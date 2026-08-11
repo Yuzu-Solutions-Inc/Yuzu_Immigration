@@ -248,8 +248,15 @@ export async function revokeFormShareLinkAction(
 export async function generateProjectPdfsAction(
   projectId: string,
   locale: string,
+  formCode?: string,
 ): Promise<
-  | { ok: true; zipBase64: string; filename: string; warnings: string[] }
+  | {
+      ok: true;
+      base64: string;
+      filename: string;
+      contentType: string;
+      warnings: string[];
+    }
   | { ok: false; error: string }
 > {
   if (!z.string().uuid().safeParse(projectId).success) {
@@ -276,6 +283,20 @@ export async function generateProjectPdfsAction(
     return { ok: false, error: "no_forms" };
   }
 
+  const requestedCode = formCode?.trim().toLowerCase();
+  if (requestedCode) {
+    if (!isFormCode(requestedCode)) {
+      return { ok: false, error: "invalid" };
+    }
+    if (!forms.some((f) => f.form_code === requestedCode)) {
+      return { ok: false, error: "invalid" };
+    }
+  }
+
+  const formCodes = requestedCode
+    ? [requestedCode]
+    : forms.map((f) => f.form_code);
+
   try {
     const {
       mergeAccountRepIntoAnswers,
@@ -295,10 +316,10 @@ export async function generateProjectPdfsAction(
       project?.form_language,
     );
     const result = await fillProjectForms({
-      formCodes: forms.map((f) => f.form_code),
+      formCodes,
       answers,
     });
-    const zip = await zipFilledForms(result.forms);
+
     await supabase
       .from("project_forms")
       .update({
@@ -314,10 +335,24 @@ export async function generateProjectPdfsAction(
       );
 
     revalidatePath(`/${locale}/projects/${projectId}`);
+
+    if (requestedCode && result.forms.length === 1) {
+      const form = result.forms[0]!;
+      return {
+        ok: true,
+        base64: Buffer.from(form.bytes).toString("base64"),
+        filename: form.filename,
+        contentType: "application/pdf",
+        warnings: result.warnings,
+      };
+    }
+
+    const zip = await zipFilledForms(result.forms);
     return {
       ok: true,
-      zipBase64: Buffer.from(zip).toString("base64"),
+      base64: Buffer.from(zip).toString("base64"),
       filename: `ircc-forms-${projectId.slice(0, 8)}.zip`,
+      contentType: "application/zip",
       warnings: result.warnings,
     };
   } catch (error) {

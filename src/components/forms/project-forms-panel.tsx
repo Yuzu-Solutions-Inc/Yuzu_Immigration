@@ -20,6 +20,23 @@ import type { ProjectFormRow } from "@/lib/ircc/project-forms";
 
 const initialState: FormsActionState = {};
 
+function triggerBrowserDownload(
+  base64: string,
+  filename: string,
+  contentType: string,
+) {
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const blob = new Blob([bytes], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function ProjectFormsPanel({
   locale,
   projectId,
@@ -51,6 +68,7 @@ export function ProjectFormsPanel({
     initialState,
   );
   const [genPending, startGen] = useTransition();
+  const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
   const [formCode, setFormCode] = useState<FormCode>("imm5475");
@@ -67,26 +85,27 @@ export function ProjectFormsPanel({
     saveAction(fd);
   }
 
-  function handleGenerate() {
+  function handleDownload(code?: string) {
+    const key = code ?? "all";
     setGenError(null);
     setGenWarnings([]);
+    setDownloadingKey(key);
     startGen(async () => {
-      const result = await generateProjectPdfsAction(projectId, locale);
-      if (!result.ok) {
-        setGenError(result.error);
-        return;
+      try {
+        const result = await generateProjectPdfsAction(projectId, locale, code);
+        if (!result.ok) {
+          setGenError(result.error);
+          return;
+        }
+        setGenWarnings(result.warnings);
+        triggerBrowserDownload(
+          result.base64,
+          result.filename,
+          result.contentType,
+        );
+      } finally {
+        setDownloadingKey(null);
       }
-      setGenWarnings(result.warnings);
-      const bin = atob(result.zipBase64);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const blob = new Blob([bytes], { type: "application/zip" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = result.filename;
-      a.click();
-      URL.revokeObjectURL(url);
     });
   }
 
@@ -102,9 +121,22 @@ export function ProjectFormsPanel({
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("todoTitle")}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {t("todoTitle")}
+          </h2>
+          {forms.length > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={genPending}
+              onClick={() => handleDownload()}
+            >
+              {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
+            </Button>
+          ) : null}
+        </div>
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
           {forms.length === 0 ? (
             <li className="px-5 py-4 text-sm text-muted-foreground">
@@ -114,9 +146,9 @@ export function ProjectFormsPanel({
             forms.map((form) => (
               <li
                 key={form.id}
-                className="flex items-center justify-between gap-3 px-5 py-4"
+                className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
               >
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium text-brand">
                     {formTitle(form.form_code as FormCode, locale)}
                   </p>
@@ -125,13 +157,40 @@ export function ProjectFormsPanel({
                     {form.is_required ? ` · ${t("required")}` : ""}
                   </p>
                 </div>
-                <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  {t(`statuses.${form.status}`)}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    {t(`statuses.${form.status}`)}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={genPending}
+                    onClick={() => handleDownload(form.form_code)}
+                  >
+                    {downloadingKey === form.form_code
+                      ? t("downloading")
+                      : t("download")}
+                  </Button>
+                </div>
               </li>
             ))
           )}
         </ul>
+        {genError ? (
+          <p className="text-sm text-destructive" role="alert">
+            {genError.startsWith("Enter") || genError.startsWith("Could")
+              ? genError
+              : t("errors.generateFailed")}
+          </p>
+        ) : null}
+        {genWarnings.length > 0 ? (
+          <ul className="list-disc space-y-1 pl-5 text-sm text-amber-700">
+            {genWarnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        ) : null}
 
         {addable.length > 0 ? (
           <form action={addAction} className="flex flex-wrap items-end gap-2">
@@ -223,34 +282,6 @@ export function ProjectFormsPanel({
         </div>
         {shareState.error || revokeState.error ? (
           <p className="text-sm text-destructive">{t("errors.shareFailed")}</p>
-        ) : null}
-      </SurfaceCard>
-
-      <SurfaceCard className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="font-heading text-base font-semibold text-brand">
-              {t("generateTitle")}
-            </h3>
-            <p className="text-sm text-muted-foreground">{t("generateHelp")}</p>
-          </div>
-          <Button type="button" disabled={genPending} onClick={handleGenerate}>
-            {genPending ? t("generating") : t("generate")}
-          </Button>
-        </div>
-        {genError ? (
-          <p className="text-sm text-destructive" role="alert">
-            {genError.startsWith("Enter") || genError.startsWith("Could")
-              ? genError
-              : t("errors.generateFailed")}
-          </p>
-        ) : null}
-        {genWarnings.length > 0 ? (
-          <ul className="list-disc space-y-1 pl-5 text-sm text-amber-700">
-            {genWarnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
         ) : null}
       </SurfaceCard>
 
