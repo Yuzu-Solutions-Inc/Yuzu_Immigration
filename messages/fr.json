@@ -5,19 +5,64 @@
   },
   "home": {
     "title": "Le CRM conçu pour les consultants en immigration canadienne",
-    "subtitle": "Clients, dossiers, documents et échéances — en français et en anglais.",
-    "cta": "Ouvrir le tableau de bord",
-    "setup": "Connectez Supabase dans .env.local pour activer l’auth et les données."
+    "subtitle": "Gérez clients, dossiers et portails partagés — en français et en anglais.",
+    "cta": "Se connecter",
+    "secondaryCta": "Créer un compte"
+  },
+  "auth": {
+    "title": "Connexion à MyConsultant",
+    "subtitle": "Accédez à l’espace de votre organisation.",
+    "continueGoogle": "Continuer avec Google",
+    "orEmail": "ou utiliser l’e-mail",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "fullName": "Nom complet",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "noAccount": "Nouveau ici ?",
+    "hasAccount": "Déjà inscrit ?",
+    "pleaseWait": "Veuillez patienter…",
+    "redirecting": "Redirection…",
+    "checkEmail": "Vérifiez votre e-mail pour confirmer le compte, puis connectez-vous.",
+    "googleFailed": "Échec de la connexion Google. Activez le fournisseur Google dans Supabase, puis réessayez.",
+    "signOut": "Se déconnecter",
+    "errors": {
+      "invalid": "Entrez un e-mail valide et un mot de passe d’au moins 8 caractères.",
+      "signIn": "Connexion impossible. Vérifiez l’e-mail et le mot de passe.",
+      "signUp": "Impossible de créer le compte. Essayez un autre e-mail.",
+      "generic": "Une erreur est survenue. Réessayez."
+    }
+  },
+  "onboarding": {
+    "title": "Créer votre organisation",
+    "subtitle": "Chaque cabinet dispose d’un espace sécurisé. Vous en serez le propriétaire.",
+    "orgName": "Nom de l’organisation",
+    "orgNamePlaceholder": "Immigration Étoile du Nord",
+    "orgSlug": "Identifiant d’espace",
+    "orgSlugHelp": "Utilisé dans les liens. Lettres minuscules, chiffres et tirets.",
+    "create": "Créer l’organisation",
+    "creating": "Création…",
+    "errors": {
+      "invalid": "Entrez un nom et un identifiant valides.",
+      "slugTaken": "Cet identifiant est déjà pris. Essayez-en un autre.",
+      "createFailed": "Impossible de créer l’organisation. Réessayez.",
+      "generic": "Une erreur est survenue. Réessayez."
+    }
+  },
+  "appHome": {
+    "title": "Accueil",
+    "welcome": "Bon retour, {name}",
+    "welcomeFallback": "Bon retour",
+    "orgLabel": "Organisation",
+    "roleLabel": "Rôle",
+    "customers": "Clients",
+    "customersHint": "Les fiches clients et l’accès portail suivront.",
+    "team": "Équipe",
+    "teamHint": "Tous les membres de l’organisation ont actuellement un accès complet."
   },
   "nav": {
-    "dashboard": "Tableau de bord",
-    "clients": "Clients",
-    "cases": "Dossiers",
-    "documents": "Documents"
-  },
-  "dashboard": {
-    "title": "Tableau de bord",
-    "welcome": "Bienvenue sur MyConsultant",
-    "empty": "Aucune donnée pour l’instant. Les modules clients et dossiers suivent."
+    "home": "Accueil",
+    "customers": "Clients",
+    "login": "Connexion"
   }
 }

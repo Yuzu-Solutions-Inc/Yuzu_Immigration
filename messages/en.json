@@ -5,19 +5,64 @@
   },
   "home": {
     "title": "The CRM built for Canadian immigration consultants",
-    "subtitle": "Clients, cases, documents, and deadlines — in English and French.",
-    "cta": "Open dashboard",
-    "setup": "Connect Supabase in .env.local to enable auth and data."
+    "subtitle": "Manage clients, cases, and shared portals — in English and French.",
+    "cta": "Sign in",
+    "secondaryCta": "Create account"
+  },
+  "auth": {
+    "title": "Sign in to MyConsultant",
+    "subtitle": "Access your organization workspace.",
+    "continueGoogle": "Continue with Google",
+    "orEmail": "or use email",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full name",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "noAccount": "New here?",
+    "hasAccount": "Already registered?",
+    "pleaseWait": "Please wait…",
+    "redirecting": "Redirecting…",
+    "checkEmail": "Check your email to confirm your account, then sign in.",
+    "googleFailed": "Google sign-in failed. Enable the Google provider in Supabase, then try again.",
+    "signOut": "Sign out",
+    "errors": {
+      "invalid": "Enter a valid email and a password with at least 8 characters.",
+      "signIn": "Could not sign in. Check your email and password.",
+      "signUp": "Could not create the account. Try a different email.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "onboarding": {
+    "title": "Create your organization",
+    "subtitle": "Each consulting firm gets its own secure workspace. You will be the owner.",
+    "orgName": "Organization name",
+    "orgNamePlaceholder": "North Star Immigration",
+    "orgSlug": "Workspace URL slug",
+    "orgSlugHelp": "Used in links and identifiers. Lowercase letters, numbers, and hyphens.",
+    "create": "Create organization",
+    "creating": "Creating…",
+    "errors": {
+      "invalid": "Enter a valid organization name and slug.",
+      "slugTaken": "That slug is already taken. Try another.",
+      "createFailed": "Could not create the organization. Try again.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "appHome": {
+    "title": "Home",
+    "welcome": "Welcome back, {name}",
+    "welcomeFallback": "Welcome back",
+    "orgLabel": "Organization",
+    "roleLabel": "Role",
+    "customers": "Customers",
+    "customersHint": "Client records and portal access come next.",
+    "team": "Team",
+    "teamHint": "Everyone in the org currently shares full access."
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "clients": "Clients",
-    "cases": "Cases",
-    "documents": "Documents"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome to MyConsultant",
-    "empty": "No data yet. Client and case modules come next."
+    "home": "Home",
+    "customers": "Customers",
+    "login": "Sign in"
   }
 }

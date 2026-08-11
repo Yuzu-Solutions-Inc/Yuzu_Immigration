@@ -30,7 +30,19 @@ Canadian immigration consultant CRM by Yuzu Solutions.
 
 - Secrets live only in `.env.local` (gitignored).
 - Service role key is server-only (`src/lib/supabase/admin.ts`).
-- Baseline RLS policies: `supabase/rls/001_baseline.sql`.
+- Tenant isolation via RLS on `organizations` / members / `customers`.
+- Customer portal password hashes live in `private.customer_portal_secrets` (not Data-API readable).
+- Portal login RPC is service-role only — call from Next.js server actions, never the browser.
+
+## Auth plan
+
+| Actor | Method |
+|-------|--------|
+| Staff (org users) | Supabase Auth: **email/password** or **Google** |
+| Customers (portal) | `access_code` or link (`access_token`) + password |
+
+Enable Google under Supabase Dashboard → Authentication → Providers.
+Add redirect URL: `http://localhost:3000/auth/callback` (and production URL later).
 
 ## Repo
 

@@ -7,17 +7,25 @@ alwaysApply: true
 
 - **Framework**: Next.js App Router (src/), TypeScript strict
 - **UI**: Tailwind CSS v4 + shadcn/ui (`src/components/ui`)
-- **Data**: Supabase Auth + Postgres + Storage; Drizzle ORM for schema/migrations
+- **Data**: Supabase project `cezwtrsleuubrfmbhosn` (Auth, Postgres, Storage) + Drizzle ORM
 - **Client data**: TanStack Query for server-state fetching/mutations
 - **Forms**: React Hook Form + Zod
 - **i18n**: next-intl with `en` and `fr` under `src/app/[locale]`
 
+## Domain model
+- `organizations` — one tenant per consulting firm (SaaS customer)
+- `profiles` + `organization_members` — staff users (Supabase Auth: email/password or Google). For now every member can access all org data.
+- `customers` — immigration clients of an organization
+- `customer_portal_access` — public access_code + access_token (link); passwords live in `private.customer_portal_secrets` (bcrypt)
+- Portal login verification is **server-only** via `verify_customer_portal_login` (service_role). Never call from the browser.
+
 ## Layout
 - `src/app/[locale]/(marketing)` — public pages
 - `src/app/[locale]/(app)` — authenticated CRM shell
+- `src/app/[locale]/portal` — customer portal (link + password)
 - `src/lib/supabase` — browser/server/middleware clients
 - `src/db` — Drizzle schema and DB client
 - `messages/` — locale JSON dictionaries
 
 ## Product context
-Canadian immigration consultant CRM (MyConsultant / Yuzu Solutions). Prefer bilingual UX, case/client/document workflows, and firm multi-tenancy with RLS from day one.
+Canadian immigration consultant CRM (MyConsultant / Yuzu Solutions). Prefer bilingual UX and firm multi-tenancy with RLS.
