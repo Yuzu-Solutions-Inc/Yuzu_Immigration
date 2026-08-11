@@ -23,7 +23,6 @@ export type CanonicalField = {
 };
 
 export const QUESTIONNAIRE_SECTIONS = [
-  "basics",
   "identity",
   "contact",
   "family",
@@ -37,13 +36,7 @@ export type QuestionnaireSection = (typeof QUESTIONNAIRE_SECTIONS)[number];
 /** Ask-once field registry. Labels live in messages under forms.fields.* */
 export const CANONICAL_FIELDS: CanonicalField[] = [
   // formLanguage comes from immigration_projects.form_language (not asked here).
-  {
-    key: "email",
-    section: "basics",
-    type: "email",
-    required: true,
-    maxLength: 120,
-  },
+  // email comes from people.email on the principal (not asked here).
   {
     key: "familyName",
     section: "identity",

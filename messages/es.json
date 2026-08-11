@@ -382,7 +382,6 @@
     "linkExpiredTitle": "This link has expired",
     "linkExpiredBody": "Ask your consultant for a new link. Your answers are kept on file.",
     "sections": {
-      "basics": "Basics",
       "identity": "About you",
       "contact": "Contact",
       "family": "Family",
@@ -392,7 +391,6 @@
       "representative": "Your consultant"
     },
     "sectionLedes": {
-      "basics": "Language and email for this file.",
       "identity": "Simple identity details — asked once for all forms.",
       "contact": "How IRCC can reach you.",
       "family": "Parents and partner when needed.",

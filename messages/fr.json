@@ -382,7 +382,6 @@
     "linkExpiredTitle": "Ce lien a expiré",
     "linkExpiredBody": "Demandez un nouveau lien à votre consultant. Vos réponses sont conservées.",
     "sections": {
-      "basics": "Bases",
       "identity": "À propos de vous",
       "contact": "Coordonnées",
       "family": "Famille",
@@ -392,7 +391,6 @@
       "representative": "Votre consultant"
     },
     "sectionLedes": {
-      "basics": "Langue et courriel pour ce dossier.",
       "identity": "Identité simple — demandée une fois pour tous les formulaires.",
       "contact": "Comment IRCC peut vous joindre.",
       "family": "Parents et conjoint au besoin.",

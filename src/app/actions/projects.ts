@@ -171,6 +171,7 @@ async function resolveParticipants(
         id: string;
         role: ParticipantRole;
         displayName: string;
+        email: string | null;
       }>;
     }
 > {
@@ -179,6 +180,7 @@ async function resolveParticipants(
     id: string;
     role: ParticipantRole;
     displayName: string;
+    email: string | null;
   }> = [];
   const seen = new Set<string>();
 
@@ -186,7 +188,7 @@ async function resolveParticipants(
     if (participant.personId) {
       const { data: existing, error } = await supabase
         .from("people")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, email")
         .eq("organization_id", orgId)
         .eq("id", participant.personId)
         .maybeSingle();
@@ -204,6 +206,7 @@ async function resolveParticipants(
         id: existing.id as string,
         role: participant.role,
         displayName: `${existing.first_name} ${existing.last_name}`.trim(),
+        email: (existing.email as string | null) || null,
       });
       continue;
     }
@@ -217,6 +220,7 @@ async function resolveParticipants(
       immigrationStatus === "none" || !participant.statusExpiresAt
         ? null
         : participant.statusExpiresAt;
+    const email = participant.email || null;
 
     const { data: created, error: createError } = await supabase
       .from("people")
@@ -224,12 +228,12 @@ async function resolveParticipants(
         organization_id: orgId,
         first_name: participant.firstName,
         last_name: participant.lastName,
-        email: participant.email || null,
+        email,
         preferred_locale: locale,
         immigration_status: immigrationStatus,
         status_expires_at: statusExpiresAt,
       })
-      .select("id, first_name, last_name")
+      .select("id, first_name, last_name, email")
       .single();
 
     if (createError || !created) {
@@ -242,6 +246,7 @@ async function resolveParticipants(
       id: created.id as string,
       role: participant.role,
       displayName: `${created.first_name} ${created.last_name}`.trim(),
+      email: (created.email as string | null) || email,
     });
   }
 
@@ -393,6 +398,7 @@ export async function createProjectAction(
     const nameParts = (principal?.displayName || "").split(/\s+/);
     const initialAnswers: Record<string, unknown> = {
       formLanguage: toIrccFormLanguage(data.formLanguage),
+      email: principal?.email || "",
       familyName: nameParts.length > 1 ? nameParts.at(-1) : nameParts[0] || "",
       givenName:
         nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "",
@@ -403,7 +409,7 @@ export async function createProjectAction(
       organization_id: orgId,
       project_id: project.id,
       answers: initialAnswers,
-      current_section: "basics",
+      current_section: "identity",
     });
   } catch (error) {
     console.error("project forms bootstrap:", error);
@@ -498,6 +504,8 @@ export async function updateProjectAction(
   const { mergeAccountRepIntoAnswers, PROFILE_REP_SELECT } = await import(
     "@/lib/ircc/account-rep"
   );
+  const { withPrincipalEmail } = await import("@/lib/ircc/principal-email");
+  const principal = resolved.people.find((p) => p.role === "principal");
   const [{ data: answersRow }, { data: repProfile }] = await Promise.all([
     supabase
       .from("project_form_answers")
@@ -514,12 +522,15 @@ export async function updateProjectAction(
       : Promise.resolve({ data: null }),
   ]);
   if (answersRow) {
-    const nextAnswers = mergeAccountRepIntoAnswers(
-      {
-        ...((answersRow.answers as Record<string, unknown> | null) ?? {}),
-        formLanguage: toIrccFormLanguage(data.formLanguage),
-      },
-      repProfile,
+    const nextAnswers = withPrincipalEmail(
+      mergeAccountRepIntoAnswers(
+        {
+          ...((answersRow.answers as Record<string, unknown> | null) ?? {}),
+          formLanguage: toIrccFormLanguage(data.formLanguage),
+        },
+        repProfile,
+      ),
+      principal?.email,
     );
     await supabase
       .from("project_form_answers")

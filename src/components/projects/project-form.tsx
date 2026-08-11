@@ -549,7 +549,9 @@ export function ProjectForm({
                 className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px]"
                 required
               >
-                <option value="">{t("selectPerson")}</option>
+                <option value="" disabled={Boolean(slot.personId)}>
+                  {t("selectPerson")}
+                </option>
                 {people.map((person) => (
                   <option key={person.id} value={person.id}>
                     {person.first_name} {person.last_name}

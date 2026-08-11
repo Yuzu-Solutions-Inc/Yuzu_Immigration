@@ -69,7 +69,9 @@ function FieldControl({
           required={field.required}
           className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
         >
-          <option value="">{t("selectPlaceholder")}</option>
+          <option value="" disabled={Boolean(value)}>
+            {t("selectPlaceholder")}
+          </option>
           {field.options?.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {t(`options.${opt.labelKey}`)}
@@ -83,7 +85,9 @@ function FieldControl({
           onChange={(e) => onChange(e.target.value)}
           className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px]"
         >
-          <option value="">{t("selectPlaceholder")}</option>
+          <option value="" disabled={Boolean(value)}>
+            {t("selectPlaceholder")}
+          </option>
           <option value="Y">{t("options.yes")}</option>
           <option value="N">{t("options.no")}</option>
         </select>
@@ -149,7 +153,7 @@ export function ModularQuestionnaire({
   });
   const [sectionIndex, setSectionIndex] = useState(0);
   const section = (sections[sectionIndex] ??
-    "basics") as QuestionnaireSection;
+    "identity") as QuestionnaireSection;
 
   const sectionFields = fields.filter(
     (f) => f.section === section && isFieldVisible(f, answers),

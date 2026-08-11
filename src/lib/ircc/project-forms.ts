@@ -9,6 +9,10 @@ import {
   mergeAccountRepIntoAnswers,
   PROFILE_REP_SELECT,
 } from "@/lib/ircc/account-rep";
+import {
+  fetchPrincipalEmail,
+  withPrincipalEmail,
+} from "@/lib/ircc/principal-email";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -263,24 +267,30 @@ export async function loadShareContext(token: string) {
   if (!projectRes.data) return null;
 
   const repUserId = projectRes.data.representative_user_id as string | null;
-  const { data: repProfile } = repUserId
-    ? await admin
-        .from("profiles")
-        .select(PROFILE_REP_SELECT)
-        .eq("id", repUserId)
-        .maybeSingle()
-    : { data: null };
+  const [{ data: repProfile }, principalEmail] = await Promise.all([
+    repUserId
+      ? admin
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", repUserId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    fetchPrincipalEmail(admin, resolved.projectId),
+  ]);
 
   return {
     ...resolved,
     project: projectRes.data,
     forms: (formsRes.data ?? []) as ProjectFormRow[],
-    answers: withProjectFormLanguage(
-      mergeAccountRepIntoAnswers(
-        (answersRes.data?.answers ?? {}) as Record<string, unknown>,
-        repProfile,
+    answers: withPrincipalEmail(
+      withProjectFormLanguage(
+        mergeAccountRepIntoAnswers(
+          (answersRes.data?.answers ?? {}) as Record<string, unknown>,
+          repProfile,
+        ),
+        projectRes.data.form_language,
       ),
-      projectRes.data.form_language,
+      principalEmail,
     ),
     currentSection:
       (answersRes.data?.current_section as string | null) ?? null,
@@ -305,17 +315,23 @@ export async function saveShareAnswers(input: {
     .maybeSingle();
 
   const repUserId = project?.representative_user_id as string | null;
-  const { data: repProfile } = repUserId
-    ? await admin
-        .from("profiles")
-        .select(PROFILE_REP_SELECT)
-        .eq("id", repUserId)
-        .maybeSingle()
-    : { data: null };
+  const [{ data: repProfile }, principalEmail] = await Promise.all([
+    repUserId
+      ? admin
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", repUserId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    fetchPrincipalEmail(admin, resolved.projectId),
+  ]);
 
-  const answers = withProjectFormLanguage(
-    mergeAccountRepIntoAnswers(input.answers, repProfile),
-    project?.form_language,
+  const answers = withPrincipalEmail(
+    withProjectFormLanguage(
+      mergeAccountRepIntoAnswers(input.answers, repProfile),
+      project?.form_language,
+    ),
+    principalEmail,
   );
 
   const { error } = await admin.from("project_form_answers").upsert(

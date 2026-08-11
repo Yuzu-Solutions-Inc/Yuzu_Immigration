@@ -13,6 +13,7 @@ import {
   getProjectStatusHistory,
 } from "@/lib/crm/queries";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
+import { withPrincipalEmail } from "@/lib/ircc/principal-email";
 import {
   getActiveShareLink,
   getProjectFormAnswers,
@@ -48,9 +49,13 @@ export default async function ProjectDetailPage({
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
   const formLocale = locale === "fr" ? "fr" : "en";
-  const answers = withProjectFormLanguage(
-    answersRow?.answers ?? {},
-    project.form_language,
+  const principal = participants.find((p) => p.role === "principal");
+  const answers = withPrincipalEmail(
+    withProjectFormLanguage(
+      answersRow?.answers ?? {},
+      project.form_language,
+    ),
+    principal?.person?.email,
   );
 
   const opened = new Date(project.opened_at).toLocaleDateString(

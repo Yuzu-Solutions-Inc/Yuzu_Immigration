@@ -8,6 +8,10 @@ import { isFormCode } from "@/lib/ircc/catalog";
 import { fillProjectForms, zipFilledForms } from "@/lib/ircc/fill-project";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
 import {
+  fetchPrincipalEmail,
+  withPrincipalEmail,
+} from "@/lib/ircc/principal-email";
+import {
   SHARE_LINK_TTL_DAYS,
   addProjectForm,
   getProjectFormAnswers,
@@ -98,18 +102,24 @@ export async function saveProjectAnswersAction(
     PROFILE_REP_SELECT,
   } = await import("@/lib/ircc/account-rep");
   const repUserId = project?.representative_user_id as string | null;
-  const { data: repProfile } = repUserId
-    ? await supabase
-        .from("profiles")
-        .select(PROFILE_REP_SELECT)
-        .eq("id", repUserId)
-        .maybeSingle()
-    : { data: null };
+  const [{ data: repProfile }, principalEmail] = await Promise.all([
+    repUserId
+      ? supabase
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", repUserId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    fetchPrincipalEmail(supabase, projectId),
+  ]);
 
   answers.hasRepresentative = "Y";
-  answers = withProjectFormLanguage(
-    mergeAccountRepIntoAnswers(answers, repProfile),
-    project?.form_language,
+  answers = withPrincipalEmail(
+    withProjectFormLanguage(
+      mergeAccountRepIntoAnswers(answers, repProfile),
+      project?.form_language,
+    ),
+    principalEmail,
   );
 
   try {
@@ -303,17 +313,23 @@ export async function generateProjectPdfsAction(
       PROFILE_REP_SELECT,
     } = await import("@/lib/ircc/account-rep");
     const repUserId = project?.representative_user_id as string | null;
-    const { data: repProfile } = repUserId
-      ? await supabase
-          .from("profiles")
-          .select(PROFILE_REP_SELECT)
-          .eq("id", repUserId)
-          .maybeSingle()
-      : { data: null };
+    const [{ data: repProfile }, principalEmail] = await Promise.all([
+      repUserId
+        ? supabase
+            .from("profiles")
+            .select(PROFILE_REP_SELECT)
+            .eq("id", repUserId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      fetchPrincipalEmail(supabase, projectId),
+    ]);
 
-    const answers = withProjectFormLanguage(
-      mergeAccountRepIntoAnswers(answersRow?.answers ?? {}, repProfile),
-      project?.form_language,
+    const answers = withPrincipalEmail(
+      withProjectFormLanguage(
+        mergeAccountRepIntoAnswers(answersRow?.answers ?? {}, repProfile),
+        project?.form_language,
+      ),
+      principalEmail,
     );
     const result = await fillProjectForms({
       formCodes,
