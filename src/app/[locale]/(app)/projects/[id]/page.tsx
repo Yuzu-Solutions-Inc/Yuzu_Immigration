@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
+import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import { formatStatusDate } from "@/components/projects/project-status-summary";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,13 +13,21 @@ import {
   getProjectParticipants,
   getProjectStatusHistory,
 } from "@/lib/crm/queries";
+import {
+  answersForPersonFill,
+  normalizeAnswersStore,
+} from "@/lib/ircc/answers-store";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
-import { withPrincipalEmail } from "@/lib/ircc/principal-email";
+import {
+  mergeAccountRepIntoAnswers,
+  PROFILE_REP_SELECT,
+} from "@/lib/ircc/account-rep";
 import {
   getActiveShareLink,
   getProjectFormAnswers,
   listProjectForms,
 } from "@/lib/ircc/project-forms";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 export default async function ProjectDetailPage({
@@ -50,13 +59,43 @@ export default async function ProjectDetailPage({
   const tr = await getTranslations("roles");
   const formLocale = locale === "fr" ? "fr" : "en";
   const principal = participants.find((p) => p.role === "principal");
-  const answers = withPrincipalEmail(
-    withProjectFormLanguage(
-      answersRow?.answers ?? {},
-      project.form_language,
-    ),
-    principal?.person?.email,
-  );
+  const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+    principalPersonId: principal?.person?.id,
+  });
+
+  const supabase = await createClient();
+  const { data: repProfile } = project.representative_user_id
+    ? await supabase
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", project.representative_user_id)
+        .maybeSingle()
+    : { data: null };
+
+  const questionnairePeople: QuestionnairePerson[] = participants
+    .filter((row) => row.person)
+    .map((row) => {
+      const person = row.person!;
+      const formCodes = forms
+        .filter(
+          (f) =>
+            f.person_id === person.id ||
+            (row.role === "principal" && !f.person_id),
+        )
+        .map((f) => f.form_code);
+      const raw = answersForPersonFill(store, person.id);
+      if (person.email) raw.email = person.email;
+      return {
+        id: person.id,
+        displayName: `${person.first_name} ${person.last_name}`.trim(),
+        role: row.role,
+        formCodes,
+        answers: withProjectFormLanguage(
+          mergeAccountRepIntoAnswers(raw, repProfile),
+          project.form_language,
+        ),
+      };
+    });
 
   const opened = new Date(project.opened_at).toLocaleDateString(
     locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
@@ -198,7 +237,7 @@ export default async function ProjectDetailPage({
         locale={formLocale}
         projectId={project.id}
         forms={forms}
-        answers={answers}
+        people={questionnairePeople}
         activeShareExpiresAt={share?.expires_at ?? null}
       />
     </div>

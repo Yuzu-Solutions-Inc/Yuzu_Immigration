@@ -1,28 +1,53 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import type { ProgramFamily } from "@/db/schema";
-import { seedFormsForProgram } from "@/lib/ircc/kits";
-import type { FormCode } from "@/lib/ircc/catalog";
-import { isFormCode } from "@/lib/ircc/catalog";
+import {
+  expandSeedsForParticipants,
+  seedFormsForProgram,
+} from "@/lib/ircc/kits";
+import {
+  formScope,
+  isFormCode,
+  isPersonScopedForm,
+  type FormCode,
+} from "@/lib/ircc/catalog";
+import {
+  emptyAnswersStore,
+  mergePersonQuestionnaireSave,
+  normalizeAnswersStore,
+  seedPersonIdentityFromName,
+  type FlatAnswers,
+  type ProjectAnswersStore,
+} from "@/lib/ircc/answers-store";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
 import {
   mergeAccountRepIntoAnswers,
   PROFILE_REP_SELECT,
 } from "@/lib/ircc/account-rep";
-import {
-  fetchPrincipalEmail,
-  withPrincipalEmail,
-} from "@/lib/ircc/principal-email";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { CANONICAL_FIELDS } from "@/lib/ircc/fields";
 
 export const SHARE_LINK_TTL_DAYS = 30;
+
+/** Questionnaire keys that belong on the project bag (IMM 5409 etc.). */
+export const PROJECT_SCOPED_ANSWER_KEYS: string[] = CANONICAL_FIELDS.filter(
+  (field) =>
+    field.forms?.length &&
+    field.forms.every((code) => formScope(code) === "project"),
+).map((field) => field.key);
+
+// isCommonLaw is used as a gate for 5409 fields but has no forms[] — treat as project.
+if (!PROJECT_SCOPED_ANSWER_KEYS.includes("isCommonLaw")) {
+  PROJECT_SCOPED_ANSWER_KEYS.push("isCommonLaw");
+}
 
 export type ProjectFormRow = {
   id: string;
   organization_id: string;
   project_id: string;
   form_code: string;
+  person_id: string | null;
   status: "todo" | "in_progress" | "ready" | "generated";
   is_required: boolean;
   sort_order: number;
@@ -54,6 +79,14 @@ export type FormShareLinkRow = {
   created_at: string;
 };
 
+export type ProjectPersonBrief = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  role: string;
+};
+
 export function hashShareToken(token: string): string {
   return createHash("sha256").update(token, "utf8").digest("hex");
 }
@@ -62,19 +95,98 @@ export function generateShareToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
+type DbClient = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from: (table: string) => any;
+};
+
+export async function listActiveProjectPeople(
+  client: DbClient,
+  projectId: string,
+): Promise<ProjectPersonBrief[]> {
+  const { data: links, error } = await client
+    .from("project_participants")
+    .select("role, person_id, created_at")
+    .eq("project_id", projectId)
+    .is("left_at", null)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("listActiveProjectPeople:", error.message);
+    return [];
+  }
+
+  const personIds = (links ?? [])
+    .map((row: { person_id: string }) => row.person_id)
+    .filter(Boolean);
+  if (personIds.length === 0) return [];
+
+  const { data: peopleRows, error: peopleError } = await client
+    .from("people")
+    .select("id, first_name, last_name, email")
+    .in("id", personIds);
+
+  if (peopleError) {
+    console.error("listActiveProjectPeople people:", peopleError.message);
+    return [];
+  }
+
+  type PersonRow = {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string | null;
+  };
+
+  const byId = new Map<string, PersonRow>(
+    ((peopleRows ?? []) as PersonRow[]).map((person) => [person.id, person]),
+  );
+
+  const out: ProjectPersonBrief[] = [];
+  for (const row of links ?? []) {
+    const person = byId.get(row.person_id as string);
+    if (!person) continue;
+    out.push({
+      id: person.id,
+      firstName: person.first_name,
+      lastName: person.last_name,
+      email: person.email,
+      role: String(row.role),
+    });
+  }
+
+  out.sort((a, b) => {
+    if (a.role === "principal" && b.role !== "principal") return -1;
+    if (b.role === "principal" && a.role !== "principal") return 1;
+    return 0;
+  });
+
+  return out;
+}
+
 export async function seedProjectForms(
   organizationId: string,
   projectId: string,
   programFamily: ProgramFamily,
-  options?: { applicationLocation?: "outside" | "inside" },
+  options?: {
+    applicationLocation?: "outside" | "inside";
+    personIds?: string[];
+  },
 ) {
   const supabase = await createClient();
-  const seeds = seedFormsForProgram(programFamily, options);
+  const personIds =
+    options?.personIds ??
+    (await listActiveProjectPeople(supabase, projectId)).map((p) => p.id);
+  const seeds = expandSeedsForParticipants(
+    seedFormsForProgram(programFamily, options),
+    personIds,
+  );
   const { error } = await supabase.from("project_forms").insert(
     seeds.map((seed) => ({
       organization_id: organizationId,
       project_id: projectId,
       form_code: seed.formCode,
+      person_id: seed.personId,
       is_required: seed.isRequired,
       sort_order: seed.sortOrder,
       status: "todo",
@@ -83,6 +195,114 @@ export async function seedProjectForms(
   if (error) {
     console.error("seedProjectForms:", error.message);
     throw new Error(error.message);
+  }
+}
+
+/**
+ * Ensure every active participant has a copy of each person-scoped form
+ * already on the project (kit or manually added). Project-scoped rows stay
+ * single.
+ */
+export async function syncPersonScopedFormsForParticipants(input: {
+  organizationId: string;
+  projectId: string;
+  personIds: string[];
+}) {
+  const supabase = await createClient();
+  const { data: existing, error } = await supabase
+    .from("project_forms")
+    .select("id, form_code, person_id, is_required, sort_order")
+    .eq("project_id", input.projectId)
+    .eq("organization_id", input.organizationId);
+
+  if (error) {
+    console.error("syncPersonScopedFormsForParticipants:", error.message);
+    throw new Error(error.message);
+  }
+
+  const rows = (existing ?? []) as Array<{
+    id: string;
+    form_code: string;
+    person_id: string | null;
+    is_required: boolean;
+    sort_order: number;
+  }>;
+
+  const personScopedCodes = [
+    ...new Set(
+      rows
+        .filter((r) => isPersonScopedForm(r.form_code))
+        .map((r) => r.form_code),
+    ),
+  ];
+
+  if (personScopedCodes.length === 0 || input.personIds.length === 0) return;
+
+  const have = new Set(
+    rows
+      .filter((r) => r.person_id)
+      .map((r) => `${r.form_code}:${r.person_id}`),
+  );
+
+  const inserts: Array<{
+    organization_id: string;
+    project_id: string;
+    form_code: string;
+    person_id: string;
+    is_required: boolean;
+    sort_order: number;
+    status: "todo";
+  }> = [];
+
+  for (const code of personScopedCodes) {
+    const template = rows.find(
+      (r) => r.form_code === code && r.person_id != null,
+    ) ?? rows.find((r) => r.form_code === code);
+
+    for (const personId of input.personIds) {
+      const key = `${code}:${personId}`;
+      if (have.has(key)) continue;
+      inserts.push({
+        organization_id: input.organizationId,
+        project_id: input.projectId,
+        form_code: code,
+        person_id: personId,
+        is_required: template?.is_required ?? true,
+        sort_order: (template?.sort_order ?? 50) + 1,
+        status: "todo",
+      });
+      have.add(key);
+    }
+  }
+
+  // Attach any leftover unassigned person-scoped rows to the first person.
+  const unassigned = rows.filter(
+    (r) => isPersonScopedForm(r.form_code) && !r.person_id,
+  );
+  const primaryPersonId = input.personIds[0];
+  if (primaryPersonId && unassigned.length > 0) {
+    for (const row of unassigned) {
+      const key = `${row.form_code}:${primaryPersonId}`;
+      if (have.has(key)) {
+        await supabase.from("project_forms").delete().eq("id", row.id);
+        continue;
+      }
+      await supabase
+        .from("project_forms")
+        .update({ person_id: primaryPersonId })
+        .eq("id", row.id);
+      have.add(key);
+    }
+  }
+
+  if (inserts.length > 0) {
+    const { error: insertError } = await supabase
+      .from("project_forms")
+      .insert(inserts);
+    if (insertError) {
+      console.error("syncPersonScopedForms insert:", insertError.message);
+      throw new Error(insertError.message);
+    }
   }
 }
 
@@ -118,10 +338,18 @@ export async function getProjectFormAnswers(
   return data as ProjectFormAnswersRow | null;
 }
 
+export async function loadProjectAnswersStore(
+  projectId: string,
+  principalPersonId?: string | null,
+): Promise<ProjectAnswersStore> {
+  const row = await getProjectFormAnswers(projectId);
+  return normalizeAnswersStore(row?.answers ?? {}, { principalPersonId });
+}
+
 export async function upsertProjectFormAnswers(input: {
   organizationId: string;
   projectId: string;
-  answers: Record<string, unknown>;
+  answers: ProjectAnswersStore | FlatAnswers;
   currentSection?: string | null;
 }) {
   const supabase = await createClient();
@@ -145,12 +373,28 @@ export async function addProjectForm(input: {
   organizationId: string;
   projectId: string;
   formCode: FormCode;
+  personId?: string | null;
   isRequired?: boolean;
 }) {
   if (!isFormCode(input.formCode)) {
     throw new Error("Invalid form code");
   }
   const supabase = await createClient();
+  const scope = formScope(input.formCode);
+  let personId = input.personId ?? null;
+
+  if (scope === "person") {
+    if (!personId) {
+      const people = await listActiveProjectPeople(supabase, input.projectId);
+      personId = people[0]?.id ?? null;
+    }
+    if (!personId) {
+      throw new Error("person_required");
+    }
+  } else {
+    personId = null;
+  }
+
   const { data: existing } = await supabase
     .from("project_forms")
     .select("sort_order")
@@ -164,6 +408,7 @@ export async function addProjectForm(input: {
     organization_id: input.organizationId,
     project_id: input.projectId,
     form_code: input.formCode,
+    person_id: personId,
     is_required: input.isRequired ?? false,
     sort_order: sortOrder,
     status: "todo",
@@ -227,12 +472,28 @@ export async function resolveShareToken(token: string): Promise<{
   };
 }
 
+function injectPersonContact(
+  answers: FlatAnswers,
+  person: ProjectPersonBrief | undefined,
+): FlatAnswers {
+  if (!person) return answers;
+  const next = { ...answers };
+  const email = String(person.email ?? "").trim();
+  if (email) next.email = email;
+  if (!next.familyName) next.familyName = person.lastName;
+  if (!next.givenName) next.givenName = person.firstName;
+  if (!next.phone && person) {
+    // phone stays on people table only when present via answers
+  }
+  return next;
+}
+
 export async function loadShareContext(token: string) {
   const resolved = await resolveShareToken(token);
   if (!resolved) return null;
 
   const admin = createServiceClient();
-  const [projectRes, formsRes, answersRes, orgRes] = await Promise.all([
+  const [projectRes, formsRes, answersRes, orgRes, people] = await Promise.all([
     admin
       .from("immigration_projects")
       .select(
@@ -255,6 +516,7 @@ export async function loadShareContext(token: string) {
       .select("id, name")
       .eq("id", resolved.organizationId)
       .maybeSingle(),
+    listActiveProjectPeople(admin, resolved.projectId),
   ]);
 
   const loadError =
@@ -266,32 +528,57 @@ export async function loadShareContext(token: string) {
 
   if (!projectRes.data) return null;
 
-  const repUserId = projectRes.data.representative_user_id as string | null;
-  const [{ data: repProfile }, principalEmail] = await Promise.all([
-    repUserId
-      ? admin
-          .from("profiles")
-          .select(PROFILE_REP_SELECT)
-          .eq("id", repUserId)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    fetchPrincipalEmail(admin, resolved.projectId),
-  ]);
+  const project = projectRes.data;
+  const principal = people.find((p) => p.role === "principal") ?? people[0];
+  const store = normalizeAnswersStore(answersRes.data?.answers ?? {}, {
+    principalPersonId: principal?.id,
+  });
+
+  const repUserId = project.representative_user_id as string | null;
+  const { data: repProfile } = repUserId
+    ? await admin
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", repUserId)
+        .maybeSingle()
+    : { data: null };
+
+  const peopleWithAnswers = people.map((person) => {
+    const formCodes = (formsRes.data ?? [])
+      .filter(
+        (f: ProjectFormRow) =>
+          f.person_id === person.id ||
+          (person.role === "principal" && !f.person_id),
+      )
+      .map((f: ProjectFormRow) => f.form_code as string);
+
+    const merged = withProjectFormLanguage(
+      mergeAccountRepIntoAnswers(
+        injectPersonContact(
+          {
+            ...store.byPerson[person.id],
+            ...(person.role === "principal" ? store.project : {}),
+          },
+          person,
+        ),
+        repProfile,
+      ),
+      project.form_language,
+    );
+
+    return {
+      ...person,
+      formCodes,
+      answers: merged,
+    };
+  });
 
   return {
     ...resolved,
-    project: projectRes.data,
+    project,
     forms: (formsRes.data ?? []) as ProjectFormRow[],
-    answers: withPrincipalEmail(
-      withProjectFormLanguage(
-        mergeAccountRepIntoAnswers(
-          (answersRes.data?.answers ?? {}) as Record<string, unknown>,
-          repProfile,
-        ),
-        projectRes.data.form_language,
-      ),
-      principalEmail,
-    ),
+    answersStore: store,
+    people: peopleWithAnswers,
     currentSection:
       (answersRes.data?.current_section as string | null) ?? null,
     organization: orgRes.data,
@@ -300,6 +587,7 @@ export async function loadShareContext(token: string) {
 
 export async function saveShareAnswers(input: {
   token: string;
+  personId: string;
   answers: Record<string, unknown>;
   currentSection?: string | null;
 }) {
@@ -308,6 +596,10 @@ export async function saveShareAnswers(input: {
     throw new Error("expired");
   }
   const admin = createServiceClient();
+  const people = await listActiveProjectPeople(admin, resolved.projectId);
+  const person = people.find((p) => p.id === input.personId);
+  if (!person) throw new Error("invalid_person");
+
   const { data: project } = await admin
     .from("immigration_projects")
     .select("form_language, representative_user_id")
@@ -315,30 +607,46 @@ export async function saveShareAnswers(input: {
     .maybeSingle();
 
   const repUserId = project?.representative_user_id as string | null;
-  const [{ data: repProfile }, principalEmail] = await Promise.all([
-    repUserId
-      ? admin
-          .from("profiles")
-          .select(PROFILE_REP_SELECT)
-          .eq("id", repUserId)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    fetchPrincipalEmail(admin, resolved.projectId),
-  ]);
+  const { data: repProfile } = repUserId
+    ? await admin
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", repUserId)
+        .maybeSingle()
+    : { data: null };
 
-  const answers = withPrincipalEmail(
-    withProjectFormLanguage(
-      mergeAccountRepIntoAnswers(input.answers, repProfile),
-      project?.form_language,
+  const { data: answersRow } = await admin
+    .from("project_form_answers")
+    .select("answers")
+    .eq("project_id", resolved.projectId)
+    .maybeSingle();
+
+  const principal = people.find((p) => p.role === "principal") ?? people[0];
+  let store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+    principalPersonId: principal?.id,
+  });
+
+  const cleaned = withProjectFormLanguage(
+    mergeAccountRepIntoAnswers(
+      injectPersonContact(input.answers, person),
+      repProfile,
     ),
-    principalEmail,
+    project?.form_language,
+  );
+  cleaned.hasRepresentative = "Y";
+
+  store = mergePersonQuestionnaireSave(
+    store,
+    input.personId,
+    cleaned,
+    PROJECT_SCOPED_ANSWER_KEYS,
   );
 
   const { error } = await admin.from("project_form_answers").upsert(
     {
       organization_id: resolved.organizationId,
       project_id: resolved.projectId,
-      answers,
+      answers: store,
       current_section: input.currentSection ?? null,
       updated_at: new Date().toISOString(),
     },
@@ -346,3 +654,31 @@ export async function saveShareAnswers(input: {
   );
   if (error) throw new Error(error.message);
 }
+
+export function buildInitialAnswersStore(input: {
+  people: Array<{
+    id: string;
+    displayName: string;
+    email?: string | null;
+    role: string;
+  }>;
+  formLanguage: string;
+  repAnswers: FlatAnswers;
+}): ProjectAnswersStore {
+  const store = emptyAnswersStore();
+  for (const person of input.people) {
+    store.byPerson[person.id] = {
+      ...seedPersonIdentityFromName(person.displayName, person.email),
+      formLanguage: input.formLanguage,
+      ...input.repAnswers,
+      hasRepresentative: "Y",
+    };
+  }
+  return store;
+}
+
+export {
+  emptyAnswersStore,
+  mergePersonQuestionnaireSave,
+  normalizeAnswersStore,
+};

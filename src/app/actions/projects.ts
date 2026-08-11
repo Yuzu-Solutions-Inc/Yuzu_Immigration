@@ -366,13 +366,19 @@ export async function createProjectAction(
   }
 
   try {
-    const { seedFormsForProgram } = await import("@/lib/ircc/kits");
-    const seeds = seedFormsForProgram(data.programFamily);
+    const { expandSeedsForParticipants, seedFormsForProgram } = await import(
+      "@/lib/ircc/kits"
+    );
+    const seeds = expandSeedsForParticipants(
+      seedFormsForProgram(data.programFamily),
+      resolved.people.map((p) => p.id),
+    );
     const { error: formsError } = await supabase.from("project_forms").insert(
       seeds.map((seed) => ({
         organization_id: orgId,
         project_id: project.id,
         form_code: seed.formCode,
+        person_id: seed.personId,
         is_required: seed.isRequired,
         sort_order: seed.sortOrder,
         status: "todo",
@@ -386,6 +392,9 @@ export async function createProjectAction(
       "@/lib/ircc/account-rep"
     );
     const { toIrccFormLanguage } = await import("@/lib/ircc/form-language");
+    const { buildInitialAnswersStore } = await import(
+      "@/lib/ircc/project-forms"
+    );
     const { data: repProfile } = representativeUserId
       ? await supabase
           .from("profiles")
@@ -394,16 +403,16 @@ export async function createProjectAction(
           .maybeSingle()
       : { data: null };
 
-    const principal = resolved.people.find((p) => p.role === "principal");
-    const nameParts = (principal?.displayName || "").split(/\s+/);
-    const initialAnswers: Record<string, unknown> = {
+    const initialAnswers = buildInitialAnswersStore({
+      people: resolved.people.map((p) => ({
+        id: p.id,
+        displayName: p.displayName,
+        email: p.email,
+        role: p.role,
+      })),
       formLanguage: toIrccFormLanguage(data.formLanguage),
-      email: principal?.email || "",
-      familyName: nameParts.length > 1 ? nameParts.at(-1) : nameParts[0] || "",
-      givenName:
-        nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "",
-      ...accountRepAnswersFromProfile(repProfile),
-    };
+      repAnswers: accountRepAnswersFromProfile(repProfile),
+    });
 
     await supabase.from("project_form_answers").insert({
       organization_id: orgId,
@@ -504,7 +513,10 @@ export async function updateProjectAction(
   const { mergeAccountRepIntoAnswers, PROFILE_REP_SELECT } = await import(
     "@/lib/ircc/account-rep"
   );
-  const { withPrincipalEmail } = await import("@/lib/ircc/principal-email");
+  const {
+    normalizeAnswersStore,
+    seedPersonIdentityFromName,
+  } = await import("@/lib/ircc/answers-store");
   const principal = resolved.people.find((p) => p.role === "principal");
   const [{ data: answersRow }, { data: repProfile }] = await Promise.all([
     supabase
@@ -522,20 +534,28 @@ export async function updateProjectAction(
       : Promise.resolve({ data: null }),
   ]);
   if (answersRow) {
-    const nextAnswers = withPrincipalEmail(
-      mergeAccountRepIntoAnswers(
-        {
-          ...((answersRow.answers as Record<string, unknown> | null) ?? {}),
-          formLanguage: toIrccFormLanguage(data.formLanguage),
-        },
-        repProfile,
-      ),
-      principal?.email,
-    );
+    const store = normalizeAnswersStore(answersRow.answers ?? {}, {
+      principalPersonId: principal?.id,
+    });
+    const formLanguage = toIrccFormLanguage(data.formLanguage);
+    const repAnswers = mergeAccountRepIntoAnswers({}, repProfile);
+
+    for (const person of resolved.people) {
+      const existing = store.byPerson[person.id] ?? {};
+      store.byPerson[person.id] = {
+        ...seedPersonIdentityFromName(person.displayName, person.email),
+        ...existing,
+        formLanguage,
+        ...repAnswers,
+        email: person.email || existing.email || "",
+        hasRepresentative: "Y",
+      };
+    }
+
     await supabase
       .from("project_form_answers")
       .update({
-        answers: nextAnswers,
+        answers: store,
         updated_at: new Date().toISOString(),
       })
       .eq("id", answersRow.id);
@@ -620,6 +640,19 @@ export async function updateProjectAction(
         return { error: "update_failed" };
       }
     }
+  }
+
+  try {
+    const { syncPersonScopedFormsForParticipants } = await import(
+      "@/lib/ircc/project-forms"
+    );
+    await syncPersonScopedFormsForParticipants({
+      organizationId: orgId,
+      projectId,
+      personIds: resolved.people.map((p) => p.id),
+    });
+  } catch (error) {
+    console.error("sync person forms after participant update:", error);
   }
 
   revalidatePath(`/${data.locale}/projects/${projectId}`);

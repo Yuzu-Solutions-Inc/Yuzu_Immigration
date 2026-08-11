@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -123,35 +123,71 @@ function FieldControl({
   );
 }
 
+export type QuestionnairePerson = {
+  id: string;
+  displayName: string;
+  role: string;
+  formCodes: string[];
+  answers: Record<string, unknown>;
+};
+
+function answersToState(initial: Record<string, unknown>) {
+  const next: Record<string, string> = {};
+  for (const field of CANONICAL_FIELDS) {
+    const v = initial[field.key];
+    if (v !== undefined && v !== null) next[field.key] = String(v);
+  }
+  next.hasRepresentative = "Y";
+  return next;
+}
+
 export function ModularQuestionnaire({
-  formCodes,
-  initialAnswers,
+  people,
   onSave,
   pending,
   statusMessage,
   errorMessage,
 }: {
-  formCodes: string[];
-  initialAnswers: Record<string, unknown>;
-  onSave: (answers: Record<string, unknown>, section: string) => void;
+  people: QuestionnairePerson[];
+  onSave: (
+    personId: string,
+    answers: Record<string, unknown>,
+    section: string,
+  ) => void;
   pending?: boolean;
   statusMessage?: string | null;
   errorMessage?: string | null;
 }) {
   const t = useTranslations("forms");
   const th = useTranslations("forms.help");
-  const fields = useMemo(() => fieldsForFormCodes(formCodes), [formCodes]);
+  const tr = useTranslations("roles");
+
+  const [activePersonId, setActivePersonId] = useState(
+    () => people[0]?.id ?? "",
+  );
+  const activePerson =
+    people.find((p) => p.id === activePersonId) ?? people[0] ?? null;
+
+  const fields = useMemo(
+    () => fieldsForFormCodes(activePerson?.formCodes ?? []),
+    [activePerson?.formCodes],
+  );
   const sections = useMemo(() => sectionsForFields(fields), [fields]);
-  const [answers, setAnswers] = useState<Record<string, string>>(() => {
-    const next: Record<string, string> = {};
-    for (const field of CANONICAL_FIELDS) {
-      const v = initialAnswers[field.key];
-      if (v !== undefined && v !== null) next[field.key] = String(v);
-    }
-    next.hasRepresentative = "Y";
-    return next;
-  });
+  const [answers, setAnswers] = useState<Record<string, string>>(() =>
+    answersToState(activePerson?.answers ?? {}),
+  );
   const [sectionIndex, setSectionIndex] = useState(0);
+
+  useEffect(() => {
+    if (!activePersonId) return;
+    const person = people.find((p) => p.id === activePersonId);
+    if (!person) return;
+    setAnswers(answersToState(person.answers));
+    setSectionIndex(0);
+    // Reset local draft when switching people (not on every answers prop refresh).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [activePersonId]);
+
   const section = (sections[sectionIndex] ??
     "identity") as QuestionnaireSection;
 
@@ -164,11 +200,57 @@ export function ModularQuestionnaire({
   }
 
   function save() {
-    onSave({ ...answers, hasRepresentative: "Y" }, section);
+    if (!activePerson) return;
+    onSave(activePerson.id, { ...answers, hasRepresentative: "Y" }, section);
+  }
+
+  if (!activePerson) {
+    return (
+      <p className="text-sm text-muted-foreground">{t("questionnaireEmpty")}</p>
+    );
   }
 
   return (
     <div className="space-y-6">
+      {people.length > 1 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("personTabsLabel")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {people.map((person) => (
+              <button
+                key={person.id}
+                type="button"
+                onClick={() => setActivePersonId(person.id)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  person.id === activePerson.id
+                    ? "bg-brand text-white"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {person.displayName}
+                <span className="ml-1 font-normal opacity-80">
+                  · {tr(person.role as never)}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {t("personTabsHelp", { name: activePerson.displayName })}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          <h3 className="font-heading text-base font-semibold text-brand">
+            {activePerson.displayName}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {t("personTabsHelp", { name: activePerson.displayName })}
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {sections.map((s, i) => (
           <button

@@ -7,20 +7,21 @@ import {
   saveShareAnswersAction,
   type FormsActionState,
 } from "@/app/actions/forms";
-import { ModularQuestionnaire } from "@/components/forms/modular-questionnaire";
+import {
+  ModularQuestionnaire,
+  type QuestionnairePerson,
+} from "@/components/forms/modular-questionnaire";
 
 const initial: FormsActionState = {};
 
 export function ClientFillForm({
   token,
-  formCodes,
-  initialAnswers,
+  people,
   projectTitle,
   expiresAt,
 }: {
   token: string;
-  formCodes: string[];
-  initialAnswers: Record<string, unknown>;
+  people: QuestionnairePerson[];
   projectTitle: string;
   expiresAt: string;
 }) {
@@ -29,12 +30,19 @@ export function ClientFillForm({
     saveShareAnswersAction,
     initial,
   );
-  const [localAnswers, setLocalAnswers] = useState(initialAnswers);
+  const [localPeople, setLocalPeople] = useState(people);
 
-  function handleSave(answers: Record<string, unknown>, section: string) {
-    setLocalAnswers(answers);
+  function handleSave(
+    personId: string,
+    answers: Record<string, unknown>,
+    section: string,
+  ) {
+    setLocalPeople((prev) =>
+      prev.map((p) => (p.id === personId ? { ...p, answers } : p)),
+    );
     const fd = new FormData();
     fd.set("token", token);
+    fd.set("personId", personId);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(answers));
     action(fd);
@@ -67,8 +75,7 @@ export function ClientFillForm({
       </header>
 
       <ModularQuestionnaire
-        formCodes={formCodes}
-        initialAnswers={localAnswers}
+        people={localPeople}
         onSave={handleSave}
         pending={pending}
         statusMessage={state.message === "saved" ? t("saved") : null}

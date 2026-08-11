@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -12,10 +12,18 @@ import {
   saveProjectAnswersAction,
   type FormsActionState,
 } from "@/app/actions/forms";
-import { ModularQuestionnaire } from "@/components/forms/modular-questionnaire";
+import {
+  ModularQuestionnaire,
+  type QuestionnairePerson,
+} from "@/components/forms/modular-questionnaire";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
-import { formTitle, type FormCode, ALL_FORM_CODES } from "@/lib/ircc/catalog";
+import {
+  formTitle,
+  isPersonScopedForm,
+  type FormCode,
+  ALL_FORM_CODES,
+} from "@/lib/ircc/catalog";
 import { ADDABLE_COMPANION_FORMS } from "@/lib/ircc/kits";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
 
@@ -42,16 +50,17 @@ export function ProjectFormsPanel({
   locale,
   projectId,
   forms,
-  answers,
+  people,
   activeShareExpiresAt,
 }: {
   locale: "en" | "fr";
   projectId: string;
   forms: ProjectFormRow[];
-  answers: Record<string, unknown>;
+  people: QuestionnairePerson[];
   activeShareExpiresAt: string | null;
 }) {
   const t = useTranslations("forms");
+  const tr = useTranslations("roles");
   const [addState, addAction, addPending] = useActionState(
     addFormToProjectAction,
     initialState,
@@ -73,29 +82,45 @@ export function ProjectFormsPanel({
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
   const [formCode, setFormCode] = useState<FormCode>("imm5475");
+  const personScoped = isPersonScopedForm(formCode);
+  const [personId, setPersonId] = useState(people[0]?.id ?? "");
+
+  const peopleById = useMemo(() => {
+    const map = new Map(people.map((p) => [p.id, p]));
+    return map;
+  }, [people]);
 
   const addOptions = [
     ...ADDABLE_COMPANION_FORMS,
     ...ALL_FORM_CODES.filter((c) => !ADDABLE_COMPANION_FORMS.includes(c)),
   ];
 
-  function handleSave(next: Record<string, unknown>, section: string) {
+  function handleSave(
+    nextPersonId: string,
+    next: Record<string, unknown>,
+    section: string,
+  ) {
     const fd = new FormData();
     fd.set("projectId", projectId);
+    fd.set("personId", nextPersonId);
     fd.set("locale", locale);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(next));
     saveAction(fd);
   }
 
-  function handleDownload(code?: string) {
-    const key = code ?? "all";
+  function handleDownload(formId?: string) {
+    const key = formId ?? "all";
     setGenError(null);
     setGenWarnings([]);
     setDownloadingKey(key);
     startGen(async () => {
       try {
-        const result = await generateProjectPdfsAction(projectId, locale, code);
+        const result = await generateProjectPdfsAction(
+          projectId,
+          locale,
+          formId,
+        );
         if (!result.ok) {
           setGenError(result.error);
           return;
@@ -146,50 +171,60 @@ export function ProjectFormsPanel({
               {t("todoEmpty")}
             </li>
           ) : (
-            forms.map((form) => (
-              <li
-                key={form.id}
-                className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-brand">
-                    {formTitle(form.form_code as FormCode, locale)}
-                  </p>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {form.form_code.toUpperCase()}
-                    {form.is_required ? ` · ${t("required")}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {t(`statuses.${form.status}`)}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-sm"
-                    disabled={genPending}
-                    onClick={() => handleDownload(form.form_code)}
-                    aria-label={
-                      downloadingKey === form.form_code
-                        ? t("downloading")
-                        : t("download")
-                    }
-                  >
-                    {downloadingKey === form.form_code ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Download className="size-4" />
-                    )}
-                  </Button>
-                </div>
-              </li>
-            ))
+            forms.map((form) => {
+              const assignee = form.person_id
+                ? peopleById.get(form.person_id)
+                : null;
+              return (
+                <li
+                  key={form.id}
+                  className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-brand">
+                      {formTitle(form.form_code as FormCode, locale)}
+                    </p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {form.form_code.toUpperCase()}
+                      {form.is_required ? ` · ${t("required")}` : ""}
+                      {assignee
+                        ? ` · ${assignee.displayName}`
+                        : ` · ${t("projectScoped")}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      {t(`statuses.${form.status}`)}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      disabled={genPending}
+                      onClick={() => handleDownload(form.id)}
+                      aria-label={
+                        downloadingKey === form.id
+                          ? t("downloading")
+                          : t("download")
+                      }
+                    >
+                      {downloadingKey === form.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Download className="size-4" />
+                      )}
+                    </Button>
+                  </div>
+                </li>
+              );
+            })
           )}
         </ul>
         {genError ? (
           <p className="text-sm text-destructive" role="alert">
-            {genError.startsWith("Enter") || genError.startsWith("Could")
+            {genError.startsWith("Enter") ||
+            genError.startsWith("Could") ||
+            genError.includes(":")
               ? genError
               : t("errors.generateFailed")}
           </p>
@@ -218,18 +253,41 @@ export function ProjectFormsPanel({
               {addOptions.map((code) => (
                 <option key={code} value={code}>
                   {formTitle(code, locale)}
-                  {forms.some((f) => f.form_code === code)
-                    ? ` · ${t("alreadyOnFile")}`
-                    : ""}
+                  {isPersonScopedForm(code)
+                    ? ` · ${t("scopePerson")}`
+                    : ` · ${t("scopeProject")}`}
                 </option>
               ))}
             </select>
           </div>
-          <Button type="submit" disabled={addPending}>
+          {personScoped ? (
+            <div className="min-w-[180px] space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">
+                {t("assignPerson")}
+              </label>
+              <select
+                name="personId"
+                value={personId}
+                onChange={(e) => setPersonId(e.target.value)}
+                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
+              >
+                {people.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.displayName} · {tr(person.role as never)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+          <Button type="submit" disabled={addPending || (personScoped && !personId)}>
             {addPending ? t("adding") : t("addForm")}
           </Button>
           {addState.error ? (
-            <p className="w-full text-sm text-destructive">{t("errors.addFailed")}</p>
+            <p className="w-full text-sm text-destructive">
+              {addState.error === "person_required"
+                ? t("errors.personRequired")
+                : t("errors.addFailed")}
+            </p>
           ) : null}
         </form>
       </section>
@@ -291,8 +349,7 @@ export function ProjectFormsPanel({
 
       <SurfaceCard>
         <ModularQuestionnaire
-          formCodes={forms.map((f) => f.form_code)}
-          initialAnswers={answers}
+          people={people}
           onSave={handleSave}
           pending={savePending}
           statusMessage={saveState.message === "saved" ? t("saved") : null}

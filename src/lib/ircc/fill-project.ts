@@ -29,8 +29,19 @@ import { fillImm5710Pdf } from "./fillers/imm5710";
 
 export type FilledForm = {
   code: string;
+  formId?: string;
+  personId?: string | null;
   filename: string;
   bytes: Uint8Array;
+};
+
+export type FillFormInstance = {
+  id?: string;
+  code: string;
+  personId?: string | null;
+  answers: Record<string, unknown>;
+  /** All form codes on the project (for checklist / companion context). */
+  projectFormCodes?: string[];
 };
 
 export type FillResult = {
@@ -221,23 +232,45 @@ function buildPrimaryPayload(
 }
 
 export async function fillProjectForms(input: {
-  formCodes: string[];
-  answers: Record<string, unknown>;
+  formCodes?: string[];
+  answers?: Record<string, unknown>;
+  /** Preferred: one entry per project_forms row with person-specific answers. */
+  instances?: FillFormInstance[];
 }): Promise<FillResult> {
-  const formCodes = [...new Set(input.formCodes.map((c) => c.toLowerCase()))];
-  const answers = toCompanionAnswers(input.answers, formCodes);
-  const lang = answers.formLanguage;
+  const instances: FillFormInstance[] =
+    input.instances ??
+    (input.formCodes ?? []).map((code) => ({
+      code,
+      answers: input.answers ?? {},
+      projectFormCodes: input.formCodes,
+    }));
+
   const warnings: string[] = [];
   const out: FilledForm[] = [];
+  const usedNames = new Set<string>();
 
-  if (!answers.familyName || !answers.givenName) {
-    throw new Error("Enter family name and given name before generating PDFs.");
-  }
-  if (!answers.dobYear || !answers.dobMonth || !answers.dobDay) {
-    throw new Error("Enter date of birth before generating PDFs.");
-  }
+  for (const instance of instances) {
+    const code = instance.code.toLowerCase();
+    const projectCodes = (
+      instance.projectFormCodes ?? instances.map((i) => i.code)
+    ).map((c) => c.toLowerCase());
+    const answers = toCompanionAnswers(instance.answers, projectCodes);
+    const lang = answers.formLanguage;
+    const label = `${answers.familyName || "form"} ${answers.givenName || ""}`.trim();
 
-  for (const code of formCodes) {
+    if (!answers.familyName || !answers.givenName) {
+      warnings.push(
+        `${code}${label ? ` (${label})` : ""}: enter family name and given name.`,
+      );
+      continue;
+    }
+    if (!answers.dobYear || !answers.dobMonth || !answers.dobDay) {
+      warnings.push(
+        `${code} (${answers.familyName}): enter date of birth before generating.`,
+      );
+      continue;
+    }
+
     try {
       let bytes: Uint8Array;
       if (code === "imm1294") {
@@ -261,9 +294,23 @@ export async function fillProjectForms(input: {
         bytes = await fillCompanion(code, lang, answers);
       }
 
-      const filename = `${code}${lang}_${answers.familyName}_${answers.givenName}.pdf`
+      let filename = `${code}${lang}_${answers.familyName}_${answers.givenName}.pdf`
         .replace(/[^\w.\-]+/g, "_");
-      out.push({ code, filename, bytes });
+      if (usedNames.has(filename)) {
+        const suffix = (instance.personId ?? instance.id ?? out.length)
+          .toString()
+          .slice(0, 8);
+        filename = filename.replace(/\.pdf$/, `_${suffix}.pdf`);
+      }
+      usedNames.add(filename);
+
+      out.push({
+        code,
+        formId: instance.id,
+        personId: instance.personId,
+        filename,
+        bytes,
+      });
     } catch (error) {
       warnings.push(
         `${code}: ${error instanceof Error ? error.message : String(error)}`,

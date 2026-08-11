@@ -277,6 +277,10 @@ export const projectForms = pgTable(
       .notNull()
       .references(() => immigrationProjects.id, { onDelete: "cascade" }),
     formCode: text("form_code").notNull(),
+    /** Set for person-scoped forms; null for project-scoped (checklists, IMM 5409). */
+    personId: uuid("person_id").references(() => people.id, {
+      onDelete: "set null",
+    }),
     status: projectFormStatusEnum("status").notNull().default("todo"),
     isRequired: boolean("is_required").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),

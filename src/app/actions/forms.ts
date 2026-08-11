@@ -4,19 +4,27 @@ import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { isFormCode } from "@/lib/ircc/catalog";
+import { isFormCode, isPersonScopedForm } from "@/lib/ircc/catalog";
+import {
+  answersForPersonFill,
+  mergePersonQuestionnaireSave,
+  normalizeAnswersStore,
+} from "@/lib/ircc/answers-store";
 import { fillProjectForms, zipFilledForms } from "@/lib/ircc/fill-project";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
 import {
-  fetchPrincipalEmail,
-  withPrincipalEmail,
-} from "@/lib/ircc/principal-email";
+  mergeAccountRepIntoAnswers,
+  PROFILE_REP_SELECT,
+} from "@/lib/ircc/account-rep";
 import {
+  PROJECT_SCOPED_ANSWER_KEYS,
   SHARE_LINK_TTL_DAYS,
   addProjectForm,
   getProjectFormAnswers,
+  listActiveProjectPeople,
   listProjectForms,
   saveShareAnswers,
+  syncPersonScopedFormsForParticipants,
   upsertProjectFormAnswers,
 } from "@/lib/ircc/project-forms";
 import { requireOrganizationId } from "@/lib/crm/queries";
@@ -43,10 +51,20 @@ export async function addFormToProjectAction(
 ): Promise<FormsActionState> {
   const projectId = String(formData.get("projectId") || "");
   const formCode = String(formData.get("formCode") || "");
+  const personIdRaw = String(formData.get("personId") || "");
   const locale = String(formData.get("locale") || "en");
 
   if (!z.string().uuid().safeParse(projectId).success || !isFormCode(formCode)) {
     return { error: "invalid" };
+  }
+
+  const personId =
+    personIdRaw && z.string().uuid().safeParse(personIdRaw).success
+      ? personIdRaw
+      : null;
+
+  if (isPersonScopedForm(formCode) && !personId) {
+    return { error: "person_required" };
   }
 
   const orgId = await requireOrganizationId();
@@ -57,6 +75,7 @@ export async function addFormToProjectAction(
       organizationId: orgId,
       projectId,
       formCode,
+      personId,
     });
   } catch {
     return { error: "add_failed" };
@@ -71,11 +90,15 @@ export async function saveProjectAnswersAction(
   formData: FormData,
 ): Promise<FormsActionState> {
   const projectId = String(formData.get("projectId") || "");
+  const personId = String(formData.get("personId") || "");
   const locale = String(formData.get("locale") || "en");
   const currentSection = String(formData.get("currentSection") || "") || null;
   const answersRaw = String(formData.get("answers") || "{}");
 
-  if (!z.string().uuid().safeParse(projectId).success) {
+  if (
+    !z.string().uuid().safeParse(projectId).success ||
+    !z.string().uuid().safeParse(personId).success
+  ) {
     return { error: "invalid" };
   }
 
@@ -90,6 +113,10 @@ export async function saveProjectAnswersAction(
   if (!orgId) return { error: "unauthorized" };
 
   const supabase = await createClient();
+  const people = await listActiveProjectPeople(supabase, projectId);
+  const person = people.find((p) => p.id === personId);
+  if (!person) return { error: "invalid" };
+
   const { data: project } = await supabase
     .from("immigration_projects")
     .select("form_language, representative_user_id")
@@ -97,36 +124,40 @@ export async function saveProjectAnswersAction(
     .eq("organization_id", orgId)
     .maybeSingle();
 
-  const {
-    mergeAccountRepIntoAnswers,
-    PROFILE_REP_SELECT,
-  } = await import("@/lib/ircc/account-rep");
   const repUserId = project?.representative_user_id as string | null;
-  const [{ data: repProfile }, principalEmail] = await Promise.all([
-    repUserId
-      ? supabase
-          .from("profiles")
-          .select(PROFILE_REP_SELECT)
-          .eq("id", repUserId)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    fetchPrincipalEmail(supabase, projectId),
-  ]);
+  const { data: repProfile } = repUserId
+    ? await supabase
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", repUserId)
+        .maybeSingle()
+    : { data: null };
 
+  const email = String(person.email ?? "").trim();
+  if (email) answers.email = email;
   answers.hasRepresentative = "Y";
-  answers = withPrincipalEmail(
-    withProjectFormLanguage(
-      mergeAccountRepIntoAnswers(answers, repProfile),
-      project?.form_language,
-    ),
-    principalEmail,
+  answers = withProjectFormLanguage(
+    mergeAccountRepIntoAnswers(answers, repProfile),
+    project?.form_language,
+  );
+
+  const principal = people.find((p) => p.role === "principal") ?? people[0];
+  const answersRow = await getProjectFormAnswers(projectId);
+  let store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+    principalPersonId: principal?.id,
+  });
+  store = mergePersonQuestionnaireSave(
+    store,
+    personId,
+    answers,
+    PROJECT_SCOPED_ANSWER_KEYS,
   );
 
   try {
     await upsertProjectFormAnswers({
       organizationId: orgId,
       projectId,
-      answers,
+      answers: store,
       currentSection,
     });
 
@@ -138,7 +169,8 @@ export async function saveProjectAnswersAction(
       })
       .eq("project_id", projectId)
       .eq("organization_id", orgId)
-      .eq("status", "todo");
+      .eq("status", "todo")
+      .or(`person_id.eq.${personId},person_id.is.null`);
   } catch {
     return { error: "save_failed" };
   }
@@ -153,10 +185,13 @@ export async function saveShareAnswersAction(
   formData: FormData,
 ): Promise<FormsActionState> {
   const token = String(formData.get("token") || "");
+  const personId = String(formData.get("personId") || "");
   const currentSection = String(formData.get("currentSection") || "") || null;
   const answersRaw = String(formData.get("answers") || "{}");
 
-  if (!token) return { error: "invalid" };
+  if (!token || !z.string().uuid().safeParse(personId).success) {
+    return { error: "invalid" };
+  }
 
   let answers: Record<string, unknown>;
   try {
@@ -168,7 +203,7 @@ export async function saveShareAnswersAction(
   answers.hasRepresentative = "Y";
 
   try {
-    await saveShareAnswers({ token, answers, currentSection });
+    await saveShareAnswers({ token, personId, answers, currentSection });
   } catch (error) {
     if (error instanceof Error && error.message === "expired") {
       return { error: "expired" };
@@ -196,7 +231,6 @@ export async function createFormShareLinkAction(
   const user = await getSessionUser();
   const supabase = await createClient();
 
-  // Revoke existing active links — data is kept; only the URL dies.
   await supabase
     .from("form_share_links")
     .update({ revoked_at: new Date().toISOString() })
@@ -258,7 +292,7 @@ export async function revokeFormShareLinkAction(
 export async function generateProjectPdfsAction(
   projectId: string,
   locale: string,
-  formCode?: string,
+  formIdOrCode?: string,
 ): Promise<
   | {
       ok: true;
@@ -277,7 +311,7 @@ export async function generateProjectPdfsAction(
   if (!orgId) return { ok: false, error: "unauthorized" };
 
   const supabase = await createClient();
-  const [forms, answersRow, project] = await Promise.all([
+  const [forms, answersRow, project, people] = await Promise.all([
     listProjectForms(projectId),
     getProjectFormAnswers(projectId),
     supabase
@@ -287,72 +321,85 @@ export async function generateProjectPdfsAction(
       .eq("organization_id", orgId)
       .maybeSingle()
       .then(({ data }) => data),
+    listActiveProjectPeople(supabase, projectId),
   ]);
 
   if (forms.length === 0) {
     return { ok: false, error: "no_forms" };
   }
 
-  const requestedCode = formCode?.trim().toLowerCase();
-  if (requestedCode) {
-    if (!isFormCode(requestedCode)) {
+  const requested = formIdOrCode?.trim();
+  let selected = forms;
+  if (requested) {
+    if (z.string().uuid().safeParse(requested).success) {
+      selected = forms.filter((f) => f.id === requested);
+    } else if (isFormCode(requested.toLowerCase())) {
+      selected = forms.filter(
+        (f) => f.form_code === requested.toLowerCase(),
+      );
+    } else {
       return { ok: false, error: "invalid" };
     }
-    if (!forms.some((f) => f.form_code === requestedCode)) {
+    if (selected.length === 0) {
       return { ok: false, error: "invalid" };
     }
   }
 
-  const formCodes = requestedCode
-    ? [requestedCode]
-    : forms.map((f) => f.form_code);
-
   try {
-    const {
-      mergeAccountRepIntoAnswers,
-      PROFILE_REP_SELECT,
-    } = await import("@/lib/ircc/account-rep");
     const repUserId = project?.representative_user_id as string | null;
-    const [{ data: repProfile }, principalEmail] = await Promise.all([
-      repUserId
-        ? supabase
-            .from("profiles")
-            .select(PROFILE_REP_SELECT)
-            .eq("id", repUserId)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      fetchPrincipalEmail(supabase, projectId),
-    ]);
+    const { data: repProfile } = repUserId
+      ? await supabase
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", repUserId)
+          .maybeSingle()
+      : { data: null };
 
-    const answers = withPrincipalEmail(
-      withProjectFormLanguage(
-        mergeAccountRepIntoAnswers(answersRow?.answers ?? {}, repProfile),
+    const principal = people.find((p) => p.role === "principal") ?? people[0];
+    const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+      principalPersonId: principal?.id,
+    });
+    const projectFormCodes = forms.map((f) => f.form_code);
+
+    const instances = selected.map((form) => {
+      const person = people.find((p) => p.id === form.person_id);
+      const raw = answersForPersonFill(store, form.person_id);
+      if (person?.email) raw.email = person.email;
+      const answers = withProjectFormLanguage(
+        mergeAccountRepIntoAnswers(raw, repProfile),
         project?.form_language,
-      ),
-      principalEmail,
-    );
-    const result = await fillProjectForms({
-      formCodes,
-      answers,
+      );
+      return {
+        id: form.id,
+        code: form.form_code,
+        personId: form.person_id,
+        answers,
+        projectFormCodes,
+      };
     });
 
-    await supabase
-      .from("project_forms")
-      .update({
-        status: "generated",
-        generated_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("project_id", projectId)
-      .eq("organization_id", orgId)
-      .in(
-        "form_code",
-        result.forms.map((f) => f.code),
-      );
+    const result = await fillProjectForms({ instances });
+
+    const generatedIds = result.forms
+      .map((f) => f.formId)
+      .filter((id): id is string => Boolean(id));
+
+    if (generatedIds.length > 0) {
+      await supabase
+        .from("project_forms")
+        .update({
+          status: "generated",
+          generated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("project_id", projectId)
+        .eq("organization_id", orgId)
+        .in("id", generatedIds);
+    }
 
     revalidatePath(`/${locale}/projects/${projectId}`);
 
-    if (requestedCode && result.forms.length === 1) {
+    if (selected.length === 1 && result.forms.length === 1) {
       const form = result.forms[0]!;
       return {
         ok: true,
@@ -387,26 +434,43 @@ export async function ensureProjectFormsSeeded(
   programFamily: string,
 ) {
   const supabase = await createClient();
+  const people = await listActiveProjectPeople(supabase, projectId);
+  const personIds = people.map((p) => p.id);
+
   const { data: existing } = await supabase
     .from("project_forms")
     .select("id")
     .eq("project_id", projectId)
     .limit(1);
 
-  if (existing && existing.length > 0) return;
+  if (!existing || existing.length === 0) {
+    const { expandSeedsForParticipants, seedFormsForProgram } = await import(
+      "@/lib/ircc/kits"
+    );
+    const seeds = expandSeedsForParticipants(
+      seedFormsForProgram(programFamily as never),
+      personIds,
+    );
+    await supabase.from("project_forms").insert(
+      seeds.map((seed) => ({
+        organization_id: organizationId,
+        project_id: projectId,
+        form_code: seed.formCode,
+        person_id: seed.personId,
+        is_required: seed.isRequired,
+        sort_order: seed.sortOrder,
+        status: "todo",
+      })),
+    );
+    return;
+  }
 
-  const { seedFormsForProgram } = await import("@/lib/ircc/kits");
-  const seeds = seedFormsForProgram(programFamily as never);
-  await supabase.from("project_forms").insert(
-    seeds.map((seed) => ({
-      organization_id: organizationId,
-      project_id: projectId,
-      form_code: seed.formCode,
-      is_required: seed.isRequired,
-      sort_order: seed.sortOrder,
-      status: "todo",
-    })),
-  );
+  // Existing projects: ensure every participant has person-scoped copies.
+  await syncPersonScopedFormsForParticipants({
+    organizationId,
+    projectId,
+    personIds,
+  });
 }
 
 export async function adminLoadShareProject(token: string) {

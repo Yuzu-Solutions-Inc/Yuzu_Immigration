@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClientFillForm } from "@/components/forms/client-fill-form";
+import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import { loadShareContext } from "@/lib/ircc/project-forms";
 
 export default async function ClientFillPage({
@@ -27,11 +28,18 @@ export default async function ClientFillPage({
     );
   }
 
+  const people: QuestionnairePerson[] = ctx.people.map((person) => ({
+    id: person.id,
+    displayName: `${person.firstName} ${person.lastName}`.trim(),
+    role: person.role,
+    formCodes: person.formCodes,
+    answers: person.answers,
+  }));
+
   return (
     <ClientFillForm
       token={token}
-      formCodes={ctx.forms.map((f) => f.form_code)}
-      initialAnswers={ctx.answers}
+      people={people}
       projectTitle={String(ctx.project.title)}
       expiresAt={ctx.expiresAt}
     />

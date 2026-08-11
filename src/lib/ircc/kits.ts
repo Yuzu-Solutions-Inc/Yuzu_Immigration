@@ -1,11 +1,16 @@
 import type { ProgramFamily } from "@/db/schema";
 
-import type { FormCode } from "./catalog";
+import { formScope, type FormCode } from "./catalog";
 
 export type KitSeedForm = {
   formCode: FormCode;
   isRequired: boolean;
   sortOrder: number;
+};
+
+export type ExpandedKitSeedForm = KitSeedForm & {
+  /** Null for project-scoped forms. */
+  personId: string | null;
 };
 
 /**
@@ -52,6 +57,38 @@ export function seedFormsForProgram(
       // Other programs: start with representative form; consultant adds the rest.
       return [alwaysRep];
   }
+}
+
+/**
+ * Expand kit seeds: person-scoped forms get one row per participant;
+ * project-scoped forms get a single unassigned row.
+ */
+export function expandSeedsForParticipants(
+  seeds: KitSeedForm[],
+  personIds: string[],
+): ExpandedKitSeedForm[] {
+  const people = personIds.filter(Boolean);
+  const out: ExpandedKitSeedForm[] = [];
+
+  for (const seed of seeds) {
+    if (formScope(seed.formCode) === "person") {
+      if (people.length === 0) {
+        out.push({ ...seed, personId: null });
+        continue;
+      }
+      people.forEach((personId, index) => {
+        out.push({
+          ...seed,
+          personId,
+          sortOrder: seed.sortOrder * 100 + index,
+        });
+      });
+    } else {
+      out.push({ ...seed, personId: null });
+    }
+  }
+
+  return out;
 }
 
 /** Optional companions a consultant can add via "Add form". */
