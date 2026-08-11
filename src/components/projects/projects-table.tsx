@@ -36,8 +36,24 @@ import type { ProjectRow } from "@/lib/crm/queries";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
 import { cn } from "@/lib/utils";
 
-type SortKey = "title" | "program_family" | "created_at" | "submit_before";
+type SortKey =
+  | "title"
+  | "program_family"
+  | "created_at"
+  | "submit_before"
+  | "representative";
 type SortDir = "asc" | "desc";
+
+type MemberOption = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+};
+
+function staffLabel(member: MemberOption | null | undefined) {
+  if (!member) return "";
+  return member.full_name || member.email || "";
+}
 
 function formatDate(isoDate: string | null, locale: string) {
   if (!isoDate) return null;
@@ -58,7 +74,13 @@ function compareNullableDates(a: string | null, b: string | null) {
 const selectClassName =
   "h-8 w-full min-w-[8.5rem] rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
-export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
+export function ProjectsTable({
+  projects,
+  members,
+}: {
+  projects: ProjectRow[];
+  members: MemberOption[];
+}) {
   const t = useTranslations("projects");
   const tprog = useTranslations("programs");
   const locale = useLocale();
@@ -72,6 +94,9 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">(
     "all",
   );
+  const [representativeFilter, setRepresentativeFilter] = useState<
+    string | "all" | "unassigned"
+  >("all");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -93,6 +118,14 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
       if (statusFilter !== "all" && project.status !== statusFilter) {
         return false;
       }
+      if (representativeFilter === "unassigned") {
+        if (project.representative_user_id) return false;
+      } else if (
+        representativeFilter !== "all" &&
+        project.representative_user_id !== representativeFilter
+      ) {
+        return false;
+      }
       return true;
     });
 
@@ -104,6 +137,12 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
         cmp = a.program_family.localeCompare(b.program_family);
       } else if (sortKey === "created_at") {
         cmp = a.created_at.localeCompare(b.created_at);
+      } else if (sortKey === "representative") {
+        const aLabel =
+          a.representative?.full_name || a.representative?.email || "";
+        const bLabel =
+          b.representative?.full_name || b.representative?.email || "";
+        cmp = aLabel.localeCompare(bLabel, undefined, { sensitivity: "base" });
       } else {
         cmp = compareNullableDates(a.submit_before, b.submit_before);
       }
@@ -116,6 +155,7 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
     deferredName,
     programFilter,
     statusFilter,
+    representativeFilter,
     sortKey,
     sortDir,
   ]);
@@ -313,9 +353,31 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
             ))}
           </select>
         </div>
+        <div className="min-w-[10rem] space-y-1.5 sm:w-48">
+          <Label htmlFor="projects-filter-rep">{t("filterRepresentative")}</Label>
+          <select
+            id="projects-filter-rep"
+            value={representativeFilter}
+            onChange={(e) =>
+              setRepresentativeFilter(
+                e.target.value as string | "all" | "unassigned",
+              )
+            }
+            className={selectClassName}
+          >
+            <option value="all">{t("filterAll")}</option>
+            <option value="unassigned">{t("representativeUnassigned")}</option>
+            {members.map((member) => (
+              <option key={member.user_id} value={member.user_id}>
+                {staffLabel(member) || member.user_id}
+              </option>
+            ))}
+          </select>
+        </div>
         {(nameQuery ||
           programFilter !== "all" ||
-          statusFilter !== "all") && (
+          statusFilter !== "all" ||
+          representativeFilter !== "all") && (
           <Button
             type="button"
             variant="outline"
@@ -324,6 +386,7 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
               setNameQuery("");
               setProgramFilter("all");
               setStatusFilter("all");
+              setRepresentativeFilter("all");
             }}
           >
             {t("clearFilters")}
@@ -381,6 +444,12 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
               </TableHead>
               <TableHead>{t("columnStatus")}</TableHead>
               <TableHead>
+                <SortButton
+                  column="representative"
+                  label={t("columnRepresentative")}
+                />
+              </TableHead>
+              <TableHead>
                 <SortButton column="created_at" label={t("columnCreated")} />
               </TableHead>
               <TableHead>
@@ -395,7 +464,7 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
             {filteredSorted.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="h-24 text-center text-muted-foreground whitespace-normal"
                 >
                   {t("noMatches")}
@@ -451,6 +520,11 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
                           </option>
                         ))}
                       </select>
+                    </TableCell>
+                    <TableCell className="whitespace-normal text-muted-foreground">
+                      {project.representative?.full_name ||
+                        project.representative?.email ||
+                        t("representativeUnassigned")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(project.created_at, locale) ?? "—"}

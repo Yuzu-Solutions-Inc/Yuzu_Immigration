@@ -7,7 +7,7 @@ import { useState } from "react";
 import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
-import { SettingsMenu } from "@/components/layout/settings-menu";
+import { SettingsNavLinks } from "@/components/layout/settings-menu";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -86,15 +86,9 @@ function SidebarBody({
         })}
       </nav>
 
-      <div className="mt-auto space-y-1 border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-2 px-0.5 pb-1">
-          <LocaleSwitcher
-            className="min-w-0 flex-1"
-            variant="sidebar"
-            compact
-          />
-          <SettingsMenu variant="sidebar" onNavigate={onNavigate} />
-        </div>
+      <div className="mt-auto space-y-2 border-t border-sidebar-border p-3">
+        <LocaleSwitcher className="w-full px-0.5" variant="sidebar" />
+        <SettingsNavLinks onNavigate={onNavigate} />
         <form action={signOutAction}>
           <input type="hidden" name="locale" value={locale} />
           <button
@@ -118,7 +112,7 @@ export function DesktopSidebar({
   newProjectLabel: string;
 }) {
   return (
-    <aside className="hidden w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto bg-sidebar text-sidebar-foreground lg:flex">
       <SidebarBody orgName={orgName} newProjectLabel={newProjectLabel} />
     </aside>
   );

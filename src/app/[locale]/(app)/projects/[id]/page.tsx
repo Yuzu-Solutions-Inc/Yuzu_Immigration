@@ -67,7 +67,8 @@ export default async function ProjectDetailPage({
           </h1>
           <p className="text-[15px] text-muted-foreground">
             {tprog(project.program_family)} ·{" "}
-            {t(`jurisdictions.${project.jurisdiction}`)}
+            {t(`jurisdictions.${project.jurisdiction}`)} ·{" "}
+            {t(`formLanguages.${project.form_language === "fr" ? "fr" : "en"}`)}
           </p>
           {project.description ? (
             <p className="max-w-2xl text-sm text-brand/80">
@@ -86,7 +87,7 @@ export default async function ProjectDetailPage({
         </Link>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         <ProjectStatusCard
           locale={locale}
           projectId={project.id}
@@ -112,7 +113,17 @@ export default async function ProjectDetailPage({
             {opened}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated sm:col-span-1">
+        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("representative")}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-semibold text-brand">
+            {project.representative?.full_name ||
+              project.representative?.email ||
+              t("representativeUnassigned")}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
           <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             {t("notes")}
           </p>

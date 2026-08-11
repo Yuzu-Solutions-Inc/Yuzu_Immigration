@@ -22,6 +22,19 @@ export type PersonRow = {
   updated_at: string;
 };
 
+export type StaffProfileRow = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+};
+
+export type OrgMemberRow = {
+  id: string;
+  user_id: string;
+  role: "owner" | "admin" | "member";
+  profile: StaffProfileRow;
+};
+
 export type ProjectRow = {
   id: string;
   organization_id: string;
@@ -33,10 +46,13 @@ export type ProjectRow = {
   submit_before: string | null;
   jurisdiction: ProjectJurisdiction;
   program_family: ProgramFamily;
+  form_language: "en" | "fr";
+  representative_user_id: string | null;
   opened_at: string;
   closed_at: string | null;
   created_at: string;
   updated_at: string;
+  representative?: StaffProfileRow | null;
 };
 
 export type ParticipantRow = {
@@ -128,6 +144,60 @@ export async function getPerson(personId: string): Promise<PersonRow | null> {
   return data as PersonRow | null;
 }
 
+export async function listOrgMembers(): Promise<OrgMemberRow[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data: members, error } = await supabase
+    .from("organization_members")
+    .select("id, user_id, role")
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("listOrgMembers:", error.message);
+    return [];
+  }
+
+  const userIds = (members ?? []).map((m) => m.user_id as string);
+  if (userIds.length === 0) return [];
+
+  const { data: profiles, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", userIds);
+
+  if (profileError) {
+    console.error("listOrgMembers profiles:", profileError.message);
+    return [];
+  }
+
+  const profileById = new Map(
+    (profiles ?? []).map((p) => [p.id as string, p as StaffProfileRow]),
+  );
+
+  return (members ?? [])
+    .map((m) => {
+      const profile = profileById.get(m.user_id as string);
+      if (!profile) return null;
+      return {
+        id: m.id as string,
+        user_id: m.user_id as string,
+        role: m.role as OrgMemberRow["role"],
+        profile,
+      };
+    })
+    .filter((row): row is OrgMemberRow => row !== null)
+    .sort((a, b) =>
+      (a.profile.full_name || a.profile.email || "").localeCompare(
+        b.profile.full_name || b.profile.email || "",
+        undefined,
+        { sensitivity: "base" },
+      ),
+    );
+}
+
 export async function listProjects(): Promise<ProjectRow[]> {
   const orgId = await requireOrganizationId();
   if (!orgId) return [];
@@ -144,7 +214,40 @@ export async function listProjects(): Promise<ProjectRow[]> {
     console.error("listProjects:", error.message);
     return [];
   }
-  return (data ?? []) as ProjectRow[];
+
+  const projects = (data ?? []) as ProjectRow[];
+  const repIds = [
+    ...new Set(
+      projects
+        .map((p) => p.representative_user_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  if (repIds.length === 0) {
+    return projects.map((p) => ({ ...p, representative: null }));
+  }
+
+  const { data: profiles, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", repIds);
+
+  if (profileError) {
+    console.error("listProjects representatives:", profileError.message);
+    return projects.map((p) => ({ ...p, representative: null }));
+  }
+
+  const profileById = new Map(
+    (profiles ?? []).map((p) => [p.id as string, p as StaffProfileRow]),
+  );
+
+  return projects.map((p) => ({
+    ...p,
+    representative: p.representative_user_id
+      ? (profileById.get(p.representative_user_id) ?? null)
+      : null,
+  }));
 }
 
 export async function getProject(projectId: string): Promise<ProjectRow | null> {
@@ -163,7 +266,23 @@ export async function getProject(projectId: string): Promise<ProjectRow | null> 
     console.error("getProject:", error.message);
     return null;
   }
-  return data as ProjectRow | null;
+  if (!data) return null;
+
+  const project = data as ProjectRow;
+  if (!project.representative_user_id) {
+    return { ...project, representative: null };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("id", project.representative_user_id)
+    .maybeSingle();
+
+  return {
+    ...project,
+    representative: (profile as StaffProfileRow | null) ?? null,
+  };
 }
 
 export type ProjectStatusHistoryRow = {

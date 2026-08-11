@@ -30,23 +30,13 @@ export const QUESTIONNAIRE_SECTIONS = [
   "situation",
   "study",
   "work",
-  "representative",
 ] as const;
 
 export type QuestionnaireSection = (typeof QUESTIONNAIRE_SECTIONS)[number];
 
 /** Ask-once field registry. Labels live in messages under forms.fields.* */
 export const CANONICAL_FIELDS: CanonicalField[] = [
-  {
-    key: "formLanguage",
-    section: "basics",
-    type: "select",
-    required: true,
-    options: [
-      { value: "e", labelKey: "langEnglish" },
-      { value: "f", labelKey: "langFrench" },
-    ],
-  },
+  // formLanguage comes from immigration_projects.form_language (not asked here).
   {
     key: "email",
     section: "basics",
@@ -329,53 +319,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     maxLength: 400,
     forms: ["imm1295", "imm5710"],
   },
-  // Representative — prefilled from org; client can confirm
-  {
-    key: "repFamilyName",
-    section: "representative",
-    type: "text",
-    required: true,
-    maxLength: 80,
-    forms: ["imm5476"],
-  },
-  {
-    key: "repGivenName",
-    section: "representative",
-    type: "text",
-    required: true,
-    maxLength: 80,
-    forms: ["imm5476"],
-  },
-  {
-    key: "repOrganization",
-    section: "representative",
-    type: "text",
-    maxLength: 120,
-    forms: ["imm5476"],
-  },
-  {
-    key: "repMembershipId",
-    section: "representative",
-    type: "text",
-    maxLength: 40,
-    forms: ["imm5476"],
-    helpKey: "membershipHelp",
-  },
-  {
-    key: "repEmail",
-    section: "representative",
-    type: "email",
-    required: true,
-    maxLength: 120,
-    forms: ["imm5476"],
-  },
-  {
-    key: "repPhone",
-    section: "representative",
-    type: "tel",
-    maxLength: 40,
-    forms: ["imm5476"],
-  },
+  // Representative block comes from Organization settings (IMM 5476), not the client questionnaire.
 ];
 
 export function fieldsForFormCodes(formCodes: string[]): CanonicalField[] {

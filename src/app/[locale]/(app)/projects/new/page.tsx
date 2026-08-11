@@ -3,7 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { CreateProjectForm } from "@/components/projects/create-project-form";
 import { Link } from "@/i18n/navigation";
-import { listPeople } from "@/lib/crm/queries";
+import { getSessionUser } from "@/lib/auth/session";
+import { listOrgMembers, listPeople } from "@/lib/crm/queries";
 
 export default async function NewProjectPage({
   params,
@@ -17,7 +18,11 @@ export default async function NewProjectPage({
   setRequestLocale(locale);
 
   const t = await getTranslations("projects");
-  const people = await listPeople();
+  const [people, members, user] = await Promise.all([
+    listPeople(),
+    listOrgMembers(),
+    getSessionUser(),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -36,8 +41,14 @@ export default async function NewProjectPage({
 
       <SurfaceCard>
         <CreateProjectForm
-          locale={locale === "fr" ? "fr" : "en"}
+          locale={locale}
           people={people}
+          members={members.map((m) => ({
+            user_id: m.user_id,
+            full_name: m.profile.full_name,
+            email: m.profile.email,
+          }))}
+          currentUserId={user?.id}
           presetPersonId={presetPersonId}
         />
       </SurfaceCard>

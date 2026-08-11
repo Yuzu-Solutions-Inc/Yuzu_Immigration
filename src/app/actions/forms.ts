@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { isFormCode } from "@/lib/ircc/catalog";
 import { fillProjectForms, zipFilledForms } from "@/lib/ircc/fill-project";
+import { withProjectFormLanguage } from "@/lib/ircc/form-language";
 import {
   SHARE_LINK_TTL_DAYS,
   addProjectForm,
@@ -84,7 +85,16 @@ export async function saveProjectAnswersAction(
   const orgId = await requireOrganizationId();
   if (!orgId) return { error: "unauthorized" };
 
+  const supabase = await createClient();
+  const { data: project } = await supabase
+    .from("immigration_projects")
+    .select("form_language")
+    .eq("id", projectId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
   answers.hasRepresentative = "Y";
+  answers = withProjectFormLanguage(answers, project?.form_language);
 
   try {
     await upsertProjectFormAnswers({
@@ -94,7 +104,6 @@ export async function saveProjectAnswersAction(
       currentSection,
     });
 
-    const supabase = await createClient();
     await supabase
       .from("project_forms")
       .update({
@@ -234,9 +243,25 @@ export async function generateProjectPdfsAction(
   const orgId = await requireOrganizationId();
   if (!orgId) return { ok: false, error: "unauthorized" };
 
-  const [forms, answersRow] = await Promise.all([
+  const supabase = await createClient();
+  const [forms, answersRow, project, org] = await Promise.all([
     listProjectForms(projectId),
     getProjectFormAnswers(projectId),
+    supabase
+      .from("immigration_projects")
+      .select("form_language")
+      .eq("id", projectId)
+      .eq("organization_id", orgId)
+      .maybeSingle()
+      .then(({ data }) => data),
+    supabase
+      .from("organizations")
+      .select(
+        "name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
+      )
+      .eq("id", orgId)
+      .maybeSingle()
+      .then(({ data }) => data),
   ]);
 
   if (forms.length === 0) {
@@ -244,12 +269,16 @@ export async function generateProjectPdfsAction(
   }
 
   try {
+    const { mergeOrgRepIntoAnswers } = await import("@/lib/ircc/org-rep");
+    const answers = withProjectFormLanguage(
+      mergeOrgRepIntoAnswers(answersRow?.answers ?? {}, org),
+      project?.form_language,
+    );
     const result = await fillProjectForms({
       formCodes: forms.map((f) => f.form_code),
-      answers: answersRow?.answers ?? {},
+      answers,
     });
     const zip = await zipFilledForms(result.forms);
-    const supabase = await createClient();
     await supabase
       .from("project_forms")
       .update({

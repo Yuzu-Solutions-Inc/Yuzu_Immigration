@@ -170,6 +170,12 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .notNull()
     .default("federal"),
   programFamily: programFamilyEnum("program_family").notNull().default("other"),
+  /** IRCC PDF blank language: en or fr. */
+  formLanguage: text("form_language").notNull().default("en"),
+  representativeUserId: uuid("representative_user_id").references(
+    () => profiles.id,
+    { onDelete: "set null" },
+  ),
   openedAt: timestamp("opened_at", { withTimezone: true }).defaultNow().notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -4,6 +4,7 @@ import type { ProgramFamily } from "@/db/schema";
 import { seedFormsForProgram } from "@/lib/ircc/kits";
 import type { FormCode } from "@/lib/ircc/catalog";
 import { isFormCode } from "@/lib/ircc/catalog";
+import { withProjectFormLanguage } from "@/lib/ircc/form-language";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -223,41 +224,51 @@ export async function loadShareContext(token: string) {
   if (!resolved) return null;
 
   const admin = createServiceClient();
-  const [{ data: project }, { data: forms }, { data: answers }, { data: org }] =
-    await Promise.all([
-      admin
-        .from("immigration_projects")
-        .select("id, title, program_family, organization_id")
-        .eq("id", resolved.projectId)
-        .maybeSingle(),
-      admin
-        .from("project_forms")
-        .select("*")
-        .eq("project_id", resolved.projectId)
-        .order("sort_order", { ascending: true }),
-      admin
-        .from("project_form_answers")
-        .select("*")
-        .eq("project_id", resolved.projectId)
-        .maybeSingle(),
-      admin
-        .from("organizations")
-        .select(
-          "id, name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
-        )
-        .eq("id", resolved.organizationId)
-        .maybeSingle(),
-    ]);
+  const [projectRes, formsRes, answersRes, orgRes] = await Promise.all([
+    admin
+      .from("immigration_projects")
+      .select("id, title, program_family, organization_id, form_language")
+      .eq("id", resolved.projectId)
+      .maybeSingle(),
+    admin
+      .from("project_forms")
+      .select("*")
+      .eq("project_id", resolved.projectId)
+      .order("sort_order", { ascending: true }),
+    admin
+      .from("project_form_answers")
+      .select("*")
+      .eq("project_id", resolved.projectId)
+      .maybeSingle(),
+    admin
+      .from("organizations")
+      .select(
+        "id, name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
+      )
+      .eq("id", resolved.organizationId)
+      .maybeSingle(),
+  ]);
 
-  if (!project) return null;
+  const loadError =
+    projectRes.error || formsRes.error || answersRes.error || orgRes.error;
+  if (loadError) {
+    console.error("loadShareContext:", loadError.message);
+    throw new Error(`share_context_failed: ${loadError.message}`);
+  }
+
+  if (!projectRes.data) return null;
 
   return {
     ...resolved,
-    project,
-    forms: (forms ?? []) as ProjectFormRow[],
-    answers: (answers?.answers ?? {}) as Record<string, unknown>,
-    currentSection: (answers?.current_section as string | null) ?? null,
-    organization: org,
+    project: projectRes.data,
+    forms: (formsRes.data ?? []) as ProjectFormRow[],
+    answers: withProjectFormLanguage(
+      (answersRes.data?.answers ?? {}) as Record<string, unknown>,
+      projectRes.data.form_language,
+    ),
+    currentSection:
+      (answersRes.data?.current_section as string | null) ?? null,
+    organization: orgRes.data,
   };
 }
 
@@ -271,11 +282,22 @@ export async function saveShareAnswers(input: {
     throw new Error("expired");
   }
   const admin = createServiceClient();
+  const { data: project } = await admin
+    .from("immigration_projects")
+    .select("form_language")
+    .eq("id", resolved.projectId)
+    .maybeSingle();
+
+  const answers = withProjectFormLanguage(
+    input.answers,
+    project?.form_language,
+  );
+
   const { error } = await admin.from("project_form_answers").upsert(
     {
       organization_id: resolved.organizationId,
       project_id: resolved.projectId,
-      answers: input.answers,
+      answers,
       current_section: input.currentSection ?? null,
       updated_at: new Date().toISOString(),
     },

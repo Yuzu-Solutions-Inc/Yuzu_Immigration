@@ -38,6 +38,12 @@ type ExistingPerson = {
   email: string | null;
 };
 
+type OrgMemberOption = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+};
+
 export type ProjectFormSlot = {
   role: ParticipantRole;
   mode: "new" | "existing";
@@ -60,6 +66,8 @@ export type ProjectFormInitial = {
   composition: ProjectComposition;
   programFamily: ProgramFamily;
   jurisdiction: ProjectJurisdiction;
+  formLanguage: "en" | "fr";
+  representativeUserId: string;
   slots: ProjectFormSlot[];
 };
 
@@ -81,11 +89,15 @@ function emptySlot(role: ParticipantRole): ProjectFormSlot {
 export function ProjectForm({
   locale,
   people,
+  members,
+  currentUserId,
   presetPersonId,
   initial,
 }: {
-  locale: "en" | "fr";
+  locale: string;
   people: ExistingPerson[];
+  members: OrgMemberOption[];
+  currentUserId?: string;
   presetPersonId?: string;
   initial?: ProjectFormInitial;
 }) {
@@ -104,6 +116,9 @@ export function ProjectForm({
   const [jurisdiction, setJurisdiction] = useState<ProjectJurisdiction>(
     initial?.jurisdiction ?? defaultJurisdictionForProgram("express_entry"),
   );
+  const [formLanguage, setFormLanguage] = useState<"en" | "fr">(
+    initial?.formLanguage ?? (locale === "fr" ? "fr" : "en"),
+  );
   const [status, setStatus] = useState<ProjectStatus>(
     initial?.status ?? "new",
   );
@@ -112,6 +127,12 @@ export function ProjectForm({
   );
   const [submitBefore, setSubmitBefore] = useState(
     initial?.submitBefore ?? "",
+  );
+  const [representativeUserId, setRepresentativeUserId] = useState(
+    initial?.representativeUserId ||
+      currentUserId ||
+      members[0]?.user_id ||
+      "",
   );
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -219,9 +240,15 @@ export function ProjectForm({
       <input type="hidden" name="composition" value={composition} />
       <input type="hidden" name="programFamily" value={programFamily} />
       <input type="hidden" name="jurisdiction" value={jurisdiction} />
+      <input type="hidden" name="formLanguage" value={formLanguage} />
       <input type="hidden" name="status" value={status} />
       <input type="hidden" name="statusAt" value={statusAt} />
       <input type="hidden" name="submitBefore" value={submitBefore} />
+      <input
+        type="hidden"
+        name="representativeUserId"
+        value={representativeUserId}
+      />
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="description" value={description} />
       <input type="hidden" name="notes" value={notes} />
@@ -270,7 +297,7 @@ export function ProjectForm({
               required
             />
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-2">
             <Label htmlFor="submitBefore">{t("submitBefore")}</Label>
             <Input
               id="submitBefore"
@@ -282,17 +309,65 @@ export function ProjectForm({
               {t("submitBeforeHelp")}
             </p>
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="representative">{t("representative")}</Label>
+            <select
+              id="representative"
+              value={representativeUserId}
+              onChange={(e) => setRepresentativeUserId(e.target.value)}
+              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              required={members.length > 0}
+            >
+              {members.length === 0 ? (
+                <option value="">{t("representativeEmpty")}</option>
+              ) : (
+                members.map((member) => (
+                  <option key={member.user_id} value={member.user_id}>
+                    {member.full_name || member.email || member.user_id}
+                  </option>
+                ))
+              )}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              {t("representativeHelp")}
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          <Label htmlFor="submitBefore">{t("submitBefore")}</Label>
-          <Input
-            id="submitBefore"
-            type="date"
-            value={submitBefore}
-            onChange={(e) => setSubmitBefore(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">{t("submitBeforeHelp")}</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="submitBefore">{t("submitBefore")}</Label>
+            <Input
+              id="submitBefore"
+              type="date"
+              value={submitBefore}
+              onChange={(e) => setSubmitBefore(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">{t("submitBeforeHelp")}</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="representative">{t("representative")}</Label>
+            <select
+              id="representative"
+              value={representativeUserId}
+              onChange={(e) => setRepresentativeUserId(e.target.value)}
+              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              required={members.length > 0}
+            >
+              {members.length === 0 ? (
+                <option value="">{t("representativeEmpty")}</option>
+              ) : (
+                members.map((member) => (
+                  <option key={member.user_id} value={member.user_id}>
+                    {member.full_name || member.email || member.user_id}
+                  </option>
+                ))
+              )}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              {t("representativeHelp")}
+            </p>
+          </div>
         </div>
       )}
 
@@ -374,6 +449,21 @@ export function ProjectForm({
             <option value="quebec">{t("jurisdictions.quebec")}</option>
             <option value="both">{t("jurisdictions.both")}</option>
           </select>
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="formLanguage">{t("formLanguage")}</Label>
+          <select
+            id="formLanguage"
+            value={formLanguage}
+            onChange={(e) =>
+              setFormLanguage(e.target.value === "fr" ? "fr" : "en")
+            }
+            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+          >
+            <option value="en">{t("formLanguages.en")}</option>
+            <option value="fr">{t("formLanguages.fr")}</option>
+          </select>
+          <p className="text-xs text-muted-foreground">{t("formLanguageHelp")}</p>
         </div>
       </div>
 
@@ -567,8 +657,10 @@ export function ProjectForm({
 
 /** @deprecated Prefer ProjectForm */
 export function CreateProjectForm(props: {
-  locale: "en" | "fr";
+  locale: string;
   people: ExistingPerson[];
+  members: OrgMemberOption[];
+  currentUserId?: string;
   presetPersonId?: string;
 }) {
   return <ProjectForm {...props} />;

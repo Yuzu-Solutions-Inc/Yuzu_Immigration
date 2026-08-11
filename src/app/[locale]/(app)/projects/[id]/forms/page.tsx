@@ -35,6 +35,11 @@ export default async function ProjectFormsPage({
     getActiveShareLink(id),
   ]);
   const t = await getTranslations("forms");
+  const { withProjectFormLanguage } = await import("@/lib/ircc/form-language");
+  const answers = withProjectFormLanguage(
+    answersRow?.answers ?? {},
+    project.form_language,
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -56,7 +61,7 @@ export default async function ProjectFormsPage({
           locale={locale === "fr" ? "fr" : "en"}
           projectId={project.id}
           forms={forms}
-          answers={answersRow?.answers ?? {}}
+          answers={answers}
           activeShareExpiresAt={share?.expires_at ?? null}
         />
       </SurfaceCard>

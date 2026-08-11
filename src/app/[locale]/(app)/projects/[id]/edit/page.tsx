@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectForm } from "@/components/projects/project-form";
 import { Link } from "@/i18n/navigation";
+import { getSessionUser } from "@/lib/auth/session";
 import { inferCompositionFromRoles } from "@/lib/crm/programs";
 import {
   getProject,
   getProjectParticipants,
+  listOrgMembers,
   listPeople,
 } from "@/lib/crm/queries";
 
@@ -22,9 +24,11 @@ export default async function EditProjectPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const [participants, people, t] = await Promise.all([
+  const [participants, people, members, user, t] = await Promise.all([
     getProjectParticipants(id),
     listPeople(),
+    listOrgMembers(),
+    getSessionUser(),
     getTranslations("projects"),
   ]);
 
@@ -60,8 +64,14 @@ export default async function EditProjectPage({
 
       <SurfaceCard>
         <ProjectForm
-          locale={locale === "fr" ? "fr" : "en"}
+          locale={locale}
           people={people}
+          members={members.map((m) => ({
+            user_id: m.user_id,
+            full_name: m.profile.full_name,
+            email: m.profile.email,
+          }))}
+          currentUserId={user?.id}
           initial={{
             projectId: project.id,
             title: project.title,
@@ -73,6 +83,9 @@ export default async function EditProjectPage({
             composition,
             programFamily: project.program_family,
             jurisdiction: project.jurisdiction,
+            formLanguage:
+              project.form_language === "fr" ? "fr" : "en",
+            representativeUserId: project.representative_user_id ?? "",
             slots: slots.length
               ? slots
               : [

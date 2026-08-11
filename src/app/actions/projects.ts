@@ -70,6 +70,7 @@ const projectFieldsSchema = z.object({
   composition: z.enum(["individual", "couple", "family"]),
   programFamily: z.enum(PROGRAM_FAMILIES as [ProgramFamily, ...ProgramFamily[]]),
   jurisdiction: z.enum(["federal", "quebec", "both"]).optional(),
+  formLanguage: z.enum(["en", "fr"]).default("en"),
   title: z.string().trim().max(200).optional(),
   description: z.string().trim().max(500).optional().or(z.literal("")),
   notes: z.string().trim().max(10000).optional().or(z.literal("")),
@@ -83,6 +84,7 @@ const projectFieldsSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .or(z.literal("")),
+  representativeUserId: z.string().uuid().optional().or(z.literal("")),
   participants: z.array(participantInputSchema).min(1),
 });
 
@@ -112,16 +114,20 @@ function programLabel(family: ProgramFamily, locale: string) {
 }
 
 function parseProjectForm(formData: FormData) {
-  const locale = (formData.get("locale") as "en" | "fr") || "en";
+  const locale = (formData.get("locale") as "en" | "fr" | "es") || "en";
   const composition = formData.get("composition") as ProjectComposition;
   const programFamily = formData.get("programFamily") as ProgramFamily;
   const jurisdictionRaw = String(formData.get("jurisdiction") || "");
+  const formLanguageRaw = String(formData.get("formLanguage") || "").trim();
   const titleRaw = String(formData.get("title") || "").trim();
   const descriptionRaw = String(formData.get("description") || "").trim();
   const notesRaw = String(formData.get("notes") || "").trim();
   const statusRaw = String(formData.get("status") || "").trim();
   const statusAtRaw = String(formData.get("statusAt") || "").trim();
   const submitBeforeRaw = String(formData.get("submitBefore") || "").trim();
+  const representativeUserIdRaw = String(
+    formData.get("representativeUserId") || "",
+  ).trim();
 
   const participantsJson = String(formData.get("participants") || "[]");
   let participantsParsed: unknown;
@@ -136,12 +142,14 @@ function parseProjectForm(formData: FormData) {
     composition,
     programFamily,
     jurisdiction: jurisdictionRaw || undefined,
+    formLanguage: formLanguageRaw || (locale === "fr" ? "fr" : "en"),
     title: titleRaw || undefined,
     description: descriptionRaw || undefined,
     notes: notesRaw || undefined,
     status: statusRaw || undefined,
     statusAt: statusAtRaw || undefined,
     submitBefore: submitBeforeRaw || undefined,
+    representativeUserId: representativeUserIdRaw || undefined,
     participants: participantsParsed,
   });
 
@@ -244,6 +252,28 @@ async function resolveParticipants(
   return { people: resolvedPeople };
 }
 
+async function resolveRepresentativeUserId(
+  orgId: string,
+  requestedId: string | undefined,
+  fallbackUserId: string | null,
+): Promise<string | null> {
+  const candidate = requestedId || fallbackUserId;
+  if (!candidate) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("user_id")
+    .eq("organization_id", orgId)
+    .eq("user_id", candidate)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+  return data.user_id as string;
+}
+
 export async function createProjectAction(
   _prev: ProjectActionState,
   formData: FormData,
@@ -278,6 +308,13 @@ export async function createProjectAction(
 
   const statusAt = new Date().toISOString().slice(0, 10);
   const submitBefore = data.submitBefore || null;
+  const user = await getSessionUser();
+  const representativeUserId = await resolveRepresentativeUserId(
+    orgId,
+    data.representativeUserId || undefined,
+    user?.id ?? null,
+  );
+
   const { data: project, error: projectError } = await supabase
     .from("immigration_projects")
     .insert({
@@ -290,6 +327,8 @@ export async function createProjectAction(
       submit_before: submitBefore,
       jurisdiction,
       program_family: data.programFamily,
+      form_language: data.formLanguage,
+      representative_user_id: representativeUserId,
     })
     .select("id")
     .single();
@@ -299,7 +338,6 @@ export async function createProjectAction(
     return { error: "create_failed" };
   }
 
-  const user = await getSessionUser();
   await recordProjectStatusHistory(supabase, {
     organizationId: orgId,
     projectId: project.id as string,
@@ -347,27 +385,16 @@ export async function createProjectAction(
       .eq("id", orgId)
       .maybeSingle();
 
+    const { orgRepAnswersFromOrg } = await import("@/lib/ircc/org-rep");
+    const { toIrccFormLanguage } = await import("@/lib/ircc/form-language");
     const principal = resolved.people.find((p) => p.role === "principal");
     const nameParts = (principal?.displayName || "").split(/\s+/);
     const initialAnswers: Record<string, unknown> = {
-      hasRepresentative: "Y",
-      formLanguage: data.locale === "fr" ? "f" : "e",
+      formLanguage: toIrccFormLanguage(data.formLanguage),
       familyName: nameParts.length > 1 ? nameParts.at(-1) : nameParts[0] || "",
       givenName:
         nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "",
-      repFamilyName: org?.rep_family_name || "",
-      repGivenName: org?.rep_given_name || "",
-      repOrganization: org?.rep_organization || org?.name || "",
-      repEmail: org?.rep_email || "",
-      repPhone: org?.rep_phone || "",
-      repPhoneCountryCode: org?.rep_phone_country_code || "",
-      repMembershipId: org?.rep_membership_id || "",
-      repStreetNum: org?.rep_street_num || "",
-      repStreetName: org?.rep_street_name || "",
-      repCity: org?.rep_city || "",
-      repProvince: org?.rep_province || "",
-      repCountry: org?.rep_country || "Canada",
-      repPostalCode: org?.rep_postal_code || "",
+      ...orgRepAnswersFromOrg(org),
     };
 
     await supabase.from("project_form_answers").insert({
@@ -408,6 +435,13 @@ export async function updateProjectAction(
   const statusAt =
     data.statusAt ?? new Date().toISOString().slice(0, 10);
 
+  const user = await getSessionUser();
+  const representativeUserId = await resolveRepresentativeUserId(
+    orgId,
+    data.representativeUserId || undefined,
+    user?.id ?? null,
+  );
+
   const resolved = await resolveParticipants(
     orgId,
     data.locale,
@@ -445,6 +479,8 @@ export async function updateProjectAction(
       submit_before: data.submitBefore || null,
       jurisdiction,
       program_family: data.programFamily,
+      form_language: data.formLanguage,
+      representative_user_id: representativeUserId,
       closed_at: isTerminalStatus(status) ? `${statusAt}T12:00:00.000Z` : null,
       updated_at: new Date().toISOString(),
     })
@@ -456,6 +492,27 @@ export async function updateProjectAction(
     return { error: "update_failed" };
   }
 
+  const { toIrccFormLanguage } = await import("@/lib/ircc/form-language");
+  const { data: answersRow } = await supabase
+    .from("project_form_answers")
+    .select("id, answers")
+    .eq("project_id", projectId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (answersRow) {
+    const nextAnswers = {
+      ...((answersRow.answers as Record<string, unknown> | null) ?? {}),
+      formLanguage: toIrccFormLanguage(data.formLanguage),
+    };
+    await supabase
+      .from("project_form_answers")
+      .update({
+        answers: nextAnswers,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", answersRow.id);
+  }
+
   if (
     statusChanged(
       {
@@ -465,7 +522,6 @@ export async function updateProjectAction(
       { status, statusAt },
     )
   ) {
-    const user = await getSessionUser();
     await recordProjectStatusHistory(supabase, {
       organizationId: orgId,
       projectId,

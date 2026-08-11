@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectsTable } from "@/components/projects/projects-table";
-import { listProjects } from "@/lib/crm/queries";
+import { listOrgMembers, listProjects } from "@/lib/crm/queries";
 
 export default async function ProjectsPage({
   params,
@@ -15,7 +15,10 @@ export default async function ProjectsPage({
 
   const t = await getTranslations("projects");
   const th = await getTranslations("appHome");
-  const projects = await listProjects();
+  const [projects, members] = await Promise.all([
+    listProjects(),
+    listOrgMembers(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -35,7 +38,14 @@ export default async function ProjectsPage({
           <NewProjectButton label={th("newProject")} />
         </SurfaceCard>
       ) : (
-        <ProjectsTable projects={projects} />
+        <ProjectsTable
+          projects={projects}
+          members={members.map((m) => ({
+            user_id: m.user_id,
+            full_name: m.profile.full_name,
+            email: m.profile.email,
+          }))}
+        />
       )}
     </div>
   );
