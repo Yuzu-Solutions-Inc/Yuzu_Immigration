@@ -109,3 +109,61 @@ export async function updatePersonAction(
   revalidatePath(`/${data.locale}/projects`);
   redirect(`/${data.locale}/people/${data.personId}`);
 }
+
+const deletePersonSchema = z.object({
+  locale: z.enum(["en", "fr", "es"]).default("en"),
+  personId: z.string().uuid(),
+});
+
+export type DeletePersonState = {
+  error?: string;
+};
+
+export async function deletePersonAction(
+  _prev: DeletePersonState,
+  formData: FormData,
+): Promise<DeletePersonState> {
+  const parsed = deletePersonSchema.safeParse({
+    locale: formData.get("locale") || "en",
+    personId: String(formData.get("personId") || ""),
+  });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  const { data } = parsed;
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${data.locale}/onboarding`);
+  }
+
+  const supabase = await createClient();
+  const { data: existing, error: existingError } = await supabase
+    .from("people")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("id", data.personId)
+    .maybeSingle();
+
+  if (existingError || !existing) {
+    return { error: "not_found" };
+  }
+
+  const { error: deleteError } = await supabase
+    .from("people")
+    .delete()
+    .eq("id", data.personId)
+    .eq("organization_id", orgId);
+
+  if (deleteError) {
+    console.error("delete person:", deleteError.message);
+    return { error: "delete_failed" };
+  }
+
+  revalidatePath(`/${data.locale}/people`);
+  revalidatePath(`/${data.locale}/people/${data.personId}`);
+  revalidatePath(`/${data.locale}/home`);
+  revalidatePath(`/${data.locale}/projects`);
+  redirect(`/${data.locale}/people`);
+}

@@ -270,6 +270,9 @@
     "editSubtitle": "Update identity, contact, and current immigration status.",
     "save": "Save changes",
     "saving": "Saving…",
+    "delete": "Delete",
+    "deleting": "Deleting…",
+    "deleteConfirm": "Delete {name}? This cannot be undone. They will be removed from all projects.",
     "projects": "Projects",
     "noProjects": "Not linked to any projects yet.",
     "email": "Email",
@@ -294,6 +297,7 @@
     "errors": {
       "invalid": "Check the form and try again.",
       "updateFailed": "Could not save the person. Try again.",
+      "deleteFailed": "Could not delete the person. Try again.",
       "notFound": "Person not found.",
       "generic": "Something went wrong. Try again."
     }

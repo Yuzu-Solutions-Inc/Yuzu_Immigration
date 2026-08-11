@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { DeletePersonButton } from "@/components/people/delete-person-button";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import { buttonVariants } from "@/components/ui/button";
@@ -96,6 +97,11 @@ export default async function PersonDetailPage({
             >
               {t("newProject")}
             </Link>
+            <DeletePersonButton
+              locale={locale}
+              personId={person.id}
+              fullName={`${person.first_name} ${person.last_name}`}
+            />
           </div>
         </div>
       </div>

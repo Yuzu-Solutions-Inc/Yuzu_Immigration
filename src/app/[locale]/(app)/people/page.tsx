@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { DeletePersonButton } from "@/components/people/delete-person-button";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Link } from "@/i18n/navigation";
 import { listPeople } from "@/lib/crm/queries";
@@ -30,21 +31,32 @@ export default async function PeoplePage({
         </SurfaceCard>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-          {people.map((person) => (
-            <li key={person.id}>
-              <Link
-                href={`/people/${person.id}`}
-                className="flex flex-col gap-0.5 px-5 py-4 transition-colors hover:bg-muted/60"
+          {people.map((person) => {
+            const fullName = `${person.first_name} ${person.last_name}`;
+            return (
+              <li
+                key={person.id}
+                className="flex items-center gap-3 px-5 py-4"
               >
-                <p className="font-medium text-brand">
-                  {person.first_name} {person.last_name}
-                </p>
-                {person.email ? (
-                  <p className="text-sm text-muted-foreground">{person.email}</p>
-                ) : null}
-              </Link>
-            </li>
-          ))}
+                <Link
+                  href={`/people/${person.id}`}
+                  className="min-w-0 flex-1 transition-colors hover:opacity-80"
+                >
+                  <p className="font-medium text-brand">{fullName}</p>
+                  {person.email ? (
+                    <p className="text-sm text-muted-foreground">
+                      {person.email}
+                    </p>
+                  ) : null}
+                </Link>
+                <DeletePersonButton
+                  locale={locale}
+                  personId={person.id}
+                  fullName={fullName}
+                />
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

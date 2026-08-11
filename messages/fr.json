@@ -270,6 +270,9 @@
     "editSubtitle": "Mettez à jour l’identité, les coordonnées et le statut d’immigration.",
     "save": "Enregistrer",
     "saving": "Enregistrement…",
+    "delete": "Supprimer",
+    "deleting": "Suppression…",
+    "deleteConfirm": "Supprimer {name} ? Cette action est irréversible. La personne sera retirée de tous les projets.",
     "projects": "Projets",
     "noProjects": "Pas encore lié à un projet.",
     "email": "E-mail",
@@ -294,6 +297,7 @@
     "errors": {
       "invalid": "Vérifiez le formulaire et réessayez.",
       "updateFailed": "Impossible d’enregistrer la personne. Réessayez.",
+      "deleteFailed": "Impossible de supprimer la personne. Réessayez.",
       "notFound": "Personne introuvable.",
       "generic": "Une erreur est survenue. Réessayez."
     }

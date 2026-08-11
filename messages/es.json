@@ -270,6 +270,9 @@
     "editSubtitle": "Update identity, contact, and current immigration status.",
     "save": "Save changes",
     "saving": "Saving…",
+    "delete": "Eliminar",
+    "deleting": "Eliminando…",
+    "deleteConfirm": "¿Eliminar a {name}? Esta acción no se puede deshacer. Se quitará de todos los proyectos.",
     "projects": "Projects",
     "noProjects": "Not linked to any projects yet.",
     "email": "Email",
@@ -294,6 +297,7 @@
     "errors": {
       "invalid": "Check the form and try again.",
       "updateFailed": "Could not save the person. Try again.",
+      "deleteFailed": "No se pudo eliminar a la persona. Inténtelo de nuevo.",
       "notFound": "Person not found.",
       "generic": "Something went wrong. Try again."
     }
