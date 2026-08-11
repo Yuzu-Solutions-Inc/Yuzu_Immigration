@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils";
 export function LocaleSwitcher({
   className,
   compact = false,
+  variant = "default",
 }: {
   className?: string;
   compact?: boolean;
+  variant?: "default" | "sidebar";
 }) {
   const t = useTranslations("locale");
   const locale = useLocale() as AppLocale;
@@ -33,7 +35,11 @@ export function LocaleSwitcher({
           router.replace(pathname, { locale: next });
         }}
         className={cn(
-          "h-9 rounded-xl border border-border bg-surface px-2.5 text-sm font-medium text-brand outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30",
+          "h-9 w-full rounded-xl border px-2.5 text-sm font-medium outline-none focus-visible:ring-3",
+          variant === "default" &&
+            "border-border bg-surface text-brand focus-visible:border-ring focus-visible:ring-ring/30",
+          variant === "sidebar" &&
+            "border-sidebar-border bg-sidebar-accent text-sidebar-foreground focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/30",
           compact && "h-8 px-2 text-xs",
         )}
       >

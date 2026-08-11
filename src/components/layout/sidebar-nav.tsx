@@ -6,6 +6,8 @@ import { useState } from "react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { SettingsMenu } from "@/components/layout/settings-menu";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -84,7 +86,15 @@ function SidebarBody({
         })}
       </nav>
 
-      <div className="mt-auto border-t border-sidebar-border p-3">
+      <div className="mt-auto space-y-1 border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-2 px-0.5 pb-1">
+          <LocaleSwitcher
+            className="min-w-0 flex-1"
+            variant="sidebar"
+            compact
+          />
+          <SettingsMenu variant="sidebar" onNavigate={onNavigate} />
+        </div>
         <form action={signOutAction}>
           <input type="hidden" name="locale" value={locale} />
           <button

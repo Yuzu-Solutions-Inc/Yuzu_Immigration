@@ -274,6 +274,7 @@ export function ProjectsTable({ projects }: { projects: ProjectRow[] }) {
             value={nameQuery}
             onChange={(e) => setNameQuery(e.target.value)}
             placeholder={t("filterNamePlaceholder")}
+            className="h-8 rounded-lg px-2 text-sm"
           />
         </div>
         <div className="min-w-[10rem] space-y-1.5 sm:w-48">

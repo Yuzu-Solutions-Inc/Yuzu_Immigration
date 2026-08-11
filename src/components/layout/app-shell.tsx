@@ -4,8 +4,6 @@ import {
   DesktopSidebar,
   MobileSidebarTrigger,
 } from "@/components/layout/sidebar-nav";
-import { LocaleSwitcher } from "@/components/layout/locale-switcher";
-import { SettingsMenu } from "@/components/layout/settings-menu";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -13,7 +11,6 @@ import { cn } from "@/lib/utils";
 export async function DashboardShell({
   orgName,
   children,
-  actions,
 }: {
   locale: string;
   orgName: string;
@@ -27,32 +24,13 @@ export async function DashboardShell({
       <DesktopSidebar orgName={orgName} newProjectLabel={tHome("newProject")} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur supports-backdrop-filter:bg-surface/80 sm:px-6">
-          <div className="flex items-center gap-3">
-            <MobileSidebarTrigger
-              orgName={orgName}
-              newProjectLabel={tHome("newProject")}
-            />
-            <p className="hidden text-sm text-muted-foreground sm:block lg:hidden">
-              {orgName}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {actions}
-            <Link
-              href="/projects/new"
-              className={cn(
-                buttonVariants({ size: "sm" }),
-                "hidden bg-action text-white hover:bg-action/90 sm:inline-flex lg:hidden",
-              )}
-            >
-              {tHome("newProject")}
-            </Link>
-            <LocaleSwitcher compact />
-            <SettingsMenu />
-          </div>
-        </header>
+        <div className="sticky top-0 z-20 flex h-12 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur supports-backdrop-filter:bg-surface/80 lg:hidden">
+          <MobileSidebarTrigger
+            orgName={orgName}
+            newProjectLabel={tHome("newProject")}
+          />
+          <p className="truncate text-sm font-medium text-brand">{orgName}</p>
+        </div>
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
           {children}
