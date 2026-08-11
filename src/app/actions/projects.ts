@@ -547,16 +547,110 @@ export async function updateProjectAction(
 
 export type StatusUpdateState = {
   error?: string;
+  updated?: number;
 };
+
+async function applyProjectStatuses(params: {
+  locale: string;
+  projectIds: string[];
+  status: ProjectStatus;
+  statusAt: string;
+}): Promise<StatusUpdateState> {
+  const { locale, projectIds, status, statusAt } = params;
+  if (projectIds.length === 0 || projectIds.length > 100) {
+    return { error: "invalid" };
+  }
+
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const supabase = await createClient();
+  const { data: existingRows, error: existingError } = await supabase
+    .from("immigration_projects")
+    .select("id, status, status_at")
+    .eq("organization_id", orgId)
+    .in("id", projectIds);
+
+  if (existingError) {
+    console.error("load projects for status:", existingError.message);
+    return { error: "update_failed" };
+  }
+
+  const existingById = new Map(
+    (existingRows ?? []).map((row) => [row.id as string, row]),
+  );
+
+  if (existingById.size !== projectIds.length) {
+    return { error: "not_found" };
+  }
+
+  const user = await getSessionUser();
+  const now = new Date().toISOString();
+  let updated = 0;
+
+  for (const projectId of projectIds) {
+    const existing = existingById.get(projectId);
+    if (!existing) {
+      return { error: "not_found" };
+    }
+
+    const { error: updateError } = await supabase
+      .from("immigration_projects")
+      .update({
+        status,
+        status_at: statusAt,
+        closed_at: isTerminalStatus(status) ? `${statusAt}T12:00:00.000Z` : null,
+        updated_at: now,
+      })
+      .eq("id", projectId)
+      .eq("organization_id", orgId);
+
+    if (updateError) {
+      console.error("update status:", updateError.message);
+      return { error: "update_failed" };
+    }
+
+    if (
+      statusChanged(
+        {
+          status: existing.status as string,
+          status_at: existing.status_at as string,
+        },
+        { status, statusAt },
+      )
+    ) {
+      await recordProjectStatusHistory(supabase, {
+        organizationId: orgId,
+        projectId,
+        status,
+        statusAt,
+        changedBy: user?.id ?? null,
+      });
+    }
+
+    updated += 1;
+  }
+
+  for (const projectId of projectIds) {
+    revalidatePath(`/${locale}/projects/${projectId}`);
+  }
+  revalidatePath(`/${locale}/projects`);
+  revalidatePath(`/${locale}/home`);
+
+  return { updated };
+}
 
 export async function updateProjectStatusAction(
   _prev: StatusUpdateState,
   formData: FormData,
 ): Promise<StatusUpdateState> {
-  const locale = (formData.get("locale") as "en" | "fr") || "en";
+  const locale = (formData.get("locale") as "en" | "fr" | "es") || "en";
   const projectId = String(formData.get("projectId") || "");
   const statusRaw = String(formData.get("status") || "");
   const statusAtRaw = String(formData.get("statusAt") || "").trim();
+  const returnTo = String(formData.get("returnTo") || "detail");
 
   const parsed = z
     .object({
@@ -574,62 +668,47 @@ export async function updateProjectStatusAction(
     return { error: "invalid" };
   }
 
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
-    redirect(`/${locale}/onboarding`);
+  const result = await applyProjectStatuses({
+    locale,
+    projectIds: [parsed.data.projectId],
+    status: parsed.data.status,
+    statusAt: parsed.data.statusAt,
+  });
+
+  if (result.error) {
+    return result;
   }
 
-  const supabase = await createClient();
-  const { status, statusAt } = parsed.data;
-
-  const { data: existing, error: existingError } = await supabase
-    .from("immigration_projects")
-    .select("id, status, status_at")
-    .eq("organization_id", orgId)
-    .eq("id", parsed.data.projectId)
-    .maybeSingle();
-
-  if (existingError || !existing) {
-    return { error: "not_found" };
+  if (returnTo === "list") {
+    return result;
   }
 
-  const { error: updateError } = await supabase
-    .from("immigration_projects")
-    .update({
-      status,
-      status_at: statusAt,
-      closed_at: isTerminalStatus(status) ? `${statusAt}T12:00:00.000Z` : null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", parsed.data.projectId)
-    .eq("organization_id", orgId);
-
-  if (updateError) {
-    console.error("update status:", updateError.message);
-    return { error: "update_failed" };
-  }
-
-  if (
-    statusChanged(
-      {
-        status: existing.status as string,
-        status_at: existing.status_at as string,
-      },
-      { status, statusAt },
-    )
-  ) {
-    const user = await getSessionUser();
-    await recordProjectStatusHistory(supabase, {
-      organizationId: orgId,
-      projectId: parsed.data.projectId,
-      status,
-      statusAt,
-      changedBy: user?.id ?? null,
-    });
-  }
-
-  revalidatePath(`/${locale}/projects/${parsed.data.projectId}`);
-  revalidatePath(`/${locale}/projects`);
-  revalidatePath(`/${locale}/home`);
   redirect(`/${locale}/projects/${parsed.data.projectId}`);
+}
+
+export async function setProjectsStatusAction(input: {
+  locale: string;
+  projectIds: string[];
+  status: ProjectStatus;
+  statusAt?: string;
+}): Promise<StatusUpdateState> {
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]),
+      projectIds: z.array(z.string().uuid()).min(1).max(100),
+      status: statusSchema,
+      statusAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    })
+    .safeParse({
+      locale: input.locale,
+      projectIds: input.projectIds,
+      status: input.status,
+      statusAt: input.statusAt || new Date().toISOString().slice(0, 10),
+    });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  return applyProjectStatuses(parsed.data);
 }
