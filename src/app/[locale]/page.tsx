@@ -18,10 +18,11 @@ export default async function MarketingHomePage({
     <main className="relative flex min-h-full flex-1 flex-col overflow-hidden">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.95_0.03_230),_transparent_55%),linear-gradient(to_bottom,_oklch(0.985_0.01_95),_oklch(0.97_0.02_220))]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(99,102,241,0.12),_transparent_45%),radial-gradient(ellipse_at_bottom_left,_rgba(5,150,105,0.08),_transparent_40%),linear-gradient(180deg,_#f9fafb_0%,_#eef2ff_100%)]"
       />
+
       <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
-        <p className="text-sm font-semibold tracking-[0.08em] text-foreground uppercase">
+        <p className="font-heading text-lg font-bold tracking-tight text-brand">
           {app("name")}
         </p>
         <Link
@@ -32,15 +33,18 @@ export default async function MarketingHomePage({
         </Link>
       </header>
 
-      <section className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-8 px-6 pb-20 pt-10">
+      <section className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-8 px-6 pb-20 pt-8">
         <div className="max-w-3xl space-y-5">
-          <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+          <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
+            {app("tagline")}
+          </p>
+          <h1 className="font-heading text-5xl font-bold tracking-tight text-brand text-balance sm:text-6xl">
             {app("name")}
           </h1>
           <p className="max-w-2xl text-xl text-muted-foreground text-pretty sm:text-2xl">
             {t("title")}
           </p>
-          <p className="max-w-xl text-base text-muted-foreground text-pretty">
+          <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground text-pretty">
             {t("subtitle")}
           </p>
         </div>

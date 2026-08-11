@@ -12,6 +12,14 @@ alwaysApply: true
 - **Forms**: React Hook Form + Zod
 - **i18n**: next-intl with `en` and `fr` under `src/app/[locale]`
 
+## Visual system
+- Brand graphite `#111827`, action violet `#6366F1`, success emerald `#059669`, highlight amber `#F59E0B`
+- Canvas `#F9FAFB`, surfaces `#FFFFFF`, text secondary `#4A5568`, border `#E5E7EB`
+- Fonts: Plus Jakarta Sans (headings), Inter (body)
+- Radius 12px, soft elevation `0 4px 6px -1px rgba(0,0,0,0.05)`
+- No IRCC/MIFI government red/blue motifs or official icons
+- Always include the private-portal disclaimer footer (`legal.disclaimer`)
+
 ## Domain model
 - `organizations` — one tenant per consulting firm (SaaS customer)
 - `profiles` + `organization_members` — staff users (Supabase Auth: email/password or Google). For now every member can access all org data.

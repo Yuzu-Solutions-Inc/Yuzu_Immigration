@@ -2,8 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { CreateOrganizationForm } from "@/components/org/create-organization-form";
+import { SurfaceCard } from "@/components/layout/surface-card";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
-import { Link } from "@/i18n/navigation";
 
 export default async function OnboardingPage({
   params,
@@ -27,22 +27,22 @@ export default async function OnboardingPage({
   const app = await getTranslations("app");
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-lg flex-1 flex-col justify-center gap-8 px-6 py-16">
+    <main className="mx-auto flex min-h-full w-full max-w-lg flex-1 flex-col justify-center gap-6 px-6 py-14">
       <div className="space-y-2">
-        <p className="text-sm font-semibold tracking-[0.08em] uppercase">
+        <p className="font-heading text-sm font-bold tracking-tight text-brand">
           {app("name")}
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="text-muted-foreground text-pretty">{t("subtitle")}</p>
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-brand">
+          {t("title")}
+        </h1>
+        <p className="text-[15px] text-muted-foreground text-pretty">
+          {t("subtitle")}
+        </p>
       </div>
 
-      <CreateOrganizationForm locale={locale as "en" | "fr"} />
-
-      <p className="text-center text-sm text-muted-foreground">
-        <Link href="/home" className="underline underline-offset-4">
-          ←
-        </Link>
-      </p>
+      <SurfaceCard>
+        <CreateOrganizationForm locale={locale as "en" | "fr"} />
+      </SurfaceCard>
     </main>
   );
 }

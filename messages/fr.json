@@ -64,5 +64,8 @@
     "home": "Accueil",
     "customers": "Clients",
     "login": "Connexion"
+  },
+  "legal": {
+    "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI)."
   }
 }

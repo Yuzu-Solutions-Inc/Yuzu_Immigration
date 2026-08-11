@@ -64,5 +64,8 @@
     "home": "Home",
     "customers": "Customers",
     "login": "Sign in"
+  },
+  "legal": {
+    "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI)."
   }
 }
