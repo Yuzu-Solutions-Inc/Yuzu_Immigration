@@ -228,3 +228,63 @@ export async function addPersonNoteAction(
   revalidatePath(`/${data.locale}/people/${data.personId}`);
   return { message: "saved" };
 }
+
+const updatePersonNoteSchema = z.object({
+  locale: z.enum(["en", "fr", "es"]).default("en"),
+  personId: z.string().uuid(),
+  noteId: z.string().uuid(),
+  body: z.string().trim().min(1).max(20000),
+});
+
+export async function updatePersonNoteAction(
+  _prev: AddPersonNoteState,
+  formData: FormData,
+): Promise<AddPersonNoteState> {
+  const parsed = updatePersonNoteSchema.safeParse({
+    locale: formData.get("locale") || "en",
+    personId: String(formData.get("personId") || ""),
+    noteId: String(formData.get("noteId") || ""),
+    body: String(formData.get("body") || ""),
+  });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  const { data } = parsed;
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${data.locale}/onboarding`);
+  }
+
+  const supabase = await createClient();
+  const { data: existing, error: existingError } = await supabase
+    .from("person_notes")
+    .select("id")
+    .eq("id", data.noteId)
+    .eq("person_id", data.personId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
+  if (existingError || !existing) {
+    return { error: "not_found" };
+  }
+
+  const { error: updateError } = await supabase
+    .from("person_notes")
+    .update({
+      body: data.body,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", data.noteId)
+    .eq("person_id", data.personId)
+    .eq("organization_id", orgId);
+
+  if (updateError) {
+    console.error("update person note:", updateError.message);
+    return { error: "save_failed" };
+  }
+
+  revalidatePath(`/${data.locale}/people/${data.personId}`);
+  return { message: "updated" };
+}

@@ -110,8 +110,6 @@ export default async function PersonDetailPage({
         </div>
       </div>
 
-      <PersonNotesSection locale={locale} personId={person.id} notes={notes} />
-
       <section className="space-y-3">
         <h2 className="font-heading text-lg font-semibold text-brand">
           {t("projects")}
@@ -145,6 +143,8 @@ export default async function PersonDetailPage({
           </ul>
         )}
       </section>
+
+      <PersonNotesSection locale={locale} personId={person.id} notes={notes} />
     </div>
   );
 }
