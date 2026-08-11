@@ -5,7 +5,7 @@
  * replacement for the XFA datasets stream (obj 113). Signed byte ranges stay intact.
  */
 
-import pako from "pako";
+import { deflate, inflate } from "pako";
 import { md5 } from "js-md5";
 import countryCodes from "../codes/country-codes.json";
 import countryAliases from "../codes/country-aliases.json";
@@ -1133,7 +1133,7 @@ export async function extractDatasetsXml(
   const encrypted = pdf.subarray(span.streamStart, span.streamEnd);
   const okey = objectKey(fileKey, datasetsObj, datasetsGen);
   const compressed = await aesDecryptCbc(okey, encrypted);
-  const xmlBytes = pako.inflate(compressed);
+  const xmlBytes = inflate(compressed);
   return new TextDecoder("utf-8").decode(xmlBytes);
 }
 
@@ -1168,7 +1168,7 @@ export async function fillImm1294Pdf(
   const datasetsXml = await extractDatasetsXml(blankPdf, crypto);
   const patchedXml = patchForm1(datasetsXml, normalized);
   const xmlBytes = new TextEncoder().encode(patchedXml);
-  const compressed = pako.deflate(xmlBytes);
+  const compressed = deflate(xmlBytes);
   const okey = objectKey(fileKey, datasetsObj, datasetsGen);
   const streamBytes = await aesEncryptCbc(okey, compressed);
 
@@ -1203,7 +1203,7 @@ export async function fillImm1294Pdf(
   const predicted = new Uint8Array(6);
   predicted[0] = 2;
   predicted.set(xrefBin, 1);
-  const xrefFlate = pako.deflate(predicted);
+  const xrefFlate = deflate(predicted);
   // Intentionally NOT AES-encrypted — matches IRCC XRef streams.
   const xrefLenField = String(xrefFlate.length).padStart(7, " ");
 

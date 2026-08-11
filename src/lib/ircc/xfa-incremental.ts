@@ -2,7 +2,7 @@
  * Generic encrypted XFA datasets incremental update (UR3-safe).
  * XRef streams stay unencrypted raw Flate — matches IRCC/Adobe convention.
  */
-import pako from "pako";
+import { deflate, inflate } from "pako";
 import { md5 } from "js-md5";
 
 export type FormMeta = {
@@ -169,7 +169,7 @@ export async function extractDatasetsXml(
   const encrypted = pdf.subarray(span.streamStart, span.streamEnd);
   const okey = objectKey(hexToBytes(meta.fileKeyHex), meta.datasetsObj, meta.datasetsGen);
   const compressed = await aesDecryptCbc(okey, encrypted);
-  return new TextDecoder("utf-8").decode(pako.inflate(compressed));
+  return new TextDecoder("utf-8").decode(inflate(compressed));
 }
 
 export async function fillXfaDatasetsIncremental(
@@ -179,7 +179,7 @@ export async function fillXfaDatasetsIncremental(
 ): Promise<Uint8Array> {
   const datasetsXml = await extractDatasetsXml(blankPdf, meta);
   const patchedXml = patchXml(datasetsXml);
-  const compressed = pako.deflate(new TextEncoder().encode(patchedXml));
+  const compressed = deflate(new TextEncoder().encode(patchedXml));
   const okey = objectKey(hexToBytes(meta.fileKeyHex), meta.datasetsObj, meta.datasetsGen);
   const streamBytes = await aesEncryptCbc(okey, compressed);
 
@@ -207,7 +207,7 @@ export async function fillXfaDatasetsIncremental(
   const predicted = new Uint8Array(6);
   predicted[0] = 2;
   predicted.set(xrefBin, 1);
-  const xrefFlate = pako.deflate(predicted);
+  const xrefFlate = deflate(predicted);
   const xrefLenField = String(xrefFlate.length).padStart(7, " ");
   const xrefHeader = new TextEncoder().encode(
     `${xrefObjNum} 0 obj\n` +
