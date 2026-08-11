@@ -2,10 +2,15 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { ProjectStatusUpdateForm } from "@/components/projects/project-status-update-form";
+import { formatStatusDate } from "@/components/projects/project-status-summary";
+import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getProject, getProjectParticipants } from "@/lib/crm/queries";
+import {
+  getProject,
+  getProjectParticipants,
+  getProjectStatusHistory,
+} from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
 export default async function ProjectDetailPage({
@@ -19,16 +24,15 @@ export default async function ProjectDetailPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const participants = await getProjectParticipants(id);
+  const [participants, history] = await Promise.all([
+    getProjectParticipants(id),
+    getProjectStatusHistory(id),
+  ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
 
   const opened = new Date(project.opened_at).toLocaleDateString(
-    locale === "fr" ? "fr-CA" : "en-CA",
-    { year: "numeric", month: "short", day: "numeric" },
-  );
-  const statusAtLabel = new Date(`${project.status_at}T12:00:00`).toLocaleDateString(
     locale === "fr" ? "fr-CA" : "en-CA",
     { year: "numeric", month: "short", day: "numeric" },
   );
@@ -62,16 +66,21 @@ export default async function ProjectDetailPage({
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <ProjectStatusCard
+          locale={locale === "fr" ? "fr" : "en"}
+          projectId={project.id}
+          currentStatus={project.status}
+          currentStatusAt={project.status_at}
+        />
         <SurfaceCard className="space-y-1 sm:p-6">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("status")}
+            {t("submitBefore")}
           </p>
           <p className="font-medium text-brand">
-            {t(`statuses.${project.status}`)}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t("statusSince", { date: statusAtLabel })}
+            {project.submit_before
+              ? formatStatusDate(project.submit_before, locale)
+              : t("submitBeforeEmpty")}
           </p>
         </SurfaceCard>
         <SurfaceCard className="space-y-1 sm:p-6">
@@ -82,17 +91,34 @@ export default async function ProjectDetailPage({
         </SurfaceCard>
       </div>
 
-      <SurfaceCard className="space-y-3 sm:p-6">
+      <section className="space-y-3">
         <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("updateStatusTitle")}
+          {t("statusHistoryTitle")}
         </h2>
-        <ProjectStatusUpdateForm
-          locale={locale === "fr" ? "fr" : "en"}
-          projectId={project.id}
-          currentStatus={project.status}
-          currentStatusAt={project.status_at}
-        />
-      </SurfaceCard>
+        {history.length === 0 ? (
+          <SurfaceCard>
+            <p className="text-[15px] text-muted-foreground">
+              {t("statusHistoryEmpty")}
+            </p>
+          </SurfaceCard>
+        ) : (
+          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+            {history.map((entry) => (
+              <li
+                key={entry.id}
+                className="flex items-center justify-between gap-3 px-5 py-4"
+              >
+                <p className="font-medium text-brand">
+                  {t(`statuses.${entry.status}`)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {formatStatusDate(entry.status_at, locale)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">

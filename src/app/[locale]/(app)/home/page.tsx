@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import {
   Table,
   TableBody,
@@ -221,9 +222,11 @@ export default async function AppHomePage({
                         {tp(`jurisdictions.${project.jurisdiction}`)}
                       </p>
                     </div>
-                    <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      {tp(`statuses.${project.status}`)}
-                    </span>
+                    <ProjectStatusSummary
+                      status={project.status}
+                      statusAt={project.status_at}
+                      locale={locale}
+                    />
                   </Link>
                 </li>
               ))}

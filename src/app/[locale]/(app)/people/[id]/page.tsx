@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getPerson, getPersonProjects } from "@/lib/crm/queries";
@@ -21,7 +22,6 @@ export default async function PersonDetailPage({
   const projects = await getPersonProjects(id);
   const t = await getTranslations("people");
   const ti = await getTranslations("immigrationStatus");
-  const tp = await getTranslations("projects");
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
 
@@ -80,15 +80,23 @@ export default async function PersonDetailPage({
               </div>
             </dl>
           </div>
-          <Link
-            href={`/projects/new?person=${person.id}`}
-            className={cn(
-              buttonVariants({ size: "sm" }),
-              "bg-action text-white hover:bg-action/90",
-            )}
-          >
-            {t("newProject")}
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/people/${person.id}/edit`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              {t("edit")}
+            </Link>
+            <Link
+              href={`/projects/new?person=${person.id}`}
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "bg-action text-white hover:bg-action/90",
+              )}
+            >
+              {t("newProject")}
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -114,9 +122,11 @@ export default async function PersonDetailPage({
                       {tprog(project.program_family)} · {tr(project.role)}
                     </p>
                   </div>
-                  <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {tp(`statuses.${project.status}`)}
-                  </span>
+                  <ProjectStatusSummary
+                    status={project.status}
+                    statusAt={project.status_at}
+                    locale={locale}
+                  />
                 </Link>
               </li>
             ))}

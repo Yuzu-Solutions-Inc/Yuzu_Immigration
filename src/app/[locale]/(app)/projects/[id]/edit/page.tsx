@@ -67,6 +67,7 @@ export default async function EditProjectPage({
             title: project.title,
             status: project.status,
             statusAt: project.status_at,
+            submitBefore: project.submit_before ?? "",
             composition,
             programFamily: project.program_family,
             jurisdiction: project.jurisdiction,

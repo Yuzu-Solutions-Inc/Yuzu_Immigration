@@ -53,6 +53,7 @@ export type ProjectFormInitial = {
   title: string;
   status: ProjectStatus;
   statusAt: string;
+  submitBefore: string;
   composition: ProjectComposition;
   programFamily: ProgramFamily;
   jurisdiction: ProjectJurisdiction;
@@ -105,6 +106,9 @@ export function ProjectForm({
   );
   const [statusAt, setStatusAt] = useState(
     initial?.statusAt ?? todayDateInputValue(),
+  );
+  const [submitBefore, setSubmitBefore] = useState(
+    initial?.submitBefore ?? "",
   );
   const [title, setTitle] = useState(initial?.title ?? "");
   const [slots, setSlots] = useState<ProjectFormSlot[]>(
@@ -212,6 +216,7 @@ export function ProjectForm({
       <input type="hidden" name="jurisdiction" value={jurisdiction} />
       <input type="hidden" name="status" value={status} />
       <input type="hidden" name="statusAt" value={statusAt} />
+      <input type="hidden" name="submitBefore" value={submitBefore} />
       <input type="hidden" name="title" value={title} />
       <input
         type="hidden"
@@ -258,8 +263,31 @@ export function ProjectForm({
               required
             />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="submitBefore">{t("submitBefore")}</Label>
+            <Input
+              id="submitBefore"
+              type="date"
+              value={submitBefore}
+              onChange={(e) => setSubmitBefore(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("submitBeforeHelp")}
+            </p>
+          </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="space-y-2">
+          <Label htmlFor="submitBefore">{t("submitBefore")}</Label>
+          <Input
+            id="submitBefore"
+            type="date"
+            value={submitBefore}
+            onChange={(e) => setSubmitBefore(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">{t("submitBeforeHelp")}</p>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>{t("composition")}</Label>

@@ -1,0 +1,2 @@
+-- Applied remotely: project_status_history
+-- Historize project status changes; backfilled from current immigration_projects rows

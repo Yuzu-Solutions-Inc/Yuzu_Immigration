@@ -12,8 +12,13 @@ import {
   type ProjectComposition,
 } from "@/lib/crm/programs";
 import { requireOrganizationId } from "@/lib/crm/queries";
+import {
+  recordProjectStatusHistory,
+  statusChanged,
+} from "@/lib/crm/status-history";
 import { isTerminalStatus } from "@/lib/crm/statuses";
 import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/session";
 
 const participantInputSchema = z.object({
   personId: z.string().uuid().optional(),
@@ -71,6 +76,11 @@ const projectFieldsSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
+  submitBefore: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .or(z.literal("")),
   participants: z.array(participantInputSchema).min(1),
 });
 
@@ -107,6 +117,7 @@ function parseProjectForm(formData: FormData) {
   const titleRaw = String(formData.get("title") || "").trim();
   const statusRaw = String(formData.get("status") || "").trim();
   const statusAtRaw = String(formData.get("statusAt") || "").trim();
+  const submitBeforeRaw = String(formData.get("submitBefore") || "").trim();
 
   const participantsJson = String(formData.get("participants") || "[]");
   let participantsParsed: unknown;
@@ -124,6 +135,7 @@ function parseProjectForm(formData: FormData) {
     title: titleRaw || undefined,
     status: statusRaw || undefined,
     statusAt: statusAtRaw || undefined,
+    submitBefore: submitBeforeRaw || undefined,
     participants: participantsParsed,
   });
 
@@ -258,13 +270,16 @@ export async function createProjectAction(
       peopleNames: resolved.people.map((p) => p.displayName),
     });
 
+  const statusAt = new Date().toISOString().slice(0, 10);
+  const submitBefore = data.submitBefore || null;
   const { data: project, error: projectError } = await supabase
     .from("immigration_projects")
     .insert({
       organization_id: orgId,
       title,
       status: "new",
-      status_at: new Date().toISOString().slice(0, 10),
+      status_at: statusAt,
+      submit_before: submitBefore,
       jurisdiction,
       program_family: data.programFamily,
     })
@@ -275,6 +290,15 @@ export async function createProjectAction(
     console.error("create project:", projectError?.message);
     return { error: "create_failed" };
   }
+
+  const user = await getSessionUser();
+  await recordProjectStatusHistory(supabase, {
+    organizationId: orgId,
+    projectId: project.id as string,
+    status: "new",
+    statusAt,
+    changedBy: user?.id ?? null,
+  });
 
   const { error: linksError } = await supabase.from("project_participants").insert(
     resolved.people.map((person) => ({
@@ -335,7 +359,7 @@ export async function updateProjectAction(
 
   const { data: existingProject, error: existingError } = await supabase
     .from("immigration_projects")
-    .select("id, status")
+    .select("id, status, status_at")
     .eq("organization_id", orgId)
     .eq("id", projectId)
     .maybeSingle();
@@ -350,6 +374,7 @@ export async function updateProjectAction(
       title,
       status,
       status_at: statusAt,
+      submit_before: data.submitBefore || null,
       jurisdiction,
       program_family: data.programFamily,
       closed_at: isTerminalStatus(status) ? `${statusAt}T12:00:00.000Z` : null,
@@ -361,6 +386,25 @@ export async function updateProjectAction(
   if (updateError) {
     console.error("update project:", updateError.message);
     return { error: "update_failed" };
+  }
+
+  if (
+    statusChanged(
+      {
+        status: existingProject.status as string,
+        status_at: existingProject.status_at as string,
+      },
+      { status, statusAt },
+    )
+  ) {
+    const user = await getSessionUser();
+    await recordProjectStatusHistory(supabase, {
+      organizationId: orgId,
+      projectId,
+      status,
+      statusAt,
+      changedBy: user?.id ?? null,
+    });
   }
 
   const { data: currentLinks, error: linksReadError } = await supabase
@@ -472,7 +516,7 @@ export async function updateProjectStatusAction(
 
   const { data: existing, error: existingError } = await supabase
     .from("immigration_projects")
-    .select("id")
+    .select("id, status, status_at")
     .eq("organization_id", orgId)
     .eq("id", parsed.data.projectId)
     .maybeSingle();
@@ -495,6 +539,25 @@ export async function updateProjectStatusAction(
   if (updateError) {
     console.error("update status:", updateError.message);
     return { error: "update_failed" };
+  }
+
+  if (
+    statusChanged(
+      {
+        status: existing.status as string,
+        status_at: existing.status_at as string,
+      },
+      { status, statusAt },
+    )
+  ) {
+    const user = await getSessionUser();
+    await recordProjectStatusHistory(supabase, {
+      organizationId: orgId,
+      projectId: parsed.data.projectId,
+      status,
+      statusAt,
+      changedBy: user?.id ?? null,
+    });
   }
 
   revalidatePath(`/${locale}/projects/${parsed.data.projectId}`);

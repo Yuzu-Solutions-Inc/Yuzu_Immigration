@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import { Link } from "@/i18n/navigation";
 import { listProjects } from "@/lib/crm/queries";
 
@@ -50,9 +51,11 @@ export default async function ProjectsPage({
                     {t(`jurisdictions.${project.jurisdiction}`)}
                   </p>
                 </div>
-                <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  {t(`statuses.${project.status}`)}
-                </span>
+                <ProjectStatusSummary
+                  status={project.status}
+                  statusAt={project.status_at}
+                  locale={locale}
+                />
               </Link>
             </li>
           ))}

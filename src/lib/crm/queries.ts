@@ -28,6 +28,7 @@ export type ProjectRow = {
   title: string;
   status: ProjectStatus;
   status_at: string;
+  submit_before: string | null;
   jurisdiction: ProjectJurisdiction;
   program_family: ProgramFamily;
   opened_at: string;
@@ -161,6 +162,38 @@ export async function getProject(projectId: string): Promise<ProjectRow | null> 
     return null;
   }
   return data as ProjectRow | null;
+}
+
+export type ProjectStatusHistoryRow = {
+  id: string;
+  organization_id: string;
+  project_id: string;
+  status: ProjectStatus;
+  status_at: string;
+  changed_by: string | null;
+  created_at: string;
+};
+
+export async function getProjectStatusHistory(
+  projectId: string,
+): Promise<ProjectStatusHistoryRow[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("project_status_history")
+    .select("*")
+    .eq("organization_id", orgId)
+    .eq("project_id", projectId)
+    .order("status_at", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("getProjectStatusHistory:", error.message);
+    return [];
+  }
+  return (data ?? []) as ProjectStatusHistoryRow[];
 }
 
 export async function getProjectParticipants(

@@ -148,6 +148,7 @@ export const immigrationProjects = pgTable("immigration_projects", {
   title: text("title").notNull(),
   status: projectStatusEnum("status").notNull().default("new"),
   statusAt: date("status_at").notNull().default(sql`current_date`),
+  submitBefore: date("submit_before"),
   jurisdiction: projectJurisdictionEnum("jurisdiction")
     .notNull()
     .default("federal"),
@@ -158,6 +159,24 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .defaultNow()
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectStatusHistory = pgTable("project_status_history", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  status: projectStatusEnum("status").notNull(),
+  statusAt: date("status_at").notNull(),
+  changedBy: uuid("changed_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
