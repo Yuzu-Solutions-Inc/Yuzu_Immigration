@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { History, Pencil } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ProjectStatus } from "@/db/schema";
+import type { ProjectStatusHistoryRow } from "@/lib/crm/queries";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +28,7 @@ const initialState: StatusUpdateState = {};
 
 function formatStatusDate(isoDate: string, locale: string) {
   return new Date(`${isoDate}T12:00:00`).toLocaleDateString(
-    locale === "fr" ? "fr-CA" : "en-CA",
+    locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
     { year: "numeric", month: "short", day: "numeric" },
   );
 }
@@ -37,14 +38,17 @@ export function ProjectStatusCard({
   projectId,
   currentStatus,
   currentStatusAt,
+  history = [],
 }: {
-  locale: "en" | "fr";
+  locale: string;
   projectId: string;
   currentStatus: ProjectStatus;
   currentStatusAt: string;
+  history?: ProjectStatusHistoryRow[];
 }) {
   const t = useTranslations("projects");
-  const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [status, setStatus] = useState<ProjectStatus>(currentStatus);
   const [statusAt, setStatusAt] = useState(
     currentStatusAt || todayDateInputValue(),
@@ -55,11 +59,11 @@ export function ProjectStatusCard({
   );
 
   useEffect(() => {
-    if (open) {
+    if (editOpen) {
       setStatus(currentStatus);
       setStatusAt(currentStatusAt || todayDateInputValue());
     }
-  }, [open, currentStatus, currentStatusAt]);
+  }, [editOpen, currentStatus, currentStatusAt]);
 
   function onStatusChange(next: ProjectStatus) {
     setStatus(next);
@@ -76,42 +80,49 @@ export function ProjectStatusCard({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "group w-full rounded-xl border border-border bg-surface p-6 text-left shadow-elevated transition-colors",
-          "hover:border-action/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30",
-        )}
-        aria-label={t("editStatusAria")}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setEditOpen(true)}
+            className={cn(
+              "group min-w-0 flex-1 rounded-lg text-left transition-colors",
+              "hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30",
+            )}
+            aria-label={t("editStatusAria")}
+          >
+            <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
               {t("status")}
             </p>
-            <p className="font-heading text-lg font-semibold text-brand">
-              {t(`statuses.${currentStatus}`)}
-            </p>
-            <p className="text-sm text-muted-foreground">
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <p className="truncate text-sm font-semibold text-brand">
+                {t(`statuses.${currentStatus}`)}
+              </p>
+              <Pencil
+                className="size-3 shrink-0 text-muted-foreground opacity-70 group-hover:text-action"
+                aria-hidden
+              />
+            </div>
+            <p className="truncate text-xs text-muted-foreground">
               {t("statusSince", {
                 date: formatStatusDate(currentStatusAt, locale),
               })}
             </p>
-          </div>
-          <span
-            className={cn(
-              "inline-flex size-8 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-all",
-              "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100",
-              "group-hover:border-border group-hover:bg-surface group-hover:text-action",
-            )}
+          </button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-xs"
+            onClick={() => setHistoryOpen(true)}
+            aria-label={t("viewStatusHistory")}
+            title={t("viewStatusHistory")}
           >
-            <Pencil className="size-3.5" aria-hidden />
-          </span>
+            <History className="size-3.5" />
+          </Button>
         </div>
-      </button>
+      </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-md" showCloseButton>
           <DialogHeader>
             <DialogTitle>{t("updateStatusTitle")}</DialogTitle>
@@ -164,7 +175,7 @@ export function ProjectStatusCard({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => setEditOpen(false)}
                 disabled={pending}
               >
                 {t("cancel")}
@@ -176,13 +187,43 @@ export function ProjectStatusCard({
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>{t("statusHistoryTitle")}</DialogTitle>
+            <DialogDescription>{t("statusHistoryHint")}</DialogDescription>
+          </DialogHeader>
+          {history.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("statusHistoryEmpty")}
+            </p>
+          ) : (
+            <ul className="max-h-80 divide-y divide-border overflow-y-auto rounded-xl border border-border">
+              {history.map((entry) => (
+                <li
+                  key={entry.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3"
+                >
+                  <p className="text-sm font-medium text-brand">
+                    {t(`statuses.${entry.status}`)}
+                  </p>
+                  <p className="shrink-0 text-xs text-muted-foreground">
+                    {formatStatusDate(entry.status_at, locale)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
 
 /** @deprecated Prefer ProjectStatusCard */
 export function ProjectStatusUpdateForm(props: {
-  locale: "en" | "fr";
+  locale: string;
   projectId: string;
   currentStatus: ProjectStatus;
   currentStatusAt: string;

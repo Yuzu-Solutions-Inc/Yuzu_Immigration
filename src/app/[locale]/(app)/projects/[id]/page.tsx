@@ -2,7 +2,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
-import { SurfaceCard } from "@/components/layout/surface-card";
 import { formatStatusDate } from "@/components/projects/project-status-summary";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { buttonVariants } from "@/components/ui/button";
@@ -46,10 +45,10 @@ export default async function ProjectDetailPage({
   const tf = await getTranslations("forms");
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
-  const loc = locale === "fr" ? "fr" : "en";
+  const loc = locale === "fr" ? "fr" : locale === "es" ? "es" : "en";
 
   const opened = new Date(project.opened_at).toLocaleDateString(
-    locale === "fr" ? "fr-CA" : "en-CA",
+    locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
     { year: "numeric", month: "short", day: "numeric" },
   );
 
@@ -71,7 +70,7 @@ export default async function ProjectDetailPage({
             {t(`jurisdictions.${project.jurisdiction}`)}
           </p>
           {project.description ? (
-            <p className="max-w-2xl text-[15px] text-brand/80">
+            <p className="max-w-2xl text-sm text-brand/80">
               {project.description}
             </p>
           ) : null}
@@ -87,45 +86,47 @@ export default async function ProjectDetailPage({
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-4">
         <ProjectStatusCard
-          locale={locale === "fr" ? "fr" : "en"}
+          locale={locale}
           projectId={project.id}
           currentStatus={project.status}
           currentStatusAt={project.status_at}
+          history={history}
         />
-        <SurfaceCard className="space-y-1 sm:p-6">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             {t("submitBefore")}
           </p>
-          <p className="font-medium text-brand">
+          <p className="mt-0.5 truncate text-sm font-semibold text-brand">
             {project.submit_before
               ? formatStatusDate(project.submit_before, locale)
               : t("submitBeforeEmpty")}
           </p>
-        </SurfaceCard>
-        <SurfaceCard className="space-y-1 sm:p-6">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        </div>
+        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             {t("opened")}
           </p>
-          <p className="font-medium text-brand">{opened}</p>
-        </SurfaceCard>
-      </div>
-
-      <section className="space-y-3">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("notes")}
-        </h2>
-        <SurfaceCard>
+          <p className="mt-0.5 truncate text-sm font-semibold text-brand">
+            {opened}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated sm:col-span-1">
+          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("notes")}
+          </p>
           {project.notes ? (
-            <p className="whitespace-pre-wrap text-[15px] text-brand">
+            <p className="mt-0.5 line-clamp-2 text-sm text-brand" title={project.notes}>
               {project.notes}
             </p>
           ) : (
-            <p className="text-[15px] text-muted-foreground">{t("notesEmpty")}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {t("notesEmpty")}
+            </p>
           )}
-        </SurfaceCard>
-      </section>
+        </div>
+      </div>
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -172,35 +173,6 @@ export default async function ProjectDetailPage({
             })}
           </p>
         ) : null}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("statusHistoryTitle")}
-        </h2>
-        {history.length === 0 ? (
-          <SurfaceCard>
-            <p className="text-[15px] text-muted-foreground">
-              {t("statusHistoryEmpty")}
-            </p>
-          </SurfaceCard>
-        ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-            {history.map((entry) => (
-              <li
-                key={entry.id}
-                className="flex items-center justify-between gap-3 px-5 py-4"
-              >
-                <p className="font-medium text-brand">
-                  {t(`statuses.${entry.status}`)}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {formatStatusDate(entry.status_at, locale)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
 
       <section className="space-y-3">
