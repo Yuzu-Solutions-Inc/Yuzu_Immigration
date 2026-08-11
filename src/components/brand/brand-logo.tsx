@@ -11,7 +11,7 @@ const sizeClass = {
 type BrandLogoProps = {
   className?: string;
   size?: keyof typeof sizeClass;
-  href?: "/" | null;
+  href?: "/" | "/home" | null;
   inverted?: boolean;
 };
 

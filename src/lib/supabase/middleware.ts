@@ -55,7 +55,11 @@ export async function updateSession(request: NextRequest) {
     pathname === "/home" ||
     pathname.startsWith("/home/") ||
     pathname === "/onboarding" ||
-    pathname.startsWith("/onboarding/");
+    pathname.startsWith("/onboarding/") ||
+    pathname === "/projects" ||
+    pathname.startsWith("/projects/") ||
+    pathname === "/people" ||
+    pathname.startsWith("/people/");
 
   if (!user && isProtectedRoute) {
     const redirectUrl = request.nextUrl.clone();

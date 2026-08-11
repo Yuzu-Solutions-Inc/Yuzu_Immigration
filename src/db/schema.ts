@@ -6,13 +6,52 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const orgMemberRoleEnum = pgEnum("org_member_role", [
   "owner",
   "admin",
   "member",
+]);
+
+export const projectStatusEnum = pgEnum("project_status", [
+  "active",
+  "on_hold",
+  "submitted",
+  "closed",
+]);
+
+export const projectJurisdictionEnum = pgEnum("project_jurisdiction", [
+  "federal",
+  "quebec",
+  "both",
+]);
+
+export const programFamilyEnum = pgEnum("program_family", [
+  "study_permit",
+  "work_permit",
+  "visitor",
+  "pgwp",
+  "express_entry",
+  "pnp",
+  "family_sponsorship",
+  "humanitarian",
+  "quebec_pstq",
+  "quebec_family",
+  "quebec_temporary",
+  "other",
+]);
+
+export const participantRoleEnum = pgEnum("participant_role", [
+  "principal",
+  "spouse",
+  "partner",
+  "dependent",
+  "sponsor",
+  "accompanying",
 ]);
 
 export const organizations = pgTable("organizations", {
@@ -60,8 +99,8 @@ export const organizationMembers = pgTable(
   (table) => [unique().on(table.organizationId, table.userId)],
 );
 
-/** Immigration clients belonging to an organization. */
-export const customers = pgTable("customers", {
+/** Lifelong immigration clients belonging to an organization. */
+export const people = pgTable("people", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id")
     .notNull()
@@ -79,16 +118,63 @@ export const customers = pgTable("customers", {
     .notNull(),
 });
 
+export const immigrationProjects = pgTable("immigration_projects", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  status: projectStatusEnum("status").notNull().default("active"),
+  jurisdiction: projectJurisdictionEnum("jurisdiction")
+    .notNull()
+    .default("federal"),
+  programFamily: programFamilyEnum("program_family").notNull().default("other"),
+  openedAt: timestamp("opened_at", { withTimezone: true }).defaultNow().notNull(),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectParticipants = pgTable(
+  "project_participants",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+    role: participantRoleEnum("role").notNull().default("principal"),
+    leftAt: timestamp("left_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("project_participants_active_unique")
+      .on(table.projectId, table.personId)
+      .where(sql`${table.leftAt} is null`),
+  ],
+);
+
 /**
  * Portal login metadata (no password hash).
  * URL: /portal/[access_token] or login with access_code + password.
  */
 export const customerPortalAccess = pgTable("customer_portal_access", {
   id: uuid("id").defaultRandom().primaryKey(),
-  customerId: uuid("customer_id")
+  personId: uuid("person_id")
     .notNull()
     .unique()
-    .references(() => customers.id, { onDelete: "cascade" }),
+    .references(() => people.id, { onDelete: "cascade" }),
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
@@ -113,12 +199,18 @@ const privateSchema = pgSchema("private");
 export const customerPortalSecrets = privateSchema.table(
   "customer_portal_secrets",
   {
-    customerId: uuid("customer_id")
+    personId: uuid("person_id")
       .primaryKey()
-      .references(() => customers.id, { onDelete: "cascade" }),
+      .references(() => people.id, { onDelete: "cascade" }),
     passwordHash: text("password_hash").notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
 );
+
+export type ProgramFamily = (typeof programFamilyEnum.enumValues)[number];
+export type ProjectJurisdiction =
+  (typeof projectJurisdictionEnum.enumValues)[number];
+export type ParticipantRole = (typeof participantRoleEnum.enumValues)[number];
+export type ProjectStatus = (typeof projectStatusEnum.enumValues)[number];

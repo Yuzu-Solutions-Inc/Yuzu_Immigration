@@ -53,17 +53,115 @@
     "title": "Accueil",
     "welcome": "Bon retour, {name}",
     "welcomeFallback": "Bon retour",
+    "dashboardSubtitle": "Vue d’ensemble de votre cabinet — d’autres indicateurs s’ajouteront ici.",
     "orgLabel": "Organisation",
     "roleLabel": "Rôle",
-    "customers": "Clients",
-    "customersHint": "Les fiches clients et l’accès portail suivront.",
-    "team": "Équipe",
-    "teamHint": "Tous les membres de l’organisation ont actuellement un accès complet."
+    "newProject": "Nouveau projet",
+    "newProjectHint": "Ouvrez un dossier en un écran — personnes, programme et juridiction ensemble.",
+    "recentProjects": "Projets récents",
+    "viewAllProjects": "Voir tous les projets",
+    "emptyProjects": "Aucun projet pour l’instant. Commencez par votre premier dossier.",
+    "stats": {
+      "activeProjects": "Projets actifs",
+      "people": "Personnes",
+      "onHold": "En pause"
+    },
+    "placeholders": {
+      "deadlinesTitle": "Échéances à venir",
+      "deadlinesBody": "Expirations de permis, cibles de dépôt et fenêtres biométriques apparaîtront ici.",
+      "activityTitle": "Activité récente",
+      "activityBody": "Les mises à jour de dossiers et les événements du portail s’afficheront dans ce fil."
+    }
   },
   "nav": {
     "home": "Accueil",
-    "customers": "Clients",
+    "projects": "Projets",
+    "people": "Personnes",
+    "menu": "Ouvrir le menu",
     "login": "Connexion"
+  },
+  "projects": {
+    "title": "Projets",
+    "subtitle": "Dossiers d’immigration liés à une ou plusieurs personnes.",
+    "new": "Nouveau projet",
+    "empty": "Aucun projet pour l’instant.",
+    "createTitle": "Nouveau projet",
+    "createSubtitle": "Composition, programme et personnes sur un seul écran.",
+    "composition": "Qui est sur ce dossier ?",
+    "compositions": {
+      "individual": "Individu",
+      "couple": "Couple",
+      "family": "Famille"
+    },
+    "program": "Famille de programme",
+    "jurisdiction": "Juridiction",
+    "jurisdictions": {
+      "federal": "Fédéral (IRCC)",
+      "quebec": "Québec (MIFI)",
+      "both": "Les deux"
+    },
+    "people": "Personnes",
+    "addDependent": "Ajouter un dépendant",
+    "newPerson": "Nouveau",
+    "existingPerson": "Existant",
+    "selectPerson": "Choisir une personne…",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "emailOptional": "E-mail (optionnel)",
+    "create": "Créer le projet",
+    "creating": "Création…",
+    "back": "Retour aux projets",
+    "status": "Statut",
+    "opened": "Ouvert le",
+    "participants": "Participants",
+    "notFound": "Projet introuvable.",
+    "statuses": {
+      "active": "Actif",
+      "on_hold": "En pause",
+      "submitted": "Soumis",
+      "closed": "Fermé"
+    },
+    "errors": {
+      "invalid": "Vérifiez le formulaire et réessayez.",
+      "personMissing": "Une des personnes sélectionnées est introuvable.",
+      "principalRequired": "Un demandeur principal est requis.",
+      "createFailed": "Impossible de créer le projet. Réessayez.",
+      "generic": "Une erreur est survenue. Réessayez."
+    }
+  },
+  "people": {
+    "title": "Personnes",
+    "subtitle": "Fiches clients à long terme, tous dossiers confondus.",
+    "empty": "Aucune personne pour l’instant. Elles apparaissent quand vous créez un projet.",
+    "newProject": "Nouveau projet pour cette personne",
+    "projects": "Projets",
+    "noProjects": "Pas encore lié à un projet.",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "notFound": "Personne introuvable.",
+    "back": "Retour aux personnes"
+  },
+  "programs": {
+    "study_permit": "Permis d’études",
+    "work_permit": "Permis de travail",
+    "visitor": "Visiteur / VRT",
+    "pgwp": "PTPD",
+    "express_entry": "Entrée express",
+    "pnp": "PCP",
+    "family_sponsorship": "Parrainage familial",
+    "humanitarian": "Humanitaire",
+    "quebec_pstq": "PSTQ Québec",
+    "quebec_family": "Réunification Québec",
+    "quebec_temporary": "Temporaire Québec",
+    "other": "Autre"
+  },
+  "roles": {
+    "principal": "Principal",
+    "spouse": "Conjoint",
+    "partner": "Partenaire",
+    "dependent": "Dépendant",
+    "sponsor": "Parrain",
+    "accompanying": "Accompagnant"
   },
   "legal": {
     "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI)."

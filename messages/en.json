@@ -53,17 +53,115 @@
     "title": "Home",
     "welcome": "Welcome back, {name}",
     "welcomeFallback": "Welcome back",
+    "dashboardSubtitle": "Your firm’s workspace overview — more insights will land here over time.",
     "orgLabel": "Organization",
     "roleLabel": "Role",
-    "customers": "Customers",
-    "customersHint": "Client records and portal access come next.",
-    "team": "Team",
-    "teamHint": "Everyone in the org currently shares full access."
+    "newProject": "New project",
+    "newProjectHint": "Open a file in one screen — people, program, and jurisdiction together.",
+    "recentProjects": "Recent projects",
+    "viewAllProjects": "View all projects",
+    "emptyProjects": "No projects yet. Start with your first immigration file.",
+    "stats": {
+      "activeProjects": "Active projects",
+      "people": "People",
+      "onHold": "On hold"
+    },
+    "placeholders": {
+      "deadlinesTitle": "Upcoming deadlines",
+      "deadlinesBody": "Permit expiries, submission targets, and biometrics windows will appear here.",
+      "activityTitle": "Recent activity",
+      "activityBody": "File updates and portal events will show up in this feed."
+    }
   },
   "nav": {
     "home": "Home",
-    "customers": "Customers",
+    "projects": "Projects",
+    "people": "People",
+    "menu": "Open menu",
     "login": "Sign in"
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Time-bound immigration engagements linked to one or more people.",
+    "new": "New project",
+    "empty": "No projects yet.",
+    "createTitle": "New project",
+    "createSubtitle": "Composition, program, and people on one screen.",
+    "composition": "Who is on this file?",
+    "compositions": {
+      "individual": "Individual",
+      "couple": "Couple",
+      "family": "Family"
+    },
+    "program": "Program family",
+    "jurisdiction": "Jurisdiction",
+    "jurisdictions": {
+      "federal": "Federal (IRCC)",
+      "quebec": "Quebec (MIFI)",
+      "both": "Both"
+    },
+    "people": "People",
+    "addDependent": "Add dependent",
+    "newPerson": "New",
+    "existingPerson": "Existing",
+    "selectPerson": "Select a person…",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "emailOptional": "Email (optional)",
+    "create": "Create project",
+    "creating": "Creating…",
+    "back": "Back to projects",
+    "status": "Status",
+    "opened": "Opened",
+    "participants": "Participants",
+    "notFound": "Project not found.",
+    "statuses": {
+      "active": "Active",
+      "on_hold": "On hold",
+      "submitted": "Submitted",
+      "closed": "Closed"
+    },
+    "errors": {
+      "invalid": "Check the form and try again.",
+      "personMissing": "One of the selected people could not be found.",
+      "principalRequired": "A principal applicant is required.",
+      "createFailed": "Could not create the project. Try again.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "people": {
+    "title": "People",
+    "subtitle": "Lifelong client records across every immigration file.",
+    "empty": "No people yet. They appear when you create a project.",
+    "newProject": "New project for this person",
+    "projects": "Projects",
+    "noProjects": "Not linked to any projects yet.",
+    "email": "Email",
+    "phone": "Phone",
+    "notFound": "Person not found.",
+    "back": "Back to people"
+  },
+  "programs": {
+    "study_permit": "Study permit",
+    "work_permit": "Work permit",
+    "visitor": "Visitor / TRV",
+    "pgwp": "PGWP",
+    "express_entry": "Express Entry",
+    "pnp": "PNP",
+    "family_sponsorship": "Family sponsorship",
+    "humanitarian": "Humanitarian",
+    "quebec_pstq": "Quebec PSTQ",
+    "quebec_family": "Quebec family",
+    "quebec_temporary": "Quebec temporary",
+    "other": "Other"
+  },
+  "roles": {
+    "principal": "Principal",
+    "spouse": "Spouse",
+    "partner": "Partner",
+    "dependent": "Dependent",
+    "sponsor": "Sponsor",
+    "accompanying": "Accompanying"
   },
   "legal": {
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI)."

@@ -1,0 +1,5 @@
+-- Applied remotely: harden_org_tenant_isolation
+-- - Revoked TRUNCATE/REFERENCES/TRIGGER from authenticated (TRUNCATE bypasses RLS)
+-- - Hardened project_participants + portal_access policies to require same-org person/project
+-- - Triggers enforce same-org integrity even for elevated paths
+-- - Verified: member of org A cannot SELECT/INSERT org B rows or cross-link participants

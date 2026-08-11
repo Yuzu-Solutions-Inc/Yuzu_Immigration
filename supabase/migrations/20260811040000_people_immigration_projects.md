@@ -1,0 +1,3 @@
+-- Applied remotely: people_and_immigration_projects
+-- customers renamed to people; portal FKs use person_id
+-- immigration_projects + project_participants with org RLS
