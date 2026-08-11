@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
-import { getAppBaseUrl } from "@/lib/env";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 const credentialsSchema = z.object({
   email: z.string().email(),

@@ -18,7 +18,7 @@ import { requireOrganizationId } from "@/lib/crm/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { getAppBaseUrl } from "@/lib/env";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 export type FormsActionState = {
   error?: string;
