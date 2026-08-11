@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireOrganizationId } from "@/lib/crm/queries";
+import { getSessionUser } from "@/lib/auth/session";
 import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { createClient } from "@/lib/supabase/server";
 
@@ -166,4 +167,64 @@ export async function deletePersonAction(
   revalidatePath(`/${data.locale}/home`);
   revalidatePath(`/${data.locale}/projects`);
   redirect(`/${data.locale}/people`);
+}
+
+const addPersonNoteSchema = z.object({
+  locale: z.enum(["en", "fr", "es"]).default("en"),
+  personId: z.string().uuid(),
+  body: z.string().trim().min(1).max(20000),
+});
+
+export type AddPersonNoteState = {
+  error?: string;
+  message?: string;
+};
+
+export async function addPersonNoteAction(
+  _prev: AddPersonNoteState,
+  formData: FormData,
+): Promise<AddPersonNoteState> {
+  const parsed = addPersonNoteSchema.safeParse({
+    locale: formData.get("locale") || "en",
+    personId: String(formData.get("personId") || ""),
+    body: String(formData.get("body") || ""),
+  });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  const { data } = parsed;
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${data.locale}/onboarding`);
+  }
+
+  const user = await getSessionUser();
+  const supabase = await createClient();
+  const { data: person, error: personError } = await supabase
+    .from("people")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("id", data.personId)
+    .maybeSingle();
+
+  if (personError || !person) {
+    return { error: "not_found" };
+  }
+
+  const { error: insertError } = await supabase.from("person_notes").insert({
+    organization_id: orgId,
+    person_id: data.personId,
+    body: data.body,
+    created_by: user?.id ?? null,
+  });
+
+  if (insertError) {
+    console.error("add person note:", insertError.message);
+    return { error: "save_failed" };
+  }
+
+  revalidatePath(`/${data.locale}/people/${data.personId}`);
+  return { message: "saved" };
 }

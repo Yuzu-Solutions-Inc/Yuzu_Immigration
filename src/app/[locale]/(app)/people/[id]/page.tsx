@@ -2,11 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { DeletePersonButton } from "@/components/people/delete-person-button";
+import { PersonNotesSection } from "@/components/people/person-notes-section";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getPerson, getPersonProjects } from "@/lib/crm/queries";
+import { getPerson, getPersonProjects, listPersonNotes } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
 export default async function PersonDetailPage({
@@ -20,7 +21,10 @@ export default async function PersonDetailPage({
   const person = await getPerson(id);
   if (!person) notFound();
 
-  const projects = await getPersonProjects(id);
+  const [projects, notes] = await Promise.all([
+    getPersonProjects(id),
+    listPersonNotes(id),
+  ]);
   const t = await getTranslations("people");
   const ti = await getTranslations("immigrationStatus");
   const tprog = await getTranslations("programs");
@@ -105,6 +109,8 @@ export default async function PersonDetailPage({
           </div>
         </div>
       </div>
+
+      <PersonNotesSection locale={locale} personId={person.id} notes={notes} />
 
       <section className="space-y-3">
         <h2 className="font-heading text-lg font-semibold text-brand">

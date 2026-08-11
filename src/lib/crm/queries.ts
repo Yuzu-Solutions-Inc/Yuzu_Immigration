@@ -22,6 +22,17 @@ export type PersonRow = {
   updated_at: string;
 };
 
+export type PersonNoteRow = {
+  id: string;
+  organization_id: string;
+  person_id: string;
+  body: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  author_name: string | null;
+};
+
 export type StaffProfileRow = {
   id: string;
   full_name: string | null;
@@ -142,6 +153,54 @@ export async function getPerson(personId: string): Promise<PersonRow | null> {
     return null;
   }
   return data as PersonRow | null;
+}
+
+export async function listPersonNotes(
+  personId: string,
+): Promise<PersonNoteRow[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("person_notes")
+    .select("id, organization_id, person_id, body, created_by, created_at, updated_at")
+    .eq("organization_id", orgId)
+    .eq("person_id", personId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("listPersonNotes:", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []) as Omit<PersonNoteRow, "author_name">[];
+  const authorIds = [
+    ...new Set(rows.map((row) => row.created_by).filter(Boolean)),
+  ] as string[];
+
+  let names = new Map<string, string | null>();
+  if (authorIds.length > 0) {
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", authorIds);
+    if (profileError) {
+      console.error("listPersonNotes authors:", profileError.message);
+    } else {
+      names = new Map(
+        (profiles ?? []).map((p) => [
+          p.id as string,
+          (p.full_name as string | null) || (p.email as string | null),
+        ]),
+      );
+    }
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    author_name: row.created_by ? (names.get(row.created_by) ?? null) : null,
+  }));
 }
 
 export async function listOrgMembers(): Promise<OrgMemberRow[]> {

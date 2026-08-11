@@ -36,7 +36,7 @@ export default async function PeoplePage({
             return (
               <li
                 key={person.id}
-                className="flex items-center gap-3 px-5 py-4"
+                className="group flex items-center gap-3 px-5 py-4"
               >
                 <Link
                   href={`/people/${person.id}`}
@@ -53,6 +53,7 @@ export default async function PeoplePage({
                   locale={locale}
                   personId={person.id}
                   fullName={fullName}
+                  className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100"
                 />
               </li>
             );

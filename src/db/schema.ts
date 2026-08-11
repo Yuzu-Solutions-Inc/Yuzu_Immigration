@@ -156,6 +156,27 @@ export const people = pgTable("people", {
     .notNull(),
 });
 
+/** Internal consultation notes for a person (firm-only). */
+export const personNotes = pgTable("person_notes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  personId: uuid("person_id")
+    .notNull()
+    .references(() => people.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const immigrationProjects = pgTable("immigration_projects", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id")

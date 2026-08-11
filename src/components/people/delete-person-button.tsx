@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -8,6 +9,7 @@ import {
   type DeletePersonState,
 } from "@/app/actions/people";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const initialState: DeletePersonState = {};
 
@@ -15,12 +17,12 @@ export function DeletePersonButton({
   locale,
   personId,
   fullName,
-  size = "sm",
+  className,
 }: {
   locale: string;
   personId: string;
   fullName: string;
-  size?: "sm" | "xs";
+  className?: string;
 }) {
   const t = useTranslations("people");
   const [state, formAction, pending] = useActionState(
@@ -39,7 +41,7 @@ export function DeletePersonButton({
   return (
     <form
       action={formAction}
-      className="inline-flex flex-col items-end gap-1"
+      className={cn("inline-flex flex-col items-end gap-1", className)}
       onSubmit={(event) => {
         if (!window.confirm(t("deleteConfirm", { name: fullName }))) {
           event.preventDefault();
@@ -50,11 +52,14 @@ export function DeletePersonButton({
       <input type="hidden" name="personId" value={personId} />
       <Button
         type="submit"
-        variant="destructive"
-        size={size}
+        variant="ghost"
+        size="icon-sm"
         disabled={pending}
+        aria-label={pending ? t("deleting") : t("deleteAria", { name: fullName })}
+        title={t("delete")}
+        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
       >
-        {pending ? t("deleting") : t("delete")}
+        <Trash2 className="size-4" />
       </Button>
       {errorMessage ? (
         <p className="max-w-[12rem] text-right text-xs text-destructive">
