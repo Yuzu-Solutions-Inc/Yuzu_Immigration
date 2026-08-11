@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { z } from "zod";
 
 const emptyToUndefined = (value: unknown) =>
@@ -10,14 +11,11 @@ const optionalSecret = z.preprocess(
 );
 
 const serverSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.preprocess(
+  NEXT_PUBLIC_APP_URL: optionalUrl,
+  NEXT_PUBLIC_DEFAULT_LOCALE: z.preprocess(
     emptyToUndefined,
-    z.string().url().default("http://localhost:3000"),
+    z.enum(["en", "fr", "es"]).default("en"),
   ),
-    NEXT_PUBLIC_DEFAULT_LOCALE: z.preprocess(
-      emptyToUndefined,
-      z.enum(["en", "fr", "es"]).default("en"),
-    ),
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalSecret,
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
@@ -46,6 +44,49 @@ function readEnv(): ServerEnv {
 }
 
 export const env = readEnv();
+
+function isLocalhostUrl(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Public site origin for share links / redirects.
+ * Prefer a non-localhost NEXT_PUBLIC_APP_URL, then the current request host,
+ * then Vercel URL, then localhost for local dev.
+ */
+export async function getAppBaseUrl(): Promise<string> {
+  const configured = env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (configured && !isLocalhostUrl(configured)) {
+    return configured;
+  }
+
+  try {
+    const h = await headers();
+    const host = h.get("x-forwarded-host") || h.get("host");
+    if (host) {
+      const proto =
+        h.get("x-forwarded-proto") ||
+        (isLocalhostUrl(`http://${host}`) ? "http" : "https");
+      return `${proto}://${host}`.replace(/\/$/, "");
+    }
+  } catch {
+    // headers() unavailable outside a request
+  }
+
+  const vercel =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercel) {
+    const host = vercel.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    return `https://${host}`;
+  }
+
+  return configured || "http://localhost:3000";
+}
 
 export function requireSupabasePublicEnv() {
   if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {

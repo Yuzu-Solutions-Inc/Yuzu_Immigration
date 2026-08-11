@@ -18,7 +18,7 @@ import { requireOrganizationId } from "@/lib/crm/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { env } from "@/lib/env";
+import { getAppBaseUrl } from "@/lib/env";
 
 export type FormsActionState = {
   error?: string;
@@ -187,7 +187,7 @@ export async function createFormShareLinkAction(
     return { error: "share_failed" };
   }
 
-  const base = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  const base = await getAppBaseUrl();
   const shareUrl = `${base}/${locale}/fill/${token}`;
 
   revalidatePath(`/${locale}/projects/${projectId}`);

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAppBaseUrl } from "@/lib/env";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -60,7 +61,7 @@ export async function signUpWithPassword(
   }
 
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const origin = await getAppBaseUrl();
 
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
