@@ -289,7 +289,6 @@ export const projectForms = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [unique().on(table.projectId, table.formCode)],
 );
 
 export const projectFormAnswers = pgTable("project_form_answers", {

@@ -347,6 +347,7 @@
     "required": "Obligatoire",
     "addForm": "Ajouter un formulaire",
     "adding": "Ajout…",
+    "alreadyOnFile": "déjà au dossier",
     "statuses": {
       "todo": "À faire",
       "in_progress": "En cours",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { Download, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -73,8 +74,10 @@ export function ProjectFormsPanel({
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
   const [formCode, setFormCode] = useState<FormCode>("imm5475");
 
-  const existing = new Set(forms.map((f) => f.form_code));
-  const addable = ADDABLE_COMPANION_FORMS.filter((c) => !existing.has(c));
+  const addOptions = [
+    ...ADDABLE_COMPANION_FORMS,
+    ...ALL_FORM_CODES.filter((c) => !ADDABLE_COMPANION_FORMS.includes(c)),
+  ];
 
   function handleSave(next: Record<string, unknown>, section: string) {
     const fd = new FormData();
@@ -164,13 +167,20 @@ export function ProjectFormsPanel({
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="icon-sm"
                     disabled={genPending}
                     onClick={() => handleDownload(form.form_code)}
+                    aria-label={
+                      downloadingKey === form.form_code
+                        ? t("downloading")
+                        : t("download")
+                    }
                   >
-                    {downloadingKey === form.form_code
-                      ? t("downloading")
-                      : t("download")}
+                    {downloadingKey === form.form_code ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Download className="size-4" />
+                    )}
                   </Button>
                 </div>
               </li>
@@ -192,42 +202,36 @@ export function ProjectFormsPanel({
           </ul>
         ) : null}
 
-        {addable.length > 0 ? (
-          <form action={addAction} className="flex flex-wrap items-end gap-2">
-            <input type="hidden" name="projectId" value={projectId} />
-            <input type="hidden" name="locale" value={locale} />
-            <div className="min-w-[220px] flex-1 space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("addForm")}
-              </label>
-              <select
-                name="formCode"
-                value={formCode}
-                onChange={(e) => setFormCode(e.target.value as FormCode)}
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
-              >
-                {addable.map((code) => (
-                  <option key={code} value={code}>
-                    {formTitle(code, locale)}
-                  </option>
-                ))}
-                {ALL_FORM_CODES.filter(
-                  (c) => !existing.has(c) && !addable.includes(c),
-                ).map((code) => (
-                  <option key={code} value={code}>
-                    {formTitle(code, locale)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <Button type="submit" disabled={addPending}>
-              {addPending ? t("adding") : t("addForm")}
-            </Button>
-            {addState.error ? (
-              <p className="w-full text-sm text-destructive">{t("errors.addFailed")}</p>
-            ) : null}
-          </form>
-        ) : null}
+        <form action={addAction} className="flex flex-wrap items-end gap-2">
+          <input type="hidden" name="projectId" value={projectId} />
+          <input type="hidden" name="locale" value={locale} />
+          <div className="min-w-[220px] flex-1 space-y-1">
+            <label className="text-xs font-semibold text-muted-foreground uppercase">
+              {t("addForm")}
+            </label>
+            <select
+              name="formCode"
+              value={formCode}
+              onChange={(e) => setFormCode(e.target.value as FormCode)}
+              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
+            >
+              {addOptions.map((code) => (
+                <option key={code} value={code}>
+                  {formTitle(code, locale)}
+                  {forms.some((f) => f.form_code === code)
+                    ? ` · ${t("alreadyOnFile")}`
+                    : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button type="submit" disabled={addPending}>
+            {addPending ? t("adding") : t("addForm")}
+          </Button>
+          {addState.error ? (
+            <p className="w-full text-sm text-destructive">{t("errors.addFailed")}</p>
+          ) : null}
+        </form>
       </section>
 
       <SurfaceCard className="space-y-4">

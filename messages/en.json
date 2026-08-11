@@ -347,6 +347,7 @@
     "required": "Required",
     "addForm": "Add form",
     "adding": "Adding…",
+    "alreadyOnFile": "already on file",
     "statuses": {
       "todo": "To do",
       "in_progress": "In progress",
