@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "MyConsultant",
+    "name": "My Consultant",
     "tagline": "Canadian immigration consultant CRM"
   },
   "home": {
@@ -10,7 +10,7 @@
     "secondaryCta": "Create account"
   },
   "auth": {
-    "title": "Sign in to MyConsultant",
+    "title": "Sign in to My Consultant",
     "subtitle": "Access your organization workspace.",
     "continueGoogle": "Continue with Google",
     "orEmail": "or use email",

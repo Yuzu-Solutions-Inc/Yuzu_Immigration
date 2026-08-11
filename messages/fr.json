@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "MyConsultant",
+    "name": "My Consultant",
     "tagline": "CRM pour consultants en immigration canadienne"
   },
   "home": {
@@ -10,7 +10,7 @@
     "secondaryCta": "Créer un compte"
   },
   "auth": {
-    "title": "Connexion à MyConsultant",
+    "title": "Connexion à My Consultant",
     "subtitle": "Accédez à l’espace de votre organisation.",
     "continueGoogle": "Continuer avec Google",
     "orEmail": "ou utiliser l’e-mail",

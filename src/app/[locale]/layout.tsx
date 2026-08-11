@@ -1,4 +1,4 @@
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Nunito, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -14,6 +14,12 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-heading",
   subsets: ["latin"],
   weight: ["500", "600", "700"],
+});
+
+const nunito = Nunito({
+  variable: "--font-logo",
+  subsets: ["latin"],
+  weight: ["700", "800"],
 });
 
 const inter = Inter({
@@ -44,7 +50,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${plusJakarta.variable} ${inter.variable} h-full antialiased`}
+      className={`${plusJakarta.variable} ${nunito.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <NextIntlClientProvider messages={messages}>

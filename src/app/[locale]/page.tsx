@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -22,9 +23,7 @@ export default async function MarketingHomePage({
       />
 
       <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
-        <p className="font-heading text-lg font-bold tracking-tight text-brand">
-          {app("name")}
-        </p>
+        <BrandLogo size="md" />
         <Link
           href="/login"
           className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
@@ -38,9 +37,7 @@ export default async function MarketingHomePage({
           <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
             {app("tagline")}
           </p>
-          <h1 className="font-heading text-5xl font-bold tracking-tight text-brand text-balance sm:text-6xl">
-            {app("name")}
-          </h1>
+          <BrandLogo size="hero" href={null} />
           <p className="max-w-2xl text-xl text-muted-foreground text-pretty sm:text-2xl">
             {t("title")}
           </p>

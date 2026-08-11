@@ -9,6 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
+  --font-logo: var(--font-logo);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -127,6 +128,10 @@
 }
 
 @layer utilities {
+  .font-logo {
+    font-family: var(--font-logo), var(--font-heading), var(--font-sans), sans-serif;
+  }
+
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
   }

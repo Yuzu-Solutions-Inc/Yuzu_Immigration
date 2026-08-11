@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "MyConsultant",
+  title: "My Consultant",
   description: "Canadian immigration consultant CRM by Yuzu Solutions",
 };
 
