@@ -56,7 +56,11 @@ export async function createOrganizationAction(
   });
 
   if (error) {
-    if (error.message.toLowerCase().includes("duplicate") || error.code === "23505") {
+    console.error("create_organization rpc:", error.message, error.code);
+    if (
+      error.message.toLowerCase().includes("duplicate") ||
+      error.code === "23505"
+    ) {
       return { error: "slug_taken" };
     }
     return { error: "create_failed" };

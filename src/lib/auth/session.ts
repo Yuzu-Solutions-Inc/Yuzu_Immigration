@@ -36,31 +36,34 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data: membershipRows, error: membershipError } = await supabase
     .from("organization_members")
-    .select(
-      `
-      id,
-      role,
-      organization:organizations (
-        id,
-        name,
-        slug
-      )
-    `,
-    )
+    .select("id, role, organization_id")
     .eq("user_id", user.id);
 
-  if (error || !data) {
+  if (membershipError || !membershipRows?.length) {
+    if (membershipError) {
+      console.error("getUserMemberships members:", membershipError.message);
+    }
     return [];
   }
 
-  return data
-    .map((row) => {
-      const organization = Array.isArray(row.organization)
-        ? row.organization[0]
-        : row.organization;
+  const orgIds = membershipRows.map((row) => row.organization_id as string);
+  const { data: orgs, error: orgError } = await supabase
+    .from("organizations")
+    .select("id, name, slug")
+    .in("id", orgIds);
 
+  if (orgError) {
+    console.error("getUserMemberships orgs:", orgError.message);
+    return [];
+  }
+
+  const orgById = new Map((orgs ?? []).map((org) => [org.id as string, org]));
+
+  return membershipRows
+    .map((row) => {
+      const organization = orgById.get(row.organization_id as string);
       if (!organization) {
         return null;
       }
