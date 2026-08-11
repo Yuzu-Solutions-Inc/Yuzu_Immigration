@@ -110,12 +110,17 @@ export function EditPersonForm({
             id="preferredLocale"
             name="preferredLocale"
             defaultValue={
-              person.preferred_locale === "fr" ? "fr" : "en"
+              person.preferred_locale === "fr"
+                ? "fr"
+                : person.preferred_locale === "es"
+                  ? "es"
+                  : "en"
             }
             className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
             <option value="en">{t("locales.en")}</option>
             <option value="fr">{t("locales.fr")}</option>
+            <option value="es">{t("locales.es")}</option>
           </select>
         </div>
         <div className="space-y-2">

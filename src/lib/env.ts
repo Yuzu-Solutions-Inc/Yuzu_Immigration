@@ -14,10 +14,10 @@ const serverSchema = z.object({
     emptyToUndefined,
     z.string().url().default("http://localhost:3000"),
   ),
-  NEXT_PUBLIC_DEFAULT_LOCALE: z.preprocess(
-    emptyToUndefined,
-    z.enum(["en", "fr"]).default("en"),
-  ),
+    NEXT_PUBLIC_DEFAULT_LOCALE: z.preprocess(
+      emptyToUndefined,
+      z.enum(["en", "fr", "es"]).default("en"),
+    ),
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalSecret,
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret,

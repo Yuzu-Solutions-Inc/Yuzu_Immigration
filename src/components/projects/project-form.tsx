@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import type {
   ParticipantRole,
   PersonImmigrationStatus,
@@ -51,6 +52,8 @@ export type ProjectFormSlot = {
 export type ProjectFormInitial = {
   projectId: string;
   title: string;
+  description: string;
+  notes: string;
   status: ProjectStatus;
   statusAt: string;
   submitBefore: string;
@@ -111,6 +114,8 @@ export function ProjectForm({
     initial?.submitBefore ?? "",
   );
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [slots, setSlots] = useState<ProjectFormSlot[]>(
     initial?.slots?.length ? initial.slots : [emptySlot("principal")],
   );
@@ -218,6 +223,8 @@ export function ProjectForm({
       <input type="hidden" name="statusAt" value={statusAt} />
       <input type="hidden" name="submitBefore" value={submitBefore} />
       <input type="hidden" name="title" value={title} />
+      <input type="hidden" name="description" value={description} />
+      <input type="hidden" name="notes" value={notes} />
       <input
         type="hidden"
         name="participants"
@@ -288,6 +295,34 @@ export function ProjectForm({
           <p className="text-xs text-muted-foreground">{t("submitBeforeHelp")}</p>
         </div>
       )}
+
+      <div className="space-y-2">
+        <Label htmlFor="description">{t("description")}</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={t("descriptionPlaceholder")}
+          maxLength={500}
+          rows={2}
+          className="rounded-xl"
+        />
+        <p className="text-xs text-muted-foreground">{t("descriptionHelp")}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="notes">{t("notes")}</Label>
+        <Textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder={t("notesPlaceholder")}
+          maxLength={10000}
+          rows={4}
+          className="rounded-xl"
+        />
+        <p className="text-xs text-muted-foreground">{t("notesHelp")}</p>
+      </div>
 
       <div className="space-y-2">
         <Label>{t("composition")}</Label>

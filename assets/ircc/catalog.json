@@ -1,0 +1,96 @@
+{
+  "description": "IRCC forms for study and work permit kits. Synced by scripts/sync_ircc_forms.py.",
+  "kits": {
+    "study-permit-outside-canada": ["imm1294", "imm5707", "imm5483", "imm5476", "imm5475", "imm5409", "imm5646"],
+    "work-permit-outside-canada": ["imm1295", "imm5707", "imm5488", "imm5476", "imm5475", "imm5409"],
+    "work-permit-inside-canada": ["imm5710", "imm5707", "imm5556", "imm5476", "imm5475", "imm5409"]
+  },
+  "forms": [
+    {
+      "code": "imm1294",
+      "title_en": "Application for Study Permit Outside Canada",
+      "title_fr": "Demande de permis d'études à l'extérieur du Canada",
+      "required": true
+    },
+    {
+      "code": "imm1295",
+      "title_en": "Application for a Work Permit Made Outside of Canada",
+      "title_fr": "Demande de permis de travail présentée à l'extérieur du Canada",
+      "required": true
+    },
+    {
+      "code": "imm5710",
+      "title_en": "Application to Change Conditions, Extend my Stay or Remain in Canada as a Worker",
+      "title_fr": "Demande pour modifier les conditions de séjour, le prolonger ou demeurer au Canada à titre de travailleur",
+      "required": true
+    },
+    {
+      "code": "imm5646",
+      "title_en": "Custodianship Declaration for Minors Studying in Canada",
+      "title_fr": "Déclaration de tutelle pour mineurs qui étudient au Canada",
+      "required": false
+    },
+    {
+      "code": "imm5483",
+      "title_en": "Document Checklist — Study Permit",
+      "title_fr": "Liste de contrôle des documents — Permis d'études",
+      "required": true
+    },
+    {
+      "code": "imm5488",
+      "title_en": "Document Checklist: Work Permit (Applied outside Canada)",
+      "title_fr": "Liste de contrôle des documents : Permis de travail (demande à l'extérieur du Canada)",
+      "required": true
+    },
+    {
+      "code": "imm5556",
+      "title_en": "Document Checklist: Worker (in Canada Applicant)",
+      "title_fr": "Liste de contrôle des documents : Travailleur (demandeur au Canada)",
+      "required": true
+    },
+    {
+      "code": "imm5476",
+      "title_en": "Use of a Representative",
+      "title_fr": "Recours à un représentant",
+      "required": false
+    },
+    {
+      "code": "imm5475",
+      "title_en": "Authority to Release Personal Information to a Designated Individual",
+      "title_fr": "Autorisation de communiquer des renseignements personnels à une personne désignée",
+      "required": false
+    },
+    {
+      "code": "imm5409",
+      "title_en": "Statutory Declaration of Common-law Union",
+      "title_fr": "Déclaration solennelle d'union de fait",
+      "required": false
+    },
+    {
+      "code": "imm5707",
+      "title_en": "Family Information (IMM 5707)",
+      "title_fr": "Renseignements familiaux (IMM 5707)",
+      "required": true
+    }
+  ],
+  "languages": [
+    {
+      "id": "e",
+      "label": "English",
+      "guide_url_template": "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/{code}.html",
+      "pdf_url_template": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/{code}/{date}/{code}e.pdf"
+    },
+    {
+      "id": "f",
+      "label": "French",
+      "guide_url_template": "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/{code}.html",
+      "pdf_url_template": "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/{code}/{date}/{code}f.pdf"
+    }
+  ],
+  "aliases": {
+    "imm1294f": [
+      "yuzu_github_page/assets/forms/imm1294f.pdf",
+      "supabase/functions/imm1294-filler/imm1294f.pdf"
+    ]
+  }
+}

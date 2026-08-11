@@ -1,0 +1,3 @@
+-- Applied remotely: project_description_notes
+-- immigration_projects.description (short summary)
+-- immigration_projects.notes (internal consultant notes)

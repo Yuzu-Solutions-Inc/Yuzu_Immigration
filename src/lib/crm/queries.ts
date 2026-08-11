@@ -26,6 +26,8 @@ export type ProjectRow = {
   id: string;
   organization_id: string;
   title: string;
+  description: string | null;
+  notes: string | null;
   status: ProjectStatus;
   status_at: string;
   submit_before: string | null;

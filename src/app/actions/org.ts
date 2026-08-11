@@ -16,7 +16,7 @@ const createOrgSchema = z.object({
     .min(2)
     .max(48)
     .optional(),
-  locale: z.enum(["en", "fr"]).default("en"),
+  locale: z.enum(["en", "fr", "es"]).default("en"),
 });
 
 export type CreateOrgState = {
@@ -29,7 +29,7 @@ export async function createOrganizationAction(
 ): Promise<CreateOrgState> {
   const name = String(formData.get("name") ?? "");
   const slugInput = String(formData.get("slug") ?? "").trim();
-  const locale = (formData.get("locale") as "en" | "fr") || "en";
+  const locale = (formData.get("locale") as string) || "en";
 
   const parsed = createOrgSchema.safeParse({
     name,

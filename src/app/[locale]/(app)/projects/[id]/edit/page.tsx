@@ -65,6 +65,8 @@ export default async function EditProjectPage({
           initial={{
             projectId: project.id,
             title: project.title,
+            description: project.description ?? "",
+            notes: project.notes ?? "",
             status: project.status,
             statusAt: project.status_at,
             submitBefore: project.submit_before ?? "",

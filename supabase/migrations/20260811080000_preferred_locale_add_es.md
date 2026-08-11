@@ -1,0 +1,2 @@
+-- Applied remotely: preferred_locale_add_es
+-- profiles + people preferred_locale allow en|fr|es

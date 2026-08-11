@@ -1,0 +1,33 @@
+{
+  "aliases": {
+    "montreal": "1694",
+    "montréal": "1694",
+    "toronto": "3812",
+    "vancouver": "8634",
+    "ottawa": "3600",
+    "calgary": "7090",
+    "edmonton": "7198",
+    "quebec": "2030",
+    "quebec city": "2030",
+    "québec": "2030"
+  },
+  "labels": {
+    "Montréal": "1694",
+    "Montreal": "1694",
+    "Toronto": "3812",
+    "Vancouver": "8634",
+    "Ottawa": "3600",
+    "Calgary": "7090",
+    "Edmonton": "7198",
+    "Quebec": "2030",
+    "Mississauga": "3510",
+    "Brampton": "3088",
+    "Laval": "1678",
+    "Gatineau": "1314",
+    "Longueuil": "1684",
+    "Burnaby": "8636",
+    "London": "3466",
+    "Kitchener": "3420",
+    "Québec": "2030"
+  }
+}

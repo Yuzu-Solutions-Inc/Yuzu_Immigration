@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { formatStatusDate } from "@/components/projects/project-status-summary";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
@@ -11,6 +12,11 @@ import {
   getProjectParticipants,
   getProjectStatusHistory,
 } from "@/lib/crm/queries";
+import { formTitle, type FormCode } from "@/lib/ircc/catalog";
+import {
+  getActiveShareLink,
+  listProjectForms,
+} from "@/lib/ircc/project-forms";
 import { cn } from "@/lib/utils";
 
 export default async function ProjectDetailPage({
@@ -24,13 +30,23 @@ export default async function ProjectDetailPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const [participants, history] = await Promise.all([
+  await ensureProjectFormsSeeded(
+    project.organization_id,
+    project.id,
+    project.program_family,
+  );
+
+  const [participants, history, forms, share] = await Promise.all([
     getProjectParticipants(id),
     getProjectStatusHistory(id),
+    listProjectForms(id),
+    getActiveShareLink(id),
   ]);
   const t = await getTranslations("projects");
+  const tf = await getTranslations("forms");
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
+  const loc = locale === "fr" ? "fr" : "en";
 
   const opened = new Date(project.opened_at).toLocaleDateString(
     locale === "fr" ? "fr-CA" : "en-CA",
@@ -54,6 +70,11 @@ export default async function ProjectDetailPage({
             {tprog(project.program_family)} ·{" "}
             {t(`jurisdictions.${project.jurisdiction}`)}
           </p>
+          {project.description ? (
+            <p className="max-w-2xl text-[15px] text-brand/80">
+              {project.description}
+            </p>
+          ) : null}
         </div>
         <Link
           href={`/projects/${project.id}/edit`}
@@ -90,6 +111,68 @@ export default async function ProjectDetailPage({
           <p className="font-medium text-brand">{opened}</p>
         </SurfaceCard>
       </div>
+
+      <section className="space-y-3">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("notes")}
+        </h2>
+        <SurfaceCard>
+          {project.notes ? (
+            <p className="whitespace-pre-wrap text-[15px] text-brand">
+              {project.notes}
+            </p>
+          ) : (
+            <p className="text-[15px] text-muted-foreground">{t("notesEmpty")}</p>
+          )}
+        </SurfaceCard>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {tf("todoTitle")}
+          </h2>
+          <Link
+            href={`/projects/${project.id}/forms`}
+            className="text-sm font-medium text-action hover:underline"
+          >
+            {tf("manageForms")}
+          </Link>
+        </div>
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+          {forms.length === 0 ? (
+            <li className="px-5 py-4 text-sm text-muted-foreground">
+              {tf("todoEmpty")}
+            </li>
+          ) : (
+            forms.map((form) => (
+              <li
+                key={form.id}
+                className="flex items-center justify-between gap-3 px-5 py-4"
+              >
+                <div>
+                  <p className="font-medium text-brand">
+                    {formTitle(form.form_code as FormCode, loc)}
+                  </p>
+                  <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                    {form.form_code.toUpperCase()}
+                  </p>
+                </div>
+                <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  {tf(`statuses.${form.status}`)}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+        {share ? (
+          <p className="text-sm text-muted-foreground">
+            {tf("shareActive", {
+              date: formatStatusDate(share.expires_at.slice(0, 10), locale),
+            })}
+          </p>
+        ) : null}
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-heading text-lg font-semibold text-brand">

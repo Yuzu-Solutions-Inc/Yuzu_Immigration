@@ -9,7 +9,7 @@ const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),
   fullName: z.string().trim().min(1).max(120).optional(),
-  locale: z.enum(["en", "fr"]).default("en"),
+  locale: z.enum(["en", "fr", "es"]).default("en"),
 });
 
 export type AuthActionState = {
@@ -87,13 +87,13 @@ export async function signUpWithPassword(
 }
 
 export async function signOutAction(formData: FormData) {
-  const locale = (formData.get("locale") as "en" | "fr") || "en";
+  const locale = (formData.get("locale") as string) || "en";
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect(`/${locale}/login`);
 }
 
-export async function signOut(locale: "en" | "fr" = "en") {
+export async function signOut(locale: string = "en") {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect(`/${locale}/login`);

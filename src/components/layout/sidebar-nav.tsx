@@ -1,9 +1,10 @@
 "use client";
 
-import { FolderKanban, Home, Menu, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { FolderKanban, Home, LogOut, Menu, Users } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -39,7 +40,9 @@ function SidebarBody({
   onNavigate?: () => void;
 }) {
   const t = useTranslations("nav");
+  const auth = useTranslations("auth");
   const pathname = usePathname();
+  const locale = useLocale();
 
   return (
     <div className="flex h-full flex-col">
@@ -80,6 +83,19 @@ function SidebarBody({
           );
         })}
       </nav>
+
+      <div className="mt-auto border-t border-sidebar-border p-3">
+        <form action={signOutAction}>
+          <input type="hidden" name="locale" value={locale} />
+          <button
+            type="submit"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <LogOut className="size-4 shrink-0 opacity-90" aria-hidden />
+            {auth("signOut")}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

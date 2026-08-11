@@ -2,11 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { routing } from "@/i18n/routing";
+import { isAppLocale, type AppLocale } from "@/lib/i18n/locales";
 
-function getLocaleFromPath(pathname: string) {
+function getLocaleFromPath(pathname: string): AppLocale {
   const segment = pathname.split("/")[1];
-  if (routing.locales.includes(segment as "en" | "fr")) {
-    return segment as "en" | "fr";
+  if (isAppLocale(segment)) {
+    return segment;
   }
   return routing.defaultLocale;
 }
@@ -59,7 +60,9 @@ export async function updateSession(request: NextRequest) {
     pathname === "/projects" ||
     pathname.startsWith("/projects/") ||
     pathname === "/people" ||
-    pathname.startsWith("/people/");
+    pathname.startsWith("/people/") ||
+    pathname === "/settings" ||
+    pathname.startsWith("/settings/");
 
   if (!user && isProtectedRoute) {
     const redirectUrl = request.nextUrl.clone();

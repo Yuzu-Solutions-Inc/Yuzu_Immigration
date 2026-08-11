@@ -9,13 +9,13 @@ import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { createClient } from "@/lib/supabase/server";
 
 const updatePersonSchema = z.object({
-  locale: z.enum(["en", "fr"]).default("en"),
+  locale: z.enum(["en", "fr", "es"]).default("en"),
   personId: z.string().uuid(),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
-  preferredLocale: z.enum(["en", "fr"]),
+  preferredLocale: z.enum(["en", "fr", "es"]),
   immigrationStatus: z.enum([
     "none",
     "visitor",

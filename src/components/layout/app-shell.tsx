@@ -1,16 +1,16 @@
 import { getTranslations } from "next-intl/server";
 
-import { signOutAction } from "@/app/actions/auth";
 import {
   DesktopSidebar,
   MobileSidebarTrigger,
 } from "@/components/layout/sidebar-nav";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { SettingsMenu } from "@/components/layout/settings-menu";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 export async function DashboardShell({
-  locale,
   orgName,
   children,
   actions,
@@ -20,7 +20,6 @@ export async function DashboardShell({
   children: React.ReactNode;
   actions?: React.ReactNode;
 }) {
-  const auth = await getTranslations("auth");
   const tHome = await getTranslations("appHome");
 
   return (
@@ -50,15 +49,8 @@ export async function DashboardShell({
             >
               {tHome("newProject")}
             </Link>
-            <form action={signOutAction}>
-              <input type="hidden" name="locale" value={locale} />
-              <button
-                type="submit"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                {auth("signOut")}
-              </button>
-            </form>
+            <LocaleSwitcher compact />
+            <SettingsMenu />
           </div>
         </header>
 

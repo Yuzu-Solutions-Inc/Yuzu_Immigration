@@ -10,7 +10,7 @@ alwaysApply: true
 - **Data**: Supabase project `cezwtrsleuubrfmbhosn` (Auth, Postgres, Storage) + Drizzle ORM
 - **Client data**: TanStack Query for server-state fetching/mutations
 - **Forms**: React Hook Form + Zod
-- **i18n**: next-intl with `en` and `fr` under `src/app/[locale]`
+- **i18n**: next-intl with `en`, `fr`, and `es` under `src/app/[locale]`
 
 ## Visual system
 - Brand graphite `#111827`, action violet `#6366F1`, success emerald `#059669`, highlight amber `#F59E0B`
@@ -20,13 +20,17 @@ alwaysApply: true
 - No IRCC/MIFI government red/blue motifs or official icons
 
 ## Domain model
-- `organizations` — one tenant per consulting firm (SaaS customer)
+- `organizations` — one tenant per consulting firm (SaaS customer). Optional `rep_*` columns prefill IMM 5476.
 - `profiles` + `organization_members` — staff users (Supabase Auth: email/password or Google). For now every member can access all org data.
 - `people` — lifelong immigration clients (identity + history)
 - `immigration_projects` — time-bound engagements (program_family + jurisdiction + status)
 - `project_participants` — people linked to a project with roles; soft-unlink via `left_at`
+- `project_forms` — IRCC forms on a project to-do (seeded by program; IMM 5476 always included)
+- `project_form_answers` — ask-once questionnaire answers (jsonb) per project
+- `form_share_links` — hashed client tokens, 30-day expiry; regenerate without losing answers
 - `customer_portal_access` — portal access_code + access_token on a person; passwords in `private.customer_portal_secrets`
 - Portal login verification is **server-only** via `verify_customer_portal_login` (service_role). Never call from the browser.
+- Client form fill via `/[locale]/fill/[token]` uses service role after token hash lookup.
 
 ## Layout
 - `src/app/[locale]/(marketing)` — public pages (landing lives at `[locale]/page` until moved)

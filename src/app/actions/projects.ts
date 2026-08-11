@@ -66,11 +66,13 @@ const statusSchema = z.enum([
 ]);
 
 const projectFieldsSchema = z.object({
-  locale: z.enum(["en", "fr"]).default("en"),
+  locale: z.enum(["en", "fr", "es"]).default("en"),
   composition: z.enum(["individual", "couple", "family"]),
   programFamily: z.enum(PROGRAM_FAMILIES as [ProgramFamily, ...ProgramFamily[]]),
   jurisdiction: z.enum(["federal", "quebec", "both"]).optional(),
   title: z.string().trim().max(200).optional(),
+  description: z.string().trim().max(500).optional().or(z.literal("")),
+  notes: z.string().trim().max(10000).optional().or(z.literal("")),
   status: statusSchema.optional(),
   statusAt: z
     .string()
@@ -91,7 +93,7 @@ export type ProjectActionState = {
 /** @deprecated Prefer ProjectActionState */
 export type CreateProjectState = ProjectActionState;
 
-function programLabel(family: ProgramFamily, locale: "en" | "fr") {
+function programLabel(family: ProgramFamily, locale: string) {
   const labels: Record<ProgramFamily, { en: string; fr: string }> = {
     study_permit: { en: "Study permit", fr: "Permis d’études" },
     work_permit: { en: "Work permit", fr: "Permis de travail" },
@@ -106,7 +108,7 @@ function programLabel(family: ProgramFamily, locale: "en" | "fr") {
     quebec_temporary: { en: "Quebec temporary", fr: "Temporaire Québec" },
     other: { en: "Other", fr: "Autre" },
   };
-  return labels[family][locale];
+  return locale === "fr" ? labels[family].fr : labels[family].en;
 }
 
 function parseProjectForm(formData: FormData) {
@@ -115,6 +117,8 @@ function parseProjectForm(formData: FormData) {
   const programFamily = formData.get("programFamily") as ProgramFamily;
   const jurisdictionRaw = String(formData.get("jurisdiction") || "");
   const titleRaw = String(formData.get("title") || "").trim();
+  const descriptionRaw = String(formData.get("description") || "").trim();
+  const notesRaw = String(formData.get("notes") || "").trim();
   const statusRaw = String(formData.get("status") || "").trim();
   const statusAtRaw = String(formData.get("statusAt") || "").trim();
   const submitBeforeRaw = String(formData.get("submitBefore") || "").trim();
@@ -133,6 +137,8 @@ function parseProjectForm(formData: FormData) {
     programFamily,
     jurisdiction: jurisdictionRaw || undefined,
     title: titleRaw || undefined,
+    description: descriptionRaw || undefined,
+    notes: notesRaw || undefined,
     status: statusRaw || undefined,
     statusAt: statusAtRaw || undefined,
     submitBefore: submitBeforeRaw || undefined,
@@ -148,7 +154,7 @@ function parseProjectForm(formData: FormData) {
 
 async function resolveParticipants(
   orgId: string,
-  locale: "en" | "fr",
+  locale: string,
   participants: z.infer<typeof participantInputSchema>[],
 ): Promise<
   | { error: string }
@@ -277,6 +283,8 @@ export async function createProjectAction(
     .insert({
       organization_id: orgId,
       title,
+      description: data.description || null,
+      notes: data.notes || null,
       status: "new",
       status_at: statusAt,
       submit_before: submitBefore,
@@ -312,6 +320,64 @@ export async function createProjectAction(
   if (linksError) {
     console.error("create participants:", linksError.message);
     return { error: "create_failed" };
+  }
+
+  try {
+    const { seedFormsForProgram } = await import("@/lib/ircc/kits");
+    const seeds = seedFormsForProgram(data.programFamily);
+    const { error: formsError } = await supabase.from("project_forms").insert(
+      seeds.map((seed) => ({
+        organization_id: orgId,
+        project_id: project.id,
+        form_code: seed.formCode,
+        is_required: seed.isRequired,
+        sort_order: seed.sortOrder,
+        status: "todo",
+      })),
+    );
+    if (formsError) {
+      console.error("seed project forms:", formsError.message);
+    }
+
+    const { data: org } = await supabase
+      .from("organizations")
+      .select(
+        "name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
+      )
+      .eq("id", orgId)
+      .maybeSingle();
+
+    const principal = resolved.people.find((p) => p.role === "principal");
+    const nameParts = (principal?.displayName || "").split(/\s+/);
+    const initialAnswers: Record<string, unknown> = {
+      hasRepresentative: "Y",
+      formLanguage: data.locale === "fr" ? "f" : "e",
+      familyName: nameParts.length > 1 ? nameParts.at(-1) : nameParts[0] || "",
+      givenName:
+        nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "",
+      repFamilyName: org?.rep_family_name || "",
+      repGivenName: org?.rep_given_name || "",
+      repOrganization: org?.rep_organization || org?.name || "",
+      repEmail: org?.rep_email || "",
+      repPhone: org?.rep_phone || "",
+      repPhoneCountryCode: org?.rep_phone_country_code || "",
+      repMembershipId: org?.rep_membership_id || "",
+      repStreetNum: org?.rep_street_num || "",
+      repStreetName: org?.rep_street_name || "",
+      repCity: org?.rep_city || "",
+      repProvince: org?.rep_province || "",
+      repCountry: org?.rep_country || "Canada",
+      repPostalCode: org?.rep_postal_code || "",
+    };
+
+    await supabase.from("project_form_answers").insert({
+      organization_id: orgId,
+      project_id: project.id,
+      answers: initialAnswers,
+      current_section: "basics",
+    });
+  } catch (error) {
+    console.error("project forms bootstrap:", error);
   }
 
   redirect(`/${data.locale}/projects/${project.id}`);
@@ -372,6 +438,8 @@ export async function updateProjectAction(
     .from("immigration_projects")
     .update({
       title,
+      description: data.description || null,
+      notes: data.notes || null,
       status,
       status_at: statusAt,
       submit_before: data.submitBefore || null,

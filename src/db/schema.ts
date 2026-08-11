@@ -1,6 +1,8 @@
 import {
   boolean,
   date,
+  integer,
+  jsonb,
   pgEnum,
   pgSchema,
   pgTable,
@@ -76,6 +78,19 @@ export const organizations = pgTable("organizations", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  repFamilyName: text("rep_family_name"),
+  repGivenName: text("rep_given_name"),
+  repOrganization: text("rep_organization"),
+  repEmail: text("rep_email"),
+  repPhone: text("rep_phone"),
+  repPhoneCountryCode: text("rep_phone_country_code"),
+  repMembershipId: text("rep_membership_id"),
+  repStreetNum: text("rep_street_num"),
+  repStreetName: text("rep_street_name"),
+  repCity: text("rep_city"),
+  repProvince: text("rep_province"),
+  repCountry: text("rep_country"),
+  repPostalCode: text("rep_postal_code"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -146,6 +161,8 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
+  description: text("description"),
+  notes: text("notes"),
   status: projectStatusEnum("status").notNull().default("new"),
   statusAt: date("status_at").notNull().default(sql`current_date`),
   submitBefore: date("submit_before"),
@@ -231,6 +248,78 @@ export const customerPortalAccess = pgTable("customer_portal_access", {
     .defaultNow()
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectFormStatusEnum = pgEnum("project_form_status", [
+  "todo",
+  "in_progress",
+  "ready",
+  "generated",
+]);
+
+export const projectForms = pgTable(
+  "project_forms",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+    formCode: text("form_code").notNull(),
+    status: projectFormStatusEnum("status").notNull().default("todo"),
+    isRequired: boolean("is_required").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    generatedStoragePath: text("generated_storage_path"),
+    generatedAt: timestamp("generated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.projectId, table.formCode)],
+);
+
+export const projectFormAnswers = pgTable("project_form_answers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" })
+    .unique(),
+  answers: jsonb("answers").$type<Record<string, unknown>>().notNull().default({}),
+  currentSection: text("current_section"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const formShareLinks = pgTable("form_share_links", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
