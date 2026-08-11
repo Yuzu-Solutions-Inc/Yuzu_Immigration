@@ -31,16 +31,14 @@ import { CANONICAL_FIELDS } from "@/lib/ircc/fields";
 export const SHARE_LINK_TTL_DAYS = 30;
 
 /** Questionnaire keys that belong on the project bag (IMM 5409 etc.). */
-export const PROJECT_SCOPED_ANSWER_KEYS: string[] = CANONICAL_FIELDS.filter(
-  (field) =>
-    field.forms?.length &&
-    field.forms.every((code) => formScope(code) === "project"),
-).map((field) => field.key);
-
-// isCommonLaw is used as a gate for 5409 fields but has no forms[] — treat as project.
-if (!PROJECT_SCOPED_ANSWER_KEYS.includes("isCommonLaw")) {
-  PROJECT_SCOPED_ANSWER_KEYS.push("isCommonLaw");
-}
+export const PROJECT_SCOPED_ANSWER_KEYS: string[] = [
+  ...CANONICAL_FIELDS.filter(
+    (field) =>
+      field.forms?.length &&
+      field.forms.every((code) => formScope(code) === "project"),
+  ).map((field) => field.key),
+  "isCommonLaw",
+];
 
 export type ProjectFormRow = {
   id: string;

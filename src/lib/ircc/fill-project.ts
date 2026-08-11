@@ -2,7 +2,7 @@ import JSZip from "jszip";
 
 import formMeta from "./form-meta.json";
 import { loadBlankPdf } from "./blanks";
-import { expandDobAnswers } from "./fields";
+import { expandAnswersForFill } from "./expand-answers";
 import { applicationLabelForForms } from "./kits";
 import {
   patchImm5409,
@@ -63,22 +63,17 @@ function metaFor(code: string, lang: "e" | "f"): FormMeta {
 function toCompanionAnswers(
   raw: Record<string, unknown>,
   formCodes: string[],
-): CompanionAnswers & {
+): CompanionAnswers & Record<string, unknown> & {
   email: string;
   formLanguage: "e" | "f";
   forms: string[];
-  schoolName?: string;
-  schoolAddress?: string;
-  needsCustodian?: boolean;
-  applicationLocation?: "outside" | "inside";
-  employerName?: string;
-  jobDescription?: string;
 } {
-  const expanded = expandDobAnswers(raw);
+  const expanded = expandAnswersForFill(raw);
   const yn = (key: string) =>
     String(expanded[key] || "").toUpperCase() === "Y";
 
   return {
+    ...expanded,
     email: String(expanded.email || ""),
     formLanguage: asLang(expanded.formLanguage),
     forms: formCodes,
@@ -104,10 +99,27 @@ function toCompanionAnswers(
     postalCode: String(expanded.postalCode || ""),
     parent1FamilyName: String(expanded.parent1FamilyName || ""),
     parent1GivenName: String(expanded.parent1GivenName || ""),
+    parent1Dob: String(expanded.parent1Dob || ""),
+    parent1Cob: String(expanded.parent1Cob || ""),
+    parent1Address: String(expanded.parent1Address || ""),
+    parent1MaritalStatus: String(expanded.parent1MaritalStatus || ""),
+    parent1Occupation: String(expanded.parent1Occupation || ""),
+    parent1Telephone: String(expanded.parent1Telephone || ""),
     parent2FamilyName: String(expanded.parent2FamilyName || ""),
     parent2GivenName: String(expanded.parent2GivenName || ""),
+    parent2Dob: String(expanded.parent2Dob || ""),
+    parent2Cob: String(expanded.parent2Cob || ""),
+    parent2Address: String(expanded.parent2Address || ""),
+    parent2MaritalStatus: String(expanded.parent2MaritalStatus || ""),
+    parent2Occupation: String(expanded.parent2Occupation || ""),
+    parent2Telephone: String(expanded.parent2Telephone || ""),
     spouseFamilyName: String(expanded.spouseFamilyName || ""),
     spouseGivenName: String(expanded.spouseGivenName || ""),
+    spouseDob: String(expanded.spouseDob || ""),
+    spouseCob: String(expanded.spouseCob || ""),
+    spouseAddress: String(expanded.spouseAddress || ""),
+    spouseOccupation: String(expanded.spouseOccupation || ""),
+    spouseAccompanying: Boolean(expanded.spouseAccompanying),
     hasRepresentative: true,
     repFamilyName: String(expanded.repFamilyName || ""),
     repGivenName: String(expanded.repGivenName || ""),
@@ -130,9 +142,19 @@ function toCompanionAnswers(
     partnerFamilyName: String(expanded.partnerFamilyName || ""),
     partnerGivenName: String(expanded.partnerGivenName || ""),
     yearsTogether: String(expanded.yearsTogether || ""),
+    commonLawCity: String(expanded.commonLawCity || ""),
+    commonLawProvince: String(expanded.commonLawProvince || ""),
+    commonLawCountry: String(expanded.commonLawCountry || ""),
+    commonLawStart: String(expanded.commonLawStart || ""),
     schoolName: String(expanded.schoolName || ""),
     schoolAddress: String(expanded.schoolAddress || ""),
     needsCustodian: yn("needsCustodian"),
+    custodianFamilyName: String(expanded.custodianFamilyName || ""),
+    custodianGivenName: String(expanded.custodianGivenName || ""),
+    custodianDob: String(expanded.custodianDob || ""),
+    custodianStatus: String(expanded.custodianStatus || ""),
+    custodianAddress: String(expanded.custodianAddress || ""),
+    custodianTelephone: String(expanded.custodianTelephone || ""),
     applicationLocation:
       String(expanded.applicationLocation || "outside") === "inside"
         ? "inside"
@@ -140,6 +162,7 @@ function toCompanionAnswers(
     employerName: String(expanded.employerName || ""),
     jobTitle: String(expanded.jobTitle || ""),
     jobDescription: String(expanded.jobDescription || ""),
+    children: Array.isArray(expanded.children) ? expanded.children : [],
   };
 }
 
@@ -177,58 +200,80 @@ async function fillCompanion(
   return fillXfaDatasetsIncremental(blank, meta, patch);
 }
 
+/** Prefer questionnaire values; only fall back when a required key is blank. */
 function buildPrimaryPayload(
   answers: ReturnType<typeof toCompanionAnswers>,
 ): Record<string, unknown> {
-  return {
-    ...answers,
-    email: answers.email,
-    serviceIn: answers.formLanguage === "f" ? "French" : "English",
-    preferredLang: answers.formLanguage === "f" ? "French" : "English",
-    ableToCommunicate: answers.formLanguage === "f" ? "French" : "English",
+  const lang = answers.formLanguage === "f" ? "French" : "English";
+  const year = String(new Date().getFullYear());
+  const fallbacks: Record<string, unknown> = {
+    serviceIn: lang,
+    preferredLang: lang,
+    ableToCommunicate: lang,
     nativeLang: answers.citizenship || "English",
-    status: "01",
     sameAsMailing: "Y",
-    phoneType: "Cellular",
+    phoneType: "02",
     funds: "Myself",
-    studyLevel: "05",
-    fieldOfStudy: "0001",
-    schoolProvince: answers.provinceState || "ON",
-    schoolCity: answers.city || "Toronto",
-    schoolAddress: answers.schoolAddress || answers.schoolName || "TBD",
-    schoolName: answers.schoolName || "TBD",
-    dli: "O000000000000",
-    studyFromYear: String(new Date().getFullYear()),
-    studyFromMonth: "09",
-    studyFromDay: "01",
-    studyToYear: String(new Date().getFullYear() + 2),
-    studyToMonth: "04",
-    studyToDay: "30",
-    tuitionAmount: "0",
-    availableFunds: "0",
-    passportNumber: "TBD",
-    passportCountry: answers.citizenship || "Unknown",
-    passportIssueYear: "2020",
-    passportIssueMonth: "01",
-    passportIssueDay: "01",
-    passportExpiryYear: "2030",
-    passportExpiryMonth: "01",
-    passportExpiryDay: "01",
     previousCor: "N",
     educationIndicator: "N",
     bgTb: "N",
     bgDisorder: "N",
     bgOverstay: "N",
     bgRefused: "N",
-    bgCriminal: "N",
+    bgCrime: "N",
     bgMilitary: "N",
-    occupation: answers.occupation || answers.jobTitle || "Student",
-    employer: answers.employerName || answers.schoolName || "N/A",
+    bgViolence: "N",
+    bgWitness: "N",
+    cicContactConsent: "Y",
     hasAlias: "N",
     hasNatId: "N",
     hasUsCard: "N",
     langTest: "N",
+    previouslyMarried: "N",
+    sameAsCor: "Y",
+    jobs: [],
   };
+
+  const merged: Record<string, unknown> = { ...fallbacks, ...answers };
+  for (const [key, value] of Object.entries(fallbacks)) {
+    if (merged[key] === undefined || merged[key] === null || merged[key] === "") {
+      merged[key] = value;
+    }
+  }
+
+  if (!merged.occupation) {
+    merged.occupation = answers.jobTitle || "Student";
+  }
+  if (!merged.employer) {
+    merged.employer = answers.employerName || answers.schoolName || "N/A";
+  }
+  if (!merged.passportCountry) {
+    merged.passportCountry = answers.citizenship || "Unknown";
+  }
+  if (!merged.schoolProvince && answers.provinceState) {
+    merged.schoolProvince = answers.provinceState;
+  }
+  if (!merged.schoolCity && answers.city) {
+    merged.schoolCity = answers.city;
+  }
+  if (!merged.currentCountry && answers.country) {
+    merged.currentCountry = answers.country;
+  }
+  if (!Array.isArray(merged.jobs)) merged.jobs = [];
+  if ((merged.jobs as unknown[]).length === 0) {
+    merged.jobs = [
+      {
+        fromYear: year,
+        fromMonth: "01",
+        occupation: String(merged.occupation || "Student"),
+        employer: String(merged.employer || "N/A"),
+        city: String(merged.city || answers.city || "Unknown"),
+        country: String(merged.country || answers.country || "Unknown"),
+      },
+    ];
+  }
+
+  return merged;
 }
 
 export async function fillProjectForms(input: {

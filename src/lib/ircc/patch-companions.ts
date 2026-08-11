@@ -82,6 +82,15 @@ export type CompanionAnswers = {
   commonLawProvince?: string;
   commonLawCountry?: string;
   commonLawStart?: string;
+  custodianFamilyName?: string;
+  custodianGivenName?: string;
+  custodianDob?: string;
+  custodianStatus?: string;
+  custodianAddress?: string;
+  custodianTelephone?: string;
+  parent1Telephone?: string;
+  parent2Telephone?: string;
+  children?: Array<Record<string, unknown>>;
 };
 
 export type PatchImm5707Options = {
@@ -242,8 +251,37 @@ export function patchImm5707(
 
   out = out.replace(
     /<hideChildren\n>0<\/hideChildren\n>/,
-    "<hideChildren\n>1</hideChildren\n>",
+    Array.isArray(a.children) && a.children.length > 0
+      ? "<hideChildren\n>0</hideChildren\n>"
+      : "<hideChildren\n>1</hideChildren\n>",
   );
+  out = out.replace(
+    /<hideChildren\n>1<\/hideChildren\n>/,
+    Array.isArray(a.children) && a.children.length > 0
+      ? "<hideChildren\n>0</hideChildren\n>"
+      : "<hideChildren\n>1</hideChildren\n>",
+  );
+
+  if (Array.isArray(a.children)) {
+    for (const child of a.children.slice(0, 8)) {
+      const family = ascii(String(child.familyName || ""));
+      const given = ascii(String(child.givenName || ""));
+      if (!family && !given) continue;
+      out = setEmptyTag(out, "yesno", child.accompanying === "Y" || child.accompanying === true ? "Y" : "N");
+      if (family) out = setEmptyTag(out, "FamilyName", family);
+      if (given) out = setEmptyTag(out, "GivenNames", given);
+      if (child.dob) out = setEmptyTag(out, "DOB", ascii(String(child.dob), 20));
+      if (child.cob) out = setEmptyTag(out, "COB", ascii(String(child.cob)));
+      out = setEmptyTag(out, "Address", ascii(String(child.address || address), 200));
+      out = setEmptyTag(out, "MaritalStatus", "Single");
+      out = setEmptyTag(
+        out,
+        "Occupation",
+        ascii(String(child.occupation || child.relationship || "Child"), 80),
+      );
+    }
+  }
+
   out = setEmptyTag(out, "SectionAdate", todayYmd());
   out = setEmptyTag(out, "SectionBdate", todayYmd());
   return out;

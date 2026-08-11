@@ -9,11 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   CANONICAL_FIELDS,
+  emptyTableRow,
   fieldsForFormCodes,
   isFieldVisible,
+  isTableVisible,
   sectionsForFields,
+  tablesForFormCodes,
   type CanonicalField,
   type QuestionnaireSection,
+  type RepeatableTable,
+  type TableColumn,
 } from "@/lib/ircc/fields";
 
 function HelpTip({ text }: { text: string }) {
@@ -34,51 +39,57 @@ function HelpTip({ text }: { text: string }) {
 }
 
 function FieldControl({
-  field,
+  id,
+  label,
+  help,
+  type,
   value,
   onChange,
+  required,
+  maxLength,
+  options,
   t,
-  th,
 }: {
-  field: CanonicalField;
+  id: string;
+  label: string;
+  help?: string | null;
+  type: CanonicalField["type"] | TableColumn["type"];
   value: string;
   onChange: (value: string) => void;
+  required?: boolean;
+  maxLength?: number;
+  options?: Array<{ value: string; labelKey: string }>;
   t: ReturnType<typeof useTranslations>;
-  th: ReturnType<typeof useTranslations>;
 }) {
-  const id = `field-${field.key}`;
-  const label = t(`fields.${field.key}`);
-  const help = field.helpKey ? th(field.helpKey) : null;
-
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="inline-flex items-center">
         {label}
-        {field.required ? (
+        {required ? (
           <span className="text-destructive" aria-hidden>
             *
           </span>
         ) : null}
         {help ? <HelpTip text={help} /> : null}
       </Label>
-      {field.type === "select" ? (
+      {type === "select" ? (
         <select
           id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          required={field.required}
+          required={required}
           className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
         >
           <option value="" disabled={Boolean(value)}>
             {t("selectPlaceholder")}
           </option>
-          {field.options?.map((opt) => (
+          {options?.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {t(`options.${opt.labelKey}`)}
             </option>
           ))}
         </select>
-      ) : field.type === "yesno" ? (
+      ) : type === "yesno" ? (
         <select
           id={id}
           value={value}
@@ -91,13 +102,24 @@ function FieldControl({
           <option value="Y">{t("options.yes")}</option>
           <option value="N">{t("options.no")}</option>
         </select>
-      ) : field.type === "textarea" ? (
+      ) : type === "checkbox" ? (
+        <label className="flex h-10 items-center gap-2 text-sm text-brand">
+          <input
+            id={id}
+            type="checkbox"
+            checked={value === "Y"}
+            onChange={(e) => onChange(e.target.checked ? "Y" : "N")}
+            className="size-4 rounded border-input"
+          />
+          {t("options.yes")}
+        </label>
+      ) : type === "textarea" ? (
         <Textarea
           id={id}
           value={value}
-          maxLength={field.maxLength}
+          maxLength={maxLength}
           onChange={(e) => onChange(e.target.value)}
-          required={field.required}
+          required={required}
           rows={3}
           className="rounded-xl"
         />
@@ -105,20 +127,119 @@ function FieldControl({
         <Input
           id={id}
           type={
-            field.type === "email"
+            type === "email"
               ? "email"
-              : field.type === "tel"
+              : type === "tel"
                 ? "tel"
-                : field.type === "date"
+                : type === "date"
                   ? "date"
-                  : "text"
+                  : type === "month"
+                    ? "month"
+                    : "text"
           }
           value={value}
-          maxLength={field.maxLength}
+          maxLength={maxLength}
           onChange={(e) => onChange(e.target.value)}
-          required={field.required}
+          required={required}
         />
       )}
+    </div>
+  );
+}
+
+function TableEditor({
+  table,
+  rows,
+  onChange,
+  t,
+  th,
+}: {
+  table: RepeatableTable;
+  rows: Array<Record<string, string>>;
+  onChange: (rows: Array<Record<string, string>>) => void;
+  t: ReturnType<typeof useTranslations>;
+  th: ReturnType<typeof useTranslations>;
+}) {
+  function updateCell(rowIndex: number, key: string, value: string) {
+    onChange(
+      rows.map((row, i) => (i === rowIndex ? { ...row, [key]: value } : row)),
+    );
+  }
+
+  function addRow() {
+    if (rows.length >= table.maxRows) return;
+    onChange([...rows, emptyTableRow(table)]);
+  }
+
+  function removeRow(index: number) {
+    if (rows.length <= (table.minRows ?? 0)) return;
+    onChange(rows.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="space-y-3 sm:col-span-2">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h4 className="font-heading text-sm font-semibold text-brand">
+            {t(`tables.${table.key}.title`)}
+          </h4>
+          {table.helpKey ? (
+            <p className="text-xs text-muted-foreground">{th(table.helpKey)}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {t(`tables.${table.key}.help`)}
+            </p>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={rows.length >= table.maxRows}
+          onClick={addRow}
+        >
+          {t("addRow")}
+        </Button>
+      </div>
+      <div className="space-y-4">
+        {rows.map((row, rowIndex) => (
+          <div
+            key={`${table.key}-${rowIndex}`}
+            className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                {t("rowLabel", { n: rowIndex + 1 })}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={rows.length <= (table.minRows ?? 0)}
+                onClick={() => removeRow(rowIndex)}
+              >
+                {t("removeRow")}
+              </Button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {table.columns.map((col) => (
+                <FieldControl
+                  key={col.key}
+                  id={`${table.key}-${rowIndex}-${col.key}`}
+                  label={t(`tables.columns.${col.labelKey}`)}
+                  type={col.type}
+                  value={row[col.key] ?? ""}
+                  onChange={(v) => updateCell(rowIndex, col.key, v)}
+                  required={col.required}
+                  maxLength={col.maxLength}
+                  options={col.options}
+                  t={t}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -132,13 +253,44 @@ export type QuestionnairePerson = {
 };
 
 function answersToState(initial: Record<string, unknown>) {
-  const next: Record<string, string> = {};
+  const next: Record<string, unknown> = { hasRepresentative: "Y" };
   for (const field of CANONICAL_FIELDS) {
     const v = initial[field.key];
-    if (v !== undefined && v !== null) next[field.key] = String(v);
+    if (v !== undefined && v !== null) {
+      next[field.key] =
+        field.type === "checkbox"
+          ? String(v).toUpperCase() === "Y" || v === true
+            ? "Y"
+            : "N"
+          : String(v);
+    }
   }
-  next.hasRepresentative = "Y";
   return next;
+}
+
+function initTables(
+  formCodes: string[],
+  initial: Record<string, unknown>,
+): Record<string, Array<Record<string, string>>> {
+  const out: Record<string, Array<Record<string, string>>> = {};
+  for (const table of tablesForFormCodes(formCodes)) {
+    const raw = initial[table.key];
+    if (Array.isArray(raw) && raw.length > 0) {
+      out[table.key] = raw.map((row) => {
+        const next = emptyTableRow(table);
+        if (row && typeof row === "object") {
+          for (const col of table.columns) {
+            const v = (row as Record<string, unknown>)[col.key];
+            if (v !== undefined && v !== null) next[col.key] = String(v);
+          }
+        }
+        return next;
+      });
+    } else {
+      out[table.key] = [emptyTableRow(table)];
+    }
+  }
+  return out;
 }
 
 export function ModularQuestionnaire({
@@ -172,10 +324,20 @@ export function ModularQuestionnaire({
     () => fieldsForFormCodes(activePerson?.formCodes ?? []),
     [activePerson?.formCodes],
   );
-  const sections = useMemo(() => sectionsForFields(fields), [fields]);
-  const [answers, setAnswers] = useState<Record<string, string>>(() =>
+  const tables = useMemo(
+    () => tablesForFormCodes(activePerson?.formCodes ?? []),
+    [activePerson?.formCodes],
+  );
+  const sections = useMemo(
+    () => sectionsForFields(fields, tables),
+    [fields, tables],
+  );
+  const [answers, setAnswers] = useState<Record<string, unknown>>(() =>
     answersToState(activePerson?.answers ?? {}),
   );
+  const [tableData, setTableData] = useState<
+    Record<string, Array<Record<string, string>>>
+  >(() => initTables(activePerson?.formCodes ?? [], activePerson?.answers ?? {}));
   const [sectionIndex, setSectionIndex] = useState(0);
 
   useEffect(() => {
@@ -183,9 +345,9 @@ export function ModularQuestionnaire({
     const person = people.find((p) => p.id === activePersonId);
     if (!person) return;
     setAnswers(answersToState(person.answers));
+    setTableData(initTables(person.formCodes, person.answers));
     setSectionIndex(0);
-    // Reset local draft when switching people (not on every answers prop refresh).
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on person switch only
   }, [activePersonId]);
 
   const section = (sections[sectionIndex] ??
@@ -194,6 +356,9 @@ export function ModularQuestionnaire({
   const sectionFields = fields.filter(
     (f) => f.section === section && isFieldVisible(f, answers),
   );
+  const sectionTables = tables.filter(
+    (tbl) => tbl.section === section && isTableVisible(tbl, answers),
+  );
 
   function update(key: string, value: string) {
     setAnswers((prev) => ({ ...prev, [key]: value, hasRepresentative: "Y" }));
@@ -201,7 +366,14 @@ export function ModularQuestionnaire({
 
   function save() {
     if (!activePerson) return;
-    onSave(activePerson.id, { ...answers, hasRepresentative: "Y" }, section);
+    const payload: Record<string, unknown> = {
+      ...answers,
+      hasRepresentative: "Y",
+    };
+    for (const [key, rows] of Object.entries(tableData)) {
+      payload[key] = rows;
+    }
+    onSave(activePerson.id, payload, section);
   }
 
   if (!activePerson) {
@@ -282,19 +454,34 @@ export function ModularQuestionnaire({
           <div
             key={field.key}
             className={
-              field.type === "textarea" || field.key === "email"
-                ? "sm:col-span-2"
-                : undefined
+              field.wide || field.type === "textarea" ? "sm:col-span-2" : undefined
             }
           >
             <FieldControl
-              field={field}
-              value={answers[field.key] ?? ""}
+              id={`field-${field.key}`}
+              label={t(`fields.${field.key}`)}
+              help={field.helpKey ? th(field.helpKey) : null}
+              type={field.type}
+              value={String(answers[field.key] ?? "")}
               onChange={(v) => update(field.key, v)}
+              required={field.required}
+              maxLength={field.maxLength}
+              options={field.options}
               t={t}
-              th={th}
             />
           </div>
+        ))}
+        {sectionTables.map((table) => (
+          <TableEditor
+            key={table.key}
+            table={table}
+            rows={tableData[table.key] ?? [emptyTableRow(table)]}
+            onChange={(rows) =>
+              setTableData((prev) => ({ ...prev, [table.key]: rows }))
+            }
+            t={t}
+            th={th}
+          />
         ))}
       </div>
 
