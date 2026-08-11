@@ -5,6 +5,10 @@ import { seedFormsForProgram } from "@/lib/ircc/kits";
 import type { FormCode } from "@/lib/ircc/catalog";
 import { isFormCode } from "@/lib/ircc/catalog";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
+import {
+  mergeAccountRepIntoAnswers,
+  PROFILE_REP_SELECT,
+} from "@/lib/ircc/account-rep";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -227,7 +231,9 @@ export async function loadShareContext(token: string) {
   const [projectRes, formsRes, answersRes, orgRes] = await Promise.all([
     admin
       .from("immigration_projects")
-      .select("id, title, program_family, organization_id, form_language")
+      .select(
+        "id, title, program_family, organization_id, form_language, representative_user_id",
+      )
       .eq("id", resolved.projectId)
       .maybeSingle(),
     admin
@@ -242,9 +248,7 @@ export async function loadShareContext(token: string) {
       .maybeSingle(),
     admin
       .from("organizations")
-      .select(
-        "id, name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
-      )
+      .select("id, name")
       .eq("id", resolved.organizationId)
       .maybeSingle(),
   ]);
@@ -258,12 +262,24 @@ export async function loadShareContext(token: string) {
 
   if (!projectRes.data) return null;
 
+  const repUserId = projectRes.data.representative_user_id as string | null;
+  const { data: repProfile } = repUserId
+    ? await admin
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", repUserId)
+        .maybeSingle()
+    : { data: null };
+
   return {
     ...resolved,
     project: projectRes.data,
     forms: (formsRes.data ?? []) as ProjectFormRow[],
     answers: withProjectFormLanguage(
-      (answersRes.data?.answers ?? {}) as Record<string, unknown>,
+      mergeAccountRepIntoAnswers(
+        (answersRes.data?.answers ?? {}) as Record<string, unknown>,
+        repProfile,
+      ),
       projectRes.data.form_language,
     ),
     currentSection:
@@ -284,12 +300,21 @@ export async function saveShareAnswers(input: {
   const admin = createServiceClient();
   const { data: project } = await admin
     .from("immigration_projects")
-    .select("form_language")
+    .select("form_language, representative_user_id")
     .eq("id", resolved.projectId)
     .maybeSingle();
 
+  const repUserId = project?.representative_user_id as string | null;
+  const { data: repProfile } = repUserId
+    ? await admin
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", repUserId)
+        .maybeSingle()
+    : { data: null };
+
   const answers = withProjectFormLanguage(
-    input.answers,
+    mergeAccountRepIntoAnswers(input.answers, repProfile),
     project?.form_language,
   );
 

@@ -20,10 +20,10 @@ alwaysApply: true
 - No IRCC/MIFI government red/blue motifs or official icons
 
 ## Domain model
-- `organizations` — one tenant per consulting firm (SaaS customer). Optional `rep_*` columns prefill IMM 5476.
-- `profiles` + `organization_members` — staff users (Supabase Auth: email/password or Google). For now every member can access all org data.
+- `organizations` — one tenant per consulting firm (SaaS customer).
+- `profiles` + `organization_members` — staff users (Supabase Auth: email/password or Google). For now every member can access all org data. Each profile has optional `rep_*` columns for IMM 5476 (per-account representative).
 - `people` — lifelong immigration clients (identity + history)
-- `immigration_projects` — time-bound engagements (program_family + jurisdiction + status)
+- `immigration_projects` — time-bound engagements (program_family + jurisdiction + status). `representative_user_id` points at the staff profile whose `rep_*` details fill IMM 5476.
 - `project_participants` — people linked to a project with roles; soft-unlink via `left_at`
 - `project_forms` — IRCC forms on a project to-do (seeded by program; IMM 5476 always included)
 - `project_form_answers` — ask-once questionnaire answers (jsonb) per project

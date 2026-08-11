@@ -88,13 +88,29 @@ export async function saveProjectAnswersAction(
   const supabase = await createClient();
   const { data: project } = await supabase
     .from("immigration_projects")
-    .select("form_language")
+    .select("form_language, representative_user_id")
     .eq("id", projectId)
     .eq("organization_id", orgId)
     .maybeSingle();
 
+  const {
+    mergeAccountRepIntoAnswers,
+    PROFILE_REP_SELECT,
+  } = await import("@/lib/ircc/account-rep");
+  const repUserId = project?.representative_user_id as string | null;
+  const { data: repProfile } = repUserId
+    ? await supabase
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", repUserId)
+        .maybeSingle()
+    : { data: null };
+
   answers.hasRepresentative = "Y";
-  answers = withProjectFormLanguage(answers, project?.form_language);
+  answers = withProjectFormLanguage(
+    mergeAccountRepIntoAnswers(answers, repProfile),
+    project?.form_language,
+  );
 
   try {
     await upsertProjectFormAnswers({
@@ -244,22 +260,14 @@ export async function generateProjectPdfsAction(
   if (!orgId) return { ok: false, error: "unauthorized" };
 
   const supabase = await createClient();
-  const [forms, answersRow, project, org] = await Promise.all([
+  const [forms, answersRow, project] = await Promise.all([
     listProjectForms(projectId),
     getProjectFormAnswers(projectId),
     supabase
       .from("immigration_projects")
-      .select("form_language")
+      .select("form_language, representative_user_id")
       .eq("id", projectId)
       .eq("organization_id", orgId)
-      .maybeSingle()
-      .then(({ data }) => data),
-    supabase
-      .from("organizations")
-      .select(
-        "name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
-      )
-      .eq("id", orgId)
       .maybeSingle()
       .then(({ data }) => data),
   ]);
@@ -269,9 +277,21 @@ export async function generateProjectPdfsAction(
   }
 
   try {
-    const { mergeOrgRepIntoAnswers } = await import("@/lib/ircc/org-rep");
+    const {
+      mergeAccountRepIntoAnswers,
+      PROFILE_REP_SELECT,
+    } = await import("@/lib/ircc/account-rep");
+    const repUserId = project?.representative_user_id as string | null;
+    const { data: repProfile } = repUserId
+      ? await supabase
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", repUserId)
+          .maybeSingle()
+      : { data: null };
+
     const answers = withProjectFormLanguage(
-      mergeOrgRepIntoAnswers(answersRow?.answers ?? {}, org),
+      mergeAccountRepIntoAnswers(answersRow?.answers ?? {}, repProfile),
       project?.form_language,
     );
     const result = await fillProjectForms({

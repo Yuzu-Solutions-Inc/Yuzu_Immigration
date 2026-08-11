@@ -19,10 +19,26 @@ const localeEnum = z.enum(
   APP_LOCALES as unknown as [AppLocale, ...AppLocale[]],
 );
 
+const optionalText = (max: number) =>
+  z.string().trim().max(max).optional().or(z.literal(""));
+
 const accountSchema = z.object({
   locale: localeEnum,
   fullName: z.string().trim().min(1).max(120),
   preferredLocale: localeEnum,
+  repFamilyName: optionalText(80),
+  repGivenName: optionalText(80),
+  repOrganization: optionalText(120),
+  repEmail: z.string().email().optional().or(z.literal("")),
+  repPhone: optionalText(40),
+  repPhoneCountryCode: optionalText(6),
+  repMembershipId: optionalText(40),
+  repStreetNum: optionalText(20),
+  repStreetName: optionalText(80),
+  repCity: optionalText(80),
+  repProvince: optionalText(40),
+  repCountry: optionalText(80),
+  repPostalCode: optionalText(20),
 });
 
 const orgSchema = z.object({
@@ -35,29 +51,30 @@ const orgSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
     .min(2)
     .max(48),
-  repFamilyName: z.string().trim().max(80).optional().or(z.literal("")),
-  repGivenName: z.string().trim().max(80).optional().or(z.literal("")),
-  repOrganization: z.string().trim().max(120).optional().or(z.literal("")),
-  repEmail: z.string().email().optional().or(z.literal("")),
-  repPhone: z.string().trim().max(40).optional().or(z.literal("")),
-  repPhoneCountryCode: z.string().trim().max(6).optional().or(z.literal("")),
-  repMembershipId: z.string().trim().max(40).optional().or(z.literal("")),
-  repStreetNum: z.string().trim().max(20).optional().or(z.literal("")),
-  repStreetName: z.string().trim().max(80).optional().or(z.literal("")),
-  repCity: z.string().trim().max(80).optional().or(z.literal("")),
-  repProvince: z.string().trim().max(40).optional().or(z.literal("")),
-  repCountry: z.string().trim().max(80).optional().or(z.literal("")),
-  repPostalCode: z.string().trim().max(20).optional().or(z.literal("")),
 });
 
 export async function updateAccountSettingsAction(
   _prev: SettingsActionState,
   formData: FormData,
 ): Promise<SettingsActionState> {
+  const empty = (key: string) => String(formData.get(key) ?? "").trim();
   const parsed = accountSchema.safeParse({
     locale: formData.get("locale") || "en",
     fullName: formData.get("fullName"),
     preferredLocale: formData.get("preferredLocale") || "en",
+    repFamilyName: empty("repFamilyName"),
+    repGivenName: empty("repGivenName"),
+    repOrganization: empty("repOrganization"),
+    repEmail: empty("repEmail"),
+    repPhone: empty("repPhone"),
+    repPhoneCountryCode: empty("repPhoneCountryCode"),
+    repMembershipId: empty("repMembershipId"),
+    repStreetNum: empty("repStreetNum"),
+    repStreetName: empty("repStreetName"),
+    repCity: empty("repCity"),
+    repProvince: empty("repProvince"),
+    repCountry: empty("repCountry") || "Canada",
+    repPostalCode: empty("repPostalCode"),
   });
 
   if (!parsed.success) {
@@ -75,6 +92,19 @@ export async function updateAccountSettingsAction(
     .update({
       full_name: parsed.data.fullName,
       preferred_locale: parsed.data.preferredLocale,
+      rep_family_name: parsed.data.repFamilyName || null,
+      rep_given_name: parsed.data.repGivenName || null,
+      rep_organization: parsed.data.repOrganization || null,
+      rep_email: parsed.data.repEmail || null,
+      rep_phone: parsed.data.repPhone || null,
+      rep_phone_country_code: parsed.data.repPhoneCountryCode || null,
+      rep_membership_id: parsed.data.repMembershipId || null,
+      rep_street_num: parsed.data.repStreetNum || null,
+      rep_street_name: parsed.data.repStreetName || null,
+      rep_city: parsed.data.repCity || null,
+      rep_province: parsed.data.repProvince || null,
+      rep_country: parsed.data.repCountry || null,
+      rep_postal_code: parsed.data.repPostalCode || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id);
@@ -103,19 +133,6 @@ export async function updateOrganizationSettingsAction(
     locale: formData.get("locale") || "en",
     name: formData.get("name"),
     slug: formData.get("slug") || slugifyOrganizationName(empty("name")),
-    repFamilyName: empty("repFamilyName"),
-    repGivenName: empty("repGivenName"),
-    repOrganization: empty("repOrganization"),
-    repEmail: empty("repEmail"),
-    repPhone: empty("repPhone"),
-    repPhoneCountryCode: empty("repPhoneCountryCode"),
-    repMembershipId: empty("repMembershipId"),
-    repStreetNum: empty("repStreetNum"),
-    repStreetName: empty("repStreetName"),
-    repCity: empty("repCity"),
-    repProvince: empty("repProvince"),
-    repCountry: empty("repCountry") || "Canada",
-    repPostalCode: empty("repPostalCode"),
   });
 
   if (!parsed.success) {
@@ -133,19 +150,6 @@ export async function updateOrganizationSettingsAction(
     .update({
       name: parsed.data.name,
       slug: parsed.data.slug,
-      rep_family_name: parsed.data.repFamilyName || null,
-      rep_given_name: parsed.data.repGivenName || null,
-      rep_organization: parsed.data.repOrganization || null,
-      rep_email: parsed.data.repEmail || null,
-      rep_phone: parsed.data.repPhone || null,
-      rep_phone_country_code: parsed.data.repPhoneCountryCode || null,
-      rep_membership_id: parsed.data.repMembershipId || null,
-      rep_street_num: parsed.data.repStreetNum || null,
-      rep_street_name: parsed.data.repStreetName || null,
-      rep_city: parsed.data.repCity || null,
-      rep_province: parsed.data.repProvince || null,
-      rep_country: parsed.data.repCountry || null,
-      rep_postal_code: parsed.data.repPostalCode || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", orgId);

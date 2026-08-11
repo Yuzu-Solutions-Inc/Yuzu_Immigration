@@ -319,7 +319,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     maxLength: 400,
     forms: ["imm1295", "imm5710"],
   },
-  // Representative block comes from Organization settings (IMM 5476), not the client questionnaire.
+  // Representative block comes from the assigned staff account (IMM 5476), not the client questionnaire.
 ];
 
 export function fieldsForFormCodes(formCodes: string[]): CanonicalField[] {

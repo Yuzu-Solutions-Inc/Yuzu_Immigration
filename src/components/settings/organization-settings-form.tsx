@@ -17,19 +17,6 @@ const initial: SettingsActionState = {};
 export type OrgSettingsValues = {
   name: string;
   slug: string;
-  repFamilyName: string;
-  repGivenName: string;
-  repOrganization: string;
-  repEmail: string;
-  repPhone: string;
-  repPhoneCountryCode: string;
-  repMembershipId: string;
-  repStreetNum: string;
-  repStreetName: string;
-  repCity: string;
-  repProvince: string;
-  repCountry: string;
-  repPostalCode: string;
 };
 
 export function OrganizationSettingsForm({
@@ -84,51 +71,6 @@ export function OrganizationSettingsForm({
             />
             <p className="text-xs text-muted-foreground">{t("orgSlugHelp")}</p>
           </div>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div>
-          <h3 className="font-heading text-base font-semibold text-brand">
-            {t("repTitle")}
-          </h3>
-          <p className="text-sm text-muted-foreground">{t("repHelp")}</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {(
-            [
-              ["repFamilyName", "repFamilyName"],
-              ["repGivenName", "repGivenName"],
-              ["repOrganization", "repOrganization"],
-              ["repMembershipId", "repMembershipId"],
-              ["repEmail", "repEmail"],
-              ["repPhone", "repPhone"],
-              ["repPhoneCountryCode", "repPhoneCountryCode"],
-              ["repStreetNum", "repStreetNum"],
-              ["repStreetName", "repStreetName"],
-              ["repCity", "repCity"],
-              ["repProvince", "repProvince"],
-              ["repCountry", "repCountry"],
-              ["repPostalCode", "repPostalCode"],
-            ] as const
-          ).map(([name, labelKey]) => (
-            <div
-              key={name}
-              className={
-                name === "repOrganization" || name === "repStreetName"
-                  ? "space-y-2 sm:col-span-2"
-                  : "space-y-2"
-              }
-            >
-              <Label htmlFor={name}>{t(labelKey)}</Label>
-              <Input
-                id={name}
-                name={name}
-                type={name === "repEmail" ? "email" : "text"}
-                defaultValue={initialValues[name]}
-              />
-            </div>
-          ))}
         </div>
       </section>
 

@@ -22,9 +22,7 @@ export default async function OrganizationSettingsPage({
   const supabase = await createClient();
   const { data: org } = await supabase
     .from("organizations")
-    .select(
-      "name, slug, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
-    )
+    .select("name, slug")
     .eq("id", membership.organization.id)
     .maybeSingle();
 
@@ -45,19 +43,6 @@ export default async function OrganizationSettingsPage({
         initialValues={{
           name: org.name ?? "",
           slug: org.slug ?? "",
-          repFamilyName: org.rep_family_name ?? "",
-          repGivenName: org.rep_given_name ?? "",
-          repOrganization: org.rep_organization ?? "",
-          repEmail: org.rep_email ?? "",
-          repPhone: org.rep_phone ?? "",
-          repPhoneCountryCode: org.rep_phone_country_code ?? "",
-          repMembershipId: org.rep_membership_id ?? "",
-          repStreetNum: org.rep_street_num ?? "",
-          repStreetName: org.rep_street_name ?? "",
-          repCity: org.rep_city ?? "",
-          repProvince: org.rep_province ?? "",
-          repCountry: org.rep_country ?? "Canada",
-          repPostalCode: org.rep_postal_code ?? "",
         }}
       />
     </SurfaceCard>

@@ -377,16 +377,18 @@ export async function createProjectAction(
       console.error("seed project forms:", formsError.message);
     }
 
-    const { data: org } = await supabase
-      .from("organizations")
-      .select(
-        "name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
-      )
-      .eq("id", orgId)
-      .maybeSingle();
-
-    const { orgRepAnswersFromOrg } = await import("@/lib/ircc/org-rep");
+    const { accountRepAnswersFromProfile, PROFILE_REP_SELECT } = await import(
+      "@/lib/ircc/account-rep"
+    );
     const { toIrccFormLanguage } = await import("@/lib/ircc/form-language");
+    const { data: repProfile } = representativeUserId
+      ? await supabase
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", representativeUserId)
+          .maybeSingle()
+      : { data: null };
+
     const principal = resolved.people.find((p) => p.role === "principal");
     const nameParts = (principal?.displayName || "").split(/\s+/);
     const initialAnswers: Record<string, unknown> = {
@@ -394,7 +396,7 @@ export async function createProjectAction(
       familyName: nameParts.length > 1 ? nameParts.at(-1) : nameParts[0] || "",
       givenName:
         nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "",
-      ...orgRepAnswersFromOrg(org),
+      ...accountRepAnswersFromProfile(repProfile),
     };
 
     await supabase.from("project_form_answers").insert({
@@ -493,17 +495,32 @@ export async function updateProjectAction(
   }
 
   const { toIrccFormLanguage } = await import("@/lib/ircc/form-language");
-  const { data: answersRow } = await supabase
-    .from("project_form_answers")
-    .select("id, answers")
-    .eq("project_id", projectId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
+  const { mergeAccountRepIntoAnswers, PROFILE_REP_SELECT } = await import(
+    "@/lib/ircc/account-rep"
+  );
+  const [{ data: answersRow }, { data: repProfile }] = await Promise.all([
+    supabase
+      .from("project_form_answers")
+      .select("id, answers")
+      .eq("project_id", projectId)
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+    representativeUserId
+      ? supabase
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", representativeUserId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
   if (answersRow) {
-    const nextAnswers = {
-      ...((answersRow.answers as Record<string, unknown> | null) ?? {}),
-      formLanguage: toIrccFormLanguage(data.formLanguage),
-    };
+    const nextAnswers = mergeAccountRepIntoAnswers(
+      {
+        ...((answersRow.answers as Record<string, unknown> | null) ?? {}),
+        formLanguage: toIrccFormLanguage(data.formLanguage),
+      },
+      repProfile,
+    );
     await supabase
       .from("project_form_answers")
       .update({

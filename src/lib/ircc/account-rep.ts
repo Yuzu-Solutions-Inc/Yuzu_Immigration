@@ -1,0 +1,76 @@
+/** Account-level IMM 5476 representative fields (staff profile, not client data). */
+
+export type AccountRepSource = {
+  email?: string | null;
+  full_name?: string | null;
+  rep_family_name?: string | null;
+  rep_given_name?: string | null;
+  rep_organization?: string | null;
+  rep_email?: string | null;
+  rep_phone?: string | null;
+  rep_phone_country_code?: string | null;
+  rep_membership_id?: string | null;
+  rep_street_num?: string | null;
+  rep_street_name?: string | null;
+  rep_city?: string | null;
+  rep_province?: string | null;
+  rep_country?: string | null;
+  rep_postal_code?: string | null;
+};
+
+export const ACCOUNT_REP_ANSWER_KEYS = [
+  "repFamilyName",
+  "repGivenName",
+  "repOrganization",
+  "repEmail",
+  "repPhone",
+  "repPhoneCountryCode",
+  "repMembershipId",
+  "repStreetNum",
+  "repStreetName",
+  "repCity",
+  "repProvince",
+  "repCountry",
+  "repPostalCode",
+] as const;
+
+export type AccountRepAnswerKey = (typeof ACCOUNT_REP_ANSWER_KEYS)[number];
+
+export const PROFILE_REP_SELECT =
+  "id, email, full_name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code";
+
+/** Map profiles.rep_* into questionnaire / PDF answer keys. */
+export function accountRepAnswersFromProfile(
+  profile: AccountRepSource | null | undefined,
+): Record<AccountRepAnswerKey, string> & { hasRepresentative: "Y" } {
+  return {
+    hasRepresentative: "Y",
+    repFamilyName: profile?.rep_family_name || "",
+    repGivenName: profile?.rep_given_name || "",
+    repOrganization: profile?.rep_organization || "",
+    repEmail: profile?.rep_email || profile?.email || "",
+    repPhone: profile?.rep_phone || "",
+    repPhoneCountryCode: profile?.rep_phone_country_code || "",
+    repMembershipId: profile?.rep_membership_id || "",
+    repStreetNum: profile?.rep_street_num || "",
+    repStreetName: profile?.rep_street_name || "",
+    repCity: profile?.rep_city || "",
+    repProvince: profile?.rep_province || "",
+    repCountry: profile?.rep_country || "Canada",
+    repPostalCode: profile?.rep_postal_code || "",
+  };
+}
+
+/**
+ * Overlay account representative fields onto stored answers.
+ * The project's assigned representative profile always wins for IMM 5476.
+ */
+export function mergeAccountRepIntoAnswers(
+  answers: Record<string, unknown>,
+  profile: AccountRepSource | null | undefined,
+): Record<string, unknown> {
+  return {
+    ...answers,
+    ...accountRepAnswersFromProfile(profile),
+  };
+}
