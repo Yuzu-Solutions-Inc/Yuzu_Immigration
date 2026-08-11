@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { formTitle, type FormCode, ALL_FORM_CODES } from "@/lib/ircc/catalog";
 import { ADDABLE_COMPANION_FORMS } from "@/lib/ircc/kits";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
-import { Link } from "@/i18n/navigation";
 
 const initialState: FormsActionState = {};
 
@@ -103,17 +102,9 @@ export function ProjectFormsPanel({
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("todoTitle")}
-          </h2>
-          <Link
-            href={`/projects/${projectId}/forms`}
-            className="text-sm font-medium text-action hover:underline"
-          >
-            {t("openQuestionnaire")}
-          </Link>
-        </div>
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("todoTitle")}
+        </h2>
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
           {forms.length === 0 ? (
             <li className="px-5 py-4 text-sm text-muted-foreground">
