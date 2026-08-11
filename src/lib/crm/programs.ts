@@ -47,6 +47,18 @@ export function defaultRolesForComposition(
   }
 }
 
+export function inferCompositionFromRoles(
+  roles: ParticipantRole[],
+): ProjectComposition {
+  const hasDependent = roles.some((role) => role === "dependent");
+  const hasPartner = roles.some(
+    (role) => role === "spouse" || role === "partner",
+  );
+  if (hasDependent || roles.length > 2) return "family";
+  if (hasPartner || roles.length === 2) return "couple";
+  return "individual";
+}
+
 export function buildProjectTitle(input: {
   programFamily: ProgramFamily;
   programLabel: string;

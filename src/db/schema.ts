@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   pgEnum,
   pgSchema,
   pgTable,
@@ -18,10 +19,13 @@ export const orgMemberRoleEnum = pgEnum("org_member_role", [
 ]);
 
 export const projectStatusEnum = pgEnum("project_status", [
-  "active",
-  "on_hold",
+  "new",
+  "in_progress",
+  "stuck",
+  "waiting",
   "submitted",
-  "closed",
+  "granted",
+  "rejected",
 ]);
 
 export const projectJurisdictionEnum = pgEnum("project_jurisdiction", [
@@ -52,6 +56,20 @@ export const participantRoleEnum = pgEnum("participant_role", [
   "dependent",
   "sponsor",
   "accompanying",
+]);
+
+export const personImmigrationStatusEnum = pgEnum("person_immigration_status", [
+  "none",
+  "visitor",
+  "student",
+  "worker",
+  "maintained",
+  "permanent_resident",
+  "canadian_citizen",
+  "refugee_claimant",
+  "protected_person",
+  "overstay",
+  "other",
 ]);
 
 export const organizations = pgTable("organizations", {
@@ -110,6 +128,10 @@ export const people = pgTable("people", {
   email: text("email"),
   phone: text("phone"),
   preferredLocale: text("preferred_locale").default("en").notNull(),
+  immigrationStatus: personImmigrationStatusEnum("immigration_status")
+    .notNull()
+    .default("none"),
+  statusExpiresAt: date("status_expires_at"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -124,7 +146,8 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  status: projectStatusEnum("status").notNull().default("active"),
+  status: projectStatusEnum("status").notNull().default("new"),
+  statusAt: date("status_at").notNull().default(sql`current_date`),
   jurisdiction: projectJurisdictionEnum("jurisdiction")
     .notNull()
     .default("federal"),
@@ -214,3 +237,5 @@ export type ProjectJurisdiction =
   (typeof projectJurisdictionEnum.enumValues)[number];
 export type ParticipantRole = (typeof participantRoleEnum.enumValues)[number];
 export type ProjectStatus = (typeof projectStatusEnum.enumValues)[number];
+export type PersonImmigrationStatus =
+  (typeof personImmigrationStatusEnum.enumValues)[number];

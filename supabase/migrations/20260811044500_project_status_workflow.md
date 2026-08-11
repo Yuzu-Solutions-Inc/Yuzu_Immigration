@@ -1,0 +1,4 @@
+-- Applied remotely: project_status_workflow
+-- New statuses: new, in_progress, stuck, waiting, submitted, granted, rejected
+-- Added status_at date (defaults to current_date)
+-- Mapped active→in_progress, on_hold→waiting, closed→granted

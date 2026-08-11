@@ -20,6 +20,7 @@ export default async function PersonDetailPage({
 
   const projects = await getPersonProjects(id);
   const t = await getTranslations("people");
+  const ti = await getTranslations("immigrationStatus");
   const tp = await getTranslations("projects");
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
@@ -55,6 +56,28 @@ export default async function PersonDetailPage({
                   <dd className="inline">{person.phone}</dd>
                 </div>
               ) : null}
+              <div>
+                <dt className="inline font-medium text-brand/70">
+                  {t("immigrationStatus")}:{" "}
+                </dt>
+                <dd className="inline">
+                  {ti(person.immigration_status)}
+                  {person.status_expires_at
+                    ? ` · ${t("expires", {
+                        date: new Date(
+                          `${person.status_expires_at}T12:00:00`,
+                        ).toLocaleDateString(
+                          locale === "fr" ? "fr-CA" : "en-CA",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        ),
+                      })}`
+                    : ""}
+                </dd>
+              </div>
             </dl>
           </div>
           <Link

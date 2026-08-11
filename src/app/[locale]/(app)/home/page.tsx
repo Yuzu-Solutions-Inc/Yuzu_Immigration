@@ -2,9 +2,37 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
 import { getSessionUser } from "@/lib/auth/session";
-import { listPeople, listProjects } from "@/lib/crm/queries";
+import {
+  listPeople,
+  listProjects,
+  listUpcomingStatusExpiries,
+} from "@/lib/crm/queries";
+import { cn } from "@/lib/utils";
+
+function formatDate(isoDate: string, locale: string) {
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString(
+    locale === "fr" ? "fr-CA" : "en-CA",
+    { year: "numeric", month: "short", day: "numeric" },
+  );
+}
+
+function daysUntil(isoDate: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(`${isoDate}T12:00:00`);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
 
 export default async function AppHomePage({
   params,
@@ -18,11 +46,20 @@ export default async function AppHomePage({
   const t = await getTranslations("appHome");
   const tp = await getTranslations("projects");
   const tprog = await getTranslations("programs");
+  const ti = await getTranslations("immigrationStatus");
 
-  const [projects, people] = await Promise.all([listProjects(), listPeople()]);
+  const [projects, people, expiries] = await Promise.all([
+    listProjects(),
+    listPeople(),
+    listUpcomingStatusExpiries(15),
+  ]);
   const recent = projects.slice(0, 5);
-  const activeCount = projects.filter((p) => p.status === "active").length;
-  const onHoldCount = projects.filter((p) => p.status === "on_hold").length;
+  const inProgressCount = projects.filter(
+    (p) => p.status === "in_progress" || p.status === "new",
+  ).length;
+  const blockedCount = projects.filter(
+    (p) => p.status === "stuck" || p.status === "waiting",
+  ).length;
 
   const displayName =
     (user?.user_metadata?.full_name as string | undefined) ||
@@ -49,7 +86,7 @@ export default async function AppHomePage({
             {t("stats.activeProjects")}
           </p>
           <p className="font-heading text-3xl font-semibold text-brand">
-            {activeCount}
+            {inProgressCount}
           </p>
         </SurfaceCard>
         <SurfaceCard className="space-y-1 sm:p-5">
@@ -62,12 +99,90 @@ export default async function AppHomePage({
         </SurfaceCard>
         <SurfaceCard className="space-y-1 sm:p-5">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("stats.onHold")}
+            {t("stats.blocked")}
           </p>
           <p className="font-heading text-3xl font-semibold text-brand">
-            {onHoldCount}
+            {blockedCount}
           </p>
         </SurfaceCard>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {t("expiries.title")}
+          </h2>
+          <Link
+            href="/people"
+            className="text-sm font-medium text-action hover:underline"
+          >
+            {t("expiries.viewPeople")}
+          </Link>
+        </div>
+
+        {expiries.length === 0 ? (
+          <SurfaceCard>
+            <p className="text-[15px] text-muted-foreground">
+              {t("expiries.empty")}
+            </p>
+          </SurfaceCard>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("expiries.columns.person")}</TableHead>
+                  <TableHead>{t("expiries.columns.status")}</TableHead>
+                  <TableHead>{t("expiries.columns.expires")}</TableHead>
+                  <TableHead className="text-right">
+                    {t("expiries.columns.timing")}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expiries.map((person) => {
+                  const expiry = person.status_expires_at!;
+                  const days = daysUntil(expiry);
+                  const timing =
+                    days < 0
+                      ? t("expiries.overdue", { days: Math.abs(days) })
+                      : days === 0
+                        ? t("expiries.today")
+                        : t("expiries.inDays", { days });
+
+                  return (
+                    <TableRow key={person.id}>
+                      <TableCell>
+                        <Link
+                          href={`/people/${person.id}`}
+                          className="font-medium text-brand hover:underline"
+                        >
+                          {person.first_name} {person.last_name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {ti(person.immigration_status)}
+                      </TableCell>
+                      <TableCell>{formatDate(expiry, locale)}</TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right text-sm font-medium",
+                          days < 0
+                            ? "text-destructive"
+                            : days <= 30
+                              ? "text-[#b45309]"
+                              : "text-muted-foreground",
+                        )}
+                      >
+                        {timing}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-5">
@@ -117,14 +232,6 @@ export default async function AppHomePage({
         </div>
 
         <div className="space-y-4 lg:col-span-2">
-          <SurfaceCard className="space-y-2 sm:p-5">
-            <h2 className="font-heading text-base font-semibold text-brand">
-              {t("placeholders.deadlinesTitle")}
-            </h2>
-            <p className="text-sm text-muted-foreground text-pretty">
-              {t("placeholders.deadlinesBody")}
-            </p>
-          </SurfaceCard>
           <SurfaceCard className="space-y-2 sm:p-5">
             <h2 className="font-heading text-base font-semibold text-brand">
               {t("placeholders.activityTitle")}

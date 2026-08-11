@@ -24,7 +24,7 @@ export async function DashboardShell({
   const tHome = await getTranslations("appHome");
 
   return (
-    <div className="flex min-h-[calc(100vh-4.5rem)] flex-1 bg-canvas">
+    <div className="flex min-h-screen flex-1 bg-canvas">
       <DesktopSidebar orgName={orgName} newProjectLabel={tHome("newProject")} />
 
       <div className="flex min-w-0 flex-1 flex-col">

@@ -1,0 +1,2 @@
+-- Applied remotely: people_immigration_status
+-- people.immigration_status enum + people.status_expires_at date

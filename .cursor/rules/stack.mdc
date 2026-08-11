@@ -18,7 +18,6 @@ alwaysApply: true
 - Fonts: Plus Jakarta Sans (headings), Inter (body)
 - Radius 12px, soft elevation `0 4px 6px -1px rgba(0,0,0,0.05)`
 - No IRCC/MIFI government red/blue motifs or official icons
-- Always include the private-portal disclaimer footer (`legal.disclaimer`)
 
 ## Domain model
 - `organizations` — one tenant per consulting firm (SaaS customer)

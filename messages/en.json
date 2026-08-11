@@ -62,13 +62,25 @@
     "viewAllProjects": "View all projects",
     "emptyProjects": "No projects yet. Start with your first immigration file.",
     "stats": {
-      "activeProjects": "Active projects",
+      "activeProjects": "Open projects",
       "people": "People",
-      "onHold": "On hold"
+      "blocked": "Stuck / waiting"
+    },
+    "expiries": {
+      "title": "Upcoming visa expiries",
+      "viewPeople": "View people",
+      "empty": "No status expiration dates yet. Add them when you create or update people.",
+      "columns": {
+        "person": "Person",
+        "status": "Status",
+        "expires": "Expires",
+        "timing": "Timing"
+      },
+      "overdue": "{days}d overdue",
+      "today": "Today",
+      "inDays": "In {days}d"
     },
     "placeholders": {
-      "deadlinesTitle": "Upcoming deadlines",
-      "deadlinesBody": "Permit expiries, submission targets, and biometrics windows will appear here.",
       "activityTitle": "Recent activity",
       "activityBody": "File updates and portal events will show up in this feed."
     }
@@ -108,24 +120,47 @@
     "firstName": "First name",
     "lastName": "Last name",
     "emailOptional": "Email (optional)",
+    "immigrationStatus": "Current status",
+    "statusExpiresAt": "Status expiration date",
     "create": "Create project",
     "creating": "Creating…",
+    "edit": "Edit project",
+    "editTitle": "Edit project",
+    "editSubtitle": "Update composition, program, status, and people on this file.",
+    "editPeople": "Edit people",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "titleLabel": "Project title",
+    "titlePlaceholder": "Leave blank to auto-generate from people",
+    "removePerson": "Remove",
     "back": "Back to projects",
+    "backToProject": "Back to project",
     "status": "Status",
+    "statusAt": "Status date",
+    "statusAtHelp": "Defaults to today when you change status — adjust if needed.",
+    "statusSince": "Since {date}",
+    "updateStatusTitle": "Update status",
+    "updateStatus": "Update status",
+    "savingStatus": "Updating…",
     "opened": "Opened",
     "participants": "Participants",
     "notFound": "Project not found.",
     "statuses": {
-      "active": "Active",
-      "on_hold": "On hold",
+      "new": "New",
+      "in_progress": "In Progress",
+      "stuck": "Stuck",
+      "waiting": "Waiting",
       "submitted": "Submitted",
-      "closed": "Closed"
+      "granted": "Granted",
+      "rejected": "Rejected"
     },
     "errors": {
       "invalid": "Check the form and try again.",
       "personMissing": "One of the selected people could not be found.",
       "principalRequired": "A principal applicant is required.",
       "createFailed": "Could not create the project. Try again.",
+      "updateFailed": "Could not save the project. Try again.",
+      "notFound": "Project not found.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -138,8 +173,23 @@
     "noProjects": "Not linked to any projects yet.",
     "email": "Email",
     "phone": "Phone",
+    "immigrationStatus": "Current status",
+    "expires": "expires {date}",
     "notFound": "Person not found.",
     "back": "Back to people"
+  },
+  "immigrationStatus": {
+    "none": "No status",
+    "visitor": "Visitor",
+    "student": "Student",
+    "worker": "Worker",
+    "maintained": "Maintained status",
+    "permanent_resident": "Permanent resident",
+    "canadian_citizen": "Canadian citizen",
+    "refugee_claimant": "Refugee claimant",
+    "protected_person": "Protected person",
+    "overstay": "Overstay",
+    "other": "Other"
   },
   "programs": {
     "study_permit": "Study permit",

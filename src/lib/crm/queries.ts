@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import type {
   ParticipantRole,
+  PersonImmigrationStatus,
   ProgramFamily,
   ProjectJurisdiction,
   ProjectStatus,
@@ -15,6 +16,8 @@ export type PersonRow = {
   email: string | null;
   phone: string | null;
   preferred_locale: string;
+  immigration_status: PersonImmigrationStatus;
+  status_expires_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -24,6 +27,7 @@ export type ProjectRow = {
   organization_id: string;
   title: string;
   status: ProjectStatus;
+  status_at: string;
   jurisdiction: ProjectJurisdiction;
   program_family: ProgramFamily;
   opened_at: string;
@@ -74,6 +78,29 @@ export async function listPeople(query?: string): Promise<PersonRow[]> {
   const { data, error } = await request;
   if (error) {
     console.error("listPeople:", error.message);
+    return [];
+  }
+  return (data ?? []) as PersonRow[];
+}
+
+export async function listUpcomingStatusExpiries(
+  limit = 15,
+): Promise<PersonRow[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("people")
+    .select("*")
+    .eq("organization_id", orgId)
+    .not("status_expires_at", "is", null)
+    .neq("immigration_status", "none")
+    .order("status_expires_at", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    console.error("listUpcomingStatusExpiries:", error.message);
     return [];
   }
   return (data ?? []) as PersonRow[];
