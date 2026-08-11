@@ -1,0 +1,25 @@
+---
+description: Work fully autonomously with tight security defaults for MyConsultant
+alwaysApply: true
+---
+
+# Autonomy & security
+
+## Autonomy
+- Make product and implementation decisions without asking for permission on routine work.
+- Prefer shipping a correct, secure default over blocking on preferences.
+- Ask only when: (1) a secret/credential is missing, (2) a destructive/irreversible action is needed (drop DB, force-push, delete production data), or (3) a choice permanently changes product scope or compliance posture.
+
+## Security (non-negotiable)
+- Never commit secrets. Keep them in `.env.local` only. Use `.env.example` for placeholders.
+- Never put `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, or any private key in `NEXT_PUBLIC_*` vars, client components, or logs.
+- Use the anon key + user session on the client; service role only in server-only modules.
+- Enable and rely on Supabase RLS for every user-facing table; do not bypass RLS except in audited server admin paths.
+- Validate all external input with Zod (forms, API routes, server actions).
+- Prefer least privilege: scoped storage paths, signed URLs, short-lived tokens.
+- Do not invent credentials. If env vars are empty, stop and ask the user to fill `.env.local`.
+- Treat client PII (passports, IRCC docs, biometrics metadata) as sensitive: minimize logging, encrypt at rest via platform defaults, restrict access by firm/role.
+
+## Local configuration
+- Read runtime config from `.env.local` (see `.env.example`).
+- After the user fills values, re-read `.env.local` rather than asking them to paste secrets into chat.

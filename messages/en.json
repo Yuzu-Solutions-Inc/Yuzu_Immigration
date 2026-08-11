@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "MyConsultant",
+    "tagline": "Canadian immigration consultant CRM"
+  },
+  "home": {
+    "title": "The CRM built for Canadian immigration consultants",
+    "subtitle": "Clients, cases, documents, and deadlines — in English and French.",
+    "cta": "Open dashboard",
+    "setup": "Connect Supabase in .env.local to enable auth and data."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "cases": "Cases",
+    "documents": "Documents"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to MyConsultant",
+    "empty": "No data yet. Client and case modules come next."
+  }
+}

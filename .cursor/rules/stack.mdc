@@ -1,0 +1,23 @@
+---
+description: MyConsultant stack and architecture conventions
+alwaysApply: true
+---
+
+# Stack conventions
+
+- **Framework**: Next.js App Router (src/), TypeScript strict
+- **UI**: Tailwind CSS v4 + shadcn/ui (`src/components/ui`)
+- **Data**: Supabase Auth + Postgres + Storage; Drizzle ORM for schema/migrations
+- **Client data**: TanStack Query for server-state fetching/mutations
+- **Forms**: React Hook Form + Zod
+- **i18n**: next-intl with `en` and `fr` under `src/app/[locale]`
+
+## Layout
+- `src/app/[locale]/(marketing)` — public pages
+- `src/app/[locale]/(app)` — authenticated CRM shell
+- `src/lib/supabase` — browser/server/middleware clients
+- `src/db` — Drizzle schema and DB client
+- `messages/` — locale JSON dictionaries
+
+## Product context
+Canadian immigration consultant CRM (MyConsultant / Yuzu Solutions). Prefer bilingual UX, case/client/document workflows, and firm multi-tenancy with RLS from day one.

@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "MyConsultant",
+    "tagline": "CRM pour consultants en immigration canadienne"
+  },
+  "home": {
+    "title": "Le CRM conçu pour les consultants en immigration canadienne",
+    "subtitle": "Clients, dossiers, documents et échéances — en français et en anglais.",
+    "cta": "Ouvrir le tableau de bord",
+    "setup": "Connectez Supabase dans .env.local pour activer l’auth et les données."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "clients": "Clients",
+    "cases": "Dossiers",
+    "documents": "Documents"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue sur MyConsultant",
+    "empty": "Aucune donnée pour l’instant. Les modules clients et dossiers suivent."
+  }
+}
