@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useMemo, useState, useTransition } from "react";
-import { Download, Loader2, Trash2 } from "lucide-react";
+import { useActionState, useMemo, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -10,28 +10,12 @@ import {
   removeCustomDocumentRequestAction,
   type DocumentsActionState,
 } from "@/app/actions/documents";
+import { DocumentFileActions } from "@/components/documents/document-file-actions";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
 import type { DocumentRequestWithFile } from "@/lib/documents/service";
 
 const initial: DocumentsActionState = {};
-
-function triggerBrowserDownload(
-  base64: string,
-  filename: string,
-  contentType: string,
-) {
-  const bin = atob(base64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const blob = new Blob([bytes], { type: contentType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function documentLabel(
   row: DocumentRequestWithFile,
@@ -64,9 +48,6 @@ export function ProjectDocumentsPanel({
     removeCustomDocumentRequestAction,
     initial,
   );
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
   const [personId, setPersonId] = useState(people[0]?.id ?? "");
 
   const grouped = useMemo(() => {
@@ -79,27 +60,6 @@ export function ProjectDocumentsPanel({
     }
     return map;
   }, [people, requests]);
-
-  function handleDownload(requestId: string) {
-    setDownloadError(null);
-    setDownloadingId(requestId);
-    startTransition(async () => {
-      try {
-        const result = await downloadProjectDocumentAction(requestId);
-        if (!result.ok) {
-          setDownloadError(result.error);
-          return;
-        }
-        triggerBrowserDownload(
-          result.base64,
-          result.filename,
-          result.contentType,
-        );
-      } finally {
-        setDownloadingId(null);
-      }
-    });
-  }
 
   return (
     <div className="space-y-4">
@@ -158,20 +118,12 @@ export function ProjectDocumentsPanel({
                         </div>
                         <div className="flex items-center gap-2">
                           {row.file ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon-sm"
-                              disabled={pending}
-                              onClick={() => handleDownload(row.id)}
-                              aria-label={t("download")}
-                            >
-                              {downloadingId === row.id ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <Download className="size-4" />
-                              )}
-                            </Button>
+                            <DocumentFileActions
+                              compact
+                              requestId={row.id}
+                              filename={row.file.original_filename}
+                              fetchFile={downloadProjectDocumentAction}
+                            />
                           ) : null}
                           {row.doc_key === "custom" ? (
                             <form action={removeAction}>
@@ -208,11 +160,6 @@ export function ProjectDocumentsPanel({
         })}
       </ul>
 
-      {downloadError ? (
-        <p className="text-sm text-destructive" role="alert">
-          {t("errors.downloadFailed")}
-        </p>
-      ) : null}
       {removeState.error ? (
         <p className="text-sm text-destructive" role="alert">
           {t("errors.removeFailed")}

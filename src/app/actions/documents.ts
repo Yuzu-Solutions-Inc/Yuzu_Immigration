@@ -211,6 +211,57 @@ export async function downloadProjectDocumentAction(
   }
 }
 
+export async function downloadShareDocumentAction(
+  token: string,
+  requestId: string,
+): Promise<
+  | {
+      ok: true;
+      base64: string;
+      filename: string;
+      contentType: string;
+    }
+  | { ok: false; error: string }
+> {
+  if (!token || !uuid.safeParse(requestId).success) {
+    return { ok: false, error: "invalid" };
+  }
+
+  const resolved = await resolveShareToken(token);
+  if (!resolved) return { ok: false, error: "expired" };
+
+  const admin = createServiceClient();
+  const { data: file, error } = await admin
+    .from("project_document_files")
+    .select("*")
+    .eq("request_id", requestId)
+    .eq("project_id", resolved.projectId)
+    .eq("organization_id", resolved.organizationId)
+    .maybeSingle();
+
+  if (error || !file) {
+    return { ok: false, error: "not_found" };
+  }
+
+  try {
+    const result = await downloadDecryptedDocument({
+      organizationId: resolved.organizationId,
+      storagePath: file.storage_path as string,
+      contentType: file.content_type as string,
+      originalFilename: file.original_filename as string,
+    });
+    return {
+      ok: true,
+      base64: result.buffer.toString("base64"),
+      filename: result.filename,
+      contentType: result.contentType,
+    };
+  } catch (err) {
+    console.error("downloadShareDocumentAction:", err);
+    return { ok: false, error: "download_failed" };
+  }
+}
+
 export async function uploadShareDocumentAction(
   _prev: DocumentsActionState,
   formData: FormData,
