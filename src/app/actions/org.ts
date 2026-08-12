@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { setActiveOrganizationId } from "@/lib/auth/active-org";
@@ -118,5 +119,6 @@ export async function switchOrganizationAction(formData: FormData) {
   }
 
   await setActiveOrganizationId(next.organization.id);
+  revalidatePath("/", "layout");
   redirect(`/${parsed.data.locale}/home`);
 }
