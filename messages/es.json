@@ -109,6 +109,10 @@
     "securityHelp": "Acciones sensibles recientes en el espacio de tu despacho (solo propietarios y administradores).",
     "securityForbidden": "Solo los propietarios y administradores pueden ver el registro de auditoría.",
     "securityEmpty": "Aún no hay eventos auditados.",
+    "securityAuditHeading": "Registro de auditoría",
+    "securityDestructionHeading": "Registro de destrucción",
+    "securityDestructionEmpty": "Aún no hay expedientes destruidos de forma segura.",
+    "securityDestructionMeta": "Cerrado {closed} · Destruido {destroyed}",
     "securityColWhen": "Cuándo",
     "securityColAction": "Acción",
     "securityColActor": "Actor",
@@ -894,6 +898,30 @@
       "downloadFailed": "No se pudo descargar el archivo.",
       "previewUnsupported": "Este tipo de archivo no se puede previsualizar en el navegador. Descárguelo para abrirlo.",
       "generic": "Algo salió mal."
+    }
+  },
+  "privacy": {
+    "retentionTitle": "Retención y destrucción",
+    "retentionHelp": "Los expedientes cerrados se conservan al menos seis años según las obligaciones del College, y luego pueden destruirse de forma segura.",
+    "closedAt": "Expediente cerrado",
+    "retainUntil": "Conservar hasta",
+    "destroyedOn": "Contenido sensible destruido el {date}",
+    "destroyHelp": "Elimina permanentemente los documentos cifrados y borra las respuestas del cuestionario de este proyecto. Escriba DESTROY para confirmar.",
+    "destroyConfirmLabel": "Escriba DESTROY para confirmar",
+    "destroyNote": "Nota opcional",
+    "destroy": "Destruir contenido sensible",
+    "destroying": "Destruyendo…",
+    "destroySuccess": "Contenido sensible destruido y registrado en el registro de destrucción.",
+    "destroyNotYet": "La destrucción segura estará disponible después de la fecha de retención.",
+    "exportPerson": "Exportar datos",
+    "errors": {
+      "invalid": "Revise la confirmación e inténtelo de nuevo.",
+      "unauthorized": "Debe iniciar sesión.",
+      "forbidden": "Solo propietarios y administradores.",
+      "notFound": "Registro no encontrado.",
+      "notEligible": "Este expediente aún no es elegible para destrucción.",
+      "destroyFailed": "No se pudo destruir el contenido. Inténtelo de nuevo.",
+      "generic": "Algo salió mal. Inténtelo de nuevo."
     }
   },
   "legal": {

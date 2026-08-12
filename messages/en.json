@@ -109,6 +109,10 @@
     "securityHelp": "Recent sensitive actions in your firm workspace (owners and admins only).",
     "securityForbidden": "Only organization owners and admins can view the security audit log.",
     "securityEmpty": "No audited events yet.",
+    "securityAuditHeading": "Audit log",
+    "securityDestructionHeading": "Destruction register",
+    "securityDestructionEmpty": "No securely destroyed files recorded yet.",
+    "securityDestructionMeta": "Closed {closed} · Destroyed {destroyed}",
     "securityColWhen": "When",
     "securityColAction": "Action",
     "securityColActor": "Actor",
@@ -894,6 +898,30 @@
       "downloadFailed": "Could not download the file.",
       "previewUnsupported": "This file type can’t be previewed in the browser. Download it to open.",
       "generic": "Something went wrong."
+    }
+  },
+  "privacy": {
+    "retentionTitle": "Retention & destruction",
+    "retentionHelp": "Closed files are retained for at least six years to support College of Immigration and Citizenship Consultants file-management duties, then eligible for secure destruction.",
+    "closedAt": "File closed",
+    "retainUntil": "Retain until",
+    "destroyedOn": "Sensitive content destroyed on {date}",
+    "destroyHelp": "This permanently deletes encrypted documents and clears questionnaire answers for this project. Type DESTROY to confirm.",
+    "destroyConfirmLabel": "Type DESTROY to confirm",
+    "destroyNote": "Optional note",
+    "destroy": "Destroy sensitive content",
+    "destroying": "Destroying…",
+    "destroySuccess": "Sensitive content destroyed and recorded in the destruction register.",
+    "destroyNotYet": "Secure destruction becomes available after the retention date.",
+    "exportPerson": "Export data",
+    "errors": {
+      "invalid": "Check the confirmation and try again.",
+      "unauthorized": "Sign in required.",
+      "forbidden": "Only owners and admins can do this.",
+      "notFound": "Record not found.",
+      "notEligible": "This file is not yet eligible for destruction.",
+      "destroyFailed": "Could not destroy content. Try again.",
+      "generic": "Something went wrong. Try again."
     }
   },
   "legal": {

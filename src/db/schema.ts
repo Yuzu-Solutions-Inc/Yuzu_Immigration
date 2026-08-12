@@ -200,6 +200,12 @@ export const immigrationProjects = pgTable("immigration_projects", {
   ),
   openedAt: timestamp("opened_at", { withTimezone: true }).defaultNow().notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
+  retainUntil: timestamp("retain_until", { withTimezone: true }),
+  destroyedAt: timestamp("destroyed_at", { withTimezone: true }),
+  destroyedBy: uuid("destroyed_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  destructionNote: text("destruction_note"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -434,6 +440,29 @@ export const securityAuditEvents = pgTable("security_audit_events", {
   metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
   ip: text("ip"),
   userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** CICC-oriented register of securely destroyed closed files. */
+export const fileDestructionRegister = pgTable("file_destruction_register", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").references(() => immigrationProjects.id, {
+    onDelete: "set null",
+  }),
+  clientName: text("client_name").notNull(),
+  serviceSummary: text("service_summary"),
+  fileClosedAt: timestamp("file_closed_at", { withTimezone: true }),
+  destroyedAt: timestamp("destroyed_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  destroyedBy: uuid("destroyed_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

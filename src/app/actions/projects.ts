@@ -18,8 +18,20 @@ import {
   statusChanged,
 } from "@/lib/crm/status-history";
 import { isTerminalStatus } from "@/lib/crm/statuses";
+import { computeRetainUntil } from "@/lib/privacy/retention";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth/session";
+
+function closedAndRetainFields(status: ProjectStatus, statusAt: string) {
+  if (!isTerminalStatus(status)) {
+    return { closed_at: null as string | null, retain_until: null as string | null };
+  }
+  const closedAt = `${statusAt}T12:00:00.000Z`;
+  return {
+    closed_at: closedAt,
+    retain_until: computeRetainUntil(closedAt),
+  };
+}
 
 const participantInputSchema = z.object({
   personId: z.string().uuid().optional(),
@@ -610,7 +622,7 @@ export async function updateProjectAction(
       program_family: data.programFamily,
       form_language: data.formLanguage,
       representative_user_id: representativeUserId,
-      closed_at: isTerminalStatus(status) ? `${statusAt}T12:00:00.000Z` : null,
+      ...closedAndRetainFields(status, statusAt),
       updated_at: new Date().toISOString(),
     })
     .eq("id", projectId)
@@ -925,7 +937,7 @@ async function applyProjectStatuses(params: {
       .update({
         status,
         status_at: statusAt,
-        closed_at: isTerminalStatus(status) ? `${statusAt}T12:00:00.000Z` : null,
+        ...closedAndRetainFields(status, statusAt),
         updated_at: now,
       })
       .eq("id", projectId)

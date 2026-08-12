@@ -61,6 +61,8 @@ export type ProjectRow = {
   representative_user_id: string | null;
   opened_at: string;
   closed_at: string | null;
+  retain_until: string | null;
+  destroyed_at: string | null;
   created_at: string;
   updated_at: string;
   representative?: StaffProfileRow | null;

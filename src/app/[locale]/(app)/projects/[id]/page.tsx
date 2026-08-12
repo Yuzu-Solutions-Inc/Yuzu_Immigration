@@ -5,15 +5,19 @@ import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
+import { ProjectRetentionPanel } from "@/components/privacy/retention-export";
 import { formatStatusDate } from "@/components/projects/project-status-summary";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { canAdministerOrg } from "@/lib/auth/rbac";
+import { getPrimaryMembership } from "@/lib/auth/session";
 import {
   getProject,
   getProjectParticipants,
   getProjectStatusHistory,
 } from "@/lib/crm/queries";
+import { toAppLocale } from "@/lib/i18n/locales";
 import { ensureProjectDocumentsSeeded } from "@/lib/documents/service";
 import { listProjectDocumentRequests } from "@/lib/documents/service";
 import {
@@ -40,9 +44,12 @@ export default async function ProjectDetailPage({
 }) {
   const { locale, id } = await params;
   setRequestLocale(locale);
+  const appLocale = toAppLocale(locale);
 
   const project = await getProject(id);
   if (!project) notFound();
+
+  const membership = await getPrimaryMembership();
 
   await ensureProjectFormsSeeded(
     project.organization_id,
@@ -201,6 +208,15 @@ export default async function ProjectDetailPage({
           )}
         </div>
       </div>
+
+      <ProjectRetentionPanel
+        locale={appLocale}
+        projectId={project.id}
+        closedAt={project.closed_at}
+        retainUntil={project.retain_until}
+        destroyedAt={project.destroyed_at}
+        canAdminister={canAdministerOrg(membership?.role)}
+      />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">

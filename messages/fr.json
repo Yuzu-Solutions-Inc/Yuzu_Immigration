@@ -109,6 +109,10 @@
     "securityHelp": "Actions sensibles récentes dans l’espace du cabinet (propriétaires et admins seulement).",
     "securityForbidden": "Seuls les propriétaires et administrateurs peuvent consulter le journal d’audit.",
     "securityEmpty": "Aucun événement audité pour le moment.",
+    "securityAuditHeading": "Journal d’audit",
+    "securityDestructionHeading": "Registre de destruction",
+    "securityDestructionEmpty": "Aucun dossier détruit de façon sécuritaire pour le moment.",
+    "securityDestructionMeta": "Fermé {closed} · Détruit {destroyed}",
     "securityColWhen": "Quand",
     "securityColAction": "Action",
     "securityColActor": "Acteur",
@@ -894,6 +898,30 @@
       "downloadFailed": "Impossible de télécharger le fichier.",
       "previewUnsupported": "Ce type de fichier ne peut pas être prévisualisé dans le navigateur. Téléchargez-le pour l’ouvrir.",
       "generic": "Une erreur s'est produite."
+    }
+  },
+  "privacy": {
+    "retentionTitle": "Conservation et destruction",
+    "retentionHelp": "Les dossiers fermés sont conservés au moins six ans pour respecter les obligations de gestion de dossiers du Collège, puis peuvent être détruits de façon sécuritaire.",
+    "closedAt": "Dossier fermé",
+    "retainUntil": "Conserver jusqu’au",
+    "destroyedOn": "Contenu sensible détruit le {date}",
+    "destroyHelp": "Supprime définitivement les documents chiffrés et efface les réponses au questionnaire de ce projet. Tapez DESTROY pour confirmer.",
+    "destroyConfirmLabel": "Tapez DESTROY pour confirmer",
+    "destroyNote": "Note facultative",
+    "destroy": "Détruire le contenu sensible",
+    "destroying": "Destruction…",
+    "destroySuccess": "Contenu sensible détruit et inscrit au registre de destruction.",
+    "destroyNotYet": "La destruction sécuritaire sera disponible après la date de conservation.",
+    "exportPerson": "Exporter les données",
+    "errors": {
+      "invalid": "Vérifiez la confirmation et réessayez.",
+      "unauthorized": "Connexion requise.",
+      "forbidden": "Réservé aux propriétaires et administrateurs.",
+      "notFound": "Enregistrement introuvable.",
+      "notEligible": "Ce dossier n’est pas encore admissible à la destruction.",
+      "destroyFailed": "Impossible de détruire le contenu. Réessayez.",
+      "generic": "Une erreur est survenue. Réessayez."
     }
   },
   "legal": {

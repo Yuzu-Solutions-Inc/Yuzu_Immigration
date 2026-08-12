@@ -3,10 +3,13 @@ import { notFound } from "next/navigation";
 
 import { DeletePersonButton } from "@/components/people/delete-person-button";
 import { PersonNotesSection } from "@/components/people/person-notes-section";
+import { ExportPersonButton } from "@/components/privacy/retention-export";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { canAdministerOrg } from "@/lib/auth/rbac";
+import { getPrimaryMembership } from "@/lib/auth/session";
 import { getPerson, getPersonProjects, listPersonNotes } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +24,7 @@ export default async function PersonDetailPage({
   const person = await getPerson(id);
   if (!person) notFound();
 
+  const membership = await getPrimaryMembership();
   const [projects, notes] = await Promise.all([
     getPersonProjects(id),
     listPersonNotes(id),
@@ -86,6 +90,9 @@ export default async function PersonDetailPage({
             </dl>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {canAdministerOrg(membership?.role) ? (
+              <ExportPersonButton personId={person.id} />
+            ) : null}
             <Link
               href={`/people/${person.id}/edit`}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
