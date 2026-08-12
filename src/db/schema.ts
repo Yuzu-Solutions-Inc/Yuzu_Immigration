@@ -418,6 +418,27 @@ export const projectDocumentFiles = pgTable("project_document_files", {
     .notNull(),
 });
 
+/** Append-only security audit trail (service_role inserts; admin select). */
+export const securityAuditEvents = pgTable("security_audit_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, {
+    onDelete: "set null",
+  }),
+  actorUserId: uuid("actor_user_id").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  actorKind: text("actor_kind").notNull(),
+  action: text("action").notNull(),
+  resourceType: text("resource_type"),
+  resourceId: text("resource_id"),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 const privateSchema = pgSchema("private");
 
 /** bcrypt hashes — never exposed to anon/authenticated Data API. */

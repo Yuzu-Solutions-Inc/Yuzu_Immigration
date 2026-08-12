@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
+import { canAdministerOrg } from "@/lib/auth/rbac";
 import { requireOrganizationId } from "@/lib/crm/queries";
-import { getSessionUser } from "@/lib/auth/session";
 import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
+import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 
 const personFieldsSchema = z.object({
@@ -203,6 +205,11 @@ export async function deletePersonAction(
     redirect(`/${data.locale}/onboarding`);
   }
 
+  const membership = await getPrimaryMembership();
+  if (!canAdministerOrg(membership?.role)) {
+    return { error: "forbidden" };
+  }
+
   const supabase = await createClient();
   const { data: existing, error: existingError } = await supabase
     .from("people")
@@ -225,6 +232,16 @@ export async function deletePersonAction(
     console.error("delete person:", deleteError.message);
     return { error: "delete_failed" };
   }
+
+  const user = await getSessionUser();
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "person.delete",
+    resourceType: "person",
+    resourceId: data.personId,
+  });
 
   revalidatePath(`/${data.locale}/people`);
   revalidatePath(`/${data.locale}/people/${data.personId}`);

@@ -38,6 +38,7 @@ export function OrganizationSettingsForm({
       invalid: t("errors.invalid"),
       slug_taken: t("errors.slugTaken"),
       save_failed: t("errors.saveFailed"),
+      forbidden: t("errors.forbidden"),
     }[state.error] ??
       t("errors.generic"));
 

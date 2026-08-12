@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
+import { canAdministerOrg } from "@/lib/auth/rbac";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
 import { slugifyOrganizationName } from "@/lib/org/slug";
+import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 
 export type SettingsActionState = {
@@ -144,6 +146,11 @@ export async function updateOrganizationSettingsAction(
     redirect(`/${parsed.data.locale}/onboarding`);
   }
 
+  const membership = await getPrimaryMembership();
+  if (!canAdministerOrg(membership?.role)) {
+    return { error: "forbidden" };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("organizations")
@@ -164,6 +171,17 @@ export async function updateOrganizationSettingsAction(
     }
     return { error: "save_failed" };
   }
+
+  const user = await getSessionUser();
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "organization.update",
+    resourceType: "organization",
+    resourceId: orgId,
+    metadata: { name: parsed.data.name, slug: parsed.data.slug },
+  });
 
   revalidatePath(`/${parsed.data.locale}/settings/organization`);
   revalidatePath(`/${parsed.data.locale}/home`);

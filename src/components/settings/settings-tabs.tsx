@@ -12,6 +12,7 @@ export function SettingsTabs() {
   const tabs = [
     { href: "/settings/account", label: t("account") },
     { href: "/settings/organization", label: t("organization") },
+    { href: "/settings/security", label: t("security") },
   ] as const;
 
   return (

@@ -32,6 +32,7 @@ import {
 } from "@/lib/ircc/project-forms";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { getSessionUser } from "@/lib/auth/session";
+import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { getAppBaseUrl } from "@/lib/app-url";
@@ -281,6 +282,16 @@ export async function createFormShareLinkAction(
     return { error: "share_failed" };
   }
 
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "share_link.create",
+    resourceType: "immigration_project",
+    resourceId: projectId,
+    metadata: { expiresAt },
+  });
+
   const base = await getAppBaseUrl();
   const shareUrl = `${base}/${locale}/fill/${token}`;
 
@@ -302,6 +313,7 @@ export async function revokeFormShareLinkAction(
   const orgId = await requireOrganizationId();
   if (!orgId) return { error: "unauthorized" };
 
+  const user = await getSessionUser();
   const supabase = await createClient();
   await supabase
     .from("form_share_links")
@@ -309,6 +321,15 @@ export async function revokeFormShareLinkAction(
     .eq("project_id", projectId)
     .eq("organization_id", orgId)
     .is("revoked_at", null);
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "share_link.revoke",
+    resourceType: "immigration_project",
+    resourceId: projectId,
+  });
 
   revalidatePath(`/${locale}/projects/${projectId}`);
   return { message: "revoked" };

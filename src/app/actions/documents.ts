@@ -18,6 +18,7 @@ import {
   storeEncryptedDocument,
 } from "@/lib/documents/service";
 import { resolveShareToken } from "@/lib/ircc/project-forms";
+import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -200,6 +201,20 @@ export async function downloadProjectDocumentAction(
       contentType: file.content_type as string,
       originalFilename: file.original_filename as string,
     });
+    const user = await getSessionUser();
+    await recordAuditEvent({
+      organizationId: orgId,
+      actorUserId: user?.id,
+      actorKind: "staff",
+      action: "document.download",
+      resourceType: "project_document_file",
+      resourceId: String(file.id),
+      metadata: {
+        requestId,
+        projectId: file.project_id,
+        personId: file.person_id,
+      },
+    });
     return {
       ok: true,
       base64: result.buffer.toString("base64"),
@@ -250,6 +265,18 @@ export async function downloadShareDocumentAction(
       storagePath: file.storage_path as string,
       contentType: file.content_type as string,
       originalFilename: file.original_filename as string,
+    });
+    await recordAuditEvent({
+      organizationId: resolved.organizationId,
+      actorKind: "share_link",
+      action: "document.download_share",
+      resourceType: "project_document_file",
+      resourceId: String(file.id),
+      metadata: {
+        requestId,
+        projectId: resolved.projectId,
+        shareLinkId: resolved.linkId,
+      },
     });
     return {
       ok: true,
@@ -335,6 +362,19 @@ export async function uploadShareDocumentAction(
       contentType,
       uploadedVia: "share_link",
       client: admin,
+    });
+    await recordAuditEvent({
+      organizationId: resolved.organizationId,
+      actorKind: "share_link",
+      action: "document.upload_share",
+      resourceType: "project_document_request",
+      resourceId: requestId,
+      metadata: {
+        projectId: resolved.projectId,
+        personId: request.person_id,
+        byteSize: plaintext.length,
+        contentType,
+      },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

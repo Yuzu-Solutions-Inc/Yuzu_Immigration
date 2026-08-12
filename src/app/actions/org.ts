@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyOrganizationName } from "@/lib/org/slug";
+import { recordAuditEvent } from "@/lib/security/audit";
 
 const createOrgSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -73,6 +74,17 @@ export async function createOrganizationAction(
   if (!data) {
     return { error: "create_failed" };
   }
+
+  const org = data as { id?: string };
+  await recordAuditEvent({
+    organizationId: org.id ?? null,
+    actorUserId: user.id,
+    actorKind: "staff",
+    action: "organization.create",
+    resourceType: "organization",
+    resourceId: org.id,
+    metadata: { name: parsed.data.name },
+  });
 
   redirect(`/${locale}/home`);
 }

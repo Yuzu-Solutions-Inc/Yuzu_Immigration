@@ -1,0 +1,108 @@
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
+
+import { PrivacyLink } from "@/components/legal/privacy-link";
+import { SurfaceCard } from "@/components/layout/surface-card";
+import { canAdministerOrg } from "@/lib/auth/rbac";
+import { getPrimaryMembership } from "@/lib/auth/session";
+import { toAppLocale } from "@/lib/i18n/locales";
+import { createClient } from "@/lib/supabase/server";
+
+type AuditRow = {
+  id: string;
+  action: string;
+  actor_kind: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  created_at: string;
+  ip: string | null;
+};
+
+export default async function SecuritySettingsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale: localeParam } = await params;
+  setRequestLocale(localeParam);
+  const locale = toAppLocale(localeParam);
+
+  const membership = await getPrimaryMembership();
+  if (!membership) redirect(`/${locale}/onboarding`);
+
+  const t = await getTranslations("settings");
+
+  if (!canAdministerOrg(membership.role)) {
+    return (
+      <SurfaceCard className="space-y-3 sm:p-6">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("security")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{t("securityForbidden")}</p>
+        <PrivacyLink />
+      </SurfaceCard>
+    );
+  }
+
+  const supabase = await createClient();
+  const { data: events } = await supabase
+    .from("security_audit_events")
+    .select(
+      "id, action, actor_kind, resource_type, resource_id, created_at, ip",
+    )
+    .eq("organization_id", membership.organization.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const rows = (events ?? []) as AuditRow[];
+
+  return (
+    <SurfaceCard className="space-y-4 sm:p-6">
+      <div className="space-y-1">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("security")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{t("securityHelp")}</p>
+        <PrivacyLink className="inline-block pt-1" />
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("securityEmpty")}</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-canvas text-xs tracking-wide text-muted-foreground uppercase">
+              <tr>
+                <th className="px-3 py-2 font-medium">{t("securityColWhen")}</th>
+                <th className="px-3 py-2 font-medium">{t("securityColAction")}</th>
+                <th className="px-3 py-2 font-medium">{t("securityColActor")}</th>
+                <th className="px-3 py-2 font-medium">{t("securityColResource")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id} className="border-t border-border/80">
+                  <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                    {new Date(row.created_at).toLocaleString(locale)}
+                  </td>
+                  <td className="px-3 py-2 font-medium text-brand">
+                    {row.action}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {row.actor_kind}
+                    {row.ip ? ` · ${row.ip}` : ""}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {[row.resource_type, row.resource_id]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </SurfaceCard>
+  );
+}
