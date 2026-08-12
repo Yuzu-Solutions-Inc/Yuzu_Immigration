@@ -16,9 +16,13 @@ import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
 import {
   detectCommonLaw,
   detectMinor,
+  inferApplicationLocationFromForms,
   resolveApplicationLocation,
 } from "@/lib/ircc/kits";
-import { getProjectFormAnswers } from "@/lib/ircc/project-forms";
+import {
+  getProjectFormAnswers,
+  listProjectForms,
+} from "@/lib/ircc/project-forms";
 
 export default async function EditProjectPage({
   params,
@@ -31,7 +35,7 @@ export default async function EditProjectPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const [participants, people, members, user, t, answersRow] =
+  const [participants, people, members, user, t, answersRow, forms] =
     await Promise.all([
       getProjectParticipants(id),
       listPeople(),
@@ -39,6 +43,7 @@ export default async function EditProjectPage({
       getSessionUser(),
       getTranslations("projects"),
       getProjectFormAnswers(id),
+      listProjectForms(id),
     ]);
 
   const slots = participants
@@ -61,6 +66,7 @@ export default async function EditProjectPage({
   });
   const applicationLocation = resolveApplicationLocation(
     store.project.applicationLocation ||
+      inferApplicationLocationFromForms(forms.map((form) => form.form_code)) ||
       Object.values(store.byPerson).find((bag) => bag.applicationLocation)
         ?.applicationLocation,
     project.program_family,

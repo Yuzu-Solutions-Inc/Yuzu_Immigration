@@ -324,15 +324,11 @@ export async function syncPersonScopedFormsForParticipants(input: {
   }
 }
 
-const OBSOLETE_PERMIT_FORMS = new Set(["imm5483", "imm5488", "imm5556"]);
-/** In/out primary + family forms are chosen at project creation and never swapped. */
-const FROZEN_PERMIT_FORMS = new Set([
-  "imm1294",
-  "imm5709",
-  "imm1295",
-  "imm5710",
-  "imm5707",
-  "imm5645",
+const OBSOLETE_PERMIT_FORMS = new Set([
+  "imm5483",
+  "imm5488",
+  "imm5556",
+  "imm5406",
 ]);
 const PRIMARY_PERMIT_FORMS = new Set([
   "imm1294",
@@ -341,14 +337,19 @@ const PRIMARY_PERMIT_FORMS = new Set([
   "imm5710",
 ]);
 const FAMILY_PERMIT_FORMS = new Set(["imm5707", "imm5645"]);
+const KIT_SWAP_FORMS = new Set([
+  ...PRIMARY_PERMIT_FORMS,
+  ...FAMILY_PERMIT_FORMS,
+  "imm5476",
+]);
 
 function formRowKey(formCode: string, personId: string | null): string {
   return `${formCode}:${personId ?? ""}`;
 }
 
 /**
- * Keep a federal permit file on its creation kit (in/out never swaps).
- * May add IMM 5476 / 5409 / 5646, strip old checklists, and copy person-scoped rows.
+ * Align a federal permit file to the current kit (in/out, common-law, minor).
+ * Swaps primary / family forms when application location changes.
  */
 export async function reconcileProjectKitForms(input: {
   organizationId: string;
@@ -392,8 +393,8 @@ export async function reconcileProjectKitForms(input: {
 
   const existingCodes = new Set(rows.map((row) => row.form_code));
   const location = resolveApplicationLocation(
-    inferApplicationLocationFromForms([...existingCodes]) ||
-      input.applicationLocation,
+    input.applicationLocation ??
+      inferApplicationLocationFromForms([...existingCodes]),
     input.programFamily,
   );
   const desired = expandSeedsForParticipants(
@@ -403,29 +404,16 @@ export async function reconcileProjectKitForms(input: {
       needsCustodian: input.needsCustodian,
     }),
     input.personIds,
-  ).filter((seed) => {
-    if (
-      PRIMARY_PERMIT_FORMS.has(seed.formCode) &&
-      [...existingCodes].some((c) => PRIMARY_PERMIT_FORMS.has(c))
-    ) {
-      return existingCodes.has(seed.formCode);
-    }
-    if (
-      FAMILY_PERMIT_FORMS.has(seed.formCode) &&
-      [...existingCodes].some((c) => FAMILY_PERMIT_FORMS.has(c))
-    ) {
-      return existingCodes.has(seed.formCode);
-    }
-    return true;
-  });
+  );
   const desiredKeys = new Set(
     desired.map((seed) => formRowKey(seed.formCode, seed.personId)),
   );
 
   const toDelete = rows.filter((row) => {
     if (OBSOLETE_PERMIT_FORMS.has(row.form_code)) return true;
-    if (FROZEN_PERMIT_FORMS.has(row.form_code)) return false;
-    if (row.form_code === "imm5476") return false;
+    const key = formRowKey(row.form_code, row.person_id);
+    if (desiredKeys.has(key)) return false;
+    if (KIT_SWAP_FORMS.has(row.form_code)) return true;
     if (row.form_code === "imm5409") {
       return input.isCommonLaw === false && row.is_required;
     }
@@ -499,7 +487,7 @@ export function kitOptionsFromAnswersStore(
 
   return {
     applicationLocation: resolveApplicationLocation(
-      inferred || projectLoc || personLoc,
+      projectLoc || inferred || personLoc,
       programFamily,
     ),
     isCommonLaw: detectCommonLaw({
