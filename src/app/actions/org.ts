@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { setActiveOrganizationId } from "@/lib/auth/active-org";
+import { getUserMemberships } from "@/lib/auth/session";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyOrganizationName } from "@/lib/org/slug";
@@ -76,6 +78,9 @@ export async function createOrganizationAction(
   }
 
   const org = data as { id?: string };
+  if (org.id) {
+    await setActiveOrganizationId(org.id);
+  }
   await recordAuditEvent({
     organizationId: org.id ?? null,
     actorUserId: user.id,
@@ -87,4 +92,31 @@ export async function createOrganizationAction(
   });
 
   redirect(`/${locale}/home`);
+}
+
+export async function switchOrganizationAction(formData: FormData) {
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      organizationId: z.string().uuid(),
+    })
+    .safeParse({
+      locale: formData.get("locale") || "en",
+      organizationId: String(formData.get("organizationId") || ""),
+    });
+
+  if (!parsed.success) {
+    return;
+  }
+
+  const memberships = await getUserMemberships();
+  const next = memberships.find(
+    (row) => row.organization.id === parsed.data.organizationId,
+  );
+  if (!next) {
+    return;
+  }
+
+  await setActiveOrganizationId(next.organization.id);
+  redirect(`/${parsed.data.locale}/home`);
 }

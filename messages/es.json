@@ -110,7 +110,9 @@
     "people": "Personas",
     "menu": "Abrir menú",
     "login": "Iniciar sesión",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "switchOrg": "Cambiar de organización",
+    "switchOrgAria": "Cambiar de organización"
   },
   "locale": {
     "label": "Idioma"

@@ -110,7 +110,9 @@
     "people": "People",
     "menu": "Open menu",
     "login": "Sign in",
-    "settings": "Settings"
+    "settings": "Settings",
+    "switchOrg": "Switch organization",
+    "switchOrgAria": "Switch organization"
   },
   "locale": {
     "label": "Language"

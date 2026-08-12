@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOrganizationId } from "@/lib/auth/active-org";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { isOrgRole } from "@/lib/auth/rbac";
 
@@ -41,7 +42,8 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
   const { data: membershipRows, error: membershipError } = await supabase
     .from("organization_members")
     .select("id, role, organization_id")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true });
 
   if (membershipError || !membershipRows?.length) {
     if (membershipError) {
@@ -83,7 +85,24 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
     .filter((row): row is OrgMembership => row !== null);
 }
 
-export async function getPrimaryMembership() {
+export async function getWorkspaceContext(): Promise<{
+  membership: OrgMembership | null;
+  memberships: OrgMembership[];
+}> {
   const memberships = await getUserMemberships();
-  return memberships[0] ?? null;
+  if (memberships.length === 0) {
+    return { membership: null, memberships };
+  }
+
+  const activeId = await getActiveOrganizationId();
+  const membership =
+    memberships.find((row) => row.organization.id === activeId) ??
+    memberships[0];
+
+  return { membership, memberships };
+}
+
+export async function getPrimaryMembership() {
+  const { membership } = await getWorkspaceContext();
+  return membership;
 }

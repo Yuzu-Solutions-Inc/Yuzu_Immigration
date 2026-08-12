@@ -8,6 +8,10 @@ import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { PrivacyLink } from "@/components/legal/privacy-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import {
+  OrgSwitcher,
+  type OrgSwitcherOption,
+} from "@/components/layout/org-switcher";
 import { SettingsNavLinks } from "@/components/layout/settings-menu";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -34,12 +38,14 @@ function isActive(pathname: string, href: string) {
 }
 
 function SidebarBody({
-  orgName,
+  organizations,
+  activeOrganizationId,
   newProjectLabel,
   canCreate,
   onNavigate,
 }: {
-  orgName: string;
+  organizations: OrgSwitcherOption[];
+  activeOrganizationId: string;
   newProjectLabel: string;
   canCreate: boolean;
   onNavigate?: () => void;
@@ -53,7 +59,11 @@ function SidebarBody({
     <div className="flex h-full flex-col">
       <div className="space-y-4 border-b border-sidebar-border px-4 py-5">
         <BrandLogo href="/home" size="sm" inverted />
-        <p className="truncate text-xs text-sidebar-foreground/55">{orgName}</p>
+        <OrgSwitcher
+          organizations={organizations}
+          activeOrganizationId={activeOrganizationId}
+          variant="sidebar"
+        />
         {canCreate ? (
           <Link
             href="/projects/new"
@@ -114,18 +124,21 @@ function SidebarBody({
 }
 
 export function DesktopSidebar({
-  orgName,
+  organizations,
+  activeOrganizationId,
   newProjectLabel,
   canCreate,
 }: {
-  orgName: string;
+  organizations: OrgSwitcherOption[];
+  activeOrganizationId: string;
   newProjectLabel: string;
   canCreate: boolean;
 }) {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto bg-sidebar text-sidebar-foreground lg:flex">
       <SidebarBody
-        orgName={orgName}
+        organizations={organizations}
+        activeOrganizationId={activeOrganizationId}
         newProjectLabel={newProjectLabel}
         canCreate={canCreate}
       />
@@ -134,11 +147,13 @@ export function DesktopSidebar({
 }
 
 export function MobileSidebarTrigger({
-  orgName,
+  organizations,
+  activeOrganizationId,
   newProjectLabel,
   canCreate,
 }: {
-  orgName: string;
+  organizations: OrgSwitcherOption[];
+  activeOrganizationId: string;
   newProjectLabel: string;
   canCreate: boolean;
 }) {
@@ -165,7 +180,8 @@ export function MobileSidebarTrigger({
           <SheetTitle>{t("menu")}</SheetTitle>
         </SheetHeader>
         <SidebarBody
-          orgName={orgName}
+          organizations={organizations}
+          activeOrganizationId={activeOrganizationId}
           newProjectLabel={newProjectLabel}
           canCreate={canCreate}
           onNavigate={() => setOpen(false)}

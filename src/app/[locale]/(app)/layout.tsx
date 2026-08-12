@@ -4,10 +4,7 @@ import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/layout/app-shell";
 import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { canCreateRecords } from "@/lib/auth/rbac";
-import {
-  getPrimaryMembership,
-  getSessionUser,
-} from "@/lib/auth/session";
+import { getSessionUser, getWorkspaceContext } from "@/lib/auth/session";
 
 export default async function AppDashboardLayout({
   children,
@@ -26,7 +23,7 @@ export default async function AppDashboardLayout({
 
   await acceptPendingInvitationsForUser();
 
-  const membership = await getPrimaryMembership();
+  const { membership, memberships } = await getWorkspaceContext();
   if (!membership) {
     redirect(`/${locale}/onboarding`);
   }
@@ -34,7 +31,12 @@ export default async function AppDashboardLayout({
   return (
     <DashboardShell
       locale={locale}
-      orgName={membership.organization.name}
+      organizations={memberships.map((row) => ({
+        id: row.organization.id,
+        name: row.organization.name,
+        role: row.role,
+      }))}
+      activeOrganizationId={membership.organization.id}
       canCreate={canCreateRecords(membership.role)}
     >
       {children}

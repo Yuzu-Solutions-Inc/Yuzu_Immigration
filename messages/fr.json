@@ -110,7 +110,9 @@
     "people": "Personnes",
     "menu": "Ouvrir le menu",
     "login": "Connexion",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "switchOrg": "Changer d’organisation",
+    "switchOrgAria": "Changer d’organisation"
   },
   "locale": {
     "label": "Langue"
