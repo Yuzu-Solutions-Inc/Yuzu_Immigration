@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyOrganizationName } from "@/lib/org/slug";
 
@@ -50,9 +51,12 @@ export async function createOrganizationAction(
     redirect(`/${locale}/login`);
   }
 
-  const { data, error } = await supabase.rpc("create_organization", {
+  // Privileged RPC is service_role-only; session already verified above.
+  const admin = createServiceClient();
+  const { data, error } = await admin.rpc("create_organization", {
     p_name: parsed.data.name,
     p_slug: parsed.data.slug ?? slugifyOrganizationName(parsed.data.name),
+    p_actor_user_id: user.id,
   });
 
   if (error) {
