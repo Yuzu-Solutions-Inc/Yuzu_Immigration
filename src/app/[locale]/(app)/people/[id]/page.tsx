@@ -8,8 +8,12 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { canAdministerOrg } from "@/lib/auth/rbac";
-import { getPrimaryMembership } from "@/lib/auth/session";
+import {
+  canAdministerOrg,
+  canCreateRecords,
+  canDeleteRecord,
+} from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { getPerson, getPersonProjects, listPersonNotes } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +29,13 @@ export default async function PersonDetailPage({
   if (!person) notFound();
 
   const membership = await getPrimaryMembership();
+  const user = await getSessionUser();
+  const canCreate = canCreateRecords(membership?.role);
+  const canDelete = canDeleteRecord({
+    role: membership?.role,
+    createdBy: person.created_by,
+    actorUserId: user?.id,
+  });
   const [projects, notes] = await Promise.all([
     getPersonProjects(id),
     listPersonNotes(id),
@@ -99,20 +110,24 @@ export default async function PersonDetailPage({
             >
               {t("edit")}
             </Link>
-            <Link
-              href={`/projects/new?person=${person.id}`}
-              className={cn(
-                buttonVariants({ size: "sm" }),
-                "bg-action text-white hover:bg-action/90",
-              )}
-            >
-              {t("newProject")}
-            </Link>
-            <DeletePersonButton
-              locale={locale}
-              personId={person.id}
-              fullName={`${person.first_name} ${person.last_name}`}
-            />
+            {canCreate ? (
+              <Link
+                href={`/projects/new?person=${person.id}`}
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "bg-action text-white hover:bg-action/90",
+                )}
+              >
+                {t("newProject")}
+              </Link>
+            ) : null}
+            {canDelete ? (
+              <DeletePersonButton
+                locale={locale}
+                personId={person.id}
+                fullName={`${person.first_name} ${person.last_name}`}
+              />
+            ) : null}
           </div>
         </div>
       </div>

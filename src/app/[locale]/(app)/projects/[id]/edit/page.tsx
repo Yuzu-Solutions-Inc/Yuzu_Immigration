@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectForm } from "@/components/projects/project-form";
 import { Link } from "@/i18n/navigation";
-import { getSessionUser } from "@/lib/auth/session";
+import { canCreateRecords } from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { inferCompositionFromRoles } from "@/lib/crm/programs";
 import {
   getProject,
@@ -37,12 +38,13 @@ export default async function EditProjectPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const [participants, people, members, user, t, answersRow, forms] =
+  const [participants, people, members, user, membership, t, answersRow, forms] =
     await Promise.all([
       getProjectParticipants(id),
       listPeople(),
       listOrgMembers(),
       getSessionUser(),
+      getPrimaryMembership(),
       getTranslations("projects"),
       getProjectFormAnswers(id),
       listProjectForms(id),
@@ -128,6 +130,7 @@ export default async function EditProjectPage({
             email: m.profile.email,
           }))}
           currentUserId={user?.id}
+          canCreatePeople={canCreateRecords(membership?.role)}
           initial={{
             projectId: project.id,
             title: project.title,

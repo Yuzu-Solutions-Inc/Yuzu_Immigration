@@ -33,15 +33,7 @@ export default async function SecuritySettingsPage({
   const t = await getTranslations("settings");
 
   if (!canAdministerOrg(membership.role)) {
-    return (
-      <SurfaceCard className="space-y-3 sm:p-6">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("security")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t("securityForbidden")}</p>
-        <PrivacyLink />
-      </SurfaceCard>
-    );
+    redirect(`/${locale}/settings/account`);
   }
 
   const supabase = await createClient();

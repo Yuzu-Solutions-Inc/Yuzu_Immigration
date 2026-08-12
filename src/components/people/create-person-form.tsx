@@ -36,6 +36,7 @@ export function CreatePersonForm({ locale }: { locale: AppLocale }) {
     ? {
         invalid: t("errors.invalid"),
         create_failed: t("errors.createFailed"),
+        forbidden: t("errors.forbidden"),
       }[state.error] ?? t("errors.generic")
     : null;
 

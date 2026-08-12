@@ -12,6 +12,8 @@ import {
   defaultJurisdictionForProgram,
   type ProjectComposition,
 } from "@/lib/crm/programs";
+import { canCreateRecords, canDeleteRecord } from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import {
   recordProjectStatusHistory,
@@ -19,8 +21,8 @@ import {
 } from "@/lib/crm/status-history";
 import { isTerminalStatus } from "@/lib/crm/statuses";
 import { computeRetainUntil } from "@/lib/privacy/retention";
+import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
-import { getSessionUser } from "@/lib/auth/session";
 
 function closedAndRetainFields(status: ProjectStatus, statusAt: string) {
   if (!isTerminalStatus(status)) {
@@ -218,6 +220,7 @@ async function resolveParticipants(
   orgId: string,
   locale: string,
   participants: z.infer<typeof participantInputSchema>[],
+  options?: { allowCreatePeople?: boolean; createdBy?: string | null },
 ): Promise<
   | { error: string }
   | {
@@ -269,6 +272,10 @@ async function resolveParticipants(
       return { error: "invalid" };
     }
 
+    if (!options?.allowCreatePeople) {
+      return { error: "forbidden" };
+    }
+
     const immigrationStatus = participant.immigrationStatus ?? "none";
     const statusExpiresAt =
       immigrationStatus === "none" || !participant.statusExpiresAt
@@ -286,6 +293,7 @@ async function resolveParticipants(
         preferred_locale: locale,
         immigration_status: immigrationStatus,
         status_expires_at: statusExpiresAt,
+        created_by: options.createdBy ?? null,
       })
       .select("id, first_name, last_name, email")
       .single();
@@ -344,18 +352,24 @@ export async function createProjectAction(
   if (!SELECTABLE_PROGRAM_FAMILIES.includes(data.programFamily)) {
     return { error: "invalid" };
   }
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
+  const membership = await getPrimaryMembership();
+  if (!membership) {
     redirect(`/${data.locale}/onboarding`);
   }
+  if (!canCreateRecords(membership.role)) {
+    return { error: "forbidden" };
+  }
+  const orgId = membership.organization.id;
 
   const supabase = await createClient();
   const jurisdiction = defaultJurisdictionForProgram(data.programFamily);
+  const user = await getSessionUser();
 
   const resolved = await resolveParticipants(
     orgId,
     data.locale,
     data.participants,
+    { allowCreatePeople: true, createdBy: user?.id ?? null },
   );
   if ("error" in resolved) return { error: resolved.error };
 
@@ -369,7 +383,6 @@ export async function createProjectAction(
 
   const statusAt = new Date().toISOString().slice(0, 10);
   const submitBefore = data.submitBefore || null;
-  const user = await getSessionUser();
   const representativeUserId = await resolveRepresentativeUserId(
     orgId,
     data.representativeUserId || undefined,
@@ -390,6 +403,7 @@ export async function createProjectAction(
       program_family: data.programFamily,
       form_language: data.formLanguage,
       representative_user_id: representativeUserId,
+      created_by: user?.id ?? null,
     })
     .select("id")
     .single();
@@ -565,10 +579,11 @@ export async function updateProjectAction(
   if ("error" in parsed) return { error: parsed.error };
 
   const { data } = parsed;
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
+  const membership = await getPrimaryMembership();
+  if (!membership) {
     redirect(`/${data.locale}/onboarding`);
   }
+  const orgId = membership.organization.id;
 
   const supabase = await createClient();
   const jurisdiction = defaultJurisdictionForProgram(data.programFamily);
@@ -587,6 +602,10 @@ export async function updateProjectAction(
     orgId,
     data.locale,
     data.participants,
+    {
+      allowCreatePeople: canCreateRecords(membership.role),
+      createdBy: user?.id ?? null,
+    },
   );
   if ("error" in resolved) return { error: resolved.error };
 
@@ -1047,4 +1066,82 @@ export async function setProjectsStatusAction(input: {
   }
 
   return applyProjectStatuses(parsed.data);
+}
+
+export type DeleteProjectState = {
+  error?: string;
+};
+
+export async function deleteProjectAction(
+  _prev: DeleteProjectState,
+  formData: FormData,
+): Promise<DeleteProjectState> {
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      projectId: z.string().uuid(),
+    })
+    .safeParse({
+      locale: formData.get("locale") || "en",
+      projectId: String(formData.get("projectId") || ""),
+    });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  const membership = await getPrimaryMembership();
+  const user = await getSessionUser();
+  if (!membership) {
+    redirect(`/${parsed.data.locale}/onboarding`);
+  }
+
+  const orgId = membership.organization.id;
+  const supabase = await createClient();
+  const { data: existing, error: existingError } = await supabase
+    .from("immigration_projects")
+    .select("id, created_by")
+    .eq("organization_id", orgId)
+    .eq("id", parsed.data.projectId)
+    .maybeSingle();
+
+  if (existingError || !existing) {
+    return { error: "not_found" };
+  }
+
+  if (
+    !canDeleteRecord({
+      role: membership.role,
+      createdBy: existing.created_by as string | null,
+      actorUserId: user?.id,
+    })
+  ) {
+    return { error: "forbidden" };
+  }
+
+  const { error: deleteError } = await supabase
+    .from("immigration_projects")
+    .delete()
+    .eq("id", parsed.data.projectId)
+    .eq("organization_id", orgId);
+
+  if (deleteError) {
+    console.error("delete project:", deleteError.message);
+    return { error: "delete_failed" };
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "project.delete",
+    resourceType: "immigration_project",
+    resourceId: parsed.data.projectId,
+  });
+
+  revalidatePath(`/${parsed.data.locale}/projects`);
+  revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
+  revalidatePath(`/${parsed.data.locale}/home`);
+  revalidatePath(`/${parsed.data.locale}/people`);
+  redirect(`/${parsed.data.locale}/projects`);
 }

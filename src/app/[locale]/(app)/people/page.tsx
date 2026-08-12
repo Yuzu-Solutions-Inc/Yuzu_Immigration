@@ -4,6 +4,8 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import { PeopleList } from "@/components/people/people-list";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { canCreateRecords } from "@/lib/auth/rbac";
+import { getPrimaryMembership } from "@/lib/auth/session";
 import { listPeople } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +32,8 @@ export default async function PeoplePage({
   setRequestLocale(locale);
 
   const t = await getTranslations("people");
+  const membership = await getPrimaryMembership();
+  const canCreate = canCreateRecords(membership?.role);
   const people = await listPeople();
 
   return (
@@ -41,13 +45,13 @@ export default async function PeoplePage({
           </h1>
           <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <NewPersonButton label={t("new")} />
+        {canCreate ? <NewPersonButton label={t("new")} /> : null}
       </div>
 
       {people.length === 0 ? (
         <SurfaceCard className="space-y-3">
           <p className="text-[15px] text-muted-foreground">{t("empty")}</p>
-          <NewPersonButton label={t("new")} />
+          {canCreate ? <NewPersonButton label={t("new")} /> : null}
         </SurfaceCard>
       ) : (
         <PeopleList locale={locale} people={people} />

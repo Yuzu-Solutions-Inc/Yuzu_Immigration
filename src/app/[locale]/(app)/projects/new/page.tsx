@@ -1,9 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { CreateProjectForm } from "@/components/projects/create-project-form";
 import { Link } from "@/i18n/navigation";
-import { getSessionUser } from "@/lib/auth/session";
+import { canCreateRecords } from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { listOrgMembers, listPeople } from "@/lib/crm/queries";
 
 export default async function NewProjectPage({
@@ -18,6 +20,10 @@ export default async function NewProjectPage({
   setRequestLocale(locale);
 
   const t = await getTranslations("projects");
+  const membership = await getPrimaryMembership();
+  if (!canCreateRecords(membership?.role)) {
+    redirect(`/${locale}/projects`);
+  }
   const [people, members, user] = await Promise.all([
     listPeople(),
     listOrgMembers(),

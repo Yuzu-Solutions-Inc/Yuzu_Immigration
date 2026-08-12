@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { SettingsTabs } from "@/components/settings/settings-tabs";
+import { canAdministerOrg } from "@/lib/auth/rbac";
+import { getPrimaryMembership } from "@/lib/auth/session";
 
 export default async function SettingsLayout({
   children,
@@ -12,6 +14,7 @@ export default async function SettingsLayout({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("settings");
+  const membership = await getPrimaryMembership();
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -21,7 +24,7 @@ export default async function SettingsLayout({
         </h1>
         <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
       </div>
-      <SettingsTabs />
+      <SettingsTabs canAdminister={canAdministerOrg(membership?.role)} />
       {children}
     </div>
   );

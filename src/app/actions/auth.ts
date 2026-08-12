@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppBaseUrl } from "@/lib/app-url";
+import { safeInternalPath } from "@/lib/auth/next-path";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -42,7 +43,11 @@ export async function signInWithPassword(
     return { error: "sign_in_failed" };
   }
 
-  redirect(`/${parsed.data.locale}/home`);
+  const next = safeInternalPath(
+    formData.get("next"),
+    `/${parsed.data.locale}/home`,
+  );
+  redirect(next);
 }
 
 export async function signUpWithPassword(
@@ -62,12 +67,16 @@ export async function signUpWithPassword(
 
   const supabase = await createClient();
   const origin = await getAppBaseUrl();
+  const next = safeInternalPath(
+    formData.get("next"),
+    `/${parsed.data.locale}/home`,
+  );
 
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/${parsed.data.locale}/home`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
       data: {
         full_name: parsed.data.fullName,
         preferred_locale: parsed.data.locale,
@@ -81,7 +90,7 @@ export async function signUpWithPassword(
 
   // If email confirmation is disabled, session exists immediately.
   if (data.session) {
-    redirect(`/${parsed.data.locale}/home`);
+    redirect(next);
   }
 
   return { success: "check_email" };

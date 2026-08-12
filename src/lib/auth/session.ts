@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import type { OrgRole } from "@/lib/auth/rbac";
+import { isOrgRole } from "@/lib/auth/rbac";
 
 export type OrgMembership = {
   id: string;
-  role: "owner" | "admin" | "member";
+  role: OrgRole;
   organization: {
     id: string;
     name: string;
@@ -70,7 +72,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
 
       return {
         id: row.id as string,
-        role: row.role as OrgMembership["role"],
+        role: isOrgRole(row.role) ? row.role : "consultant",
         organization: {
           id: organization.id as string,
           name: organization.name as string,

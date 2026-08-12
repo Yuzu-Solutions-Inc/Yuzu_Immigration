@@ -11,7 +11,7 @@ export function GoogleSignInButton({
   locale,
   nextPath,
 }: {
-  locale: "en" | "fr";
+  locale: string;
   nextPath?: string;
 }) {
   const t = useTranslations("auth");

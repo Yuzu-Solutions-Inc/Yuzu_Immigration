@@ -59,9 +59,10 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 ## Phase 2 — Access control & monitoring (manual)
 
 ### Roles inside each firm
-- [ ] Assign correct `organization_members.role` values (`owner` / `admin` / `member`)
-- [ ] Ensure at least one `owner` per firm; do not leave production tenants with only `member` roles if admins need audit/export/destroy
-- [ ] Decide when to introduce invite flows and whether members should be project-scoped (future product work)
+- [ ] Assign correct `organization_members.role` values (`admin` / `consultant` / `assistant`)
+- [ ] Ensure at least one `admin` per firm
+- [ ] Invite staff from **Settings → Organization** (email + role). Add `/auth/callback` and `/{locale}/invite/*` to the Supabase Auth redirect allow list, and enable Auth invite emails
+- [ ] Share projects with assistants from the project page so they can see those files
 
 ### Operational monitoring
 - [ ] Review **Settings → Security** audit log weekly during early production
@@ -70,7 +71,7 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 
 ### Optional product follow-ups (not yet built)
 - [ ] Staff MFA enrollment UI in-app
-- [ ] Project-scoped member ACLs (beyond org-wide access)
+- [ ] Project-scoped assistant sharing (built: share a project with assistants from the project page)
 - [ ] Field-level encryption for passport/SIN-like columns (documents already AES-256-GCM)
 
 ---
@@ -80,7 +81,7 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 ### Firm practice policy
 - [ ] Document each firm’s retention schedule (default product: **closed_at + 6 years**)
 - [ ] Align retainer language with CICC Client File Management Regulation (return of client property, closed-file notice, destruction register)
-- [ ] Define who may approve secure destruction (`owner`/`admin` only in product)
+- [ ] Define who may approve secure destruction (`admin` only in product)
 
 ### Using the product
 - [ ] When a file reaches terminal status (`granted` / `rejected`), confirm `closed_at` and `retain_until` appear on the project

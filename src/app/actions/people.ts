@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
-import { canAdministerOrg } from "@/lib/auth/rbac";
+import { canCreateRecords, canDeleteRecord } from "@/lib/auth/rbac";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { recordAuditEvent } from "@/lib/security/audit";
@@ -76,10 +76,15 @@ export async function createPersonAction(
   }
 
   const { data } = parsed;
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
+  const membership = await getPrimaryMembership();
+  if (!membership) {
     redirect(`/${data.locale}/onboarding`);
   }
+  if (!canCreateRecords(membership.role)) {
+    return { error: "forbidden" };
+  }
+  const orgId = membership.organization.id;
+  const user = await getSessionUser();
 
   const supabase = await createClient();
   const statusExpiresAt =
@@ -98,6 +103,7 @@ export async function createPersonAction(
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,
+      created_by: user?.id ?? null,
     })
     .select("id")
     .single();
@@ -200,26 +206,33 @@ export async function deletePersonAction(
   }
 
   const { data } = parsed;
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
+  const membership = await getPrimaryMembership();
+  const user = await getSessionUser();
+  if (!membership) {
     redirect(`/${data.locale}/onboarding`);
   }
-
-  const membership = await getPrimaryMembership();
-  if (!canAdministerOrg(membership?.role)) {
-    return { error: "forbidden" };
-  }
+  const orgId = membership.organization.id;
 
   const supabase = await createClient();
   const { data: existing, error: existingError } = await supabase
     .from("people")
-    .select("id")
+    .select("id, created_by")
     .eq("organization_id", orgId)
     .eq("id", data.personId)
     .maybeSingle();
 
   if (existingError || !existing) {
     return { error: "not_found" };
+  }
+
+  if (
+    !canDeleteRecord({
+      role: membership.role,
+      createdBy: existing.created_by as string | null,
+      actorUserId: user?.id,
+    })
+  ) {
+    return { error: "forbidden" };
   }
 
   const { error: deleteError } = await supabase
@@ -233,7 +246,6 @@ export async function deletePersonAction(
     return { error: "delete_failed" };
   }
 
-  const user = await getSessionUser();
   await recordAuditEvent({
     organizationId: orgId,
     actorUserId: user?.id,

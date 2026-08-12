@@ -10,10 +10,12 @@ import { cn } from "@/lib/utils";
 
 export async function DashboardShell({
   orgName,
+  canCreate = true,
   children,
 }: {
   locale: string;
   orgName: string;
+  canCreate?: boolean;
   children: React.ReactNode;
   actions?: React.ReactNode;
 }) {
@@ -21,13 +23,18 @@ export async function DashboardShell({
 
   return (
     <div className="flex min-h-screen flex-1 bg-canvas">
-      <DesktopSidebar orgName={orgName} newProjectLabel={tHome("newProject")} />
+      <DesktopSidebar
+        orgName={orgName}
+        newProjectLabel={tHome("newProject")}
+        canCreate={canCreate}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-20 flex h-12 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur supports-backdrop-filter:bg-surface/80 lg:hidden">
           <MobileSidebarTrigger
             orgName={orgName}
             newProjectLabel={tHome("newProject")}
+            canCreate={canCreate}
           />
           <p className="truncate text-sm font-medium text-brand">{orgName}</p>
         </div>

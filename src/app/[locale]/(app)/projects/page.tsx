@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectsTable } from "@/components/projects/projects-table";
+import { canCreateRecords } from "@/lib/auth/rbac";
+import { getPrimaryMembership } from "@/lib/auth/session";
 import { listOrgMembers, listProjects } from "@/lib/crm/queries";
 
 export default async function ProjectsPage({
@@ -15,6 +17,8 @@ export default async function ProjectsPage({
 
   const t = await getTranslations("projects");
   const th = await getTranslations("appHome");
+  const membership = await getPrimaryMembership();
+  const canCreate = canCreateRecords(membership?.role);
   const [projects, members] = await Promise.all([
     listProjects(),
     listOrgMembers(),
@@ -29,13 +33,13 @@ export default async function ProjectsPage({
           </h1>
           <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <NewProjectButton label={t("new")} />
+        {canCreate ? <NewProjectButton label={t("new")} /> : null}
       </div>
 
       {projects.length === 0 ? (
         <SurfaceCard className="space-y-3">
           <p className="text-[15px] text-muted-foreground">{t("empty")}</p>
-          <NewProjectButton label={th("newProject")} />
+          {canCreate ? <NewProjectButton label={th("newProject")} /> : null}
         </SurfaceCard>
       ) : (
         <ProjectsTable

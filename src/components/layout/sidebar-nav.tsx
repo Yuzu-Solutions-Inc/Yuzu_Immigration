@@ -36,10 +36,12 @@ function isActive(pathname: string, href: string) {
 function SidebarBody({
   orgName,
   newProjectLabel,
+  canCreate,
   onNavigate,
 }: {
   orgName: string;
   newProjectLabel: string;
+  canCreate: boolean;
   onNavigate?: () => void;
 }) {
   const t = useTranslations("nav");
@@ -52,16 +54,18 @@ function SidebarBody({
       <div className="space-y-4 border-b border-sidebar-border px-4 py-5">
         <BrandLogo href="/home" size="sm" inverted />
         <p className="truncate text-xs text-sidebar-foreground/55">{orgName}</p>
-        <Link
-          href="/projects/new"
-          onClick={onNavigate}
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "w-full bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
-          )}
-        >
-          {newProjectLabel}
-        </Link>
+        {canCreate ? (
+          <Link
+            href="/projects/new"
+            onClick={onNavigate}
+            className={cn(
+              buttonVariants({ size: "sm" }),
+              "w-full bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
+            )}
+          >
+            {newProjectLabel}
+          </Link>
+        ) : null}
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
@@ -112,13 +116,19 @@ function SidebarBody({
 export function DesktopSidebar({
   orgName,
   newProjectLabel,
+  canCreate,
 }: {
   orgName: string;
   newProjectLabel: string;
+  canCreate: boolean;
 }) {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto bg-sidebar text-sidebar-foreground lg:flex">
-      <SidebarBody orgName={orgName} newProjectLabel={newProjectLabel} />
+      <SidebarBody
+        orgName={orgName}
+        newProjectLabel={newProjectLabel}
+        canCreate={canCreate}
+      />
     </aside>
   );
 }
@@ -126,9 +136,11 @@ export function DesktopSidebar({
 export function MobileSidebarTrigger({
   orgName,
   newProjectLabel,
+  canCreate,
 }: {
   orgName: string;
   newProjectLabel: string;
+  canCreate: boolean;
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -155,6 +167,7 @@ export function MobileSidebarTrigger({
         <SidebarBody
           orgName={orgName}
           newProjectLabel={newProjectLabel}
+          canCreate={canCreate}
           onNavigate={() => setOpen(false)}
         />
       </SheetContent>

@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import type { OrgRole } from "@/lib/auth/rbac";
+import { isOrgRole } from "@/lib/auth/rbac";
 import type {
   ParticipantRole,
   PersonImmigrationStatus,
@@ -18,6 +20,7 @@ export type PersonRow = {
   preferred_locale: string;
   immigration_status: PersonImmigrationStatus;
   status_expires_at: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -42,7 +45,7 @@ export type StaffProfileRow = {
 export type OrgMemberRow = {
   id: string;
   user_id: string;
-  role: "owner" | "admin" | "member";
+  role: OrgRole;
   profile: StaffProfileRow;
 };
 
@@ -59,6 +62,7 @@ export type ProjectRow = {
   program_family: ProgramFamily;
   form_language: "en" | "fr";
   representative_user_id: string | null;
+  created_by: string | null;
   opened_at: string;
   closed_at: string | null;
   retain_until: string | null;
@@ -245,7 +249,7 @@ export async function listOrgMembers(): Promise<OrgMemberRow[]> {
       return {
         id: m.id as string,
         user_id: m.user_id as string,
-        role: m.role as OrgMemberRow["role"],
+        role: isOrgRole(m.role) ? m.role : "consultant",
         profile,
       };
     })
@@ -463,4 +467,58 @@ export async function getPersonProjects(personId: string): Promise<
       };
     })
     .filter((row): row is ProjectRow & { role: ParticipantRole } => row !== null);
+}
+
+export type PendingInvitationRow = {
+  id: string;
+  email: string;
+  role: OrgRole;
+  expires_at: string;
+  created_at: string;
+};
+
+export async function listPendingInvitations(): Promise<PendingInvitationRow[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organization_invitations")
+    .select("id, email, role, expires_at, created_at")
+    .eq("organization_id", orgId)
+    .is("accepted_at", null)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("listPendingInvitations:", error.message);
+    return [];
+  }
+
+  return ((data ?? []) as PendingInvitationRow[]).map((row) => ({
+    ...row,
+    role: isOrgRole(row.role) ? row.role : "consultant",
+  }));
+}
+
+export async function listProjectAssistantUserIds(
+  projectId: string,
+): Promise<string[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("project_staff_access")
+    .select("user_id")
+    .eq("organization_id", orgId)
+    .eq("project_id", projectId);
+
+  if (error) {
+    console.error("listProjectAssistantUserIds:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => row.user_id as string);
 }

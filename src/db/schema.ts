@@ -15,9 +15,9 @@ import {
 import { sql } from "drizzle-orm";
 
 export const orgMemberRoleEnum = pgEnum("org_member_role", [
-  "owner",
   "admin",
-  "member",
+  "consultant",
+  "assistant",
 ]);
 
 export const projectStatusEnum = pgEnum("project_status", [
@@ -125,13 +125,36 @@ export const organizationMembers = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
-    role: orgMemberRoleEnum("role").notNull().default("member"),
+    role: orgMemberRoleEnum("role").notNull().default("consultant"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => [unique().on(table.organizationId, table.userId)],
 );
+
+/** Admin-issued staff invites (hashed token). */
+export const organizationInvitations = pgTable("organization_invitations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  role: orgMemberRoleEnum("role").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  invitedBy: uuid("invited_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  acceptedUserId: uuid("accepted_user_id").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 /** Lifelong immigration clients belonging to an organization. */
 export const people = pgTable("people", {
@@ -148,6 +171,9 @@ export const people = pgTable("people", {
     .notNull()
     .default("none"),
   statusExpiresAt: date("status_expires_at"),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -198,6 +224,9 @@ export const immigrationProjects = pgTable("immigration_projects", {
     () => profiles.id,
     { onDelete: "set null" },
   ),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
   openedAt: timestamp("opened_at", { withTimezone: true }).defaultNow().notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
   retainUntil: timestamp("retain_until", { withTimezone: true }),
@@ -213,6 +242,30 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .defaultNow()
     .notNull(),
 });
+
+/** Assistants only see projects they are shared on. */
+export const projectStaffAccess = pgTable(
+  "project_staff_access",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    grantedBy: uuid("granted_by").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.projectId, table.userId)],
+);
 
 export const projectStatusHistory = pgTable("project_status_history", {
   id: uuid("id").defaultRandom().primaryKey(),

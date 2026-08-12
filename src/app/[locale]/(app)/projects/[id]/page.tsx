@@ -6,16 +6,24 @@ import { ProjectDocumentsPanel } from "@/components/documents/project-documents-
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import { ProjectRetentionPanel } from "@/components/privacy/retention-export";
+import { DeleteProjectButton } from "@/components/projects/delete-project-button";
+import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
 import { formatStatusDate } from "@/components/projects/project-status-summary";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { canAdministerOrg } from "@/lib/auth/rbac";
-import { getPrimaryMembership } from "@/lib/auth/session";
+import {
+  canAdministerOrg,
+  canDeleteRecord,
+  canShareProjects,
+} from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
   getProject,
   getProjectParticipants,
   getProjectStatusHistory,
+  listOrgMembers,
+  listProjectAssistantUserIds,
 } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { ensureProjectDocumentsSeeded } from "@/lib/documents/service";
@@ -50,6 +58,13 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   const membership = await getPrimaryMembership();
+  const user = await getSessionUser();
+  const canShare = canShareProjects(membership?.role);
+  const canDelete = canDeleteRecord({
+    role: membership?.role,
+    createdBy: project.created_by,
+    actorUserId: user?.id,
+  });
 
   await ensureProjectFormsSeeded(
     project.organization_id,
@@ -62,7 +77,7 @@ export default async function ProjectDetailPage({
     project.program_family,
   );
 
-  const [participants, history, forms, answersRow, share, documentRequests] =
+  const [participants, history, forms, answersRow, share, documentRequests, members, assistantIds] =
     await Promise.all([
       getProjectParticipants(id),
       getProjectStatusHistory(id),
@@ -70,6 +85,8 @@ export default async function ProjectDetailPage({
       getProjectFormAnswers(id),
       getActiveShareLink(id),
       listProjectDocumentRequests(id),
+      canShare ? listOrgMembers() : Promise.resolve([]),
+      canShare ? listProjectAssistantUserIds(id) : Promise.resolve([]),
     ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
@@ -146,15 +163,24 @@ export default async function ProjectDetailPage({
             </p>
           ) : null}
         </div>
-        <Link
-          href={`/projects/${project.id}/edit`}
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "bg-action text-white hover:bg-action/90",
-          )}
-        >
-          {t("edit")}
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/projects/${project.id}/edit`}
+            className={cn(
+              buttonVariants({ size: "sm" }),
+              "bg-action text-white hover:bg-action/90",
+            )}
+          >
+            {t("edit")}
+          </Link>
+          {canDelete ? (
+            <DeleteProjectButton
+              locale={locale}
+              projectId={project.id}
+              title={project.title}
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
@@ -217,6 +243,21 @@ export default async function ProjectDetailPage({
         destroyedAt={project.destroyed_at}
         canAdminister={canAdministerOrg(membership?.role)}
       />
+
+      {canShare ? (
+        <ProjectAssistantShare
+          locale={locale}
+          projectId={project.id}
+          assistants={members
+            .filter((m) => m.role === "assistant")
+            .map((m) => ({
+              user_id: m.user_id,
+              full_name: m.profile.full_name,
+              email: m.profile.email,
+            }))}
+          selectedUserIds={assistantIds}
+        />
+      ) : null}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">

@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { OrganizationSettingsForm } from "@/components/settings/organization-settings-form";
-import { getPrimaryMembership } from "@/lib/auth/session";
+import { TeamSettings } from "@/components/settings/team-settings";
+import { canAdministerOrg } from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { listOrgMembers, listPendingInvitations } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,7 +21,11 @@ export default async function OrganizationSettingsPage({
 
   const membership = await getPrimaryMembership();
   if (!membership) redirect(`/${locale}/onboarding`);
+  if (!canAdministerOrg(membership.role)) {
+    redirect(`/${locale}/settings/account`);
+  }
 
+  const user = await getSessionUser();
   const supabase = await createClient();
   const { data: org } = await supabase
     .from("organizations")
@@ -27,6 +34,11 @@ export default async function OrganizationSettingsPage({
     .maybeSingle();
 
   if (!org) redirect(`/${locale}/onboarding`);
+
+  const [members, invitations] = await Promise.all([
+    listOrgMembers(),
+    listPendingInvitations(),
+  ]);
 
   const t = await getTranslations("settings");
 
@@ -44,6 +56,12 @@ export default async function OrganizationSettingsPage({
           name: org.name ?? "",
           slug: org.slug ?? "",
         }}
+      />
+      <TeamSettings
+        locale={locale}
+        currentUserId={user?.id ?? ""}
+        members={members}
+        invitations={invitations}
       />
     </SurfaceCard>
   );

@@ -19,7 +19,7 @@ export function LoginForm({
   locale,
   nextPath,
 }: {
-  locale: "en" | "fr";
+  locale: string;
   nextPath?: string;
 }) {
   const t = useTranslations("auth");
@@ -47,6 +47,7 @@ export function LoginForm({
 
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="locale" value={locale} />
+        {nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
 
         {mode === "signup" ? (
           <div className="space-y-2">

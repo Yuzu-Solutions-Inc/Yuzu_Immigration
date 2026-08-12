@@ -91,12 +91,15 @@ const initialState: ProjectActionState = {};
 function emptySlot(
   role: ParticipantRole,
   kit?: Partial<
-    Pick<ProjectFormSlot, "programFamily" | "applicationLocation" | "needsCustodian">
+    Pick<
+      ProjectFormSlot,
+      "programFamily" | "applicationLocation" | "needsCustodian" | "mode"
+    >
   >,
 ): ProjectFormSlot {
   return {
     role,
-    mode: "new",
+    mode: kit?.mode ?? "new",
     personId: "",
     firstName: "",
     lastName: "",
@@ -116,6 +119,7 @@ export function ProjectForm({
   currentUserId,
   presetPersonId,
   initial,
+  canCreatePeople = true,
 }: {
   locale: string;
   people: ExistingPerson[];
@@ -123,12 +127,16 @@ export function ProjectForm({
   currentUserId?: string;
   presetPersonId?: string;
   initial?: ProjectFormInitial;
+  canCreatePeople?: boolean;
 }) {
   const t = useTranslations("projects");
   const tp = useTranslations("programs");
   const tr = useTranslations("roles");
   const ti = useTranslations("immigrationStatus");
   const isEdit = Boolean(initial);
+  const defaultPersonMode: "new" | "existing" = canCreatePeople
+    ? "new"
+    : "existing";
 
   const [composition, setComposition] = useState<ProjectComposition>(
     initial?.composition ?? "individual",
@@ -170,7 +178,7 @@ export function ProjectForm({
   );
   const customFile = isCustomProgram(programFamily);
   const [slots, setSlots] = useState<ProjectFormSlot[]>(
-    initial?.slots?.length ? initial.slots : [emptySlot("principal")],
+    initial?.slots?.length ? initial.slots : [emptySlot("principal", { mode: defaultPersonMode })],
   );
   const skipJurisdictionSync = useRef(Boolean(initial));
   const compositionInitialized = useRef(false);
@@ -195,7 +203,7 @@ export function ProjectForm({
           const person = people.find((p) => p.id === presetPersonId);
           if (person) {
             return {
-              ...emptySlot(role, { applicationLocation }),
+              ...emptySlot(role, { applicationLocation, mode: defaultPersonMode }),
               mode: "existing" as const,
               personId: person.id,
               firstName: person.first_name,
@@ -204,7 +212,7 @@ export function ProjectForm({
             };
           }
         }
-        return emptySlot(role, { applicationLocation });
+        return emptySlot(role, { applicationLocation, mode: defaultPersonMode });
       }),
     );
   }, [
@@ -214,6 +222,7 @@ export function ProjectForm({
     isEdit,
     initial?.slots?.length,
     applicationLocation,
+    defaultPersonMode,
   ]);
 
   useEffect(() => {
@@ -261,6 +270,7 @@ export function ProjectForm({
         create_failed: t("errors.createFailed"),
         update_failed: t("errors.updateFailed"),
         not_found: t("errors.notFound"),
+        forbidden: t("errors.forbidden"),
       }[state.error] ?? t("errors.generic")
     : null;
 
@@ -273,7 +283,7 @@ export function ProjectForm({
   function addDependent() {
     setSlots((prev) => [
       ...prev,
-      emptySlot("dependent", { applicationLocation }),
+      emptySlot("dependent", { applicationLocation, mode: defaultPersonMode }),
     ]);
   }
 
@@ -607,37 +617,41 @@ export function ProjectForm({
                     >
                       {t("removePerson")}
                     </button>
-                    <span className="text-border">|</span>
+                    {canCreatePeople ? <span className="text-border">|</span> : null}
                   </>
                 ) : null}
-                <button
-                  type="button"
-                  className={
-                    slot.mode === "new"
-                      ? "font-semibold text-action"
-                      : "text-muted-foreground"
-                  }
-                  onClick={() =>
-                    updateSlot(index, {
-                      mode: "new",
-                      personId: "",
-                    })
-                  }
-                >
-                  {t("newPerson")}
-                </button>
-                <span className="text-border">|</span>
-                <button
-                  type="button"
-                  className={
-                    slot.mode === "existing"
-                      ? "font-semibold text-action"
-                      : "text-muted-foreground"
-                  }
-                  onClick={() => updateSlot(index, { mode: "existing" })}
-                >
-                  {t("existingPerson")}
-                </button>
+                {canCreatePeople ? (
+                  <>
+                    <button
+                      type="button"
+                      className={
+                        slot.mode === "new"
+                          ? "font-semibold text-action"
+                          : "text-muted-foreground"
+                      }
+                      onClick={() =>
+                        updateSlot(index, {
+                          mode: "new",
+                          personId: "",
+                        })
+                      }
+                    >
+                      {t("newPerson")}
+                    </button>
+                    <span className="text-border">|</span>
+                    <button
+                      type="button"
+                      className={
+                        slot.mode === "existing"
+                          ? "font-semibold text-action"
+                          : "text-muted-foreground"
+                      }
+                      onClick={() => updateSlot(index, { mode: "existing" })}
+                    >
+                      {t("existingPerson")}
+                    </button>
+                  </>
+                ) : null}
               </div>
             </div>
 
@@ -841,6 +855,7 @@ export function CreateProjectForm(props: {
   members: OrgMemberOption[];
   currentUserId?: string;
   presetPersonId?: string;
+  canCreatePeople?: boolean;
 }) {
   return <ProjectForm {...props} />;
 }

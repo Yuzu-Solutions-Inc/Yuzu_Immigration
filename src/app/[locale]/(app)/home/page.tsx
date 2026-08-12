@@ -12,7 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
-import { getSessionUser } from "@/lib/auth/session";
+import { canCreateRecords } from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
   listPeople,
   listProjects,
@@ -44,6 +45,8 @@ export default async function AppHomePage({
   setRequestLocale(locale);
 
   const user = await getSessionUser();
+  const membership = await getPrimaryMembership();
+  const canCreate = canCreateRecords(membership?.role);
   const t = await getTranslations("appHome");
   const tp = await getTranslations("projects");
   const tprog = await getTranslations("programs");
@@ -78,7 +81,7 @@ export default async function AppHomePage({
           </h1>
           <p className="text-[15px] text-muted-foreground">{t("dashboardSubtitle")}</p>
         </div>
-        <NewProjectButton label={t("newProject")} />
+        {canCreate ? <NewProjectButton label={t("newProject")} /> : null}
       </div>
 
       <section className="grid gap-4 sm:grid-cols-3">
@@ -205,7 +208,7 @@ export default async function AppHomePage({
               <p className="text-[15px] text-muted-foreground">
                 {t("emptyProjects")}
               </p>
-              <NewProjectButton label={t("newProject")} />
+              {canCreate ? <NewProjectButton label={t("newProject")} /> : null}
             </SurfaceCard>
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">

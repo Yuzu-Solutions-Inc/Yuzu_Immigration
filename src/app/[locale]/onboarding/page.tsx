@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { CreateOrganizationForm } from "@/components/org/create-organization-form";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 
 export default async function OnboardingPage({
@@ -18,6 +19,8 @@ export default async function OnboardingPage({
   if (!user) {
     redirect(`/${locale}/login`);
   }
+
+  await acceptPendingInvitationsForUser();
 
   const membership = await getPrimaryMembership();
   if (membership) {

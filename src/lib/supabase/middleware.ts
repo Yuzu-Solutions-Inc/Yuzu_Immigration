@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { routing } from "@/i18n/routing";
+import { safeInternalPath } from "@/lib/auth/next-path";
 import { isAppLocale, type AppLocale } from "@/lib/i18n/locales";
 
 function getLocaleFromPath(pathname: string): AppLocale {
@@ -76,8 +77,18 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
+    const requestedNext = safeInternalPath(
+      request.nextUrl.searchParams.get("next"),
+      `/${locale}/home`,
+    );
+    const nextPath = stripLocale(requestedNext).pathname;
+    const next =
+      nextPath === "/login" || nextPath.startsWith("/login/")
+        ? `/${locale}/home`
+        : requestedNext;
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = `/${locale}/home`;
+    redirectUrl.pathname = next;
+    redirectUrl.search = "";
     const redirectResponse = NextResponse.redirect(redirectUrl);
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie.name, cookie.value);

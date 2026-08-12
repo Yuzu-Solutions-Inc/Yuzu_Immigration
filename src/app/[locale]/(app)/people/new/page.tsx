@@ -1,8 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { CreatePersonForm } from "@/components/people/create-person-form";
 import { Link } from "@/i18n/navigation";
+import { canCreateRecords } from "@/lib/auth/rbac";
+import { getPrimaryMembership } from "@/lib/auth/session";
 import { toAppLocale } from "@/lib/i18n/locales";
 
 export default async function NewPersonPage({
@@ -12,6 +15,11 @@ export default async function NewPersonPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  const membership = await getPrimaryMembership();
+  if (!canCreateRecords(membership?.role)) {
+    redirect(`/${locale}/people`);
+  }
 
   const t = await getTranslations("people");
 

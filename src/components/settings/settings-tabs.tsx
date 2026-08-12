@@ -5,14 +5,18 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
-export function SettingsTabs() {
+export function SettingsTabs({ canAdminister }: { canAdminister: boolean }) {
   const t = useTranslations("settings");
   const pathname = usePathname();
 
   const tabs = [
     { href: "/settings/account", label: t("account") },
-    { href: "/settings/organization", label: t("organization") },
-    { href: "/settings/security", label: t("security") },
+    ...(canAdminister
+      ? [
+          { href: "/settings/organization", label: t("organization") },
+          { href: "/settings/security", label: t("security") },
+        ]
+      : []),
   ] as const;
 
   return (
