@@ -85,6 +85,8 @@ const projectFieldsSchema = z.object({
     .optional()
     .or(z.literal("")),
   representativeUserId: z.string().uuid().optional().or(z.literal("")),
+  applicationLocation: z.enum(["outside", "inside"]).optional(),
+  isCommonLaw: z.enum(["Y", "N"]).optional(),
   participants: z.array(participantInputSchema).min(1),
 });
 
@@ -128,6 +130,10 @@ function parseProjectForm(formData: FormData) {
   const representativeUserIdRaw = String(
     formData.get("representativeUserId") || "",
   ).trim();
+  const applicationLocationRaw = String(
+    formData.get("applicationLocation") || "",
+  ).trim();
+  const isCommonLawRaw = String(formData.get("isCommonLaw") || "").trim();
 
   const participantsJson = String(formData.get("participants") || "[]");
   let participantsParsed: unknown;
@@ -150,6 +156,8 @@ function parseProjectForm(formData: FormData) {
     statusAt: statusAtRaw || undefined,
     submitBefore: submitBeforeRaw || undefined,
     representativeUserId: representativeUserIdRaw || undefined,
+    applicationLocation: applicationLocationRaw || undefined,
+    isCommonLaw: isCommonLawRaw || undefined,
     participants: participantsParsed,
   });
 
@@ -366,11 +374,25 @@ export async function createProjectAction(
   }
 
   try {
-    const { expandSeedsForParticipants, seedFormsForProgram } = await import(
-      "@/lib/ircc/kits"
+    const {
+      detectCommonLaw,
+      expandSeedsForParticipants,
+      resolveApplicationLocation,
+      seedFormsForProgram,
+    } = await import("@/lib/ircc/kits");
+    const applicationLocation = resolveApplicationLocation(
+      data.applicationLocation,
+      data.programFamily,
     );
+    const isCommonLaw = detectCommonLaw({
+      isCommonLaw: data.isCommonLaw,
+      participantRoles: resolved.people.map((p) => p.role),
+    });
     const seeds = expandSeedsForParticipants(
-      seedFormsForProgram(data.programFamily),
+      seedFormsForProgram(data.programFamily, {
+        applicationLocation,
+        isCommonLaw,
+      }),
       resolved.people.map((p) => p.id),
     );
     const { error: formsError } = await supabase.from("project_forms").insert(
@@ -412,6 +434,10 @@ export async function createProjectAction(
       })),
       formLanguage: toIrccFormLanguage(data.formLanguage),
       repAnswers: accountRepAnswersFromProfile(repProfile),
+      projectAnswers: {
+        applicationLocation,
+        isCommonLaw: isCommonLaw ? "Y" : "N",
+      },
     });
 
     await supabase.from("project_form_answers").insert({
@@ -539,6 +565,23 @@ export async function updateProjectAction(
     });
     const formLanguage = toIrccFormLanguage(data.formLanguage);
     const repAnswers = mergeAccountRepIntoAnswers({}, repProfile);
+    const { detectCommonLaw, resolveApplicationLocation } = await import(
+      "@/lib/ircc/kits"
+    );
+    if (data.applicationLocation) {
+      store.project.applicationLocation = resolveApplicationLocation(
+        data.applicationLocation,
+        data.programFamily,
+      );
+    }
+    if (data.isCommonLaw) {
+      store.project.isCommonLaw = detectCommonLaw({
+        isCommonLaw: data.isCommonLaw,
+        participantRoles: resolved.people.map((p) => p.role),
+      })
+        ? "Y"
+        : "N";
+    }
 
     for (const person of resolved.people) {
       const existing = store.byPerson[person.id] ?? {};
@@ -643,13 +686,46 @@ export async function updateProjectAction(
   }
 
   try {
-    const { syncPersonScopedFormsForParticipants } = await import(
-      "@/lib/ircc/project-forms"
+    const { kitOptionsFromAnswersStore, reconcileProjectKitForms } =
+      await import("@/lib/ircc/project-forms");
+    const { detectCommonLaw, resolveApplicationLocation } = await import(
+      "@/lib/ircc/kits"
     );
-    await syncPersonScopedFormsForParticipants({
+    const { data: latestAnswers } = await supabase
+      .from("project_form_answers")
+      .select("answers")
+      .eq("project_id", projectId)
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    const store = normalizeAnswersStore(latestAnswers?.answers ?? {}, {
+      principalPersonId: principal?.id,
+    });
+    const { data: existingFormRows } = await supabase
+      .from("project_forms")
+      .select("form_code")
+      .eq("project_id", projectId)
+      .eq("organization_id", orgId);
+    const kit = kitOptionsFromAnswersStore(
+      store,
+      data.programFamily,
+      resolved.people.map((p) => p.role),
+      (existingFormRows ?? []).map((r: { form_code: string }) => r.form_code),
+    );
+    await reconcileProjectKitForms({
       organizationId: orgId,
       projectId,
+      programFamily: data.programFamily,
       personIds: resolved.people.map((p) => p.id),
+      applicationLocation: data.applicationLocation
+        ? resolveApplicationLocation(data.applicationLocation, data.programFamily)
+        : kit.applicationLocation,
+      isCommonLaw:
+        data.isCommonLaw != null
+          ? detectCommonLaw({
+              isCommonLaw: data.isCommonLaw,
+              participantRoles: resolved.people.map((p) => p.role),
+            })
+          : kit.isCommonLaw,
     });
   } catch (error) {
     console.error("sync person forms after participant update:", error);

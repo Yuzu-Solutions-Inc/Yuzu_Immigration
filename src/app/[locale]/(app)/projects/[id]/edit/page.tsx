@@ -12,6 +12,12 @@ import {
   listOrgMembers,
   listPeople,
 } from "@/lib/crm/queries";
+import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
+import {
+  detectCommonLaw,
+  resolveApplicationLocation,
+} from "@/lib/ircc/kits";
+import { getProjectFormAnswers } from "@/lib/ircc/project-forms";
 
 export default async function EditProjectPage({
   params,
@@ -24,13 +30,15 @@ export default async function EditProjectPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const [participants, people, members, user, t] = await Promise.all([
-    getProjectParticipants(id),
-    listPeople(),
-    listOrgMembers(),
-    getSessionUser(),
-    getTranslations("projects"),
-  ]);
+  const [participants, people, members, user, t, answersRow] =
+    await Promise.all([
+      getProjectParticipants(id),
+      listPeople(),
+      listOrgMembers(),
+      getSessionUser(),
+      getTranslations("projects"),
+      getProjectFormAnswers(id),
+    ]);
 
   const slots = participants
     .filter((row) => row.person)
@@ -46,6 +54,23 @@ export default async function EditProjectPage({
     }));
 
   const composition = inferCompositionFromRoles(slots.map((s) => s.role));
+  const principal = participants.find((row) => row.role === "principal");
+  const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+    principalPersonId: principal?.person?.id,
+  });
+  const applicationLocation = resolveApplicationLocation(
+    store.project.applicationLocation ||
+      Object.values(store.byPerson).find((bag) => bag.applicationLocation)
+        ?.applicationLocation,
+    project.program_family,
+  );
+  const isCommonLaw = detectCommonLaw({
+    isCommonLaw: store.project.isCommonLaw,
+    maritalStatus: principal?.person
+      ? store.byPerson[principal.person.id]?.maritalStatus
+      : undefined,
+    participantRoles: slots.map((s) => s.role),
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -86,6 +111,8 @@ export default async function EditProjectPage({
             formLanguage:
               project.form_language === "fr" ? "fr" : "en",
             representativeUserId: project.representative_user_id ?? "",
+            applicationLocation,
+            isCommonLaw,
             slots: slots.length
               ? slots
               : [

@@ -26,6 +26,11 @@ import {
   type ProjectComposition,
 } from "@/lib/crm/programs";
 import {
+  defaultApplicationLocation,
+  isWorkPermitProgram,
+  type ApplicationLocation,
+} from "@/lib/ircc/kits";
+import {
   PERSON_IMMIGRATION_STATUSES,
   personStatusAllowsExpiry,
 } from "@/lib/crm/person-status";
@@ -68,6 +73,8 @@ export type ProjectFormInitial = {
   jurisdiction: ProjectJurisdiction;
   formLanguage: "en" | "fr";
   representativeUserId: string;
+  applicationLocation?: ApplicationLocation;
+  isCommonLaw?: boolean;
   slots: ProjectFormSlot[];
 };
 
@@ -137,6 +144,14 @@ export function ProjectForm({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [applicationLocation, setApplicationLocation] =
+    useState<ApplicationLocation>(
+      initial?.applicationLocation ??
+        defaultApplicationLocation(initial?.programFamily ?? "work_permit"),
+    );
+  const [isCommonLaw, setIsCommonLaw] = useState(
+    initial?.isCommonLaw ?? false,
+  );
   const [slots, setSlots] = useState<ProjectFormSlot[]>(
     initial?.slots?.length ? initial.slots : [emptySlot("principal")],
   );
@@ -185,7 +200,10 @@ export function ProjectForm({
       return;
     }
     setJurisdiction(defaultJurisdictionForProgram(programFamily));
-  }, [programFamily]);
+    if (!initial?.applicationLocation) {
+      setApplicationLocation(defaultApplicationLocation(programFamily));
+    }
+  }, [programFamily, initial?.applicationLocation]);
 
   const participantsPayload = useMemo(
     () =>
@@ -241,6 +259,8 @@ export function ProjectForm({
       <input type="hidden" name="programFamily" value={programFamily} />
       <input type="hidden" name="jurisdiction" value={jurisdiction} />
       <input type="hidden" name="formLanguage" value={formLanguage} />
+      <input type="hidden" name="applicationLocation" value={applicationLocation} />
+      <input type="hidden" name="isCommonLaw" value={isCommonLaw ? "Y" : "N"} />
       <input type="hidden" name="status" value={status} />
       <input type="hidden" name="statusAt" value={statusAt} />
       <input type="hidden" name="submitBefore" value={submitBefore} />
@@ -465,6 +485,46 @@ export function ProjectForm({
           </select>
           <p className="text-xs text-muted-foreground">{t("formLanguageHelp")}</p>
         </div>
+        {isWorkPermitProgram(programFamily) ? (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="applicationLocation">
+                {t("applicationLocation")}
+              </Label>
+              <select
+                id="applicationLocation"
+                value={applicationLocation}
+                onChange={(e) =>
+                  setApplicationLocation(
+                    e.target.value === "inside" ? "inside" : "outside",
+                  )
+                }
+                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              >
+                <option value="outside">{t("locationOutside")}</option>
+                <option value="inside">{t("locationInside")}</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                {t("applicationLocationHelp")}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="isCommonLaw">{t("isCommonLaw")}</Label>
+              <select
+                id="isCommonLaw"
+                value={isCommonLaw ? "Y" : "N"}
+                onChange={(e) => setIsCommonLaw(e.target.value === "Y")}
+                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              >
+                <option value="N">{t("commonLawNo")}</option>
+                <option value="Y">{t("commonLawYes")}</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                {t("isCommonLawHelp")}
+              </p>
+            </div>
+          </>
+        ) : null}
       </div>
 
       <div className="space-y-4">

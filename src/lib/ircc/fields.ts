@@ -85,7 +85,8 @@ const STUDY = ["imm1294"] as const;
 const WORK = ["imm1295", "imm5710"] as const;
 const WORK_IN = ["imm5710"] as const;
 const WORK_OUT = ["imm1295"] as const;
-const FAMILY_FORM = ["imm5707"] as const;
+const FAMILY_FORM = ["imm5707", "imm5406"] as const;
+const FAMILY_OUT = ["imm5406"] as const;
 const CUSTODIAN = ["imm5646"] as const;
 const DESIGNEE = ["imm5475"] as const;
 const COMMON_LAW = ["imm5409"] as const;
@@ -797,6 +798,13 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     forms: [...FAMILY_FORM],
     helpKey: "childrenHelp",
   },
+  {
+    key: "hasSiblings",
+    section: "family",
+    type: "yesno",
+    forms: [...FAMILY_OUT],
+    helpKey: "siblingsHelp",
+  },
 
   // —— Study ——
   {
@@ -940,6 +948,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "applicationLocation",
     section: "work",
     type: "select",
+    required: true,
     options: [
       { value: "outside", labelKey: "locationOutside" },
       { value: "inside", labelKey: "locationInside" },
@@ -1315,7 +1324,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "isCommonLaw",
     section: "situation",
     type: "yesno",
-    forms: [...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
     helpKey: "commonLawHelp",
   },
   {
@@ -1323,55 +1332,90 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...COMMON_LAW],
-    showWhen: { key: "isCommonLaw", equals: "Y" },
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    showWhen: {
+      or: [
+        { key: "isCommonLaw", equals: "Y" },
+        { key: "maritalStatus", equals: "03" },
+      ],
+    },
   },
   {
     key: "partnerGivenName",
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...COMMON_LAW],
-    showWhen: { key: "isCommonLaw", equals: "Y" },
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    showWhen: {
+      or: [
+        { key: "isCommonLaw", equals: "Y" },
+        { key: "maritalStatus", equals: "03" },
+      ],
+    },
   },
   {
     key: "yearsTogether",
     section: "situation",
     type: "text",
     maxLength: 10,
-    forms: [...COMMON_LAW],
-    showWhen: { key: "isCommonLaw", equals: "Y" },
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    showWhen: {
+      or: [
+        { key: "isCommonLaw", equals: "Y" },
+        { key: "maritalStatus", equals: "03" },
+      ],
+    },
   },
   {
     key: "commonLawCity",
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...COMMON_LAW],
-    showWhen: { key: "isCommonLaw", equals: "Y" },
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    showWhen: {
+      or: [
+        { key: "isCommonLaw", equals: "Y" },
+        { key: "maritalStatus", equals: "03" },
+      ],
+    },
   },
   {
     key: "commonLawProvince",
     section: "situation",
     type: "text",
     maxLength: 40,
-    forms: [...COMMON_LAW],
-    showWhen: { key: "isCommonLaw", equals: "Y" },
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    showWhen: {
+      or: [
+        { key: "isCommonLaw", equals: "Y" },
+        { key: "maritalStatus", equals: "03" },
+      ],
+    },
   },
   {
     key: "commonLawCountry",
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...COMMON_LAW],
-    showWhen: { key: "isCommonLaw", equals: "Y" },
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    showWhen: {
+      or: [
+        { key: "isCommonLaw", equals: "Y" },
+        { key: "maritalStatus", equals: "03" },
+      ],
+    },
   },
   {
     key: "commonLawStart",
     section: "situation",
     type: "date",
-    forms: [...COMMON_LAW],
-    showWhen: { key: "isCommonLaw", equals: "Y" },
+    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    showWhen: {
+      or: [
+        { key: "isCommonLaw", equals: "Y" },
+        { key: "maritalStatus", equals: "03" },
+      ],
+    },
   },
   {
     key: "needsCustodian",
@@ -1516,6 +1560,29 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
       },
       { key: "address", type: "text", labelKey: "colAddress", maxLength: 120 },
       { key: "occupation", type: "text", labelKey: "colOccupation", maxLength: 80 },
+    ],
+  },
+  {
+    key: "siblings",
+    section: "family",
+    forms: [...FAMILY_OUT],
+    showWhen: { key: "hasSiblings", equals: "Y" },
+    maxRows: 3,
+    minRows: 1,
+    helpKey: "siblingsRowsHelp",
+    columns: [
+      { key: "familyName", type: "text", labelKey: "colFamilyName", maxLength: 80, required: true },
+      { key: "givenName", type: "text", labelKey: "colGivenName", maxLength: 80, required: true },
+      { key: "relationship", type: "text", labelKey: "colRelationship", maxLength: 40, required: true },
+      { key: "dob", type: "date", labelKey: "colDob" },
+      { key: "cob", type: "text", labelKey: "colCob", maxLength: 80 },
+      {
+        key: "maritalStatus",
+        type: "select",
+        labelKey: "colMaritalStatus",
+        options: MARITAL_OPTS,
+      },
+      { key: "address", type: "text", labelKey: "colAddress", maxLength: 120 },
     ],
   },
 ];

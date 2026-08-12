@@ -187,6 +187,14 @@
     },
     "formLanguage": "Form language",
     "formLanguageHelp": "Language of the IRCC PDF forms generated for this file.",
+    "applicationLocation": "Solicitud desde",
+    "applicationLocationHelp": "Dónde está el solicitante al presentar el permiso de trabajo.",
+    "locationOutside": "Fuera de Canadá",
+    "locationInside": "En Canadá",
+    "isCommonLaw": "¿Unión de hecho?",
+    "isCommonLawHelp": "Añade el IMM 5409. Pareja con la que ha convivido al menos 12 meses, no casados.",
+    "commonLawYes": "Sí",
+    "commonLawNo": "No",
     "formLanguages": {
       "en": "English",
       "fr": "French"
@@ -557,6 +565,7 @@
       "parent2Occupation": "Parent 2 occupation",
       "parent2Telephone": "Parent 2 telephone",
       "hasChildren": "Do you have children?",
+      "hasSiblings": "¿Tiene hermanos o hermanas?",
       "schoolCity": "School city",
       "schoolProvince": "School province",
       "dli": "Designated learning institution (DLI) number",
@@ -713,6 +722,8 @@
       "usCardHelp": "Green card / permanent resident card for the United States.",
       "previouslyMarriedHelp": "Include dissolved marriages and common-law unions.",
       "childrenHelp": "Include biological, adopted, and step-children.",
+      "siblingsHelp": "Incluya medios hermanos y hermanastros, vivan o no con usted.",
+      "siblingsRowsHelp": "Añada cada hermano en su propia fila (máximo 3 en esta página).",
       "dliHelp": "Starts with O followed by digits — from your school’s offer letter.",
       "caqHelp": "Required for most study programs in Quebec.",
       "palHelp": "Provincial attestation letter when required by your province.",
@@ -753,6 +764,10 @@
         "title": "Children",
         "help": "Add each child on their own row."
       },
+      "siblings": {
+        "title": "Hermanos y hermanas",
+        "help": "Incluya medios hermanos y hermanastros."
+      },
       "columns": {
         "colCountry": "Country",
         "colStatus": "Status",
@@ -773,7 +788,8 @@
         "colCob": "Country of birth",
         "colRelationship": "Relationship",
         "colAccompanying": "Accompanying?",
-        "colAddress": "Address"
+        "colAddress": "Address",
+        "colMaritalStatus": "Estado civil"
       }
     },
     "addRow": "Añadir fila",

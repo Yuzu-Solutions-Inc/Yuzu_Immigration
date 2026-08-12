@@ -1,6 +1,6 @@
 /**
- * Work-permit kit patchers — kit-local checklists + selectForms;
- * companions live in _shared/patch_companions.ts.
+ * Work-permit kit patchers — legacy checklist fill + selectForms.
+ * Companions (5707 / 5406 / 5476 / 5409) live in patch-companions.ts.
  */
 import {
   patchImm5409 as patchImm5409Shared,
@@ -124,10 +124,8 @@ export function selectForms(input: {
 }): string[] {
   const inside = input.applicationLocation === "inside";
   const primary = inside ? "imm5710" : "imm1295";
-  const checklist = inside ? "imm5556" : "imm5488";
-  // IMM 5476 always — consultant represents the client in MyConsultant.
-  const forms = [primary, "imm5707", checklist, "imm5476"];
-  if (input.hasDesignee) forms.push("imm5475");
+  const family = inside ? "imm5707" : "imm5406";
+  const forms = [primary, family, "imm5476"];
   if (input.isCommonLaw) forms.push("imm5409");
   return forms;
 }

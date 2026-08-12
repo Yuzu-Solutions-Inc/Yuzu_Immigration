@@ -5,6 +5,7 @@ import { loadBlankPdf } from "./blanks";
 import { expandAnswersForFill } from "./expand-answers";
 import { applicationLabelForForms } from "./kits";
 import {
+  patchImm5406,
   patchImm5409,
   patchImm5475,
   patchImm5476,
@@ -163,6 +164,7 @@ function toCompanionAnswers(
     jobTitle: String(expanded.jobTitle || ""),
     jobDescription: String(expanded.jobDescription || ""),
     children: Array.isArray(expanded.children) ? expanded.children : [],
+    siblings: Array.isArray(expanded.siblings) ? expanded.siblings : [],
   };
 }
 
@@ -182,6 +184,7 @@ async function fillCompanion(
           ? "Student"
           : "Worker",
       }),
+    imm5406: (xml) => patchImm5406(xml, answers),
     imm5476: (xml) => patchImm5476(xml, answers, { applicationLabel: appLabel }),
     imm5475: (xml) => patchImm5475(xml, answers),
     imm5409: (xml) => patchImm5409(xml, answers),

@@ -90,10 +90,15 @@ export function normalizeAnswersStore(
 
   // Couple / project companions that lived in the flat bag.
   for (const key of [
+    "applicationLocation",
     "isCommonLaw",
     "partnerFamilyName",
     "partnerGivenName",
     "yearsTogether",
+    "commonLawCity",
+    "commonLawProvince",
+    "commonLawCountry",
+    "commonLawStart",
   ] as const) {
     if (key in raw) store.project[key] = raw[key];
   }

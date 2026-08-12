@@ -24,8 +24,12 @@ import {
   type FormCode,
   ALL_FORM_CODES,
 } from "@/lib/ircc/catalog";
-import { ADDABLE_COMPANION_FORMS } from "@/lib/ircc/kits";
+import {
+  addableFormsForProgram,
+  isWorkPermitProgram,
+} from "@/lib/ircc/kits";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
+import type { ProgramFamily } from "@/db/schema";
 
 const initialState: FormsActionState = {};
 
@@ -49,12 +53,14 @@ function triggerBrowserDownload(
 export function ProjectFormsPanel({
   locale,
   projectId,
+  programFamily,
   forms,
   people,
   activeShareExpiresAt,
 }: {
   locale: "en" | "fr";
   projectId: string;
+  programFamily: ProgramFamily | string;
   forms: ProjectFormRow[];
   people: QuestionnairePerson[];
   activeShareExpiresAt: string | null;
@@ -81,7 +87,8 @@ export function ProjectFormsPanel({
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
-  const [formCode, setFormCode] = useState<FormCode>("imm5475");
+  const addable = addableFormsForProgram(programFamily);
+  const [formCode, setFormCode] = useState<FormCode>(addable[0] ?? "imm5475");
   const personScoped = isPersonScopedForm(formCode);
   const [personId, setPersonId] = useState(people[0]?.id ?? "");
 
@@ -90,10 +97,12 @@ export function ProjectFormsPanel({
     return map;
   }, [people]);
 
-  const addOptions = [
-    ...ADDABLE_COMPANION_FORMS,
-    ...ALL_FORM_CODES.filter((c) => !ADDABLE_COMPANION_FORMS.includes(c)),
-  ];
+  const addOptions = isWorkPermitProgram(programFamily)
+    ? addable
+    : [
+        ...addable,
+        ...ALL_FORM_CODES.filter((c) => !addable.includes(c)),
+      ];
 
   function handleSave(
     nextPersonId: string,

@@ -21,10 +21,11 @@ import {
   SHARE_LINK_TTL_DAYS,
   addProjectForm,
   getProjectFormAnswers,
+  kitOptionsFromAnswersStore,
   listActiveProjectPeople,
   listProjectForms,
+  reconcileProjectKitForms,
   saveShareAnswers,
-  syncPersonScopedFormsForParticipants,
   upsertProjectFormAnswers,
 } from "@/lib/ircc/project-forms";
 import { requireOrganizationId } from "@/lib/crm/queries";
@@ -119,7 +120,7 @@ export async function saveProjectAnswersAction(
 
   const { data: project } = await supabase
     .from("immigration_projects")
-    .select("form_language, representative_user_id")
+    .select("form_language, representative_user_id, program_family")
     .eq("id", projectId)
     .eq("organization_id", orgId)
     .maybeSingle();
@@ -171,6 +172,22 @@ export async function saveProjectAnswersAction(
       .eq("organization_id", orgId)
       .eq("status", "todo")
       .or(`person_id.eq.${personId},person_id.is.null`);
+
+    const existingForms = await listProjectForms(projectId);
+    const kit = kitOptionsFromAnswersStore(
+      store,
+      String(project?.program_family || ""),
+      people.map((p) => p.role),
+      existingForms.map((f) => f.form_code),
+    );
+    await reconcileProjectKitForms({
+      organizationId: orgId,
+      projectId,
+      programFamily: String(project?.program_family || "other"),
+      personIds: people.map((p) => p.id),
+      applicationLocation: kit.applicationLocation,
+      isCommonLaw: kit.isCommonLaw,
+    });
   } catch {
     return { error: "save_failed" };
   }
@@ -427,7 +444,7 @@ export async function generateProjectPdfsAction(
   }
 }
 
-/** Backfill forms for existing projects missing a kit (always includes IMM 5476). */
+/** Backfill / reconcile kit forms (always includes IMM 5476). */
 export async function ensureProjectFormsSeeded(
   organizationId: string,
   projectId: string,
@@ -436,40 +453,29 @@ export async function ensureProjectFormsSeeded(
   const supabase = await createClient();
   const people = await listActiveProjectPeople(supabase, projectId);
   const personIds = people.map((p) => p.id);
-
-  const { data: existing } = await supabase
+  const answersRow = await getProjectFormAnswers(projectId);
+  const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+    principalPersonId: people.find((p) => p.role === "principal")?.id,
+  });
+  const { data: existingRows } = await supabase
     .from("project_forms")
-    .select("id")
+    .select("form_code")
     .eq("project_id", projectId)
-    .limit(1);
+    .eq("organization_id", organizationId);
+  const kit = kitOptionsFromAnswersStore(
+    store,
+    programFamily,
+    people.map((p) => p.role),
+    (existingRows ?? []).map((r: { form_code: string }) => r.form_code),
+  );
 
-  if (!existing || existing.length === 0) {
-    const { expandSeedsForParticipants, seedFormsForProgram } = await import(
-      "@/lib/ircc/kits"
-    );
-    const seeds = expandSeedsForParticipants(
-      seedFormsForProgram(programFamily as never),
-      personIds,
-    );
-    await supabase.from("project_forms").insert(
-      seeds.map((seed) => ({
-        organization_id: organizationId,
-        project_id: projectId,
-        form_code: seed.formCode,
-        person_id: seed.personId,
-        is_required: seed.isRequired,
-        sort_order: seed.sortOrder,
-        status: "todo",
-      })),
-    );
-    return;
-  }
-
-  // Existing projects: ensure every participant has person-scoped copies.
-  await syncPersonScopedFormsForParticipants({
+  await reconcileProjectKitForms({
     organizationId,
     projectId,
+    programFamily,
     personIds,
+    applicationLocation: kit.applicationLocation,
+    isCommonLaw: kit.isCommonLaw,
   });
 }
 

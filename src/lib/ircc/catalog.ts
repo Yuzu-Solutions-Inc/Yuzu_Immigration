@@ -3,6 +3,7 @@ export type FormCode =
   | "imm1295"
   | "imm5710"
   | "imm5707"
+  | "imm5406"
   | "imm5483"
   | "imm5488"
   | "imm5556"
@@ -52,6 +53,13 @@ export const IRCC_FORMS: Record<FormCode, IrccFormDefinition> = {
     code: "imm5707",
     titleEn: "Family information",
     titleFr: "Renseignements familiaux",
+    scope: "person",
+    core: true,
+  },
+  imm5406: {
+    code: "imm5406",
+    titleEn: "Additional family information (outside Canada)",
+    titleFr: "Renseignements familiaux supplémentaires (hors Canada)",
     scope: "person",
     core: true,
   },

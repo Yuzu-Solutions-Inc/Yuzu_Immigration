@@ -91,6 +91,8 @@ export type CompanionAnswers = {
   parent1Telephone?: string;
   parent2Telephone?: string;
   children?: Array<Record<string, unknown>>;
+  siblings?: Array<Record<string, unknown>>;
+  email?: string;
 };
 
 export type PatchImm5707Options = {
@@ -284,6 +286,167 @@ export function patchImm5707(
 
   out = setEmptyTag(out, "SectionAdate", todayYmd());
   out = setEmptyTag(out, "SectionBdate", todayYmd());
+  return out;
+}
+
+function na(value: string | undefined, fallback = "N/A"): string {
+  return ascii(value) || fallback;
+}
+
+/**
+ * IMM 5406 — Additional Family Information (overseas / outside Canada).
+ * Section A: applicant, spouse, parents. B: children. C: siblings.
+ */
+export function patchImm5406(xml: string, a: CompanionAnswers): string {
+  let out = xml;
+  const b = primaryBag(a);
+  const marital = String(b.maritalStatus || a.maritalStatus || "02");
+  const address = ascii(mailingAddress(a), 200) || "N/A";
+  const email = ascii(a.emailContact || a.email || String(b.email || ""), 80);
+
+  out = setEmptyTag(out, "FamilyName", ascii(a.familyName));
+  out = setEmptyTag(out, "GivenNames", ascii(a.givenName));
+  out = setEmptyTag(out, "DOB", ymd(a));
+  out = setEmptyTag(out, "COB", ascii(a.placeBirthCountry || a.citizenship) || "N/A");
+  out = setEmptyTag(out, "Address", address);
+  out = setEmptyTag(out, "MaritalStatus", maritalLabel(marital));
+  if (email) out = setEmptyTag(out, "Email", email);
+
+  const hasSpouse = marital === "01" || marital === "03";
+  const spouseFamily = ascii(
+    a.spouseFamilyName ||
+      String(b.spouseFamilyName || a.partnerFamilyName || ""),
+  );
+  const spouseGiven = ascii(
+    a.spouseGivenName ||
+      String(b.spouseGivenName || a.partnerGivenName || ""),
+  );
+  out = setEmptyTag(out, "FamilyName", hasSpouse ? na(spouseFamily) : "N/A");
+  out = setEmptyTag(out, "GivenNames", hasSpouse ? na(spouseGiven) : "N/A");
+  const sDob = ascii(
+    a.spouseDob ||
+      (b.spouseDobYear && b.spouseDobMonth && b.spouseDobDay
+        ? `${b.spouseDobYear}-${String(b.spouseDobMonth).padStart(2, "0")}-${String(
+            b.spouseDobDay,
+          ).padStart(2, "0")}`
+        : ""),
+    20,
+  );
+  out = setEmptyTag(out, "DOB", hasSpouse ? na(sDob) : "N/A");
+  out = setEmptyTag(
+    out,
+    "COB",
+    hasSpouse ? na(ascii(a.spouseCob || a.citizenship)) : "N/A",
+  );
+  out = setEmptyTag(
+    out,
+    "Address",
+    hasSpouse ? na(ascii(a.spouseAddress || address, 200)) : "N/A",
+  );
+  out = setEmptyTag(
+    out,
+    "MaritalStatus",
+    hasSpouse ? maritalLabel(marital) : "N/A",
+  );
+  if (hasSpouse && email) out = setEmptyTag(out, "Email", email);
+
+  out = setEmptyTag(out, "FamilyName", na(a.parent1FamilyName));
+  out = setEmptyTag(out, "GivenNames", na(a.parent1GivenName));
+  out = setEmptyTag(out, "DOB", na(a.parent1Dob, "N/A"));
+  out = setEmptyTag(out, "COB", na(a.parent1Cob || a.placeBirthCountry));
+  out = setEmptyTag(out, "Address", na(ascii(a.parent1Address || address, 200)));
+  out = setEmptyTag(
+    out,
+    "MaritalStatus",
+    a.parent1FamilyName
+      ? maritalLabel(a.parent1MaritalStatus || "01")
+      : "N/A",
+  );
+
+  out = setEmptyTag(out, "FamilyName", na(a.parent2FamilyName));
+  out = setEmptyTag(out, "GivenNames", na(a.parent2GivenName));
+  out = setEmptyTag(out, "DOB", na(a.parent2Dob, "N/A"));
+  out = setEmptyTag(out, "COB", na(a.parent2Cob || a.placeBirthCountry));
+  out = setEmptyTag(out, "Address", na(ascii(a.parent2Address || address, 200)));
+  out = setEmptyTag(
+    out,
+    "MaritalStatus",
+    a.parent2FamilyName
+      ? maritalLabel(a.parent2MaritalStatus || "01")
+      : "N/A",
+  );
+
+  const children = Array.isArray(a.children)
+    ? a.children.filter((c) => c.familyName || c.givenName)
+    : [];
+  out = out.replace(
+    /<hideChildren\n>[01]<\/hideChildren\n>/,
+    children.length > 0
+      ? "<hideChildren\n>0</hideChildren\n>"
+      : "<hideChildren\n>1</hideChildren\n>",
+  );
+  for (const child of children.slice(0, 3)) {
+    out = setEmptyTag(
+      out,
+      "Relationship",
+      ascii(String(child.relationship || "Child"), 40) || "Child",
+    );
+    out = setEmptyTag(out, "FamilyName", ascii(String(child.familyName || "")));
+    out = setEmptyTag(out, "GivenNames", ascii(String(child.givenName || "")));
+    if (child.dob) out = setEmptyTag(out, "DOB", ascii(String(child.dob), 20));
+    out = setEmptyTag(out, "COB", ascii(String(child.cob || a.placeBirthCountry || "")));
+    out = setEmptyTag(
+      out,
+      "Address",
+      ascii(String(child.address || address), 200),
+    );
+    out = setEmptyTag(
+      out,
+      "MaritalStatus",
+      maritalLabel(String(child.maritalStatus || "02")),
+    );
+    if (child.email) out = setEmptyTag(out, "Email", ascii(String(child.email), 80));
+  }
+
+  const siblings = Array.isArray(a.siblings)
+    ? a.siblings.filter((s) => s.familyName || s.givenName)
+    : [];
+  out = out.replace(
+    /<hideSiblings\n>[01]<\/hideSiblings\n>/,
+    siblings.length > 0
+      ? "<hideSiblings\n>0</hideSiblings\n>"
+      : "<hideSiblings\n>1</hideSiblings\n>",
+  );
+  for (const sibling of siblings.slice(0, 3)) {
+    out = setEmptyTag(
+      out,
+      "Relationship",
+      ascii(String(sibling.relationship || "Sibling"), 40) || "Sibling",
+    );
+    out = setEmptyTag(out, "FamilyName", ascii(String(sibling.familyName || "")));
+    out = setEmptyTag(out, "GivenNames", ascii(String(sibling.givenName || "")));
+    if (sibling.dob) out = setEmptyTag(out, "DOB", ascii(String(sibling.dob), 20));
+    out = setEmptyTag(
+      out,
+      "COB",
+      ascii(String(sibling.cob || a.placeBirthCountry || "")),
+    );
+    out = setEmptyTag(
+      out,
+      "Address",
+      ascii(String(sibling.address || address), 200),
+    );
+    out = setEmptyTag(
+      out,
+      "MaritalStatus",
+      maritalLabel(String(sibling.maritalStatus || "02")),
+    );
+    if (sibling.email) {
+      out = setEmptyTag(out, "Email", ascii(String(sibling.email), 80));
+    }
+  }
+
+  out = setEmptyTag(out, "SignedDate", todayYmd());
   return out;
 }
 

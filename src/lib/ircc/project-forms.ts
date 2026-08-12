@@ -2,8 +2,13 @@ import { createHash, randomBytes } from "node:crypto";
 
 import type { ProgramFamily } from "@/db/schema";
 import {
+  detectCommonLaw,
   expandSeedsForParticipants,
+  inferApplicationLocationFromForms,
+  isWorkPermitProgram,
+  resolveApplicationLocation,
   seedFormsForProgram,
+  type ApplicationLocation,
 } from "@/lib/ircc/kits";
 import {
   formScope,
@@ -37,7 +42,15 @@ export const PROJECT_SCOPED_ANSWER_KEYS: string[] = [
       field.forms?.length &&
       field.forms.every((code) => formScope(code) === "project"),
   ).map((field) => field.key),
+  "applicationLocation",
   "isCommonLaw",
+  "partnerFamilyName",
+  "partnerGivenName",
+  "yearsTogether",
+  "commonLawCity",
+  "commonLawProvince",
+  "commonLawCountry",
+  "commonLawStart",
 ];
 
 export type ProjectFormRow = {
@@ -167,7 +180,8 @@ export async function seedProjectForms(
   projectId: string,
   programFamily: ProgramFamily,
   options?: {
-    applicationLocation?: "outside" | "inside";
+    applicationLocation?: ApplicationLocation;
+    isCommonLaw?: boolean;
     personIds?: string[];
   },
 ) {
@@ -176,7 +190,10 @@ export async function seedProjectForms(
     options?.personIds ??
     (await listActiveProjectPeople(supabase, projectId)).map((p) => p.id);
   const seeds = expandSeedsForParticipants(
-    seedFormsForProgram(programFamily, options),
+    seedFormsForProgram(programFamily, {
+      applicationLocation: options?.applicationLocation,
+      isCommonLaw: options?.isCommonLaw,
+    }),
     personIds,
   );
   const { error } = await supabase.from("project_forms").insert(
@@ -302,6 +319,161 @@ export async function syncPersonScopedFormsForParticipants(input: {
       throw new Error(insertError.message);
     }
   }
+}
+
+const OBSOLETE_WORK_PERMIT_FORMS = new Set(["imm5488", "imm5556"]);
+const MANAGED_WORK_PERMIT_FORMS = new Set([
+  "imm1295",
+  "imm5710",
+  "imm5707",
+  "imm5406",
+  "imm5476",
+  "imm5409",
+  "imm5488",
+  "imm5556",
+]);
+
+function formRowKey(formCode: string, personId: string | null): string {
+  return `${formCode}:${personId ?? ""}`;
+}
+
+/**
+ * Align a work-permit file to the federal kit (in/out + common-law + always 5476).
+ * Removes old WP checklists. Study / other programs only sync person copies.
+ */
+export async function reconcileProjectKitForms(input: {
+  organizationId: string;
+  projectId: string;
+  programFamily: ProgramFamily | string;
+  personIds: string[];
+  applicationLocation?: ApplicationLocation;
+  isCommonLaw?: boolean;
+  client?: DbClient;
+}) {
+  const supabase = input.client ?? (await createClient());
+  if (!isWorkPermitProgram(input.programFamily)) {
+    if (input.client) return;
+    await syncPersonScopedFormsForParticipants({
+      organizationId: input.organizationId,
+      projectId: input.projectId,
+      personIds: input.personIds,
+    });
+    return;
+  }
+
+  const location = resolveApplicationLocation(
+    input.applicationLocation,
+    input.programFamily,
+  );
+  const desired = expandSeedsForParticipants(
+    seedFormsForProgram(input.programFamily as ProgramFamily, {
+      applicationLocation: location,
+      isCommonLaw: input.isCommonLaw,
+    }),
+    input.personIds,
+  );
+  const desiredKeys = new Set(
+    desired.map((seed) => formRowKey(seed.formCode, seed.personId)),
+  );
+
+  const { data: existing, error } = await supabase
+    .from("project_forms")
+    .select("id, form_code, person_id, is_required, sort_order")
+    .eq("project_id", input.projectId)
+    .eq("organization_id", input.organizationId);
+
+  if (error) {
+    console.error("reconcileProjectKitForms:", error.message);
+    throw new Error(error.message);
+  }
+
+  const rows = (existing ?? []) as Array<{
+    id: string;
+    form_code: string;
+    person_id: string | null;
+    is_required: boolean;
+    sort_order: number;
+  }>;
+
+  const toDelete = rows.filter((row) => {
+    if (OBSOLETE_WORK_PERMIT_FORMS.has(row.form_code)) return true;
+    if (!MANAGED_WORK_PERMIT_FORMS.has(row.form_code)) return false;
+    return !desiredKeys.has(formRowKey(row.form_code, row.person_id));
+  });
+
+  if (toDelete.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("project_forms")
+      .delete()
+      .in(
+        "id",
+        toDelete.map((row) => row.id),
+      );
+    if (deleteError) {
+      console.error("reconcileProjectKitForms delete:", deleteError.message);
+      throw new Error(deleteError.message);
+    }
+  }
+
+  const remainingKeys = new Set(
+    rows
+      .filter((row) => !toDelete.some((d) => d.id === row.id))
+      .map((row) => formRowKey(row.form_code, row.person_id)),
+  );
+
+  const inserts = desired
+    .filter((seed) => !remainingKeys.has(formRowKey(seed.formCode, seed.personId)))
+    .map((seed) => ({
+      organization_id: input.organizationId,
+      project_id: input.projectId,
+      form_code: seed.formCode,
+      person_id: seed.personId,
+      is_required: seed.isRequired,
+      sort_order: seed.sortOrder,
+      status: "todo" as const,
+    }));
+
+  if (inserts.length > 0) {
+    const { error: insertError } = await supabase
+      .from("project_forms")
+      .insert(inserts);
+    if (insertError) {
+      console.error("reconcileProjectKitForms insert:", insertError.message);
+      throw new Error(insertError.message);
+    }
+  }
+}
+
+export function kitOptionsFromAnswersStore(
+  store: ProjectAnswersStore,
+  programFamily: ProgramFamily | string,
+  participantRoles: string[] = [],
+  existingFormCodes: string[] = [],
+): {
+  applicationLocation: ApplicationLocation;
+  isCommonLaw: boolean;
+} {
+  const projectLoc = store.project.applicationLocation;
+  const personLoc = Object.values(store.byPerson).find((bag) => {
+    const loc = String(bag.applicationLocation || "");
+    return loc === "inside" || loc === "outside";
+  })?.applicationLocation;
+  const maritalStatus = Object.values(store.byPerson).find(
+    (bag) => bag.maritalStatus,
+  )?.maritalStatus;
+  const inferred = inferApplicationLocationFromForms(existingFormCodes);
+
+  return {
+    applicationLocation: resolveApplicationLocation(
+      projectLoc || personLoc || inferred,
+      programFamily,
+    ),
+    isCommonLaw: detectCommonLaw({
+      isCommonLaw: store.project.isCommonLaw,
+      maritalStatus,
+      participantRoles,
+    }),
+  };
 }
 
 export async function listProjectForms(
@@ -600,7 +772,7 @@ export async function saveShareAnswers(input: {
 
   const { data: project } = await admin
     .from("immigration_projects")
-    .select("form_language, representative_user_id")
+    .select("form_language, representative_user_id, program_family")
     .eq("id", resolved.projectId)
     .maybeSingle();
 
@@ -651,6 +823,26 @@ export async function saveShareAnswers(input: {
     { onConflict: "project_id" },
   );
   if (error) throw new Error(error.message);
+
+  const { data: existingShareForms } = await admin
+    .from("project_forms")
+    .select("form_code")
+    .eq("project_id", resolved.projectId);
+  const kit = kitOptionsFromAnswersStore(
+    store,
+    String(project?.program_family || ""),
+    people.map((p) => p.role),
+    (existingShareForms ?? []).map((r: { form_code: string }) => r.form_code),
+  );
+  await reconcileProjectKitForms({
+    organizationId: resolved.organizationId,
+    projectId: resolved.projectId,
+    programFamily: String(project?.program_family || "other"),
+    personIds: people.map((p) => p.id),
+    applicationLocation: kit.applicationLocation,
+    isCommonLaw: kit.isCommonLaw,
+    client: admin,
+  });
 }
 
 export function buildInitialAnswersStore(input: {
@@ -662,6 +854,7 @@ export function buildInitialAnswersStore(input: {
   }>;
   formLanguage: string;
   repAnswers: FlatAnswers;
+  projectAnswers?: FlatAnswers;
 }): ProjectAnswersStore {
   const store = emptyAnswersStore();
   for (const person of input.people) {
@@ -671,6 +864,9 @@ export function buildInitialAnswersStore(input: {
       ...input.repAnswers,
       hasRepresentative: "Y",
     };
+  }
+  if (input.projectAnswers) {
+    store.project = { ...input.projectAnswers };
   }
   return store;
 }

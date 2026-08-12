@@ -258,6 +258,9 @@ export function expandAnswersForFill(
   out.hasDesignee = yn(out.hasDesignee, "N");
   out.isCommonLaw = yn(out.isCommonLaw, "N");
   out.needsCustodian = yn(out.needsCustodian, "N");
+  out.hasSiblings = yn(out.hasSiblings, "N");
+  if (!Array.isArray(out.siblings)) out.siblings = [];
+  if (!Array.isArray(out.children)) out.children = [];
 
   // Defaults that remain only when still empty (never overwrite questionnaire)
   if (!out.phoneType) out.phoneType = "02";

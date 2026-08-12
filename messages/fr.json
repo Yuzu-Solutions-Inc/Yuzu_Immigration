@@ -187,6 +187,14 @@
     },
     "formLanguage": "Langue des formulaires",
     "formLanguageHelp": "Langue des PDF IRCC générés pour ce dossier.",
+    "applicationLocation": "Demande depuis",
+    "applicationLocationHelp": "Où se trouve le demandeur au moment du dépôt du permis de travail.",
+    "locationOutside": "Hors du Canada",
+    "locationInside": "Au Canada",
+    "isCommonLaw": "Union de fait ?",
+    "isCommonLawHelp": "Ajoute le IMM 5409. Partenaire avec qui vous vivez depuis au moins 12 mois, non mariés.",
+    "commonLawYes": "Oui",
+    "commonLawNo": "Non",
     "formLanguages": {
       "en": "Anglais",
       "fr": "Français"
@@ -557,6 +565,7 @@
       "parent2Occupation": "Parent 2 occupation",
       "parent2Telephone": "Parent 2 telephone",
       "hasChildren": "Do you have children?",
+      "hasSiblings": "Avez-vous des frères ou sœurs ?",
       "schoolCity": "School city",
       "schoolProvince": "School province",
       "dli": "Designated learning institution (DLI) number",
@@ -713,6 +722,8 @@
       "usCardHelp": "Green card / permanent resident card for the United States.",
       "previouslyMarriedHelp": "Include dissolved marriages and common-law unions.",
       "childrenHelp": "Include biological, adopted, and step-children.",
+      "siblingsHelp": "Inclure demi-frères, demi-sœurs et beaux-frères/sœurs, même s’ils ne vivent pas avec vous.",
+      "siblingsRowsHelp": "Ajoutez chaque frère ou sœur sur une ligne (maximum 3 sur cette page).",
       "dliHelp": "Starts with O followed by digits — from your school’s offer letter.",
       "caqHelp": "Required for most study programs in Quebec.",
       "palHelp": "Provincial attestation letter when required by your province.",
@@ -753,6 +764,10 @@
         "title": "Children",
         "help": "Add each child on their own row."
       },
+      "siblings": {
+        "title": "Frères et sœurs",
+        "help": "Inclure demi-frères, demi-sœurs et beaux-frères/sœurs."
+      },
       "columns": {
         "colCountry": "Country",
         "colStatus": "Status",
@@ -773,7 +788,8 @@
         "colCob": "Country of birth",
         "colRelationship": "Relationship",
         "colAccompanying": "Accompanying?",
-        "colAddress": "Address"
+        "colAddress": "Address",
+        "colMaritalStatus": "État matrimonial"
       }
     },
     "addRow": "Ajouter une ligne",

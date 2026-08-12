@@ -30,9 +30,17 @@ export async function loadBlankPdf(
     // fall through to remote
   }
 
+  const dated = key.startsWith("imm5406")
+    ? [
+        key.endsWith("f")
+          ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5406/01-05-2026/imm5406f.pdf"
+          : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5406/01-05-2026/imm5406e.pdf",
+      ]
+    : [];
   const urls = [
     `${SITE_URL}/assets/forms/ircc/blanks/${key}.pdf`,
     `https://raw.githubusercontent.com/TROCKIN8R/yuzu_websites/main/yuzu_github_page/assets/forms/ircc/blanks/${key}.pdf`,
+    ...dated,
   ];
 
   let lastError = "No blank PDF source";

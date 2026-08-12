@@ -2,8 +2,8 @@
   "description": "IRCC forms for study and work permit kits. Synced by scripts/sync_ircc_forms.py.",
   "kits": {
     "study-permit-outside-canada": ["imm1294", "imm5707", "imm5483", "imm5476", "imm5475", "imm5409", "imm5646"],
-    "work-permit-outside-canada": ["imm1295", "imm5707", "imm5488", "imm5476", "imm5475", "imm5409"],
-    "work-permit-inside-canada": ["imm5710", "imm5707", "imm5556", "imm5476", "imm5475", "imm5409"]
+    "work-permit-outside-canada": ["imm1295", "imm5406", "imm5476", "imm5409"],
+    "work-permit-inside-canada": ["imm5710", "imm5707", "imm5476", "imm5409"]
   },
   "forms": [
     {
@@ -70,6 +70,12 @@
       "code": "imm5707",
       "title_en": "Family Information (IMM 5707)",
       "title_fr": "Renseignements familiaux (IMM 5707)",
+      "required": true
+    },
+    {
+      "code": "imm5406",
+      "title_en": "Additional Family Information (IMM 5406)",
+      "title_fr": "Renseignements familiaux supplémentaires (IMM 5406)",
       "required": true
     }
   ],

@@ -236,6 +236,7 @@ export default async function ProjectDetailPage({
       <ProjectFormsPanel
         locale={formLocale}
         projectId={project.id}
+        programFamily={project.program_family}
         forms={forms}
         people={questionnairePeople}
         activeShareExpiresAt={share?.expires_at ?? null}
