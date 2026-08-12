@@ -494,9 +494,11 @@ export function ProjectsTable({
                       >
                         {project.title}
                       </Link>
-                      <p className="text-xs text-muted-foreground">
-                        {t(`jurisdictions.${project.jurisdiction}`)}
-                      </p>
+                      {project.jurisdiction !== "federal" ? (
+                        <p className="text-xs text-muted-foreground">
+                          {t(`jurisdictions.${project.jurisdiction}`)}
+                        </p>
+                      ) : null}
                     </TableCell>
                     <TableCell className="whitespace-normal">
                       {tprog(project.program_family)}

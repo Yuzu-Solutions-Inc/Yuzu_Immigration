@@ -218,8 +218,10 @@ export default async function AppHomePage({
                     <div>
                       <p className="font-medium text-brand">{project.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {tprog(project.program_family)} ·{" "}
-                        {tp(`jurisdictions.${project.jurisdiction}`)}
+                        {tprog(project.program_family)}
+                        {project.jurisdiction !== "federal"
+                          ? ` · ${tp(`jurisdictions.${project.jurisdiction}`)}`
+                          : ""}
                       </p>
                     </div>
                     <ProjectStatusSummary

@@ -26,7 +26,7 @@ import {
 } from "@/lib/ircc/catalog";
 import {
   addableFormsForProgram,
-  isWorkPermitProgram,
+  isFederalPermitProgram,
 } from "@/lib/ircc/kits";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
 import type { ProgramFamily } from "@/db/schema";
@@ -97,7 +97,7 @@ export function ProjectFormsPanel({
     return map;
   }, [people]);
 
-  const addOptions = isWorkPermitProgram(programFamily)
+  const addOptions = isFederalPermitProgram(programFamily)
     ? addable
     : [
         ...addable,

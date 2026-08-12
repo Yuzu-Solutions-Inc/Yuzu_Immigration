@@ -188,6 +188,7 @@ export async function saveProjectAnswersAction(
       personIds: people.map((p) => p.id),
       applicationLocation: kit.applicationLocation,
       isCommonLaw: kit.isCommonLaw,
+      needsCustodian: kit.needsCustodian,
     });
   } catch {
     return { error: "save_failed" };
@@ -477,6 +478,7 @@ export async function ensureProjectFormsSeeded(
     personIds,
     applicationLocation: kit.applicationLocation,
     isCommonLaw: kit.isCommonLaw,
+    needsCustodian: kit.needsCustodian,
   });
 }
 

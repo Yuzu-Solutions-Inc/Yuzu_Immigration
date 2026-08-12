@@ -5,7 +5,7 @@ import { loadBlankPdf } from "./blanks";
 import { expandAnswersForFill } from "./expand-answers";
 import { applicationLabelForForms } from "./kits";
 import {
-  patchImm5406,
+  patchImm5645,
   patchImm5409,
   patchImm5475,
   patchImm5476,
@@ -26,6 +26,7 @@ import { fillXfaDatasetsIncremental, type FormMeta } from "./xfa-incremental";
 import { fillImm1294Pdf, type Imm1294Answers } from "./fillers/imm1294";
 import { validateAnswers } from "./fillers/imm1294-validate";
 import { fillImm1295Pdf } from "./fillers/imm1295";
+import { fillImm5709Pdf } from "./fillers/imm5709";
 import { fillImm5710Pdf } from "./fillers/imm5710";
 
 export type FilledForm = {
@@ -180,11 +181,12 @@ async function fillCompanion(
   const patchers: Record<string, (xml: string) => string> = {
     imm5707: (xml) =>
       patchImm5707(xml, answers, {
-        defaultOccupation: answers.forms.includes("imm1294")
-          ? "Student"
-          : "Worker",
+        defaultOccupation:
+          answers.forms.includes("imm1294") || answers.forms.includes("imm5709")
+            ? "Student"
+            : "Worker",
       }),
-    imm5406: (xml) => patchImm5406(xml, answers),
+    imm5645: (xml) => patchImm5645(xml, answers),
     imm5476: (xml) => patchImm5476(xml, answers, { applicationLabel: appLabel }),
     imm5475: (xml) => patchImm5475(xml, answers),
     imm5409: (xml) => patchImm5409(xml, answers),
@@ -334,6 +336,10 @@ export async function fillProjectForms(input: {
         const payload = buildPrimaryPayload(answers);
         const blank = await loadBlankPdf(code, lang);
         bytes = await fillImm1295Pdf(blank, payload as never);
+      } else if (code === "imm5709") {
+        const payload = buildPrimaryPayload(answers);
+        const blank = await loadBlankPdf(code, lang);
+        bytes = await fillImm5709Pdf(blank, payload as never);
       } else if (code === "imm5710") {
         const payload = buildPrimaryPayload(answers);
         const blank = await loadBlankPdf(code, lang);

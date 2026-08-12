@@ -20,14 +20,14 @@ import type {
   ProjectStatus,
 } from "@/db/schema";
 import {
-  PROGRAM_FAMILIES,
-  defaultJurisdictionForProgram,
+  SELECTABLE_PROGRAM_FAMILIES,
   defaultRolesForComposition,
   type ProjectComposition,
 } from "@/lib/crm/programs";
 import {
   defaultApplicationLocation,
-  isWorkPermitProgram,
+  isFederalPermitProgram,
+  isStudyPermitProgram,
   type ApplicationLocation,
 } from "@/lib/ircc/kits";
 import {
@@ -75,6 +75,7 @@ export type ProjectFormInitial = {
   representativeUserId: string;
   applicationLocation?: ApplicationLocation;
   isCommonLaw?: boolean;
+  needsCustodian?: boolean;
   slots: ProjectFormSlot[];
 };
 
@@ -120,9 +121,6 @@ export function ProjectForm({
   const [programFamily, setProgramFamily] = useState<ProgramFamily>(
     initial?.programFamily ?? "express_entry",
   );
-  const [jurisdiction, setJurisdiction] = useState<ProjectJurisdiction>(
-    initial?.jurisdiction ?? defaultJurisdictionForProgram("express_entry"),
-  );
   const [formLanguage, setFormLanguage] = useState<"en" | "fr">(
     initial?.formLanguage ?? (locale === "fr" ? "fr" : "en"),
   );
@@ -151,6 +149,9 @@ export function ProjectForm({
     );
   const [isCommonLaw, setIsCommonLaw] = useState(
     initial?.isCommonLaw ?? false,
+  );
+  const [needsCustodian, setNeedsCustodian] = useState(
+    initial?.needsCustodian ?? false,
   );
   const [slots, setSlots] = useState<ProjectFormSlot[]>(
     initial?.slots?.length ? initial.slots : [emptySlot("principal")],
@@ -199,7 +200,6 @@ export function ProjectForm({
       skipJurisdictionSync.current = false;
       return;
     }
-    setJurisdiction(defaultJurisdictionForProgram(programFamily));
     if (!isEdit) {
       setApplicationLocation(defaultApplicationLocation(programFamily));
     }
@@ -257,10 +257,15 @@ export function ProjectForm({
       ) : null}
       <input type="hidden" name="composition" value={composition} />
       <input type="hidden" name="programFamily" value={programFamily} />
-      <input type="hidden" name="jurisdiction" value={jurisdiction} />
+      <input type="hidden" name="jurisdiction" value="federal" />
       <input type="hidden" name="formLanguage" value={formLanguage} />
       <input type="hidden" name="applicationLocation" value={applicationLocation} />
       <input type="hidden" name="isCommonLaw" value={isCommonLaw ? "Y" : "N"} />
+      <input
+        type="hidden"
+        name="needsCustodian"
+        value={needsCustodian ? "Y" : "N"}
+      />
       <input type="hidden" name="status" value={status} />
       <input type="hidden" name="statusAt" value={statusAt} />
       <input type="hidden" name="submitBefore" value={submitBefore} />
@@ -448,26 +453,14 @@ export function ProjectForm({
             onChange={(e) => setProgramFamily(e.target.value as ProgramFamily)}
             className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
-            {PROGRAM_FAMILIES.map((family) => (
+            {(SELECTABLE_PROGRAM_FAMILIES.includes(programFamily)
+              ? SELECTABLE_PROGRAM_FAMILIES
+              : [programFamily, ...SELECTABLE_PROGRAM_FAMILIES]
+            ).map((family) => (
               <option key={family} value={family}>
                 {tp(family)}
               </option>
             ))}
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="jurisdiction">{t("jurisdiction")}</Label>
-          <select
-            id="jurisdiction"
-            value={jurisdiction}
-            onChange={(e) =>
-              setJurisdiction(e.target.value as ProjectJurisdiction)
-            }
-            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-          >
-            <option value="federal">{t("jurisdictions.federal")}</option>
-            <option value="quebec">{t("jurisdictions.quebec")}</option>
-            <option value="both">{t("jurisdictions.both")}</option>
           </select>
         </div>
         <div className="space-y-2 sm:col-span-2">
@@ -485,7 +478,7 @@ export function ProjectForm({
           </select>
           <p className="text-xs text-muted-foreground">{t("formLanguageHelp")}</p>
         </div>
-        {isWorkPermitProgram(programFamily) ? (
+        {isFederalPermitProgram(programFamily) ? (
           <>
             <div className="space-y-2">
               <Label htmlFor="applicationLocation">
@@ -536,6 +529,23 @@ export function ProjectForm({
                 {t("isCommonLawHelp")}
               </p>
             </div>
+            {isStudyPermitProgram(programFamily) ? (
+              <div className="space-y-2">
+                <Label htmlFor="needsCustodian">{t("isMinor")}</Label>
+                <select
+                  id="needsCustodian"
+                  value={needsCustodian ? "Y" : "N"}
+                  onChange={(e) => setNeedsCustodian(e.target.value === "Y")}
+                  className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                >
+                  <option value="N">{t("commonLawNo")}</option>
+                  <option value="Y">{t("commonLawYes")}</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  {t("isMinorHelp")}
+                </p>
+              </div>
+            ) : null}
           </>
         ) : null}
       </div>

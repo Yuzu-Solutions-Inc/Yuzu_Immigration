@@ -1,8 +1,9 @@
 {
   "description": "IRCC forms for study and work permit kits. Synced by scripts/sync_ircc_forms.py.",
   "kits": {
-    "study-permit-outside-canada": ["imm1294", "imm5707", "imm5483", "imm5476", "imm5475", "imm5409", "imm5646"],
-    "work-permit-outside-canada": ["imm1295", "imm5406", "imm5476", "imm5409"],
+    "study-permit-outside-canada": ["imm1294", "imm5645", "imm5476", "imm5409", "imm5646"],
+    "study-permit-inside-canada": ["imm5709", "imm5707", "imm5476", "imm5409", "imm5646"],
+    "work-permit-outside-canada": ["imm1295", "imm5645", "imm5476", "imm5409"],
     "work-permit-inside-canada": ["imm5710", "imm5707", "imm5476", "imm5409"]
   },
   "forms": [
@@ -16,6 +17,12 @@
       "code": "imm1295",
       "title_en": "Application for a Work Permit Made Outside of Canada",
       "title_fr": "Demande de permis de travail présentée à l'extérieur du Canada",
+      "required": true
+    },
+    {
+      "code": "imm5709",
+      "title_en": "Application to Change Conditions, Extend my Stay or Remain in Canada as a Student",
+      "title_fr": "Demande pour modifier les conditions de séjour, le prolonger ou demeurer au Canada comme étudiant",
       "required": true
     },
     {
@@ -34,7 +41,7 @@
       "code": "imm5483",
       "title_en": "Document Checklist — Study Permit",
       "title_fr": "Liste de contrôle des documents — Permis d'études",
-      "required": true
+      "required": false
     },
     {
       "code": "imm5488",
@@ -73,9 +80,9 @@
       "required": true
     },
     {
-      "code": "imm5406",
-      "title_en": "Additional Family Information (IMM 5406)",
-      "title_fr": "Renseignements familiaux supplémentaires (IMM 5406)",
+      "code": "imm5645",
+      "title_en": "Family Information — Visitors, Students and Workers (IMM 5645)",
+      "title_fr": "Renseignements familiaux — visiteurs, étudiants et travailleurs (IMM 5645)",
       "required": true
     }
   ],

@@ -15,6 +15,7 @@ import {
 import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
 import {
   detectCommonLaw,
+  detectMinor,
   resolveApplicationLocation,
 } from "@/lib/ircc/kits";
 import { getProjectFormAnswers } from "@/lib/ircc/project-forms";
@@ -71,6 +72,18 @@ export default async function EditProjectPage({
       : undefined,
     participantRoles: slots.map((s) => s.role),
   });
+  const principalBag = principal?.person
+    ? store.byPerson[principal.person.id]
+    : undefined;
+  const needsCustodian =
+    detectMinor({ needsCustodian: store.project.needsCustodian }) ||
+    detectMinor({
+      needsCustodian: principalBag?.needsCustodian,
+      dob: principalBag?.dob,
+      dobYear: principalBag?.dobYear,
+      dobMonth: principalBag?.dobMonth,
+      dobDay: principalBag?.dobDay,
+    });
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -113,6 +126,7 @@ export default async function EditProjectPage({
             representativeUserId: project.representative_user_id ?? "",
             applicationLocation,
             isCommonLaw,
+            needsCustodian,
             slots: slots.length
               ? slots
               : [

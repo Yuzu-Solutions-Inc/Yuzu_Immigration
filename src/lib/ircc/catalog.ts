@@ -1,9 +1,10 @@
 export type FormCode =
   | "imm1294"
   | "imm1295"
+  | "imm5709"
   | "imm5710"
   | "imm5707"
-  | "imm5406"
+  | "imm5645"
   | "imm5483"
   | "imm5488"
   | "imm5556"
@@ -42,6 +43,13 @@ export const IRCC_FORMS: Record<FormCode, IrccFormDefinition> = {
     scope: "person",
     core: true,
   },
+  imm5709: {
+    code: "imm5709",
+    titleEn: "Study permit — change / extend / remain (in Canada)",
+    titleFr: "Permis d’études — modifier / prolonger / demeurer (au Canada)",
+    scope: "person",
+    core: true,
+  },
   imm5710: {
     code: "imm5710",
     titleEn: "Work permit — change / extend / remain (in Canada)",
@@ -51,15 +59,15 @@ export const IRCC_FORMS: Record<FormCode, IrccFormDefinition> = {
   },
   imm5707: {
     code: "imm5707",
-    titleEn: "Family information",
-    titleFr: "Renseignements familiaux",
+    titleEn: "Family information (in Canada)",
+    titleFr: "Renseignements familiaux (au Canada)",
     scope: "person",
     core: true,
   },
-  imm5406: {
-    code: "imm5406",
-    titleEn: "Additional family information (outside Canada)",
-    titleFr: "Renseignements familiaux supplémentaires (hors Canada)",
+  imm5645: {
+    code: "imm5645",
+    titleEn: "Family information (outside Canada)",
+    titleFr: "Renseignements familiaux (hors Canada)",
     scope: "person",
     core: true,
   },
@@ -68,7 +76,6 @@ export const IRCC_FORMS: Record<FormCode, IrccFormDefinition> = {
     titleEn: "Document checklist — study permit",
     titleFr: "Liste de contrôle — permis d’études",
     scope: "project",
-    core: true,
   },
   imm5488: {
     code: "imm5488",

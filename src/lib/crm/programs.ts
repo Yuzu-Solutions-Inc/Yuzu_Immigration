@@ -19,18 +19,25 @@ export const PROGRAM_FAMILIES: ProgramFamily[] = [
   "other",
 ];
 
-export type ProjectComposition = "individual" | "couple" | "family";
-
-export function defaultJurisdictionForProgram(
-  program: ProgramFamily,
-): ProjectJurisdiction {
-  if (
+export function isQuebecOnlyProgram(
+  program: ProgramFamily | string,
+): boolean {
+  return (
     program === "quebec_pstq" ||
     program === "quebec_family" ||
     program === "quebec_temporary"
-  ) {
-    return "quebec";
-  }
+  );
+}
+
+/** IRCC PDF kits only — Quebec/MIFI programs use Arrima / their own portal. */
+export const SELECTABLE_PROGRAM_FAMILIES: ProgramFamily[] =
+  PROGRAM_FAMILIES.filter((family) => !isQuebecOnlyProgram(family));
+
+export type ProjectComposition = "individual" | "couple" | "family";
+
+export function defaultJurisdictionForProgram(
+  _program?: ProgramFamily | string,
+): ProjectJurisdiction {
   return "federal";
 }
 

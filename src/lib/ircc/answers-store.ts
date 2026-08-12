@@ -92,6 +92,7 @@ export function normalizeAnswersStore(
   for (const key of [
     "applicationLocation",
     "isCommonLaw",
+    "needsCustodian",
     "partnerFamilyName",
     "partnerGivenName",
     "yearsTogether",

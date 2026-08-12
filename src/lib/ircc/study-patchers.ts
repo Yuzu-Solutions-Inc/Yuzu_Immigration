@@ -181,6 +181,7 @@ export function patchImm5483(xml: string, a: KitAnswers): string {
 }
 
 export function selectForms(input: {
+  applicationLocation?: "outside" | "inside";
   hasRepresentative?: boolean;
   hasDesignee?: boolean;
   isCommonLaw?: boolean;
@@ -188,8 +189,12 @@ export function selectForms(input: {
   /** @deprecated use needsCustodian; kept for older drafts */
   includeImm5707?: boolean;
 }): string[] {
-  // IMM 5476 always — consultant represents the client in MyConsultant.
-  const forms = ["imm1294", "imm5707", "imm5483", "imm5476"];
+  const inside = input.applicationLocation === "inside";
+  const forms = [
+    inside ? "imm5709" : "imm1294",
+    inside ? "imm5707" : "imm5645",
+    "imm5476",
+  ];
   if (input.hasDesignee) forms.push("imm5475");
   if (input.isCommonLaw) forms.push("imm5409");
   if (input.needsCustodian) forms.push("imm5646");

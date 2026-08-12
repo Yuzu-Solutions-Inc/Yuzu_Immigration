@@ -80,13 +80,14 @@ export const CHECKLIST_FORM_CODES = new Set([
   "imm5556",
 ]);
 
-const PRIMARY = ["imm1294", "imm1295", "imm5710"] as const;
-const STUDY = ["imm1294"] as const;
+const PRIMARY = ["imm1294", "imm1295", "imm5709", "imm5710"] as const;
+const STUDY = ["imm1294", "imm5709"] as const;
 const WORK = ["imm1295", "imm5710"] as const;
 const WORK_IN = ["imm5710"] as const;
 const WORK_OUT = ["imm1295"] as const;
-const FAMILY_FORM = ["imm5707", "imm5406"] as const;
-const FAMILY_OUT = ["imm5406"] as const;
+const IN_CANADA = ["imm5709", "imm5710"] as const;
+const FAMILY_FORM = ["imm5707", "imm5645"] as const;
+const FAMILY_OUT = ["imm5645"] as const;
 const CUSTODIAN = ["imm5646"] as const;
 const DESIGNEE = ["imm5475"] as const;
 const COMMON_LAW = ["imm5409"] as const;
@@ -1079,13 +1080,13 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "applyingExtend",
     section: "work",
     type: "checkbox",
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "applyingRestore",
     section: "work",
     type: "checkbox",
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "applyingNewEmployer",
@@ -1097,54 +1098,54 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "applyingTrp",
     section: "work",
     type: "checkbox",
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "origEntryDate",
     section: "work",
     type: "date",
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "origEntryPlace",
     section: "work",
     type: "text",
     maxLength: 80,
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "purposeOfVisit",
     section: "work",
     type: "text",
     maxLength: 80,
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "purposeOther",
     section: "work",
     type: "text",
     maxLength: 80,
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "recentEntryDate",
     section: "work",
     type: "date",
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "recentEntryPlace",
     section: "work",
     type: "text",
     maxLength: 80,
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "prevDocNum",
     section: "work",
     type: "text",
     maxLength: 40,
-    forms: [...WORK_IN],
+    forms: [...IN_CANADA],
   },
   {
     key: "workPurposeType",

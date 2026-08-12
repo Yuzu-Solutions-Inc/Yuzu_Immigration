@@ -69,7 +69,7 @@ const projectFieldsSchema = z.object({
   locale: z.enum(["en", "fr", "es"]).default("en"),
   composition: z.enum(["individual", "couple", "family"]),
   programFamily: z.enum(PROGRAM_FAMILIES as [ProgramFamily, ...ProgramFamily[]]),
-  jurisdiction: z.enum(["federal", "quebec", "both"]).optional(),
+  jurisdiction: z.enum(["federal"]).optional(),
   formLanguage: z.enum(["en", "fr"]).default("en"),
   title: z.string().trim().max(200).optional(),
   description: z.string().trim().max(500).optional().or(z.literal("")),
@@ -87,6 +87,7 @@ const projectFieldsSchema = z.object({
   representativeUserId: z.string().uuid().optional().or(z.literal("")),
   applicationLocation: z.enum(["outside", "inside"]).optional(),
   isCommonLaw: z.enum(["Y", "N"]).optional(),
+  needsCustodian: z.enum(["Y", "N"]).optional(),
   participants: z.array(participantInputSchema).min(1),
 });
 
@@ -119,7 +120,7 @@ function parseProjectForm(formData: FormData) {
   const locale = (formData.get("locale") as "en" | "fr" | "es") || "en";
   const composition = formData.get("composition") as ProjectComposition;
   const programFamily = formData.get("programFamily") as ProgramFamily;
-  const jurisdictionRaw = String(formData.get("jurisdiction") || "");
+  const jurisdictionRaw = "federal";
   const formLanguageRaw = String(formData.get("formLanguage") || "").trim();
   const titleRaw = String(formData.get("title") || "").trim();
   const descriptionRaw = String(formData.get("description") || "").trim();
@@ -134,6 +135,7 @@ function parseProjectForm(formData: FormData) {
     formData.get("applicationLocation") || "",
   ).trim();
   const isCommonLawRaw = String(formData.get("isCommonLaw") || "").trim();
+  const needsCustodianRaw = String(formData.get("needsCustodian") || "").trim();
 
   const participantsJson = String(formData.get("participants") || "[]");
   let participantsParsed: unknown;
@@ -158,6 +160,7 @@ function parseProjectForm(formData: FormData) {
     representativeUserId: representativeUserIdRaw || undefined,
     applicationLocation: applicationLocationRaw || undefined,
     isCommonLaw: isCommonLawRaw || undefined,
+    needsCustodian: needsCustodianRaw || undefined,
     participants: participantsParsed,
   });
 
@@ -301,8 +304,7 @@ export async function createProjectAction(
   }
 
   const supabase = await createClient();
-  const jurisdiction =
-    data.jurisdiction ?? defaultJurisdictionForProgram(data.programFamily);
+  const jurisdiction = defaultJurisdictionForProgram(data.programFamily);
 
   const resolved = await resolveParticipants(
     orgId,
@@ -376,6 +378,7 @@ export async function createProjectAction(
   try {
     const {
       detectCommonLaw,
+      detectMinor,
       expandSeedsForParticipants,
       resolveApplicationLocation,
       seedFormsForProgram,
@@ -388,12 +391,20 @@ export async function createProjectAction(
       isCommonLaw: data.isCommonLaw,
       participantRoles: resolved.people.map((p) => p.role),
     });
+    const needsCustodian = detectMinor({
+      needsCustodian: data.needsCustodian,
+    });
+    const personIds = [
+      ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
+      ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
+    ];
     const seeds = expandSeedsForParticipants(
       seedFormsForProgram(data.programFamily, {
         applicationLocation,
         isCommonLaw,
+        needsCustodian,
       }),
-      resolved.people.map((p) => p.id),
+      personIds,
     );
     const { error: formsError } = await supabase.from("project_forms").insert(
       seeds.map((seed) => ({
@@ -437,6 +448,7 @@ export async function createProjectAction(
       projectAnswers: {
         applicationLocation,
         isCommonLaw: isCommonLaw ? "Y" : "N",
+        needsCustodian: needsCustodian ? "Y" : "N",
       },
     });
 
@@ -472,8 +484,7 @@ export async function updateProjectAction(
   }
 
   const supabase = await createClient();
-  const jurisdiction =
-    data.jurisdiction ?? defaultJurisdictionForProgram(data.programFamily);
+  const jurisdiction = defaultJurisdictionForProgram(data.programFamily);
   const status = (data.status ?? "new") as ProjectStatus;
   const statusAt =
     data.statusAt ?? new Date().toISOString().slice(0, 10);
@@ -565,11 +576,18 @@ export async function updateProjectAction(
     });
     const formLanguage = toIrccFormLanguage(data.formLanguage);
     const repAnswers = mergeAccountRepIntoAnswers({}, repProfile);
-    const { detectCommonLaw } = await import("@/lib/ircc/kits");
+    const { detectCommonLaw, detectMinor } = await import("@/lib/ircc/kits");
     if (data.isCommonLaw) {
       store.project.isCommonLaw = detectCommonLaw({
         isCommonLaw: data.isCommonLaw,
         participantRoles: resolved.people.map((p) => p.role),
+      })
+        ? "Y"
+        : "N";
+    }
+    if (data.needsCustodian) {
+      store.project.needsCustodian = detectMinor({
+        needsCustodian: data.needsCustodian,
       })
         ? "Y"
         : "N";
@@ -680,7 +698,7 @@ export async function updateProjectAction(
   try {
     const { kitOptionsFromAnswersStore, reconcileProjectKitForms } =
       await import("@/lib/ircc/project-forms");
-    const { detectCommonLaw } = await import("@/lib/ircc/kits");
+    const { detectCommonLaw, detectMinor } = await import("@/lib/ircc/kits");
     const { data: latestAnswers } = await supabase
       .from("project_form_answers")
       .select("answers")
@@ -705,7 +723,10 @@ export async function updateProjectAction(
       organizationId: orgId,
       projectId,
       programFamily: data.programFamily,
-      personIds: resolved.people.map((p) => p.id),
+      personIds: [
+        ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
+        ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
+      ],
       applicationLocation: kit.applicationLocation,
       isCommonLaw:
         data.isCommonLaw != null
@@ -714,6 +735,10 @@ export async function updateProjectAction(
               participantRoles: resolved.people.map((p) => p.role),
             })
           : kit.isCommonLaw,
+      needsCustodian:
+        data.needsCustodian != null
+          ? detectMinor({ needsCustodian: data.needsCustodian })
+          : kit.needsCustodian,
     });
   } catch (error) {
     console.error("sync person forms after participant update:", error);

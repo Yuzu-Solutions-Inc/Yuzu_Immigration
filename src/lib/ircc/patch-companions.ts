@@ -1,6 +1,6 @@
 /**
  * Shared companion IRCC form patchers used across permit kits:
- * IMM 5707 (family info), 5476 (representative), 5475 (designee), 5409 (common-law).
+ * IMM 5707 / 5645 (family info), 5476 (representative), 5475 (designee), 5409 (common-law).
  *
  * Checklist patchers and primary application fillers stay kit-local.
  */
@@ -294,10 +294,10 @@ function na(value: string | undefined, fallback = "N/A"): string {
 }
 
 /**
- * IMM 5406 — Additional Family Information (overseas / outside Canada).
+ * IMM 5645 — Family Information for visitors, students and workers (outside Canada).
  * Section A: applicant, spouse, parents. B: children. C: siblings.
  */
-export function patchImm5406(xml: string, a: CompanionAnswers): string {
+export function patchImm5645(xml: string, a: CompanionAnswers): string {
   let out = xml;
   const b = primaryBag(a);
   const marital = String(b.maritalStatus || a.maritalStatus || "02");

@@ -3,9 +3,10 @@ import { createHash, randomBytes } from "node:crypto";
 import type { ProgramFamily } from "@/db/schema";
 import {
   detectCommonLaw,
+  detectMinor,
   expandSeedsForParticipants,
   inferApplicationLocationFromForms,
-  isWorkPermitProgram,
+  isFederalPermitProgram,
   resolveApplicationLocation,
   seedFormsForProgram,
   type ApplicationLocation,
@@ -182,6 +183,7 @@ export async function seedProjectForms(
   options?: {
     applicationLocation?: ApplicationLocation;
     isCommonLaw?: boolean;
+    needsCustodian?: boolean;
     personIds?: string[];
   },
 ) {
@@ -193,6 +195,7 @@ export async function seedProjectForms(
     seedFormsForProgram(programFamily, {
       applicationLocation: options?.applicationLocation,
       isCommonLaw: options?.isCommonLaw,
+      needsCustodian: options?.needsCustodian,
     }),
     personIds,
   );
@@ -321,24 +324,31 @@ export async function syncPersonScopedFormsForParticipants(input: {
   }
 }
 
-const OBSOLETE_WORK_PERMIT_FORMS = new Set(["imm5488", "imm5556"]);
+const OBSOLETE_PERMIT_FORMS = new Set(["imm5483", "imm5488", "imm5556"]);
 /** In/out primary + family forms are chosen at project creation and never swapped. */
-const FROZEN_WORK_PERMIT_FORMS = new Set([
+const FROZEN_PERMIT_FORMS = new Set([
+  "imm1294",
+  "imm5709",
   "imm1295",
   "imm5710",
   "imm5707",
-  "imm5406",
+  "imm5645",
 ]);
-const PRIMARY_WORK_FORMS = new Set(["imm1295", "imm5710"]);
-const FAMILY_WORK_FORMS = new Set(["imm5707", "imm5406"]);
+const PRIMARY_PERMIT_FORMS = new Set([
+  "imm1294",
+  "imm5709",
+  "imm1295",
+  "imm5710",
+]);
+const FAMILY_PERMIT_FORMS = new Set(["imm5707", "imm5645"]);
 
 function formRowKey(formCode: string, personId: string | null): string {
   return `${formCode}:${personId ?? ""}`;
 }
 
 /**
- * Keep a work-permit file on its creation kit (in/out never swaps).
- * May add IMM 5476 / 5409, strip old checklists, and copy person-scoped rows.
+ * Keep a federal permit file on its creation kit (in/out never swaps).
+ * May add IMM 5476 / 5409 / 5646, strip old checklists, and copy person-scoped rows.
  */
 export async function reconcileProjectKitForms(input: {
   organizationId: string;
@@ -347,10 +357,11 @@ export async function reconcileProjectKitForms(input: {
   personIds: string[];
   applicationLocation?: ApplicationLocation;
   isCommonLaw?: boolean;
+  needsCustodian?: boolean;
   client?: DbClient;
 }) {
   const supabase = input.client ?? (await createClient());
-  if (!isWorkPermitProgram(input.programFamily)) {
+  if (!isFederalPermitProgram(input.programFamily)) {
     if (input.client) return;
     await syncPersonScopedFormsForParticipants({
       organizationId: input.organizationId,
@@ -389,13 +400,20 @@ export async function reconcileProjectKitForms(input: {
     seedFormsForProgram(input.programFamily as ProgramFamily, {
       applicationLocation: location,
       isCommonLaw: input.isCommonLaw,
+      needsCustodian: input.needsCustodian,
     }),
     input.personIds,
   ).filter((seed) => {
-    if (PRIMARY_WORK_FORMS.has(seed.formCode) && [...existingCodes].some((c) => PRIMARY_WORK_FORMS.has(c))) {
+    if (
+      PRIMARY_PERMIT_FORMS.has(seed.formCode) &&
+      [...existingCodes].some((c) => PRIMARY_PERMIT_FORMS.has(c))
+    ) {
       return existingCodes.has(seed.formCode);
     }
-    if (FAMILY_WORK_FORMS.has(seed.formCode) && [...existingCodes].some((c) => FAMILY_WORK_FORMS.has(c))) {
+    if (
+      FAMILY_PERMIT_FORMS.has(seed.formCode) &&
+      [...existingCodes].some((c) => FAMILY_PERMIT_FORMS.has(c))
+    ) {
       return existingCodes.has(seed.formCode);
     }
     return true;
@@ -405,11 +423,14 @@ export async function reconcileProjectKitForms(input: {
   );
 
   const toDelete = rows.filter((row) => {
-    if (OBSOLETE_WORK_PERMIT_FORMS.has(row.form_code)) return true;
-    if (FROZEN_WORK_PERMIT_FORMS.has(row.form_code)) return false;
+    if (OBSOLETE_PERMIT_FORMS.has(row.form_code)) return true;
+    if (FROZEN_PERMIT_FORMS.has(row.form_code)) return false;
     if (row.form_code === "imm5476") return false;
     if (row.form_code === "imm5409") {
       return input.isCommonLaw === false && row.is_required;
+    }
+    if (row.form_code === "imm5646") {
+      return input.needsCustodian === false && row.is_required;
     }
     return false;
   });
@@ -465,15 +486,15 @@ export function kitOptionsFromAnswersStore(
 ): {
   applicationLocation: ApplicationLocation;
   isCommonLaw: boolean;
+  needsCustodian: boolean;
 } {
   const projectLoc = store.project.applicationLocation;
-  const personLoc = Object.values(store.byPerson).find((bag) => {
+  const personBags = Object.values(store.byPerson);
+  const personLoc = personBags.find((bag) => {
     const loc = String(bag.applicationLocation || "");
     return loc === "inside" || loc === "outside";
   })?.applicationLocation;
-  const maritalStatus = Object.values(store.byPerson).find(
-    (bag) => bag.maritalStatus,
-  )?.maritalStatus;
+  const maritalStatus = personBags.find((bag) => bag.maritalStatus)?.maritalStatus;
   const inferred = inferApplicationLocationFromForms(existingFormCodes);
 
   return {
@@ -486,6 +507,17 @@ export function kitOptionsFromAnswersStore(
       maritalStatus,
       participantRoles,
     }),
+    needsCustodian:
+      detectMinor({ needsCustodian: store.project.needsCustodian }) ||
+      personBags.some((bag) =>
+        detectMinor({
+          needsCustodian: bag.needsCustodian,
+          dob: bag.dob,
+          dobYear: bag.dobYear,
+          dobMonth: bag.dobMonth,
+          dobDay: bag.dobDay,
+        }),
+      ),
   };
 }
 
@@ -855,6 +887,7 @@ export async function saveShareAnswers(input: {
     personIds: people.map((p) => p.id),
     applicationLocation: kit.applicationLocation,
     isCommonLaw: kit.isCommonLaw,
+    needsCustodian: kit.needsCustodian,
     client: admin,
   });
 }
