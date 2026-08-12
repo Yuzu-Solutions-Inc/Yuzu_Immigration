@@ -65,6 +65,7 @@ export const QUESTIONNAIRE_SECTIONS = [
   "family",
   "study",
   "work",
+  "visit",
   "employment",
   "education",
   "background",
@@ -80,14 +81,25 @@ export const CHECKLIST_FORM_CODES = new Set([
   "imm5556",
 ]);
 
-const PRIMARY = ["imm1294", "imm1295", "imm5709", "imm5710"] as const;
+const PRIMARY = [
+  "imm1294",
+  "imm1295",
+  "imm5257",
+  "imm5257sch1",
+  "imm5708",
+  "imm5709",
+  "imm5710",
+] as const;
 const STUDY = ["imm1294", "imm5709"] as const;
 const WORK = ["imm1295", "imm5710"] as const;
+const VISITOR = ["imm5257", "imm5257sch1", "imm5708"] as const;
+const VISITOR_IN = ["imm5708"] as const;
+const VISITOR_OUT = ["imm5257", "imm5257sch1"] as const;
 const WORK_IN = ["imm5710"] as const;
 const WORK_OUT = ["imm1295"] as const;
 const IN_CANADA = ["imm5709", "imm5710"] as const;
-const FAMILY_FORM = ["imm5707", "imm5645"] as const;
-const FAMILY_OUT = ["imm5645"] as const;
+const FAMILY_FORM = ["imm5707", "imm5645", "imm5406"] as const;
+const FAMILY_OUT = ["imm5645", "imm5406"] as const;
 const CUSTODIAN = ["imm5646"] as const;
 const DESIGNEE = ["imm5475"] as const;
 const COMMON_LAW = ["imm5409"] as const;
@@ -187,6 +199,14 @@ const WORK_PERMIT_OPTS = [
   { value: "SAWP", labelKey: "wpSawp" },
   { value: "SBC", labelKey: "wpSbc" },
   { value: "Other", labelKey: "wpOther" },
+];
+
+const VISIT_PURPOSE_OPTS = [
+  { value: "tourism", labelKey: "visitTourism" },
+  { value: "business", labelKey: "visitBusiness" },
+  { value: "family", labelKey: "visitFamily" },
+  { value: "transit", labelKey: "visitTransit" },
+  { value: "other", labelKey: "visitOther" },
 ];
 
 const marriedOrCl: ShowWhen = {
@@ -944,6 +964,104 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     showWhen: { key: "palNumber", notEquals: "" },
   },
 
+  // —— Visitor ——
+  {
+    key: "visitPurpose",
+    section: "visit",
+    type: "select",
+    required: true,
+    options: VISIT_PURPOSE_OPTS,
+    forms: [...VISITOR],
+  },
+  {
+    key: "visitPurposeOther",
+    section: "visit",
+    type: "text",
+    maxLength: 80,
+    forms: [...VISITOR],
+    showWhen: { key: "visitPurpose", equals: "other" },
+  },
+  {
+    key: "visitFrom",
+    section: "visit",
+    type: "date",
+    required: true,
+    forms: [...VISITOR_OUT],
+  },
+  {
+    key: "visitTo",
+    section: "visit",
+    type: "date",
+    required: true,
+    forms: [...VISITOR_OUT],
+  },
+  {
+    key: "visitHostName",
+    section: "visit",
+    type: "text",
+    maxLength: 120,
+    forms: [...VISITOR],
+  },
+  {
+    key: "visitHostRelationship",
+    section: "visit",
+    type: "text",
+    maxLength: 80,
+    forms: [...VISITOR],
+  },
+  {
+    key: "visitFunds",
+    section: "visit",
+    type: "select",
+    options: FUNDS_OPTS,
+    forms: [...VISITOR],
+  },
+  {
+    key: "visitorApplyExtend",
+    section: "visit",
+    type: "checkbox",
+    forms: [...VISITOR_IN],
+  },
+  {
+    key: "visitorApplyRestore",
+    section: "visit",
+    type: "checkbox",
+    forms: [...VISITOR_IN],
+  },
+  {
+    key: "visitorOrigEntryDate",
+    section: "visit",
+    type: "date",
+    forms: [...VISITOR_IN],
+  },
+  {
+    key: "visitorOrigEntryPlace",
+    section: "visit",
+    type: "text",
+    maxLength: 80,
+    forms: [...VISITOR_IN],
+  },
+  {
+    key: "visitorRecentEntryDate",
+    section: "visit",
+    type: "date",
+    forms: [...VISITOR_IN],
+  },
+  {
+    key: "visitorRecentEntryPlace",
+    section: "visit",
+    type: "text",
+    maxLength: 80,
+    forms: [...VISITOR_IN],
+  },
+  {
+    key: "visitorPrevDocNum",
+    section: "visit",
+    type: "text",
+    maxLength: 40,
+    forms: [...VISITOR_IN],
+  },
+
   // —— Work permit details ——
   {
     key: "workPermitType",
@@ -1313,7 +1431,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "isCommonLaw",
     section: "situation",
     type: "yesno",
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     helpKey: "commonLawHelp",
   },
   {
@@ -1321,7 +1439,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
       or: [
         { key: "isCommonLaw", equals: "Y" },
@@ -1334,7 +1452,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
       or: [
         { key: "isCommonLaw", equals: "Y" },
@@ -1347,7 +1465,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "situation",
     type: "text",
     maxLength: 10,
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
       or: [
         { key: "isCommonLaw", equals: "Y" },
@@ -1360,7 +1478,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
       or: [
         { key: "isCommonLaw", equals: "Y" },
@@ -1373,7 +1491,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "situation",
     type: "text",
     maxLength: 40,
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
       or: [
         { key: "isCommonLaw", equals: "Y" },
@@ -1386,7 +1504,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "situation",
     type: "text",
     maxLength: 80,
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
       or: [
         { key: "isCommonLaw", equals: "Y" },
@@ -1398,7 +1516,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "commonLawStart",
     section: "situation",
     type: "date",
-    forms: [...WORK, ...STUDY, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
       or: [
         { key: "isCommonLaw", equals: "Y" },

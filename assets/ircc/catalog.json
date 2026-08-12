@@ -1,10 +1,12 @@
 {
-  "description": "IRCC forms for study and work permit kits. Synced by scripts/sync_ircc_forms.py.",
+  "description": "IRCC forms for federal study, work, and visitor kits. Synced by scripts/sync_ircc_forms.py.",
   "kits": {
     "study-permit-outside-canada": ["imm1294", "imm5645", "imm5476", "imm5409", "imm5646"],
     "study-permit-inside-canada": ["imm5709", "imm5707", "imm5476", "imm5409", "imm5646"],
     "work-permit-outside-canada": ["imm1295", "imm5645", "imm5476", "imm5409"],
-    "work-permit-inside-canada": ["imm5710", "imm5707", "imm5476", "imm5409"]
+    "work-permit-inside-canada": ["imm5710", "imm5707", "imm5476", "imm5409"],
+    "visitor-outside-canada": ["imm5257", "imm5257sch1", "imm5406", "imm5476", "imm5409"],
+    "visitor-inside-canada": ["imm5708", "imm5707", "imm5476", "imm5409"]
   },
   "forms": [
     {
@@ -83,6 +85,30 @@
       "code": "imm5645",
       "title_en": "Family Information — Visitors, Students and Workers (IMM 5645)",
       "title_fr": "Renseignements familiaux — visiteurs, étudiants et travailleurs (IMM 5645)",
+      "required": true
+    },
+    {
+      "code": "imm5406",
+      "title_en": "Additional Family Information (IMM 5406)",
+      "title_fr": "Renseignements familiaux supplémentaires (IMM 5406)",
+      "required": true
+    },
+    {
+      "code": "imm5257",
+      "title_en": "Application for Visitor Visa (Temporary Resident Visa)",
+      "title_fr": "Demande de visa de visiteur (visa de résident temporaire)",
+      "required": true
+    },
+    {
+      "code": "imm5257sch1",
+      "title_en": "Schedule 1: Application for Temporary Residence",
+      "title_fr": "Annexe 1 : Demande de résidence temporaire",
+      "required": true
+    },
+    {
+      "code": "imm5708",
+      "title_en": "Application to Change Conditions, Extend my Stay or Remain in Canada as a Visitor",
+      "title_fr": "Demande pour modifier les conditions de séjour, le prolonger ou demeurer au Canada à titre de visiteur",
       "required": true
     }
   ],

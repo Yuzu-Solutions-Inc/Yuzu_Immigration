@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/table";
 import type { ProgramFamily, ProjectStatus } from "@/db/schema";
 import { Link, useRouter } from "@/i18n/navigation";
-import { PROGRAM_FAMILIES } from "@/lib/crm/programs";
+import { SELECTABLE_PROGRAM_FAMILIES } from "@/lib/crm/programs";
 import type { ProjectRow } from "@/lib/crm/queries";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
 import { cn } from "@/lib/utils";
@@ -328,7 +328,7 @@ export function ProjectsTable({
             className={selectClassName}
           >
             <option value="all">{t("filterAll")}</option>
-            {PROGRAM_FAMILIES.map((value) => (
+            {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
               <option key={value} value={value}>
                 {tprog(value)}
               </option>

@@ -6,6 +6,7 @@ import { expandAnswersForFill } from "./expand-answers";
 import { applicationLabelForForms } from "./kits";
 import {
   patchImm5645,
+  patchImm5406,
   patchImm5409,
   patchImm5475,
   patchImm5476,
@@ -184,9 +185,13 @@ async function fillCompanion(
         defaultOccupation:
           answers.forms.includes("imm1294") || answers.forms.includes("imm5709")
             ? "Student"
-            : "Worker",
+            : answers.forms.includes("imm5257") ||
+                answers.forms.includes("imm5708")
+              ? "Visitor"
+              : "Worker",
       }),
     imm5645: (xml) => patchImm5645(xml, answers),
+    imm5406: (xml) => patchImm5406(xml, answers),
     imm5476: (xml) => patchImm5476(xml, answers, { applicationLabel: appLabel }),
     imm5475: (xml) => patchImm5475(xml, answers),
     imm5409: (xml) => patchImm5409(xml, answers),

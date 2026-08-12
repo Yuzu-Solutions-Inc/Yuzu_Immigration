@@ -5,6 +5,10 @@ export type FormCode =
   | "imm5710"
   | "imm5707"
   | "imm5645"
+  | "imm5406"
+  | "imm5257"
+  | "imm5257sch1"
+  | "imm5708"
   | "imm5483"
   | "imm5488"
   | "imm5556"
@@ -68,6 +72,34 @@ export const IRCC_FORMS: Record<FormCode, IrccFormDefinition> = {
     code: "imm5645",
     titleEn: "Family information (outside Canada)",
     titleFr: "Renseignements familiaux (hors Canada)",
+    scope: "person",
+    core: true,
+  },
+  imm5406: {
+    code: "imm5406",
+    titleEn: "Additional family information (outside Canada)",
+    titleFr: "Renseignements familiaux supplémentaires (hors Canada)",
+    scope: "person",
+    core: true,
+  },
+  imm5257: {
+    code: "imm5257",
+    titleEn: "Visitor visa (outside Canada)",
+    titleFr: "Visa de visiteur (hors Canada)",
+    scope: "person",
+    core: true,
+  },
+  imm5257sch1: {
+    code: "imm5257sch1",
+    titleEn: "Schedule 1 — temporary residence",
+    titleFr: "Annexe 1 — résidence temporaire",
+    scope: "person",
+    core: true,
+  },
+  imm5708: {
+    code: "imm5708",
+    titleEn: "Visitor — change / extend / remain (in Canada)",
+    titleFr: "Visiteur — modifier / prolonger / demeurer (au Canada)",
     scope: "person",
     core: true,
   },

@@ -21,6 +21,37 @@ export type KitSeedOptions = {
   needsCustodian?: boolean;
 };
 
+export const PERMIT_KIT_FAMILIES = [
+  "study_permit",
+  "work_permit",
+  "visitor",
+] as const;
+
+export type PermitKitFamily = (typeof PERMIT_KIT_FAMILIES)[number];
+
+export type PersonKitAssignment = {
+  personId: string;
+  programFamily: PermitKitFamily;
+  applicationLocation?: ApplicationLocation;
+  needsCustodian?: boolean;
+};
+
+export function isPermitKitFamily(
+  value: unknown,
+): value is PermitKitFamily {
+  return (
+    value === "study_permit" ||
+    value === "work_permit" ||
+    value === "visitor"
+  );
+}
+
+export function isCustomProgram(
+  programFamily: ProgramFamily | string,
+): boolean {
+  return programFamily === "other";
+}
+
 export function isWorkPermitProgram(
   programFamily: ProgramFamily | string,
 ): boolean {
@@ -33,10 +64,20 @@ export function isStudyPermitProgram(
   return programFamily === "study_permit";
 }
 
+export function isVisitorProgram(
+  programFamily: ProgramFamily | string,
+): boolean {
+  return programFamily === "visitor";
+}
+
 export function isFederalPermitProgram(
   programFamily: ProgramFamily | string,
 ): boolean {
-  return isWorkPermitProgram(programFamily) || isStudyPermitProgram(programFamily);
+  return (
+    isWorkPermitProgram(programFamily) ||
+    isStudyPermitProgram(programFamily) ||
+    isVisitorProgram(programFamily)
+  );
 }
 
 export function defaultApplicationLocation(
@@ -59,12 +100,19 @@ export function inferApplicationLocationFromForms(
   formCodes: string[],
 ): ApplicationLocation | undefined {
   const codes = new Set(formCodes.map((c) => c.toLowerCase()));
-  if (codes.has("imm5710") || codes.has("imm5709") || codes.has("imm5556")) {
+  if (
+    codes.has("imm5710") ||
+    codes.has("imm5709") ||
+    codes.has("imm5708") ||
+    codes.has("imm5556")
+  ) {
     return "inside";
   }
   if (
     codes.has("imm1295") ||
     codes.has("imm1294") ||
+    codes.has("imm5257") ||
+    codes.has("imm5257sch1") ||
     codes.has("imm5488") ||
     codes.has("imm5483") ||
     codes.has("imm5645") ||
@@ -203,6 +251,33 @@ export function studyPermitKitForms(options?: KitSeedOptions): KitSeedForm[] {
 }
 
 /**
+ * Federal visitor kit:
+ * - inside Canada: IMM 5708, IMM 5707, IMM 5476
+ * - outside Canada: IMM 5257, IMM 5257 SCH1, IMM 5406, IMM 5476
+ * - spouse / common-law: + IMM 5409
+ * - IMM 5476 always
+ */
+export function visitorKitForms(options?: KitSeedOptions): KitSeedForm[] {
+  const inside = options?.applicationLocation === "inside";
+  const seeds: KitSeedForm[] = inside
+    ? [
+        { formCode: "imm5708", isRequired: true, sortOrder: 10 },
+        { formCode: "imm5707", isRequired: true, sortOrder: 20 },
+        { formCode: "imm5476", isRequired: true, sortOrder: 90 },
+      ]
+    : [
+        { formCode: "imm5257", isRequired: true, sortOrder: 10 },
+        { formCode: "imm5257sch1", isRequired: true, sortOrder: 15 },
+        { formCode: "imm5406", isRequired: true, sortOrder: 20 },
+        { formCode: "imm5476", isRequired: true, sortOrder: 90 },
+      ];
+  if (options?.isCommonLaw) {
+    seeds.push({ formCode: "imm5409", isRequired: true, sortOrder: 80 });
+  }
+  return seeds;
+}
+
+/**
  * Base IRCC forms seeded when a project is created for a program.
  * IMM 5476 (use of a representative) is always included — the consultant represents the client.
  */
@@ -229,6 +304,14 @@ export function seedFormsForProgram(
     case "work_permit":
     case "pgwp":
       return workPermitKitForms({
+        applicationLocation: resolveApplicationLocation(
+          options?.applicationLocation,
+          programFamily,
+        ),
+        isCommonLaw: options?.isCommonLaw,
+      });
+    case "visitor":
+      return visitorKitForms({
         applicationLocation: resolveApplicationLocation(
           options?.applicationLocation,
           programFamily,
@@ -281,15 +364,71 @@ export function expandSeedsForParticipants(
   return out;
 }
 
+/**
+ * Custom project: each person gets their own permit kit (program + in/out).
+ * IMM 5409 stays a single project-scoped row when the file is common-law.
+ */
+export function expandMixedPersonKits(
+  kits: PersonKitAssignment[],
+  options?: { isCommonLaw?: boolean },
+): ExpandedKitSeedForm[] {
+  const out: ExpandedKitSeedForm[] = [];
+  const seenProject = new Set<FormCode>();
+
+  kits.forEach((kit, index) => {
+    const family: ProgramFamily = isPermitKitFamily(kit.programFamily)
+      ? kit.programFamily
+      : "work_permit";
+    const seeds = seedFormsForProgram(family, {
+      applicationLocation: kit.applicationLocation,
+      isCommonLaw: false,
+      needsCustodian: kit.needsCustodian,
+    });
+    for (const seed of seeds) {
+      if (seed.formCode === "imm5409") continue;
+      if (formScope(seed.formCode) === "project") {
+        if (seenProject.has(seed.formCode)) continue;
+        seenProject.add(seed.formCode);
+        out.push({
+          ...seed,
+          personId: null,
+          sortOrder: seed.sortOrder * 100,
+        });
+        continue;
+      }
+      out.push({
+        ...seed,
+        personId: kit.personId,
+        sortOrder: (index + 1) * 1000 + seed.sortOrder,
+      });
+    }
+  });
+
+  if (options?.isCommonLaw && !seenProject.has("imm5409")) {
+    out.push({
+      formCode: "imm5409",
+      isRequired: true,
+      sortOrder: 8000,
+      personId: null,
+    });
+  }
+
+  return out;
+}
+
 /** Optional companions a consultant can add via "Add form". */
 export const ADDABLE_COMPANION_FORMS: FormCode[] = [
   "imm5475",
   "imm5409",
   "imm5646",
   "imm5645",
+  "imm5406",
   "imm5707",
   "imm1294",
   "imm1295",
+  "imm5257",
+  "imm5257sch1",
+  "imm5708",
   "imm5709",
   "imm5710",
   "imm5483",
@@ -312,6 +451,14 @@ export const STUDY_PERMIT_ADDABLE_FORMS: FormCode[] = [
   "imm5707",
 ];
 
+/** Visitor add list: no primary / schedule swap. */
+export const VISITOR_ADDABLE_FORMS: FormCode[] = [
+  "imm5409",
+  "imm5475",
+  "imm5406",
+  "imm5707",
+];
+
 export function addableFormsForProgram(
   programFamily: ProgramFamily | string,
 ): FormCode[] {
@@ -320,6 +467,18 @@ export function addableFormsForProgram(
   }
   if (isStudyPermitProgram(programFamily)) {
     return STUDY_PERMIT_ADDABLE_FORMS;
+  }
+  if (isVisitorProgram(programFamily)) {
+    return VISITOR_ADDABLE_FORMS;
+  }
+  if (isCustomProgram(programFamily)) {
+    return [
+      ...new Set([
+        ...WORK_PERMIT_ADDABLE_FORMS,
+        ...STUDY_PERMIT_ADDABLE_FORMS,
+        ...VISITOR_ADDABLE_FORMS,
+      ]),
+    ];
   }
   return ADDABLE_COMPANION_FORMS;
 }
@@ -330,6 +489,9 @@ export function applicationLabelForForms(formCodes: string[]): string {
   }
   if (formCodes.includes("imm1295") || formCodes.includes("imm5710")) {
     return "Work permit";
+  }
+  if (formCodes.includes("imm5257") || formCodes.includes("imm5708")) {
+    return "Visitor visa";
   }
   return "Immigration application";
 }

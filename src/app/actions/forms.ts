@@ -24,6 +24,8 @@ import {
   kitOptionsFromAnswersStore,
   listActiveProjectPeople,
   listProjectForms,
+  personKitAssignments,
+  personKitsFromAnswersStore,
   reconcileProjectKitForms,
   saveShareAnswers,
   upsertProjectFormAnswers,
@@ -189,6 +191,10 @@ export async function saveProjectAnswersAction(
       applicationLocation: kit.applicationLocation,
       isCommonLaw: kit.isCommonLaw,
       needsCustodian: kit.needsCustodian,
+      personKits: personKitAssignments(
+        people.map((p) => p.id),
+        personKitsFromAnswersStore(store),
+      ),
     });
   } catch {
     return { error: "save_failed" };

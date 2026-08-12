@@ -1,6 +1,6 @@
 /**
  * Shared companion IRCC form patchers used across permit kits:
- * IMM 5707 / 5645 (family info), 5476 (representative), 5475 (designee), 5409 (common-law).
+ * IMM 5707 / 5645 / 5406 (family info), 5476 (representative), 5475 (designee), 5409 (common-law).
  *
  * Checklist patchers and primary application fillers stay kit-local.
  */
@@ -449,6 +449,9 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
   out = setEmptyTag(out, "SignedDate", todayYmd());
   return out;
 }
+
+/** IMM 5406 — additional family information (visitor visa outside Canada). Same XFA tags as IMM 5645. */
+export const patchImm5406 = patchImm5645;
 
 /** IMM 5476 — Use of a representative. */
 export function patchImm5476(

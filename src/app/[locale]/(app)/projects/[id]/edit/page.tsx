@@ -17,11 +17,13 @@ import {
   detectCommonLaw,
   detectMinor,
   inferApplicationLocationFromForms,
+  isPermitKitFamily,
   resolveApplicationLocation,
 } from "@/lib/ircc/kits";
 import {
   getProjectFormAnswers,
   listProjectForms,
+  personKitsFromAnswersStore,
 } from "@/lib/ircc/project-forms";
 
 export default async function EditProjectPage({
@@ -46,20 +48,6 @@ export default async function EditProjectPage({
       listProjectForms(id),
     ]);
 
-  const slots = participants
-    .filter((row) => row.person)
-    .map((row) => ({
-      role: row.role,
-      mode: "existing" as const,
-      personId: row.person!.id,
-      firstName: row.person!.first_name,
-      lastName: row.person!.last_name,
-      email: row.person!.email ?? "",
-      immigrationStatus: "none" as const,
-      statusExpiresAt: "",
-    }));
-
-  const composition = inferCompositionFromRoles(slots.map((s) => s.role));
   const principal = participants.find((row) => row.role === "principal");
   const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
     principalPersonId: principal?.person?.id,
@@ -71,6 +59,30 @@ export default async function EditProjectPage({
         ?.applicationLocation,
     project.program_family,
   );
+  const fallbackProgram = isPermitKitFamily(project.program_family)
+    ? project.program_family
+    : "work_permit";
+  const personKits = personKitsFromAnswersStore(store);
+  const slots = participants
+    .filter((row) => row.person)
+    .map((row) => {
+      const kit = personKits[row.person!.id];
+      return {
+        role: row.role,
+        mode: "existing" as const,
+        personId: row.person!.id,
+        firstName: row.person!.first_name,
+        lastName: row.person!.last_name,
+        email: row.person!.email ?? "",
+        immigrationStatus: "none" as const,
+        statusExpiresAt: "",
+        programFamily: kit?.programFamily ?? fallbackProgram,
+        applicationLocation: kit?.applicationLocation ?? applicationLocation,
+        needsCustodian: kit?.needsCustodian ?? false,
+      };
+    });
+
+  const composition = inferCompositionFromRoles(slots.map((s) => s.role));
   const isCommonLaw = detectCommonLaw({
     isCommonLaw: store.project.isCommonLaw,
     maritalStatus: principal?.person
@@ -145,6 +157,9 @@ export default async function EditProjectPage({
                     email: "",
                     immigrationStatus: "none" as const,
                     statusExpiresAt: "",
+                    programFamily: "work_permit" as const,
+                    applicationLocation: "outside" as const,
+                    needsCustodian: false,
                   },
                 ],
           }}

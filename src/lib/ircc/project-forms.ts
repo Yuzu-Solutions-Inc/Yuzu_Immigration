@@ -4,12 +4,17 @@ import type { ProgramFamily } from "@/db/schema";
 import {
   detectCommonLaw,
   detectMinor,
+  expandMixedPersonKits,
   expandSeedsForParticipants,
   inferApplicationLocationFromForms,
+  isCustomProgram,
   isFederalPermitProgram,
+  isPermitKitFamily,
   resolveApplicationLocation,
   seedFormsForProgram,
   type ApplicationLocation,
+  type PermitKitFamily,
+  type PersonKitAssignment,
 } from "@/lib/ircc/kits";
 import {
   formScope,
@@ -324,27 +329,80 @@ export async function syncPersonScopedFormsForParticipants(input: {
   }
 }
 
-const OBSOLETE_PERMIT_FORMS = new Set([
-  "imm5483",
-  "imm5488",
-  "imm5556",
-  "imm5406",
-]);
+const OBSOLETE_PERMIT_FORMS = new Set(["imm5483", "imm5488", "imm5556"]);
 const PRIMARY_PERMIT_FORMS = new Set([
   "imm1294",
   "imm5709",
   "imm1295",
   "imm5710",
+  "imm5257",
+  "imm5708",
 ]);
-const FAMILY_PERMIT_FORMS = new Set(["imm5707", "imm5645"]);
+const FAMILY_PERMIT_FORMS = new Set(["imm5707", "imm5645", "imm5406"]);
 const KIT_SWAP_FORMS = new Set([
   ...PRIMARY_PERMIT_FORMS,
   ...FAMILY_PERMIT_FORMS,
+  "imm5257sch1",
   "imm5476",
 ]);
 
 function formRowKey(formCode: string, personId: string | null): string {
   return `${formCode}:${personId ?? ""}`;
+}
+
+export type StoredPersonKit = {
+  programFamily: PermitKitFamily;
+  applicationLocation: ApplicationLocation;
+  needsCustodian?: boolean;
+};
+
+function ynKitFlag(value: unknown): boolean {
+  const flag = String(value ?? "").trim().toUpperCase();
+  return flag === "Y" || flag === "YES" || flag === "TRUE" || flag === "1";
+}
+
+export function parseStoredPersonKit(raw: unknown): StoredPersonKit | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const bag = raw as Record<string, unknown>;
+  if (!isPermitKitFamily(bag.programFamily)) return null;
+  return {
+    programFamily: bag.programFamily,
+    applicationLocation:
+      bag.applicationLocation === "inside" ? "inside" : "outside",
+    needsCustodian: ynKitFlag(bag.needsCustodian) ? true : undefined,
+  };
+}
+
+export function personKitsFromAnswersStore(
+  store: ProjectAnswersStore,
+): Record<string, StoredPersonKit> {
+  const raw = store.project.personKits;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: Record<string, StoredPersonKit> = {};
+  for (const [personId, value] of Object.entries(
+    raw as Record<string, unknown>,
+  )) {
+    const kit = parseStoredPersonKit(value);
+    if (kit) out[personId] = kit;
+  }
+  return out;
+}
+
+export function personKitAssignments(
+  personIds: string[],
+  kits: Record<string, StoredPersonKit>,
+  fallback?: Partial<StoredPersonKit>,
+): PersonKitAssignment[] {
+  return personIds.filter(Boolean).map((personId) => {
+    const kit = kits[personId];
+    return {
+      personId,
+      programFamily: kit?.programFamily ?? fallback?.programFamily ?? "work_permit",
+      applicationLocation:
+        kit?.applicationLocation ?? fallback?.applicationLocation ?? "outside",
+      needsCustodian: kit?.needsCustodian ?? fallback?.needsCustodian,
+    };
+  });
 }
 
 /**
@@ -359,10 +417,12 @@ export async function reconcileProjectKitForms(input: {
   applicationLocation?: ApplicationLocation;
   isCommonLaw?: boolean;
   needsCustodian?: boolean;
+  personKits?: PersonKitAssignment[];
   client?: DbClient;
 }) {
   const supabase = input.client ?? (await createClient());
-  if (!isFederalPermitProgram(input.programFamily)) {
+  const custom = isCustomProgram(input.programFamily);
+  if (!isFederalPermitProgram(input.programFamily) && !custom) {
     if (input.client) return;
     await syncPersonScopedFormsForParticipants({
       organizationId: input.organizationId,
@@ -395,16 +455,27 @@ export async function reconcileProjectKitForms(input: {
   const location = resolveApplicationLocation(
     input.applicationLocation ??
       inferApplicationLocationFromForms([...existingCodes]),
-    input.programFamily,
+    custom ? "work_permit" : input.programFamily,
   );
-  const desired = expandSeedsForParticipants(
-    seedFormsForProgram(input.programFamily as ProgramFamily, {
-      applicationLocation: location,
-      isCommonLaw: input.isCommonLaw,
-      needsCustodian: input.needsCustodian,
-    }),
-    input.personIds,
-  );
+  const desired = custom
+    ? expandMixedPersonKits(
+        input.personKits?.length
+          ? input.personKits
+          : personKitAssignments(input.personIds, {}, {
+              programFamily: "work_permit",
+              applicationLocation: location,
+              needsCustodian: input.needsCustodian,
+            }),
+        { isCommonLaw: input.isCommonLaw },
+      )
+    : expandSeedsForParticipants(
+        seedFormsForProgram(input.programFamily as ProgramFamily, {
+          applicationLocation: location,
+          isCommonLaw: input.isCommonLaw,
+          needsCustodian: input.needsCustodian,
+        }),
+        input.personIds,
+      );
   const desiredKeys = new Set(
     desired.map((seed) => formRowKey(seed.formCode, seed.personId)),
   );
@@ -418,6 +489,7 @@ export async function reconcileProjectKitForms(input: {
       return input.isCommonLaw === false && row.is_required;
     }
     if (row.form_code === "imm5646") {
+      if (custom) return row.is_required;
       return input.needsCustodian === false && row.is_required;
     }
     return false;
@@ -876,6 +948,10 @@ export async function saveShareAnswers(input: {
     applicationLocation: kit.applicationLocation,
     isCommonLaw: kit.isCommonLaw,
     needsCustodian: kit.needsCustodian,
+    personKits: personKitAssignments(
+      people.map((p) => p.id),
+      personKitsFromAnswersStore(store),
+    ),
     client: admin,
   });
 }
@@ -890,6 +966,7 @@ export function buildInitialAnswersStore(input: {
   formLanguage: string;
   repAnswers: FlatAnswers;
   projectAnswers?: FlatAnswers;
+  personKits?: Record<string, StoredPersonKit>;
 }): ProjectAnswersStore {
   const store = emptyAnswersStore();
   for (const person of input.people) {
@@ -902,6 +979,9 @@ export function buildInitialAnswersStore(input: {
   }
   if (input.projectAnswers) {
     store.project = { ...input.projectAnswers };
+  }
+  if (input.personKits && Object.keys(input.personKits).length > 0) {
+    store.project.personKits = input.personKits;
   }
   return store;
 }

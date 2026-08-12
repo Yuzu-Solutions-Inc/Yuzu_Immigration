@@ -29,9 +29,31 @@ export function isQuebecOnlyProgram(
   );
 }
 
-/** IRCC PDF kits only — Quebec/MIFI programs use Arrima / their own portal. */
-export const SELECTABLE_PROGRAM_FAMILIES: ProgramFamily[] =
-  PROGRAM_FAMILIES.filter((family) => !isQuebecOnlyProgram(family));
+/** Single-kit IRCC programs offered on create/edit. */
+export const PERMIT_PROGRAM_FAMILIES: ProgramFamily[] = [
+  "study_permit",
+  "work_permit",
+  "visitor",
+];
+
+/** Create/edit options: the three permits plus a mixed custom file. */
+export const SELECTABLE_PROGRAM_FAMILIES: ProgramFamily[] = [
+  ...PERMIT_PROGRAM_FAMILIES,
+  "other",
+];
+
+export function isPermitProgramFamily(
+  program: ProgramFamily | string,
+): boolean {
+  return (PERMIT_PROGRAM_FAMILIES as string[]).includes(program);
+}
+
+/** Mixed file: each participant can have a different permit + applying-from. */
+export function isCustomProgram(
+  program: ProgramFamily | string,
+): boolean {
+  return program === "other";
+}
 
 export type ProjectComposition = "individual" | "couple" | "family";
 

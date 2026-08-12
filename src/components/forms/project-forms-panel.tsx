@@ -26,6 +26,7 @@ import {
 } from "@/lib/ircc/catalog";
 import {
   addableFormsForProgram,
+  isCustomProgram,
   isFederalPermitProgram,
 } from "@/lib/ircc/kits";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
@@ -97,12 +98,13 @@ export function ProjectFormsPanel({
     return map;
   }, [people]);
 
-  const addOptions = isFederalPermitProgram(programFamily)
-    ? addable
-    : [
-        ...addable,
-        ...ALL_FORM_CODES.filter((c) => !addable.includes(c)),
-      ];
+  const addOptions =
+    isFederalPermitProgram(programFamily) || isCustomProgram(programFamily)
+      ? addable
+      : [
+          ...addable,
+          ...ALL_FORM_CODES.filter((c) => !addable.includes(c)),
+        ];
 
   function handleSave(
     nextPersonId: string,

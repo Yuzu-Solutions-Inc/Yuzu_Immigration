@@ -20,15 +20,19 @@ import type {
   ProjectStatus,
 } from "@/db/schema";
 import {
+  PERMIT_PROGRAM_FAMILIES,
   SELECTABLE_PROGRAM_FAMILIES,
   defaultRolesForComposition,
   type ProjectComposition,
 } from "@/lib/crm/programs";
 import {
   defaultApplicationLocation,
+  isCustomProgram,
   isFederalPermitProgram,
+  isPermitKitFamily,
   isStudyPermitProgram,
   type ApplicationLocation,
+  type PermitKitFamily,
 } from "@/lib/ircc/kits";
 import {
   PERSON_IMMIGRATION_STATUSES,
@@ -58,6 +62,9 @@ export type ProjectFormSlot = {
   email: string;
   immigrationStatus: PersonImmigrationStatus;
   statusExpiresAt: string;
+  programFamily: PermitKitFamily;
+  applicationLocation: ApplicationLocation;
+  needsCustodian: boolean;
 };
 
 export type ProjectFormInitial = {
@@ -81,7 +88,12 @@ export type ProjectFormInitial = {
 
 const initialState: ProjectActionState = {};
 
-function emptySlot(role: ParticipantRole): ProjectFormSlot {
+function emptySlot(
+  role: ParticipantRole,
+  kit?: Partial<
+    Pick<ProjectFormSlot, "programFamily" | "applicationLocation" | "needsCustodian">
+  >,
+): ProjectFormSlot {
   return {
     role,
     mode: "new",
@@ -91,6 +103,9 @@ function emptySlot(role: ParticipantRole): ProjectFormSlot {
     email: "",
     immigrationStatus: "none",
     statusExpiresAt: "",
+    programFamily: kit?.programFamily ?? "work_permit",
+    applicationLocation: kit?.applicationLocation ?? "outside",
+    needsCustodian: kit?.needsCustodian ?? false,
   };
 }
 
@@ -119,7 +134,7 @@ export function ProjectForm({
     initial?.composition ?? "individual",
   );
   const [programFamily, setProgramFamily] = useState<ProgramFamily>(
-    initial?.programFamily ?? "express_entry",
+    initial?.programFamily ?? "work_permit",
   );
   const [formLanguage, setFormLanguage] = useState<"en" | "fr">(
     initial?.formLanguage ?? (locale === "fr" ? "fr" : "en"),
@@ -153,6 +168,7 @@ export function ProjectForm({
   const [needsCustodian, setNeedsCustodian] = useState(
     initial?.needsCustodian ?? false,
   );
+  const customFile = isCustomProgram(programFamily);
   const [slots, setSlots] = useState<ProjectFormSlot[]>(
     initial?.slots?.length ? initial.slots : [emptySlot("principal")],
   );
@@ -179,21 +195,26 @@ export function ProjectForm({
           const person = people.find((p) => p.id === presetPersonId);
           if (person) {
             return {
-              role,
+              ...emptySlot(role, { applicationLocation }),
               mode: "existing" as const,
               personId: person.id,
               firstName: person.first_name,
               lastName: person.last_name,
               email: person.email ?? "",
-              immigrationStatus: "none" as const,
-              statusExpiresAt: "",
             };
           }
         }
-        return emptySlot(role);
+        return emptySlot(role, { applicationLocation });
       }),
     );
-  }, [composition, people, presetPersonId, isEdit, initial?.slots?.length]);
+  }, [
+    composition,
+    people,
+    presetPersonId,
+    isEdit,
+    initial?.slots?.length,
+    applicationLocation,
+  ]);
 
   useEffect(() => {
     if (skipJurisdictionSync.current) {
@@ -207,9 +228,16 @@ export function ProjectForm({
 
   const participantsPayload = useMemo(
     () =>
-      slots.map((slot) =>
-        slot.mode === "existing" && slot.personId
-          ? { personId: slot.personId, role: slot.role }
+      slots.map((slot) => {
+        const kit = customFile
+          ? {
+              programFamily: slot.programFamily,
+              applicationLocation: slot.applicationLocation,
+              needsCustodian: slot.needsCustodian ? ("Y" as const) : ("N" as const),
+            }
+          : {};
+        return slot.mode === "existing" && slot.personId
+          ? { personId: slot.personId, role: slot.role, ...kit }
           : {
               firstName: slot.firstName,
               lastName: slot.lastName,
@@ -219,9 +247,10 @@ export function ProjectForm({
                 ? slot.statusExpiresAt
                 : "",
               role: slot.role,
-            },
-      ),
-    [slots],
+              ...kit,
+            };
+      }),
+    [slots, customFile],
   );
 
   const errorMessage = state.error
@@ -242,7 +271,10 @@ export function ProjectForm({
   }
 
   function addDependent() {
-    setSlots((prev) => [...prev, emptySlot("dependent")]);
+    setSlots((prev) => [
+      ...prev,
+      emptySlot("dependent", { applicationLocation }),
+    ]);
   }
 
   function removeSlot(index: number) {
@@ -462,6 +494,9 @@ export function ProjectForm({
               </option>
             ))}
           </select>
+          {customFile ? (
+            <p className="text-xs text-muted-foreground">{t("customHelp")}</p>
+          ) : null}
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="formLanguage">{t("formLanguage")}</Label>
@@ -478,29 +513,31 @@ export function ProjectForm({
           </select>
           <p className="text-xs text-muted-foreground">{t("formLanguageHelp")}</p>
         </div>
-        {isFederalPermitProgram(programFamily) ? (
+        {isFederalPermitProgram(programFamily) || customFile ? (
           <>
-            <div className="space-y-2">
-              <Label htmlFor="applicationLocation">
-                {t("applicationLocation")}
-              </Label>
-              <select
-                id="applicationLocation"
-                value={applicationLocation}
-                onChange={(e) =>
-                  setApplicationLocation(
-                    e.target.value === "inside" ? "inside" : "outside",
-                  )
-                }
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-              >
-                <option value="outside">{t("locationOutside")}</option>
-                <option value="inside">{t("locationInside")}</option>
-              </select>
-              <p className="text-xs text-muted-foreground">
-                {t("applicationLocationHelp")}
-              </p>
-            </div>
+            {isFederalPermitProgram(programFamily) ? (
+              <div className="space-y-2">
+                <Label htmlFor="applicationLocation">
+                  {t("applicationLocation")}
+                </Label>
+                <select
+                  id="applicationLocation"
+                  value={applicationLocation}
+                  onChange={(e) =>
+                    setApplicationLocation(
+                      e.target.value === "inside" ? "inside" : "outside",
+                    )
+                  }
+                  className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                >
+                  <option value="outside">{t("locationOutside")}</option>
+                  <option value="inside">{t("locationInside")}</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  {t("applicationLocationHelp")}
+                </p>
+              </div>
+            ) : null}
             <div className="space-y-2">
               <Label htmlFor="isCommonLaw">{t("isCommonLaw")}</Label>
               <select
@@ -704,6 +741,76 @@ export function ProjectForm({
                 </div>
               </div>
             )}
+            {customFile ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor={`personProgram-${index}`}>
+                    {t("personProgram")}
+                  </Label>
+                  <select
+                    id={`personProgram-${index}`}
+                    value={slot.programFamily}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      updateSlot(index, {
+                        programFamily: isPermitKitFamily(next)
+                          ? next
+                          : "work_permit",
+                        needsCustodian:
+                          next === "study_permit" ? slot.needsCustodian : false,
+                      });
+                    }}
+                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                  >
+                    {PERMIT_PROGRAM_FAMILIES.map((family) => (
+                      <option key={family} value={family}>
+                        {tp(family)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`personLocation-${index}`}>
+                    {t("applicationLocation")}
+                  </Label>
+                  <select
+                    id={`personLocation-${index}`}
+                    value={slot.applicationLocation}
+                    onChange={(e) =>
+                      updateSlot(index, {
+                        applicationLocation:
+                          e.target.value === "inside" ? "inside" : "outside",
+                      })
+                    }
+                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                  >
+                    <option value="outside">{t("locationOutside")}</option>
+                    <option value="inside">{t("locationInside")}</option>
+                  </select>
+                </div>
+                {slot.programFamily === "study_permit" ? (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor={`personMinor-${index}`}>{t("isMinor")}</Label>
+                    <select
+                      id={`personMinor-${index}`}
+                      value={slot.needsCustodian ? "Y" : "N"}
+                      onChange={(e) =>
+                        updateSlot(index, {
+                          needsCustodian: e.target.value === "Y",
+                        })
+                      }
+                      className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                    >
+                      <option value="N">{t("commonLawNo")}</option>
+                      <option value="Y">{t("commonLawYes")}</option>
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      {t("isMinorHelp")}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ))}
       </div>

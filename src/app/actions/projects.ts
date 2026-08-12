@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { ParticipantRole, ProgramFamily, ProjectStatus } from "@/db/schema";
 import {
   PROGRAM_FAMILIES,
+  SELECTABLE_PROGRAM_FAMILIES,
   buildProjectTitle,
   defaultJurisdictionForProgram,
   type ProjectComposition,
@@ -53,6 +54,9 @@ const participantInputSchema = z.object({
     "sponsor",
     "accompanying",
   ]),
+  programFamily: z.enum(["study_permit", "work_permit", "visitor"]).optional(),
+  applicationLocation: z.enum(["outside", "inside"]).optional(),
+  needsCustodian: z.enum(["Y", "N"]).optional(),
 });
 
 const statusSchema = z.enum([
@@ -98,6 +102,33 @@ export type ProjectActionState = {
 /** @deprecated Prefer ProjectActionState */
 export type CreateProjectState = ProjectActionState;
 
+function personKitsFromParticipantInputs(
+  people: Array<{ id: string }>,
+  participants: Array<{
+    programFamily?: "study_permit" | "work_permit" | "visitor";
+    applicationLocation?: "outside" | "inside";
+    needsCustodian?: "Y" | "N";
+  }>,
+) {
+  const kits: Record<
+    string,
+    {
+      programFamily: "study_permit" | "work_permit" | "visitor";
+      applicationLocation: "outside" | "inside";
+      needsCustodian?: boolean;
+    }
+  > = {};
+  people.forEach((person, index) => {
+    const input = participants[index];
+    kits[person.id] = {
+      programFamily: input?.programFamily ?? "work_permit",
+      applicationLocation: input?.applicationLocation ?? "outside",
+      ...(input?.needsCustodian === "Y" ? { needsCustodian: true } : {}),
+    };
+  });
+  return kits;
+}
+
 function programLabel(family: ProgramFamily, locale: string) {
   const labels: Record<ProgramFamily, { en: string; fr: string }> = {
     study_permit: { en: "Study permit", fr: "Permis d’études" },
@@ -111,7 +142,7 @@ function programLabel(family: ProgramFamily, locale: string) {
     quebec_pstq: { en: "Quebec PSTQ", fr: "PSTQ Québec" },
     quebec_family: { en: "Quebec family", fr: "Réunification Québec" },
     quebec_temporary: { en: "Quebec temporary", fr: "Temporaire Québec" },
-    other: { en: "Other", fr: "Autre" },
+    other: { en: "Custom project", fr: "Projet personnalisé" },
   };
   return locale === "fr" ? labels[family].fr : labels[family].en;
 }
@@ -298,6 +329,9 @@ export async function createProjectAction(
   if ("error" in parsed) return { error: parsed.error };
 
   const { data } = parsed;
+  if (!SELECTABLE_PROGRAM_FAMILIES.includes(data.programFamily)) {
+    return { error: "invalid" };
+  }
   const orgId = await requireOrganizationId();
   if (!orgId) {
     redirect(`/${data.locale}/onboarding`);
@@ -379,7 +413,9 @@ export async function createProjectAction(
     const {
       detectCommonLaw,
       detectMinor,
+      expandMixedPersonKits,
       expandSeedsForParticipants,
+      isCustomProgram,
       resolveApplicationLocation,
       seedFormsForProgram,
     } = await import("@/lib/ircc/kits");
@@ -398,14 +434,29 @@ export async function createProjectAction(
       ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
       ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
     ];
-    const seeds = expandSeedsForParticipants(
-      seedFormsForProgram(data.programFamily, {
-        applicationLocation,
-        isCommonLaw,
-        needsCustodian,
-      }),
-      personIds,
-    );
+    const custom = isCustomProgram(data.programFamily);
+    const personKits = custom
+      ? personKitsFromParticipantInputs(resolved.people, data.participants)
+      : {};
+    const seeds = custom
+      ? expandMixedPersonKits(
+          personIds.map((personId) => ({
+            personId,
+            programFamily: personKits[personId]?.programFamily ?? "work_permit",
+            applicationLocation:
+              personKits[personId]?.applicationLocation ?? "outside",
+            needsCustodian: personKits[personId]?.needsCustodian,
+          })),
+          { isCommonLaw },
+        )
+      : expandSeedsForParticipants(
+          seedFormsForProgram(data.programFamily, {
+            applicationLocation,
+            isCommonLaw,
+            needsCustodian,
+          }),
+          personIds,
+        );
     const { error: formsError } = await supabase.from("project_forms").insert(
       seeds.map((seed) => ({
         organization_id: orgId,
@@ -450,6 +501,7 @@ export async function createProjectAction(
         isCommonLaw: isCommonLaw ? "Y" : "N",
         needsCustodian: needsCustodian ? "Y" : "N",
       },
+      personKits: custom ? personKits : undefined,
     });
 
     await supabase.from("project_form_answers").insert({
@@ -576,7 +628,7 @@ export async function updateProjectAction(
     });
     const formLanguage = toIrccFormLanguage(data.formLanguage);
     const repAnswers = mergeAccountRepIntoAnswers({}, repProfile);
-    const { detectCommonLaw, detectMinor, resolveApplicationLocation } =
+    const { detectCommonLaw, detectMinor, isCustomProgram, resolveApplicationLocation } =
       await import("@/lib/ircc/kits");
     store.project.applicationLocation = resolveApplicationLocation(
       data.applicationLocation,
@@ -596,6 +648,14 @@ export async function updateProjectAction(
       })
         ? "Y"
         : "N";
+    }
+    if (isCustomProgram(data.programFamily)) {
+      store.project.personKits = personKitsFromParticipantInputs(
+        resolved.people,
+        data.participants,
+      );
+    } else {
+      delete store.project.personKits;
     }
 
     for (const person of resolved.people) {
@@ -701,10 +761,18 @@ export async function updateProjectAction(
   }
 
   try {
-    const { kitOptionsFromAnswersStore, reconcileProjectKitForms } =
-      await import("@/lib/ircc/project-forms");
-    const { detectCommonLaw, detectMinor, resolveApplicationLocation } =
-      await import("@/lib/ircc/kits");
+    const {
+      kitOptionsFromAnswersStore,
+      personKitAssignments,
+      personKitsFromAnswersStore,
+      reconcileProjectKitForms,
+    } = await import("@/lib/ircc/project-forms");
+    const {
+      detectCommonLaw,
+      detectMinor,
+      isCustomProgram,
+      resolveApplicationLocation,
+    } = await import("@/lib/ircc/kits");
     const { data: latestAnswers } = await supabase
       .from("project_form_answers")
       .select("answers")
@@ -725,14 +793,15 @@ export async function updateProjectAction(
       resolved.people.map((p) => p.role),
       (existingFormRows ?? []).map((r: { form_code: string }) => r.form_code),
     );
+    const personIds = [
+      ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
+      ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
+    ];
     await reconcileProjectKitForms({
       organizationId: orgId,
       projectId,
       programFamily: data.programFamily,
-      personIds: [
-        ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
-        ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
-      ],
+      personIds,
       applicationLocation: resolveApplicationLocation(
         data.applicationLocation,
         data.programFamily,
@@ -748,6 +817,9 @@ export async function updateProjectAction(
         data.needsCustodian != null
           ? detectMinor({ needsCustodian: data.needsCustodian })
           : kit.needsCustodian,
+      personKits: isCustomProgram(data.programFamily)
+        ? personKitAssignments(personIds, personKitsFromAnswersStore(store))
+        : undefined,
     });
   } catch (error) {
     console.error("sync person forms after participant update:", error);
