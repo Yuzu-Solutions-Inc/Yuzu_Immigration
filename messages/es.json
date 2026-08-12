@@ -888,6 +888,67 @@
     }
   },
   "legal": {
-    "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI)."
+    "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
+    "privacyLink": "Privacidad",
+    "privacyTitle": "Política de privacidad",
+    "privacyUpdated": "Última actualización: 12 de agosto de 2026",
+    "privacyIntro": "My Consultant (operado por Yuzu Solutions) es una plataforma de gestión para consultores de inmigración canadienses. Esta política explica cómo se recopila, usa, divulga y protege la información personal conforme a PIPEDA y a las expectativas de confidencialidad profesional.",
+    "backHome": "Volver al inicio",
+    "consentTitle": "Cómo se usa su información",
+    "consentBody": "Al continuar, usted proporciona información personal (y documentos) para que su consultor de inmigración prepare y gestione su expediente. La información se almacena en Canadá, se cifra en tránsito y en reposo para los archivos cargados, y solo es accesible para su firma a través de este enlace seguro. Consulte nuestra Política de privacidad para derechos, retención y contacto.",
+    "sections": {
+      "controller": {
+        "title": "1. Quién es responsable",
+        "body": "Su firma consultora (la organización que usa My Consultant) suele ser la organización que decide por qué y cómo se trata su información personal de cliente para servicios de inmigración.\n\nYuzu Solutions opera el software My Consultant y trata esa información en nombre de la firma como proveedor / encargado del tratamiento. Para datos de cuenta y facturación del personal de la firma, Yuzu Solutions es la organización responsable."
+      },
+      "purposes": {
+        "title": "2. Finalidades",
+        "body": "Tratamos información personal para:\n• Proveer el CRM, formularios, documentos y enlaces compartidos\n• Autenticar al personal y, cuando corresponda, el acceso al portal del cliente\n• Mantener la seguridad, prevenir abusos y mejorar la fiabilidad\n• Cumplir obligaciones legales y profesionales aplicables\n\nNo vendemos información personal."
+      },
+      "collection": {
+        "title": "3. Qué recopilamos",
+        "body": "Según el uso del producto, puede incluir:\n• Datos de cuenta del personal (nombre, correo, identificadores de autenticación, perfil de representante)\n• Identidad y contacto del cliente introducidos por la firma o el cliente\n• Respuestas a cuestionarios y datos de formularios\n• Documentos de apoyo cargados (almacenados cifrados)\n• Registros técnicos necesarios para seguridad y operaciones\n\nLas firmas deben recopilar solo lo necesario para el encargo."
+      },
+      "legalBasis": {
+        "title": "4. Consentimiento y aviso",
+        "body": "Las firmas son responsables de obtener un consentimiento significativo cuando la ley lo exige, y de explicar sus propios contratos y prácticas de privacidad.\n\nLos enlaces compartidos muestran un aviso breve antes de enviar documentos o formularios. Continuar usando esos enlaces constituye consentimiento al tratamiento descrito para el expediente de inmigración, sujeto a las instrucciones de la firma y a la ley aplicable."
+      },
+      "safeguards": {
+        "title": "5. Medidas de seguridad",
+        "body": "Aplicamos salvaguardas administrativas, técnicas y organizativas proporcionales a la sensibilidad de los datos de inmigración, incluyendo:\n• Cifrado en tránsito (TLS)\n• Cifrado en reposo en la plataforma, más AES-256-GCM a nivel de aplicación para documentos del cliente\n• Controles de acceso por fila limitados a cada firma\n• Privilegios service_role restringidos a rutas de servidor auditadas\n• Diseño de mínimo privilegio para funciones privilegiadas de base de datos\n\nNingún método es perfectamente seguro; reducimos el riesgo de forma continua."
+      },
+      "retention": {
+        "title": "6. Conservación",
+        "body": "Los registros de proyectos y clientes se conservan mientras el espacio de la firma esté activo y según los controles de retención del producto (alineados con la retención típica del College of Immigration and Citizenship Consultants de al menos seis años tras el cierre del expediente).\n\nLas firmas siguen siendo responsables de sus deberes profesionales de retención y destrucción segura."
+      },
+      "sharing": {
+        "title": "7. Compartir y subprocesadores",
+        "body": "La información personal puede ser tratada por proveedores de infraestructura que ayudan a operar el servicio (por ejemplo base de datos/autenticación/almacenamiento y alojamiento). Esos proveedores están sujetos a contratos que exigen protección adecuada.\n\nNo divulgamos el contenido de expedientes a terceros para su marketing. Puede haber divulgación si lo exige la ley, para proteger derechos y seguridad, o con autorización adecuada."
+      },
+      "transfers": {
+        "title": "8. Ubicación del tratamiento",
+        "body": "Los datos principales de la aplicación se alojan en Canadá (AWS Canada Central). Algunas herramientas operativas (monitorización de errores o correo, si están habilitadas) pueden tratar metadatos limitados en otras regiones. Actualizaremos esta política cuando cambien subprocesadores o regiones."
+      },
+      "rights": {
+        "title": "9. Sus derechos",
+        "body": "Sujeto a PIPEDA y otras leyes aplicables, las personas pueden solicitar acceso, corrección o información sobre el tratamiento de sus datos.\n\nLos clientes deben contactar primero a su firma. El personal puede usar herramientas de exportación del producto cuando estén disponibles. También puede contactar a Yuzu Solutions abajo, o presentar una queja ante el Comisionado de Privacidad de Canadá."
+      },
+      "breach": {
+        "title": "10. Incidentes",
+        "body": "Mantenemos un proceso de incidentes para evaluar vulneraciones de privacidad. Cuando una vulneración cree un riesgo real de daño significativo, notificaremos a las organizaciones y personas afectadas e informaremos al OPC según la ley, y apoyaremos a las firmas en sus propias notificaciones."
+      },
+      "children": {
+        "title": "11. Menores y dependientes",
+        "body": "El servicio puede almacenar información de menores cuando forman parte de un expediente de inmigración. Las firmas deben asegurar que la recopilación sea necesaria y esté debidamente autorizada."
+      },
+      "changes": {
+        "title": "12. Cambios",
+        "body": "Podemos actualizar esta política para reflejar cambios de producto, legales o de seguridad. La fecha de «Última actualización» cambiará entonces. Los cambios materiales se señalarán en el producto o a los administradores de la firma cuando sea práctico."
+      },
+      "contact": {
+        "title": "13. Contacto",
+        "body": "Consultas de privacidad sobre la plataforma My Consultant:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente de inmigración."
+      }
+    }
   }
 }

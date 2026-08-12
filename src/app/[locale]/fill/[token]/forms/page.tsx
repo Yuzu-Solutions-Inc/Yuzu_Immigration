@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClientFillForm } from "@/components/forms/client-fill-form";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
+import { ClientPrivacyNotice } from "@/components/legal/client-privacy-notice";
 import { Link } from "@/i18n/navigation";
 import { loadShareContext } from "@/lib/ircc/project-forms";
 
@@ -40,13 +41,14 @@ export default async function ClientFillFormsPage({
 
   return (
     <div className="space-y-4">
-      <div className="mx-auto max-w-2xl px-4 pt-6">
+      <div className="mx-auto max-w-2xl space-y-4 px-4 pt-6">
         <Link
           href={`/fill/${token}`}
           className="text-sm font-medium text-action hover:underline"
         >
           ← {td("backToLanding")}
         </Link>
+        <ClientPrivacyNotice token={token} />
       </div>
       <ClientFillForm
         token={token}

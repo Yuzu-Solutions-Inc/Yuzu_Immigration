@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { PrivacyLink } from "@/components/legal/privacy-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,10 @@ export default async function MarketingHomePage({
           </Link>
         </div>
       </section>
+
+      <footer className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-end px-6 pb-6">
+        <PrivacyLink />
+      </footer>
     </main>
   );
 }

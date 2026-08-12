@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClientDocumentsUpload } from "@/components/documents/client-documents-upload";
+import { ClientPrivacyNotice } from "@/components/legal/client-privacy-notice";
 import { Link } from "@/i18n/navigation";
 import { seedShareDocumentDefaults } from "@/lib/documents/share-seed";
 import { listShareDocumentRequests } from "@/lib/documents/service";
@@ -71,6 +72,8 @@ export default async function ClientFillDocumentsPage({
           {String(ctx.project.title)}
         </p>
       </header>
+
+      <ClientPrivacyNotice token={token} />
 
       <ClientDocumentsUpload
         token={token}

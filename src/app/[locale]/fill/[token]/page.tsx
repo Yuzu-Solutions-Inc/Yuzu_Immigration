@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { ClientPrivacyNotice } from "@/components/legal/client-privacy-notice";
 import { Link } from "@/i18n/navigation";
 import { seedShareDocumentDefaults } from "@/lib/documents/share-seed";
 import { listShareDocumentRequests } from "@/lib/documents/service";
@@ -59,6 +60,8 @@ export default async function ClientFillLandingPage({
           })}
         </p>
       </header>
+
+      <ClientPrivacyNotice token={token} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Link

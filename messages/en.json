@@ -888,6 +888,67 @@
     }
   },
   "legal": {
-    "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI)."
+    "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
+    "privacyLink": "Privacy",
+    "privacyTitle": "Privacy Policy",
+    "privacyUpdated": "Last updated: 12 August 2026",
+    "privacyIntro": "My Consultant (operated by Yuzu Solutions) is a practice-management platform for Canadian immigration consultants. This policy explains how personal information is collected, used, disclosed, and protected in line with PIPEDA and professional confidentiality expectations for regulated consultants.",
+    "backHome": "Back to home",
+    "consentTitle": "How your information is used",
+    "consentBody": "By continuing, you provide personal information (and documents) so your immigration consultant can prepare and manage your file. Information is stored in Canada, encrypted in transit and at rest for uploaded files, and accessible only to your consulting firm through this secure link. See our Privacy Policy for rights, retention, and contact details.",
+    "sections": {
+      "controller": {
+        "title": "1. Who is responsible",
+        "body": "Your consulting firm (the organization using My Consultant) is generally the organization that decides why and how your client personal information is processed for immigration services.\n\nYuzu Solutions operates the My Consultant software and processes that information on behalf of the firm as a service provider / processor. For account and billing data about firm staff users, Yuzu Solutions is the organization responsible for that information."
+      },
+      "purposes": {
+        "title": "2. Purposes",
+        "body": "We process personal information to:\n• Provide the CRM, form, document, and share-link features firms use to serve clients\n• Authenticate staff and (where enabled) client portal access\n• Maintain security, prevent abuse, and improve reliability\n• Meet legal and professional obligations applicable to the service\n\nWe do not sell personal information."
+      },
+      "collection": {
+        "title": "3. What we collect",
+        "body": "Depending on how the product is used, this may include:\n• Staff account details (name, email, authentication identifiers, representative profile fields)\n• Client identity and contact details entered by the firm or the client\n• Immigration-related questionnaire answers and generated form data\n• Uploaded supporting documents (stored as ciphertext)\n• Technical logs needed for security and operations (IP, timestamps, action metadata)\n\nFirms should collect only what is needed for the engagement."
+      },
+      "legalBasis": {
+        "title": "4. Consent and notice",
+        "body": "Firms are responsible for obtaining meaningful consent from clients where required, and for explaining their own retainers and privacy practices.\n\nClient share links show a short notice before documents or forms are submitted. Continuing to use those links constitutes consent to the described processing for the immigration file, subject to the firm’s instructions and applicable law."
+      },
+      "safeguards": {
+        "title": "5. Safeguards",
+        "body": "We apply administrative, technical, and organizational safeguards proportionate to the sensitivity of immigration data, including:\n• Encryption in transit (TLS)\n• Encryption at rest for platform storage, plus application-level AES-256-GCM for client document files\n• Row-level access controls scoped to each consulting firm\n• Service-role privileges restricted to audited server paths\n• Least-privilege design for privileged database functions\n\nNo method of transmission or storage is perfectly secure; we work continuously to reduce risk."
+      },
+      "retention": {
+        "title": "6. Retention",
+        "body": "Project and client records are retained while the firm’s workspace is active and according to retention controls in the product (aligned with typical College of Immigration and Citizenship Consultants closed-file retention of at least six years after file closure).\n\nFirms remain responsible for their professional retention and secure destruction duties. When a firm deletes or destroys records through the product, we remove associated application data and encrypted objects subject to backup cycles."
+      },
+      "sharing": {
+        "title": "7. Sharing and subprocessors",
+        "body": "Personal information may be processed by infrastructure providers that help us run the service (for example database/auth/storage and application hosting). Those providers are bound by contracts requiring appropriate protection.\n\nWe do not disclose client file contents to third parties for their own marketing. Disclosure may occur if required by law, to protect rights and security, or with appropriate authorization."
+      },
+      "transfers": {
+        "title": "8. Location of processing",
+        "body": "Primary application data for this product is hosted in Canada (AWS Canada Central). Some operational tooling (for example error monitoring or email delivery, if enabled) may process limited metadata in other regions. We will update this policy and firm documentation when subprocessors or regions change."
+      },
+      "rights": {
+        "title": "9. Your rights",
+        "body": "Subject to PIPEDA and other applicable law, individuals may request access to, correction of, or information about the handling of their personal information.\n\nClients should normally contact their consulting firm first. Firm staff may use product export tools where available. You may also contact Yuzu Solutions using the details below. You may complain to the Office of the Privacy Commissioner of Canada."
+      },
+      "breach": {
+        "title": "10. Breaches",
+        "body": "We maintain an incident process to assess privacy breaches. Where a breach creates a real risk of significant harm, we will notify affected organizations and individuals and report to the OPC as required by law, and support firms with information they need for their own notifications."
+      },
+      "children": {
+        "title": "11. Children and dependents",
+        "body": "The service may store information about minors when they are part of an immigration file. Firms must ensure collection is necessary and appropriately authorized by a parent, guardian, or as otherwise permitted by law."
+      },
+      "changes": {
+        "title": "12. Changes to this policy",
+        "body": "We may update this policy to reflect product, legal, or security changes. The “Last updated” date will change when we do. Material changes will be highlighted in-product or by notice to firm administrators when practical."
+      },
+      "contact": {
+        "title": "13. Contact",
+        "body": "Privacy inquiries for the My Consultant platform:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file."
+      }
+    }
   }
 }

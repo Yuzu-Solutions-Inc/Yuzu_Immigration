@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { PrivacyLink } from "@/components/legal/privacy-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SettingsNavLinks } from "@/components/layout/settings-menu";
 import { buttonVariants } from "@/components/ui/button";
@@ -99,6 +100,10 @@ function SidebarBody({
             {auth("signOut")}
           </button>
         </form>
+        <PrivacyLink
+          onNavigate={onNavigate}
+          className="block px-3 py-1 text-sidebar-foreground/45 hover:text-sidebar-foreground/70"
+        />
       </div>
     </div>
   );

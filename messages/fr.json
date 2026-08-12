@@ -888,6 +888,67 @@
     }
   },
   "legal": {
-    "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI)."
+    "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI).",
+    "privacyLink": "Confidentialité",
+    "privacyTitle": "Politique de confidentialité",
+    "privacyUpdated": "Dernière mise à jour : 12 août 2026",
+    "privacyIntro": "My Consultant (exploité par Yuzu Solutions) est une plateforme de gestion de pratique pour les consultants en immigration au Canada. Cette politique explique comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés conformément à la LPRPDE et aux attentes de confidentialité professionnelle.",
+    "backHome": "Retour à l’accueil",
+    "consentTitle": "Utilisation de vos renseignements",
+    "consentBody": "En continuant, vous fournissez des renseignements personnels (et des documents) afin que votre consultant en immigration puisse préparer et gérer votre dossier. Les renseignements sont hébergés au Canada, chiffrés en transit et au repos pour les fichiers téléversés, et accessibles uniquement à votre cabinet via ce lien sécurisé. Consultez notre politique de confidentialité pour les droits, la conservation et les coordonnées.",
+    "sections": {
+      "controller": {
+        "title": "1. Responsables",
+        "body": "Votre cabinet (l’organisation qui utilise My Consultant) est généralement l’organisation qui décide pourquoi et comment vos renseignements clients sont traités pour les services d’immigration.\n\nYuzu Solutions exploite le logiciel My Consultant et traite ces renseignements pour le compte du cabinet à titre de fournisseur de services / sous-traitant. Pour les données de compte et de facturation du personnel du cabinet, Yuzu Solutions est l’organisation responsable."
+      },
+      "purposes": {
+        "title": "2. Fins",
+        "body": "Nous traitons les renseignements personnels afin de :\n• Fournir le CRM, les formulaires, les documents et les liens de partage\n• Authentifier le personnel et, le cas échéant, l’accès portail client\n• Assurer la sécurité, prévenir les abus et maintenir la fiabilité\n• Respecter les obligations légales et professionnelles applicables\n\nNous ne vendons pas les renseignements personnels."
+      },
+      "collection": {
+        "title": "3. Ce que nous recueillons",
+        "body": "Selon l’utilisation du produit, cela peut inclure :\n• Coordonnées du personnel (nom, courriel, identifiants d’authentification, profil de représentant)\n• Identité et coordonnées des clients saisies par le cabinet ou le client\n• Réponses aux questionnaires et données de formulaires\n• Documents justificatifs téléversés (stockés sous forme de texte chiffré)\n• Journaux techniques nécessaires à la sécurité et aux opérations\n\nLes cabinets ne doivent recueillir que ce qui est nécessaire au mandat."
+      },
+      "legalBasis": {
+        "title": "4. Consentement et avis",
+        "body": "Les cabinets sont responsables d’obtenir un consentement valable lorsque requis, et d’expliquer leurs propres mandats et pratiques de confidentialité.\n\nLes liens de partage affichent un court avis avant la soumission de documents ou de formulaires. Continuer d’utiliser ces liens constitue un consentement au traitement décrit pour le dossier d’immigration, sous réserve des instructions du cabinet et de la loi applicable."
+      },
+      "safeguards": {
+        "title": "5. Mesures de protection",
+        "body": "Nous appliquons des mesures administratives, techniques et organisationnelles proportionnées à la sensibilité des données d’immigration, notamment :\n• Chiffrement en transit (TLS)\n• Chiffrement au repos pour le stockage, plus AES-256-GCM au niveau applicatif pour les documents clients\n• Contrôles d’accès par ligne limités à chaque cabinet\n• Privilèges service_role limités à des chemins serveur audités\n• Conception à moindre privilège pour les fonctions base de données sensibles\n\nAucune méthode n’est parfaitement sûre; nous réduisons les risques de façon continue."
+      },
+      "retention": {
+        "title": "6. Conservation",
+        "body": "Les dossiers projet et client sont conservés tant que l’espace de travail du cabinet est actif et selon les contrôles de conservation du produit (alignés sur la conservation typique du Collège des consultants en immigration et en citoyenneté d’au moins six ans après la fermeture du dossier).\n\nLes cabinets demeurent responsables de leurs obligations professionnelles de conservation et de destruction sécuritaire."
+      },
+      "sharing": {
+        "title": "7. Communication et sous-traitants",
+        "body": "Les renseignements personnels peuvent être traités par des fournisseurs d’infrastructure qui nous aident à exploiter le service (par ex. base de données / authentification / stockage et hébergement). Ces fournisseurs sont liés par des contrats exigeant une protection appropriée.\n\nNous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou avec une autorisation appropriée."
+      },
+      "transfers": {
+        "title": "8. Lieu de traitement",
+        "body": "Les données applicatives principales de ce produit sont hébergées au Canada (AWS Canada Central). Certains outils opérationnels (surveillance d’erreurs ou courriel, le cas échéant) peuvent traiter des métadonnées limitées ailleurs. Nous mettrons à jour cette politique lorsque les sous-traitants ou régions changent."
+      },
+      "rights": {
+        "title": "9. Vos droits",
+        "body": "Sous réserve de la LPRPDE et des autres lois applicables, les personnes peuvent demander l’accès, la correction ou des renseignements sur le traitement de leurs données.\n\nLes clients devraient d’abord contacter leur cabinet. Le personnel peut utiliser les outils d’export du produit lorsque disponibles. Vous pouvez aussi contacter Yuzu Solutions ci-dessous, ou déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada."
+      },
+      "breach": {
+        "title": "10. Atteintes",
+        "body": "Nous maintenons un processus d’incident pour évaluer les atteintes à la vie privée. Lorsqu’une atteinte crée un risque réel de préjudice grave, nous aviserons les organisations et personnes concernées et déclarerons au CPVP comme l’exige la loi, et appuierons les cabinets pour leurs propres avis."
+      },
+      "children": {
+        "title": "11. Enfants et personnes à charge",
+        "body": "Le service peut stocker des renseignements sur des mineurs lorsqu’ils font partie d’un dossier d’immigration. Les cabinets doivent s’assurer que la collecte est nécessaire et dûment autorisée."
+      },
+      "changes": {
+        "title": "12. Modifications",
+        "body": "Nous pouvons mettre à jour cette politique pour refléter des changements produit, juridiques ou de sécurité. La date de « Dernière mise à jour » changera alors. Les changements importants seront signalés dans le produit ou aux administrateurs du cabinet lorsque possible."
+      },
+      "contact": {
+        "title": "13. Contact",
+        "body": "Demandes de confidentialité pour la plateforme My Consultant :\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier d’immigration."
+      }
+    }
   }
 }
