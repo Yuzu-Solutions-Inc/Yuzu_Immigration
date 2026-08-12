@@ -322,24 +322,23 @@ export async function syncPersonScopedFormsForParticipants(input: {
 }
 
 const OBSOLETE_WORK_PERMIT_FORMS = new Set(["imm5488", "imm5556"]);
-const MANAGED_WORK_PERMIT_FORMS = new Set([
+/** In/out primary + family forms are chosen at project creation and never swapped. */
+const FROZEN_WORK_PERMIT_FORMS = new Set([
   "imm1295",
   "imm5710",
   "imm5707",
   "imm5406",
-  "imm5476",
-  "imm5409",
-  "imm5488",
-  "imm5556",
 ]);
+const PRIMARY_WORK_FORMS = new Set(["imm1295", "imm5710"]);
+const FAMILY_WORK_FORMS = new Set(["imm5707", "imm5406"]);
 
 function formRowKey(formCode: string, personId: string | null): string {
   return `${formCode}:${personId ?? ""}`;
 }
 
 /**
- * Align a work-permit file to the federal kit (in/out + common-law + always 5476).
- * Removes old WP checklists. Study / other programs only sync person copies.
+ * Keep a work-permit file on its creation kit (in/out never swaps).
+ * May add IMM 5476 / 5409, strip old checklists, and copy person-scoped rows.
  */
 export async function reconcileProjectKitForms(input: {
   organizationId: string;
@@ -361,21 +360,6 @@ export async function reconcileProjectKitForms(input: {
     return;
   }
 
-  const location = resolveApplicationLocation(
-    input.applicationLocation,
-    input.programFamily,
-  );
-  const desired = expandSeedsForParticipants(
-    seedFormsForProgram(input.programFamily as ProgramFamily, {
-      applicationLocation: location,
-      isCommonLaw: input.isCommonLaw,
-    }),
-    input.personIds,
-  );
-  const desiredKeys = new Set(
-    desired.map((seed) => formRowKey(seed.formCode, seed.personId)),
-  );
-
   const { data: existing, error } = await supabase
     .from("project_forms")
     .select("id, form_code, person_id, is_required, sort_order")
@@ -395,10 +379,39 @@ export async function reconcileProjectKitForms(input: {
     sort_order: number;
   }>;
 
+  const existingCodes = new Set(rows.map((row) => row.form_code));
+  const location = resolveApplicationLocation(
+    inferApplicationLocationFromForms([...existingCodes]) ||
+      input.applicationLocation,
+    input.programFamily,
+  );
+  const desired = expandSeedsForParticipants(
+    seedFormsForProgram(input.programFamily as ProgramFamily, {
+      applicationLocation: location,
+      isCommonLaw: input.isCommonLaw,
+    }),
+    input.personIds,
+  ).filter((seed) => {
+    if (PRIMARY_WORK_FORMS.has(seed.formCode) && [...existingCodes].some((c) => PRIMARY_WORK_FORMS.has(c))) {
+      return existingCodes.has(seed.formCode);
+    }
+    if (FAMILY_WORK_FORMS.has(seed.formCode) && [...existingCodes].some((c) => FAMILY_WORK_FORMS.has(c))) {
+      return existingCodes.has(seed.formCode);
+    }
+    return true;
+  });
+  const desiredKeys = new Set(
+    desired.map((seed) => formRowKey(seed.formCode, seed.personId)),
+  );
+
   const toDelete = rows.filter((row) => {
     if (OBSOLETE_WORK_PERMIT_FORMS.has(row.form_code)) return true;
-    if (!MANAGED_WORK_PERMIT_FORMS.has(row.form_code)) return false;
-    return !desiredKeys.has(formRowKey(row.form_code, row.person_id));
+    if (FROZEN_WORK_PERMIT_FORMS.has(row.form_code)) return false;
+    if (row.form_code === "imm5476") return false;
+    if (row.form_code === "imm5409") {
+      return input.isCommonLaw === false && row.is_required;
+    }
+    return false;
   });
 
   if (toDelete.length > 0) {
@@ -465,7 +478,7 @@ export function kitOptionsFromAnswersStore(
 
   return {
     applicationLocation: resolveApplicationLocation(
-      projectLoc || personLoc || inferred,
+      inferred || projectLoc || personLoc,
       programFamily,
     ),
     isCommonLaw: detectCommonLaw({
@@ -804,6 +817,7 @@ export async function saveShareAnswers(input: {
     project?.form_language,
   );
   cleaned.hasRepresentative = "Y";
+  delete cleaned.applicationLocation;
 
   store = mergePersonQuestionnaireSave(
     store,

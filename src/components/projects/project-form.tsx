@@ -200,10 +200,10 @@ export function ProjectForm({
       return;
     }
     setJurisdiction(defaultJurisdictionForProgram(programFamily));
-    if (!initial?.applicationLocation) {
+    if (!isEdit) {
       setApplicationLocation(defaultApplicationLocation(programFamily));
     }
-  }, [programFamily, initial?.applicationLocation]);
+  }, [programFamily, isEdit]);
 
   const participantsPayload = useMemo(
     () =>
@@ -491,21 +491,34 @@ export function ProjectForm({
               <Label htmlFor="applicationLocation">
                 {t("applicationLocation")}
               </Label>
-              <select
-                id="applicationLocation"
-                value={applicationLocation}
-                onChange={(e) =>
-                  setApplicationLocation(
-                    e.target.value === "inside" ? "inside" : "outside",
-                  )
-                }
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-              >
-                <option value="outside">{t("locationOutside")}</option>
-                <option value="inside">{t("locationInside")}</option>
-              </select>
+              {isEdit ? (
+                <p
+                  id="applicationLocation"
+                  className="flex h-10 items-center rounded-xl border border-border bg-muted px-3 text-[15px] text-brand"
+                >
+                  {applicationLocation === "inside"
+                    ? t("locationInside")
+                    : t("locationOutside")}
+                </p>
+              ) : (
+                <select
+                  id="applicationLocation"
+                  value={applicationLocation}
+                  onChange={(e) =>
+                    setApplicationLocation(
+                      e.target.value === "inside" ? "inside" : "outside",
+                    )
+                  }
+                  className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                >
+                  <option value="outside">{t("locationOutside")}</option>
+                  <option value="inside">{t("locationInside")}</option>
+                </select>
+              )}
               <p className="text-xs text-muted-foreground">
-                {t("applicationLocationHelp")}
+                {isEdit
+                  ? t("applicationLocationLockedHelp")
+                  : t("applicationLocationHelp")}
               </p>
             </div>
             <div className="space-y-2">

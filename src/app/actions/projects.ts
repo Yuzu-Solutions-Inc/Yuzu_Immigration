@@ -565,15 +565,7 @@ export async function updateProjectAction(
     });
     const formLanguage = toIrccFormLanguage(data.formLanguage);
     const repAnswers = mergeAccountRepIntoAnswers({}, repProfile);
-    const { detectCommonLaw, resolveApplicationLocation } = await import(
-      "@/lib/ircc/kits"
-    );
-    if (data.applicationLocation) {
-      store.project.applicationLocation = resolveApplicationLocation(
-        data.applicationLocation,
-        data.programFamily,
-      );
-    }
+    const { detectCommonLaw } = await import("@/lib/ircc/kits");
     if (data.isCommonLaw) {
       store.project.isCommonLaw = detectCommonLaw({
         isCommonLaw: data.isCommonLaw,
@@ -688,9 +680,7 @@ export async function updateProjectAction(
   try {
     const { kitOptionsFromAnswersStore, reconcileProjectKitForms } =
       await import("@/lib/ircc/project-forms");
-    const { detectCommonLaw, resolveApplicationLocation } = await import(
-      "@/lib/ircc/kits"
-    );
+    const { detectCommonLaw } = await import("@/lib/ircc/kits");
     const { data: latestAnswers } = await supabase
       .from("project_form_answers")
       .select("answers")
@@ -716,9 +706,7 @@ export async function updateProjectAction(
       projectId,
       programFamily: data.programFamily,
       personIds: resolved.people.map((p) => p.id),
-      applicationLocation: data.applicationLocation
-        ? resolveApplicationLocation(data.applicationLocation, data.programFamily)
-        : kit.applicationLocation,
+      applicationLocation: kit.applicationLocation,
       isCommonLaw:
         data.isCommonLaw != null
           ? detectCommonLaw({

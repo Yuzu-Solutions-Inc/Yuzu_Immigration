@@ -137,6 +137,7 @@ export async function saveProjectAnswersAction(
   const email = String(person.email ?? "").trim();
   if (email) answers.email = email;
   answers.hasRepresentative = "Y";
+  delete answers.applicationLocation;
   answers = withProjectFormLanguage(
     mergeAccountRepIntoAnswers(answers, repProfile),
     project?.form_language,

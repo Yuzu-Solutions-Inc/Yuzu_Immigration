@@ -945,18 +945,6 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
 
   // —— Work permit details ——
   {
-    key: "applicationLocation",
-    section: "work",
-    type: "select",
-    required: true,
-    options: [
-      { value: "outside", labelKey: "locationOutside" },
-      { value: "inside", labelKey: "locationInside" },
-    ],
-    forms: [...WORK],
-    helpKey: "applicationLocationHelp",
-  },
-  {
     key: "workPermitType",
     section: "work",
     type: "select",
