@@ -394,7 +394,7 @@
       "generated": "Généré"
     },
     "shareTitle": "Lien client sécurisé",
-    "shareHelp": "Lien sécurisé pour que le client remplisse et enregistre. Expire après 30 jours. Les réponses restent si le lien meurt — générez-en un nouveau en tout temps.",
+    "shareHelp": "Lien sécurisé pour déposer des documents et remplir le questionnaire. Expire après 30 jours. Réponses et fichiers restent si le lien meurt — générez-en un nouveau en tout temps.",
     "shareActive": "Un lien est actif jusqu’au {date}.",
     "shareInactive": "Aucun lien client actif.",
     "shareCopy": "Copiez ce lien maintenant — il n’est montré qu’une fois",
@@ -820,6 +820,60 @@
     "addRow": "Ajouter une ligne",
     "removeRow": "Retirer",
     "rowLabel": "Ligne {n}"
+  },
+  "documents": {
+    "title": "Documents",
+    "help": "Chaque personne doit fournir un passeport et une photo par défaut. Ajoutez d'autres demandes au besoin.",
+    "emptyPerson": "Aucune demande de document pour le moment.",
+    "required": "Obligatoire",
+    "download": "Télécharger",
+    "remove": "Retirer la demande",
+    "addTitle": "Document supplémentaire",
+    "addHelp": "Demandez un autre fichier pour une personne de ce dossier.",
+    "assignPerson": "Personne",
+    "label": "Nom du document",
+    "labelPlaceholder": "ex. Lettre d'acceptation",
+    "note": "Note au client",
+    "notePlaceholder": "Instructions facultatives",
+    "add": "Demander le document",
+    "adding": "Ajout…",
+    "added": "Demande de document ajoutée.",
+    "customFallback": "Document personnalisé",
+    "upload": "Téléverser",
+    "replace": "Remplacer",
+    "uploading": "Téléversement…",
+    "uploaded": "Document téléversé de façon sécurisée.",
+    "clientEyebrow": "Lien client sécurisé",
+    "clientLede": "Déposez les documents demandés et complétez le questionnaire de votre dossier.",
+    "clientFormats": "Acceptés : PDF, JPEG, PNG, WebP, HEIC. Max {maxMb} Mo par fichier. Fichiers chiffrés au repos.",
+    "landingDocumentsTitle": "Déposer des documents",
+    "landingDocumentsBody": "Passeport, photo et tout autre fichier demandé par votre consultant.",
+    "landingDocumentsCta": "{uploaded} sur {total} déposés",
+    "landingFormsTitle": "Remplir le questionnaire",
+    "landingFormsBody": "Répondez une seule fois — votre consultant complète les formulaires IRCC.",
+    "landingFormsCta": "Continuer vers les formulaires",
+    "backToLanding": "Retour aux options",
+    "keys": {
+      "passport": "Passeport",
+      "photo": "Photo"
+    },
+    "statuses": {
+      "requested": "Demandé",
+      "uploaded": "Déposé",
+      "accepted": "Accepté",
+      "rejected": "Refusé"
+    },
+    "errors": {
+      "invalid": "Vérifiez le formulaire et réessayez.",
+      "expired": "Ce lien a expiré. Demandez un nouveau lien à votre consultant.",
+      "fileTooLarge": "Fichier trop volumineux. Maximum {maxMb} Mo.",
+      "fileType": "Type de fichier non pris en charge. Utilisez PDF, JPEG, PNG, WebP ou HEIC.",
+      "uploadFailed": "Échec du téléversement. Réessayez.",
+      "addFailed": "Impossible d'ajouter la demande de document.",
+      "removeFailed": "Impossible de retirer la demande.",
+      "downloadFailed": "Impossible de télécharger le fichier.",
+      "generic": "Une erreur s'est produite."
+    }
   },
   "legal": {
     "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI)."

@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
+import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import { formatStatusDate } from "@/components/projects/project-status-summary";
@@ -13,6 +14,8 @@ import {
   getProjectParticipants,
   getProjectStatusHistory,
 } from "@/lib/crm/queries";
+import { ensureProjectDocumentsSeeded } from "@/lib/documents/service";
+import { listProjectDocumentRequests } from "@/lib/documents/service";
 import {
   answersForPersonFill,
   normalizeAnswersStore,
@@ -46,14 +49,21 @@ export default async function ProjectDetailPage({
     project.id,
     project.program_family,
   );
+  await ensureProjectDocumentsSeeded(
+    project.organization_id,
+    project.id,
+    project.program_family,
+  );
 
-  const [participants, history, forms, answersRow, share] = await Promise.all([
-    getProjectParticipants(id),
-    getProjectStatusHistory(id),
-    listProjectForms(id),
-    getProjectFormAnswers(id),
-    getActiveShareLink(id),
-  ]);
+  const [participants, history, forms, answersRow, share, documentRequests] =
+    await Promise.all([
+      getProjectParticipants(id),
+      getProjectStatusHistory(id),
+      listProjectForms(id),
+      getProjectFormAnswers(id),
+      getActiveShareLink(id),
+      listProjectDocumentRequests(id),
+    ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
@@ -235,6 +245,17 @@ export default async function ProjectDetailPage({
           ))}
         </ul>
       </section>
+
+      <ProjectDocumentsPanel
+        locale={locale}
+        projectId={project.id}
+        requests={documentRequests}
+        people={questionnairePeople.map((p) => ({
+          id: p.id,
+          displayName: p.displayName,
+          role: p.role,
+        }))}
+      />
 
       <ProjectFormsPanel
         locale={formLocale}

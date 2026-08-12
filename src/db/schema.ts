@@ -355,6 +355,69 @@ export const formShareLinks = pgTable("form_share_links", {
     .notNull(),
 });
 
+export const documentRequestStatusEnum = pgEnum("document_request_status", [
+  "requested",
+  "uploaded",
+  "accepted",
+  "rejected",
+]);
+
+/** Per-person document checklist (passport/photo defaults + custom). */
+export const projectDocumentRequests = pgTable("project_document_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  personId: uuid("person_id")
+    .notNull()
+    .references(() => people.id, { onDelete: "cascade" }),
+  docKey: text("doc_key").notNull(),
+  customLabel: text("custom_label"),
+  isRequired: boolean("is_required").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  status: documentRequestStatusEnum("status").notNull().default("requested"),
+  consultantNote: text("consultant_note"),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Encrypted file metadata — ciphertext lives in private Storage. */
+export const projectDocumentFiles = pgTable("project_document_files", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  requestId: uuid("request_id")
+    .notNull()
+    .references(() => projectDocumentRequests.id, { onDelete: "cascade" })
+    .unique(),
+  personId: uuid("person_id")
+    .notNull()
+    .references(() => people.id, { onDelete: "cascade" }),
+  storagePath: text("storage_path").notNull(),
+  originalFilename: text("original_filename").notNull(),
+  contentType: text("content_type").notNull(),
+  byteSize: integer("byte_size").notNull(),
+  encryptionAlg: text("encryption_alg").notNull().default("aes-256-gcm"),
+  uploadedVia: text("uploaded_via").notNull().default("share_link"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 const privateSchema = pgSchema("private");
 
 /** bcrypt hashes — never exposed to anon/authenticated Data API. */
@@ -378,3 +441,6 @@ export type ParticipantRole = (typeof participantRoleEnum.enumValues)[number];
 export type ProjectStatus = (typeof projectStatusEnum.enumValues)[number];
 export type PersonImmigrationStatus =
   (typeof personImmigrationStatusEnum.enumValues)[number];
+export type DocumentRequestStatus =
+  (typeof documentRequestStatusEnum.enumValues)[number];
+export type DocumentDocKey = "passport" | "photo" | "custom";

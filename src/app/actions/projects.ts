@@ -472,6 +472,29 @@ export async function createProjectAction(
       console.error("seed project forms:", formsError.message);
     }
 
+    const { defaultDocumentsForProgram } = await import(
+      "@/lib/documents/catalog"
+    );
+    const docSeeds = defaultDocumentsForProgram(data.programFamily);
+    const { error: docsError } = await supabase
+      .from("project_document_requests")
+      .insert(
+        personIds.flatMap((personId) =>
+          docSeeds.map((seed) => ({
+            organization_id: orgId,
+            project_id: project.id,
+            person_id: personId,
+            doc_key: seed.docKey,
+            is_required: seed.isRequired,
+            sort_order: seed.sortOrder,
+            status: "requested",
+          })),
+        ),
+      );
+    if (docsError) {
+      console.error("seed project documents:", docsError.message);
+    }
+
     const { accountRepAnswersFromProfile, PROFILE_REP_SELECT } = await import(
       "@/lib/ircc/account-rep"
     );
@@ -758,6 +781,20 @@ export async function updateProjectAction(
         return { error: "update_failed" };
       }
     }
+  }
+
+  try {
+    const { ensureProjectDocumentsSeeded } = await import(
+      "@/lib/documents/service"
+    );
+    await ensureProjectDocumentsSeeded(
+      orgId,
+      projectId,
+      data.programFamily,
+      resolved.people.map((p) => p.id),
+    );
+  } catch (error) {
+    console.error("ensure documents on update:", error);
   }
 
   try {

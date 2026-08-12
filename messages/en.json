@@ -394,7 +394,7 @@
       "generated": "Generated"
     },
     "shareTitle": "Client share link",
-    "shareHelp": "Secure link for the client to fill and save. Expires in 30 days. Answers stay if the link dies — generate a new one anytime.",
+    "shareHelp": "Secure link for the client to upload documents and fill the questionnaire. Expires in 30 days. Answers and uploads stay if the link dies — generate a new one anytime.",
     "shareActive": "A link is active until {date}.",
     "shareInactive": "No active client link.",
     "shareCopy": "Copy this link now — it is shown once",
@@ -820,6 +820,60 @@
     "addRow": "Add row",
     "removeRow": "Remove",
     "rowLabel": "Row {n}"
+  },
+  "documents": {
+    "title": "Documents",
+    "help": "Every person needs a passport and photo by default. Add extra document requests when the file needs them.",
+    "emptyPerson": "No document requests yet.",
+    "required": "Required",
+    "download": "Download",
+    "remove": "Remove request",
+    "addTitle": "Additional document",
+    "addHelp": "Ask for another file for a specific person on this project.",
+    "assignPerson": "Person",
+    "label": "Document name",
+    "labelPlaceholder": "e.g. Study acceptance letter",
+    "note": "Note to client",
+    "notePlaceholder": "Optional instructions",
+    "add": "Request document",
+    "adding": "Adding…",
+    "added": "Document request added.",
+    "customFallback": "Custom document",
+    "upload": "Upload",
+    "replace": "Replace",
+    "uploading": "Uploading…",
+    "uploaded": "Document uploaded securely.",
+    "clientEyebrow": "Secure client link",
+    "clientLede": "Upload the requested documents and complete the questionnaire for your file.",
+    "clientFormats": "Accepted: PDF, JPEG, PNG, WebP, HEIC. Max {maxMb} MB per file. Files are encrypted at rest.",
+    "landingDocumentsTitle": "Upload documents",
+    "landingDocumentsBody": "Passport, photo, and any other files your consultant requested.",
+    "landingDocumentsCta": "{uploaded} of {total} uploaded",
+    "landingFormsTitle": "Fill questionnaire",
+    "landingFormsBody": "Answer once — your consultant uses this to complete IRCC forms.",
+    "landingFormsCta": "Continue to forms",
+    "backToLanding": "Back to options",
+    "keys": {
+      "passport": "Passport",
+      "photo": "Photo"
+    },
+    "statuses": {
+      "requested": "Requested",
+      "uploaded": "Uploaded",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
+    },
+    "errors": {
+      "invalid": "Check the form and try again.",
+      "expired": "This link has expired. Ask your consultant for a new one.",
+      "fileTooLarge": "File is too large. Maximum size is {maxMb} MB.",
+      "fileType": "Unsupported file type. Use PDF, JPEG, PNG, WebP, or HEIC.",
+      "uploadFailed": "Upload failed. Try again.",
+      "addFailed": "Could not add the document request.",
+      "removeFailed": "Could not remove the document request.",
+      "downloadFailed": "Could not download the file.",
+      "generic": "Something went wrong."
+    }
   },
   "legal": {
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI)."
