@@ -879,6 +879,7 @@
       "fileTooLarge": "El archivo es demasiado grande. Máximo {maxMb} MB.",
       "fileType": "Tipo de archivo no admitido. Use PDF, JPEG, PNG, WebP o HEIC.",
       "uploadFailed": "Error al subir. Inténtelo de nuevo.",
+      "serverConfig": "Las subidas aún no están configuradas en el servidor. Pida a su consultor que lo intente de nuevo en breve.",
       "addFailed": "No se pudo añadir la solicitud de documento.",
       "removeFailed": "No se pudo eliminar la solicitud.",
       "downloadFailed": "No se pudo descargar el archivo.",

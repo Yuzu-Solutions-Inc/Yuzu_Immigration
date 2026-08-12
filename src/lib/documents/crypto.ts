@@ -1,23 +1,18 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
-import { env } from "@/lib/env";
-
 const ALG = "aes-256-gcm";
 const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 const VERSION = 1;
 
+/** Read at call time so Next env reloads / deploys pick up new keys. */
 function requireDocumentKey(): Buffer {
-  const hex = env.DOCUMENT_ENCRYPTION_KEY;
+  const hex = process.env.DOCUMENT_ENCRYPTION_KEY?.trim();
   if (!hex) {
-    throw new Error(
-      "Missing DOCUMENT_ENCRYPTION_KEY in .env.local (64 hex characters)",
-    );
+    throw new Error("missing_encryption_key");
   }
   if (!/^[0-9a-fA-F]{64}$/.test(hex)) {
-    throw new Error(
-      "DOCUMENT_ENCRYPTION_KEY must be 64 hex characters (32 bytes)",
-    );
+    throw new Error("invalid_encryption_key");
   }
   return Buffer.from(hex, "hex");
 }
@@ -32,12 +27,7 @@ export function encryptDocument(plaintext: Buffer): Buffer {
   const cipher = createCipheriv(ALG, key, iv);
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  return Buffer.concat([
-    Buffer.from([VERSION]),
-    iv,
-    authTag,
-    ciphertext,
-  ]);
+  return Buffer.concat([Buffer.from([VERSION]), iv, authTag, ciphertext]);
 }
 
 export function decryptDocument(payload: Buffer): Buffer {

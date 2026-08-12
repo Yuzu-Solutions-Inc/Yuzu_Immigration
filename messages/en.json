@@ -879,6 +879,7 @@
       "fileTooLarge": "File is too large. Maximum size is {maxMb} MB.",
       "fileType": "Unsupported file type. Use PDF, JPEG, PNG, WebP, or HEIC.",
       "uploadFailed": "Upload failed. Try again.",
+      "serverConfig": "Uploads are not configured on the server yet. Ask your consultant to try again shortly.",
       "addFailed": "Could not add the document request.",
       "removeFailed": "Could not remove the document request.",
       "downloadFailed": "Could not download the file.",

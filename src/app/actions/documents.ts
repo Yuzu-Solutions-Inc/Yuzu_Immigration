@@ -7,6 +7,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import {
   DOCUMENT_MAX_BYTES,
+  guessMimeFromFilename,
   isAllowedDocumentMime,
   sanitizeUploadFilename,
 } from "@/lib/documents/catalog";
@@ -270,15 +271,27 @@ export async function uploadShareDocumentAction(
   const requestId = String(formData.get("requestId") || "");
   const file = formData.get("file");
 
-  if (!token || !uuid.safeParse(requestId).success || !(file instanceof File)) {
+  const isBlob =
+    typeof Blob !== "undefined" &&
+    file instanceof Blob &&
+    typeof (file as Blob).arrayBuffer === "function";
+  if (!token || !uuid.safeParse(requestId).success || !isBlob) {
     return { error: "invalid" };
   }
 
-  if (file.size <= 0 || file.size > DOCUMENT_MAX_BYTES) {
+  const blob = file as Blob & { name?: string };
+  if (blob.size <= 0 || blob.size > DOCUMENT_MAX_BYTES) {
     return { error: "file_too_large" };
   }
 
-  const contentType = file.type || "application/octet-stream";
+  const filename =
+    typeof blob.name === "string" && blob.name.trim()
+      ? blob.name
+      : "document";
+  const contentType =
+    (blob.type && isAllowedDocumentMime(blob.type) && blob.type) ||
+    guessMimeFromFilename(filename) ||
+    "";
   if (!isAllowedDocumentMime(contentType)) {
     return { error: "file_type" };
   }
@@ -286,7 +299,14 @@ export async function uploadShareDocumentAction(
   const resolved = await resolveShareToken(token);
   if (!resolved) return { error: "expired" };
 
-  const admin = createServiceClient();
+  let admin;
+  try {
+    admin = createServiceClient();
+  } catch (err) {
+    console.error("uploadShareDocumentAction admin:", err);
+    return { error: "server_config" };
+  }
+
   const { data: request, error: reqError } = await admin
     .from("project_document_requests")
     .select("*")
@@ -299,7 +319,7 @@ export async function uploadShareDocumentAction(
     return { error: "invalid" };
   }
 
-  const plaintext = Buffer.from(await file.arrayBuffer());
+  const plaintext = Buffer.from(await blob.arrayBuffer());
   if (plaintext.length > DOCUMENT_MAX_BYTES) {
     return { error: "file_too_large" };
   }
@@ -311,13 +331,20 @@ export async function uploadShareDocumentAction(
       personId: request.person_id as string,
       requestId: request.id as string,
       plaintext,
-      originalFilename: sanitizeUploadFilename(file.name),
+      originalFilename: sanitizeUploadFilename(filename),
       contentType,
       uploadedVia: "share_link",
       client: admin,
     });
   } catch (err) {
-    console.error("uploadShareDocumentAction:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("uploadShareDocumentAction:", message);
+    if (
+      message === "missing_encryption_key" ||
+      message === "invalid_encryption_key"
+    ) {
+      return { error: "server_config" };
+    }
     return { error: "upload_failed" };
   }
 

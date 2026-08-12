@@ -255,7 +255,7 @@ export async function storeEncryptedDocument(input: {
 
   const { error: uploadError } = await admin.storage
     .from(CLIENT_DOCUMENTS_BUCKET)
-    .upload(path, encrypted, {
+    .upload(path, new Uint8Array(encrypted), {
       contentType: "application/octet-stream",
       upsert: false,
     });

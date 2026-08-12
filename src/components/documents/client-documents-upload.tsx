@@ -134,6 +134,7 @@ export function ClientDocumentsUpload({
       file_too_large: t("errors.fileTooLarge", { maxMb }),
       file_type: t("errors.fileType"),
       upload_failed: t("errors.uploadFailed"),
+      server_config: t("errors.serverConfig"),
     }[state.error] ??
       t("errors.generic"));
 

@@ -42,6 +42,17 @@ export function isAllowedDocumentMime(
   return (DOCUMENT_ALLOWED_MIME_TYPES as readonly string[]).includes(value);
 }
 
+export function guessMimeFromFilename(name: string): DocumentAllowedMime | null {
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".heic")) return "image/heic";
+  if (lower.endsWith(".heif")) return "image/heif";
+  return null;
+}
+
 export function sanitizeUploadFilename(name: string): string {
   const base = name.split(/[/\\]/).pop()?.trim() || "document";
   return base.replace(/[^\w.\-() ]+/g, "_").slice(0, 180);
