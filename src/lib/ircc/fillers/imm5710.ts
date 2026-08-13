@@ -1,9 +1,7 @@
 /**
  * Fill IMM 5710 — application to change conditions / extend stay (work permit inside Canada).
  */
-import countryCodes from "../codes/country-codes.json";
-import countryAliases from "../codes/country-aliases.json";
-import languageCodes from "../codes/language-codes.json";
+import { resolveCountryLic, resolveLanguageLic } from "../codes/resolve-lic";
 import {
   type CorRow,
   type EducationRow,
@@ -25,7 +23,7 @@ export type Imm5710Answers = {
   email: string;
   familyName: string;
   givenName: string;
-  sex: "Male" | "Female" | "Unknown";
+  sex: "Male" | "Female" | "Unknown" | "Unspecified";
   dobYear: string;
   dobMonth: string;
   dobDay: string;
@@ -186,32 +184,6 @@ function fillNested(xml: string, outer: string, value: string, after = ""): stri
   const pos = tail.indexOf(empty);
   if (pos < 0) return xml;
   return head + tail.slice(0, pos) + filled + tail.slice(pos + empty.length);
-}
-
-function resolveCountryLic(value: string): string {
-  const raw = value.trim();
-  if (/^\d{3}$/.test(raw)) return raw;
-  const map = countryCodes as Record<string, string>;
-  if (map[raw]) return map[raw];
-  const lower = raw.toLowerCase();
-  const aliases = countryAliases as Record<string, string>;
-  if (aliases[lower]) return aliases[lower];
-  for (const [label, lic] of Object.entries(map)) {
-    if (label.toLowerCase() === lower) return lic;
-  }
-  throw new Error(`Unknown country: ${raw}`);
-}
-
-function resolveLanguageLic(value: string): string {
-  const raw = value.trim();
-  if (/^\d{3}$/.test(raw)) return raw;
-  const map = languageCodes as Record<string, string>;
-  if (map[raw]) return map[raw];
-  const lower = raw.toLowerCase();
-  for (const [label, lic] of Object.entries(map)) {
-    if (label.toLowerCase() === lower) return lic;
-  }
-  throw new Error(`Unknown language: ${raw}`);
 }
 
 function resolveProvinceLic(value: string): string {
@@ -487,7 +459,7 @@ export function buildFilledForm5710(template: string, raw: Imm5710Answers): stri
   const workTo = isoDate(a.workToYear, a.workToMonth, a.workToDay);
   xml = xml.replace(
     /<DetailsOfWork\n>[\s\S]*?<\/DetailsOfWork\n>/,
-    `<DetailsOfWork\n><Purpose\n><Type\n>${esc(a.workPurposeType || "01")}</Type\n>` +
+      `<DetailsOfWork\n><Purpose\n><Type\n>${esc(a.workPurposeType || "LMOS")}</Type\n>` +
       (a.workPurposeOther ? `<Other\n>${esc(a.workPurposeOther)}</Other\n>` : `<Other\n/>`) +
       `</Purpose\n><Employer\n><Name\n>${esc(a.employerName)}</Name\n><Addr\n>${esc(a.employerAddress)}</Addr\n></Employer\n>` +
       `<Location\n><Prov\n>${esc(a.workProvince)}</Prov\n><City\n>${esc(a.workCity)}</City\n>` +

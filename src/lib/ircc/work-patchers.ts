@@ -9,6 +9,7 @@ import {
   patchImm5707 as patchImm5707Shared,
   type CompanionAnswers,
 } from "./patch-companions";
+import { applicationLabelForForms, occupationLabelForForms } from "./kits";
 
 export type KitAnswers = CompanionAnswers & {
   email: string;
@@ -49,11 +50,15 @@ export type KitAnswers = CompanionAnswers & {
 };
 
 export function patchImm5707(xml: string, a: KitAnswers): string {
-  return patchImm5707Shared(xml, a, { defaultOccupation: "Worker" });
+  return patchImm5707Shared(xml, a, {
+    defaultOccupation: occupationLabelForForms(a.forms, a.formLanguage),
+  });
 }
 
 export function patchImm5476(xml: string, a: KitAnswers): string {
-  return patchImm5476Shared(xml, a, { applicationLabel: "Work permit" });
+  return patchImm5476Shared(xml, a, {
+    applicationLabel: applicationLabelForForms(a.forms, a.formLanguage),
+  });
 }
 
 export function patchImm5475(xml: string, a: KitAnswers): string {

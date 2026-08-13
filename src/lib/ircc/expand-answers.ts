@@ -30,6 +30,23 @@ function yn(value: unknown, fallback: "Y" | "N" = "N"): "Y" | "N" {
   return fallback;
 }
 
+const VISIT_PURPOSE_LEGACY: Record<string, string> = {
+  tourism: "02",
+  business: "01",
+  family: "08",
+  transit: "13",
+  other: "03",
+};
+
+function normalizeVisitPurpose(raw: unknown, original = false): string {
+  const v = String(raw ?? "").trim();
+  if (!v) return "";
+  if (/^\d{2}$/.test(v)) return v;
+  const key = v.toLowerCase();
+  if (original && key === "family") return "06";
+  return VISIT_PURPOSE_LEGACY[key] || v;
+}
+
 function expandPrefixedDate(
   out: Record<string, unknown>,
   prefix: string,
@@ -119,7 +136,7 @@ export function expandAnswersForFill(
   if (!out.ableToCommunicate) out.ableToCommunicate = derived.ableToCommunicate;
   if (!out.preferredLang) out.preferredLang = derived.preferredLang;
   if (!out.serviceIn) out.serviceIn = derived.serviceIn;
-  if (!out.nativeLang) out.nativeLang = String(out.citizenship || "English");
+  if (!out.nativeLang) out.nativeLang = "001";
 
   expandPrefixedDate(out, "passportIssue", "passportIssue");
   expandPrefixedDate(out, "passportExpiry", "passportExpiry");
@@ -266,6 +283,10 @@ export function expandAnswersForFill(
   if (!out.phoneType) out.phoneType = "02";
   if (!out.currentStatus) out.currentStatus = "01";
   if (!out.funds) out.funds = "Myself";
+  if (out.visitPurpose) out.visitPurpose = normalizeVisitPurpose(out.visitPurpose);
+  if (out.purposeOfVisit) {
+    out.purposeOfVisit = normalizeVisitPurpose(out.purposeOfVisit, true);
+  }
 
   return out;
 }

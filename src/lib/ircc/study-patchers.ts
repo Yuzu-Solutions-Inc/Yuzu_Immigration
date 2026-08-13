@@ -6,6 +6,7 @@ import {
   setCheckbox,
   setEmptyTag,
 } from "./xfa-incremental";
+import { applicationLabelForForms, occupationLabelForForms } from "./kits";
 import {
   ascii,
   mailingAddress,
@@ -36,11 +37,15 @@ export type KitAnswers = CompanionAnswers & {
 };
 
 export function patchImm5707(xml: string, a: KitAnswers): string {
-  return patchImm5707Shared(xml, a, { defaultOccupation: "Student" });
+  return patchImm5707Shared(xml, a, {
+    defaultOccupation: occupationLabelForForms(a.forms, a.formLanguage),
+  });
 }
 
 export function patchImm5476(xml: string, a: KitAnswers): string {
-  return patchImm5476Shared(xml, a, { applicationLabel: "Study permit" });
+  return patchImm5476Shared(xml, a, {
+    applicationLabel: applicationLabelForForms(a.forms, a.formLanguage),
+  });
 }
 
 export function patchImm5475(xml: string, a: KitAnswers): string {

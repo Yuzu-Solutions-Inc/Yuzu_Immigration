@@ -3,11 +3,11 @@ import type { Imm1294Answers } from "./imm1294";
 const EMAIL_MAX_LENGTH = 254;
 const TEXT_MAX = 120;
 
-const SEX_VALUES = new Set(["Male", "Female", "Unknown"]);
+const SEX_VALUES = new Set(["Male", "Female", "Unknown", "Unspecified"]);
 const COMMUNICATE_VALUES = new Set(["English", "French", "Both", "Neither"]);
 const FUNDS_VALUES = new Set(["Myself", "Parents", "Other"]);
 const MARITAL_VALUES = new Set(["01", "02", "03", "04", "05", "06", "00", "09"]);
-const STATUS_VALUES = new Set(["01", "02", "03", "04", "05", "06"]);
+const STATUS_VALUES = new Set(["01", "02", "03", "04", "05", "06", "07", "08", "09"]);
 const PROVINCE_VALUES = new Set([
   "AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT",
 ]);

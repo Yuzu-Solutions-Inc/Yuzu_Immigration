@@ -1,7 +1,13 @@
 /**
  * Ask-once field registry for IRCC forms (excludes document checklists).
+ * Select values are IRCC LOV `lic` codes so filled PDFs stay DocMDP-certifiable.
  * Labels: messages → forms.fields.* / forms.tables.* / forms.options.*
  */
+
+import countriesEn from "./codes/countries-en.json";
+import countriesFr from "./codes/countries-fr.json";
+import languagesEn from "./codes/languages-en.json";
+import languagesFr from "./codes/languages-fr.json";
 
 export type FieldType =
   | "text"
@@ -23,13 +29,53 @@ export type ShowWhen = {
 
 export type ShowWhenRule = ShowWhen | ShowWhen[] | { or: ShowWhen[] };
 
+export type FieldOption = {
+  value: string;
+  labelKey?: string;
+  /** Official IRCC English list label. */
+  label?: string;
+  /** Official IRCC French list label (same `lic` as `label`). */
+  labelFr?: string;
+  /** Keep at the top of long LOV lists (e.g. English/French). */
+  pin?: boolean;
+};
+
+export function fieldOptionLabel(
+  opt: FieldOption,
+  locale: string,
+  translate: (key: string) => string,
+): string {
+  if (locale.startsWith("fr") && opt.labelFr) return opt.labelFr;
+  if (opt.label) return opt.label;
+  if (opt.labelKey) return translate(`options.${opt.labelKey}`);
+  return opt.value;
+}
+
+export function orderedFieldOptions(
+  options: FieldOption[],
+  locale: string,
+  translate: (key: string) => string,
+): FieldOption[] {
+  const pinned = options.filter((opt) => opt.pin);
+  const rest = options.filter((opt) => !opt.pin);
+  if (locale.startsWith("fr") && rest.some((opt) => opt.labelFr)) {
+    rest.sort((a, b) =>
+      fieldOptionLabel(a, locale, translate).localeCompare(
+        fieldOptionLabel(b, locale, translate),
+        "fr",
+      ),
+    );
+  }
+  return [...pinned, ...rest];
+}
+
 export type CanonicalField = {
   key: string;
   section: string;
   type: FieldType;
   required?: boolean;
   maxLength?: number;
-  options?: Array<{ value: string; labelKey: string }>;
+  options?: FieldOption[];
   showWhen?: ShowWhenRule;
   forms?: string[];
   helpKey?: string;
@@ -44,7 +90,7 @@ export type TableColumn = {
   type: FieldType;
   labelKey: string;
   maxLength?: number;
-  options?: Array<{ value: string; labelKey: string }>;
+  options?: FieldOption[];
   required?: boolean;
   /** i18n key under forms.placeholders.* */
   placeholderKey?: string;
@@ -117,37 +163,71 @@ const CUSTODIAN = ["imm5646"] as const;
 const DESIGNEE = ["imm5475"] as const;
 const COMMON_LAW = ["imm5409"] as const;
 
-const SEX_OPTS = [
+function lovOptions(
+  en: Record<string, string>,
+  fr: Record<string, string>,
+  pin: string[] = [],
+): FieldOption[] {
+  const codes = [
+    ...new Set([...Object.keys(en), ...Object.keys(fr)]),
+  ].filter((value) => /^\d{3}$/.test(value));
+  const pinned = new Set(pin);
+  const toOpt = (value: string): FieldOption => ({
+    value,
+    label: en[value] || fr[value],
+    labelFr: fr[value] || en[value],
+    pin: pinned.has(value) || undefined,
+  });
+  const rest = codes
+    .filter((value) => !pinned.has(value))
+    .sort((a, b) =>
+      (en[a] || fr[a] || a).localeCompare(en[b] || fr[b] || b, "en"),
+    );
+  return [
+    ...pin.filter((value) => codes.includes(value)).map(toOpt),
+    ...rest.map(toOpt),
+  ];
+}
+
+const SEX_OPTS: FieldOption[] = [
   { value: "Female", labelKey: "sexFemale" },
   { value: "Male", labelKey: "sexMale" },
   { value: "Unknown", labelKey: "sexUnknown" },
+  { value: "Unspecified", labelKey: "sexUnspecified" },
 ];
 
-const MARITAL_OPTS = [
+const MARITAL_OPTS: FieldOption[] = [
   { value: "02", labelKey: "maritalSingle" },
   { value: "01", labelKey: "maritalMarried" },
   { value: "03", labelKey: "maritalCommonLaw" },
   { value: "04", labelKey: "maritalDivorced" },
   { value: "05", labelKey: "maritalSeparated" },
   { value: "06", labelKey: "maritalWidowed" },
+  { value: "09", labelKey: "maritalAnnulled" },
+  { value: "00", labelKey: "maritalUnknown" },
 ];
 
-const STATUS_OPTS = [
+/** IMM 1294/1295/5710 ImmigrationStatus — 04 is Worker, 05 is Student. */
+const STATUS_OPTS: FieldOption[] = [
   { value: "01", labelKey: "statusCitizen" },
   { value: "02", labelKey: "statusPR" },
   { value: "03", labelKey: "statusVisitor" },
-  { value: "04", labelKey: "statusStudent" },
-  { value: "05", labelKey: "statusWorker" },
+  { value: "04", labelKey: "statusWorker" },
+  { value: "05", labelKey: "statusStudent" },
   { value: "06", labelKey: "statusOther" },
+  { value: "07", labelKey: "statusProtected" },
+  { value: "08", labelKey: "statusRefugee" },
+  { value: "09", labelKey: "statusForeignNational" },
 ];
 
-const PHONE_TYPE_OPTS = [
+const PHONE_TYPE_OPTS: FieldOption[] = [
   { value: "02", labelKey: "phoneCellular" },
-  { value: "01", labelKey: "phoneLandline" },
+  { value: "01", labelKey: "phoneResidence" },
   { value: "03", labelKey: "phoneBusiness" },
+  { value: "05", labelKey: "phoneOther" },
 ];
 
-const PROVINCE_OPTS = [
+const PROVINCE_OPTS: FieldOption[] = [
   { value: "AB", labelKey: "provAB" },
   { value: "BC", labelKey: "provBC" },
   { value: "MB", labelKey: "provMB" },
@@ -163,49 +243,67 @@ const PROVINCE_OPTS = [
   { value: "YT", labelKey: "provYT" },
 ];
 
-const STUDY_LEVEL_OPTS = [
+const STUDY_LEVEL_OPTS: FieldOption[] = [
   { value: "01", labelKey: "studyPrimary" },
   { value: "02", labelKey: "studySecondary" },
-  { value: "03", labelKey: "studyCollege" },
+  { value: "10", labelKey: "studyPtc" },
+  { value: "11", labelKey: "studyCegepPre" },
+  { value: "12", labelKey: "studyCegepTech" },
+  { value: "13", labelKey: "studyCollegeCert" },
+  { value: "14", labelKey: "studyCollegeDip" },
+  { value: "15", labelKey: "studyCollegeApplied" },
   { value: "04", labelKey: "studyBachelor" },
   { value: "05", labelKey: "studyMaster" },
   { value: "06", labelKey: "studyDoctorate" },
-  { value: "07", labelKey: "studyOtherPost" },
-  { value: "08", labelKey: "studyLanguage" },
-  { value: "09", labelKey: "studyOther" },
+  { value: "07", labelKey: "studyUniOther" },
+  { value: "16", labelKey: "studyEsl" },
+  { value: "17", labelKey: "studyEslCollege" },
+  { value: "18", labelKey: "studyEslUni" },
+  { value: "08", labelKey: "studyOther" },
+  { value: "19", labelKey: "studyNa" },
 ];
 
-const FIELD_OF_STUDY_OPTS = [
-  { value: "01", labelKey: "fosArts" },
-  { value: "02", labelKey: "fosBusiness" },
-  { value: "03", labelKey: "fosScience" },
-  { value: "04", labelKey: "fosEngineering" },
-  { value: "05", labelKey: "fosHealth" },
-  { value: "06", labelKey: "fosEducation" },
-  { value: "07", labelKey: "fosLaw" },
-  { value: "08", labelKey: "fosTrades" },
-  { value: "09", labelKey: "fosOther" },
+const FIELD_OF_STUDY_OPTS: FieldOption[] = [
+  { value: "01", labelKey: "fosArtsSocial" },
+  { value: "02", labelKey: "fosArtsFine" },
+  { value: "03", labelKey: "fosBusiness" },
+  { value: "04", labelKey: "fosComputing" },
+  { value: "05", labelKey: "fosEsl" },
+  { value: "06", labelKey: "fosFlight" },
+  { value: "07", labelKey: "fosHospitality" },
+  { value: "08", labelKey: "fosLaw" },
+  { value: "09", labelKey: "fosMedicine" },
+  { value: "10", labelKey: "fosScienceApplied" },
+  { value: "11", labelKey: "fosScienceGeneral" },
+  { value: "12", labelKey: "fosScienceHealth" },
+  { value: "13", labelKey: "fosTrades" },
+  { value: "14", labelKey: "fosTheology" },
+  { value: "15", labelKey: "fosOther" },
+  { value: "16", labelKey: "fosAgric" },
+  { value: "17", labelKey: "fosArchitecture" },
+  { value: "18", labelKey: "fosBio" },
+  { value: "19", labelKey: "fosBusinessMgmt" },
 ];
 
-const FUNDS_OPTS = [
+const FUNDS_OPTS: FieldOption[] = [
   { value: "Myself", labelKey: "fundsMyself" },
   { value: "Parents", labelKey: "fundsParents" },
   { value: "Other", labelKey: "fundsOther" },
 ];
 
-const LANG_OPTS = [
+const LANG_OPTS: FieldOption[] = [
   { value: "English", labelKey: "langEnglish" },
   { value: "French", labelKey: "langFrench" },
   { value: "Both", labelKey: "langBoth" },
   { value: "Neither", labelKey: "langNeither" },
 ];
 
-const PREF_LANG_OPTS = [
+const PREF_LANG_OPTS: FieldOption[] = [
   { value: "English", labelKey: "langEnglish" },
   { value: "French", labelKey: "langFrench" },
 ];
 
-const WORK_PERMIT_OPTS = [
+const WORK_PERMIT_OPTS: FieldOption[] = [
   { value: "LMOS", labelKey: "wpLmos" },
   { value: "ELMO", labelKey: "wpElmo" },
   { value: "OWP", labelKey: "wpOwp" },
@@ -214,13 +312,66 @@ const WORK_PERMIT_OPTS = [
   { value: "Other", labelKey: "wpOther" },
 ];
 
-const VISIT_PURPOSE_OPTS = [
-  { value: "tourism", labelKey: "visitTourism" },
-  { value: "business", labelKey: "visitBusiness" },
-  { value: "family", labelKey: "visitFamily" },
-  { value: "transit", labelKey: "visitTransit" },
-  { value: "other", labelKey: "visitOther" },
+const WORK_PERMIT_INLAND_OPTS: FieldOption[] = [
+  { value: "LMOS", labelKey: "wpLmos" },
+  { value: "ELMO", labelKey: "wpElmo" },
+  { value: "OWP", labelKey: "wpOwp" },
+  { value: "PGWP", labelKey: "wpPgwp" },
+  { value: "COWP", labelKey: "wpCowp" },
+  { value: "LCP", labelKey: "wpLcp" },
+  { value: "VWOWP", labelKey: "wpVwowp" },
+  { value: "SBC", labelKey: "wpSbc" },
+  { value: "Other", labelKey: "wpOther" },
 ];
+
+const VISIT_PURPOSE_OPTS: FieldOption[] = [
+  { value: "01", labelKey: "visitBusiness" },
+  { value: "02", labelKey: "visitTourism" },
+  { value: "08", labelKey: "visitFamily" },
+  { value: "13", labelKey: "visitVisit" },
+  { value: "04", labelKey: "visitShortStudy" },
+  { value: "05", labelKey: "visitReturningStudent" },
+  { value: "06", labelKey: "visitReturningWorker" },
+  { value: "07", labelKey: "visitSuperVisa" },
+  { value: "03", labelKey: "visitOther" },
+];
+
+const VISIT_PURPOSE_ORIGINAL_OPTS: FieldOption[] = [
+  { value: "01", labelKey: "visitBusiness" },
+  { value: "02", labelKey: "visitTourism" },
+  { value: "06", labelKey: "visitFamily" },
+  { value: "04", labelKey: "visitStudy" },
+  { value: "05", labelKey: "visitWork" },
+  { value: "03", labelKey: "visitOther" },
+];
+
+const CHILD_REL_OPTS: FieldOption[] = [
+  { value: "son", labelKey: "relSon" },
+  { value: "daughter", labelKey: "relDaughter" },
+  { value: "stepSon", labelKey: "relStepSon" },
+  { value: "stepDaughter", labelKey: "relStepDaughter" },
+  { value: "adoptedSon", labelKey: "relAdoptedSon" },
+  { value: "adoptedDaughter", labelKey: "relAdoptedDaughter" },
+];
+
+const SIBLING_REL_OPTS: FieldOption[] = [
+  { value: "brother", labelKey: "relBrother" },
+  { value: "sister", labelKey: "relSister" },
+  { value: "halfBrother", labelKey: "relHalfBrother" },
+  { value: "halfSister", labelKey: "relHalfSister" },
+  { value: "stepBrother", labelKey: "relStepBrother" },
+  { value: "stepSister", labelKey: "relStepSister" },
+];
+
+const COUNTRY_OPTS = lovOptions(
+  countriesEn as Record<string, string>,
+  countriesFr as Record<string, string>,
+);
+const LANGUAGE_OPTS = lovOptions(
+  languagesEn as Record<string, string>,
+  languagesFr as Record<string, string>,
+  ["001", "002"],
+);
 
 const marriedOrCl: ShowWhen = {
   key: "maritalStatus",
@@ -236,7 +387,7 @@ const commonLawOnly: ShowWhen = {
 };
 const tempStatus: ShowWhen = {
   key: "currentStatus",
-  oneOf: ["03", "04", "05", "06"],
+  oneOf: ["03", "04", "05", "06", "07", "08", "09"],
 };
 
 /** Scalar questionnaire fields — email / formLanguage / rep* are not asked. */
@@ -256,17 +407,17 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "placeBirthCountry",
     section: "identity",
-    type: "text",
+    type: "select",
     required: true,
-    maxLength: 80,
+    options: COUNTRY_OPTS,
     helpKey: "countryHelp",
   },
   {
     key: "citizenship",
     section: "identity",
-    type: "text",
+    type: "select",
     required: true,
-    maxLength: 80,
+    options: COUNTRY_OPTS,
   },
   {
     key: "maritalStatus",
@@ -301,9 +452,9 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "nativeLang",
     section: "identity",
-    type: "text",
+    type: "select",
     required: true,
-    maxLength: 80,
+    options: LANGUAGE_OPTS,
     forms: [...PRIMARY],
     helpKey: "nativeLangHelp",
   },
@@ -351,7 +502,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   { key: "aptUnit", section: "contact", type: "text", maxLength: 20, forms: [...PRIMARY] },
   { key: "city", section: "contact", type: "text", maxLength: 80, required: true },
   { key: "provinceState", section: "contact", type: "text", maxLength: 40 },
-  { key: "country", section: "contact", type: "text", maxLength: 80, required: true },
+  { key: "country", section: "contact", type: "select", required: true, options: COUNTRY_OPTS },
   { key: "postalCode", section: "contact", type: "text", maxLength: 20, required: true },
   {
     key: "sameAsMailing",
@@ -403,8 +554,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "resCountry",
     section: "contact",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: COUNTRY_OPTS,
     forms: [...PRIMARY],
     showWhen: { key: "sameAsMailing", equals: "N" },
   },
@@ -421,9 +572,9 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "currentCountry",
     section: "residence",
-    type: "text",
+    type: "select",
     required: true,
-    maxLength: 80,
+    options: COUNTRY_OPTS,
     forms: [...PRIMARY],
   },
   {
@@ -473,8 +624,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "cwaCountry",
     section: "residence",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: COUNTRY_OPTS,
     forms: [...PRIMARY],
     showWhen: { key: "sameAsCor", equals: "N" },
   },
@@ -524,9 +675,9 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "passportCountry",
     section: "passport",
-    type: "text",
+    type: "select",
     required: true,
-    maxLength: 80,
+    options: COUNTRY_OPTS,
     forms: [...PRIMARY],
   },
   {
@@ -561,8 +712,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "natIdCountry",
     section: "passport",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: COUNTRY_OPTS,
     forms: [...PRIMARY],
     showWhen: { key: "hasNatId", equals: "Y" },
   },
@@ -635,8 +786,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "spouseCob",
     section: "family",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: COUNTRY_OPTS,
     forms: [...FAMILY_FORM],
     showWhen: marriedOrCl,
   },
@@ -698,8 +849,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "commonLawCountry",
     section: "family",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: COUNTRY_OPTS,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: commonLawOnly,
   },
@@ -783,8 +934,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "parent1Cob",
     section: "family",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: COUNTRY_OPTS,
     forms: [...FAMILY_FORM],
   },
   {
@@ -839,8 +990,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "parent2Cob",
     section: "family",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: COUNTRY_OPTS,
     forms: [...FAMILY_FORM],
   },
   {
@@ -1039,7 +1190,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     type: "text",
     maxLength: 80,
     forms: [...VISITOR],
-    showWhen: { key: "visitPurpose", equals: "other" },
+    showWhen: { key: "visitPurpose", equals: "03" },
   },
   {
     key: "visitFrom",
@@ -1294,8 +1445,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "purposeOfVisit",
     section: "work",
-    type: "text",
-    maxLength: 80,
+    type: "select",
+    options: VISIT_PURPOSE_ORIGINAL_OPTS,
     forms: [...IN_CANADA],
   },
   {
@@ -1304,6 +1455,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     type: "text",
     maxLength: 80,
     forms: [...IN_CANADA],
+    showWhen: { key: "purposeOfVisit", equals: "03" },
   },
   {
     key: "recentEntryDate",
@@ -1328,8 +1480,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   {
     key: "workPurposeType",
     section: "work",
-    type: "text",
-    maxLength: 40,
+    type: "select",
+    options: WORK_PERMIT_INLAND_OPTS,
     forms: [...WORK_IN],
   },
   {
@@ -1581,7 +1733,7 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
     minRows: 1,
     helpKey: "previousCorRowsHelp",
     columns: [
-      { key: "country", type: "text", labelKey: "colCountry", maxLength: 80, required: true },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS, required: true },
       {
         key: "status",
         type: "select",
@@ -1605,7 +1757,7 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
       { key: "occupation", type: "text", labelKey: "colOccupation", maxLength: 80, required: true },
       { key: "employer", type: "text", labelKey: "colEmployer", maxLength: 120, required: true },
       { key: "city", type: "text", labelKey: "colCity", maxLength: 80, required: true },
-      { key: "country", type: "text", labelKey: "colCountry", maxLength: 80, required: true },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS, required: true },
       {
         key: "provinceState",
         type: "text",
@@ -1635,7 +1787,7 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
         required: true,
       },
       { key: "city", type: "text", labelKey: "colCity", maxLength: 80, required: true },
-      { key: "country", type: "text", labelKey: "colCountry", maxLength: 80, required: true },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS, required: true },
       {
         key: "provinceState",
         type: "text",
@@ -1660,8 +1812,8 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
       { key: "familyName", type: "text", labelKey: "colFamilyName", maxLength: 80, required: true },
       { key: "givenName", type: "text", labelKey: "colGivenName", maxLength: 80, required: true },
       { key: "dob", type: "date", labelKey: "colDob", required: true },
-      { key: "cob", type: "text", labelKey: "colCob", maxLength: 80 },
-      { key: "relationship", type: "text", labelKey: "colRelationship", maxLength: 40 },
+      { key: "cob", type: "select", labelKey: "colCob", options: COUNTRY_OPTS },
+      { key: "relationship", type: "select", labelKey: "colRelationship", options: CHILD_REL_OPTS },
       {
         key: "accompanying",
         type: "yesno",
@@ -1683,9 +1835,9 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
     columns: [
       { key: "familyName", type: "text", labelKey: "colFamilyName", maxLength: 80, required: true },
       { key: "givenName", type: "text", labelKey: "colGivenName", maxLength: 80, required: true },
-      { key: "relationship", type: "text", labelKey: "colRelationship", maxLength: 40, required: true },
+      { key: "relationship", type: "select", labelKey: "colRelationship", options: SIBLING_REL_OPTS, required: true },
       { key: "dob", type: "date", labelKey: "colDob" },
-      { key: "cob", type: "text", labelKey: "colCob", maxLength: 80 },
+      { key: "cob", type: "select", labelKey: "colCob", options: COUNTRY_OPTS },
       {
         key: "maritalStatus",
         type: "select",

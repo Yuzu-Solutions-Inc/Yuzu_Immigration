@@ -7,6 +7,7 @@
 import {
   setEmptyTag,
 } from "./xfa-incremental";
+import { countryDisplayName } from "./codes/resolve-lic";
 
 /** Fields needed by companion form patchers. */
 export type CompanionAnswers = {
@@ -93,6 +94,7 @@ export type CompanionAnswers = {
   children?: Array<Record<string, unknown>>;
   siblings?: Array<Record<string, unknown>>;
   email?: string;
+  formLanguage?: "e" | "f";
 };
 
 export type PatchImm5707Options = {
@@ -124,6 +126,14 @@ export function ascii(s: string | undefined, max = 120): string {
     .slice(0, max);
 }
 
+function pdfFallback(a: CompanionAnswers, en: string, fr: string): string {
+  return a.formLanguage === "f" ? fr : en;
+}
+
+function cob(a: CompanionAnswers, value: string | undefined): string {
+  return countryDisplayName(String(value || ""), a.formLanguage);
+}
+
 export function maritalLabel(code: string | undefined): string {
   const map: Record<string, string> = {
     "01": "Married",
@@ -139,8 +149,83 @@ export function maritalLabel(code: string | undefined): string {
   return map[c] || c || "Single";
 }
 
+/** IMM 5707 marital-status `lic` codes (different from primary application forms). */
+export function maritalCodeImm5707(code: string | undefined): string {
+  const map: Record<string, string> = {
+    "03": "1",
+    "02": "2",
+    "04": "3",
+    "09": "4",
+    "01": "5",
+    "05": "6",
+    "06": "7",
+    "00": "8",
+  };
+  const c = String(code || "").trim();
+  return map[c] || "2";
+}
+
+/** IMM 5645 / IMM 5406 marital-status `lic` codes. */
+export function maritalCodeImm5645(code: string | undefined): string {
+  const map: Record<string, string> = {
+    "03": "1",
+    "02": "2",
+    "04": "3",
+    "09": "4",
+    "01": "5",
+    "05": "7",
+    "06": "8",
+    "00": "9",
+  };
+  const c = String(code || "").trim();
+  return map[c] || "2";
+}
+
+export function childRelationshipImm5707(value: string | undefined): string {
+  const map: Record<string, string> = {
+    son: "1",
+    daughter: "2",
+    stepDaughter: "3",
+    stepSon: "4",
+    adoptedDaughter: "5",
+    adoptedSon: "6",
+  };
+  return map[String(value || "").trim()] || "";
+}
+
+export function childRelationshipImm5645(value: string | undefined): string {
+  const map: Record<string, string> = {
+    son: "1",
+    daughter: "2",
+    stepDaughter: "3",
+    stepSon: "4",
+    adoptedSon: "5",
+    adoptedDaughter: "6",
+  };
+  return map[String(value || "").trim()] || "";
+}
+
+export function siblingRelationshipImm5645(value: string | undefined): string {
+  const map: Record<string, string> = {
+    brother: "1",
+    sister: "2",
+    stepBrother: "3",
+    stepSister: "4",
+    halfBrother: "5",
+    halfSister: "6",
+  };
+  return map[String(value || "").trim()] || "";
+}
+
 export function mailingAddress(a: CompanionAnswers): string {
-  return [a.streetNum, a.streetName, a.city, a.provinceState, a.country, a.postalCode]
+  return [
+    a.streetNum,
+    a.streetName,
+    a.city,
+    a.provinceState,
+    cob(a, a.country),
+    a.postalCode,
+  ]
     .filter(Boolean)
     .join(", ");
 }
@@ -176,14 +261,14 @@ export function patchImm5707(
   const occupation = ascii(
     String(b.occupation || a.occupation || a.jobTitle || ""),
     80,
-  ) || (opts.defaultOccupation || "Applicant");
+  ) || (opts.defaultOccupation || pdfFallback(a, "Applicant", "Demandeur"));
   const address = ascii(mailingAddress(a), 200);
 
   out = setEmptyTag(out, "FamilyName", ascii(a.familyName));
   out = setEmptyTag(out, "GivenNames", ascii(a.givenName));
   out = setEmptyTag(out, "DOB", ymd(a));
-  out = setEmptyTag(out, "COB", ascii(a.placeBirthCountry || a.citizenship));
-  out = setEmptyTag(out, "MaritalStatus", maritalLabel(marital));
+  out = setEmptyTag(out, "COB", ascii(cob(a, a.placeBirthCountry || a.citizenship)));
+  out = setEmptyTag(out, "MaritalStatus", maritalCodeImm5707(marital));
   out = setEmptyTag(out, "Occupation", occupation);
 
   if (marital === "01" || marital === "03") {
@@ -203,9 +288,9 @@ export function patchImm5707(
       20,
     );
     if (sDob) out = setEmptyTag(out, "DOB", sDob);
-    out = setEmptyTag(out, "COB", ascii(a.spouseCob || a.citizenship));
+    out = setEmptyTag(out, "COB", ascii(cob(a, a.spouseCob || a.citizenship)));
     out = setEmptyTag(out, "Address", ascii(a.spouseAddress || address, 200));
-    out = setEmptyTag(out, "MaritalStatus", maritalLabel(marital));
+    out = setEmptyTag(out, "MaritalStatus", maritalCodeImm5707(marital));
     out = setEmptyTag(
       out,
       "Occupation",
@@ -218,12 +303,12 @@ export function patchImm5707(
     out = setEmptyTag(out, "FamilyName", ascii(a.parent1FamilyName));
     out = setEmptyTag(out, "GivenNames", ascii(a.parent1GivenName));
     if (a.parent1Dob) out = setEmptyTag(out, "DOB", ascii(a.parent1Dob, 20));
-    out = setEmptyTag(out, "COB", ascii(a.parent1Cob || a.placeBirthCountry));
+    out = setEmptyTag(out, "COB", ascii(cob(a, a.parent1Cob || a.placeBirthCountry)));
     out = setEmptyTag(out, "Address", ascii(a.parent1Address || address, 200));
     out = setEmptyTag(
       out,
       "MaritalStatus",
-      maritalLabel(a.parent1MaritalStatus || "01"),
+      maritalCodeImm5707(a.parent1MaritalStatus || "01"),
     );
     out = setEmptyTag(
       out,
@@ -237,12 +322,12 @@ export function patchImm5707(
     out = setEmptyTag(out, "FamilyName", ascii(a.parent2FamilyName));
     out = setEmptyTag(out, "GivenNames", ascii(a.parent2GivenName));
     if (a.parent2Dob) out = setEmptyTag(out, "DOB", ascii(a.parent2Dob, 20));
-    out = setEmptyTag(out, "COB", ascii(a.parent2Cob || a.placeBirthCountry));
+    out = setEmptyTag(out, "COB", ascii(cob(a, a.parent2Cob || a.placeBirthCountry)));
     out = setEmptyTag(out, "Address", ascii(a.parent2Address || address, 200));
     out = setEmptyTag(
       out,
       "MaritalStatus",
-      maritalLabel(a.parent2MaritalStatus || "01"),
+      maritalCodeImm5707(a.parent2MaritalStatus || "01"),
     );
     out = setEmptyTag(
       out,
@@ -273,13 +358,15 @@ export function patchImm5707(
       if (family) out = setEmptyTag(out, "FamilyName", family);
       if (given) out = setEmptyTag(out, "GivenNames", given);
       if (child.dob) out = setEmptyTag(out, "DOB", ascii(String(child.dob), 20));
-      if (child.cob) out = setEmptyTag(out, "COB", ascii(String(child.cob)));
+      if (child.cob) out = setEmptyTag(out, "COB", ascii(cob(a, String(child.cob))));
       out = setEmptyTag(out, "Address", ascii(String(child.address || address), 200));
-      out = setEmptyTag(out, "MaritalStatus", "Single");
+      const childRel = childRelationshipImm5707(String(child.relationship || ""));
+      if (childRel) out = setEmptyTag(out, "Relationship", childRel);
+      out = setEmptyTag(out, "MaritalStatus", maritalCodeImm5707("02"));
       out = setEmptyTag(
         out,
         "Occupation",
-        ascii(String(child.occupation || child.relationship || "Child"), 80),
+        ascii(String(child.occupation || pdfFallback(a, "Child", "Enfant")), 80),
       );
     }
   }
@@ -307,9 +394,9 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
   out = setEmptyTag(out, "FamilyName", ascii(a.familyName));
   out = setEmptyTag(out, "GivenNames", ascii(a.givenName));
   out = setEmptyTag(out, "DOB", ymd(a));
-  out = setEmptyTag(out, "COB", ascii(a.placeBirthCountry || a.citizenship) || "N/A");
+  out = setEmptyTag(out, "COB", ascii(cob(a, a.placeBirthCountry || a.citizenship)) || "N/A");
   out = setEmptyTag(out, "Address", address);
-  out = setEmptyTag(out, "MaritalStatus", maritalLabel(marital));
+  out = setEmptyTag(out, "MaritalStatus", maritalCodeImm5645(marital));
   if (email) out = setEmptyTag(out, "Email", email);
 
   const hasSpouse = marital === "01" || marital === "03";
@@ -336,7 +423,7 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
   out = setEmptyTag(
     out,
     "COB",
-    hasSpouse ? na(ascii(a.spouseCob || a.citizenship)) : "N/A",
+    hasSpouse ? na(ascii(cob(a, a.spouseCob || a.citizenship))) : "N/A",
   );
   out = setEmptyTag(
     out,
@@ -346,33 +433,33 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
   out = setEmptyTag(
     out,
     "MaritalStatus",
-    hasSpouse ? maritalLabel(marital) : "N/A",
+    hasSpouse ? maritalCodeImm5645(marital) : "N/A",
   );
   if (hasSpouse && email) out = setEmptyTag(out, "Email", email);
 
   out = setEmptyTag(out, "FamilyName", na(a.parent1FamilyName));
   out = setEmptyTag(out, "GivenNames", na(a.parent1GivenName));
   out = setEmptyTag(out, "DOB", na(a.parent1Dob, "N/A"));
-  out = setEmptyTag(out, "COB", na(a.parent1Cob || a.placeBirthCountry));
+  out = setEmptyTag(out, "COB", na(cob(a, a.parent1Cob || a.placeBirthCountry)));
   out = setEmptyTag(out, "Address", na(ascii(a.parent1Address || address, 200)));
   out = setEmptyTag(
     out,
     "MaritalStatus",
     a.parent1FamilyName
-      ? maritalLabel(a.parent1MaritalStatus || "01")
+      ? maritalCodeImm5645(a.parent1MaritalStatus || "01")
       : "N/A",
   );
 
   out = setEmptyTag(out, "FamilyName", na(a.parent2FamilyName));
   out = setEmptyTag(out, "GivenNames", na(a.parent2GivenName));
   out = setEmptyTag(out, "DOB", na(a.parent2Dob, "N/A"));
-  out = setEmptyTag(out, "COB", na(a.parent2Cob || a.placeBirthCountry));
+  out = setEmptyTag(out, "COB", na(cob(a, a.parent2Cob || a.placeBirthCountry)));
   out = setEmptyTag(out, "Address", na(ascii(a.parent2Address || address, 200)));
   out = setEmptyTag(
     out,
     "MaritalStatus",
     a.parent2FamilyName
-      ? maritalLabel(a.parent2MaritalStatus || "01")
+      ? maritalCodeImm5645(a.parent2MaritalStatus || "01")
       : "N/A",
   );
 
@@ -389,12 +476,14 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
     out = setEmptyTag(
       out,
       "Relationship",
-      ascii(String(child.relationship || "Child"), 40) || "Child",
+      childRelationshipImm5645(String(child.relationship || "")) ||
+        ascii(String(child.relationship || pdfFallback(a, "Child", "Enfant")), 40) ||
+        pdfFallback(a, "Child", "Enfant"),
     );
     out = setEmptyTag(out, "FamilyName", ascii(String(child.familyName || "")));
     out = setEmptyTag(out, "GivenNames", ascii(String(child.givenName || "")));
     if (child.dob) out = setEmptyTag(out, "DOB", ascii(String(child.dob), 20));
-    out = setEmptyTag(out, "COB", ascii(String(child.cob || a.placeBirthCountry || "")));
+    out = setEmptyTag(out, "COB", ascii(cob(a, String(child.cob || a.placeBirthCountry || ""))));
     out = setEmptyTag(
       out,
       "Address",
@@ -403,7 +492,7 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
     out = setEmptyTag(
       out,
       "MaritalStatus",
-      maritalLabel(String(child.maritalStatus || "02")),
+      maritalCodeImm5645(String(child.maritalStatus || "02")),
     );
     if (child.email) out = setEmptyTag(out, "Email", ascii(String(child.email), 80));
   }
@@ -421,7 +510,12 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
     out = setEmptyTag(
       out,
       "Relationship",
-      ascii(String(sibling.relationship || "Sibling"), 40) || "Sibling",
+      siblingRelationshipImm5645(String(sibling.relationship || "")) ||
+        ascii(
+          String(sibling.relationship || pdfFallback(a, "Sibling", "Frere ou soeur")),
+          40,
+        ) ||
+        pdfFallback(a, "Sibling", "Frere ou soeur"),
     );
     out = setEmptyTag(out, "FamilyName", ascii(String(sibling.familyName || "")));
     out = setEmptyTag(out, "GivenNames", ascii(String(sibling.givenName || "")));
@@ -429,7 +523,7 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
     out = setEmptyTag(
       out,
       "COB",
-      ascii(String(sibling.cob || a.placeBirthCountry || "")),
+      ascii(cob(a, String(sibling.cob || a.placeBirthCountry || ""))),
     );
     out = setEmptyTag(
       out,
@@ -439,7 +533,7 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
     out = setEmptyTag(
       out,
       "MaritalStatus",
-      maritalLabel(String(sibling.maritalStatus || "02")),
+      maritalCodeImm5645(String(sibling.maritalStatus || "02")),
     );
     if (sibling.email) {
       out = setEmptyTag(out, "Email", ascii(String(sibling.email), 80));
@@ -478,7 +572,7 @@ export function patchImm5476(
   if (a.repStreetName) out = setEmptyTag(out, "streetName", ascii(a.repStreetName));
   if (a.repCity) out = setEmptyTag(out, "city", ascii(a.repCity));
   if (a.repProvince) out = setEmptyTag(out, "province", ascii(a.repProvince, 40));
-  if (a.repCountry) out = setEmptyTag(out, "country", ascii(a.repCountry));
+  if (a.repCountry) out = setEmptyTag(out, "country", ascii(cob(a, a.repCountry)));
   if (a.repPostalCode) out = setEmptyTag(out, "postalcode", ascii(a.repPostalCode, 20));
   if (a.repPhoneCountryCode) {
     out = setEmptyTag(out, "phoneCountryCode", ascii(a.repPhoneCountryCode, 6));
@@ -527,7 +621,7 @@ export function patchImm5475(xml: string, a: CompanionAnswers): string {
 /** IMM 5409 — Statutory declaration of common-law union. */
 export function patchImm5409(xml: string, a: CompanionAnswers): string {
   let out = xml;
-  out = setEmptyTag(out, "Country", ascii(a.commonLawCountry || a.country || "Canada"));
+  out = setEmptyTag(out, "Country", ascii(cob(a, a.commonLawCountry || a.country || "Canada")));
   out = setEmptyTag(out, "Province", ascii(a.commonLawProvince || a.provinceState, 40));
   out = setEmptyTag(out, "FirstName", ascii(a.givenName));
   out = setEmptyTag(out, "SecondName", ascii(a.familyName));
@@ -536,7 +630,7 @@ export function patchImm5409(xml: string, a: CompanionAnswers): string {
     out = setEmptyTag(out, "Province", ascii(a.commonLawProvince, 40));
   }
   if (a.commonLawCountry) {
-    out = setEmptyTag(out, "Country", ascii(a.commonLawCountry));
+    out = setEmptyTag(out, "Country", ascii(cob(a, a.commonLawCountry)));
   }
   if (a.yearsTogether) {
     out = setEmptyTag(out, "YearsTogether", ascii(a.yearsTogether, 10));

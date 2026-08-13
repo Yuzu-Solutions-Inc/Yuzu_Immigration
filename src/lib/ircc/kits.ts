@@ -483,15 +483,33 @@ export function addableFormsForProgram(
   return ADDABLE_COMPANION_FORMS;
 }
 
-export function applicationLabelForForms(formCodes: string[]): string {
+export function applicationLabelForForms(
+  formCodes: string[],
+  lang: "e" | "f" = "e",
+): string {
+  const fr = lang === "f";
   if (formCodes.includes("imm1294") || formCodes.includes("imm5709")) {
-    return "Study permit";
+    return fr ? "Permis d'études" : "Study permit";
   }
   if (formCodes.includes("imm1295") || formCodes.includes("imm5710")) {
-    return "Work permit";
+    return fr ? "Permis de travail" : "Work permit";
   }
   if (formCodes.includes("imm5257") || formCodes.includes("imm5708")) {
-    return "Visitor visa";
+    return fr ? "Visa de visiteur" : "Visitor visa";
   }
-  return "Immigration application";
+  return fr ? "Demande d'immigration" : "Immigration application";
+}
+
+export function occupationLabelForForms(
+  formCodes: string[],
+  lang: "e" | "f" = "e",
+): string {
+  const fr = lang === "f";
+  if (formCodes.includes("imm1294") || formCodes.includes("imm5709")) {
+    return fr ? "Étudiant" : "Student";
+  }
+  if (formCodes.includes("imm5257") || formCodes.includes("imm5708")) {
+    return fr ? "Visiteur" : "Visitor";
+  }
+  return fr ? "Travailleur" : "Worker";
 }

@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import formMeta from "./form-meta.json";
 import { loadBlankPdf } from "./blanks";
 import { expandAnswersForFill } from "./expand-answers";
-import { applicationLabelForForms } from "./kits";
+import { applicationLabelForForms, occupationLabelForForms } from "./kits";
 import {
   patchImm5645,
   patchImm5406,
@@ -177,18 +177,12 @@ async function fillCompanion(
 ): Promise<Uint8Array> {
   const blank = await loadBlankPdf(code, lang);
   const meta = metaFor(code, lang);
-  const appLabel = applicationLabelForForms(answers.forms);
+  const appLabel = applicationLabelForForms(answers.forms, lang);
 
   const patchers: Record<string, (xml: string) => string> = {
     imm5707: (xml) =>
       patchImm5707(xml, answers, {
-        defaultOccupation:
-          answers.forms.includes("imm1294") || answers.forms.includes("imm5709")
-            ? "Student"
-            : answers.forms.includes("imm5257") ||
-                answers.forms.includes("imm5708")
-              ? "Visitor"
-              : "Worker",
+        defaultOccupation: occupationLabelForForms(answers.forms, lang),
       }),
     imm5645: (xml) => patchImm5645(xml, answers),
     imm5406: (xml) => patchImm5406(xml, answers),
@@ -220,7 +214,7 @@ function buildPrimaryPayload(
     serviceIn: lang,
     preferredLang: lang,
     ableToCommunicate: lang,
-    nativeLang: answers.citizenship || "English",
+    nativeLang: "001",
     sameAsMailing: "Y",
     phoneType: "02",
     funds: "Myself",

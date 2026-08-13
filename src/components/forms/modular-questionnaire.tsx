@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { GripVertical, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +14,17 @@ import {
   emptyTableRow,
   FIELD_GROUPS,
   fieldGroupForKey,
+  fieldOptionLabel,
   fieldsForFormCodes,
   isFieldVisible,
   isGatedByParent,
   isTableVisible,
+  orderedFieldOptions,
   primaryGateKey,
   sectionsForFields,
   tablesForFormCodes,
   type CanonicalField,
+  type FieldOption,
   type QuestionnaireFieldGroup,
   type QuestionnaireSection,
   type RepeatableTable,
@@ -74,12 +77,16 @@ function FieldControl({
   onChange: (value: string) => void;
   required?: boolean;
   maxLength?: number;
-  options?: Array<{ value: string; labelKey: string }>;
+  options?: FieldOption[];
   t: ReturnType<typeof useTranslations>;
   compact?: boolean;
   placeholder?: string;
 }) {
+  const locale = useLocale();
   const selectClass = compact ? compactControlClass : defaultSelectClass;
+  const selectOptions = options
+    ? orderedFieldOptions(options, locale, t)
+    : [];
   const control =
     type === "select" ? (
       <select
@@ -93,9 +100,9 @@ function FieldControl({
         <option value="" disabled={Boolean(value)}>
           {placeholder ?? t("selectPlaceholder")}
         </option>
-        {options?.map((opt) => (
+        {selectOptions.map((opt) => (
           <option key={opt.value} value={opt.value}>
-            {t(`options.${opt.labelKey}`)}
+            {fieldOptionLabel(opt, locale, t)}
           </option>
         ))}
       </select>

@@ -7,10 +7,8 @@
 
 import { deflate, inflate } from "pako";
 import { md5 } from "js-md5";
-import countryCodes from "../codes/country-codes.json";
-import countryAliases from "../codes/country-aliases.json";
-import languageCodes from "../codes/language-codes.json";
 import cityCodes from "../codes/city-codes.json";
+import { resolveCountryLic, resolveLanguageLic } from "../codes/resolve-lic";
 import {
   type CorRow,
   type EducationRow,
@@ -28,7 +26,7 @@ export type Imm1294Answers = {
   email: string;
   familyName: string;
   givenName: string;
-  sex: "Male" | "Female" | "Unknown";
+  sex: "Male" | "Female" | "Unknown" | "Unspecified";
   dobYear: string;
   dobMonth: string;
   dobDay: string;
@@ -278,38 +276,6 @@ function fillNested(
   const pos = tail.indexOf(empty);
   if (pos < 0) return xml;
   return head + tail.slice(0, pos) + filled + tail.slice(pos + empty.length);
-}
-
-function resolveCountryLic(value: string): string {
-  const raw = value.trim();
-  if (/^\d{3}$/.test(raw)) return raw;
-  const map = countryCodes as Record<string, string>;
-  if (map[raw]) return map[raw];
-  const lower = raw.toLowerCase();
-  const aliases = countryAliases as Record<string, string>;
-  if (aliases[lower]) return aliases[lower];
-  for (const [label, lic] of Object.entries(map)) {
-    if (label.toLowerCase() === lower) return lic;
-  }
-  // Accent-insensitive match against IRCC French labels
-  const folded = lower.normalize("NFD").replace(/\p{M}/gu, "");
-  for (const [label, lic] of Object.entries(map)) {
-    const lab = label.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
-    if (lab === folded) return lic;
-  }
-  throw new Error(`Unknown country (use IRCC list name or 3-digit code): ${raw}`);
-}
-
-function resolveLanguageLic(value: string): string {
-  const raw = value.trim();
-  if (/^\d{3}$/.test(raw)) return raw;
-  const map = languageCodes as Record<string, string>;
-  if (map[raw]) return map[raw];
-  const lower = raw.toLowerCase();
-  for (const [label, lic] of Object.entries(map)) {
-    if (label.toLowerCase() === lower) return lic;
-  }
-  throw new Error(`Unknown native language (e.g. French, English): ${raw}`);
 }
 
 function resolveProvinceLic(value: string): string {
