@@ -44,7 +44,7 @@ export function LocaleSwitcher({
           compact && variant !== "sidebar" && "h-8 px-2 text-xs",
           compact &&
             variant === "sidebar" &&
-            "h-9 appearance-none px-0 text-center text-[11px] font-semibold tracking-wide",
+            "size-9 appearance-none rounded-lg px-0 text-center text-[11px] font-semibold tracking-wide",
         )}
       >
         {APP_LOCALES.map((code) => (

@@ -24,13 +24,13 @@ export function SettingsNavLinks({
       onClick={onNavigate}
       aria-label={t("menuAria")}
       title={collapsed ? t("menuLabel") : undefined}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-        collapsed && "justify-center px-0",
-        active
-          ? "bg-sidebar-primary text-sidebar-primary-foreground"
-          : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-      )}
+        className={cn(
+          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+          collapsed && "size-9 shrink-0 justify-center gap-0 px-0 py-0",
+          active
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+            : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        )}
     >
       <Settings className="size-4 shrink-0 opacity-90" aria-hidden />
       <span className={cn("whitespace-nowrap", collapsed && "sr-only")}>

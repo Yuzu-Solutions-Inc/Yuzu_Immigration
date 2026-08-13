@@ -42,11 +42,11 @@ export function OrgSwitcher({
       <p
         title={collapsed ? active.name : undefined}
         className={cn(
-          "truncate",
           variant === "sidebar" && "text-xs text-sidebar-foreground/55",
           variant === "header" && "text-sm font-medium text-brand",
-          collapsed &&
-            "mx-auto flex size-9 items-center justify-center rounded-lg bg-sidebar-accent text-[11px] font-semibold tracking-wide text-sidebar-foreground",
+          collapsed
+            ? "flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent text-[11px] font-semibold tracking-wide text-sidebar-foreground"
+            : "truncate",
         )}
       >
         {label}
@@ -59,17 +59,23 @@ export function OrgSwitcher({
   );
 
   return (
-    <form action={switchOrganizationAction}>
+    <form
+      action={switchOrganizationAction}
+      className={cn(collapsed && "flex justify-center")}
+    >
       <input type="hidden" name="locale" value={locale} />
       <label
-        className={cn("block min-w-0", collapsed && "relative mx-auto size-9")}
+        className={cn(
+          "block min-w-0",
+          collapsed && "relative size-9 shrink-0",
+        )}
         title={collapsed ? active.name : undefined}
       >
         <span className="sr-only">{t("switchOrgAria")}</span>
         {collapsed ? (
           <span
             aria-hidden
-            className="pointer-events-none flex size-9 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent text-[11px] font-semibold tracking-wide text-sidebar-foreground"
+            className="pointer-events-none flex size-9 items-center justify-center rounded-lg bg-sidebar-accent text-[11px] font-semibold tracking-wide text-sidebar-foreground"
           >
             {label}
           </span>

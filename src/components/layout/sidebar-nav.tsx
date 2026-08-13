@@ -34,6 +34,8 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_COOKIE = "sidebar-collapsed";
+const collapsedItemClass =
+  "flex size-9 shrink-0 items-center justify-center rounded-lg";
 
 const navItems = [
   { href: "/home", key: "home" as const, icon: Home },
@@ -91,23 +93,24 @@ function SidebarBody({
       <div
         className={cn(
           "space-y-4 border-b border-sidebar-border py-5",
-          collapsed ? "px-2" : "px-4 pr-10",
+          collapsed ? "flex flex-col items-center px-2" : "px-4 pr-10",
         )}
       >
         {collapsed ? (
           onToggleCollapse ? (
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={onToggleCollapse}
-                aria-expanded={false}
-                aria-label={t("expand")}
-                title={t("expand")}
-                className="inline-flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              >
-                <ChevronRight className="size-5" aria-hidden />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              aria-expanded={false}
+              aria-label={t("expand")}
+              title={t("expand")}
+              className={cn(
+                collapsedItemClass,
+                "text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              )}
+            >
+              <ChevronRight className="size-4" aria-hidden />
+            </button>
           ) : null
         ) : (
           <BrandLogo href="/home" size="sm" inverted />
@@ -125,9 +128,10 @@ function SidebarBody({
             aria-label={newProjectLabel}
             title={collapsed ? newProjectLabel : undefined}
             className={cn(
-              buttonVariants({ size: collapsed ? "icon-sm" : "sm" }),
+              collapsed
+                ? collapsedItemClass
+                : cn(buttonVariants({ size: "sm" }), "w-full"),
               "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
-              collapsed ? "mx-auto" : "w-full",
             )}
           >
             {collapsed ? (
@@ -142,7 +146,7 @@ function SidebarBody({
       <nav
         className={cn(
           "flex flex-1 flex-col gap-1 overflow-y-auto py-4",
-          collapsed ? "px-2" : "px-3",
+          collapsed ? "items-center px-2" : "px-3",
         )}
       >
         {navItems.map((item) => {
@@ -158,7 +162,7 @@ function SidebarBody({
               title={collapsed ? label : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                collapsed && "justify-center px-0",
+                collapsed && cn(collapsedItemClass, "gap-0 px-0 py-0"),
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
                   : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -176,7 +180,7 @@ function SidebarBody({
       <div
         className={cn(
           "mt-auto space-y-2 border-t border-sidebar-border",
-          collapsed ? "p-2" : "p-3",
+          collapsed ? "flex flex-col items-center p-2" : "p-3",
         )}
       >
         <PrivacyLink
@@ -184,24 +188,27 @@ function SidebarBody({
           className={cn(
             "block text-sidebar-foreground/45 hover:text-sidebar-foreground/70",
             collapsed
-              ? "truncate px-0 py-1 text-center text-[11px]"
+              ? "w-9 truncate px-0 py-1 text-center text-[11px]"
               : "px-3 py-1",
           )}
         />
         <LocaleSwitcher
-          className={cn("w-full", !collapsed && "px-0.5")}
+          className={cn(collapsed ? "w-9" : "w-full px-0.5")}
           variant="sidebar"
           compact={collapsed}
         />
         <SettingsNavLinks onNavigate={onNavigate} collapsed={collapsed} />
-        <form action={signOutAction}>
+        <form
+          action={signOutAction}
+          className={cn(collapsed && "flex justify-center")}
+        >
           <input type="hidden" name="locale" value={locale} />
           <button
             type="submit"
             title={collapsed ? auth("signOut") : undefined}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              collapsed && "justify-center px-0",
+              collapsed && cn(collapsedItemClass, "w-9 gap-0 px-0 py-0"),
             )}
           >
             <LogOut className="size-4 shrink-0 opacity-90" aria-hidden />
