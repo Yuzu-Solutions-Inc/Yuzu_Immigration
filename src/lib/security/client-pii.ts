@@ -33,6 +33,9 @@ export const PII_AAD = {
     clientName: "file_destruction_register.client_name",
     serviceSummary: "file_destruction_register.service_summary",
   },
+  shareLinks: {
+    token: "form_share_links.token_encrypted",
+  },
 } as const;
 
 type PersonPii = {

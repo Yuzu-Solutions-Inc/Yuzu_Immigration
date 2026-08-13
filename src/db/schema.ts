@@ -405,6 +405,8 @@ export const formShareLinks = pgTable("form_share_links", {
     .notNull()
     .references(() => immigrationProjects.id, { onDelete: "cascade" }),
   tokenHash: text("token_hash").notNull().unique(),
+  /** Org-DEK encrypted token so staff can recopy a still-valid link. */
+  tokenEncrypted: text("token_encrypted"),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   createdBy: uuid("created_by").references(() => profiles.id, {

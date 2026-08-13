@@ -148,13 +148,16 @@ export async function removeDocumentRequestAction(
     .eq("request_id", requestId)
     .maybeSingle();
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from("project_document_requests")
     .delete()
-    .eq("id", requestId);
+    .eq("id", requestId)
+    .eq("project_id", projectId)
+    .eq("organization_id", orgId)
+    .select("id");
 
-  if (error) {
-    console.error("removeDocumentRequest:", error.message);
+  if (error || !deleted?.length) {
+    console.error("removeDocumentRequest:", error?.message ?? "no rows deleted");
     return { error: "remove_failed" };
   }
 

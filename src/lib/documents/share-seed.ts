@@ -13,25 +13,23 @@ export async function seedShareDocumentDefaults(input: {
   const admin = createServiceClient();
   const { data: existing, error } = await admin
     .from("project_document_requests")
-    .select("person_id, doc_key")
-    .eq("project_id", input.projectId)
-    .in("doc_key", ["passport", "photo"]);
+    .select("person_id")
+    .eq("project_id", input.projectId);
 
   if (error) {
     console.error("seedShareDocumentDefaults:", error.message);
     return;
   }
 
-  const have = new Set(
-    (existing ?? []).map((r) => `${r.person_id}:${r.doc_key}`),
+  const seededPeople = new Set(
+    (existing ?? []).map((r) => r.person_id as string),
   );
   const defaults = defaultDocumentsForProgram(input.programFamily);
   const inserts = [];
 
   for (const personId of input.personIds) {
+    if (seededPeople.has(personId)) continue;
     for (const seed of defaults) {
-      const key = `${personId}:${seed.docKey}`;
-      if (have.has(key)) continue;
       inserts.push({
         organization_id: input.organizationId,
         project_id: input.projectId,

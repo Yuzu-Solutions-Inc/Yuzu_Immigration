@@ -97,11 +97,17 @@ export type FormShareLinkRow = {
   organization_id: string;
   project_id: string;
   token_hash: string;
+  token_encrypted?: string | null;
   expires_at: string;
   revoked_at: string | null;
   created_by: string | null;
   last_accessed_at: string | null;
   created_at: string;
+};
+
+export type ActiveShareLink = {
+  expires_at: string;
+  canReveal: boolean;
 };
 
 export type ProjectPersonBrief = {
@@ -775,26 +781,27 @@ export async function removeProjectForm(input: {
   if (!row) {
     throw new Error("not_found");
   }
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from("project_forms")
     .delete()
     .eq("id", input.formId)
     .eq("project_id", input.projectId)
-    .eq("organization_id", input.organizationId);
-  if (error) {
-    console.error("removeProjectForm:", error.message);
-    throw new Error(error.message);
+    .eq("organization_id", input.organizationId)
+    .select("id");
+  if (error || !deleted?.length) {
+    console.error("removeProjectForm:", error?.message ?? "no rows deleted");
+    throw new Error(error?.message ?? "not_found");
   }
 }
 
 export async function getActiveShareLink(
   projectId: string,
-): Promise<FormShareLinkRow | null> {
+): Promise<ActiveShareLink | null> {
   const supabase = await createClient();
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("form_share_links")
-    .select("*")
+    .select("expires_at, token_encrypted")
     .eq("project_id", projectId)
     .is("revoked_at", null)
     .gt("expires_at", now)
@@ -805,7 +812,11 @@ export async function getActiveShareLink(
     console.error("getActiveShareLink:", error.message);
     return null;
   }
-  return data as FormShareLinkRow | null;
+  if (!data) return null;
+  return {
+    expires_at: data.expires_at as string,
+    canReveal: Boolean(data.token_encrypted),
+  };
 }
 
 /** Resolve a client share token via service role (no staff session). */

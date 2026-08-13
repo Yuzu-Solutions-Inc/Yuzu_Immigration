@@ -34,6 +34,9 @@ import {
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { recordAuditEvent } from "@/lib/security/audit";
+import { PII_AAD } from "@/lib/security/client-pii";
+import { encryptField, decryptField } from "@/lib/security/field-crypto";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { getAppBaseUrl } from "@/lib/app-url";
@@ -301,11 +304,17 @@ export async function createFormShareLinkAction(
   const expiresAt = new Date(
     Date.now() + SHARE_LINK_TTL_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
+  const tokenEncrypted = encryptField(
+    token,
+    PII_AAD.shareLinks.token,
+    await getOrgDataKey(orgId),
+  );
 
   const { error } = await supabase.from("form_share_links").insert({
     organization_id: orgId,
     project_id: projectId,
     token_hash: hashToken(token),
+    token_encrypted: tokenEncrypted,
     expires_at: expiresAt,
     created_by: user?.id ?? null,
   });
@@ -330,6 +339,74 @@ export async function createFormShareLinkAction(
 
   revalidatePath(`/${locale}/projects/${projectId}`);
   return { message: "shared", shareUrl, expiresAt };
+}
+
+export async function revealFormShareLinkAction(
+  _prev: FormsActionState,
+  formData: FormData,
+): Promise<FormsActionState> {
+  const projectId = String(formData.get("projectId") || "");
+  const locale = String(formData.get("locale") || "en");
+
+  if (!z.string().uuid().safeParse(projectId).success) {
+    return { error: "invalid" };
+  }
+
+  const orgId = await requireOrganizationId();
+  if (!orgId) return { error: "unauthorized" };
+
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("form_share_links")
+    .select("id, token_encrypted, expires_at")
+    .eq("project_id", projectId)
+    .eq("organization_id", orgId)
+    .is("revoked_at", null)
+    .gt("expires_at", now)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("reveal share link:", error.message);
+    return { error: "share_failed" };
+  }
+  if (!data) return { error: "expired" };
+
+  const encrypted = data.token_encrypted as string | null;
+  if (!encrypted) return { error: "unrecoverable" };
+
+  let token: string;
+  try {
+    token = decryptField(
+      encrypted,
+      PII_AAD.shareLinks.token,
+      await getOrgDataKey(orgId),
+    );
+  } catch (err) {
+    console.error("reveal share link decrypt:", err);
+    return { error: "unrecoverable" };
+  }
+
+  const user = await getSessionUser();
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "share_link.reveal",
+    resourceType: "immigration_project",
+    resourceId: projectId,
+    metadata: { shareLinkId: data.id },
+  });
+
+  const base = await getAppBaseUrl();
+  const shareUrl = `${base}/${locale}/fill/${token}`;
+  return {
+    message: "revealed",
+    shareUrl,
+    expiresAt: data.expires_at as string,
+  };
 }
 
 export async function revokeFormShareLinkAction(

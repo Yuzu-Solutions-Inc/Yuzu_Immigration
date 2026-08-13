@@ -6,10 +6,8 @@ import { useTranslations } from "next-intl";
 
 import {
   addFormToProjectAction,
-  createFormShareLinkAction,
   generateProjectPdfsAction,
   removeFormFromProjectAction,
-  revokeFormShareLinkAction,
   saveProjectAnswersAction,
   type FormsActionState,
 } from "@/app/actions/forms";
@@ -17,6 +15,7 @@ import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
+import { ProjectShareLinkCard } from "@/components/forms/project-share-link-card";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +62,7 @@ export function ProjectFormsPanel({
   forms,
   people,
   activeShareExpiresAt,
+  shareCanReveal,
 }: {
   locale: "en" | "fr";
   projectId: string;
@@ -70,6 +70,7 @@ export function ProjectFormsPanel({
   forms: ProjectFormTodoRow[];
   people: QuestionnairePerson[];
   activeShareExpiresAt: string | null;
+  shareCanReveal: boolean;
 }) {
   const t = useTranslations("forms");
   const tr = useTranslations("roles");
@@ -79,14 +80,6 @@ export function ProjectFormsPanel({
   );
   const [removeState, removeAction, removePending] = useActionState(
     removeFormFromProjectAction,
-    initialState,
-  );
-  const [shareState, shareAction, sharePending] = useActionState(
-    createFormShareLinkAction,
-    initialState,
-  );
-  const [revokeState, revokeAction, revokePending] = useActionState(
-    revokeFormShareLinkAction,
     initialState,
   );
   const [genPending, startGen] = useTransition();
@@ -141,57 +134,12 @@ export function ProjectFormsPanel({
 
   return (
     <div className="space-y-6">
-      <SurfaceCard className="space-y-4">
-        <h3 className="font-heading text-base font-semibold text-brand">
-          {t("shareTitle")}
-        </h3>
-        {activeShareExpiresAt ? (
-          <p className="text-sm text-brand">
-            {t("shareActive", {
-              date: new Date(activeShareExpiresAt).toLocaleDateString(
-                locale === "fr" ? "fr-CA" : "en-CA",
-              ),
-            })}
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">{t("shareInactive")}</p>
-        )}
-        {shareState.shareUrl ? (
-          <div className="space-y-2 rounded-xl border border-border bg-canvas p-3">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              {t("shareCopy")}
-            </p>
-            <p className="break-all font-mono text-sm text-brand">
-              {shareState.shareUrl}
-            </p>
-          </div>
-        ) : null}
-        <div className="flex flex-wrap gap-2">
-          <form action={shareAction}>
-            <input type="hidden" name="projectId" value={projectId} />
-            <input type="hidden" name="locale" value={locale} />
-            <Button type="submit" disabled={sharePending}>
-              {sharePending
-                ? t("sharing")
-                : activeShareExpiresAt
-                  ? t("newShareLink")
-                  : t("createShareLink")}
-            </Button>
-          </form>
-          {activeShareExpiresAt ? (
-            <form action={revokeAction}>
-              <input type="hidden" name="projectId" value={projectId} />
-              <input type="hidden" name="locale" value={locale} />
-              <Button type="submit" variant="outline" disabled={revokePending}>
-                {t("revokeShareLink")}
-              </Button>
-            </form>
-          ) : null}
-        </div>
-        {shareState.error || revokeState.error ? (
-          <p className="text-sm text-destructive">{t("errors.shareFailed")}</p>
-        ) : null}
-      </SurfaceCard>
+      <ProjectShareLinkCard
+        locale={locale}
+        projectId={projectId}
+        activeShareExpiresAt={activeShareExpiresAt}
+        canReveal={shareCanReveal}
+      />
 
       <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">

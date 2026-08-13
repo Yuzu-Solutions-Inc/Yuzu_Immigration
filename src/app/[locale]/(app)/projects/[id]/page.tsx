@@ -335,6 +335,7 @@ export default async function ProjectDetailPage({
             forms={todoForms}
             people={questionnairePeople}
             activeShareExpiresAt={share?.expires_at ?? null}
+            shareCanReveal={share?.canReveal ?? false}
           />
         </div>
       </div>
