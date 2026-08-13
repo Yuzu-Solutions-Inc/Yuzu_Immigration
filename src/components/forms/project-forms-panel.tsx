@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { CircleCheck, Download, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -51,6 +51,10 @@ function triggerBrowserDownload(
   URL.revokeObjectURL(url);
 }
 
+export type ProjectFormTodoRow = ProjectFormRow & {
+  mandatoryReady: boolean;
+};
+
 export function ProjectFormsPanel({
   locale,
   projectId,
@@ -62,7 +66,7 @@ export function ProjectFormsPanel({
   locale: "en" | "fr";
   projectId: string;
   programFamily: ProgramFamily | string;
-  forms: ProjectFormRow[];
+  forms: ProjectFormTodoRow[];
   people: QuestionnairePerson[];
   activeShareExpiresAt: string | null;
 }) {
@@ -189,17 +193,15 @@ export function ProjectFormsPanel({
           <h2 className="font-heading text-lg font-semibold text-brand">
             {t("todoTitle")}
           </h2>
-          {forms.length > 0 ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={genPending}
-              onClick={() => handleDownload()}
-            >
-              {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={genPending || forms.length === 0}
+            onClick={() => handleDownload()}
+          >
+            {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
+          </Button>
         </div>
         <ul className="divide-y divide-border border-t border-border">
           {forms.length === 0 ? (
@@ -211,45 +213,51 @@ export function ProjectFormsPanel({
               const assignee = form.person_id
                 ? peopleById.get(form.person_id)
                 : null;
+              const ready = form.mandatoryReady;
+              const downloading = downloadingKey === form.id;
               return (
-                <li
-                  key={form.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-brand">
-                      {formTitle(form.form_code as FormCode, locale)}
-                    </p>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                      {form.form_code.toUpperCase()}
-                      {form.is_required ? ` · ${t("required")}` : ""}
-                      {assignee
-                        ? ` · ${assignee.displayName}`
-                        : ` · ${t("projectScoped")}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      {t(`statuses.${form.status}`)}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon-sm"
-                      disabled={genPending}
-                      onClick={() => handleDownload(form.id)}
-                      aria-label={
-                        downloadingKey === form.id
-                          ? t("downloading")
-                          : t("download")
-                      }
-                    >
-                      {downloadingKey === form.id ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Download className="size-4" />
-                      )}
-                    </Button>
+                <li key={form.id} className="group px-5 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-brand">
+                        {formTitle(form.form_code as FormCode, locale)}
+                      </p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        {form.form_code.toUpperCase()}
+                        {form.is_required ? ` · ${t("required")}` : ""}
+                        {assignee
+                          ? ` · ${assignee.displayName}`
+                          : ` · ${t("projectScoped")}`}
+                      </p>
+                    </div>
+                    {ready ? (
+                      <CircleCheck
+                        className="size-4 shrink-0 text-emerald-600"
+                        aria-label={t("statuses.ready")}
+                      />
+                    ) : null}
+                    {ready ? (
+                      <div className="flex shrink-0 items-center opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[[data-downloading]]:opacity-100">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          disabled={genPending}
+                          data-downloading={downloading ? "" : undefined}
+                          onClick={() => handleDownload(form.id)}
+                          aria-label={
+                            downloading ? t("downloading") : t("download")
+                          }
+                          title={t("download")}
+                        >
+                          {downloading ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Download className="size-4" />
+                          )}
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
                 </li>
               );

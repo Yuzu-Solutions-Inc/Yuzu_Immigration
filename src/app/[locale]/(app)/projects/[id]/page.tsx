@@ -35,6 +35,7 @@ import {
   answersForPersonFill,
   normalizeAnswersStore,
 } from "@/lib/ircc/answers-store";
+import { isFormMandatoryComplete } from "@/lib/ircc/form-readiness";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
 import {
   mergeAccountRepIntoAnswers,
@@ -133,6 +134,22 @@ export default async function ProjectDetailPage({
         ),
       };
     });
+
+  const principalAnswers =
+    questionnairePeople.find((person) => person.role === "principal")
+      ?.answers ??
+    questionnairePeople[0]?.answers ??
+    {};
+  const todoForms = forms.map((form) => {
+    const answers = form.person_id
+      ? (questionnairePeople.find((person) => person.id === form.person_id)
+          ?.answers ?? principalAnswers)
+      : principalAnswers;
+    return {
+      ...form,
+      mandatoryReady: isFormMandatoryComplete(form.form_code, answers),
+    };
+  });
 
   const opened = new Date(project.opened_at).toLocaleDateString(
     locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
@@ -315,7 +332,7 @@ export default async function ProjectDetailPage({
             locale={formLocale}
             projectId={project.id}
             programFamily={project.program_family}
-            forms={forms}
+            forms={todoForms}
             people={questionnairePeople}
             activeShareExpiresAt={share?.expires_at ?? null}
           />
