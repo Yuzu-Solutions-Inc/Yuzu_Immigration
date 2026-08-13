@@ -562,6 +562,97 @@ function answersToState(initial: Record<string, unknown>) {
   return applyDerivedAnswers(next);
 }
 
+function SectionProgressNav({
+  sections,
+  sectionIndex,
+  onSelect,
+  t,
+}: {
+  sections: QuestionnaireSection[];
+  sectionIndex: number;
+  onSelect: (index: number) => void;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const last = Math.max(sections.length - 1, 1);
+  const percent = Math.round((sectionIndex / last) * 100);
+
+  return (
+    <nav
+      aria-label={t("sectionStepsLabel")}
+      className="rounded-xl bg-canvas p-4 lg:sticky lg:top-4 lg:w-56 lg:shrink-0"
+    >
+      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        {t("progressLabel")}
+      </p>
+      <div
+        className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-label={t("progressComplete", { percent })}
+      >
+        <div
+          className="h-full rounded-full bg-highlight transition-[width] duration-200"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <p className="mt-2 text-sm font-semibold text-brand">
+        {t("progressComplete", { percent })}
+      </p>
+
+      <div className="relative mt-4">
+        <span
+          aria-hidden
+          className="absolute top-4 bottom-4 left-[1.375rem] w-px -translate-x-1/2 bg-border"
+        />
+        <ol className="space-y-1">
+          {sections.map((s, i) => {
+            const current = i === sectionIndex;
+            const done = i < sectionIndex;
+            return (
+              <li key={s} className="relative">
+                <button
+                  type="button"
+                  aria-current={current ? "step" : undefined}
+                  onClick={() => onSelect(i)}
+                  className={cn(
+                    "flex w-full cursor-pointer items-center gap-3 rounded-xl px-1.5 py-1.5 text-left transition-colors",
+                    current && "bg-highlight/20",
+                    !current && "hover:bg-white/70",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                      done && "bg-brand text-white",
+                      current && "bg-highlight text-brand",
+                      !done && !current && "bg-muted text-white",
+                    )}
+                    aria-hidden
+                  >
+                    {i + 1}
+                  </span>
+                  <span
+                    className={cn(
+                      "min-w-0 text-sm font-semibold leading-snug",
+                      done && "text-brand",
+                      current && "text-brand",
+                      !done && !current && "text-muted-foreground",
+                    )}
+                  >
+                    {t(`sections.${s}`)}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </nav>
+  );
+}
+
 function initTables(
   formCodes: string[],
   initial: Record<string, unknown>,
@@ -928,52 +1019,17 @@ export function ModularQuestionnaire({
               : t("personTabsHelpSingle", { name: activePerson.displayName })}
           </p>
         </div>
-
-        <div className="space-y-2 border-t border-border pt-4">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("sectionStepsLabel")}
-          </p>
-          <div
-            role="tablist"
-            aria-label={t("sectionStepsLabel")}
-            className="flex flex-wrap gap-2"
-          >
-            {sections.map((s, i) => {
-              const current = i === sectionIndex;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  role="tab"
-                  aria-selected={current}
-                  aria-current={current ? "step" : undefined}
-                  onClick={() => setSectionIndex(i)}
-                  className={cn(
-                    "inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold shadow-elevated transition-colors",
-                    current
-                      ? "border-action bg-action text-white"
-                      : "border-border bg-surface text-brand hover:border-action hover:bg-white",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
-                      current
-                        ? "bg-white/20 text-white"
-                        : "bg-canvas text-muted-foreground",
-                    )}
-                    aria-hidden
-                  >
-                    {i + 1}
-                  </span>
-                  {t(`sections.${s}`)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <SectionProgressNav
+          sections={sections}
+          sectionIndex={sectionIndex}
+          onSelect={setSectionIndex}
+          t={t}
+        />
+
+        <div className="min-w-0 flex-1 space-y-6">
       <div className="space-y-1">
         <h3 className="font-heading text-lg font-semibold text-brand">
           {t(`sections.${section}`)}
@@ -1025,6 +1081,8 @@ export function ModularQuestionnaire({
               {pending ? t("saving") : t("saveFinish")}
             </Button>
           )}
+        </div>
+      </div>
         </div>
       </div>
     </div>
