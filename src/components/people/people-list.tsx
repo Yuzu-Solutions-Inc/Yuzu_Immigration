@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -7,33 +8,68 @@ import { DeletePersonButton } from "@/components/people/delete-person-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { PersonImmigrationStatus } from "@/db/schema";
 import { Link } from "@/i18n/navigation";
+import { daysUntilIso, formatDisplayDate } from "@/lib/crm/dates";
+import { PERSON_IMMIGRATION_STATUSES } from "@/lib/crm/person-status";
+import type { PersonRow } from "@/lib/crm/queries";
+import { cn } from "@/lib/utils";
 
-type PersonListItem = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-};
+type SortKey = "name" | "email" | "immigration_status" | "status_expires_at";
+type SortDir = "asc" | "desc";
+type ExpiryFilter = "all" | "expired" | "expiring_30" | "no_date";
+
+function compareNullableDates(a: string | null, b: string | null) {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return a.localeCompare(b);
+}
+
+function expiryClass(isoDate: string | null) {
+  if (!isoDate) return "text-muted-foreground";
+  const days = daysUntilIso(isoDate);
+  if (days < 0) return "text-destructive";
+  if (days <= 7) return "text-[#b45309]";
+  return "text-muted-foreground";
+}
+
+const selectClassName =
+  "h-8 w-full min-w-[8.5rem] rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
 export function PeopleList({
   locale,
   people,
 }: {
   locale: string;
-  people: PersonListItem[];
+  people: PersonRow[];
 }) {
   const t = useTranslations("people");
+  const ti = useTranslations("immigrationStatus");
   const [nameQuery, setNameQuery] = useState("");
   const [emailQuery, setEmailQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    PersonImmigrationStatus | "all"
+  >("all");
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const deferredName = useDeferredValue(nameQuery);
   const deferredEmail = useDeferredValue(emailQuery);
 
-  const filtered = useMemo(() => {
+  const filteredSorted = useMemo(() => {
     const nameQ = deferredName.trim().toLowerCase();
     const emailQ = deferredEmail.trim().toLowerCase();
 
-    return people.filter((person) => {
+    const rows = people.filter((person) => {
       if (nameQ) {
         const fullName = `${person.first_name} ${person.last_name}`.toLowerCase();
         if (!fullName.includes(nameQ)) return false;
@@ -41,11 +77,100 @@ export function PeopleList({
       if (emailQ) {
         if (!(person.email ?? "").toLowerCase().includes(emailQ)) return false;
       }
+      if (statusFilter !== "all" && person.immigration_status !== statusFilter) {
+        return false;
+      }
+      if (expiryFilter === "no_date") {
+        if (person.status_expires_at) return false;
+      } else if (expiryFilter === "expired") {
+        if (
+          !person.status_expires_at ||
+          daysUntilIso(person.status_expires_at) >= 0
+        ) {
+          return false;
+        }
+      } else if (expiryFilter === "expiring_30") {
+        if (!person.status_expires_at) return false;
+        const days = daysUntilIso(person.status_expires_at);
+        if (days < 0 || days > 30) return false;
+      }
       return true;
     });
-  }, [people, deferredName, deferredEmail]);
 
-  const filtersActive = Boolean(nameQuery.trim() || emailQuery.trim());
+    rows.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "name") {
+        cmp = `${a.last_name} ${a.first_name}`.localeCompare(
+          `${b.last_name} ${b.first_name}`,
+          undefined,
+          { sensitivity: "base" },
+        );
+      } else if (sortKey === "email") {
+        cmp = (a.email ?? "").localeCompare(b.email ?? "", undefined, {
+          sensitivity: "base",
+        });
+      } else if (sortKey === "immigration_status") {
+        cmp = ti(a.immigration_status).localeCompare(ti(b.immigration_status), undefined, {
+          sensitivity: "base",
+        });
+      } else {
+        cmp = compareNullableDates(a.status_expires_at, b.status_expires_at);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return rows;
+  }, [
+    people,
+    deferredName,
+    deferredEmail,
+    statusFilter,
+    expiryFilter,
+    sortKey,
+    sortDir,
+    ti,
+  ]);
+
+  const filtersActive = Boolean(
+    nameQuery.trim() ||
+      emailQuery.trim() ||
+      statusFilter !== "all" ||
+      expiryFilter !== "all",
+  );
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir("asc");
+  }
+
+  function SortButton({
+    column,
+    label,
+  }: {
+    column: SortKey;
+    label: string;
+  }) {
+    const active = sortKey === column;
+    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSort(column)}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left font-medium transition-colors",
+          "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+          active ? "text-brand" : "text-foreground",
+        )}
+      >
+        {label}
+        <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
+      </button>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -72,6 +197,38 @@ export function PeopleList({
             className="h-8 rounded-lg px-2 text-sm"
           />
         </div>
+        <div className="min-w-[10rem] space-y-1.5 sm:w-48">
+          <Label htmlFor="people-filter-status">{t("filterStatus")}</Label>
+          <select
+            id="people-filter-status"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as PersonImmigrationStatus | "all")
+            }
+            className={selectClassName}
+          >
+            <option value="all">{t("filterAll")}</option>
+            {PERSON_IMMIGRATION_STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {ti(value)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-[10rem] space-y-1.5 sm:w-48">
+          <Label htmlFor="people-filter-expiry">{t("filterExpiry")}</Label>
+          <select
+            id="people-filter-expiry"
+            value={expiryFilter}
+            onChange={(e) => setExpiryFilter(e.target.value as ExpiryFilter)}
+            className={selectClassName}
+          >
+            <option value="all">{t("filterAll")}</option>
+            <option value="expired">{t("filterExpiryExpired")}</option>
+            <option value="expiring_30">{t("filterExpirySoon")}</option>
+            <option value="no_date">{t("filterExpiryNone")}</option>
+          </select>
+        </div>
         {filtersActive ? (
           <Button
             type="button"
@@ -80,6 +237,8 @@ export function PeopleList({
             onClick={() => {
               setNameQuery("");
               setEmailQuery("");
+              setStatusFilter("all");
+              setExpiryFilter("all");
             }}
           >
             {t("clearFilters")}
@@ -87,45 +246,84 @@ export function PeopleList({
         ) : null}
       </div>
 
-      {filtered.length === 0 ? (
+      {filteredSorted.length === 0 ? (
         <p className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-[15px] text-muted-foreground shadow-elevated">
           {t("noMatches")}
         </p>
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-          {filtered.map((person) => {
-            const fullName = `${person.first_name} ${person.last_name}`;
-            return (
-              <li
-                key={person.id}
-                className="group flex items-center gap-3 px-5 py-4"
-              >
-                <Link
-                  href={`/people/${person.id}`}
-                  className="min-w-0 flex-1 transition-colors hover:opacity-80"
-                >
-                  <p className="font-medium text-brand">{fullName}</p>
-                  {person.email ? (
-                    <p className="text-sm text-muted-foreground">
-                      {person.email}
-                    </p>
-                  ) : null}
-                </Link>
-                <DeletePersonButton
-                  locale={locale}
-                  personId={person.id}
-                  fullName={fullName}
-                  className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100"
-                />
-              </li>
-            );
-          })}
-        </ul>
+        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="min-w-[12rem] px-5">
+                  <SortButton column="name" label={t("columnName")} />
+                </TableHead>
+                <TableHead>
+                  <SortButton column="email" label={t("columnEmail")} />
+                </TableHead>
+                <TableHead>
+                  <SortButton
+                    column="immigration_status"
+                    label={t("columnStatus")}
+                  />
+                </TableHead>
+                <TableHead>
+                  <SortButton
+                    column="status_expires_at"
+                    label={t("columnExpires")}
+                  />
+                </TableHead>
+                <TableHead className="w-12 px-5">
+                  <span className="sr-only">{t("delete")}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredSorted.map((person) => {
+                const fullName = `${person.first_name} ${person.last_name}`;
+                return (
+                  <TableRow key={person.id} className="group">
+                    <TableCell className="px-5 whitespace-normal">
+                      <Link
+                        href={`/people/${person.id}`}
+                        className="font-medium text-brand transition-colors hover:opacity-80"
+                      >
+                        {fullName}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {person.email ?? t("emptyValue")}
+                    </TableCell>
+                    <TableCell>{ti(person.immigration_status)}</TableCell>
+                    <TableCell
+                      className={cn(
+                        "font-medium",
+                        expiryClass(person.status_expires_at),
+                      )}
+                    >
+                      {person.status_expires_at
+                        ? formatDisplayDate(person.status_expires_at, locale)
+                        : t("emptyValue")}
+                    </TableCell>
+                    <TableCell className="px-5 text-right">
+                      <DeletePersonButton
+                        locale={locale}
+                        personId={person.id}
+                        fullName={fullName}
+                        className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100"
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       <p className="text-sm text-muted-foreground">
         {t("showingCount", {
-          shown: filtered.length,
+          shown: filteredSorted.length,
           total: people.length,
         })}
       </p>
