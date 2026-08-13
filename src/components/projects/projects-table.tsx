@@ -342,9 +342,9 @@ export function ProjectsTable({
 
       <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
         <Table>
-          <TableHeader>
+          <TableHeader className="[&_tr:first-child]:border-b-0">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-auto w-10 px-3 py-2.5 align-top">
+              <TableHead className="w-10 px-3">
                 <input
                   type="checkbox"
                   className="size-4 accent-action"
@@ -357,105 +357,110 @@ export function ProjectsTable({
                   disabled={visibleIds.length === 0}
                 />
               </TableHead>
-              <TableHead className="h-auto min-w-[12rem] py-2.5 align-top">
-                <div className="flex flex-col gap-1.5">
-                  <SortButton column="title" label={t("columnName")} />
-                  <Input
-                    id="projects-filter-name"
-                    type="search"
-                    value={nameQuery}
-                    onChange={(e) => setNameQuery(e.target.value)}
-                    placeholder={t("filterNamePlaceholder")}
-                    aria-label={t("filterName")}
-                    className={headerControlClassName}
-                  />
-                </div>
+              <TableHead className="min-w-[12rem]">
+                <SortButton column="title" label={t("columnName")} />
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-top">
-                <div className="flex flex-col gap-1.5">
-                  <SortButton
-                    column="program_family"
-                    label={t("columnProgram")}
-                  />
-                  <select
-                    id="projects-filter-program"
-                    value={programFilter}
-                    onChange={(e) =>
-                      setProgramFilter(e.target.value as ProgramFamily | "all")
-                    }
-                    aria-label={t("filterProgram")}
-                    className={headerControlClassName}
-                  >
-                    <option value="all">{t("filterAll")}</option>
-                    {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
-                      <option key={value} value={value}>
-                        {tprog(value)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <TableHead className="min-w-[10rem]">
+                <SortButton
+                  column="program_family"
+                  label={t("columnProgram")}
+                />
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-top">
-                <div className="flex flex-col gap-1.5">
-                  <span className="px-0.5 py-0.5 font-medium">
-                    {t("columnStatus")}
-                  </span>
-                  <select
-                    id="projects-filter-status"
-                    value={statusFilter}
-                    onChange={(e) =>
-                      setStatusFilter(e.target.value as ProjectStatus | "all")
-                    }
-                    aria-label={t("filterStatus")}
-                    className={headerControlClassName}
-                  >
-                    <option value="all">{t("filterAll")}</option>
-                    {PROJECT_STATUSES.map((value) => (
-                      <option key={value} value={value}>
-                        {t(`statuses.${value}`)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <TableHead className="min-w-[10rem]">
+                <span className="px-0.5 py-0.5 font-medium">
+                  {t("columnStatus")}
+                </span>
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-top">
-                <div className="flex flex-col gap-1.5">
-                  <SortButton
-                    column="representative"
-                    label={t("columnRepresentative")}
-                  />
-                  <select
-                    id="projects-filter-rep"
-                    value={representativeFilter}
-                    onChange={(e) =>
-                      setRepresentativeFilter(
-                        e.target.value as string | "all" | "unassigned",
-                      )
-                    }
-                    aria-label={t("filterRepresentative")}
-                    className={headerControlClassName}
-                  >
-                    <option value="all">{t("filterAll")}</option>
-                    <option value="unassigned">
-                      {t("representativeUnassigned")}
-                    </option>
-                    {members.map((member) => (
-                      <option key={member.user_id} value={member.user_id}>
-                        {staffLabel(member) || member.user_id}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <TableHead className="min-w-[10rem]">
+                <SortButton
+                  column="representative"
+                  label={t("columnRepresentative")}
+                />
               </TableHead>
-              <TableHead className="h-auto py-2.5 align-top">
+              <TableHead>
                 <SortButton column="created_at" label={t("columnCreated")} />
               </TableHead>
-              <TableHead className="h-auto py-2.5 align-top">
+              <TableHead>
                 <SortButton
                   column="submit_before"
                   label={t("columnSubmitBefore")}
                 />
               </TableHead>
+            </TableRow>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-auto w-10 px-3 pb-2.5 pt-0" />
+              <TableHead className="h-auto min-w-[12rem] pb-2.5 pt-0">
+                <Input
+                  id="projects-filter-name"
+                  type="search"
+                  value={nameQuery}
+                  onChange={(e) => setNameQuery(e.target.value)}
+                  placeholder={t("filterNamePlaceholder")}
+                  aria-label={t("filterName")}
+                  className={headerControlClassName}
+                />
+              </TableHead>
+              <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
+                <select
+                  id="projects-filter-program"
+                  value={programFilter}
+                  onChange={(e) =>
+                    setProgramFilter(e.target.value as ProgramFamily | "all")
+                  }
+                  aria-label={t("filterProgram")}
+                  className={headerControlClassName}
+                >
+                  <option value="all">{t("filterAll")}</option>
+                  {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
+                    <option key={value} value={value}>
+                      {tprog(value)}
+                    </option>
+                  ))}
+                </select>
+              </TableHead>
+              <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
+                <select
+                  id="projects-filter-status"
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(e.target.value as ProjectStatus | "all")
+                  }
+                  aria-label={t("filterStatus")}
+                  className={headerControlClassName}
+                >
+                  <option value="all">{t("filterAll")}</option>
+                  {PROJECT_STATUSES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(`statuses.${value}`)}
+                    </option>
+                  ))}
+                </select>
+              </TableHead>
+              <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
+                <select
+                  id="projects-filter-rep"
+                  value={representativeFilter}
+                  onChange={(e) =>
+                    setRepresentativeFilter(
+                      e.target.value as string | "all" | "unassigned",
+                    )
+                  }
+                  aria-label={t("filterRepresentative")}
+                  className={headerControlClassName}
+                >
+                  <option value="all">{t("filterAll")}</option>
+                  <option value="unassigned">
+                    {t("representativeUnassigned")}
+                  </option>
+                  {members.map((member) => (
+                    <option key={member.user_id} value={member.user_id}>
+                      {staffLabel(member) || member.user_id}
+                    </option>
+                  ))}
+                </select>
+              </TableHead>
+              <TableHead className="h-auto pb-2.5 pt-0" />
+              <TableHead className="h-auto pb-2.5 pt-0" />
             </TableRow>
           </TableHeader>
           <TableBody>
