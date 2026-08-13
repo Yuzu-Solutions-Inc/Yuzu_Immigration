@@ -69,39 +69,85 @@
     "organizationFallback": "la organización"
   },
   "appHome": {
-    "title": "Home",
-    "welcome": "Welcome back, {name}",
-    "welcomeFallback": "Welcome back",
-    "dashboardSubtitle": "Your firm’s workspace overview — more insights will land here over time.",
-    "orgLabel": "Organization",
-    "roleLabel": "Role",
-    "newProject": "New project",
+    "title": "Inicio",
+    "welcome": "Bienvenido de nuevo, {name}",
+    "welcomeFallback": "Bienvenido de nuevo",
+    "dashboardSubtitle": "Plazos, revisiones y expedientes que requieren una decisión.",
+    "orgLabel": "Organización",
+    "roleLabel": "Rol",
+    "newProject": "Nuevo proyecto",
     "newProjectHint": "Abra un expediente en una sola pantalla: personas y programa juntos.",
-    "recentProjects": "Recent projects",
-    "viewAllProjects": "View all projects",
-    "emptyProjects": "No projects yet. Start with your first immigration file.",
+    "recentProjects": "Proyectos recientes",
+    "viewAllProjects": "Ver todos los proyectos",
+    "emptyProjects": "Aún no hay proyectos. Empiece por su primer expediente de inmigración.",
     "stats": {
-      "activeProjects": "Open projects",
-      "people": "People",
-      "blocked": "Stuck / waiting"
+      "activeProjects": "Proyectos abiertos",
+      "people": "Personas",
+      "blocked": "Atascados / en espera",
+      "openFiles": "Expedientes abiertos",
+      "openFilesHint": "Nuevos y en curso",
+      "openFilesHintSubmitted": "{count} presentados a IRCC",
+      "needsAttention": "Requieren atención",
+      "needsAttentionHint": "Atascados o en espera",
+      "docsToReview": "Docs por revisar",
+      "docsToReviewHint": "Subidos por clientes",
+      "deadlines": "Vencen en 30 días",
+      "deadlinesHint": "Fechas de presentación",
+      "expiries": "Vencimientos de estatus",
+      "expiriesHint": "Vencidos o próximos 30 días",
+      "awaitingClient": "En espera del cliente",
+      "awaitingClientHint": "Documentos aún solicitados"
+    },
+    "actions": {
+      "title": "Requieren su acción",
+      "empty": "Está al día: no hay nada urgente por ahora.",
+      "docReviewDetail": "{doc} · {person}",
+      "kinds": {
+        "doc_review": "Revisar documento",
+        "stuck": "Atascado",
+        "waiting": "En espera",
+        "submit_overdue": "Presentación vencida",
+        "expiry_overdue": "Estatus vencido",
+        "share_expiring": "Enlace del cliente"
+      }
+    },
+    "awaiting": {
+      "title": "En espera del cliente",
+      "empty": "No hay documentos pendientes en expedientes abiertos.",
+      "docs": "{count, plural, one {# documento} other {# documentos}} aún solicitado(s)"
+    },
+    "deadlines": {
+      "title": "Fechas de presentación",
+      "empty": "No hay fechas de presentación en los próximos 45 días."
+    },
+    "active": {
+      "title": "Expedientes activos",
+      "empty": "No hay expedientes abiertos.",
+      "forms": "Formularios {done}/{total}",
+      "docs": "Docs {done}/{total}"
+    },
+    "activity": {
+      "title": "Cambios de estatus recientes",
+      "empty": "Los cambios de estatus aparecerán aquí.",
+      "changedTo": "Marcado {status}"
     },
     "expiries": {
-      "title": "Upcoming visa expiries",
-      "viewPeople": "View people",
-      "empty": "No status expiration dates yet. Add them when you create or update people.",
+      "title": "Vencimientos de estatus próximos",
+      "viewPeople": "Ver personas",
+      "empty": "No hay fechas de vencimiento en los próximos 90 días.",
       "columns": {
-        "person": "Person",
-        "status": "Status",
-        "expires": "Expires",
-        "timing": "Timing"
+        "person": "Persona",
+        "status": "Estatus",
+        "expires": "Vence",
+        "timing": "Plazo"
       },
-      "overdue": "{days}d overdue",
-      "today": "Today",
-      "inDays": "In {days}d"
+      "overdue": "{days}d de retraso",
+      "today": "Hoy",
+      "inDays": "En {days}d"
     },
     "placeholders": {
-      "activityTitle": "Recent activity",
-      "activityBody": "File updates and portal events will show up in this feed."
+      "activityTitle": "Actividad reciente",
+      "activityBody": "Las actualizaciones de expedientes y eventos del portal aparecerán en este feed."
     }
   },
   "nav": {

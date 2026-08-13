@@ -72,7 +72,7 @@
     "title": "Home",
     "welcome": "Welcome back, {name}",
     "welcomeFallback": "Welcome back",
-    "dashboardSubtitle": "Your firm’s workspace overview — more insights will land here over time.",
+    "dashboardSubtitle": "Deadlines, reviews, and files that need a decision.",
     "orgLabel": "Organization",
     "roleLabel": "Role",
     "newProject": "New project",
@@ -83,12 +83,58 @@
     "stats": {
       "activeProjects": "Open projects",
       "people": "People",
-      "blocked": "Stuck / waiting"
+      "blocked": "Stuck / waiting",
+      "openFiles": "Open files",
+      "openFilesHint": "New and in progress",
+      "openFilesHintSubmitted": "{count} submitted to IRCC",
+      "needsAttention": "Needs attention",
+      "needsAttentionHint": "Stuck or waiting",
+      "docsToReview": "Docs to review",
+      "docsToReviewHint": "Uploaded by clients",
+      "deadlines": "Due in 30 days",
+      "deadlinesHint": "Submission dates",
+      "expiries": "Status expiries",
+      "expiriesHint": "Overdue or next 30 days",
+      "awaitingClient": "Awaiting client",
+      "awaitingClientHint": "Documents still requested"
+    },
+    "actions": {
+      "title": "Needs your action",
+      "empty": "You’re caught up — nothing urgent right now.",
+      "docReviewDetail": "{doc} · {person}",
+      "kinds": {
+        "doc_review": "Review document",
+        "stuck": "Stuck",
+        "waiting": "Waiting",
+        "submit_overdue": "Submission overdue",
+        "expiry_overdue": "Status expired",
+        "share_expiring": "Client link"
+      }
+    },
+    "awaiting": {
+      "title": "Awaiting client",
+      "empty": "No outstanding document requests on open files.",
+      "docs": "{count, plural, one {# document} other {# documents}} still requested"
+    },
+    "deadlines": {
+      "title": "Submission deadlines",
+      "empty": "No submission dates in the next 45 days."
+    },
+    "active": {
+      "title": "Active files",
+      "empty": "No open files.",
+      "forms": "Forms {done}/{total}",
+      "docs": "Docs {done}/{total}"
+    },
+    "activity": {
+      "title": "Recent status changes",
+      "empty": "Status changes will show up here as you update files.",
+      "changedTo": "Marked {status}"
     },
     "expiries": {
       "title": "Upcoming visa expiries",
       "viewPeople": "View people",
-      "empty": "No status expiration dates yet. Add them when you create or update people.",
+      "empty": "No status expiration dates in the next 90 days.",
       "columns": {
         "person": "Person",
         "status": "Status",

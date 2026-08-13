@@ -72,7 +72,7 @@
     "title": "Accueil",
     "welcome": "Bon retour, {name}",
     "welcomeFallback": "Bon retour",
-    "dashboardSubtitle": "Vue d’ensemble de votre cabinet — d’autres indicateurs s’ajouteront ici.",
+    "dashboardSubtitle": "Échéances, révisions et dossiers qui demandent une décision.",
     "orgLabel": "Organisation",
     "roleLabel": "Rôle",
     "newProject": "Nouveau projet",
@@ -83,12 +83,58 @@
     "stats": {
       "activeProjects": "Projets ouverts",
       "people": "Personnes",
-      "blocked": "Bloqués / en attente"
+      "blocked": "Bloqués / en attente",
+      "openFiles": "Dossiers ouverts",
+      "openFilesHint": "Nouveaux et en cours",
+      "openFilesHintSubmitted": "{count} soumis à IRCC",
+      "needsAttention": "À traiter",
+      "needsAttentionHint": "Bloqués ou en attente",
+      "docsToReview": "Docs à réviser",
+      "docsToReviewHint": "Téléversés par les clients",
+      "deadlines": "Échéances (30 j)",
+      "deadlinesHint": "Dates de dépôt",
+      "expiries": "Expirations de statut",
+      "expiriesHint": "En retard ou 30 prochains jours",
+      "awaitingClient": "En attente du client",
+      "awaitingClientHint": "Documents encore demandés"
+    },
+    "actions": {
+      "title": "À traiter",
+      "empty": "Vous êtes à jour — rien d’urgent pour le moment.",
+      "docReviewDetail": "{doc} · {person}",
+      "kinds": {
+        "doc_review": "Réviser le document",
+        "stuck": "Bloqué",
+        "waiting": "En attente",
+        "submit_overdue": "Dépôt en retard",
+        "expiry_overdue": "Statut expiré",
+        "share_expiring": "Lien client"
+      }
+    },
+    "awaiting": {
+      "title": "En attente du client",
+      "empty": "Aucun document en attente sur les dossiers ouverts.",
+      "docs": "{count, plural, one {# document encore demandé} other {# documents encore demandés}}"
+    },
+    "deadlines": {
+      "title": "Dates de dépôt",
+      "empty": "Aucune date de dépôt dans les 45 prochains jours."
+    },
+    "active": {
+      "title": "Dossiers actifs",
+      "empty": "Aucun dossier ouvert.",
+      "forms": "Formulaires {done}/{total}",
+      "docs": "Docs {done}/{total}"
+    },
+    "activity": {
+      "title": "Changements de statut récents",
+      "empty": "Les mises à jour de statut apparaîtront ici.",
+      "changedTo": "Marqué {status}"
     },
     "expiries": {
       "title": "Expirations de statut à venir",
       "viewPeople": "Voir les personnes",
-      "empty": "Aucune date d’expiration pour l’instant. Ajoutez-en en créant ou mettant à jour des personnes.",
+      "empty": "Aucune date d’expiration dans les 90 prochains jours.",
       "columns": {
         "person": "Personne",
         "status": "Statut",

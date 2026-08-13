@@ -303,25 +303,29 @@ export default async function ProjectDetailPage({
         </ul>
       </section>
 
-      <ProjectDocumentsPanel
-        locale={locale}
-        projectId={project.id}
-        requests={documentRequests}
-        people={questionnairePeople.map((p) => ({
-          id: p.id,
-          displayName: p.displayName,
-          role: p.role,
-        }))}
-      />
+      <div id="documents" className="scroll-mt-20">
+        <ProjectDocumentsPanel
+          locale={locale}
+          projectId={project.id}
+          requests={documentRequests}
+          people={questionnairePeople.map((p) => ({
+            id: p.id,
+            displayName: p.displayName,
+            role: p.role,
+          }))}
+        />
+      </div>
 
-      <ProjectFormsPanel
-        locale={formLocale}
-        projectId={project.id}
-        programFamily={project.program_family}
-        forms={forms}
-        people={questionnairePeople}
-        activeShareExpiresAt={share?.expires_at ?? null}
-      />
+      <div id="forms" className="scroll-mt-20">
+        <ProjectFormsPanel
+          locale={formLocale}
+          projectId={project.id}
+          programFamily={project.program_family}
+          forms={forms}
+          people={questionnairePeople}
+          activeShareExpiresAt={share?.expires_at ?? null}
+        />
+      </div>
     </div>
   );
 }
