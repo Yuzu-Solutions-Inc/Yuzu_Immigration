@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ClipboardList,
+  FileText,
+  type LucideIcon,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   startTransition,
@@ -36,7 +43,7 @@ import { SELECTABLE_PROGRAM_FAMILIES } from "@/lib/crm/programs";
 import type { ProjectProgress } from "@/lib/crm/progress";
 import type { ProjectRow } from "@/lib/crm/queries";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
-import { cn } from "@/lib/utils";
+import { cn, shouldIgnoreRowClick } from "@/lib/utils";
 
 type SortKey =
   | "title"
@@ -84,12 +91,14 @@ const headerControlClassName =
 function SortButton({
   column,
   label,
+  icon: HeaderIcon,
   sortKey,
   sortDir,
   onToggle,
 }: {
   column: SortKey;
   label: string;
+  icon?: LucideIcon;
   sortKey: SortKey;
   sortDir: SortDir;
   onToggle: (column: SortKey) => void;
@@ -100,14 +109,23 @@ function SortButton({
     <button
       type="button"
       onClick={() => onToggle(column)}
+      aria-label={label}
+      title={label}
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
+        "inline-flex items-center rounded-md px-0.5 py-0.5 font-medium transition-colors",
         "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        HeaderIcon ? "justify-center gap-0.5" : "gap-1 text-left",
         active ? "text-brand" : "text-foreground",
       )}
     >
-      {label}
-      <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
+      {HeaderIcon ? (
+        <HeaderIcon className="size-3.5" aria-hidden />
+      ) : (
+        label
+      )}
+      {HeaderIcon && !active ? null : (
+        <Icon className="size-3 shrink-0 opacity-70" aria-hidden />
+      )}
     </button>
   );
 }
@@ -436,19 +454,21 @@ export function ProjectsTable({
                   onToggle={toggleSort}
                 />
               </TableHead>
-              <TableHead className="min-w-[6.5rem]">
+              <TableHead className="w-12 px-1.5">
                 <SortButton
                   column="documents"
                   label={t("columnDocuments")}
+                  icon={FileText}
                   sortKey={sortKey}
                   sortDir={sortDir}
                   onToggle={toggleSort}
                 />
               </TableHead>
-              <TableHead className="min-w-[5.5rem]">
+              <TableHead className="w-12 px-1.5">
                 <SortButton
                   column="forms"
                   label={t("columnForms")}
+                  icon={ClipboardList}
                   sortKey={sortKey}
                   sortDir={sortDir}
                   onToggle={toggleSort}
@@ -551,6 +571,11 @@ export function ProjectsTable({
                   <TableRow
                     key={project.id}
                     data-state={selected.has(project.id) ? "selected" : undefined}
+                    className="cursor-pointer"
+                    onClick={(event) => {
+                      if (shouldIgnoreRowClick(event)) return;
+                      router.push(`/projects/${project.id}`);
+                    }}
                   >
                     <TableCell className="px-3">
                       <input
@@ -609,8 +634,9 @@ export function ProjectsTable({
                       {formatDate(project.submit_before, locale) ??
                         t("submitBeforeEmpty")}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-12 px-1.5">
                       <ProgressMeter
+                        compact
                         valueLabel={t("docsProgress", {
                           done: progress.docsDone,
                           total: progress.docsTotal,
@@ -621,8 +647,9 @@ export function ProjectsTable({
                         )}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-12 px-1.5">
                       <ProgressMeter
+                        compact
                         valueLabel={t("formsProgress", {
                           percent: progress.formPercent,
                         })}

@@ -16,11 +16,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { PersonImmigrationStatus } from "@/db/schema";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { daysUntilIso, formatDisplayDate } from "@/lib/crm/dates";
 import { PERSON_IMMIGRATION_STATUSES } from "@/lib/crm/person-status";
 import type { PersonRow } from "@/lib/crm/queries";
-import { cn } from "@/lib/utils";
+import { cn, shouldIgnoreRowClick } from "@/lib/utils";
 
 type SortKey = "name" | "email" | "immigration_status" | "status_expires_at";
 type SortDir = "asc" | "desc";
@@ -53,6 +53,7 @@ export function PeopleList({
 }) {
   const t = useTranslations("people");
   const ti = useTranslations("immigrationStatus");
+  const router = useRouter();
   const [nameQuery, setNameQuery] = useState("");
   const [emailQuery, setEmailQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -274,7 +275,14 @@ export function PeopleList({
               filteredSorted.map((person) => {
                 const fullName = `${person.first_name} ${person.last_name}`;
                 return (
-                  <TableRow key={person.id} className="group">
+                  <TableRow
+                    key={person.id}
+                    className="group cursor-pointer"
+                    onClick={(event) => {
+                      if (shouldIgnoreRowClick(event)) return;
+                      router.push(`/people/${person.id}`);
+                    }}
+                  >
                     <TableCell className="px-5 whitespace-normal">
                       <Link
                         href={`/people/${person.id}`}
