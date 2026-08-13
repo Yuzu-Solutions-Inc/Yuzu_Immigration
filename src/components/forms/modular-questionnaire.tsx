@@ -33,6 +33,13 @@ import {
 } from "@/lib/ircc/fields";
 import { cn } from "@/lib/utils";
 
+function personInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+}
+
 function HelpTip({ text }: { text: string }) {
   return (
     <span className="group relative inline-flex align-middle">
@@ -849,60 +856,105 @@ export function ModularQuestionnaire({
 
   return (
     <div className="space-y-6">
-      {people.length > 1 ? (
+      <div className="space-y-4 rounded-xl border border-border bg-canvas p-4">
         <div className="space-y-2">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             {t("personTabsLabel")}
           </p>
-          <div className="flex flex-wrap gap-2">
-            {people.map((person) => (
-              <button
-                key={person.id}
-                type="button"
-                onClick={() => setActivePersonId(person.id)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  person.id === activePerson.id
-                    ? "bg-brand text-white"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {person.displayName}
-                <span className="ml-1 font-normal opacity-80">
-                  · {tr(person.role as never)}
-                </span>
-              </button>
-            ))}
+          <div
+            role="tablist"
+            aria-label={t("personTabsLabel")}
+            className="flex flex-wrap gap-2"
+          >
+            {people.map((person) => {
+              const selected = person.id === activePerson.id;
+              return (
+                <button
+                  key={person.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setActivePersonId(person.id)}
+                  className={cn(
+                    "flex min-h-12 min-w-[10rem] flex-1 cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2 text-left shadow-elevated transition-colors sm:flex-none",
+                    selected
+                      ? "border-action bg-surface text-brand"
+                      : "border-border bg-surface text-brand hover:border-action hover:bg-white",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                      selected
+                        ? "bg-action text-white"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                    aria-hidden
+                  >
+                    {personInitials(person.displayName)}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">
+                      {person.displayName}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {tr(person.role as never)}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
           <p className="text-sm text-muted-foreground">
-            {t("personTabsHelp", { name: activePerson.displayName })}
+            {people.length > 1
+              ? t("personTabsHelp", { name: activePerson.displayName })
+              : t("personTabsHelpSingle", { name: activePerson.displayName })}
           </p>
         </div>
-      ) : (
-        <div className="space-y-1">
-          <h3 className="font-heading text-base font-semibold text-brand">
-            {activePerson.displayName}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t("personTabsHelp", { name: activePerson.displayName })}
-          </p>
-        </div>
-      )}
 
-      <div className="flex flex-wrap gap-2">
-        {sections.map((s, i) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setSectionIndex(i)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-              i === sectionIndex
-                ? "bg-action text-white"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
+        <div className="space-y-2 border-t border-border pt-4">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("sectionStepsLabel")}
+          </p>
+          <div
+            role="tablist"
+            aria-label={t("sectionStepsLabel")}
+            className="flex flex-wrap gap-2"
           >
-            {t(`sections.${s}`)}
-          </button>
-        ))}
+            {sections.map((s, i) => {
+              const current = i === sectionIndex;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  role="tab"
+                  aria-selected={current}
+                  aria-current={current ? "step" : undefined}
+                  onClick={() => setSectionIndex(i)}
+                  className={cn(
+                    "inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold shadow-elevated transition-colors",
+                    current
+                      ? "border-action bg-action text-white"
+                      : "border-border bg-surface text-brand hover:border-action hover:bg-white",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                      current
+                        ? "bg-white/20 text-white"
+                        : "bg-canvas text-muted-foreground",
+                    )}
+                    aria-hidden
+                  >
+                    {i + 1}
+                  </span>
+                  {t(`sections.${s}`)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-1">
