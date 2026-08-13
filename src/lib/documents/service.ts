@@ -8,6 +8,11 @@ import {
   defaultDocumentsForProgram,
 } from "@/lib/documents/catalog";
 import { decryptDocument, encryptDocument } from "@/lib/documents/crypto";
+import {
+  decryptDocumentFileRow,
+  decryptDocumentRequestRow,
+  encryptFilename,
+} from "@/lib/security/client-pii";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -86,8 +91,10 @@ export async function listProjectDocumentRequests(
   );
 
   return ((requests ?? []) as DocumentRequestRow[]).map((row) => ({
-    ...row,
-    file: filesByRequest.get(row.id) ?? null,
+    ...decryptDocumentRequestRow(row),
+    file: filesByRequest.get(row.id)
+      ? decryptDocumentFileRow(filesByRequest.get(row.id)!)
+      : null,
   }));
 }
 
@@ -204,9 +211,9 @@ export async function listShareDocumentRequests(
   return ((requests ?? []) as DocumentRequestRow[]).map((row) => {
     const file = filesByRequest.get(row.id);
     return {
-      ...row,
+      ...decryptDocumentRequestRow(row),
       file: file
-        ? ({
+        ? decryptDocumentFileRow({
             ...file,
             storage_path: "",
           } as DocumentFileRow)
@@ -274,7 +281,7 @@ export async function storeEncryptedDocument(input: {
       request_id: input.requestId,
       person_id: input.personId,
       storage_path: path,
-      original_filename: input.originalFilename,
+      original_filename: encryptFilename(input.originalFilename),
       content_type: input.contentType,
       byte_size: input.plaintext.length,
       encryption_alg: "aes-256-gcm",
@@ -301,7 +308,7 @@ export async function storeEncryptedDocument(input: {
     console.error("storeEncryptedDocument status:", statusError.message);
   }
 
-  return fileRow as DocumentFileRow;
+  return decryptDocumentFileRow(fileRow as DocumentFileRow);
 }
 
 export async function downloadDecryptedDocument(input: {

@@ -31,8 +31,9 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 
 ### Secrets & env
 - [ ] Keep `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, and `DOCUMENT_ENCRYPTION_KEY` only in `.env.local` / Vercel encrypted env — never in `NEXT_PUBLIC_*`
-- [ ] Generate a strong 32-byte hex `DOCUMENT_ENCRYPTION_KEY` for production and store in a password manager + Vercel
-- [ ] Document key-rotation procedure (re-encrypt documents or dual-key window) before first production clients
+- [ ] Generate a strong 32-byte hex `DOCUMENT_ENCRYPTION_KEY` for production and store in a password manager + Vercel (used for document files **and** client-field encryption)
+- [ ] After deploying field encryption, run `npm run pii:seal` once against production to encrypt existing plaintext rows (safe to re-run)
+- [ ] Document key-rotation procedure (re-encrypt documents/fields or dual-key window) before first production clients
 
 ---
 
@@ -72,7 +73,12 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 ### Optional product follow-ups (not yet built)
 - [ ] Staff MFA enrollment UI in-app
 - [ ] Project-scoped assistant sharing (built: share a project with assistants from the project page)
-- [ ] Field-level encryption for passport/SIN-like columns (documents already AES-256-GCM)
+
+### Field encryption (ops)
+- [ ] Confirm `DOCUMENT_ENCRYPTION_KEY` is set in Vercel Production **before** sealing data
+- [ ] Deploy the app that decrypts `mc1.` fields, then run `npm run pii:seal`
+- [ ] In Supabase Table Editor, client names/emails/questionnaire answers should show `mc1.` ciphertext, not plaintext
+- [ ] Split access: people with only the Supabase dashboard cannot read client PII; anyone who also has the Vercel encryption key still can
 
 ---
 
@@ -120,10 +126,10 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 |---|---|
 | 0 | Privileged RPCs locked to `service_role` + explicit actor; `is_org_role` helper; RBAC helpers |
 | 1 | `/privacy` page; low-key Privacy links (landing, login, sidebar); client consent notices on fill flows; firm DPA template |
-| 2 | `security_audit_events`; audit on downloads/uploads/share links/org/person delete; admin-only org update & person delete (RLS + app) |
+| 2 | `security_audit_events`; audit on downloads/uploads/share links/org/person delete; admin-only org update & person delete (RLS + app); AES-256-GCM client-field encryption (`mc1.` prefix) |
 | 3 | `retain_until` (+6y on close); secure destroy + `file_destruction_register`; person JSON export; Security settings UI |
 
-Region: **`ca-central-1`**. Document encryption: **AES-256-GCM** via `DOCUMENT_ENCRYPTION_KEY`.
+Region: **`ca-central-1`**. Document files and client PII columns: **AES-256-GCM** via `DOCUMENT_ENCRYPTION_KEY` (Table Editor sees ciphertext).
 
 ---
 

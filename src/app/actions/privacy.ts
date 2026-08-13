@@ -9,6 +9,16 @@ import { requireOrganizationId } from "@/lib/crm/queries";
 import { CLIENT_DOCUMENTS_BUCKET } from "@/lib/documents/catalog";
 import { isEligibleForDestruction } from "@/lib/privacy/retention";
 import { recordAuditEvent } from "@/lib/security/audit";
+import {
+  decryptDocumentFileRow,
+  decryptNoteBody,
+  decryptPersonRow,
+  decryptProjectRow,
+  encryptAnswersValue,
+  encryptDestructionWrite,
+  PII_AAD,
+} from "@/lib/security/client-pii";
+import { encryptOptionalField } from "@/lib/security/field-crypto";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -45,6 +55,15 @@ export async function exportPersonDataAction(
   if (personError || !person) {
     return { error: "not_found" };
   }
+
+  const decryptedPerson = decryptPersonRow(
+    person as {
+      first_name: string;
+      last_name: string;
+      email: string | null;
+      phone: string | null;
+    },
+  );
 
   const [{ data: notes }, { data: participants }, { data: docFiles }] =
     await Promise.all([
@@ -85,12 +104,25 @@ export async function exportPersonDataAction(
   const payload = {
     exportedAt: new Date().toISOString(),
     organizationId: orgId,
-    person,
-    notes: notes ?? [],
+    person: decryptedPerson,
+    notes: (notes ?? []).map((note) => ({
+      ...note,
+      body: decryptNoteBody(note.body as string),
+    })),
     projectParticipations: participants ?? [],
-    projects: projects ?? [],
+    projects: (projects ?? []).map((project) =>
+      decryptProjectRow(
+        project as {
+          title: string;
+          description?: string | null;
+          notes?: string | null;
+        },
+      ),
+    ),
     documents: (docFiles ?? []).map((f) => ({
-      ...f,
+      ...decryptDocumentFileRow(
+        f as { original_filename: string },
+      ),
       note: "Document ciphertext is stored encrypted; content omitted from this export metadata package.",
     })),
   };
@@ -106,7 +138,7 @@ export async function exportPersonDataAction(
   });
 
   const json = JSON.stringify(payload, null, 2);
-  const safeName = `${person.last_name}_${person.first_name}`
+  const safeName = `${decryptedPerson.last_name}_${decryptedPerson.first_name}`
     .replace(/[^a-zA-Z0-9_-]+/g, "_")
     .slice(0, 80);
 
@@ -162,6 +194,10 @@ export async function destroyClosedProjectAction(
     return { error: "not_found" };
   }
 
+  const decryptedProject = decryptProjectRow(
+    project as { title: string; description?: string | null; notes?: string | null },
+  );
+
   if (
     !isEligibleForDestruction({
       closedAt: project.closed_at as string | null,
@@ -200,7 +236,7 @@ export async function destroyClosedProjectAction(
   await admin
     .from("project_form_answers")
     .update({
-      answers: {},
+      answers: encryptAnswersValue({}),
       current_section: null,
       updated_at: new Date().toISOString(),
     })
@@ -223,7 +259,7 @@ export async function destroyClosedProjectAction(
     .is("left_at", null)
     .limit(1);
 
-  let clientName = project.title as string;
+  let clientName = decryptedProject.title;
   const principalPersonId = principalRows?.[0]?.person_id as string | undefined;
   if (principalPersonId) {
     const { data: person } = await admin
@@ -232,8 +268,11 @@ export async function destroyClosedProjectAction(
       .eq("id", principalPersonId)
       .maybeSingle();
     if (person) {
+      const decrypted = decryptPersonRow(
+        person as { first_name: string; last_name: string },
+      );
       clientName =
-        `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
+        `${decrypted.first_name ?? ""} ${decrypted.last_name ?? ""}`.trim() ||
         clientName;
     }
   }
@@ -243,8 +282,10 @@ export async function destroyClosedProjectAction(
   await admin.from("file_destruction_register").insert({
     organization_id: orgId,
     project_id: project.id,
-    client_name: clientName || "Unknown",
-    service_summary: `${project.program_family} — ${project.title}`,
+    ...encryptDestructionWrite({
+      client_name: clientName || "Unknown",
+      service_summary: `${project.program_family} — ${decryptedProject.title}`,
+    }),
     file_closed_at: project.closed_at,
     destroyed_at: destroyedAt,
     destroyed_by: user?.id ?? null,
@@ -257,7 +298,10 @@ export async function destroyClosedProjectAction(
       notes: null,
       destroyed_at: destroyedAt,
       destroyed_by: user?.id ?? null,
-      destruction_note: parsed.data.note || null,
+      destruction_note: encryptOptionalField(
+        parsed.data.note || null,
+        PII_AAD.projects.destructionNote,
+      ),
       updated_at: destroyedAt,
     })
     .eq("id", project.id)

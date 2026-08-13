@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "pii:seal": "npx tsx scripts/seal-client-pii.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

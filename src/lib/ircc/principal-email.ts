@@ -1,5 +1,8 @@
 /** Principal client email comes from `people.email`, not the questionnaire. */
 
+import { PII_AAD } from "@/lib/security/client-pii";
+import { decryptFieldMaybe } from "@/lib/security/field-crypto";
+
 type DbClient = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: (table: string) => any;
@@ -37,6 +40,9 @@ export async function fetchPrincipalEmail(
     .eq("id", personId)
     .maybeSingle();
 
-  const email = String(person?.email ?? "").trim();
-  return email || null;
+  const email = decryptFieldMaybe(
+    person?.email as string | null | undefined,
+    PII_AAD.people.email,
+  );
+  return String(email ?? "").trim() || null;
 }

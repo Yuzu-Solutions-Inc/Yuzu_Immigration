@@ -19,6 +19,10 @@ import {
 } from "@/lib/documents/service";
 import { resolveShareToken } from "@/lib/ircc/project-forms";
 import { recordAuditEvent } from "@/lib/security/audit";
+import {
+  decryptFilename,
+  encryptDocumentRequestWrite,
+} from "@/lib/security/client-pii";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -87,11 +91,13 @@ export async function addCustomDocumentRequestAction(
     project_id: projectId,
     person_id: personId,
     doc_key: "custom",
-    custom_label: label,
+    ...encryptDocumentRequestWrite({
+      custom_label: label,
+      consultant_note: note || null,
+    }),
     is_required: true,
     sort_order: (maxSort?.sort_order ?? 100) + 10,
     status: "requested",
-    consultant_note: note || null,
     created_by: user?.id ?? null,
   });
 
@@ -199,7 +205,7 @@ export async function downloadProjectDocumentAction(
       organizationId: orgId,
       storagePath: file.storage_path as string,
       contentType: file.content_type as string,
-      originalFilename: file.original_filename as string,
+      originalFilename: decryptFilename(file.original_filename as string),
     });
     const user = await getSessionUser();
     await recordAuditEvent({
@@ -264,7 +270,7 @@ export async function downloadShareDocumentAction(
       organizationId: resolved.organizationId,
       storagePath: file.storage_path as string,
       contentType: file.content_type as string,
-      originalFilename: file.original_filename as string,
+      originalFilename: decryptFilename(file.original_filename as string),
     });
     await recordAuditEvent({
       organizationId: resolved.organizationId,

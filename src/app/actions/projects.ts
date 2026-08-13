@@ -22,6 +22,13 @@ import {
 import { isTerminalStatus } from "@/lib/crm/statuses";
 import { computeRetainUntil } from "@/lib/privacy/retention";
 import { recordAuditEvent } from "@/lib/security/audit";
+import {
+  decryptAnswersValue,
+  decryptPersonRow,
+  encryptAnswersValue,
+  encryptPersonWrite,
+  encryptProjectWrite,
+} from "@/lib/security/client-pii";
 import { createClient } from "@/lib/supabase/server";
 
 function closedAndRetainFields(status: ProjectStatus, statusAt: string) {
@@ -254,16 +261,25 @@ async function resolveParticipants(
         return { error: "person_missing" };
       }
 
-      if (seen.has(existing.id as string)) {
+      const person = decryptPersonRow(
+        existing as {
+          id: string;
+          first_name: string;
+          last_name: string;
+          email: string | null;
+        },
+      );
+
+      if (seen.has(person.id)) {
         return { error: "invalid" };
       }
-      seen.add(existing.id as string);
+      seen.add(person.id);
 
       resolvedPeople.push({
-        id: existing.id as string,
+        id: person.id,
         role: participant.role,
-        displayName: `${existing.first_name} ${existing.last_name}`.trim(),
-        email: (existing.email as string | null) || null,
+        displayName: `${person.first_name} ${person.last_name}`.trim(),
+        email: person.email || null,
       });
       continue;
     }
@@ -287,15 +303,17 @@ async function resolveParticipants(
       .from("people")
       .insert({
         organization_id: orgId,
-        first_name: participant.firstName,
-        last_name: participant.lastName,
-        email,
+        ...encryptPersonWrite({
+          first_name: participant.firstName,
+          last_name: participant.lastName,
+          email,
+        }),
         preferred_locale: locale,
         immigration_status: immigrationStatus,
         status_expires_at: statusExpiresAt,
         created_by: options.createdBy ?? null,
       })
-      .select("id, first_name, last_name, email")
+      .select("id")
       .single();
 
     if (createError || !created) {
@@ -307,8 +325,8 @@ async function resolveParticipants(
     resolvedPeople.push({
       id: created.id as string,
       role: participant.role,
-      displayName: `${created.first_name} ${created.last_name}`.trim(),
-      email: (created.email as string | null) || email,
+      displayName: `${participant.firstName} ${participant.lastName}`.trim(),
+      email,
     });
   }
 
@@ -393,9 +411,11 @@ export async function createProjectAction(
     .from("immigration_projects")
     .insert({
       organization_id: orgId,
-      title,
-      description: data.description || null,
-      notes: data.notes || null,
+      ...encryptProjectWrite({
+        title,
+        description: data.description || null,
+        notes: data.notes || null,
+      }),
       status: "new",
       status_at: statusAt,
       submit_before: submitBefore,
@@ -556,7 +576,7 @@ export async function createProjectAction(
     await supabase.from("project_form_answers").insert({
       organization_id: orgId,
       project_id: project.id,
-      answers: initialAnswers,
+      answers: encryptAnswersValue(initialAnswers),
       current_section: "identity",
     });
   } catch (error) {
@@ -631,9 +651,11 @@ export async function updateProjectAction(
   const { error: updateError } = await supabase
     .from("immigration_projects")
     .update({
-      title,
-      description: data.description || null,
-      notes: data.notes || null,
+      ...encryptProjectWrite({
+        title,
+        description: data.description || null,
+        notes: data.notes || null,
+      }),
       status,
       status_at: statusAt,
       submit_before: data.submitBefore || null,
@@ -677,9 +699,12 @@ export async function updateProjectAction(
       : Promise.resolve({ data: null }),
   ]);
   if (answersRow) {
-    const store = normalizeAnswersStore(answersRow.answers ?? {}, {
-      principalPersonId: principal?.id,
-    });
+    const store = normalizeAnswersStore(
+      decryptAnswersValue(answersRow.answers),
+      {
+        principalPersonId: principal?.id,
+      },
+    );
     const formLanguage = toIrccFormLanguage(data.formLanguage);
     const repAnswers = mergeAccountRepIntoAnswers({}, repProfile);
     const { detectCommonLaw, detectMinor, isCustomProgram, resolveApplicationLocation } =
@@ -727,7 +752,7 @@ export async function updateProjectAction(
     await supabase
       .from("project_form_answers")
       .update({
-        answers: store,
+        answers: encryptAnswersValue(store),
         updated_at: new Date().toISOString(),
       })
       .eq("id", answersRow.id);
@@ -847,9 +872,12 @@ export async function updateProjectAction(
       .eq("project_id", projectId)
       .eq("organization_id", orgId)
       .maybeSingle();
-    const store = normalizeAnswersStore(latestAnswers?.answers ?? {}, {
-      principalPersonId: principal?.id,
-    });
+    const store = normalizeAnswersStore(
+      decryptAnswersValue(latestAnswers?.answers),
+      {
+        principalPersonId: principal?.id,
+      },
+    );
     const { data: existingFormRows } = await supabase
       .from("project_forms")
       .select("form_code")

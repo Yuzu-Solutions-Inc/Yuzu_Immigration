@@ -8,6 +8,11 @@ import {
   type ProjectRow,
 } from "@/lib/crm/queries";
 import { isTerminalStatus } from "@/lib/crm/statuses";
+import {
+  decryptDocumentRequestRow,
+  decryptPersonRow,
+  decryptProjectRow,
+} from "@/lib/security/client-pii";
 import { createClient } from "@/lib/supabase/server";
 
 export type HomeActionKind =
@@ -279,7 +284,9 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
     console.error("getHomeDashboard history:", historyResult.error.message);
   }
 
-  const uploadedDocs = (uploadedResult.data ?? []) as UploadedDocRow[];
+  const uploadedDocs = ((uploadedResult.data ?? []) as UploadedDocRow[]).map(
+    (row) => decryptDocumentRequestRow(row),
+  );
   const requestedRows = (requestedResult.data ?? []) as IdCountRow[];
   const formRows = (formsResult.data ?? []) as IdCountRow[];
   const docProgressRows = (docsProgressResult.data ?? []) as IdCountRow[];
@@ -308,7 +315,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       for (const row of data ?? []) {
         projectById.set(row.id as string, {
           id: row.id as string,
-          title: row.title as string,
+          title: decryptProjectRow({ title: row.title as string }).title,
         } as ProjectRow);
       }
     }
@@ -326,9 +333,12 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       console.error("getHomeDashboard people:", error.message);
     } else {
       for (const row of data ?? []) {
+        const person = decryptPersonRow(
+          row as { id: string; first_name: string; last_name: string },
+        );
         personNameById.set(
-          row.id as string,
-          `${row.first_name as string} ${row.last_name as string}`.trim(),
+          person.id,
+          `${person.first_name} ${person.last_name}`.trim(),
         );
       }
     }

@@ -18,7 +18,7 @@ const serverSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalSecret,
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
-  /** 64 hex chars — AES-256-GCM for client document uploads. */
+  /** 64 hex chars — AES-256-GCM for document files and client PII columns. */
   DOCUMENT_ENCRYPTION_KEY: optionalSecret,
   DATABASE_URL: optionalSecret,
   DIRECT_DATABASE_URL: optionalSecret,

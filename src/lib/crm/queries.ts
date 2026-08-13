@@ -9,6 +9,11 @@ import type {
   ProjectJurisdiction,
   ProjectStatus,
 } from "@/db/schema";
+import {
+  decryptNoteBody,
+  decryptPersonRow,
+  decryptProjectRow,
+} from "@/lib/security/client-pii";
 
 export type PersonRow = {
   id: string;
@@ -96,27 +101,33 @@ export async function listPeople(query?: string): Promise<PersonRow[]> {
   if (!orgId) return [];
 
   const supabase = await createClient();
-  let request = supabase
+  const { data, error } = await supabase
     .from("people")
     .select("*")
     .eq("organization_id", orgId)
-    .order("last_name", { ascending: true })
-    .order("first_name", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(100);
 
-  const q = query?.trim();
-  if (q) {
-    request = request.or(
-      `first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`,
-    );
-  }
-
-  const { data, error } = await request;
   if (error) {
     console.error("listPeople:", error.message);
     return [];
   }
-  return (data ?? []) as PersonRow[];
+
+  const people = ((data ?? []) as PersonRow[]).map(decryptPersonRow);
+  people.sort((a, b) =>
+    `${a.last_name} ${a.first_name}`.localeCompare(
+      `${b.last_name} ${b.first_name}`,
+      undefined,
+      { sensitivity: "base" },
+    ),
+  );
+
+  const q = query?.trim().toLowerCase();
+  if (!q) return people;
+  return people.filter((person) => {
+    const haystack = `${person.first_name} ${person.last_name} ${person.email ?? ""}`.toLowerCase();
+    return haystack.includes(q);
+  });
 }
 
 export async function listUpcomingStatusExpiries(
@@ -139,7 +150,7 @@ export async function listUpcomingStatusExpiries(
     console.error("listUpcomingStatusExpiries:", error.message);
     return [];
   }
-  return (data ?? []) as PersonRow[];
+  return ((data ?? []) as PersonRow[]).map(decryptPersonRow);
 }
 
 export async function getPerson(personId: string): Promise<PersonRow | null> {
@@ -158,7 +169,7 @@ export async function getPerson(personId: string): Promise<PersonRow | null> {
     console.error("getPerson:", error.message);
     return null;
   }
-  return data as PersonRow | null;
+  return data ? decryptPersonRow(data as PersonRow) : null;
 }
 
 export async function listPersonNotes(
@@ -205,6 +216,7 @@ export async function listPersonNotes(
 
   return rows.map((row) => ({
     ...row,
+    body: decryptNoteBody(row.body),
     author_name: row.created_by ? (names.get(row.created_by) ?? null) : null,
   }));
 }
@@ -280,7 +292,7 @@ export async function listProjects(): Promise<ProjectRow[]> {
     return [];
   }
 
-  const projects = (data ?? []) as ProjectRow[];
+  const projects = ((data ?? []) as ProjectRow[]).map(decryptProjectRow);
   const repIds = [
     ...new Set(
       projects
@@ -333,7 +345,7 @@ export async function getProject(projectId: string): Promise<ProjectRow | null> 
   }
   if (!data) return null;
 
-  const project = data as ProjectRow;
+  const project = decryptProjectRow(data as ProjectRow);
   if (!project.representative_user_id) {
     return { ...project, representative: null };
   }
@@ -414,7 +426,10 @@ export async function getProjectParticipants(
   }
 
   const byId = new Map(
-    (peopleRows ?? []).map((person) => [person.id as string, person as PersonRow]),
+    (peopleRows ?? []).map((person) => [
+      person.id as string,
+      decryptPersonRow(person as PersonRow),
+    ]),
   );
 
   return participants.map((row) => ({
@@ -454,7 +469,10 @@ export async function getPersonProjects(personId: string): Promise<
   }
 
   const byId = new Map(
-    (projects ?? []).map((p) => [p.id as string, p as ProjectRow]),
+    (projects ?? []).map((p) => [
+      p.id as string,
+      decryptProjectRow(p as ProjectRow),
+    ]),
   );
 
   return links

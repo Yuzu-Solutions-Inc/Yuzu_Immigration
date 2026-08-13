@@ -38,6 +38,12 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { CANONICAL_FIELDS } from "@/lib/ircc/fields";
+import {
+  decryptAnswersValue,
+  decryptPersonRow,
+  decryptProjectRow,
+  encryptAnswersValue,
+} from "@/lib/security/client-pii";
 
 export const SHARE_LINK_TTL_DAYS = 30;
 
@@ -156,7 +162,10 @@ export async function listActiveProjectPeople(
   };
 
   const byId = new Map<string, PersonRow>(
-    ((peopleRows ?? []) as PersonRow[]).map((person) => [person.id, person]),
+    ((peopleRows ?? []) as PersonRow[]).map((person) => [
+      person.id,
+      decryptPersonRow(person),
+    ]),
   );
 
   const out: ProjectPersonBrief[] = [];
@@ -610,7 +619,12 @@ export async function getProjectFormAnswers(
     console.error("getProjectFormAnswers:", error.message);
     return null;
   }
-  return data as ProjectFormAnswersRow | null;
+  if (!data) return null;
+  const row = data as ProjectFormAnswersRow;
+  return {
+    ...row,
+    answers: decryptAnswersValue(row.answers),
+  };
 }
 
 export async function loadProjectAnswersStore(
@@ -632,7 +646,7 @@ export async function upsertProjectFormAnswers(input: {
     {
       organization_id: input.organizationId,
       project_id: input.projectId,
-      answers: input.answers,
+      answers: encryptAnswersValue(input.answers),
       current_section: input.currentSection ?? null,
       updated_at: new Date().toISOString(),
     },
@@ -803,11 +817,23 @@ export async function loadShareContext(token: string) {
 
   if (!projectRes.data) return null;
 
-  const project = projectRes.data;
+  const project = decryptProjectRow(
+    projectRes.data as {
+      id: string;
+      title: string;
+      program_family: string;
+      organization_id: string;
+      form_language: string | null;
+      representative_user_id: string | null;
+    },
+  );
   const principal = people.find((p) => p.role === "principal") ?? people[0];
-  const store = normalizeAnswersStore(answersRes.data?.answers ?? {}, {
-    principalPersonId: principal?.id,
-  });
+  const store = normalizeAnswersStore(
+    decryptAnswersValue(answersRes.data?.answers),
+    {
+      principalPersonId: principal?.id,
+    },
+  );
 
   const repUserId = project.representative_user_id as string | null;
   const { data: repProfile } = repUserId
@@ -897,9 +923,12 @@ export async function saveShareAnswers(input: {
     .maybeSingle();
 
   const principal = people.find((p) => p.role === "principal") ?? people[0];
-  let store = normalizeAnswersStore(answersRow?.answers ?? {}, {
-    principalPersonId: principal?.id,
-  });
+  let store = normalizeAnswersStore(
+    decryptAnswersValue(answersRow?.answers),
+    {
+      principalPersonId: principal?.id,
+    },
+  );
 
   const cleaned = withProjectFormLanguage(
     mergeAccountRepIntoAnswers(
@@ -922,7 +951,7 @@ export async function saveShareAnswers(input: {
     {
       organization_id: resolved.organizationId,
       project_id: resolved.projectId,
-      answers: store,
+      answers: encryptAnswersValue(store),
       current_section: input.currentSection ?? null,
       updated_at: new Date().toISOString(),
     },

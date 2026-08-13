@@ -6,6 +6,7 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { toAppLocale } from "@/lib/i18n/locales";
+import { decryptDestructionRow } from "@/lib/security/client-pii";
 import { createClient } from "@/lib/supabase/server";
 
 type AuditRow = {
@@ -56,13 +57,13 @@ export default async function SecuritySettingsPage({
     .limit(25);
 
   const rows = (events ?? []) as AuditRow[];
-  const destructionRows = (destructions ?? []) as Array<{
+  const destructionRows = ((destructions ?? []) as Array<{
     id: string;
     client_name: string;
     service_summary: string | null;
     file_closed_at: string | null;
     destroyed_at: string;
-  }>;
+  }>).map(decryptDestructionRow);
 
   return (
     <SurfaceCard className="space-y-4 sm:p-6">
