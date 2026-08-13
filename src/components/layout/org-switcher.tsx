@@ -22,7 +22,6 @@ export function OrgSwitcher({
   variant?: "sidebar" | "header";
 }) {
   const t = useTranslations("nav");
-  const tRoles = useTranslations("orgRoles");
   const locale = useLocale();
   const active =
     organizations.find((org) => org.id === activeOrganizationId) ??
@@ -71,7 +70,7 @@ export function OrgSwitcher({
         >
           {sorted.map((org) => (
             <option key={org.id} value={org.id}>
-              {org.name} · {tRoles(org.role)}
+              {org.name}
             </option>
           ))}
         </select>
