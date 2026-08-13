@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 import { DeletePersonButton } from "@/components/people/delete-person-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -42,8 +41,8 @@ function expiryClass(isoDate: string | null) {
   return "text-muted-foreground";
 }
 
-const selectClassName =
-  "h-8 w-full min-w-[8.5rem] rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
+const headerControlClassName =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
 export function PeopleList({
   locale,
@@ -110,9 +109,11 @@ export function PeopleList({
           sensitivity: "base",
         });
       } else if (sortKey === "immigration_status") {
-        cmp = ti(a.immigration_status).localeCompare(ti(b.immigration_status), undefined, {
-          sensitivity: "base",
-        });
+        cmp = ti(a.immigration_status).localeCompare(
+          ti(b.immigration_status),
+          undefined,
+          { sensitivity: "base" },
+        );
       } else {
         cmp = compareNullableDates(a.status_expires_at, b.status_expires_at);
       }
@@ -161,7 +162,7 @@ export function PeopleList({
         type="button"
         onClick={() => toggleSort(column)}
         className={cn(
-          "inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left font-medium transition-colors",
+          "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
           "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
           active ? "text-brand" : "text-foreground",
         )}
@@ -174,112 +175,103 @@ export function PeopleList({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 shadow-elevated sm:flex-row sm:flex-wrap sm:items-end">
-        <div className="min-w-[12rem] flex-1 space-y-1.5">
-          <Label htmlFor="people-filter-name">{t("filterName")}</Label>
-          <Input
-            id="people-filter-name"
-            type="search"
-            value={nameQuery}
-            onChange={(e) => setNameQuery(e.target.value)}
-            placeholder={t("filterNamePlaceholder")}
-            className="h-8 rounded-lg px-2 text-sm"
-          />
-        </div>
-        <div className="min-w-[12rem] flex-1 space-y-1.5">
-          <Label htmlFor="people-filter-email">{t("filterEmail")}</Label>
-          <Input
-            id="people-filter-email"
-            type="search"
-            value={emailQuery}
-            onChange={(e) => setEmailQuery(e.target.value)}
-            placeholder={t("filterEmailPlaceholder")}
-            className="h-8 rounded-lg px-2 text-sm"
-          />
-        </div>
-        <div className="min-w-[10rem] space-y-1.5 sm:w-48">
-          <Label htmlFor="people-filter-status">{t("filterStatus")}</Label>
-          <select
-            id="people-filter-status"
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as PersonImmigrationStatus | "all")
-            }
-            className={selectClassName}
-          >
-            <option value="all">{t("filterAll")}</option>
-            {PERSON_IMMIGRATION_STATUSES.map((value) => (
-              <option key={value} value={value}>
-                {ti(value)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="min-w-[10rem] space-y-1.5 sm:w-48">
-          <Label htmlFor="people-filter-expiry">{t("filterExpiry")}</Label>
-          <select
-            id="people-filter-expiry"
-            value={expiryFilter}
-            onChange={(e) => setExpiryFilter(e.target.value as ExpiryFilter)}
-            className={selectClassName}
-          >
-            <option value="all">{t("filterAll")}</option>
-            <option value="expired">{t("filterExpiryExpired")}</option>
-            <option value="expiring_30">{t("filterExpirySoon")}</option>
-            <option value="no_date">{t("filterExpiryNone")}</option>
-          </select>
-        </div>
-        {filtersActive ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setNameQuery("");
-              setEmailQuery("");
-              setStatusFilter("all");
-              setExpiryFilter("all");
-            }}
-          >
-            {t("clearFilters")}
-          </Button>
-        ) : null}
-      </div>
-
-      {filteredSorted.length === 0 ? (
-        <p className="rounded-xl border border-border bg-surface px-5 py-8 text-center text-[15px] text-muted-foreground shadow-elevated">
-          {t("noMatches")}
-        </p>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="min-w-[12rem] px-5">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-auto min-w-[12rem] px-5 py-2.5 align-bottom">
+                <div className="flex flex-col gap-1.5">
                   <SortButton column="name" label={t("columnName")} />
-                </TableHead>
-                <TableHead>
+                  <Input
+                    id="people-filter-name"
+                    type="search"
+                    value={nameQuery}
+                    onChange={(e) => setNameQuery(e.target.value)}
+                    placeholder={t("filterNamePlaceholder")}
+                    aria-label={t("filterName")}
+                    className={headerControlClassName}
+                  />
+                </div>
+              </TableHead>
+              <TableHead className="h-auto min-w-[12rem] py-2.5 align-bottom">
+                <div className="flex flex-col gap-1.5">
                   <SortButton column="email" label={t("columnEmail")} />
-                </TableHead>
-                <TableHead>
+                  <Input
+                    id="people-filter-email"
+                    type="search"
+                    value={emailQuery}
+                    onChange={(e) => setEmailQuery(e.target.value)}
+                    placeholder={t("filterEmailPlaceholder")}
+                    aria-label={t("filterEmail")}
+                    className={headerControlClassName}
+                  />
+                </div>
+              </TableHead>
+              <TableHead className="h-auto min-w-[10rem] py-2.5 align-bottom">
+                <div className="flex flex-col gap-1.5">
                   <SortButton
                     column="immigration_status"
                     label={t("columnStatus")}
                   />
-                </TableHead>
-                <TableHead>
+                  <select
+                    id="people-filter-status"
+                    value={statusFilter}
+                    onChange={(e) =>
+                      setStatusFilter(
+                        e.target.value as PersonImmigrationStatus | "all",
+                      )
+                    }
+                    aria-label={t("filterStatus")}
+                    className={headerControlClassName}
+                  >
+                    <option value="all">{t("filterAll")}</option>
+                    {PERSON_IMMIGRATION_STATUSES.map((value) => (
+                      <option key={value} value={value}>
+                        {ti(value)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </TableHead>
+              <TableHead className="h-auto min-w-[10rem] py-2.5 align-bottom">
+                <div className="flex flex-col gap-1.5">
                   <SortButton
                     column="status_expires_at"
                     label={t("columnExpires")}
                   />
-                </TableHead>
-                <TableHead className="w-12 px-5">
-                  <span className="sr-only">{t("delete")}</span>
-                </TableHead>
+                  <select
+                    id="people-filter-expiry"
+                    value={expiryFilter}
+                    onChange={(e) =>
+                      setExpiryFilter(e.target.value as ExpiryFilter)
+                    }
+                    aria-label={t("filterExpiry")}
+                    className={headerControlClassName}
+                  >
+                    <option value="all">{t("filterAll")}</option>
+                    <option value="expired">{t("filterExpiryExpired")}</option>
+                    <option value="expiring_30">{t("filterExpirySoon")}</option>
+                    <option value="no_date">{t("filterExpiryNone")}</option>
+                  </select>
+                </div>
+              </TableHead>
+              <TableHead className="h-auto w-12 px-5 py-2.5 align-bottom">
+                <span className="sr-only">{t("delete")}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredSorted.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={5}
+                  className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
+                >
+                  {t("noMatches")}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSorted.map((person) => {
+            ) : (
+              filteredSorted.map((person) => {
                 const fullName = `${person.first_name} ${person.last_name}`;
                 return (
                   <TableRow key={person.id} className="group">
@@ -315,18 +307,35 @@ export function PeopleList({
                     </TableCell>
                   </TableRow>
                 );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      <p className="text-sm text-muted-foreground">
-        {t("showingCount", {
-          shown: filteredSorted.length,
-          total: people.length,
-        })}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          {t("showingCount", {
+            shown: filteredSorted.length,
+            total: people.length,
+          })}
+        </p>
+        {filtersActive ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setNameQuery("");
+              setEmailQuery("");
+              setStatusFilter("all");
+              setExpiryFilter("all");
+            }}
+          >
+            {t("clearFilters")}
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
