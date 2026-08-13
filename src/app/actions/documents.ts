@@ -23,6 +23,7 @@ import {
   decryptFilename,
   encryptDocumentRequestWrite,
 } from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -91,10 +92,13 @@ export async function addCustomDocumentRequestAction(
     project_id: projectId,
     person_id: personId,
     doc_key: "custom",
-    ...encryptDocumentRequestWrite({
-      custom_label: label,
-      consultant_note: note || null,
-    }),
+    ...encryptDocumentRequestWrite(
+      {
+        custom_label: label,
+        consultant_note: note || null,
+      },
+      await getOrgDataKey(orgId),
+    ),
     is_required: true,
     sort_order: (maxSort?.sort_order ?? 100) + 10,
     status: "requested",
@@ -205,7 +209,10 @@ export async function downloadProjectDocumentAction(
       organizationId: orgId,
       storagePath: file.storage_path as string,
       contentType: file.content_type as string,
-      originalFilename: decryptFilename(file.original_filename as string),
+      originalFilename: decryptFilename(
+        file.original_filename as string,
+        await getOrgDataKey(orgId),
+      ),
     });
     const user = await getSessionUser();
     await recordAuditEvent({
@@ -270,7 +277,10 @@ export async function downloadShareDocumentAction(
       organizationId: resolved.organizationId,
       storagePath: file.storage_path as string,
       contentType: file.content_type as string,
-      originalFilename: decryptFilename(file.original_filename as string),
+      originalFilename: decryptFilename(
+        file.original_filename as string,
+        await getOrgDataKey(resolved.organizationId),
+      ),
     });
     await recordAuditEvent({
       organizationId: resolved.organizationId,

@@ -29,6 +29,7 @@ import {
   encryptPersonWrite,
   encryptProjectWrite,
 } from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
 function closedAndRetainFields(status: ProjectStatus, statusAt: string) {
@@ -240,6 +241,7 @@ async function resolveParticipants(
     }
 > {
   const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
   const resolvedPeople: Array<{
     id: string;
     role: ParticipantRole;
@@ -268,6 +270,7 @@ async function resolveParticipants(
           last_name: string;
           email: string | null;
         },
+        key,
       );
 
       if (seen.has(person.id)) {
@@ -303,11 +306,14 @@ async function resolveParticipants(
       .from("people")
       .insert({
         organization_id: orgId,
-        ...encryptPersonWrite({
-          first_name: participant.firstName,
-          last_name: participant.lastName,
-          email,
-        }),
+        ...encryptPersonWrite(
+          {
+            first_name: participant.firstName,
+            last_name: participant.lastName,
+            email,
+          },
+          key,
+        ),
         preferred_locale: locale,
         immigration_status: immigrationStatus,
         status_expires_at: statusExpiresAt,
@@ -411,11 +417,14 @@ export async function createProjectAction(
     .from("immigration_projects")
     .insert({
       organization_id: orgId,
-      ...encryptProjectWrite({
-        title,
-        description: data.description || null,
-        notes: data.notes || null,
-      }),
+      ...encryptProjectWrite(
+        {
+          title,
+          description: data.description || null,
+          notes: data.notes || null,
+        },
+        await getOrgDataKey(orgId),
+      ),
       status: "new",
       status_at: statusAt,
       submit_before: submitBefore,
@@ -576,7 +585,7 @@ export async function createProjectAction(
     await supabase.from("project_form_answers").insert({
       organization_id: orgId,
       project_id: project.id,
-      answers: encryptAnswersValue(initialAnswers),
+      answers: encryptAnswersValue(initialAnswers, await getOrgDataKey(orgId)),
       current_section: "identity",
     });
   } catch (error) {
@@ -651,11 +660,14 @@ export async function updateProjectAction(
   const { error: updateError } = await supabase
     .from("immigration_projects")
     .update({
-      ...encryptProjectWrite({
-        title,
-        description: data.description || null,
-        notes: data.notes || null,
-      }),
+      ...encryptProjectWrite(
+        {
+          title,
+          description: data.description || null,
+          notes: data.notes || null,
+        },
+        await getOrgDataKey(orgId),
+      ),
       status,
       status_at: statusAt,
       submit_before: data.submitBefore || null,
@@ -700,7 +712,7 @@ export async function updateProjectAction(
   ]);
   if (answersRow) {
     const store = normalizeAnswersStore(
-      decryptAnswersValue(answersRow.answers),
+      decryptAnswersValue(answersRow.answers, await getOrgDataKey(orgId)),
       {
         principalPersonId: principal?.id,
       },
@@ -752,7 +764,7 @@ export async function updateProjectAction(
     await supabase
       .from("project_form_answers")
       .update({
-        answers: encryptAnswersValue(store),
+        answers: encryptAnswersValue(store, await getOrgDataKey(orgId)),
         updated_at: new Date().toISOString(),
       })
       .eq("id", answersRow.id);
@@ -873,7 +885,7 @@ export async function updateProjectAction(
       .eq("organization_id", orgId)
       .maybeSingle();
     const store = normalizeAnswersStore(
-      decryptAnswersValue(latestAnswers?.answers),
+      decryptAnswersValue(latestAnswers?.answers, await getOrgDataKey(orgId)),
       {
         principalPersonId: principal?.id,
       },

@@ -78,6 +78,8 @@ export const organizations = pgTable("organizations", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  /** Org AES key wrapped with DOCUMENT_ENCRYPTION_KEY. Never store plaintext. */
+  wrappedDek: text("wrapped_dek"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

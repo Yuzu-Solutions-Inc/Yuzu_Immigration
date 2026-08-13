@@ -14,6 +14,7 @@ import {
   decryptPersonRow,
   decryptProjectRow,
 } from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 
 export type PersonRow = {
   id: string;
@@ -101,6 +102,7 @@ export async function listPeople(query?: string): Promise<PersonRow[]> {
   if (!orgId) return [];
 
   const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
   const { data, error } = await supabase
     .from("people")
     .select("*")
@@ -113,7 +115,9 @@ export async function listPeople(query?: string): Promise<PersonRow[]> {
     return [];
   }
 
-  const people = ((data ?? []) as PersonRow[]).map(decryptPersonRow);
+  const people = ((data ?? []) as PersonRow[]).map((row) =>
+    decryptPersonRow(row, key),
+  );
   people.sort((a, b) =>
     `${a.last_name} ${a.first_name}`.localeCompare(
       `${b.last_name} ${b.first_name}`,
@@ -150,7 +154,8 @@ export async function listUpcomingStatusExpiries(
     console.error("listUpcomingStatusExpiries:", error.message);
     return [];
   }
-  return ((data ?? []) as PersonRow[]).map(decryptPersonRow);
+  const key = await getOrgDataKey(orgId);
+  return ((data ?? []) as PersonRow[]).map((row) => decryptPersonRow(row, key));
 }
 
 export async function getPerson(personId: string): Promise<PersonRow | null> {
@@ -169,7 +174,7 @@ export async function getPerson(personId: string): Promise<PersonRow | null> {
     console.error("getPerson:", error.message);
     return null;
   }
-  return data ? decryptPersonRow(data as PersonRow) : null;
+  return data ? decryptPersonRow(data as PersonRow, await getOrgDataKey(orgId)) : null;
 }
 
 export async function listPersonNotes(
@@ -192,6 +197,7 @@ export async function listPersonNotes(
   }
 
   const rows = (data ?? []) as Omit<PersonNoteRow, "author_name">[];
+  const key = await getOrgDataKey(orgId);
   const authorIds = [
     ...new Set(rows.map((row) => row.created_by).filter(Boolean)),
   ] as string[];
@@ -216,7 +222,7 @@ export async function listPersonNotes(
 
   return rows.map((row) => ({
     ...row,
-    body: decryptNoteBody(row.body),
+    body: decryptNoteBody(row.body, key),
     author_name: row.created_by ? (names.get(row.created_by) ?? null) : null,
   }));
 }
@@ -292,7 +298,10 @@ export async function listProjects(): Promise<ProjectRow[]> {
     return [];
   }
 
-  const projects = ((data ?? []) as ProjectRow[]).map(decryptProjectRow);
+  const key = await getOrgDataKey(orgId);
+  const projects = ((data ?? []) as ProjectRow[]).map((row) =>
+    decryptProjectRow(row, key),
+  );
   const repIds = [
     ...new Set(
       projects
@@ -345,7 +354,10 @@ export async function getProject(projectId: string): Promise<ProjectRow | null> 
   }
   if (!data) return null;
 
-  const project = decryptProjectRow(data as ProjectRow);
+  const project = decryptProjectRow(
+    data as ProjectRow,
+    await getOrgDataKey(orgId),
+  );
   if (!project.representative_user_id) {
     return { ...project, representative: null };
   }
@@ -425,10 +437,11 @@ export async function getProjectParticipants(
     return participants as ParticipantRow[];
   }
 
+  const key = await getOrgDataKey(orgId);
   const byId = new Map(
     (peopleRows ?? []).map((person) => [
       person.id as string,
-      decryptPersonRow(person as PersonRow),
+      decryptPersonRow(person as PersonRow, key),
     ]),
   );
 
@@ -468,10 +481,11 @@ export async function getPersonProjects(personId: string): Promise<
     return [];
   }
 
+  const key = await getOrgDataKey(orgId);
   const byId = new Map(
     (projects ?? []).map((p) => [
       p.id as string,
-      decryptProjectRow(p as ProjectRow),
+      decryptProjectRow(p as ProjectRow, key),
     ]),
   );
 

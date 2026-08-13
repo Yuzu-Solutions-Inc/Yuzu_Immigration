@@ -25,14 +25,22 @@ export function isEncryptedJson(value: unknown): value is EncryptedJsonEnvelope 
   return isEncryptedField(blob);
 }
 
+function resolveKey(key?: Buffer): Buffer {
+  return key ?? requireAppEncryptionKey();
+}
+
 /**
  * Encrypt a UTF-8 string. AAD binds ciphertext to a table.column so blobs
- * cannot be copied between fields.
+ * cannot be copied between fields. Pass the org DEK for client PII; omit
+ * `key` to wrap with the platform DOCUMENT_ENCRYPTION_KEY.
  */
-export function encryptField(plaintext: string, aad: string): string {
-  const key = requireAppEncryptionKey();
+export function encryptField(
+  plaintext: string,
+  aad: string,
+  key?: Buffer,
+): string {
   const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALG, key, iv);
+  const cipher = createCipheriv(ALG, resolveKey(key), iv);
   cipher.setAAD(Buffer.from(aad, "utf8"));
   const ciphertext = Buffer.concat([
     cipher.update(plaintext, "utf8"),
@@ -42,7 +50,11 @@ export function encryptField(plaintext: string, aad: string): string {
   return `${FIELD_ENC_PREFIX}${payload.toString("base64url")}`;
 }
 
-export function decryptField(value: string, aad: string): string {
+export function decryptField(
+  value: string,
+  aad: string,
+  key?: Buffer,
+): string {
   if (!isEncryptedField(value)) return value;
 
   const raw = Buffer.from(value.slice(FIELD_ENC_PREFIX.length), "base64url");
@@ -50,11 +62,10 @@ export function decryptField(value: string, aad: string): string {
     throw new Error("invalid_field_ciphertext");
   }
 
-  const key = requireAppEncryptionKey();
   const iv = raw.subarray(0, IV_LENGTH);
   const authTag = raw.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH);
   const ciphertext = raw.subarray(IV_LENGTH + AUTH_TAG_LENGTH);
-  const decipher = createDecipheriv(ALG, key, iv);
+  const decipher = createDecipheriv(ALG, resolveKey(key), iv);
   decipher.setAAD(Buffer.from(aad, "utf8"));
   decipher.setAuthTag(authTag);
   return Buffer.concat([
@@ -63,41 +74,74 @@ export function decryptField(value: string, aad: string): string {
   ]).toString("utf8");
 }
 
-/** Decrypt when prefixed; otherwise return the legacy plaintext (or null). */
+function uniqueKeys(keys: Buffer[]): Buffer[] {
+  const seen = new Set<string>();
+  const out: Buffer[] = [];
+  for (const key of keys) {
+    const id = key.toString("hex");
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(key);
+  }
+  return out;
+}
+
+/**
+ * Decrypt when prefixed; otherwise return the legacy plaintext (or null).
+ * Tries the org DEK first, then the platform key so rows sealed before
+ * per-org keys still read.
+ */
 export function decryptFieldMaybe(
   value: string | null | undefined,
   aad: string,
+  key?: Buffer,
 ): string | null | undefined {
   if (value == null) return value;
   if (value === "") return value;
-  try {
-    return decryptField(value, aad);
-  } catch (error) {
-    console.error("decryptField failed:", aad, error);
-    return "[unavailable]";
+  const keys = uniqueKeys(
+    key ? [key, requireAppEncryptionKey()] : [requireAppEncryptionKey()],
+  );
+  for (const candidate of keys) {
+    try {
+      return decryptField(value, aad, candidate);
+    } catch {
+      continue;
+    }
   }
+  console.error("decryptField failed:", aad);
+  return "[unavailable]";
 }
 
 export function encryptOptionalField(
   value: string | null | undefined,
   aad: string,
+  key?: Buffer,
 ): string | null {
   const trimmed = typeof value === "string" ? value.trim() : "";
   if (!trimmed) return null;
-  return encryptField(trimmed, aad);
+  return encryptField(trimmed, aad, key);
 }
 
-export function encryptJson(value: unknown, aad: string): EncryptedJsonEnvelope {
+export function encryptJson(
+  value: unknown,
+  aad: string,
+  key?: Buffer,
+): EncryptedJsonEnvelope {
   return {
-    [JSON_ENC_KEY]: encryptField(JSON.stringify(value ?? {}), aad),
+    [JSON_ENC_KEY]: encryptField(JSON.stringify(value ?? {}), aad, key),
   };
 }
 
-export function decryptJson(value: unknown, aad: string): unknown {
+export function decryptJson(
+  value: unknown,
+  aad: string,
+  key?: Buffer,
+): unknown {
   if (value == null) return {};
   if (!isEncryptedJson(value)) return value;
+  const json = decryptFieldMaybe(value[JSON_ENC_KEY], aad, key);
+  if (json == null || json === "" || json === "[unavailable]") return {};
   try {
-    const json = decryptField(value[JSON_ENC_KEY], aad);
     return JSON.parse(json) as unknown;
   } catch (error) {
     console.error("decryptJson failed:", aad, error);

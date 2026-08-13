@@ -10,6 +10,7 @@ import { requireOrganizationId } from "@/lib/crm/queries";
 import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { encryptNoteBody, encryptPersonWrite } from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
 const personFieldsSchema = z.object({
@@ -97,12 +98,15 @@ export async function createPersonAction(
     .from("people")
     .insert({
       organization_id: orgId,
-      ...encryptPersonWrite({
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email || null,
-        phone: data.phone || null,
-      }),
+      ...encryptPersonWrite(
+        {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email || null,
+          phone: data.phone || null,
+        },
+        await getOrgDataKey(orgId),
+      ),
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,
@@ -162,12 +166,15 @@ export async function updatePersonAction(
   const { error: updateError } = await supabase
     .from("people")
     .update({
-      ...encryptPersonWrite({
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email || null,
-        phone: data.phone || null,
-      }),
+      ...encryptPersonWrite(
+        {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email || null,
+          phone: data.phone || null,
+        },
+        await getOrgDataKey(orgId),
+      ),
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,
@@ -314,7 +321,7 @@ export async function addPersonNoteAction(
   const { error: insertError } = await supabase.from("person_notes").insert({
     organization_id: orgId,
     person_id: data.personId,
-    body: encryptNoteBody(data.body),
+    body: encryptNoteBody(data.body, await getOrgDataKey(orgId)),
     created_by: user?.id ?? null,
   });
 
@@ -371,7 +378,7 @@ export async function updatePersonNoteAction(
   const { error: updateError } = await supabase
     .from("person_notes")
     .update({
-      body: encryptNoteBody(data.body),
+      body: encryptNoteBody(data.body, await getOrgDataKey(orgId)),
       updated_at: new Date().toISOString(),
     })
     .eq("id", data.noteId)

@@ -19,6 +19,7 @@ import {
   PII_AAD,
 } from "@/lib/security/client-pii";
 import { encryptOptionalField } from "@/lib/security/field-crypto";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -45,6 +46,7 @@ export async function exportPersonDataAction(
   }
 
   const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
   const { data: person, error: personError } = await supabase
     .from("people")
     .select("*")
@@ -63,6 +65,7 @@ export async function exportPersonDataAction(
       email: string | null;
       phone: string | null;
     },
+    key,
   );
 
   const [{ data: notes }, { data: participants }, { data: docFiles }] =
@@ -107,7 +110,7 @@ export async function exportPersonDataAction(
     person: decryptedPerson,
     notes: (notes ?? []).map((note) => ({
       ...note,
-      body: decryptNoteBody(note.body as string),
+      body: decryptNoteBody(note.body as string, key),
     })),
     projectParticipations: participants ?? [],
     projects: (projects ?? []).map((project) =>
@@ -117,11 +120,13 @@ export async function exportPersonDataAction(
           description?: string | null;
           notes?: string | null;
         },
+        key,
       ),
     ),
     documents: (docFiles ?? []).map((f) => ({
       ...decryptDocumentFileRow(
         f as { original_filename: string },
+        key,
       ),
       note: "Document ciphertext is stored encrypted; content omitted from this export metadata package.",
     })),
@@ -181,6 +186,7 @@ export async function destroyClosedProjectAction(
 
   const user = await getSessionUser();
   const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
   const { data: project, error } = await supabase
     .from("immigration_projects")
     .select(
@@ -196,6 +202,7 @@ export async function destroyClosedProjectAction(
 
   const decryptedProject = decryptProjectRow(
     project as { title: string; description?: string | null; notes?: string | null },
+    key,
   );
 
   if (
@@ -236,7 +243,7 @@ export async function destroyClosedProjectAction(
   await admin
     .from("project_form_answers")
     .update({
-      answers: encryptAnswersValue({}),
+      answers: encryptAnswersValue({}, key),
       current_section: null,
       updated_at: new Date().toISOString(),
     })
@@ -270,6 +277,7 @@ export async function destroyClosedProjectAction(
     if (person) {
       const decrypted = decryptPersonRow(
         person as { first_name: string; last_name: string },
+        key,
       );
       clientName =
         `${decrypted.first_name ?? ""} ${decrypted.last_name ?? ""}`.trim() ||
@@ -282,10 +290,13 @@ export async function destroyClosedProjectAction(
   await admin.from("file_destruction_register").insert({
     organization_id: orgId,
     project_id: project.id,
-    ...encryptDestructionWrite({
-      client_name: clientName || "Unknown",
-      service_summary: `${project.program_family} — ${decryptedProject.title}`,
-    }),
+    ...encryptDestructionWrite(
+      {
+        client_name: clientName || "Unknown",
+        service_summary: `${project.program_family} — ${decryptedProject.title}`,
+      },
+      key,
+    ),
     file_closed_at: project.closed_at,
     destroyed_at: destroyedAt,
     destroyed_by: user?.id ?? null,
@@ -301,6 +312,7 @@ export async function destroyClosedProjectAction(
       destruction_note: encryptOptionalField(
         parsed.data.note || null,
         PII_AAD.projects.destructionNote,
+        key,
       ),
       updated_at: destroyedAt,
     })

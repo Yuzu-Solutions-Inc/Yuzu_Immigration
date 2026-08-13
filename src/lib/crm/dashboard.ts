@@ -13,6 +13,7 @@ import {
   decryptPersonRow,
   decryptProjectRow,
 } from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
 export type HomeActionKind =
@@ -144,6 +145,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
   if (!orgId) return EMPTY;
 
   const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
   const now = new Date();
   const in7 = new Date(now.getTime() + 7 * 86_400_000).toISOString();
 
@@ -285,7 +287,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
   }
 
   const uploadedDocs = ((uploadedResult.data ?? []) as UploadedDocRow[]).map(
-    (row) => decryptDocumentRequestRow(row),
+    (row) => decryptDocumentRequestRow(row, key),
   );
   const requestedRows = (requestedResult.data ?? []) as IdCountRow[];
   const formRows = (formsResult.data ?? []) as IdCountRow[];
@@ -315,7 +317,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       for (const row of data ?? []) {
         projectById.set(row.id as string, {
           id: row.id as string,
-          title: decryptProjectRow({ title: row.title as string }).title,
+          title: decryptProjectRow({ title: row.title as string }, key).title,
         } as ProjectRow);
       }
     }
@@ -335,6 +337,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       for (const row of data ?? []) {
         const person = decryptPersonRow(
           row as { id: string; first_name: string; last_name: string },
+          key,
         );
         personNameById.set(
           person.id,

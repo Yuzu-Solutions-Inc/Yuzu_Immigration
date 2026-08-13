@@ -44,6 +44,7 @@ import {
   decryptProjectRow,
   encryptAnswersValue,
 } from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 
 export const SHARE_LINK_TTL_DAYS = 30;
 
@@ -146,7 +147,7 @@ export async function listActiveProjectPeople(
 
   const { data: peopleRows, error: peopleError } = await client
     .from("people")
-    .select("id, first_name, last_name, email")
+    .select("id, first_name, last_name, email, organization_id")
     .in("id", personIds);
 
   if (peopleError) {
@@ -159,13 +160,15 @@ export async function listActiveProjectPeople(
     first_name: string;
     last_name: string;
     email: string | null;
+    organization_id: string;
   };
 
+  const peopleList = (peopleRows ?? []) as PersonRow[];
+  const orgId = peopleList[0]?.organization_id;
+  const key = orgId ? await getOrgDataKey(orgId) : Buffer.alloc(0);
+
   const byId = new Map<string, PersonRow>(
-    ((peopleRows ?? []) as PersonRow[]).map((person) => [
-      person.id,
-      decryptPersonRow(person),
-    ]),
+    peopleList.map((person) => [person.id, decryptPersonRow(person, key)]),
   );
 
   const out: ProjectPersonBrief[] = [];
@@ -621,9 +624,10 @@ export async function getProjectFormAnswers(
   }
   if (!data) return null;
   const row = data as ProjectFormAnswersRow;
+  const key = await getOrgDataKey(row.organization_id);
   return {
     ...row,
-    answers: decryptAnswersValue(row.answers),
+    answers: decryptAnswersValue(row.answers, key),
   };
 }
 
@@ -646,7 +650,10 @@ export async function upsertProjectFormAnswers(input: {
     {
       organization_id: input.organizationId,
       project_id: input.projectId,
-      answers: encryptAnswersValue(input.answers),
+      answers: encryptAnswersValue(
+        input.answers,
+        await getOrgDataKey(input.organizationId),
+      ),
       current_section: input.currentSection ?? null,
       updated_at: new Date().toISOString(),
     },
@@ -826,10 +833,14 @@ export async function loadShareContext(token: string) {
       form_language: string | null;
       representative_user_id: string | null;
     },
+    await getOrgDataKey(resolved.organizationId),
   );
   const principal = people.find((p) => p.role === "principal") ?? people[0];
   const store = normalizeAnswersStore(
-    decryptAnswersValue(answersRes.data?.answers),
+    decryptAnswersValue(
+      answersRes.data?.answers,
+      await getOrgDataKey(resolved.organizationId),
+    ),
     {
       principalPersonId: principal?.id,
     },
@@ -924,7 +935,10 @@ export async function saveShareAnswers(input: {
 
   const principal = people.find((p) => p.role === "principal") ?? people[0];
   let store = normalizeAnswersStore(
-    decryptAnswersValue(answersRow?.answers),
+    decryptAnswersValue(
+      answersRow?.answers,
+      await getOrgDataKey(resolved.organizationId),
+    ),
     {
       principalPersonId: principal?.id,
     },
@@ -951,7 +965,10 @@ export async function saveShareAnswers(input: {
     {
       organization_id: resolved.organizationId,
       project_id: resolved.projectId,
-      answers: encryptAnswersValue(store),
+      answers: encryptAnswersValue(
+        store,
+        await getOrgDataKey(resolved.organizationId),
+      ),
       current_section: input.currentSection ?? null,
       updated_at: new Date().toISOString(),
     },

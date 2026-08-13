@@ -2,6 +2,7 @@
 
 import { PII_AAD } from "@/lib/security/client-pii";
 import { decryptFieldMaybe } from "@/lib/security/field-crypto";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 
 type DbClient = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,13 +37,16 @@ export async function fetchPrincipalEmail(
 
   const { data: person } = await client
     .from("people")
-    .select("email")
+    .select("email, organization_id")
     .eq("id", personId)
     .maybeSingle();
 
+  const orgId = person?.organization_id as string | undefined;
+  const key = orgId ? await getOrgDataKey(orgId) : undefined;
   const email = decryptFieldMaybe(
     person?.email as string | null | undefined,
     PII_AAD.people.email,
+    key,
   );
   return String(email ?? "").trim() || null;
 }

@@ -81,6 +81,10 @@ export async function createOrganizationAction(
   const org = data as { id?: string };
   if (org.id) {
     await setActiveOrganizationId(org.id);
+    const { loadOrCreateOrgDataKey } = await import(
+      "@/lib/security/org-data-key"
+    );
+    await loadOrCreateOrgDataKey(org.id);
   }
   await recordAuditEvent({
     organizationId: org.id ?? null,

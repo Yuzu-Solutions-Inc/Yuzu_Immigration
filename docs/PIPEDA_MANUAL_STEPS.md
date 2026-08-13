@@ -76,9 +76,9 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 
 ### Field encryption (ops)
 - [ ] Confirm `DOCUMENT_ENCRYPTION_KEY` is set in Vercel Production **before** sealing data
-- [ ] Deploy the app that decrypts `mc1.` fields, then run `npm run pii:seal`
-- [ ] In Supabase Table Editor, client names/emails/questionnaire answers should show `mc1.` ciphertext, not plaintext
-- [ ] Split access: people with only the Supabase dashboard cannot read client PII; anyone who also has the Vercel encryption key still can
+- [ ] After deploying per-org keys, run `npm run pii:seal` once (creates `organizations.wrapped_dek` and re-encrypts fields with each org key)
+- [ ] In Table Editor, `organizations.wrapped_dek` and client fields should be `mc1.` ciphertext, not plaintext
+- [ ] Split access: dashboard-only cannot read client PII; Yuzu with `DOCUMENT_ENCRYPTION_KEY` can unwrap every org key. Org keys isolate firms from each other.
 
 ---
 
@@ -129,7 +129,7 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 | 2 | `security_audit_events`; audit on downloads/uploads/share links/org/person delete; admin-only org update & person delete (RLS + app); AES-256-GCM client-field encryption (`mc1.` prefix) |
 | 3 | `retain_until` (+6y on close); secure destroy + `file_destruction_register`; person JSON export; Security settings UI |
 
-Region: **`ca-central-1`**. Document files and client PII columns: **AES-256-GCM** via `DOCUMENT_ENCRYPTION_KEY` (Table Editor sees ciphertext).
+Region: **`ca-central-1`**. Client PII: **per-org AES-256-GCM** (wrapped DEK in `organizations.wrapped_dek`; wrap key is `DOCUMENT_ENCRYPTION_KEY`). Table Editor sees ciphertext.
 
 ---
 

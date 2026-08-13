@@ -13,6 +13,7 @@ import {
   decryptDocumentRequestRow,
   encryptFilename,
 } from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -90,10 +91,13 @@ export async function listProjectDocumentRequests(
     ((files ?? []) as DocumentFileRow[]).map((f) => [f.request_id, f]),
   );
 
+  const orgId = ((requests ?? [])[0] as DocumentRequestRow | undefined)
+    ?.organization_id;
+  const key = orgId ? await getOrgDataKey(orgId) : Buffer.alloc(0);
   return ((requests ?? []) as DocumentRequestRow[]).map((row) => ({
-    ...decryptDocumentRequestRow(row),
+    ...decryptDocumentRequestRow(row, key),
     file: filesByRequest.get(row.id)
-      ? decryptDocumentFileRow(filesByRequest.get(row.id)!)
+      ? decryptDocumentFileRow(filesByRequest.get(row.id)!, key)
       : null,
   }));
 }
@@ -208,15 +212,21 @@ export async function listShareDocumentRequests(
     ((files ?? []) as ShareFileMeta[]).map((f) => [f.request_id, f]),
   );
 
+  const orgId = ((requests ?? [])[0] as DocumentRequestRow | undefined)
+    ?.organization_id;
+  const key = orgId ? await getOrgDataKey(orgId) : Buffer.alloc(0);
   return ((requests ?? []) as DocumentRequestRow[]).map((row) => {
     const file = filesByRequest.get(row.id);
     return {
-      ...decryptDocumentRequestRow(row),
+      ...decryptDocumentRequestRow(row, key),
       file: file
-        ? decryptDocumentFileRow({
-            ...file,
-            storage_path: "",
-          } as DocumentFileRow)
+        ? decryptDocumentFileRow(
+            {
+              ...file,
+              storage_path: "",
+            } as DocumentFileRow,
+            key,
+          )
         : null,
     };
   });
@@ -281,7 +291,10 @@ export async function storeEncryptedDocument(input: {
       request_id: input.requestId,
       person_id: input.personId,
       storage_path: path,
-      original_filename: encryptFilename(input.originalFilename),
+      original_filename: encryptFilename(
+        input.originalFilename,
+        await getOrgDataKey(input.organizationId),
+      ),
       content_type: input.contentType,
       byte_size: input.plaintext.length,
       encryption_alg: "aes-256-gcm",
@@ -308,7 +321,10 @@ export async function storeEncryptedDocument(input: {
     console.error("storeEncryptedDocument status:", statusError.message);
   }
 
-  return decryptDocumentFileRow(fileRow as DocumentFileRow);
+  return decryptDocumentFileRow(
+    fileRow as DocumentFileRow,
+    await getOrgDataKey(input.organizationId),
+  );
 }
 
 export async function downloadDecryptedDocument(input: {
