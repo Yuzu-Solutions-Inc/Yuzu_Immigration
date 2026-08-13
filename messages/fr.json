@@ -1002,6 +1002,7 @@
       "addFailed": "Impossible d'ajouter la demande de document.",
       "removeFailed": "Impossible de retirer la demande.",
       "downloadFailed": "Impossible de télécharger le fichier.",
+      "decryptFailed": "Impossible d’ouvrir ce fichier (chiffré avec une ancienne clé). Demandez au client de le téléverser à nouveau.",
       "previewUnsupported": "Ce type de fichier ne peut pas être prévisualisé dans le navigateur. Téléchargez-le pour l’ouvrir.",
       "generic": "Une erreur s'est produite."
     }

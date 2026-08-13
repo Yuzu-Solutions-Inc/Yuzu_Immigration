@@ -37,5 +37,9 @@ export function decryptDocument(payload: Buffer): Buffer {
   const ciphertext = payload.subarray(1 + IV_LENGTH + AUTH_TAG_LENGTH);
   const decipher = createDecipheriv(ALG, key, iv);
   decipher.setAuthTag(authTag);
-  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  try {
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  } catch {
+    throw new Error("decrypt_failed");
+  }
 }

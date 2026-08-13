@@ -235,7 +235,11 @@ export async function downloadProjectDocumentAction(
       contentType: result.contentType,
     };
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error("downloadProjectDocumentAction:", err);
+    if (message === "decrypt_failed") {
+      return { ok: false, error: "decrypt_failed" };
+    }
     return { ok: false, error: "download_failed" };
   }
 }
@@ -301,7 +305,11 @@ export async function downloadShareDocumentAction(
       contentType: result.contentType,
     };
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error("downloadShareDocumentAction:", err);
+    if (message === "decrypt_failed") {
+      return { ok: false, error: "decrypt_failed" };
+    }
     return { ok: false, error: "download_failed" };
   }
 }

@@ -1002,6 +1002,7 @@
       "addFailed": "Could not add the document request.",
       "removeFailed": "Could not remove the document request.",
       "downloadFailed": "Could not download the file.",
+      "decryptFailed": "This file can’t be opened (it was encrypted with an old key). Ask the client to upload it again.",
       "previewUnsupported": "This file type can’t be previewed in the browser. Download it to open.",
       "generic": "Something went wrong."
     }

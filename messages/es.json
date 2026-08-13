@@ -1002,6 +1002,7 @@
       "addFailed": "No se pudo añadir la solicitud de documento.",
       "removeFailed": "No se pudo eliminar la solicitud.",
       "downloadFailed": "No se pudo descargar el archivo.",
+      "decryptFailed": "No se puede abrir este archivo (se cifró con una clave anterior). Pida al cliente que lo suba de nuevo.",
       "previewUnsupported": "Este tipo de archivo no se puede previsualizar en el navegador. Descárguelo para abrirlo.",
       "generic": "Algo salió mal."
     }

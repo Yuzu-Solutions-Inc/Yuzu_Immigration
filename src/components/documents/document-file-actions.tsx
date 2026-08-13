@@ -80,6 +80,8 @@ export function DocumentFileActions({
         const blob = base64ToBlob(payload.base64, payload.contentType);
         const url = URL.createObjectURL(blob);
         setPreview({ ...payload, url });
+      } catch {
+        setError("download_failed");
       } finally {
         setBusy(null);
       }
@@ -126,7 +128,9 @@ export function DocumentFileActions({
         <p className="text-xs text-destructive" role="alert">
           {error === "preview_unsupported"
             ? t("errors.previewUnsupported")
-            : t("errors.downloadFailed")}
+            : error === "decrypt_failed"
+              ? t("errors.decryptFailed")
+              : t("errors.downloadFailed")}
         </p>
       ) : null}
 
