@@ -165,6 +165,11 @@ export default async function ProjectDetailPage({
               {project.description}
             </p>
           ) : null}
+          {project.notes ? (
+            <p className="max-w-2xl text-sm text-muted-foreground" title={project.notes}>
+              {t("notes")}: {project.notes}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ExportProjectFileButton locale={locale} projectId={project.id} />
@@ -187,7 +192,7 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:divide-x divide-y sm:divide-y-0 divide-border">
         <ProjectStatusCard
           locale={locale}
           projectId={project.id}
@@ -195,7 +200,7 @@ export default async function ProjectDetailPage({
           currentStatusAt={project.status_at}
           history={history}
         />
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+        <div className="px-4 py-2.5">
           <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             {t("submitBefore")}
           </p>
@@ -205,7 +210,7 @@ export default async function ProjectDetailPage({
               : t("submitBeforeEmpty")}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+        <div className="px-4 py-2.5">
           <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             {t("opened")}
           </p>
@@ -213,7 +218,7 @@ export default async function ProjectDetailPage({
             {opened}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+        <div className="px-4 py-2.5">
           <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             {t("representative")}
           </p>
@@ -222,20 +227,6 @@ export default async function ProjectDetailPage({
               project.representative?.email ||
               t("representativeUnassigned")}
           </p>
-        </div>
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("notes")}
-          </p>
-          {project.notes ? (
-            <p className="mt-0.5 line-clamp-2 text-sm text-brand" title={project.notes}>
-              {project.notes}
-            </p>
-          ) : (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {t("notesEmpty")}
-            </p>
-          )}
         </div>
       </div>
 

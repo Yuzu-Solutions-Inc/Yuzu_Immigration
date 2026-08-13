@@ -80,7 +80,7 @@ export function ProjectStatusCard({
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+      <div className="px-4 py-2.5">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
