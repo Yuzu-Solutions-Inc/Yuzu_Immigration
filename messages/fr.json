@@ -560,6 +560,8 @@
     "createShareLink": "Créer un lien",
     "newShareLink": "Générer un nouveau lien",
     "revokeShareLink": "Révoquer le lien",
+    "shareRevoking": "Révocation…",
+    "shareRevoked": "Lien révoqué. Les liens précédents ne fonctionnent plus.",
     "sharing": "Création…",
     "generateTitle": "Générer les PDF IRCC",
     "generateHelp": "Remplit les formulaires gouvernementaux certifiés à partir des réponses demandées une seule fois.",

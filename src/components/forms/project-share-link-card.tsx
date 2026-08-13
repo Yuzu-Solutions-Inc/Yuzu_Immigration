@@ -51,16 +51,39 @@ export function ProjectShareLinkCard({
     initialState,
   );
   const [copied, setCopied] = useState(false);
+  const [linkHidden, setLinkHidden] = useState(false);
+  const [revokedFeedback, setRevokedFeedback] = useState(false);
   const copiedUrlRef = useRef<string | null>(null);
 
-  const shareUrl = shareState.shareUrl ?? revealState.shareUrl ?? null;
-  const active = Boolean(activeShareExpiresAt) || Boolean(shareUrl);
+  const shareUrl = linkHidden
+    ? null
+    : (shareState.shareUrl ?? revealState.shareUrl ?? null);
+  const active =
+    !linkHidden && (Boolean(activeShareExpiresAt) || Boolean(shareUrl));
   const dateLocale = locale === "fr" ? "fr-CA" : "en-CA";
   const expiresLabel = activeShareExpiresAt
     ? new Date(activeShareExpiresAt).toLocaleDateString(dateLocale)
     : shareState.expiresAt
       ? new Date(shareState.expiresAt).toLocaleDateString(dateLocale)
       : null;
+
+  useEffect(() => {
+    if (shareState.message === "shared" && shareState.shareUrl) {
+      setLinkHidden(false);
+      setRevokedFeedback(false);
+    }
+  }, [shareState]);
+
+  useEffect(() => {
+    if (revokeState.message !== "revoked") return;
+    setLinkHidden(true);
+    setCopied(false);
+    setRevokedFeedback(true);
+    copiedUrlRef.current = null;
+    toast.success(t("shareRevoked"));
+    const timeout = window.setTimeout(() => setRevokedFeedback(false), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [revokeState, t]);
 
   useEffect(() => {
     if (!shareUrl || copiedUrlRef.current === shareUrl) return;
@@ -152,6 +175,12 @@ export function ProjectShareLinkCard({
         </p>
       ) : null}
 
+      {revokedFeedback ? (
+        <p className="text-sm font-medium text-emerald-700" role="status">
+          {t("shareRevoked")}
+        </p>
+      ) : null}
+
       {active && !shareUrl && !canReveal ? (
         <p className="text-sm text-muted-foreground">{t("shareShowUnavailable")}</p>
       ) : null}
@@ -189,7 +218,7 @@ export function ProjectShareLinkCard({
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="locale" value={locale} />
             <Button type="submit" variant="outline" disabled={revokePending}>
-              {t("revokeShareLink")}
+              {revokePending ? t("shareRevoking") : t("revokeShareLink")}
             </Button>
           </form>
         ) : null}

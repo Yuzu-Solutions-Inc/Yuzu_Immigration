@@ -53,6 +53,23 @@ function hashToken(token: string) {
   return createHash("sha256").update(token, "utf8").digest("hex");
 }
 
+async function revokeAllShareLinksForProject(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  projectId: string,
+  organizationId: string,
+) {
+  const { error } = await supabase
+    .from("form_share_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("project_id", projectId)
+    .eq("organization_id", organizationId);
+  if (error) {
+    console.error("revoke share links:", error.message);
+    return false;
+  }
+  return true;
+}
+
 export async function addFormToProjectAction(
   _prev: FormsActionState,
   formData: FormData,
@@ -293,12 +310,12 @@ export async function createFormShareLinkAction(
   const user = await getSessionUser();
   const supabase = await createClient();
 
-  await supabase
-    .from("form_share_links")
-    .update({ revoked_at: new Date().toISOString() })
-    .eq("project_id", projectId)
-    .eq("organization_id", orgId)
-    .is("revoked_at", null);
+  const revoked = await revokeAllShareLinksForProject(
+    supabase,
+    projectId,
+    orgId,
+  );
+  if (!revoked) return { error: "share_failed" };
 
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(
@@ -425,12 +442,12 @@ export async function revokeFormShareLinkAction(
 
   const user = await getSessionUser();
   const supabase = await createClient();
-  await supabase
-    .from("form_share_links")
-    .update({ revoked_at: new Date().toISOString() })
-    .eq("project_id", projectId)
-    .eq("organization_id", orgId)
-    .is("revoked_at", null);
+  const revoked = await revokeAllShareLinksForProject(
+    supabase,
+    projectId,
+    orgId,
+  );
+  if (!revoked) return { error: "share_failed" };
 
   await recordAuditEvent({
     organizationId: orgId,

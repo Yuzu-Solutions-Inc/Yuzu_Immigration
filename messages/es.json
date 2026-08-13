@@ -560,6 +560,8 @@
     "createShareLink": "Create share link",
     "newShareLink": "Generate new link",
     "revokeShareLink": "Revoke link",
+    "shareRevoking": "Revocando…",
+    "shareRevoked": "Enlace revocado. Los enlaces anteriores ya no funcionan.",
     "sharing": "Creating…",
     "generateTitle": "Generate IRCC PDFs",
     "generateHelp": "Fills certified government forms from answers asked once.",
