@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import JSZip from "jszip";
 
 import { getSessionUser } from "@/lib/auth/session";
-import { requireOrganizationId } from "@/lib/crm/queries";
+import { getProjectParticipants, requireOrganizationId } from "@/lib/crm/queries";
 import {
   DOCUMENT_MAX_BYTES,
   guessMimeFromFilename,
@@ -14,6 +15,7 @@ import {
 import {
   downloadDecryptedDocument,
   ensureProjectDocumentsSeeded,
+  listProjectDocumentRequests,
   listShareDocumentRequests,
   storeEncryptedDocument,
 } from "@/lib/documents/service";
@@ -242,6 +244,128 @@ export async function downloadProjectDocumentAction(
     }
     return { ok: false, error: "download_failed" };
   }
+}
+
+function zipPathSegment(value: string, fallback = "item"): string {
+  const cleaned = value
+    .replace(/[^\w.\-()+ ]+/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^[._]+|[._]+$/g, "")
+    .slice(0, 80);
+  return cleaned || fallback;
+}
+
+function uniqueZipPath(used: Set<string>, path: string): string {
+  if (!used.has(path)) {
+    used.add(path);
+    return path;
+  }
+  const dot = path.lastIndexOf(".");
+  const stem = dot > 0 ? path.slice(0, dot) : path;
+  const ext = dot > 0 ? path.slice(dot) : "";
+  let n = 2;
+  let next = `${stem}_${n}${ext}`;
+  while (used.has(next)) {
+    n += 1;
+    next = `${stem}_${n}${ext}`;
+  }
+  used.add(next);
+  return next;
+}
+
+export async function downloadAllProjectDocumentsAction(
+  projectId: string,
+): Promise<
+  | {
+      ok: true;
+      base64: string;
+      filename: string;
+      contentType: string;
+    }
+  | { ok: false; error: string }
+> {
+  if (!uuid.safeParse(projectId).success) {
+    return { ok: false, error: "invalid" };
+  }
+
+  const orgId = await requireOrganizationId();
+  if (!orgId) return { ok: false, error: "unauthorized" };
+
+  const [requests, participants] = await Promise.all([
+    listProjectDocumentRequests(projectId),
+    getProjectParticipants(projectId),
+  ]);
+
+  if (requests.some((row) => row.organization_id !== orgId)) {
+    return { ok: false, error: "unauthorized" };
+  }
+
+  const uploaded = requests.filter((row) => row.file);
+  if (uploaded.length === 0) {
+    return { ok: false, error: "no_files" };
+  }
+
+  const nameById = new Map(
+    participants
+      .filter((row) => row.person)
+      .map((row) => [
+        row.person!.id,
+        `${row.person!.first_name} ${row.person!.last_name}`.trim(),
+      ]),
+  );
+
+  const zip = new JSZip();
+  const used = new Set<string>();
+  let fileCount = 0;
+
+  for (const row of uploaded) {
+    const file = row.file!;
+    try {
+      const downloaded = await downloadDecryptedDocument({
+        organizationId: orgId,
+        storagePath: file.storage_path,
+        contentType: file.content_type,
+        originalFilename: file.original_filename,
+      });
+      const folder = zipPathSegment(
+        nameById.get(row.person_id) || row.person_id.slice(0, 8),
+        row.person_id.slice(0, 8),
+      );
+      const filename = zipPathSegment(downloaded.filename, "document");
+      zip.file(uniqueZipPath(used, `${folder}/${filename}`), downloaded.buffer);
+      fileCount += 1;
+    } catch (err) {
+      console.error("downloadAllProjectDocumentsAction file:", err);
+    }
+  }
+
+  if (fileCount === 0) {
+    return { ok: false, error: "download_failed" };
+  }
+
+  const user = await getSessionUser();
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "document.download_all",
+    resourceType: "immigration_project",
+    resourceId: projectId,
+    metadata: { fileCount },
+  });
+
+  const bytes = await zip.generateAsync({
+    type: "uint8array",
+    compression: "DEFLATE",
+  });
+
+  return {
+    ok: true,
+    base64: Buffer.from(bytes).toString("base64"),
+    filename: `documents-${projectId.slice(0, 8)}.zip`,
+    contentType: "application/zip",
+  };
 }
 
 export async function downloadShareDocumentAction(

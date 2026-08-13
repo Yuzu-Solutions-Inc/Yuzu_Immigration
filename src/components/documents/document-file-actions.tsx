@@ -5,6 +5,7 @@ import { Download, Eye, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -91,15 +92,16 @@ export function DocumentFileActions({
   const loading = pending && busy !== null;
 
   return (
-    <div className="space-y-1">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className={cn(!compact && "space-y-1")}>
+      <div className={cn("flex items-center", compact ? "gap-0.5" : "flex-wrap gap-2")}>
         <Button
           type="button"
-          variant="outline"
-          size={compact ? "icon-sm" : "sm"}
+          variant={compact ? "ghost" : "outline"}
+          size={compact ? "icon-xs" : "sm"}
           disabled={loading}
           onClick={() => run("preview")}
           aria-label={t("preview")}
+          title={t("preview")}
         >
           {busy === "preview" ? (
             <Loader2 className="size-4 animate-spin" />
@@ -110,11 +112,12 @@ export function DocumentFileActions({
         </Button>
         <Button
           type="button"
-          variant="outline"
-          size={compact ? "icon-sm" : "sm"}
+          variant={compact ? "ghost" : "outline"}
+          size={compact ? "icon-xs" : "sm"}
           disabled={loading}
           onClick={() => run("download")}
           aria-label={t("download")}
+          title={t("download")}
         >
           {busy === "download" ? (
             <Loader2 className="size-4 animate-spin" />

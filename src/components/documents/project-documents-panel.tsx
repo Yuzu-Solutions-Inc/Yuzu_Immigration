@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useActionState, useMemo, useState, useTransition } from "react";
+import { CircleCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
   addCustomDocumentRequestAction,
+  downloadAllProjectDocumentsAction,
   downloadProjectDocumentAction,
   removeCustomDocumentRequestAction,
   type DocumentsActionState,
@@ -13,6 +14,7 @@ import {
 import { DocumentFileActions } from "@/components/documents/document-file-actions";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
+import { triggerBrowserDownload } from "@/lib/documents/browser-file";
 import type { DocumentRequestWithFile } from "@/lib/documents/service";
 
 const initial: DocumentsActionState = {};
@@ -39,7 +41,6 @@ export function ProjectDocumentsPanel({
   people: Array<{ id: string; displayName: string; role: string }>;
 }) {
   const t = useTranslations("documents");
-  const tr = useTranslations("roles");
   const [addState, addAction, addPending] = useActionState(
     addCustomDocumentRequestAction,
     initial,
@@ -49,6 +50,8 @@ export function ProjectDocumentsPanel({
     initial,
   );
   const [personId, setPersonId] = useState(people[0]?.id ?? "");
+  const [downloadingAll, startDownloadAll] = useTransition();
+  const [downloadAllError, setDownloadAllError] = useState<string | null>(null);
 
   const peopleById = useMemo(
     () => new Map(people.map((person) => [person.id, person])),
@@ -66,12 +69,38 @@ export function ProjectDocumentsPanel({
   }, [people, requests]);
 
   const showPerson = people.length > 1;
+  const uploadedCount = ordered.filter((row) => row.file).length;
+
+  function handleDownloadAll() {
+    setDownloadAllError(null);
+    startDownloadAll(async () => {
+      const result = await downloadAllProjectDocumentsAction(projectId);
+      if (!result.ok) {
+        setDownloadAllError(result.error);
+        return;
+      }
+      triggerBrowserDownload(result);
+    });
+  }
 
   return (
     <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
-      <h2 className="font-heading px-5 py-4 text-lg font-semibold text-brand">
-        {t("title")}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("title")}
+        </h2>
+        {uploadedCount > 0 ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={downloadingAll}
+            onClick={handleDownloadAll}
+          >
+            {downloadingAll ? t("downloading") : t("downloadAll")}
+          </Button>
+        ) : null}
+      </div>
 
       <ul className="divide-y divide-border border-t border-border">
         {ordered.length === 0 ? (
@@ -81,58 +110,67 @@ export function ProjectDocumentsPanel({
         ) : (
           ordered.map((row) => {
             const person = peopleById.get(row.person_id);
+            const submitted = Boolean(row.file);
+            const title = [
+              documentLabel(row, t),
+              row.is_required ? t("required") : null,
+              showPerson && person ? person.displayName : null,
+              t(`statuses.${row.status}`),
+              row.consultant_note,
+            ]
+              .filter(Boolean)
+              .join(" · ");
             return (
-              <li
-                key={row.id}
-                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium text-brand">
-                    {documentLabel(row, t)}
-                    {row.is_required ? (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        · {t("required")}
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {showPerson && person
-                      ? `${person.displayName} · ${tr(person.role as never)} · `
-                      : ""}
-                    {t(`statuses.${row.status}`)}
-                    {row.file ? ` · ${row.file.original_filename}` : ""}
-                  </p>
-                  {row.consultant_note ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {row.consultant_note}
-                    </p>
-                  ) : null}
-                </div>
+              <li key={row.id} className="group px-5 py-3">
                 <div className="flex items-center gap-2">
-                  {row.file ? (
-                    <DocumentFileActions
-                      compact
-                      requestId={row.id}
-                      filename={row.file.original_filename}
-                      fetchFile={downloadProjectDocumentAction}
+                  <p
+                    className="min-w-0 flex-1 truncate text-sm font-medium text-brand"
+                    title={title}
+                  >
+                    {documentLabel(row, t)}
+                    <span className="font-normal text-muted-foreground">
+                      {row.is_required ? ` · ${t("required")}` : ""}
+                      {showPerson && person ? ` · ${person.displayName}` : ""}
+                      {!submitted ? ` · ${t(`statuses.${row.status}`)}` : ""}
+                    </span>
+                  </p>
+                  {submitted ? (
+                    <CircleCheck
+                      className="size-4 shrink-0 text-emerald-600"
+                      aria-label={t("statusUploaded")}
                     />
                   ) : null}
-                  {row.doc_key === "custom" ? (
-                    <form action={removeAction}>
-                      <input type="hidden" name="requestId" value={row.id} />
-                      <input type="hidden" name="projectId" value={projectId} />
-                      <input type="hidden" name="locale" value={locale} />
-                      <Button
-                        type="submit"
-                        variant="outline"
-                        size="icon-sm"
-                        disabled={removePending}
-                        aria-label={t("remove")}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </form>
-                  ) : null}
+                  <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
+                    {row.file ? (
+                      <DocumentFileActions
+                        compact
+                        requestId={row.id}
+                        filename={row.file.original_filename}
+                        fetchFile={downloadProjectDocumentAction}
+                      />
+                    ) : null}
+                    {row.doc_key === "custom" ? (
+                      <form action={removeAction}>
+                        <input type="hidden" name="requestId" value={row.id} />
+                        <input
+                          type="hidden"
+                          name="projectId"
+                          value={projectId}
+                        />
+                        <input type="hidden" name="locale" value={locale} />
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="icon-xs"
+                          disabled={removePending}
+                          aria-label={t("remove")}
+                          title={t("remove")}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </form>
+                    ) : null}
+                  </div>
                 </div>
               </li>
             );
@@ -179,6 +217,13 @@ export function ProjectDocumentsPanel({
               {addPending ? t("adding") : t("add")}
             </Button>
           </form>
+          {downloadAllError ? (
+            <p className="mt-2 text-sm text-destructive" role="alert">
+              {downloadAllError === "no_files"
+                ? t("errors.noFiles")
+                : t("errors.downloadFailed")}
+            </p>
+          ) : null}
           {removeState.error ? (
             <p className="mt-2 text-sm text-destructive" role="alert">
               {t("errors.removeFailed")}
