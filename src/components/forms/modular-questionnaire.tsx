@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { GripVertical, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -12,12 +12,14 @@ import {
   applyDerivedAnswers,
   CANONICAL_FIELDS,
   emptyTableRow,
+  fieldGroupForKey,
   fieldsForFormCodes,
   isFieldVisible,
   isTableVisible,
   sectionsForFields,
   tablesForFormCodes,
   type CanonicalField,
+  type QuestionnaireFieldGroup,
   type QuestionnaireSection,
   type RepeatableTable,
   type TableColumn,
@@ -191,12 +193,97 @@ function FieldControl({
   );
 }
 
+function tableGatedByField(table: RepeatableTable, fieldKey: string): boolean {
+  const rule = table.showWhen;
+  if (!rule) return false;
+  if ("or" in rule && Array.isArray(rule.or)) {
+    return rule.or.some((r) => r.key === fieldKey);
+  }
+  const rules = Array.isArray(rule) ? rule : [rule];
+  return rules.some((r) => "key" in r && r.key === fieldKey);
+}
+
 function fieldColSpan(col: TableColumn) {
   if (col.type === "textarea") return "col-span-2 sm:col-span-3";
   if (col.key === "employer" || col.key === "school" || col.key === "address") {
     return "sm:col-span-2";
   }
   return undefined;
+}
+
+function groupFieldLabel(
+  key: string,
+  t: ReturnType<typeof useTranslations>,
+): string {
+  if (key === "marriageDate") return t("fields.marriageDate");
+  if (key === "yearsTogether") return t("fields.yearsTogether");
+  if (key === "commonLawStart") return t("fields.commonLawStart");
+  if (key === "commonLawCity") return t("tables.columns.colCity");
+  if (key === "commonLawProvince") return t("tables.columns.colProvince");
+  if (key === "commonLawCountry") return t("tables.columns.colCountry");
+  if (key.endsWith("From")) return t("tables.columns.colFrom");
+  if (key.endsWith("To")) return t("tables.columns.colTo");
+  if (key.endsWith("FamilyName")) return t("tables.columns.colFamilyName");
+  if (key.endsWith("GivenName")) return t("tables.columns.colGivenName");
+  if (key.endsWith("Dob")) return t("tables.columns.colDob");
+  if (key.endsWith("Cob")) return t("tables.columns.colCob");
+  if (key.endsWith("Address")) return t("tables.columns.colAddress");
+  if (key.endsWith("Occupation")) return t("tables.columns.colOccupation");
+  if (key.endsWith("MaritalStatus")) return t("tables.columns.colMaritalStatus");
+  if (key.endsWith("Telephone")) return t("tables.columns.colPhone");
+  if (key.endsWith("Accompanying")) return t("tables.columns.colAccompanying");
+  if (key.endsWith("Relationship")) return t("tables.columns.colRelationship");
+  return t(`fields.${key}`);
+}
+
+function FieldGroupEditor({
+  group,
+  fields,
+  answers,
+  onChange,
+  t,
+}: {
+  group: QuestionnaireFieldGroup;
+  fields: CanonicalField[];
+  answers: Record<string, unknown>;
+  onChange: (key: string, value: string) => void;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  if (fields.length === 0) return null;
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <h4 className="font-heading text-sm font-semibold text-brand">
+        {t(`groups.${group.key}`)}
+      </h4>
+      <div className="rounded-xl border border-border bg-surface px-3 py-3">
+        <div className="grid min-w-0 grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3">
+          {fields.map((field) => (
+            <div
+              key={field.key}
+              className={
+                field.type === "textarea" || field.wide
+                  ? "col-span-2 sm:col-span-3"
+                  : undefined
+              }
+            >
+              <FieldControl
+                id={`group-${group.key}-${field.key}`}
+                label={groupFieldLabel(field.key, t)}
+                type={field.type}
+                value={String(answers[field.key] ?? "")}
+                onChange={(v) => onChange(field.key, v)}
+                required={field.required}
+                maxLength={field.maxLength}
+                options={field.options}
+                t={t}
+                compact
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function TableEditor({
@@ -215,6 +302,7 @@ function TableEditor({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const minRows = table.minRows ?? 0;
+  const reorderable = table.reorderable !== false;
 
   function updateCell(rowIndex: number, key: string, value: string) {
     onChange(
@@ -264,17 +352,25 @@ function TableEditor({
         {rows.map((row, rowIndex) => (
           <div
             key={`${table.key}-${rowIndex}`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = "move";
-              if (dropIndex !== rowIndex) setDropIndex(rowIndex);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              const from = Number(e.dataTransfer.getData("text/plain"));
-              if (Number.isFinite(from)) moveRow(from, rowIndex);
-              clearDrag();
-            }}
+            onDragOver={
+              reorderable
+                ? (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (dropIndex !== rowIndex) setDropIndex(rowIndex);
+                  }
+                : undefined
+            }
+            onDrop={
+              reorderable
+                ? (e) => {
+                    e.preventDefault();
+                    const from = Number(e.dataTransfer.getData("text/plain"));
+                    if (Number.isFinite(from)) moveRow(from, rowIndex);
+                    clearDrag();
+                  }
+                : undefined
+            }
             className={cn(
               "flex gap-2 border-border px-3 py-3",
               rowIndex > 0 && "border-t",
@@ -285,22 +381,24 @@ function TableEditor({
                 "bg-accent/60",
             )}
           >
-            <div className="flex shrink-0 flex-col items-center gap-1 pt-5">
-              <span
-                draggable
-                role="button"
-                tabIndex={0}
-                aria-label={t("reorderRow")}
-                onDragStart={(e) => {
-                  e.dataTransfer.effectAllowed = "move";
-                  e.dataTransfer.setData("text/plain", String(rowIndex));
-                  setDragIndex(rowIndex);
-                }}
-                onDragEnd={clearDrag}
-                className="flex size-7 cursor-grab items-center justify-center rounded-full bg-muted text-muted-foreground active:cursor-grabbing"
-              >
-                <GripVertical className="size-3.5" aria-hidden />
-              </span>
+            <div className="flex w-7 shrink-0 flex-col items-center gap-1 pt-5">
+              {reorderable ? (
+                <span
+                  draggable
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t("reorderRow")}
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", String(rowIndex));
+                    setDragIndex(rowIndex);
+                  }}
+                  onDragEnd={clearDrag}
+                  className="flex size-7 cursor-grab items-center justify-center rounded-full bg-muted text-muted-foreground active:cursor-grabbing"
+                >
+                  <GripVertical className="size-3.5" aria-hidden />
+                </span>
+              ) : null}
               <span className="text-sm font-medium text-brand">{rowIndex + 1}</span>
             </div>
             <div className="grid min-w-0 flex-1 grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3">
@@ -464,9 +562,6 @@ export function ModularQuestionnaire({
   const section = (sections[sectionIndex] ??
     "identity") as QuestionnaireSection;
 
-  const sectionFields = fields.filter(
-    (f) => f.section === section && isFieldVisible(f, answers),
-  );
   const sectionTables = tables.filter(
     (tbl) => tbl.section === section && isTableVisible(tbl, answers),
   );
@@ -563,39 +658,83 @@ export function ModularQuestionnaire({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {sectionFields.map((field) => (
-          <div
-            key={field.key}
-            className={
-              field.wide || field.type === "textarea" ? "sm:col-span-2" : undefined
+        {(() => {
+          const emittedGroups = new Set<string>();
+          const emittedTables = new Set<string>();
+          const nodes: ReactNode[] = [];
+
+          function pushTable(table: RepeatableTable) {
+            if (emittedTables.has(table.key)) return;
+            emittedTables.add(table.key);
+            nodes.push(
+              <TableEditor
+                key={table.key}
+                table={table}
+                rows={tableData[table.key] ?? [emptyTableRow(table)]}
+                onChange={(rows) =>
+                  setTableData((prev) => ({ ...prev, [table.key]: rows }))
+                }
+                t={t}
+                th={th}
+              />,
+            );
+          }
+
+          for (const field of fields.filter((f) => f.section === section)) {
+            if (!isFieldVisible(field, answers)) continue;
+            const group = fieldGroupForKey(field.key);
+            if (group) {
+              if (emittedGroups.has(group.key)) continue;
+              emittedGroups.add(group.key);
+              const groupFields = group.fieldKeys
+                .map((key) => fields.find((f) => f.key === key))
+                .filter((f): f is CanonicalField =>
+                  f != null && isFieldVisible(f, answers),
+                );
+              if (groupFields.length > 0) {
+                nodes.push(
+                  <FieldGroupEditor
+                    key={group.key}
+                    group={group}
+                    fields={groupFields}
+                    answers={answers}
+                    onChange={update}
+                    t={t}
+                  />,
+                );
+              }
+              continue;
             }
-          >
-            <FieldControl
-              id={`field-${field.key}`}
-              label={t(`fields.${field.key}`)}
-              help={field.helpKey ? th(field.helpKey) : null}
-              type={field.type}
-              value={String(answers[field.key] ?? "")}
-              onChange={(v) => update(field.key, v)}
-              required={field.required}
-              maxLength={field.maxLength}
-              options={field.options}
-              t={t}
-            />
-          </div>
-        ))}
-        {sectionTables.map((table) => (
-          <TableEditor
-            key={table.key}
-            table={table}
-            rows={tableData[table.key] ?? [emptyTableRow(table)]}
-            onChange={(rows) =>
-              setTableData((prev) => ({ ...prev, [table.key]: rows }))
+            nodes.push(
+              <div
+                key={field.key}
+                className={
+                  field.wide || field.type === "textarea"
+                    ? "sm:col-span-2"
+                    : undefined
+                }
+              >
+                <FieldControl
+                  id={`field-${field.key}`}
+                  label={t(`fields.${field.key}`)}
+                  help={field.helpKey ? th(field.helpKey) : null}
+                  type={field.type}
+                  value={String(answers[field.key] ?? "")}
+                  onChange={(v) => update(field.key, v)}
+                  required={field.required}
+                  maxLength={field.maxLength}
+                  options={field.options}
+                  t={t}
+                />
+              </div>,
+            );
+            for (const table of sectionTables) {
+              if (tableGatedByField(table, field.key)) pushTable(table);
             }
-            t={t}
-            th={th}
-          />
-        ))}
+          }
+          for (const table of sectionTables) pushTable(table);
+          return nodes;
+        })()}
       </div>
 
       {errorMessage ? (

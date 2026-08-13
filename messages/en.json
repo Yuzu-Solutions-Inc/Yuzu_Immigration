@@ -903,6 +903,12 @@
       "expired": "This link has expired. Ask your consultant for a new one.",
       "generic": "Something went wrong. Try again."
     },
+    "groups": {
+      "spouse": "Spouse / partner",
+      "prevSpouse": "Previous spouse / partner",
+      "parent1": "Parent 1",
+      "parent2": "Parent 2"
+    },
     "tables": {
       "rowIndex": "#",
       "previousCorRows": {
@@ -951,7 +957,8 @@
         "colRelationship": "Relationship",
         "colAccompanying": "Accompanying?",
         "colAddress": "Address",
-        "colMaritalStatus": "Marital status"
+        "colMaritalStatus": "Marital status",
+        "colPhone": "Phone"
       }
     },
     "addRow": "Add row",

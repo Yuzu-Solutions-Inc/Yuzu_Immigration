@@ -59,6 +59,14 @@ export type RepeatableTable = {
   minRows?: number;
   columns: TableColumn[];
   helpKey?: string;
+  /** Defaults to true. Family member lists stay in given order. */
+  reorderable?: boolean;
+};
+
+export type QuestionnaireFieldGroup = {
+  key: string;
+  section: string;
+  fieldKeys: string[];
 };
 
 export const QUESTIONNAIRE_SECTIONS = [
@@ -1645,6 +1653,7 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
     maxRows: 8,
     minRows: 1,
     helpKey: "childrenRowsHelp",
+    reorderable: false,
     columns: [
       { key: "familyName", type: "text", labelKey: "colFamilyName", maxLength: 80, required: true },
       { key: "givenName", type: "text", labelKey: "colGivenName", maxLength: 80, required: true },
@@ -1668,6 +1677,7 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
     maxRows: 3,
     minRows: 1,
     helpKey: "siblingsRowsHelp",
+    reorderable: false,
     columns: [
       { key: "familyName", type: "text", labelKey: "colFamilyName", maxLength: 80, required: true },
       { key: "givenName", type: "text", labelKey: "colGivenName", maxLength: 80, required: true },
@@ -1684,6 +1694,72 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
     ],
   },
 ];
+
+export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
+  {
+    key: "spouse",
+    section: "family",
+    fieldKeys: [
+      "spouseFamilyName",
+      "spouseGivenName",
+      "marriageDate",
+      "spouseDob",
+      "spouseCob",
+      "spouseOccupation",
+      "spouseAccompanying",
+      "spouseAddress",
+      "yearsTogether",
+      "commonLawStart",
+      "commonLawCity",
+      "commonLawProvince",
+      "commonLawCountry",
+    ],
+  },
+  {
+    key: "prevSpouse",
+    section: "family",
+    fieldKeys: [
+      "prevSpouseFamilyName",
+      "prevSpouseGivenName",
+      "prevSpouseDob",
+      "prevSpouseRelationship",
+      "prevSpouseFrom",
+      "prevSpouseTo",
+    ],
+  },
+  {
+    key: "parent1",
+    section: "family",
+    fieldKeys: [
+      "parent1FamilyName",
+      "parent1GivenName",
+      "parent1Dob",
+      "parent1Cob",
+      "parent1MaritalStatus",
+      "parent1Occupation",
+      "parent1Telephone",
+      "parent1Address",
+    ],
+  },
+  {
+    key: "parent2",
+    section: "family",
+    fieldKeys: [
+      "parent2FamilyName",
+      "parent2GivenName",
+      "parent2Dob",
+      "parent2Cob",
+      "parent2MaritalStatus",
+      "parent2Occupation",
+      "parent2Telephone",
+      "parent2Address",
+    ],
+  },
+];
+
+export function fieldGroupForKey(key: string): QuestionnaireFieldGroup | undefined {
+  return FIELD_GROUPS.find((group) => group.fieldKeys.includes(key));
+}
 
 export function questionnaireFormCodes(formCodes: string[]): string[] {
   return formCodes
