@@ -598,6 +598,9 @@
       "citizenship": "Citizenship",
       "maritalStatus": "Marital status",
       "phoneCountryCode": "Phone country code",
+      "phoneCode": "Código",
+      "phoneKind": "Tipo",
+      "phoneNumber": "Número",
       "phone": "Phone number",
       "streetNum": "Street number",
       "streetName": "Street name",
@@ -908,6 +911,7 @@
       "prevSpouse": "Cónyuge / pareja anterior",
       "parent1": "Padre o madre 1",
       "parent2": "Padre o madre 2",
+      "phone": "Teléfono",
       "mailingAddress": "Dirección postal",
       "residentialAddress": "Dirección residencial"
     },

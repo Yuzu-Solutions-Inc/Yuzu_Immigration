@@ -216,6 +216,9 @@ function groupFieldLabel(
   key: string,
   t: ReturnType<typeof useTranslations>,
 ): string {
+  if (key === "phoneCountryCode") return t("fields.phoneCode");
+  if (key === "phone") return t("fields.phoneNumber");
+  if (key === "phoneType") return t("fields.phoneKind");
   if (key === "marriageDate") return t("fields.marriageDate");
   if (key === "yearsTogether") return t("fields.yearsTogether");
   if (key === "commonLawStart") return t("fields.commonLawStart");
@@ -258,6 +261,12 @@ function groupFieldSpan(field: CanonicalField) {
   return undefined;
 }
 
+function inlineFieldClass(key: string) {
+  if (key === "phoneCountryCode") return "w-[5.25rem] shrink-0";
+  if (key === "phoneType") return "w-[10.5rem] shrink-0";
+  return "min-w-0 flex-1";
+}
+
 function FieldGroupEditor({
   group,
   fields,
@@ -272,34 +281,44 @@ function FieldGroupEditor({
   t: ReturnType<typeof useTranslations>;
 }) {
   if (fields.length === 0) return null;
+  const controls = fields.map((field) => (
+    <div
+      key={field.key}
+      className={
+        group.layout === "inline"
+          ? inlineFieldClass(field.key)
+          : groupFieldSpan(field)
+      }
+    >
+      <FieldControl
+        id={`group-${group.key}-${field.key}`}
+        label={groupFieldLabel(field.key, t)}
+        type={field.type}
+        value={String(answers[field.key] ?? "")}
+        onChange={(v) => onChange(field.key, v)}
+        required={field.required}
+        maxLength={field.maxLength}
+        options={field.options}
+        t={t}
+        compact
+        placeholder={field.key === "phoneCountryCode" ? "+" : undefined}
+      />
+    </div>
+  ));
   return (
     <div className="space-y-2 sm:col-span-2">
       <h4 className="font-heading text-sm font-semibold text-brand">
         {t(`groups.${group.key}`)}
       </h4>
-      <div className="rounded-xl border border-border bg-surface px-3 py-3">
-        <div className="grid min-w-0 grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3">
-          {fields.map((field) => (
-            <div
-              key={field.key}
-              className={groupFieldSpan(field)}
-            >
-              <FieldControl
-                id={`group-${group.key}-${field.key}`}
-                label={groupFieldLabel(field.key, t)}
-                type={field.type}
-                value={String(answers[field.key] ?? "")}
-                onChange={(v) => onChange(field.key, v)}
-                required={field.required}
-                maxLength={field.maxLength}
-                options={field.options}
-                t={t}
-                compact
-              />
-            </div>
-          ))}
+      {group.layout === "inline" ? (
+        <div className="flex min-w-0 gap-2">{controls}</div>
+      ) : (
+        <div className="rounded-xl border border-border bg-surface px-3 py-3">
+          <div className="grid min-w-0 grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3">
+            {controls}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

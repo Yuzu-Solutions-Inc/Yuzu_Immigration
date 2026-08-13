@@ -67,6 +67,8 @@ export type QuestionnaireFieldGroup = {
   key: string;
   section: string;
   fieldKeys: string[];
+  /** Single-row compact controls instead of a wrapped card. */
+  layout?: "inline";
 };
 
 export const QUESTIONNAIRE_SECTIONS = [
@@ -1696,6 +1698,12 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
 ];
 
 export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
+  {
+    key: "phone",
+    section: "contact",
+    layout: "inline",
+    fieldKeys: ["phoneCountryCode", "phone", "phoneType"],
+  },
   {
     key: "spouse",
     section: "family",
