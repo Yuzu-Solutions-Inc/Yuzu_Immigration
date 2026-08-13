@@ -11,6 +11,7 @@ export function SettingsTabs({ canAdminister }: { canAdminister: boolean }) {
 
   const tabs = [
     { href: "/settings/account", label: t("account") },
+    { href: "/settings/forms", label: t("forms") },
     ...(canAdminister
       ? [
           { href: "/settings/organization", label: t("organization") },

@@ -373,6 +373,27 @@ const LANGUAGE_OPTS = lovOptions(
   ["001", "002"],
 );
 
+/** Option lists the Sunday IRCC validator compares to live PDF choice codes. */
+export const QUESTIONNAIRE_LOVS = {
+  sex: SEX_OPTS,
+  marital: MARITAL_OPTS,
+  status: STATUS_OPTS,
+  phone: PHONE_TYPE_OPTS,
+  studyLevel: STUDY_LEVEL_OPTS,
+  fieldOfStudy: FIELD_OF_STUDY_OPTS,
+  funds: FUNDS_OPTS,
+  communicate: LANG_OPTS,
+  preferredLang: PREF_LANG_OPTS,
+  workPermit: WORK_PERMIT_OPTS,
+  workPermitInland: WORK_PERMIT_INLAND_OPTS,
+  visitPurpose: VISIT_PURPOSE_OPTS,
+  visitPurposeOriginal: VISIT_PURPOSE_ORIGINAL_OPTS,
+  childRel: CHILD_REL_OPTS,
+  siblingRel: SIBLING_REL_OPTS,
+  country: COUNTRY_OPTS,
+  language: LANGUAGE_OPTS,
+} as const;
+
 const marriedOrCl: ShowWhen = {
   key: "maritalStatus",
   oneOf: ["01", "03"],

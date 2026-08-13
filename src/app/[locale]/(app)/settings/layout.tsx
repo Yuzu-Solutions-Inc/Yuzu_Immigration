@@ -17,7 +17,7 @@ export default async function SettingsLayout({
   const membership = await getPrimaryMembership();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div className="space-y-1">
         <h1 className="font-heading text-2xl font-semibold text-brand">
           {t("title")}
