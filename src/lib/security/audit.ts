@@ -2,7 +2,12 @@ import { headers } from "next/headers";
 
 import { createServiceClient } from "@/lib/supabase/admin";
 
-export type AuditActorKind = "staff" | "share_link" | "system" | "service";
+export type AuditActorKind =
+  | "staff"
+  | "share_link"
+  | "public_booking"
+  | "system"
+  | "service";
 
 export type AuditEventInput = {
   organizationId?: string | null;

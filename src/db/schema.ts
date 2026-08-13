@@ -6,7 +6,9 @@ import {
   pgEnum,
   pgSchema,
   pgTable,
+  smallint,
   text,
+  time,
   timestamp,
   unique,
   uniqueIndex,
@@ -525,6 +527,122 @@ export const fileDestructionRegister = pgTable("file_destruction_register", {
     .notNull(),
 });
 
+export const bookingAppointmentStatusEnum = pgEnum("booking_appointment_status", [
+  "confirmed",
+  "cancelled",
+  "completed",
+  "no_show",
+]);
+
+/** Per-org public booking page (hashed token + encrypted plaintext for recopy). */
+export const bookingSettings = pgTable("booking_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .unique()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  publicTokenHash: text("public_token_hash").notNull().unique(),
+  publicTokenEncrypted: text("public_token_encrypted"),
+  timezone: text("timezone").notNull().default("America/Toronto"),
+  bookingWindowDays: integer("booking_window_days").notNull().default(14),
+  minNoticeHours: integer("min_notice_hours").notNull().default(24),
+  bufferMinutes: integer("buffer_minutes").notNull().default(0),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Recurring weekly open hours. weekday 0 = Sunday (JS getDay). */
+export const bookingAvailabilityRules = pgTable(
+  "booking_availability_rules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    weekday: smallint("weekday").notNull(),
+    startTime: time("start_time").notNull(),
+    endTime: time("end_time").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique().on(table.organizationId, table.weekday, table.startTime, table.endTime),
+  ],
+);
+
+export const bookingServices = pgTable("booking_services", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  durationMinutes: integer("duration_minutes").notNull(),
+  priceCents: integer("price_cents").notNull().default(0),
+  currency: text("currency").notNull().default("CAD"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const bookingBlockedTimes = pgTable("booking_blocked_times", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+  reason: text("reason"),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const bookingAppointments = pgTable("booking_appointments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  serviceId: uuid("service_id")
+    .notNull()
+    .references(() => bookingServices.id, { onDelete: "restrict" }),
+  personId: uuid("person_id").references(() => people.id, {
+    onDelete: "set null",
+  }),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+  guestName: text("guest_name").notNull(),
+  guestEmail: text("guest_email").notNull(),
+  guestPhone: text("guest_phone").notNull(),
+  guestAddress: text("guest_address").notNull(),
+  privacyAcceptedAt: timestamp("privacy_accepted_at", { withTimezone: true }).notNull(),
+  status: bookingAppointmentStatusEnum("status").notNull().default("confirmed"),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  cancelledBy: uuid("cancelled_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 const privateSchema = pgSchema("private");
 
 /** bcrypt hashes — never exposed to anon/authenticated Data API. */
@@ -551,3 +669,5 @@ export type PersonImmigrationStatus =
 export type DocumentRequestStatus =
   (typeof documentRequestStatusEnum.enumValues)[number];
 export type DocumentDocKey = "passport" | "photo" | "custom";
+export type BookingAppointmentStatus =
+  (typeof bookingAppointmentStatusEnum.enumValues)[number];

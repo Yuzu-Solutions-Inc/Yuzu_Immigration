@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Briefcase,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   FolderKanban,
@@ -42,6 +44,8 @@ const navItems = [
   { href: "/home", key: "home" as const, icon: Home },
   { href: "/projects", key: "projects" as const, icon: FolderKanban },
   { href: "/people", key: "people" as const, icon: Users },
+  { href: "/calendar", key: "calendar" as const, icon: CalendarDays },
+  { href: "/services", key: "services" as const, icon: Briefcase },
 ] as const;
 
 function isActive(pathname: string, href: string) {

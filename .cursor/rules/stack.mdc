@@ -31,10 +31,14 @@ alwaysApply: true
 - `customer_portal_access` — portal access_code + access_token on a person; passwords in `private.customer_portal_secrets`
 - Portal login verification is **server-only** via `verify_customer_portal_login` (service_role). Never call from the browser.
 - Client form fill via `/[locale]/fill/[token]` uses service role after token hash lookup.
+- `booking_settings` + `booking_availability_rules` — firm timezone, booking window (X days ahead), recurring weekly open hours.
+- `booking_services` — bookable consultation types (title, description, duration, price).
+- `booking_appointments` — public bookings; guest PII org-DEK encrypted. Public page `/[locale]/book/[token]` uses service role after token hash lookup.
+- `booking_blocked_times` — one-off blocked days/ranges on the firm calendar.
 
 ## Layout
 - `src/app/[locale]/(marketing)` — public pages (landing lives at `[locale]/page` until moved)
-- `src/app/[locale]/(app)` — authenticated CRM dashboard: left sidebar + main content (home, projects, people)
+- `src/app/[locale]/(app)` — authenticated CRM dashboard: left sidebar + main content (home, projects, people, calendar, services)
 - `src/app/[locale]/portal` — customer portal (link + password)
 - `src/lib/supabase` — browser/server/middleware clients
 - `src/db` — Drizzle schema and DB client

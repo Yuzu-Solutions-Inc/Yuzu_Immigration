@@ -36,6 +36,13 @@ export const PII_AAD = {
   shareLinks: {
     token: "form_share_links.token_encrypted",
   },
+  booking: {
+    token: "booking_settings.public_token_encrypted",
+    guestName: "booking_appointments.guest_name",
+    guestEmail: "booking_appointments.guest_email",
+    guestPhone: "booking_appointments.guest_phone",
+    guestAddress: "booking_appointments.guest_address",
+  },
 } as const;
 
 type PersonPii = {
@@ -64,6 +71,13 @@ type DocumentFilePii = {
 type DestructionPii = {
   client_name?: string | null;
   service_summary?: string | null;
+};
+
+type BookingGuestPii = {
+  guest_name?: string | null;
+  guest_email?: string | null;
+  guest_phone?: string | null;
+  guest_address?: string | null;
 };
 
 export function encryptPersonWrite(
@@ -296,6 +310,56 @@ export function decryptDestructionRow<T extends DestructionPii>(
       PII_AAD.destruction.serviceSummary,
       key,
     ) as T["service_summary"],
+  };
+}
+
+export function encryptBookingGuestWrite(
+  input: {
+    guest_name: string;
+    guest_email: string;
+    guest_phone: string;
+    guest_address: string;
+  },
+  key: Buffer,
+) {
+  return {
+    guest_name: encryptField(input.guest_name, PII_AAD.booking.guestName, key),
+    guest_email: encryptField(input.guest_email, PII_AAD.booking.guestEmail, key),
+    guest_phone: encryptField(input.guest_phone, PII_AAD.booking.guestPhone, key),
+    guest_address: encryptField(
+      input.guest_address,
+      PII_AAD.booking.guestAddress,
+      key,
+    ),
+  };
+}
+
+export function decryptBookingGuestRow<T extends BookingGuestPii>(
+  row: T,
+  key: Buffer,
+): T {
+  return {
+    ...row,
+    guest_name: decryptFieldMaybe(
+      row.guest_name,
+      PII_AAD.booking.guestName,
+      key,
+    ) as T["guest_name"],
+    guest_email: decryptFieldMaybe(
+      row.guest_email,
+      PII_AAD.booking.guestEmail,
+      key,
+    ) as T["guest_email"],
+    guest_phone: decryptFieldMaybe(
+      row.guest_phone,
+      PII_AAD.booking.guestPhone,
+      key,
+    ) as T["guest_phone"],
+    guest_address: decryptFieldMaybe(
+      row.guest_address,
+      PII_AAD.booking.guestAddress,
+      key,
+    ) as T["guest_address"],
   };
 }
 
