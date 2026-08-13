@@ -31,6 +31,7 @@ import {
   type RepeatableTable,
   type TableColumn,
 } from "@/lib/ircc/fields";
+import { questionnaireFillPercent } from "@/lib/ircc/form-readiness";
 import { cn } from "@/lib/utils";
 
 function personInitials(name: string): string {
@@ -565,17 +566,16 @@ function answersToState(initial: Record<string, unknown>) {
 function SectionProgressNav({
   sections,
   sectionIndex,
+  percent,
   onSelect,
   t,
 }: {
   sections: QuestionnaireSection[];
   sectionIndex: number;
+  percent: number;
   onSelect: (index: number) => void;
   t: ReturnType<typeof useTranslations>;
 }) {
-  const last = Math.max(sections.length - 1, 1);
-  const percent = Math.round((sectionIndex / last) * 100);
-
   return (
     <nav
       aria-label={t("sectionStepsLabel")}
@@ -593,7 +593,7 @@ function SectionProgressNav({
         aria-label={t("progressComplete", { percent })}
       >
         <div
-          className="h-full rounded-full bg-highlight transition-[width] duration-200"
+          className="h-full rounded-full bg-action transition-[width] duration-200"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -618,7 +618,7 @@ function SectionProgressNav({
                   onClick={() => onSelect(i)}
                   className={cn(
                     "flex w-full cursor-pointer items-center gap-3 rounded-xl px-1.5 py-1.5 text-left transition-colors",
-                    current && "bg-highlight/20",
+                    current && "bg-action/15",
                     !current && "hover:bg-white/70",
                   )}
                 >
@@ -626,7 +626,7 @@ function SectionProgressNav({
                     className={cn(
                       "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                       done && "bg-brand text-white",
-                      current && "bg-highlight text-brand",
+                      current && "bg-action text-white",
                       !done && !current && "bg-muted text-white",
                     )}
                     aria-hidden
@@ -734,6 +734,24 @@ export function ModularQuestionnaire({
     setSectionIndex(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on person switch only
   }, [activePersonId]);
+
+  const fillPercentByPerson = useMemo(() => {
+    const liveAnswers = { ...answers, ...tableData };
+    const map = new Map<string, number>();
+    for (const person of people) {
+      const source =
+        person.id === activePersonId ? liveAnswers : person.answers;
+      map.set(
+        person.id,
+        questionnaireFillPercent(person.formCodes, source),
+      );
+    }
+    return map;
+  }, [people, activePersonId, answers, tableData]);
+
+  const activeFillPercent = activePerson
+    ? (fillPercentByPerson.get(activePerson.id) ?? 0)
+    : 0;
 
   const section = (sections[sectionIndex] ??
     "identity") as QuestionnaireSection;
@@ -976,6 +994,7 @@ export function ModularQuestionnaire({
           >
             {people.map((person) => {
               const selected = person.id === activePerson.id;
+              const percent = fillPercentByPerson.get(person.id) ?? 0;
               return (
                 <button
                   key={person.id}
@@ -1008,6 +1027,9 @@ export function ModularQuestionnaire({
                     <span className="block truncate text-xs text-muted-foreground">
                       {tr(person.role as never)}
                     </span>
+                    <span className="mt-0.5 block text-xs font-semibold text-action">
+                      {t("progressComplete", { percent })}
+                    </span>
                   </span>
                 </button>
               );
@@ -1025,6 +1047,7 @@ export function ModularQuestionnaire({
         <SectionProgressNav
           sections={sections}
           sectionIndex={sectionIndex}
+          percent={activeFillPercent}
           onSelect={setSectionIndex}
           t={t}
         />
