@@ -78,7 +78,6 @@ export function ClientFillForm({
         people={localPeople}
         onSave={handleSave}
         pending={pending}
-        statusMessage={state.message === "saved" ? t("saved") : null}
         errorMessage={error}
       />
     </div>

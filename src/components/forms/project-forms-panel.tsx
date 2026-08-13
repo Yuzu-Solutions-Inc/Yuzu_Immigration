@@ -385,7 +385,6 @@ export function ProjectQuestionnaire({
         people={people}
         onSave={handleSave}
         pending={savePending}
-        statusMessage={saveState.message === "saved" ? t("saved") : null}
         errorMessage={saveError}
       />
     </SurfaceCard>

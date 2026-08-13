@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { GripVertical, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { GripVertical, Loader2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { CertifiedSearchSelect } from "@/components/forms/certified-search-select";
@@ -568,12 +568,14 @@ function SectionProgressNav({
   sectionIndex,
   percent,
   onSelect,
+  disabled,
   t,
 }: {
   sections: QuestionnaireSection[];
   sectionIndex: number;
   percent: number;
   onSelect: (index: number) => void;
+  disabled?: boolean;
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
@@ -615,11 +617,13 @@ function SectionProgressNav({
                 <button
                   type="button"
                   aria-current={current ? "step" : undefined}
+                  disabled={disabled}
                   onClick={() => onSelect(i)}
                   className={cn(
                     "flex w-full cursor-pointer items-center gap-3 rounded-xl px-1.5 py-1.5 text-left transition-colors",
                     current && "bg-action/15",
-                    !current && "hover:bg-white/70",
+                    !current && !disabled && "hover:bg-white/70",
+                    disabled && "cursor-not-allowed opacity-60",
                   )}
                 >
                   <span
@@ -678,11 +682,12 @@ function initTables(
   return out;
 }
 
+type SaveIntent = "save" | "next" | "finish";
+
 export function ModularQuestionnaire({
   people,
   onSave,
   pending,
-  statusMessage,
   errorMessage,
 }: {
   people: QuestionnairePerson[];
@@ -692,7 +697,6 @@ export function ModularQuestionnaire({
     section: string,
   ) => void;
   pending?: boolean;
-  statusMessage?: string | null;
   errorMessage?: string | null;
 }) {
   const t = useTranslations("forms");
@@ -724,6 +728,10 @@ export function ModularQuestionnaire({
     Record<string, Array<Record<string, string>>>
   >(() => initTables(activePerson?.formCodes ?? [], activePerson?.answers ?? {}));
   const [sectionIndex, setSectionIndex] = useState(0);
+  const [busyIntent, setBusyIntent] = useState<SaveIntent | null>(null);
+  const [saveNotice, setSaveNotice] = useState<"saving" | "saved" | null>(null);
+  const saveIntentRef = useRef<SaveIntent | null>(null);
+  const sawPendingRef = useRef(false);
 
   useEffect(() => {
     if (!activePersonId) return;
@@ -732,8 +740,39 @@ export function ModularQuestionnaire({
     setAnswers(answersToState(person.answers));
     setTableData(initTables(person.formCodes, person.answers));
     setSectionIndex(0);
+    saveIntentRef.current = null;
+    sawPendingRef.current = false;
+    setBusyIntent(null);
+    setSaveNotice(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on person switch only
   }, [activePersonId]);
+
+  useEffect(() => {
+    if (pending) {
+      sawPendingRef.current = true;
+      setSaveNotice("saving");
+      return;
+    }
+    if (!sawPendingRef.current) return;
+    sawPendingRef.current = false;
+
+    const intent = saveIntentRef.current;
+    saveIntentRef.current = null;
+    setBusyIntent(null);
+
+    if (errorMessage) {
+      setSaveNotice(null);
+      return;
+    }
+
+    if (intent === "next") {
+      setSectionIndex((i) => Math.min(sections.length - 1, i + 1));
+    }
+
+    setSaveNotice("saved");
+    const timeoutId = window.setTimeout(() => setSaveNotice(null), 2500);
+    return () => window.clearTimeout(timeoutId);
+  }, [pending, errorMessage, sections.length]);
 
   const fillPercentByPerson = useMemo(() => {
     const liveAnswers = { ...answers, ...tableData };
@@ -765,13 +804,14 @@ export function ModularQuestionnaire({
   const sectionGroups = FIELD_GROUPS.filter((g) => g.section === section);
 
   function update(key: string, value: string) {
+    setSaveNotice((current) => (current === "saved" ? null : current));
     setAnswers((prev) =>
       applyDerivedAnswers({ ...prev, [key]: value, hasRepresentative: "Y" }),
     );
   }
 
   function save() {
-    if (!activePerson) return;
+    if (!activePerson) return false;
     const payload: Record<string, unknown> = applyDerivedAnswers({
       ...answers,
       hasRepresentative: "Y",
@@ -780,6 +820,18 @@ export function ModularQuestionnaire({
       payload[key] = rows;
     }
     onSave(activePerson.id, payload, section);
+    return true;
+  }
+
+  function requestSave(intent: SaveIntent) {
+    saveIntentRef.current = intent;
+    setBusyIntent(intent);
+    setSaveNotice("saving");
+    if (!save()) {
+      saveIntentRef.current = null;
+      setBusyIntent(null);
+      setSaveNotice(null);
+    }
   }
 
   function visibleGroupFields(group: QuestionnaireFieldGroup) {
@@ -981,6 +1033,7 @@ export function ModularQuestionnaire({
   }
 
   const showPersonTabs = people.length > 1;
+  const busy = Boolean(pending) || busyIntent != null;
 
   return (
     <div className="space-y-6">
@@ -1051,6 +1104,7 @@ export function ModularQuestionnaire({
           sectionIndex={sectionIndex}
           percent={activeFillPercent}
           onSelect={setSectionIndex}
+          disabled={busy}
           t={t}
         />
 
@@ -1070,40 +1124,84 @@ export function ModularQuestionnaire({
         <p className="text-sm text-destructive" role="alert">
           {errorMessage}
         </p>
-      ) : null}
-      {statusMessage ? (
-        <p className="text-sm text-emerald-700" role="status">
-          {statusMessage}
+      ) : saveNotice === "saving" ? (
+        <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+          {t("saving")}
         </p>
-      ) : null}
+      ) : saveNotice === "saved" ? (
+        <p className="text-sm font-medium text-emerald-700" role="status" aria-live="polite">
+          {t("saved")}
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground" aria-hidden>
+          {"\u00a0"}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button
           type="button"
           variant="outline"
-          disabled={sectionIndex === 0 || pending}
+          disabled={sectionIndex === 0 || busy}
           onClick={() => setSectionIndex((i) => Math.max(0, i - 1))}
         >
           {t("previous")}
         </Button>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" disabled={pending} onClick={save}>
-            {pending ? t("saving") : t("save")}
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            onClick={() => requestSave("save")}
+          >
+            {busyIntent === "save" ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("saving")}
+              </>
+            ) : (
+              t("save")
+            )}
           </Button>
           {sectionIndex < sections.length - 1 ? (
             <Button
               type="button"
-              disabled={pending}
-              onClick={() => {
-                save();
-                setSectionIndex((i) => Math.min(sections.length - 1, i + 1));
-              }}
+              disabled={busy}
+              aria-busy={busyIntent === "next"}
+              className={cn(
+                "hover:bg-[#4338ca] hover:shadow-md active:bg-[#3730a3] active:scale-[0.97]",
+                busyIntent === "next" && "disabled:opacity-100",
+              )}
+              onClick={() => requestSave("next")}
             >
-              {t("next")}
+              {busyIntent === "next" ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  {t("saving")}
+                </>
+              ) : (
+                t("next")
+              )}
             </Button>
           ) : (
-            <Button type="button" disabled={pending} onClick={save}>
-              {pending ? t("saving") : t("saveFinish")}
+            <Button
+              type="button"
+              disabled={busy}
+              aria-busy={busyIntent === "finish"}
+              className={cn(
+                "hover:bg-[#4338ca] hover:shadow-md active:bg-[#3730a3] active:scale-[0.97]",
+                busyIntent === "finish" && "disabled:opacity-100",
+              )}
+              onClick={() => requestSave("finish")}
+            >
+              {busyIntent === "finish" ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  {t("saving")}
+                </>
+              ) : (
+                t("saveFinish")
+              )}
             </Button>
           )}
         </div>
