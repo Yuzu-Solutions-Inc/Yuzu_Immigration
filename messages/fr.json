@@ -1019,11 +1019,15 @@
     "destroySuccess": "Contenu sensible détruit et inscrit au registre de destruction.",
     "destroyNotYet": "La destruction sécuritaire sera disponible après la date de conservation.",
     "exportPerson": "Exporter les données",
+    "downloadFile": "Télécharger le dossier complet",
+    "downloadingFile": "Préparation du ZIP…",
+    "downloadFileHelp": "Archive ZIP : personnes, formulaires, réponses et documents de ce dossier.",
     "errors": {
       "invalid": "Vérifiez la confirmation et réessayez.",
       "unauthorized": "Connexion requise.",
       "forbidden": "Réservé aux administrateurs.",
       "notFound": "Enregistrement introuvable.",
+      "exportFailed": "Impossible de télécharger le dossier. Réessayez.",
       "notEligible": "Ce dossier n’est pas encore admissible à la destruction.",
       "destroyFailed": "Impossible de détruire le contenu. Réessayez.",
       "generic": "Une erreur est survenue. Réessayez."

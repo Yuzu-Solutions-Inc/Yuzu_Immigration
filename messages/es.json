@@ -1019,11 +1019,15 @@
     "destroySuccess": "Contenido sensible destruido y registrado en el registro de destrucción.",
     "destroyNotYet": "La destrucción segura estará disponible después de la fecha de retención.",
     "exportPerson": "Exportar datos",
+    "downloadFile": "Descargar expediente completo",
+    "downloadingFile": "Preparando ZIP…",
+    "downloadFileHelp": "ZIP con personas, formularios, respuestas y documentos de este expediente.",
     "errors": {
       "invalid": "Revise la confirmación e inténtelo de nuevo.",
       "unauthorized": "Debe iniciar sesión.",
       "forbidden": "Solo administradores.",
       "notFound": "Registro no encontrado.",
+      "exportFailed": "No se pudo descargar el expediente. Inténtelo de nuevo.",
       "notEligible": "Este expediente aún no es elegible para destrucción.",
       "destroyFailed": "No se pudo destruir el contenido. Inténtelo de nuevo.",
       "generic": "Algo salió mal. Inténtelo de nuevo."

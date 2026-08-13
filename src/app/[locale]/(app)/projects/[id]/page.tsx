@@ -5,7 +5,10 @@ import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
-import { ProjectRetentionPanel } from "@/components/privacy/retention-export";
+import {
+  ExportProjectFileButton,
+  ProjectRetentionPanel,
+} from "@/components/privacy/retention-export";
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
 import { formatStatusDate } from "@/components/projects/project-status-summary";
@@ -164,6 +167,7 @@ export default async function ProjectDetailPage({
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <ExportProjectFileButton locale={locale} projectId={project.id} />
           <Link
             href={`/projects/${project.id}/edit`}
             className={cn(

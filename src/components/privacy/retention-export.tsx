@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -134,6 +135,70 @@ export function ProjectRetentionPanel({
         <p className="text-xs text-muted-foreground">{t("destroyNotYet")}</p>
       ) : null}
     </section>
+  );
+}
+
+export function ExportProjectFileButton({
+  locale,
+  projectId,
+}: {
+  locale: string;
+  projectId: string;
+}) {
+  const t = useTranslations("privacy");
+  const [pending, setPending] = useState(false);
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={pending}
+      title={t("downloadFileHelp")}
+      onClick={async () => {
+        setPending(true);
+        try {
+          const response = await fetch(
+            `/${locale}/projects/${projectId}/file-export`,
+          );
+          if (!response.ok) {
+            let code = "generic";
+            try {
+              const body = (await response.json()) as { error?: string };
+              code = body.error ?? code;
+            } catch {
+              /* ignore */
+            }
+            const message =
+              ({
+                unauthorized: t("errors.unauthorized"),
+                forbidden: t("errors.forbidden"),
+                not_found: t("errors.notFound"),
+                export_failed: t("errors.exportFailed"),
+              }[code] ?? t("errors.generic"));
+            window.alert(message);
+            return;
+          }
+          const blob = await response.blob();
+          const header = response.headers.get("Content-Disposition") ?? "";
+          const match = /filename="([^"]+)"/.exec(header);
+          const filename = match?.[1] ?? `file-export-${projectId.slice(0, 8)}.zip`;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch {
+          window.alert(t("errors.exportFailed"));
+        } finally {
+          setPending(false);
+        }
+      }}
+    >
+      <Download />
+      {pending ? t("downloadingFile") : t("downloadFile")}
+    </Button>
   );
 }
 

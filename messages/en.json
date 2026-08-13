@@ -1019,11 +1019,15 @@
     "destroySuccess": "Sensitive content destroyed and recorded in the destruction register.",
     "destroyNotYet": "Secure destruction becomes available after the retention date.",
     "exportPerson": "Export data",
+    "downloadFile": "Download full file",
+    "downloadingFile": "Preparing ZIP…",
+    "downloadFileHelp": "ZIP of people, forms, answers, and uploaded documents for this file.",
     "errors": {
       "invalid": "Check the confirmation and try again.",
       "unauthorized": "Sign in required.",
       "forbidden": "Only admins can do this.",
       "notFound": "Record not found.",
+      "exportFailed": "Could not download the file. Try again.",
       "notEligible": "This file is not yet eligible for destruction.",
       "destroyFailed": "Could not destroy content. Try again.",
       "generic": "Something went wrong. Try again."
