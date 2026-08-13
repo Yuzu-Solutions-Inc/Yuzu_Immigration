@@ -12,10 +12,13 @@ import {
   applyDerivedAnswers,
   CANONICAL_FIELDS,
   emptyTableRow,
+  FIELD_GROUPS,
   fieldGroupForKey,
   fieldsForFormCodes,
   isFieldVisible,
+  isGatedByParent,
   isTableVisible,
+  primaryGateKey,
   sectionsForFields,
   tablesForFormCodes,
   type CanonicalField,
@@ -193,14 +196,12 @@ function FieldControl({
   );
 }
 
-function tableGatedByField(table: RepeatableTable, fieldKey: string): boolean {
-  const rule = table.showWhen;
-  if (!rule) return false;
-  if ("or" in rule && Array.isArray(rule.or)) {
-    return rule.or.some((r) => r.key === fieldKey);
-  }
-  const rules = Array.isArray(rule) ? rule : [rule];
-  return rules.some((r) => "key" in r && r.key === fieldKey);
+function RevealedFromAnswer({ children }: { children: ReactNode }) {
+  return (
+    <div className="mt-3 ml-1 border-l-2 border-action/35 pl-4">
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </div>
+  );
 }
 
 function fieldColSpan(col: TableColumn) {
@@ -582,6 +583,10 @@ export function ModularQuestionnaire({
   const sectionTables = tables.filter(
     (tbl) => tbl.section === section && isTableVisible(tbl, answers),
   );
+  const sectionFieldList = fields.filter(
+    (f) => f.section === section && !f.hidden,
+  );
+  const sectionGroups = FIELD_GROUPS.filter((g) => g.section === section);
 
   function update(key: string, value: string) {
     setAnswers((prev) =>
@@ -599,6 +604,196 @@ export function ModularQuestionnaire({
       payload[key] = rows;
     }
     onSave(activePerson.id, payload, section);
+  }
+
+  function visibleGroupFields(group: QuestionnaireFieldGroup) {
+    return group.fieldKeys
+      .map((key) => fields.find((f) => f.key === key))
+      .filter(
+        (f): f is CanonicalField => f != null && isFieldVisible(f, answers),
+      );
+  }
+
+  function parentInSection(key: string | undefined) {
+    return Boolean(key && sectionFieldList.some((f) => f.key === key));
+  }
+
+  function groupNestsUnder(group: QuestionnaireFieldGroup, parentKey: string) {
+    const groupFields = visibleGroupFields(group);
+    if (groupFields.length === 0) return false;
+    return groupFields.every((f) =>
+      isGatedByParent(f.showWhen, parentKey, answers),
+    );
+  }
+
+  function buildSectionNodes() {
+    const emittedFields = new Set<string>();
+    const emittedGroups = new Set<string>();
+    const emittedTables = new Set<string>();
+    const nodes: ReactNode[] = [];
+
+    function pushTable(table: RepeatableTable) {
+      if (emittedTables.has(table.key)) return;
+      emittedTables.add(table.key);
+      nodes.push(
+        <TableEditor
+          key={table.key}
+          table={table}
+          rows={tableData[table.key] ?? [emptyTableRow(table)]}
+          onChange={(rows) =>
+            setTableData((prev) => ({ ...prev, [table.key]: rows }))
+          }
+          t={t}
+          th={th}
+        />,
+      );
+    }
+
+    function pushGroup(group: QuestionnaireFieldGroup) {
+      if (emittedGroups.has(group.key)) return;
+      const groupFields = visibleGroupFields(group);
+      if (groupFields.length === 0) return;
+      emittedGroups.add(group.key);
+      for (const field of groupFields) emittedFields.add(field.key);
+      nodes.push(
+        <FieldGroupEditor
+          key={group.key}
+          group={group}
+          fields={groupFields}
+          answers={answers}
+          onChange={update}
+          t={t}
+        />,
+      );
+    }
+
+    function followUpsFor(parentKey: string): ReactNode[] {
+      const nested: ReactNode[] = [];
+
+      for (const group of sectionGroups) {
+        if (emittedGroups.has(group.key)) continue;
+        if (!groupNestsUnder(group, parentKey)) continue;
+        const groupFields = visibleGroupFields(group);
+        emittedGroups.add(group.key);
+        for (const field of groupFields) emittedFields.add(field.key);
+        nested.push(
+          <FieldGroupEditor
+            key={group.key}
+            group={group}
+            fields={groupFields}
+            answers={answers}
+            onChange={update}
+            t={t}
+          />,
+        );
+      }
+
+      for (const table of sectionTables) {
+        if (emittedTables.has(table.key)) continue;
+        if (!isGatedByParent(table.showWhen, parentKey, answers)) continue;
+        emittedTables.add(table.key);
+        nested.push(
+          <TableEditor
+            key={table.key}
+            table={table}
+            rows={tableData[table.key] ?? [emptyTableRow(table)]}
+            onChange={(rows) =>
+              setTableData((prev) => ({ ...prev, [table.key]: rows }))
+            }
+            t={t}
+            th={th}
+          />,
+        );
+      }
+
+      for (const field of sectionFieldList) {
+        if (emittedFields.has(field.key)) continue;
+        if (!isFieldVisible(field, answers)) continue;
+        if (fieldGroupForKey(field.key)) continue;
+        if (!isGatedByParent(field.showWhen, parentKey, answers)) continue;
+        nested.push(emitFieldWithFollowUps(field));
+      }
+
+      return nested;
+    }
+
+    function emitFieldWithFollowUps(field: CanonicalField): ReactNode {
+      emittedFields.add(field.key);
+      const followUps = followUpsFor(field.key);
+      const control = (
+        <FieldControl
+          id={`field-${field.key}`}
+          label={t(`fields.${field.key}`)}
+          help={field.helpKey ? th(field.helpKey) : null}
+          type={field.type}
+          value={String(answers[field.key] ?? "")}
+          onChange={(v) => update(field.key, v)}
+          required={field.required}
+          maxLength={field.maxLength}
+          options={field.options}
+          t={t}
+        />
+      );
+      if (followUps.length === 0) {
+        return (
+          <div
+            key={field.key}
+            className={
+              field.wide || field.type === "textarea"
+                ? "sm:col-span-2"
+                : undefined
+            }
+          >
+            {control}
+          </div>
+        );
+      }
+      return (
+        <div key={field.key} className="sm:col-span-2">
+          {control}
+          <RevealedFromAnswer>{followUps}</RevealedFromAnswer>
+        </div>
+      );
+    }
+
+    for (const field of sectionFieldList) {
+      if (emittedFields.has(field.key)) continue;
+      if (!isFieldVisible(field, answers)) continue;
+      const group = fieldGroupForKey(field.key);
+      if (group) {
+        if (emittedGroups.has(group.key)) continue;
+        const groupFields = visibleGroupFields(group);
+        const gate = groupFields[0]
+          ? primaryGateKey(groupFields[0].showWhen)
+          : undefined;
+        const waitsForParent =
+          parentInSection(gate) &&
+          groupFields.every(
+            (f) => primaryGateKey(f.showWhen) === gate,
+          );
+        if (waitsForParent) continue;
+        pushGroup(group);
+        continue;
+      }
+      const gate = primaryGateKey(field.showWhen);
+      if (
+        parentInSection(gate) &&
+        isGatedByParent(field.showWhen, gate as string, answers)
+      ) {
+        continue;
+      }
+      nodes.push(emitFieldWithFollowUps(field));
+    }
+
+    for (const group of sectionGroups) pushGroup(group);
+    for (const table of sectionTables) {
+      if (emittedTables.has(table.key)) continue;
+      const gate = primaryGateKey(table.showWhen);
+      if (parentInSection(gate)) continue;
+      pushTable(table);
+    }
+
+    return nodes;
   }
 
   if (!activePerson) {
@@ -674,85 +869,7 @@ export function ModularQuestionnaire({
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {(() => {
-          const emittedGroups = new Set<string>();
-          const emittedTables = new Set<string>();
-          const nodes: ReactNode[] = [];
-
-          function pushTable(table: RepeatableTable) {
-            if (emittedTables.has(table.key)) return;
-            emittedTables.add(table.key);
-            nodes.push(
-              <TableEditor
-                key={table.key}
-                table={table}
-                rows={tableData[table.key] ?? [emptyTableRow(table)]}
-                onChange={(rows) =>
-                  setTableData((prev) => ({ ...prev, [table.key]: rows }))
-                }
-                t={t}
-                th={th}
-              />,
-            );
-          }
-
-          for (const field of fields.filter((f) => f.section === section)) {
-            if (!isFieldVisible(field, answers)) continue;
-            const group = fieldGroupForKey(field.key);
-            if (group) {
-              if (emittedGroups.has(group.key)) continue;
-              emittedGroups.add(group.key);
-              const groupFields = group.fieldKeys
-                .map((key) => fields.find((f) => f.key === key))
-                .filter((f): f is CanonicalField =>
-                  f != null && isFieldVisible(f, answers),
-                );
-              if (groupFields.length > 0) {
-                nodes.push(
-                  <FieldGroupEditor
-                    key={group.key}
-                    group={group}
-                    fields={groupFields}
-                    answers={answers}
-                    onChange={update}
-                    t={t}
-                  />,
-                );
-              }
-              continue;
-            }
-            nodes.push(
-              <div
-                key={field.key}
-                className={
-                  field.wide || field.type === "textarea"
-                    ? "sm:col-span-2"
-                    : undefined
-                }
-              >
-                <FieldControl
-                  id={`field-${field.key}`}
-                  label={t(`fields.${field.key}`)}
-                  help={field.helpKey ? th(field.helpKey) : null}
-                  type={field.type}
-                  value={String(answers[field.key] ?? "")}
-                  onChange={(v) => update(field.key, v)}
-                  required={field.required}
-                  maxLength={field.maxLength}
-                  options={field.options}
-                  t={t}
-                />
-              </div>,
-            );
-            for (const table of sectionTables) {
-              if (tableGatedByField(table, field.key)) pushTable(table);
-            }
-          }
-          for (const table of sectionTables) pushTable(table);
-          return nodes;
-        })()}
-      </div>
+      <div className="grid gap-4 sm:grid-cols-2">{buildSectionNodes()}</div>
 
       {errorMessage ? (
         <p className="text-sm text-destructive" role="alert">
