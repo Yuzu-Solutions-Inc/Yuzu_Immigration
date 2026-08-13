@@ -16,6 +16,7 @@ import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
+import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
 import {
   formTitle,
@@ -302,11 +303,11 @@ export function ProjectFormsPanel({
         </form>
       </section>
 
-      <section className="space-y-3">
+      <SurfaceCard className="space-y-4">
         <div>
-          <h2 className="font-heading text-lg font-semibold text-brand">
+          <h3 className="font-heading text-base font-semibold text-brand">
             {t("shareTitle")}
-          </h2>
+          </h3>
           <p className="text-sm text-muted-foreground">{t("shareHelp")}</p>
         </div>
         {activeShareExpiresAt ? (
@@ -321,9 +322,14 @@ export function ProjectFormsPanel({
           <p className="text-sm text-muted-foreground">{t("shareInactive")}</p>
         )}
         {shareState.shareUrl ? (
-          <p className="break-all rounded-xl border border-border bg-surface px-5 py-3 font-mono text-sm text-brand">
-            {shareState.shareUrl}
-          </p>
+          <div className="space-y-2 rounded-xl border border-border bg-canvas p-3">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {t("shareCopy")}
+            </p>
+            <p className="break-all font-mono text-sm text-brand">
+              {shareState.shareUrl}
+            </p>
+          </div>
         ) : null}
         <div className="flex flex-wrap gap-2">
           <form action={shareAction}>
@@ -350,9 +356,9 @@ export function ProjectFormsPanel({
         {shareState.error || revokeState.error ? (
           <p className="text-sm text-destructive">{t("errors.shareFailed")}</p>
         ) : null}
-      </section>
+      </SurfaceCard>
 
-      <section>
+      <SurfaceCard>
         <ModularQuestionnaire
           people={people}
           onSave={handleSave}
@@ -360,7 +366,7 @@ export function ProjectFormsPanel({
           statusMessage={saveState.message === "saved" ? t("saved") : null}
           errorMessage={saveError}
         />
-      </section>
+      </SurfaceCard>
     </div>
   );
 }

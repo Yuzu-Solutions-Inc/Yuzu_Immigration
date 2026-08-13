@@ -138,136 +138,137 @@ export function ClientDocumentsUpload({
     }[state.error] ??
       t("errors.generic"));
 
-  const peopleById = Object.fromEntries(people.map((p) => [p.id, p]));
-  const showPerson = people.length > 1;
-  const ordered = people.flatMap((person) =>
-    localRequests.filter((row) => row.person_id === person.id),
-  );
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         {t("clientFormats", { maxMb })}
       </p>
 
-      <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-        {ordered.map((row) => {
-          const person = peopleById[row.person_id];
-          const selected = selectedFiles[row.id] ?? null;
-          const isUploading = pending && activeRequestId === row.id;
-          const justUploaded = successRequestId === row.id;
-          const hasUploaded = Boolean(row.file);
+      {people.map((person) => {
+        const rows = localRequests.filter((r) => r.person_id === person.id);
+        if (rows.length === 0) return null;
+        return (
+          <section key={person.id} className="space-y-3">
+            <h2 className="font-heading text-lg font-semibold text-brand">
+              {person.displayName}
+            </h2>
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+              {rows.map((row) => {
+                const selected = selectedFiles[row.id] ?? null;
+                const isUploading = pending && activeRequestId === row.id;
+                const justUploaded = successRequestId === row.id;
+                const hasUploaded = Boolean(row.file);
 
-          return (
-            <li key={row.id} className="space-y-3 px-4 py-4">
-              <div className="space-y-1.5">
-                <p className="font-medium text-brand">
-                  {documentLabel(row, t)}
-                  {row.is_required ? (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      · {t("required")}
-                    </span>
-                  ) : null}
-                </p>
-                {showPerson && person ? (
-                  <p className="text-xs text-muted-foreground">
-                    {person.displayName}
-                  </p>
-                ) : null}
-                {row.consultant_note ? (
-                  <p className="text-sm text-muted-foreground">
-                    {row.consultant_note}
-                  </p>
-                ) : null}
-
-                {hasUploaded ? (
-                  <div className="space-y-2">
-                    <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                      <span className="font-semibold">
-                        {t("statusUploaded")}
-                      </span>
-                      {": "}
-                      {row.file!.original_filename}
-                      <span className="text-emerald-700/80">
-                        {" "}
-                        · {formatBytes(row.file!.byte_size)}
-                      </span>
-                      {justUploaded ? (
-                        <span className="ml-2 font-medium">
-                          {t("justUploaded")}
-                        </span>
+                return (
+                  <li key={row.id} className="space-y-3 px-4 py-4">
+                    <div className="space-y-1.5">
+                      <p className="font-medium text-brand">
+                        {documentLabel(row, t)}
+                        {row.is_required ? (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            · {t("required")}
+                          </span>
+                        ) : null}
+                      </p>
+                      {row.consultant_note ? (
+                        <p className="text-sm text-muted-foreground">
+                          {row.consultant_note}
+                        </p>
                       ) : null}
-                    </p>
-                    <DocumentFileActions
-                      requestId={row.id}
-                      filename={row.file!.original_filename}
-                      fetchFile={(id) =>
-                        downloadShareDocumentAction(token, id)
-                      }
-                    />
-                  </div>
-                ) : (
-                  <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                    <span className="font-semibold">{t("statusMissing")}</span>
-                  </p>
-                )}
 
-                {selected ? (
-                  <p className="rounded-lg border border-dashed border-action/40 bg-action/5 px-3 py-2 text-sm text-brand">
-                    <span className="font-semibold text-action">
-                      {t("statusSelected")}
-                    </span>
-                    {": "}
-                    {selected.name}
-                    <span className="text-muted-foreground">
-                      {" "}
-                      · {formatBytes(selected.size)}
-                    </span>
-                  </p>
-                ) : null}
-              </div>
+                      {hasUploaded ? (
+                        <div className="space-y-2">
+                          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                            <span className="font-semibold">
+                              {t("statusUploaded")}
+                            </span>
+                            {": "}
+                            {row.file!.original_filename}
+                            <span className="text-emerald-700/80">
+                              {" "}
+                              · {formatBytes(row.file!.byte_size)}
+                            </span>
+                            {justUploaded ? (
+                              <span className="ml-2 font-medium">
+                                {t("justUploaded")}
+                              </span>
+                            ) : null}
+                          </p>
+                          <DocumentFileActions
+                            requestId={row.id}
+                            filename={row.file!.original_filename}
+                            fetchFile={(id) =>
+                              downloadShareDocumentAction(token, id)
+                            }
+                          />
+                        </div>
+                      ) : (
+                        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                          <span className="font-semibold">
+                            {t("statusMissing")}
+                          </span>
+                        </p>
+                      )}
 
-              <form
-                action={(fd) => onSubmit(row.id, fd)}
-                className="flex flex-wrap items-center gap-2"
-              >
-                <label className="inline-flex cursor-pointer items-center rounded-lg bg-muted px-3 py-2 text-sm font-medium text-brand hover:bg-muted/80">
-                  {hasUploaded ? t("chooseReplacement") : t("chooseFile")}
-                  <input
-                    type="file"
-                    accept={accept}
-                    className="sr-only"
-                    onChange={(e) => {
-                      onFileChange(row.id, e.target.files);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
+                      {selected ? (
+                        <p className="rounded-lg border border-dashed border-action/40 bg-action/5 px-3 py-2 text-sm text-brand">
+                          <span className="font-semibold text-action">
+                            {t("statusSelected")}
+                          </span>
+                          {": "}
+                          {selected.name}
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {formatBytes(selected.size)}
+                          </span>
+                        </p>
+                      ) : null}
+                    </div>
 
-                {selected ? (
-                  <>
-                    <Button type="submit" disabled={isUploading}>
-                      {isUploading
-                        ? t("uploading")
-                        : hasUploaded
-                          ? t("replace")
-                          : t("upload")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isUploading}
-                      onClick={() => clearSelection(row.id)}
+                    <form
+                      action={(fd) => onSubmit(row.id, fd)}
+                      className="flex flex-wrap items-center gap-2"
                     >
-                      {t("clearSelection")}
-                    </Button>
-                  </>
-                ) : null}
-              </form>
-            </li>
-          );
-        })}
-      </ul>
+                      <label className="inline-flex cursor-pointer items-center rounded-lg bg-muted px-3 py-2 text-sm font-medium text-brand hover:bg-muted/80">
+                        {hasUploaded ? t("chooseReplacement") : t("chooseFile")}
+                        <input
+                          type="file"
+                          accept={accept}
+                          className="sr-only"
+                          onChange={(e) => {
+                            onFileChange(row.id, e.target.files);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+
+                      {selected ? (
+                        <>
+                          <Button type="submit" disabled={isUploading}>
+                            {isUploading
+                              ? t("uploading")
+                              : hasUploaded
+                                ? t("replace")
+                                : t("upload")}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isUploading}
+                            onClick={() => clearSelection(row.id)}
+                          >
+                            {t("clearSelection")}
+                          </Button>
+                        </>
+                      ) : null}
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
 
       {error ? (
         <p className="text-sm text-destructive" role="alert">
