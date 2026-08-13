@@ -41,7 +41,7 @@ export default async function ClientFillFormsPage({
 
   return (
     <div className="space-y-4">
-      <div className="mx-auto max-w-2xl space-y-4 px-4 pt-6">
+      <div className="mx-auto max-w-6xl space-y-4 px-4 pt-6">
         <Link
           href={`/fill/${token}`}
           className="text-sm font-medium text-action hover:underline"

@@ -35,6 +35,8 @@ export type CanonicalField = {
   helpKey?: string;
   /** Wider layout */
   wide?: boolean;
+  /** Stored and derived, never shown in the questionnaire. */
+  hidden?: boolean;
 };
 
 export type TableColumn = {
@@ -44,6 +46,8 @@ export type TableColumn = {
   maxLength?: number;
   options?: Array<{ value: string; labelKey: string }>;
   required?: boolean;
+  /** i18n key under forms.placeholders.* */
+  placeholderKey?: string;
 };
 
 export type RepeatableTable = {
@@ -1432,6 +1436,8 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     type: "yesno",
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     helpKey: "commonLawHelp",
+    /** Derived from maritalStatus (03 = common-law). */
+    hidden: true,
   },
   {
     key: "partnerFamilyName",
@@ -1616,9 +1622,15 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
       { key: "employer", type: "text", labelKey: "colEmployer", maxLength: 120, required: true },
       { key: "city", type: "text", labelKey: "colCity", maxLength: 80, required: true },
       { key: "country", type: "text", labelKey: "colCountry", maxLength: 80, required: true },
-      { key: "provinceState", type: "text", labelKey: "colProvince", maxLength: 40 },
-      { key: "from", type: "month", labelKey: "colFromMonth", required: true },
-      { key: "to", type: "month", labelKey: "colToMonth" },
+      {
+        key: "provinceState",
+        type: "text",
+        labelKey: "colProvince",
+        maxLength: 40,
+        placeholderKey: "ifApplicable",
+      },
+      { key: "from", type: "month", labelKey: "colFrom", required: true },
+      { key: "to", type: "month", labelKey: "colTo" },
     ],
   },
   {
@@ -1640,9 +1652,15 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
       },
       { key: "city", type: "text", labelKey: "colCity", maxLength: 80, required: true },
       { key: "country", type: "text", labelKey: "colCountry", maxLength: 80, required: true },
-      { key: "provinceState", type: "text", labelKey: "colProvince", maxLength: 40 },
-      { key: "from", type: "month", labelKey: "colFromMonth", required: true },
-      { key: "to", type: "month", labelKey: "colToMonth", required: true },
+      {
+        key: "provinceState",
+        type: "text",
+        labelKey: "colProvince",
+        maxLength: 40,
+        placeholderKey: "ifApplicable",
+      },
+      { key: "from", type: "month", labelKey: "colFrom", required: true },
+      { key: "to", type: "month", labelKey: "colTo", required: true },
     ],
   },
   {
@@ -1749,7 +1767,34 @@ export function isFieldVisible(
   field: CanonicalField,
   answers: Record<string, unknown>,
 ): boolean {
+  if (field.hidden) return false;
   return matchesShowWhen(field.showWhen, answers);
+}
+
+/**
+ * Common-law on IRCC forms is marital status 03.
+ * Married (01) already answers the partner question — do not also ask isCommonLaw.
+ */
+export function deriveIsCommonLaw(
+  maritalStatus: unknown,
+  fallback?: unknown,
+): "Y" | "N" {
+  const marital = String(maritalStatus ?? "").trim();
+  if (marital === "03") return "Y";
+  if (marital === "01" || marital === "02" || marital === "04" || marital === "05" || marital === "06") {
+    return "N";
+  }
+  const v = String(fallback ?? "").trim().toUpperCase();
+  return v === "Y" || v === "YES" || v === "TRUE" || v === "1" ? "Y" : "N";
+}
+
+export function applyDerivedAnswers(
+  answers: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    ...answers,
+    isCommonLaw: deriveIsCommonLaw(answers.maritalStatus, answers.isCommonLaw),
+  };
 }
 
 export function isTableVisible(

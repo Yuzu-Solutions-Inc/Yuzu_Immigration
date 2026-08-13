@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { GripVertical, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  applyDerivedAnswers,
   CANONICAL_FIELDS,
   emptyTableRow,
   fieldsForFormCodes,
@@ -20,6 +22,7 @@ import {
   type RepeatableTable,
   type TableColumn,
 } from "@/lib/ircc/fields";
+import { cn } from "@/lib/utils";
 
 function HelpTip({ text }: { text: string }) {
   return (
@@ -38,6 +41,12 @@ function HelpTip({ text }: { text: string }) {
   );
 }
 
+const compactControlClass =
+  "h-9 w-full min-w-0 rounded-lg border border-input bg-surface px-2 py-0 text-sm md:text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30";
+
+const defaultSelectClass =
+  "h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30";
+
 function FieldControl({
   id,
   label,
@@ -49,6 +58,8 @@ function FieldControl({
   maxLength,
   options,
   t,
+  compact,
+  placeholder,
 }: {
   id: string;
   label: string;
@@ -60,7 +71,93 @@ function FieldControl({
   maxLength?: number;
   options?: Array<{ value: string; labelKey: string }>;
   t: ReturnType<typeof useTranslations>;
+  compact?: boolean;
+  placeholder?: string;
 }) {
+  const selectClass = compact ? compactControlClass : defaultSelectClass;
+  const control =
+    type === "select" ? (
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        aria-label={compact ? label : undefined}
+        className={selectClass}
+      >
+        <option value="" disabled={Boolean(value)}>
+          {placeholder ?? t("selectPlaceholder")}
+        </option>
+        {options?.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {t(`options.${opt.labelKey}`)}
+          </option>
+        ))}
+      </select>
+    ) : type === "yesno" ? (
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={compact ? label : undefined}
+        className={selectClass}
+      >
+        <option value="" disabled={Boolean(value)}>
+          {placeholder ?? t("selectPlaceholder")}
+        </option>
+        <option value="Y">{t("options.yes")}</option>
+        <option value="N">{t("options.no")}</option>
+      </select>
+    ) : type === "checkbox" ? (
+      <label className="flex h-9 items-center justify-center gap-2 text-sm text-brand">
+        <input
+          id={id}
+          type="checkbox"
+          checked={value === "Y"}
+          onChange={(e) => onChange(e.target.checked ? "Y" : "N")}
+          aria-label={compact ? label : undefined}
+          className="size-4 rounded border-input"
+        />
+        {compact ? null : t("options.yes")}
+      </label>
+    ) : type === "textarea" ? (
+      <Textarea
+        id={id}
+        value={value}
+        maxLength={maxLength}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        rows={compact ? 2 : 3}
+        aria-label={compact ? label : undefined}
+        placeholder={placeholder}
+        className={compact ? "min-h-9 rounded-lg px-2 py-1.5 text-sm" : "rounded-xl"}
+      />
+    ) : (
+      <Input
+        id={id}
+        type={
+          type === "email"
+            ? "email"
+            : type === "tel"
+              ? "tel"
+              : type === "date"
+                ? "date"
+                : type === "month"
+                  ? "month"
+                  : "text"
+        }
+        value={value}
+        maxLength={maxLength}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        aria-label={compact ? label : undefined}
+        placeholder={placeholder}
+        className={compact ? compactControlClass : undefined}
+      />
+    );
+
+  if (compact) return control;
+
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="inline-flex items-center">
@@ -72,79 +169,20 @@ function FieldControl({
         ) : null}
         {help ? <HelpTip text={help} /> : null}
       </Label>
-      {type === "select" ? (
-        <select
-          id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          required={required}
-          className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-        >
-          <option value="" disabled={Boolean(value)}>
-            {t("selectPlaceholder")}
-          </option>
-          {options?.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {t(`options.${opt.labelKey}`)}
-            </option>
-          ))}
-        </select>
-      ) : type === "yesno" ? (
-        <select
-          id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px]"
-        >
-          <option value="" disabled={Boolean(value)}>
-            {t("selectPlaceholder")}
-          </option>
-          <option value="Y">{t("options.yes")}</option>
-          <option value="N">{t("options.no")}</option>
-        </select>
-      ) : type === "checkbox" ? (
-        <label className="flex h-10 items-center gap-2 text-sm text-brand">
-          <input
-            id={id}
-            type="checkbox"
-            checked={value === "Y"}
-            onChange={(e) => onChange(e.target.checked ? "Y" : "N")}
-            className="size-4 rounded border-input"
-          />
-          {t("options.yes")}
-        </label>
-      ) : type === "textarea" ? (
-        <Textarea
-          id={id}
-          value={value}
-          maxLength={maxLength}
-          onChange={(e) => onChange(e.target.value)}
-          required={required}
-          rows={3}
-          className="rounded-xl"
-        />
-      ) : (
-        <Input
-          id={id}
-          type={
-            type === "email"
-              ? "email"
-              : type === "tel"
-                ? "tel"
-                : type === "date"
-                  ? "date"
-                  : type === "month"
-                    ? "month"
-                    : "text"
-          }
-          value={value}
-          maxLength={maxLength}
-          onChange={(e) => onChange(e.target.value)}
-          required={required}
-        />
-      )}
+      {control}
     </div>
   );
+}
+
+function columnMinWidth(col: TableColumn) {
+  if (col.type === "date" || col.type === "month") return "min-w-[9.5rem]";
+  if (col.type === "select" || col.type === "yesno") return "min-w-[8rem]";
+  if (col.key === "employer" || col.key === "school" || col.key === "address") {
+    return "min-w-[10.5rem]";
+  }
+  if (col.key === "occupation" || col.key === "fieldOfStudy") return "min-w-[9rem]";
+  if (col.key === "provinceState") return "min-w-[6.5rem]";
+  return "min-w-[7.5rem]";
 }
 
 function TableEditor({
@@ -160,6 +198,10 @@ function TableEditor({
   t: ReturnType<typeof useTranslations>;
   th: ReturnType<typeof useTranslations>;
 }) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const minRows = table.minRows ?? 0;
+
   function updateCell(rowIndex: number, key: string, value: string) {
     onChange(
       rows.map((row, i) => (i === rowIndex ? { ...row, [key]: value } : row)),
@@ -172,74 +214,170 @@ function TableEditor({
   }
 
   function removeRow(index: number) {
-    if (rows.length <= (table.minRows ?? 0)) return;
+    if (rows.length <= minRows) return;
     onChange(rows.filter((_, i) => i !== index));
+  }
+
+  function moveRow(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
+    const next = [...rows];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onChange(next);
+  }
+
+  function clearDrag() {
+    setDragIndex(null);
+    setDropIndex(null);
   }
 
   return (
     <div className="space-y-3 sm:col-span-2">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h4 className="font-heading text-sm font-semibold text-brand">
-            {t(`tables.${table.key}.title`)}
-          </h4>
-          {table.helpKey ? (
-            <p className="text-xs text-muted-foreground">{th(table.helpKey)}</p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {t(`tables.${table.key}.help`)}
-            </p>
-          )}
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={rows.length >= table.maxRows}
-          onClick={addRow}
-        >
-          {t("addRow")}
-        </Button>
+      <div>
+        <h4 className="font-heading text-sm font-semibold text-brand">
+          {t(`tables.${table.key}.title`)}
+        </h4>
+        {table.helpKey ? (
+          <p className="text-xs text-muted-foreground">{th(table.helpKey)}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {t(`tables.${table.key}.help`)}
+          </p>
+        )}
       </div>
-      <div className="space-y-4">
-        {rows.map((row, rowIndex) => (
-          <div
-            key={`${table.key}-${rowIndex}`}
-            className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                {t("rowLabel", { n: rowIndex + 1 })}
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={rows.length <= (table.minRows ?? 0)}
-                onClick={() => removeRow(rowIndex)}
-              >
-                {t("removeRow")}
-              </Button>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {table.columns.map((col) => (
-                <FieldControl
-                  key={col.key}
-                  id={`${table.key}-${rowIndex}-${col.key}`}
-                  label={t(`tables.columns.${col.labelKey}`)}
-                  type={col.type}
-                  value={row[col.key] ?? ""}
-                  onChange={(v) => updateCell(rowIndex, col.key, v)}
-                  required={col.required}
-                  maxLength={col.maxLength}
-                  options={col.options}
-                  t={t}
-                />
+
+      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <caption className="sr-only">
+              {t(`tables.${table.key}.title`)}
+            </caption>
+            <thead>
+              <tr className="bg-muted">
+                <th
+                  scope="col"
+                  className="w-14 px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+                >
+                  {t("tables.rowIndex")}
+                </th>
+                {table.columns.map((col) => (
+                  <th
+                    key={col.key}
+                    scope="col"
+                    className={cn(
+                      "px-1.5 py-2.5 text-left text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase",
+                      columnMinWidth(col),
+                    )}
+                  >
+                    {t(`tables.columns.${col.labelKey}`)}
+                  </th>
+                ))}
+                <th className="w-10 px-1.5 py-2.5">
+                  <span className="sr-only">{t("removeRow")}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr
+                  key={`${table.key}-${rowIndex}`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (dropIndex !== rowIndex) setDropIndex(rowIndex);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const from = Number(e.dataTransfer.getData("text/plain"));
+                    if (Number.isFinite(from)) moveRow(from, rowIndex);
+                    clearDrag();
+                  }}
+                  className={cn(
+                    "border-t border-border",
+                    dragIndex === rowIndex && "opacity-50",
+                    dropIndex === rowIndex &&
+                      dragIndex !== null &&
+                      dragIndex !== rowIndex &&
+                      "bg-accent/60",
+                  )}
+                >
+                  <td className="px-2 py-2 align-middle">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        draggable
+                        role="button"
+                        tabIndex={0}
+                        aria-label={t("reorderRow")}
+                        onDragStart={(e) => {
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData(
+                            "text/plain",
+                            String(rowIndex),
+                          );
+                          setDragIndex(rowIndex);
+                        }}
+                        onDragEnd={clearDrag}
+                        className="flex size-7 shrink-0 cursor-grab items-center justify-center rounded-full bg-muted text-muted-foreground active:cursor-grabbing"
+                      >
+                        <GripVertical className="size-3.5" aria-hidden />
+                      </span>
+                      <span className="w-4 text-center text-sm font-medium text-brand">
+                        {rowIndex + 1}
+                      </span>
+                    </div>
+                  </td>
+                  {table.columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={cn("px-1.5 py-2 align-middle", columnMinWidth(col))}
+                    >
+                      <FieldControl
+                        id={`${table.key}-${rowIndex}-${col.key}`}
+                        label={t(`tables.columns.${col.labelKey}`)}
+                        type={col.type}
+                        value={row[col.key] ?? ""}
+                        onChange={(v) => updateCell(rowIndex, col.key, v)}
+                        required={col.required}
+                        maxLength={col.maxLength}
+                        options={col.options}
+                        t={t}
+                        compact
+                        placeholder={
+                          col.placeholderKey
+                            ? t(`placeholders.${col.placeholderKey}`)
+                            : undefined
+                        }
+                      />
+                    </td>
+                  ))}
+                  <td className="px-1 py-2 align-middle">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      disabled={rows.length <= minRows}
+                      onClick={() => removeRow(rowIndex)}
+                      aria-label={t("removeRow")}
+                      className="text-muted-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </Button>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
-        ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <button
+        type="button"
+        disabled={rows.length >= table.maxRows}
+        onClick={addRow}
+        className="text-sm font-medium text-highlight underline underline-offset-2 decoration-highlight/80 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        + {t(`tables.${table.key}.add`)}
+      </button>
     </div>
   );
 }
@@ -265,7 +403,7 @@ function answersToState(initial: Record<string, unknown>) {
           : String(v);
     }
   }
-  return next;
+  return applyDerivedAnswers(next);
 }
 
 function initTables(
@@ -361,15 +499,17 @@ export function ModularQuestionnaire({
   );
 
   function update(key: string, value: string) {
-    setAnswers((prev) => ({ ...prev, [key]: value, hasRepresentative: "Y" }));
+    setAnswers((prev) =>
+      applyDerivedAnswers({ ...prev, [key]: value, hasRepresentative: "Y" }),
+    );
   }
 
   function save() {
     if (!activePerson) return;
-    const payload: Record<string, unknown> = {
+    const payload: Record<string, unknown> = applyDerivedAnswers({
       ...answers,
       hasRepresentative: "Y",
-    };
+    });
     for (const [key, rows] of Object.entries(tableData)) {
       payload[key] = rows;
     }

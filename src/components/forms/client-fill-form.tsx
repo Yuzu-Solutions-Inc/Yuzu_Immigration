@@ -58,8 +58,8 @@ export function ClientFillForm({
       t("errors.generic"));
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
-      <header className="space-y-2">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <header className="max-w-2xl space-y-2">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           {t("clientEyebrow")}
         </p>

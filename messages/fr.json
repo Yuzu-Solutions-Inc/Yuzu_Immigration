@@ -403,17 +403,6 @@
     "filterNamePlaceholder": "Rechercher par nom…",
     "filterEmail": "E-mail",
     "filterEmailPlaceholder": "Rechercher par e-mail…",
-    "filterStatus": "Statut de visa",
-    "filterAll": "Tous",
-    "filterExpiry": "Expiration",
-    "filterExpiryExpired": "Expiré",
-    "filterExpirySoon": "Expire dans 30 jours",
-    "filterExpiryNone": "Aucune date",
-    "columnName": "Nom",
-    "columnEmail": "E-mail",
-    "columnStatus": "Statut de visa",
-    "columnExpires": "Expire",
-    "emptyValue": "—",
     "clearFilters": "Effacer les filtres",
     "noMatches": "Aucune personne ne correspond à ces filtres.",
     "showingCount": "Affichage de {shown} sur {total}",
@@ -889,6 +878,9 @@
       "educationRowsHelp": "List prior schools. At least one row when you answer Yes.",
       "childrenRowsHelp": "One row per child."
     },
+    "placeholders": {
+      "ifApplicable": "Si applicable"
+    },
     "errors": {
       "invalid": "Vérifiez le formulaire et réessayez.",
       "unauthorized": "Reconnectez-vous.",
@@ -901,52 +893,59 @@
       "generic": "Une erreur est survenue. Réessayez."
     },
     "tables": {
+      "rowIndex": "#",
       "previousCorRows": {
-        "title": "Previous countries of residence",
-        "help": "Add one row per country (maximum 2)."
+        "title": "Pays de résidence antérieurs",
+        "help": "Ajoutez une ligne par pays (maximum 2).",
+        "add": "Ajouter un pays"
       },
       "jobs": {
-        "title": "Employment / activity history",
-        "help": "Add jobs, studies, or other activities (maximum 3)."
+        "title": "Historique d’emploi / d’activité",
+        "help": "Ajoutez des emplois, études ou autres activités (maximum 3).",
+        "add": "Ajouter un emploi"
       },
       "educationRows": {
-        "title": "Prior education",
-        "help": "Add schools you attended before this application."
+        "title": "Études antérieures",
+        "help": "Ajoutez les établissements fréquentés avant cette demande.",
+        "add": "Ajouter une école"
       },
       "children": {
-        "title": "Children",
-        "help": "Add each child on their own row."
+        "title": "Enfants",
+        "help": "Ajoutez chaque enfant sur sa propre ligne.",
+        "add": "Ajouter un enfant"
       },
       "siblings": {
         "title": "Frères et sœurs",
-        "help": "Inclure demi-frères, demi-sœurs et beaux-frères/sœurs."
+        "help": "Inclure demi-frères, demi-sœurs et beaux-frères/sœurs.",
+        "add": "Ajouter un frère ou une sœur"
       },
       "columns": {
-        "colCountry": "Country",
-        "colStatus": "Status",
-        "colStatusOther": "Other status",
-        "colFrom": "From",
-        "colTo": "To",
-        "colFromMonth": "From (month)",
-        "colToMonth": "To (month)",
-        "colOccupation": "Occupation",
-        "colEmployer": "Employer / school",
-        "colCity": "City",
-        "colProvince": "Province / state",
-        "colSchool": "School",
-        "colFieldOfStudy": "Field of study",
-        "colFamilyName": "Family name",
-        "colGivenName": "Given name",
-        "colDob": "Date of birth",
-        "colCob": "Country of birth",
-        "colRelationship": "Relationship",
-        "colAccompanying": "Accompanying?",
-        "colAddress": "Address",
+        "colCountry": "Pays",
+        "colStatus": "Statut",
+        "colStatusOther": "Autre statut",
+        "colFrom": "Du",
+        "colTo": "Au",
+        "colFromMonth": "Du (mois)",
+        "colToMonth": "Au (mois)",
+        "colOccupation": "Profession",
+        "colEmployer": "Employeur / école",
+        "colCity": "Ville",
+        "colProvince": "Prov. / État",
+        "colSchool": "École",
+        "colFieldOfStudy": "Domaine d’études",
+        "colFamilyName": "Nom de famille",
+        "colGivenName": "Prénom",
+        "colDob": "Date de naissance",
+        "colCob": "Pays de naissance",
+        "colRelationship": "Lien",
+        "colAccompanying": "Accompagne ?",
+        "colAddress": "Adresse",
         "colMaritalStatus": "État matrimonial"
       }
     },
     "addRow": "Ajouter une ligne",
     "removeRow": "Retirer",
+    "reorderRow": "Glisser pour réordonner",
     "rowLabel": "Ligne {n}"
   },
   "documents": {
