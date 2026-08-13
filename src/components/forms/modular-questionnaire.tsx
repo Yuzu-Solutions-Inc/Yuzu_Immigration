@@ -156,7 +156,24 @@ function FieldControl({
       />
     );
 
-  if (compact) return control;
+  if (compact) {
+    return (
+      <div className="min-w-0 space-y-1">
+        <Label
+          htmlFor={id}
+          className="block text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+        >
+          {label}
+          {required ? (
+            <span className="text-destructive" aria-hidden>
+              *
+            </span>
+          ) : null}
+        </Label>
+        {control}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1.5">
@@ -174,15 +191,12 @@ function FieldControl({
   );
 }
 
-function columnMinWidth(col: TableColumn) {
-  if (col.type === "date" || col.type === "month") return "min-w-[9.5rem]";
-  if (col.type === "select" || col.type === "yesno") return "min-w-[8rem]";
+function fieldColSpan(col: TableColumn) {
+  if (col.type === "textarea") return "col-span-2 sm:col-span-3";
   if (col.key === "employer" || col.key === "school" || col.key === "address") {
-    return "min-w-[10.5rem]";
+    return "sm:col-span-2";
   }
-  if (col.key === "occupation" || col.key === "fieldOfStudy") return "min-w-[9rem]";
-  if (col.key === "provinceState") return "min-w-[6.5rem]";
-  return "min-w-[7.5rem]";
+  return undefined;
 }
 
 function TableEditor({
@@ -247,127 +261,86 @@ function TableEditor({
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-surface">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <caption className="sr-only">
-              {t(`tables.${table.key}.title`)}
-            </caption>
-            <thead>
-              <tr className="bg-muted">
-                <th
-                  scope="col"
-                  className="w-14 px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-                >
-                  {t("tables.rowIndex")}
-                </th>
-                {table.columns.map((col) => (
-                  <th
-                    key={col.key}
-                    scope="col"
-                    className={cn(
-                      "px-1.5 py-2.5 text-left text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase",
-                      columnMinWidth(col),
-                    )}
-                  >
-                    {t(`tables.columns.${col.labelKey}`)}
-                  </th>
-                ))}
-                <th className="w-10 px-1.5 py-2.5">
-                  <span className="sr-only">{t("removeRow")}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, rowIndex) => (
-                <tr
-                  key={`${table.key}-${rowIndex}`}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                    if (dropIndex !== rowIndex) setDropIndex(rowIndex);
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const from = Number(e.dataTransfer.getData("text/plain"));
-                    if (Number.isFinite(from)) moveRow(from, rowIndex);
-                    clearDrag();
-                  }}
-                  className={cn(
-                    "border-t border-border",
-                    dragIndex === rowIndex && "opacity-50",
-                    dropIndex === rowIndex &&
-                      dragIndex !== null &&
-                      dragIndex !== rowIndex &&
-                      "bg-accent/60",
-                  )}
-                >
-                  <td className="px-2 py-2 align-middle">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        draggable
-                        role="button"
-                        tabIndex={0}
-                        aria-label={t("reorderRow")}
-                        onDragStart={(e) => {
-                          e.dataTransfer.effectAllowed = "move";
-                          e.dataTransfer.setData(
-                            "text/plain",
-                            String(rowIndex),
-                          );
-                          setDragIndex(rowIndex);
-                        }}
-                        onDragEnd={clearDrag}
-                        className="flex size-7 shrink-0 cursor-grab items-center justify-center rounded-full bg-muted text-muted-foreground active:cursor-grabbing"
-                      >
-                        <GripVertical className="size-3.5" aria-hidden />
-                      </span>
-                      <span className="w-4 text-center text-sm font-medium text-brand">
-                        {rowIndex + 1}
-                      </span>
-                    </div>
-                  </td>
-                  {table.columns.map((col) => (
-                    <td
-                      key={col.key}
-                      className={cn("px-1.5 py-2 align-middle", columnMinWidth(col))}
-                    >
-                      <FieldControl
-                        id={`${table.key}-${rowIndex}-${col.key}`}
-                        label={t(`tables.columns.${col.labelKey}`)}
-                        type={col.type}
-                        value={row[col.key] ?? ""}
-                        onChange={(v) => updateCell(rowIndex, col.key, v)}
-                        required={col.required}
-                        maxLength={col.maxLength}
-                        options={col.options}
-                        t={t}
-                        compact
-                        placeholder={
-                          col.placeholderKey
-                            ? t(`placeholders.${col.placeholderKey}`)
-                            : undefined
-                        }
-                      />
-                    </td>
-                  ))}
-                  <td className="px-1 py-2 align-middle">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      disabled={rows.length <= minRows}
-                      onClick={() => removeRow(rowIndex)}
-                      aria-label={t("removeRow")}
-                      className="text-muted-foreground"
-                    >
-                      <X className="size-3.5" />
-                    </Button>
-                  </td>
-                </tr>
+        {rows.map((row, rowIndex) => (
+          <div
+            key={`${table.key}-${rowIndex}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              if (dropIndex !== rowIndex) setDropIndex(rowIndex);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              const from = Number(e.dataTransfer.getData("text/plain"));
+              if (Number.isFinite(from)) moveRow(from, rowIndex);
+              clearDrag();
+            }}
+            className={cn(
+              "flex gap-2 border-border px-3 py-3",
+              rowIndex > 0 && "border-t",
+              dragIndex === rowIndex && "opacity-50",
+              dropIndex === rowIndex &&
+                dragIndex !== null &&
+                dragIndex !== rowIndex &&
+                "bg-accent/60",
+            )}
+          >
+            <div className="flex shrink-0 flex-col items-center gap-1 pt-5">
+              <span
+                draggable
+                role="button"
+                tabIndex={0}
+                aria-label={t("reorderRow")}
+                onDragStart={(e) => {
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", String(rowIndex));
+                  setDragIndex(rowIndex);
+                }}
+                onDragEnd={clearDrag}
+                className="flex size-7 cursor-grab items-center justify-center rounded-full bg-muted text-muted-foreground active:cursor-grabbing"
+              >
+                <GripVertical className="size-3.5" aria-hidden />
+              </span>
+              <span className="text-sm font-medium text-brand">{rowIndex + 1}</span>
+            </div>
+            <div className="grid min-w-0 flex-1 grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3">
+              {table.columns.map((col) => (
+                <div key={col.key} className={fieldColSpan(col)}>
+                  <FieldControl
+                    id={`${table.key}-${rowIndex}-${col.key}`}
+                    label={t(`tables.columns.${col.labelKey}`)}
+                    type={col.type}
+                    value={row[col.key] ?? ""}
+                    onChange={(v) => updateCell(rowIndex, col.key, v)}
+                    required={col.required}
+                    maxLength={col.maxLength}
+                    options={col.options}
+                    t={t}
+                    compact
+                    placeholder={
+                      col.placeholderKey
+                        ? t(`placeholders.${col.placeholderKey}`)
+                        : undefined
+                    }
+                  />
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+            <div className="shrink-0 pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                disabled={rows.length <= minRows}
+                onClick={() => removeRow(rowIndex)}
+                aria-label={t("removeRow")}
+                className="text-muted-foreground"
+              >
+                <X className="size-3.5" />
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <button
