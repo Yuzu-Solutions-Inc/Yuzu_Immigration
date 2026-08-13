@@ -498,7 +498,7 @@
   "forms": {
     "pageTitle": "Forms & questionnaire",
     "backToProject": "Back to project",
-    "todoTitle": "Forms to-do",
+    "todoTitle": "Forms",
     "todoEmpty": "No forms on this file yet.",
     "manageForms": "Manage forms",
     "openQuestionnaire": "Full questionnaire",
@@ -551,7 +551,6 @@
       "identity": "About you",
       "contact": "Contact",
       "family": "Family",
-      "situation": "Your situation",
       "study": "Studies",
       "work": "Work permit",
       "visit": "Visit",
@@ -563,10 +562,9 @@
       "background": "Background"
     },
     "sectionLedes": {
-      "identity": "Identity and language details for this person.",
+      "identity": "Identity and language details, plus designee, common-law, or custodian when needed.",
       "contact": "Mailing address and phone. Residential address only if different.",
       "family": "Spouse, parents, previous marriage, and children when needed.",
-      "situation": "Designee, common-law, or custodian companions.",
       "study": "School and funding details for the study permit.",
       "work": "Job and permit details for the work application.",
       "visit": "Purpose, dates, and host for the visitor application.",

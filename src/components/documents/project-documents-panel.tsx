@@ -134,23 +134,21 @@ export function ProjectDocumentsPanel({
                       {!submitted ? ` · ${t(`statuses.${row.status}`)}` : ""}
                     </span>
                   </p>
-                  {submitted ? (
-                    <CircleCheck
-                      className="size-4 shrink-0 text-emerald-600"
-                      aria-label={t("statusUploaded")}
-                    />
-                  ) : null}
-                  <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
                     {row.file ? (
-                      <DocumentFileActions
-                        compact
-                        requestId={row.id}
-                        filename={row.file.original_filename}
-                        fetchFile={downloadProjectDocumentAction}
-                      />
+                      <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
+                        <DocumentFileActions
+                          compact
+                          requestId={row.id}
+                          filename={row.file.original_filename}
+                          fetchFile={downloadProjectDocumentAction}
+                        />
+                      </div>
                     ) : null}
                     {row.doc_key === "custom" ? (
-                      <form action={removeAction}>
+                      <form
+                        action={removeAction}
+                        className="flex shrink-0 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100"
+                      >
                         <input type="hidden" name="requestId" value={row.id} />
                         <input
                           type="hidden"
@@ -170,7 +168,12 @@ export function ProjectDocumentsPanel({
                         </Button>
                       </form>
                     ) : null}
-                  </div>
+                    {submitted ? (
+                      <CircleCheck
+                        className="size-4 shrink-0 text-emerald-600"
+                        aria-label={t("statusUploaded")}
+                      />
+                    ) : null}
                 </div>
               </li>
             );

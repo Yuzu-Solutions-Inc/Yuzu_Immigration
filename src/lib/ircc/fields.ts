@@ -69,7 +69,6 @@ export const QUESTIONNAIRE_SECTIONS = [
   "employment",
   "education",
   "background",
-  "situation",
 ] as const;
 
 export type QuestionnaireSection = (typeof QUESTIONNAIRE_SECTIONS)[number];
@@ -1395,17 +1394,17 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     helpKey: "cicConsentHelp",
   },
 
-  // —— Situation companions ——
+  // —— Companions (designee, common-law, custodian) ——
   {
     key: "hasDesignee",
-    section: "situation",
+    section: "identity",
     type: "yesno",
     forms: [...DESIGNEE],
     helpKey: "designeeHelp",
   },
   {
     key: "designeeFamilyName",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...DESIGNEE],
@@ -1413,7 +1412,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "designeeGivenName",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...DESIGNEE],
@@ -1421,7 +1420,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "designeeRelationship",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...DESIGNEE],
@@ -1429,14 +1428,14 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "isCommonLaw",
-    section: "situation",
+    section: "identity",
     type: "yesno",
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     helpKey: "commonLawHelp",
   },
   {
     key: "partnerFamilyName",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
@@ -1449,7 +1448,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "partnerGivenName",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
@@ -1462,7 +1461,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "yearsTogether",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 10,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
@@ -1475,7 +1474,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "commonLawCity",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
@@ -1488,7 +1487,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "commonLawProvince",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 40,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
@@ -1501,7 +1500,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "commonLawCountry",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
@@ -1514,7 +1513,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "commonLawStart",
-    section: "situation",
+    section: "identity",
     type: "date",
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
     showWhen: {
@@ -1526,14 +1525,14 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "needsCustodian",
-    section: "situation",
+    section: "identity",
     type: "yesno",
     forms: [...CUSTODIAN, ...STUDY],
     helpKey: "custodianHelp",
   },
   {
     key: "custodianFamilyName",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...CUSTODIAN],
@@ -1541,7 +1540,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "custodianGivenName",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...CUSTODIAN],
@@ -1549,14 +1548,14 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "custodianDob",
-    section: "situation",
+    section: "identity",
     type: "date",
     forms: [...CUSTODIAN],
     showWhen: { key: "needsCustodian", equals: "Y" },
   },
   {
     key: "custodianStatus",
-    section: "situation",
+    section: "identity",
     type: "text",
     maxLength: 80,
     forms: [...CUSTODIAN],
@@ -1564,7 +1563,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "custodianAddress",
-    section: "situation",
+    section: "identity",
     type: "textarea",
     maxLength: 200,
     forms: [...CUSTODIAN],
@@ -1573,7 +1572,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "custodianTelephone",
-    section: "situation",
+    section: "identity",
     type: "tel",
     maxLength: 40,
     forms: [...CUSTODIAN],

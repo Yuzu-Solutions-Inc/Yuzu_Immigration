@@ -498,7 +498,7 @@
   "forms": {
     "pageTitle": "Forms & questionnaire",
     "backToProject": "Back to project",
-    "todoTitle": "Forms to-do",
+    "todoTitle": "Formularios",
     "todoEmpty": "No forms on this file yet.",
     "manageForms": "Manage forms",
     "openQuestionnaire": "Full questionnaire",
@@ -548,10 +548,9 @@
     "scopeProject": "todo el expediente",
     "assignPerson": "Asignar a",
     "sections": {
-      "identity": "About you",
+      "identity": "Sobre usted",
       "contact": "Contact",
       "family": "Family",
-      "situation": "Your situation",
       "study": "Studies",
       "work": "Work permit",
       "visit": "Visita",
@@ -563,10 +562,9 @@
       "background": "Background"
     },
     "sectionLedes": {
-      "identity": "Identity and language details for this person.",
+      "identity": "Identidad e idiomas, más designado, unión de hecho o tutor si aplica.",
       "contact": "Mailing address and phone. Residential address only if different.",
       "family": "Spouse, parents, previous marriage, and children when needed.",
-      "situation": "Designee, common-law, or custodian companions.",
       "study": "School and funding details for the study permit.",
       "work": "Job and permit details for the work application.",
       "visit": "Motivo, fechas y anfitrión de la solicitud de visitante.",

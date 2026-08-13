@@ -498,7 +498,7 @@
   "forms": {
     "pageTitle": "Formulaires et questionnaire",
     "backToProject": "Retour au projet",
-    "todoTitle": "Formulaires à faire",
+    "todoTitle": "Formulaires",
     "todoEmpty": "Aucun formulaire sur ce dossier pour l’instant.",
     "manageForms": "Gérer les formulaires",
     "openQuestionnaire": "Questionnaire complet",
@@ -551,7 +551,6 @@
       "identity": "À propos de vous",
       "contact": "Coordonnées",
       "family": "Famille",
-      "situation": "Votre situation",
       "study": "Études",
       "work": "Permis de travail",
       "visit": "Visite",
@@ -563,10 +562,9 @@
       "background": "Antécédents"
     },
     "sectionLedes": {
-      "identity": "Identité et langues pour cette personne.",
+      "identity": "Identité et langues, ainsi que désigné, union de fait ou tuteur au besoin.",
       "contact": "Adresse postale et téléphone.",
       "family": "Conjoint, parents, union antérieure et enfants.",
-      "situation": "Désigné, union de fait ou tuteur.",
       "study": "École et financement pour le permis d’études.",
       "work": "Emploi et détails du permis de travail.",
       "visit": "Motif, dates et hôte pour la demande de visiteur.",
