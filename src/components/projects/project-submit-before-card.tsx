@@ -39,13 +39,13 @@ export function ProjectSubmitBeforeCard({
     : null;
 
   return (
-    <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-      <form action={formAction}>
+    <div className="text-right text-sm">
+      <form action={formAction} className="flex items-center justify-end gap-2">
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="projectId" value={projectId} />
         <label
           htmlFor="submit-before-card"
-          className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase"
+          className="text-muted-foreground"
         >
           {t("submitBefore")}
         </label>
@@ -62,10 +62,10 @@ export function ProjectSubmitBeforeCard({
             if (next === (currentSubmitBefore ?? "")) return;
             event.currentTarget.form?.requestSubmit();
           }}
-          className="mt-0.5 block h-7 w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-brand outline-none disabled:opacity-60 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          className="h-7 w-[9.5rem] cursor-pointer border-0 bg-transparent p-0 text-right text-sm font-medium text-brand outline-none disabled:opacity-60 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
         />
         {!value ? (
-          <p className="sr-only">{t("submitBeforeEmpty")}</p>
+          <span className="sr-only">{t("submitBeforeEmpty")}</span>
         ) : null}
       </form>
       {errorMessage ? (

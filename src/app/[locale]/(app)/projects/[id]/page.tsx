@@ -174,54 +174,56 @@ export default async function ProjectDetailPage({
             </p>
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <ExportProjectFileButton locale={locale} projectId={project.id} />
-          <Link
-            href={`/projects/${project.id}/edit`}
-            className={cn(
-              buttonVariants({ size: "sm" }),
-              "bg-action text-white hover:bg-action/90",
-            )}
-          >
-            {t("edit")}
-          </Link>
-          {canDelete ? (
-            <DeleteProjectButton
+        <div className="flex shrink-0 flex-col items-end gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <ExportProjectFileButton locale={locale} projectId={project.id} />
+            <Link
+              href={`/projects/${project.id}/edit`}
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "bg-action text-white hover:bg-action/90",
+              )}
+            >
+              {t("edit")}
+            </Link>
+            {canDelete ? (
+              <DeleteProjectButton
+                locale={locale}
+                projectId={project.id}
+                title={project.title}
+              />
+            ) : null}
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <ProjectStatusCard
               locale={locale}
               projectId={project.id}
-              title={project.title}
+              currentStatus={project.status}
+              currentStatusAt={project.status_at}
+              history={history}
             />
-          ) : null}
+            <ProjectSubmitBeforeCard
+              locale={locale}
+              projectId={project.id}
+              currentSubmitBefore={project.submit_before}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        <ProjectStatusCard
-          locale={locale}
-          projectId={project.id}
-          currentStatus={project.status}
-          currentStatusAt={project.status_at}
-          history={history}
-        />
-        <ProjectSubmitBeforeCard
-          locale={locale}
-          projectId={project.id}
-          currentSubmitBefore={project.submit_before}
-        />
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("notes")}
+      <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
+        <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          {t("notes")}
+        </p>
+        {project.notes ? (
+          <p className="mt-0.5 line-clamp-2 text-sm text-brand" title={project.notes}>
+            {project.notes}
           </p>
-          {project.notes ? (
-            <p className="mt-0.5 line-clamp-2 text-sm text-brand" title={project.notes}>
-              {project.notes}
-            </p>
-          ) : (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {t("notesEmpty")}
-            </p>
-          )}
-        </div>
+        ) : (
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {t("notesEmpty")}
+          </p>
+        )}
       </div>
 
       <ProjectRetentionPanel

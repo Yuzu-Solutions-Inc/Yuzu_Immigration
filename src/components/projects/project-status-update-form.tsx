@@ -1,6 +1,6 @@
 "use client";
 
-import { History, Pencil } from "lucide-react";
+import { History } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -22,7 +22,6 @@ import { Label } from "@/components/ui/label";
 import type { ProjectStatus } from "@/db/schema";
 import type { ProjectStatusHistoryRow } from "@/lib/crm/queries";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
-import { cn } from "@/lib/utils";
 
 const initialState: StatusUpdateState = {};
 
@@ -80,46 +79,34 @@ export function ProjectStatusCard({
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => setEditOpen(true)}
-            className={cn(
-              "group min-w-0 flex-1 rounded-lg text-left transition-colors",
-              "hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30",
-            )}
-            aria-label={t("editStatusAria")}
-          >
-            <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-              {t("status")}
-            </p>
-            <div className="mt-0.5 flex items-center gap-1.5">
-              <p className="truncate text-sm font-semibold text-brand">
-                {t(`statuses.${currentStatus}`)}
-              </p>
-              <Pencil
-                className="size-3 shrink-0 text-muted-foreground opacity-70 group-hover:text-action"
-                aria-hidden
-              />
-            </div>
-            <p className="truncate text-xs text-muted-foreground">
-              {t("statusSince", {
-                date: formatStatusDate(currentStatusAt, locale),
-              })}
-            </p>
-          </button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-xs"
-            onClick={() => setHistoryOpen(true)}
-            aria-label={t("viewStatusHistory")}
-            title={t("viewStatusHistory")}
-          >
-            <History className="size-3.5" />
-          </Button>
-        </div>
+      <div className="flex items-center gap-2 text-sm">
+        <button
+          type="button"
+          onClick={() => setEditOpen(true)}
+          className="min-w-0 text-right transition-colors hover:text-action focus-visible:outline-none focus-visible:underline"
+          aria-label={t("editStatusAria")}
+        >
+          <span className="text-muted-foreground">{t("status")} </span>
+          <span className="font-medium text-brand">
+            {t(`statuses.${currentStatus}`)}
+          </span>
+          <span className="text-muted-foreground">
+            {" · "}
+            {t("statusSince", {
+              date: formatStatusDate(currentStatusAt, locale),
+            })}
+          </span>
+        </button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => setHistoryOpen(true)}
+          aria-label={t("viewStatusHistory")}
+          title={t("viewStatusHistory")}
+        >
+          <History className="size-3.5" />
+        </Button>
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
