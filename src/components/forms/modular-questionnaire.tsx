@@ -980,68 +980,70 @@ export function ModularQuestionnaire({
     );
   }
 
+  const showPersonTabs = people.length > 1;
+
   return (
     <div className="space-y-6">
-      <div className="space-y-4 rounded-xl border border-border bg-canvas p-4">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("personTabsLabel")}
-          </p>
-          <div
-            role="tablist"
-            aria-label={t("personTabsLabel")}
-            className="flex flex-wrap gap-2"
-          >
-            {people.map((person) => {
-              const selected = person.id === activePerson.id;
-              const percent = fillPercentByPerson.get(person.id) ?? 0;
-              return (
-                <button
-                  key={person.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  onClick={() => setActivePersonId(person.id)}
-                  className={cn(
-                    "flex min-h-12 min-w-[10rem] flex-1 cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2 text-left shadow-elevated transition-colors sm:flex-none",
-                    selected
-                      ? "border-action bg-surface text-brand"
-                      : "border-border bg-surface text-brand hover:border-action hover:bg-white",
-                  )}
-                >
-                  <span
+      {showPersonTabs ? (
+        <div className="space-y-4 rounded-xl border border-border bg-canvas p-4">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {t("personTabsLabel")}
+            </p>
+            <div
+              role="tablist"
+              aria-label={t("personTabsLabel")}
+              className="flex flex-wrap gap-2"
+            >
+              {people.map((person) => {
+                const selected = person.id === activePerson.id;
+                const percent = fillPercentByPerson.get(person.id) ?? 0;
+                return (
+                  <button
+                    key={person.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => setActivePersonId(person.id)}
                     className={cn(
-                      "flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                      "flex min-h-12 min-w-[10rem] flex-1 cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2 text-left shadow-elevated transition-colors sm:flex-none",
                       selected
-                        ? "bg-action text-white"
-                        : "bg-muted text-muted-foreground",
+                        ? "border-action bg-surface text-brand"
+                        : "border-border bg-surface text-brand hover:border-action hover:bg-white",
                     )}
-                    aria-hidden
                   >
-                    {personInitials(person.displayName)}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
-                      {person.displayName}
+                    <span
+                      className={cn(
+                        "flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                        selected
+                          ? "bg-action text-white"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                      aria-hidden
+                    >
+                      {personInitials(person.displayName)}
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {tr(person.role as never)}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">
+                        {person.displayName}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {tr(person.role as never)}
+                      </span>
+                      <span className="mt-0.5 block text-xs font-semibold text-action">
+                        {t("progressComplete", { percent })}
+                      </span>
                     </span>
-                    <span className="mt-0.5 block text-xs font-semibold text-action">
-                      {t("progressComplete", { percent })}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t("personTabsHelp", { name: activePerson.displayName })}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {people.length > 1
-              ? t("personTabsHelp", { name: activePerson.displayName })
-              : t("personTabsHelpSingle", { name: activePerson.displayName })}
-          </p>
         </div>
-      </div>
+      ) : null}
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <SectionProgressNav
