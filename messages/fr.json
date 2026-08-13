@@ -565,6 +565,8 @@
     "next": "Suivant",
     "previous": "Précédent",
     "selectPlaceholder": "Choisir…",
+    "noCertifiedMatch": "Pas dans la liste officielle d’IRCC",
+    "refineCertifiedSearch": "Continuez à écrire pour affiner la liste officielle",
     "clientEyebrow": "Questionnaire sécurisé",
     "clientLede": "Répondez pour chaque personne du dossier. Votre consultant remplit les formulaires IRCC correspondants.",
     "clientExpires": "Ce lien fonctionne jusqu’au {date}.",

@@ -565,6 +565,8 @@
     "next": "Next",
     "previous": "Previous",
     "selectPlaceholder": "Select…",
+    "noCertifiedMatch": "Not on the official IRCC list",
+    "refineCertifiedSearch": "Keep typing to narrow the official list",
     "clientEyebrow": "Secure questionnaire",
     "clientLede": "Answer for each person on the file. Your consultant fills the matching IRCC forms.",
     "clientExpires": "This link works until {date}.",

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { GripVertical, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { CertifiedSearchSelect } from "@/components/forms/certified-search-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,8 +88,26 @@ function FieldControl({
   const selectOptions = options
     ? orderedFieldOptions(options, locale, t)
     : [];
+  const labeledOptions = selectOptions.map((opt) => ({
+    value: opt.value,
+    label: fieldOptionLabel(opt, locale, t),
+  }));
+  const searchable = type === "select" && labeledOptions.length > 5;
   const control =
-    type === "select" ? (
+    searchable ? (
+      <CertifiedSearchSelect
+        id={id}
+        value={value}
+        onChange={onChange}
+        options={labeledOptions}
+        placeholder={placeholder ?? t("selectPlaceholder")}
+        required={required}
+        compact={compact}
+        label={label}
+        noMatchLabel={t("noCertifiedMatch")}
+        refineLabel={t("refineCertifiedSearch")}
+      />
+    ) : type === "select" ? (
       <select
         id={id}
         value={value}
