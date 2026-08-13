@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
-import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
+import { ProjectFormsPanel, ProjectQuestionnaire } from "@/components/forms/project-forms-panel";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import {
   ExportProjectFileButton,
@@ -194,7 +194,7 @@ export default async function ProjectDetailPage({
               />
             ) : null}
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="grid grid-cols-[auto_auto_1.75rem] items-center gap-x-2.5 gap-y-1">
             <ProjectStatusCard
               locale={locale}
               projectId={project.id}
@@ -250,71 +250,83 @@ export default async function ProjectDetailPage({
         />
       ) : null}
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("participants")}
-          </h2>
-          <Link
-            href={`/projects/${project.id}/edit`}
-            className="text-sm font-medium text-action hover:underline"
-          >
-            {t("editPeople")}
-          </Link>
-        </div>
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-          {participants.map((row) => (
-            <li key={row.id}>
-              {row.person ? (
-                <Link
-                  href={`/people/${row.person.id}`}
-                  className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-muted/60"
-                >
-                  <div>
-                    <p className="font-medium text-brand">
-                      {row.person.first_name} {row.person.last_name}
-                    </p>
-                    {row.person.email ? (
-                      <p className="text-sm text-muted-foreground">
-                        {row.person.email}
-                      </p>
-                    ) : null}
-                  </div>
-                  <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {tr(row.role)}
-                  </span>
-                </Link>
-              ) : (
-                <div className="px-5 py-4 text-sm text-muted-foreground">
-                  {tr(row.role)}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="min-w-0 space-y-6">
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-heading text-lg font-semibold text-brand">
+                {t("participants")}
+              </h2>
+              <Link
+                href={`/projects/${project.id}/edit`}
+                className="text-sm font-medium text-action hover:underline"
+              >
+                {t("editPeople")}
+              </Link>
+            </div>
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+              {participants.map((row) => (
+                <li key={row.id}>
+                  {row.person ? (
+                    <Link
+                      href={`/people/${row.person.id}`}
+                      className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-muted/60"
+                    >
+                      <div>
+                        <p className="font-medium text-brand">
+                          {row.person.first_name} {row.person.last_name}
+                        </p>
+                        {row.person.email ? (
+                          <p className="text-sm text-muted-foreground">
+                            {row.person.email}
+                          </p>
+                        ) : null}
+                      </div>
+                      <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {tr(row.role)}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="px-5 py-4 text-sm text-muted-foreground">
+                      {tr(row.role)}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
 
-      <div id="documents" className="scroll-mt-20">
-        <ProjectDocumentsPanel
-          locale={locale}
-          projectId={project.id}
-          requests={documentRequests}
-          people={questionnairePeople.map((p) => ({
-            id: p.id,
-            displayName: p.displayName,
-            role: p.role,
-          }))}
-        />
+          <div id="documents" className="scroll-mt-20">
+            <ProjectDocumentsPanel
+              locale={locale}
+              projectId={project.id}
+              requests={documentRequests}
+              people={questionnairePeople.map((p) => ({
+                id: p.id,
+                displayName: p.displayName,
+                role: p.role,
+              }))}
+            />
+          </div>
+        </div>
+
+        <div id="forms" className="min-w-0 scroll-mt-20">
+          <ProjectFormsPanel
+            locale={formLocale}
+            projectId={project.id}
+            programFamily={project.program_family}
+            forms={forms}
+            people={questionnairePeople}
+            activeShareExpiresAt={share?.expires_at ?? null}
+          />
+        </div>
       </div>
 
-      <div id="forms" className="scroll-mt-20">
-        <ProjectFormsPanel
+      <div id="questionnaire" className="scroll-mt-20">
+        <ProjectQuestionnaire
           locale={formLocale}
           projectId={project.id}
-          programFamily={project.program_family}
-          forms={forms}
           people={questionnairePeople}
-          activeShareExpiresAt={share?.expires_at ?? null}
         />
       </div>
     </div>

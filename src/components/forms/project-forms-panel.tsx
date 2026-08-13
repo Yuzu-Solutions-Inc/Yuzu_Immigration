@@ -80,10 +80,6 @@ export function ProjectFormsPanel({
     revokeFormShareLinkAction,
     initialState,
   );
-  const [saveState, saveAction, savePending] = useActionState(
-    saveProjectAnswersAction,
-    initialState,
-  );
   const [genPending, startGen] = useTransition();
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
@@ -105,20 +101,6 @@ export function ProjectFormsPanel({
           ...addable,
           ...ALL_FORM_CODES.filter((c) => !addable.includes(c)),
         ];
-
-  function handleSave(
-    nextPersonId: string,
-    next: Record<string, unknown>,
-    section: string,
-  ) {
-    const fd = new FormData();
-    fd.set("projectId", projectId);
-    fd.set("personId", nextPersonId);
-    fd.set("locale", locale);
-    fd.set("currentSection", section);
-    fd.set("answers", JSON.stringify(next));
-    saveAction(fd);
-  }
 
   function handleDownload(formId?: string) {
     const key = formId ?? "all";
@@ -147,15 +129,6 @@ export function ProjectFormsPanel({
       }
     });
   }
-
-  const saveError =
-    saveState.error &&
-    ({
-      invalid: t("errors.invalid"),
-      unauthorized: t("errors.unauthorized"),
-      save_failed: t("errors.saveFailed"),
-    }[saveState.error] ??
-      t("errors.generic"));
 
   return (
     <div className="space-y-6">
@@ -239,7 +212,7 @@ export function ProjectFormsPanel({
                 value={formCode}
                 onChange={(e) => setFormCode(e.target.value as FormCode)}
                 aria-label={t("addForm")}
-                className="h-10 min-w-[220px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
+                className="h-10 min-w-[140px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
               >
                 {addOptions.map((code) => (
                   <option key={code} value={code}>
@@ -352,16 +325,57 @@ export function ProjectFormsPanel({
           <p className="text-sm text-destructive">{t("errors.shareFailed")}</p>
         ) : null}
       </SurfaceCard>
-
-      <SurfaceCard>
-        <ModularQuestionnaire
-          people={people}
-          onSave={handleSave}
-          pending={savePending}
-          statusMessage={saveState.message === "saved" ? t("saved") : null}
-          errorMessage={saveError}
-        />
-      </SurfaceCard>
     </div>
+  );
+}
+
+export function ProjectQuestionnaire({
+  locale,
+  projectId,
+  people,
+}: {
+  locale: "en" | "fr";
+  projectId: string;
+  people: QuestionnairePerson[];
+}) {
+  const t = useTranslations("forms");
+  const [saveState, saveAction, savePending] = useActionState(
+    saveProjectAnswersAction,
+    initialState,
+  );
+
+  function handleSave(
+    nextPersonId: string,
+    next: Record<string, unknown>,
+    section: string,
+  ) {
+    const fd = new FormData();
+    fd.set("projectId", projectId);
+    fd.set("personId", nextPersonId);
+    fd.set("locale", locale);
+    fd.set("currentSection", section);
+    fd.set("answers", JSON.stringify(next));
+    saveAction(fd);
+  }
+
+  const saveError =
+    saveState.error &&
+    ({
+      invalid: t("errors.invalid"),
+      unauthorized: t("errors.unauthorized"),
+      save_failed: t("errors.saveFailed"),
+    }[saveState.error] ??
+      t("errors.generic"));
+
+  return (
+    <SurfaceCard>
+      <ModularQuestionnaire
+        people={people}
+        onSave={handleSave}
+        pending={savePending}
+        statusMessage={saveState.message === "saved" ? t("saved") : null}
+        errorMessage={saveError}
+      />
+    </SurfaceCard>
   );
 }
