@@ -1,12 +1,12 @@
 "use client";
 
 import {
+  ChevronLeft,
+  ChevronRight,
   FolderKanban,
   Home,
   LogOut,
   Menu,
-  PanelLeft,
-  PanelLeftClose,
   Plus,
   Users,
 } from "lucide-react";
@@ -75,23 +75,49 @@ function SidebarBody({
   const locale = useLocale();
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
+      {onToggleCollapse && !collapsed ? (
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          aria-expanded
+          aria-label={t("collapse")}
+          title={t("collapse")}
+          className="absolute top-1.5 right-1.5 z-10 inline-flex size-7 items-center justify-center rounded-md text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        >
+          <ChevronLeft className="size-4" aria-hidden />
+        </button>
+      ) : null}
       <div
         className={cn(
           "space-y-4 border-b border-sidebar-border py-5",
-          collapsed ? "px-2" : "px-4",
+          collapsed ? "px-2" : "px-4 pr-10",
         )}
       >
-        <div className={cn(collapsed && "flex justify-center")}>
-          <BrandLogo href="/home" size="sm" inverted compact={collapsed} />
-        </div>
-        {!collapsed ? (
-          <OrgSwitcher
-            organizations={organizations}
-            activeOrganizationId={activeOrganizationId}
-            variant="sidebar"
-          />
-        ) : null}
+        {collapsed ? (
+          onToggleCollapse ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                aria-expanded={false}
+                aria-label={t("expand")}
+                title={t("expand")}
+                className="inline-flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <ChevronRight className="size-5" aria-hidden />
+              </button>
+            </div>
+          ) : null
+        ) : (
+          <BrandLogo href="/home" size="sm" inverted />
+        )}
+        <OrgSwitcher
+          organizations={organizations}
+          activeOrganizationId={activeOrganizationId}
+          variant="sidebar"
+          collapsed={collapsed}
+        />
         {canCreate ? (
           <Link
             href="/projects/new"
@@ -153,6 +179,15 @@ function SidebarBody({
           collapsed ? "p-2" : "p-3",
         )}
       >
+        <PrivacyLink
+          onNavigate={onNavigate}
+          className={cn(
+            "block text-sidebar-foreground/45 hover:text-sidebar-foreground/70",
+            collapsed
+              ? "truncate px-0 py-1 text-center text-[11px]"
+              : "px-3 py-1",
+          )}
+        />
         <LocaleSwitcher
           className={cn("w-full", !collapsed && "px-0.5")}
           variant="sidebar"
@@ -175,34 +210,6 @@ function SidebarBody({
             </span>
           </button>
         </form>
-        {!collapsed ? (
-          <PrivacyLink
-            onNavigate={onNavigate}
-            className="block px-3 py-1 text-sidebar-foreground/45 hover:text-sidebar-foreground/70"
-          />
-        ) : null}
-        {onToggleCollapse ? (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-expanded={!collapsed}
-            aria-label={collapsed ? t("expand") : t("collapse")}
-            title={collapsed ? t("expand") : t("collapse")}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              collapsed && "justify-center px-0",
-            )}
-          >
-            {collapsed ? (
-              <PanelLeft className="size-4 shrink-0 opacity-90" aria-hidden />
-            ) : (
-              <PanelLeftClose className="size-4 shrink-0 opacity-90" aria-hidden />
-            )}
-            <span className={cn("whitespace-nowrap", collapsed && "sr-only")}>
-              {collapsed ? t("expand") : t("collapse")}
-            </span>
-          </button>
-        ) : null}
       </div>
     </div>
   );

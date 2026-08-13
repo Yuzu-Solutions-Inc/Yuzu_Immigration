@@ -13,7 +13,6 @@ type BrandLogoProps = {
   size?: keyof typeof sizeClass;
   href?: "/" | "/home" | null;
   inverted?: boolean;
-  compact?: boolean;
 };
 
 export function BrandLogo({
@@ -21,19 +20,8 @@ export function BrandLogo({
   size = "md",
   href = "/",
   inverted = false,
-  compact = false,
 }: BrandLogoProps) {
-  const mark = compact ? (
-    <span
-      className={cn(
-        "font-logo inline-flex size-9 items-center justify-center rounded-lg text-[11px] font-extrabold tracking-tight",
-        inverted ? "bg-white/15 text-white" : "bg-action text-white",
-        className,
-      )}
-    >
-      My
-    </span>
-  ) : (
+  const mark = (
     <span
       className={cn(
         "font-logo inline-flex items-baseline gap-[0.28em] font-extrabold tracking-[-0.03em]",

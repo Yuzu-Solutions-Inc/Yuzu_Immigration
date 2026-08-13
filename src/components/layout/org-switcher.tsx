@@ -12,14 +12,20 @@ export type OrgSwitcherOption = {
   role: OrgRole;
 };
 
+function orgNameShort(name: string) {
+  return name.trim().slice(0, 2);
+}
+
 export function OrgSwitcher({
   organizations,
   activeOrganizationId,
   variant = "sidebar",
+  collapsed = false,
 }: {
   organizations: OrgSwitcherOption[];
   activeOrganizationId: string;
   variant?: "sidebar" | "header";
+  collapsed?: boolean;
 }) {
   const t = useTranslations("nav");
   const locale = useLocale();
@@ -29,16 +35,21 @@ export function OrgSwitcher({
 
   if (!active) return null;
 
+  const label = collapsed ? orgNameShort(active.name) : active.name;
+
   if (organizations.length < 2) {
     return (
       <p
+        title={collapsed ? active.name : undefined}
         className={cn(
           "truncate",
           variant === "sidebar" && "text-xs text-sidebar-foreground/55",
           variant === "header" && "text-sm font-medium text-brand",
+          collapsed &&
+            "mx-auto flex size-9 items-center justify-center rounded-lg bg-sidebar-accent text-[11px] font-semibold tracking-wide text-sidebar-foreground",
         )}
       >
-        {active.name}
+        {label}
       </p>
     );
   }
@@ -50,8 +61,19 @@ export function OrgSwitcher({
   return (
     <form action={switchOrganizationAction}>
       <input type="hidden" name="locale" value={locale} />
-      <label className="block min-w-0">
+      <label
+        className={cn("block min-w-0", collapsed && "relative mx-auto size-9")}
+        title={collapsed ? active.name : undefined}
+      >
         <span className="sr-only">{t("switchOrgAria")}</span>
+        {collapsed ? (
+          <span
+            aria-hidden
+            className="pointer-events-none flex size-9 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent text-[11px] font-semibold tracking-wide text-sidebar-foreground"
+          >
+            {label}
+          </span>
+        ) : null}
         <select
           name="organizationId"
           defaultValue={active.id}
@@ -66,6 +88,8 @@ export function OrgSwitcher({
               "h-8 border-sidebar-border bg-sidebar-accent px-2 text-xs text-sidebar-foreground focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/30",
             variant === "header" &&
               "border-border bg-surface text-brand focus-visible:border-ring focus-visible:ring-ring/30",
+            collapsed &&
+              "absolute inset-0 cursor-pointer opacity-0",
           )}
         >
           {sorted.map((org) => (
