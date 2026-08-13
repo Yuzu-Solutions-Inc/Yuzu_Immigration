@@ -339,6 +339,7 @@
     "submitBefore": "Submit before",
     "submitBeforeHelp": "Optional target date to file the application.",
     "submitBeforeEmpty": "Not set",
+    "editSubmitBeforeAria": "Editar la fecha límite de presentación",
     "removePerson": "Remove",
     "back": "Back to projects",
     "backToProject": "Back to project",

@@ -339,6 +339,7 @@
     "submitBefore": "Soumettre avant le",
     "submitBeforeHelp": "Date cible optionnelle pour déposer la demande.",
     "submitBeforeEmpty": "Non défini",
+    "editSubmitBeforeAria": "Modifier la date de dépôt cible",
     "removePerson": "Retirer",
     "back": "Retour aux projets",
     "backToProject": "Retour au projet",

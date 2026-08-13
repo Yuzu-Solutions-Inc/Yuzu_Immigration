@@ -1108,6 +1108,75 @@ export async function setProjectsStatusAction(input: {
   return applyProjectStatuses(parsed.data);
 }
 
+export type SubmitBeforeUpdateState = {
+  error?: string;
+};
+
+export async function updateProjectSubmitBeforeAction(
+  _prev: SubmitBeforeUpdateState,
+  formData: FormData,
+): Promise<SubmitBeforeUpdateState> {
+  const locale = (formData.get("locale") as "en" | "fr" | "es") || "en";
+  const projectId = String(formData.get("projectId") || "");
+  const submitBeforeRaw = String(formData.get("submitBefore") || "").trim();
+
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]),
+      projectId: z.string().uuid(),
+      submitBefore: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional()
+        .or(z.literal("")),
+    })
+    .safeParse({
+      locale,
+      projectId,
+      submitBefore: submitBeforeRaw,
+    });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${parsed.data.locale}/onboarding`);
+  }
+
+  const supabase = await createClient();
+  const { data: existing, error: existingError } = await supabase
+    .from("immigration_projects")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("id", parsed.data.projectId)
+    .maybeSingle();
+
+  if (existingError || !existing) {
+    return { error: "not_found" };
+  }
+
+  const { error: updateError } = await supabase
+    .from("immigration_projects")
+    .update({
+      submit_before: parsed.data.submitBefore || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.data.projectId)
+    .eq("organization_id", orgId);
+
+  if (updateError) {
+    console.error("update submit_before:", updateError.message);
+    return { error: "update_failed" };
+  }
+
+  revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
+  revalidatePath(`/${parsed.data.locale}/projects`);
+  revalidatePath(`/${parsed.data.locale}/home`);
+  return {};
+}
+
 export type DeleteProjectState = {
   error?: string;
 };

@@ -11,8 +11,8 @@ import {
 } from "@/components/privacy/retention-export";
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
-import { formatStatusDate } from "@/components/projects/project-status-summary";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
+import { ProjectSubmitBeforeCard } from "@/components/projects/project-submit-before-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import {
@@ -160,6 +160,14 @@ export default async function ProjectDetailPage({
             ·{" "}
             {t(`formLanguages.${project.form_language === "fr" ? "fr" : "en"}`)}
           </p>
+          <p className="text-sm text-muted-foreground">
+            {t("opened")} {opened}
+            {" · "}
+            {t("representative")}{" "}
+            {project.representative?.full_name ||
+              project.representative?.email ||
+              t("representativeUnassigned")}
+          </p>
           {project.description ? (
             <p className="max-w-2xl text-sm text-brand/80">
               {project.description}
@@ -187,7 +195,7 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         <ProjectStatusCard
           locale={locale}
           projectId={project.id}
@@ -195,34 +203,11 @@ export default async function ProjectDetailPage({
           currentStatusAt={project.status_at}
           history={history}
         />
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("submitBefore")}
-          </p>
-          <p className="mt-0.5 truncate text-sm font-semibold text-brand">
-            {project.submit_before
-              ? formatStatusDate(project.submit_before, locale)
-              : t("submitBeforeEmpty")}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("opened")}
-          </p>
-          <p className="mt-0.5 truncate text-sm font-semibold text-brand">
-            {opened}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("representative")}
-          </p>
-          <p className="mt-0.5 truncate text-sm font-semibold text-brand">
-            {project.representative?.full_name ||
-              project.representative?.email ||
-              t("representativeUnassigned")}
-          </p>
-        </div>
+        <ProjectSubmitBeforeCard
+          locale={locale}
+          projectId={project.id}
+          currentSubmitBefore={project.submit_before}
+        />
         <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
           <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             {t("notes")}
