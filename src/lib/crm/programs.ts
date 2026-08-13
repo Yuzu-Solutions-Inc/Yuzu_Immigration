@@ -63,6 +63,25 @@ export function defaultJurisdictionForProgram(
   return "federal";
 }
 
+const PARTICIPANT_ROLE_RANK: Record<ParticipantRole, number> = {
+  principal: 0,
+  spouse: 1,
+  partner: 2,
+  dependent: 3,
+  sponsor: 4,
+  accompanying: 5,
+};
+
+export function compareParticipantRole(a: string, b: string): number {
+  const left = PARTICIPANT_ROLE_RANK[a as ParticipantRole] ?? 50;
+  const right = PARTICIPANT_ROLE_RANK[b as ParticipantRole] ?? 50;
+  return left - right;
+}
+
+export function sortByPrincipalFirst<T extends { role: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => compareParticipantRole(a.role, b.role));
+}
+
 export function defaultRolesForComposition(
   composition: ProjectComposition,
 ): ParticipantRole[] {

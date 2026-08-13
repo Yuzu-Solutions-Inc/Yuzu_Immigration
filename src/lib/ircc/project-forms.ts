@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 
+import { compareParticipantRole } from "@/lib/crm/programs";
 import type { ProgramFamily } from "@/db/schema";
 import {
   detectCommonLaw,
@@ -184,13 +185,25 @@ export async function listActiveProjectPeople(
     });
   }
 
-  out.sort((a, b) => {
-    if (a.role === "principal" && b.role !== "principal") return -1;
-    if (b.role === "principal" && a.role !== "principal") return 1;
-    return 0;
-  });
+  out.sort((a, b) => compareParticipantRole(a.role, b.role));
 
   return out;
+}
+
+export function sortFormsPrincipalFirst<
+  T extends { person_id: string | null; sort_order: number },
+>(forms: T[], people: { id: string; role: string }[]): T[] {
+  const rank = new Map<string, number>();
+  [...people]
+    .sort((a, b) => compareParticipantRole(a.role, b.role))
+    .forEach((person, index) => rank.set(person.id, index));
+
+  return [...forms].sort((a, b) => {
+    const left = a.person_id ? (rank.get(a.person_id) ?? 99) : 0;
+    const right = b.person_id ? (rank.get(b.person_id) ?? 99) : 0;
+    if (left !== right) return left - right;
+    return a.sort_order - b.sort_order;
+  });
 }
 
 export async function seedProjectForms(
@@ -606,7 +619,9 @@ export async function listProjectForms(
     console.error("listProjectForms:", error.message);
     return [];
   }
-  return (data ?? []) as ProjectFormRow[];
+  const rows = (data ?? []) as ProjectFormRow[];
+  const people = await listActiveProjectPeople(supabase, projectId);
+  return sortFormsPrincipalFirst(rows, people);
 }
 
 export async function getProjectFormAnswers(
@@ -836,6 +851,10 @@ export async function loadShareContext(token: string) {
     await getOrgDataKey(resolved.organizationId),
   );
   const principal = people.find((p) => p.role === "principal") ?? people[0];
+  const forms = sortFormsPrincipalFirst(
+    (formsRes.data ?? []) as ProjectFormRow[],
+    people,
+  );
   const store = normalizeAnswersStore(
     decryptAnswersValue(
       answersRes.data?.answers,
@@ -856,7 +875,7 @@ export async function loadShareContext(token: string) {
     : { data: null };
 
   const peopleWithAnswers = people.map((person) => {
-    const formCodes = (formsRes.data ?? [])
+    const formCodes = forms
       .filter(
         (f: ProjectFormRow) =>
           f.person_id === person.id ||
@@ -888,7 +907,7 @@ export async function loadShareContext(token: string) {
   return {
     ...resolved,
     project,
-    forms: (formsRes.data ?? []) as ProjectFormRow[],
+    forms,
     answersStore: store,
     people: peopleWithAnswers,
     currentSection:

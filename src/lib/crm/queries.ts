@@ -15,6 +15,7 @@ import {
   decryptProjectRow,
 } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
+import { sortByPrincipalFirst } from "@/lib/crm/programs";
 
 export type PersonRow = {
   id: string;
@@ -445,10 +446,12 @@ export async function getProjectParticipants(
     ]),
   );
 
-  return participants.map((row) => ({
-    ...(row as ParticipantRow),
-    person: byId.get(row.person_id as string),
-  }));
+  return sortByPrincipalFirst(
+    participants.map((row) => ({
+      ...(row as ParticipantRow),
+      person: byId.get(row.person_id as string),
+    })),
+  );
 }
 
 export async function getPersonProjects(personId: string): Promise<
