@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { CircleCheck, Trash2 } from "lucide-react";
+import { Circle, CircleCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -113,9 +113,7 @@ export function ProjectDocumentsPanel({
             const submitted = Boolean(row.file);
             const title = [
               documentLabel(row, t),
-              row.is_required ? t("required") : null,
               showPerson && person ? person.displayName : null,
-              t(`statuses.${row.status}`),
               row.consultant_note,
             ]
               .filter(Boolean)
@@ -128,11 +126,11 @@ export function ProjectDocumentsPanel({
                     title={title}
                   >
                     {documentLabel(row, t)}
-                    <span className="font-normal text-muted-foreground">
-                      {row.is_required ? ` · ${t("required")}` : ""}
-                      {showPerson && person ? ` · ${person.displayName}` : ""}
-                      {!submitted ? ` · ${t(`statuses.${row.status}`)}` : ""}
-                    </span>
+                    {showPerson && person ? (
+                      <span className="font-normal text-muted-foreground">
+                        {` · ${person.displayName}`}
+                      </span>
+                    ) : null}
                   </p>
                     {row.file ? (
                       <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
@@ -173,7 +171,12 @@ export function ProjectDocumentsPanel({
                         className="size-4 shrink-0 text-emerald-600"
                         aria-label={t("statusUploaded")}
                       />
-                    ) : null}
+                    ) : (
+                      <Circle
+                        className="size-4 shrink-0 text-gray-300"
+                        aria-label={t("statusMissing")}
+                      />
+                    )}
                 </div>
               </li>
             );

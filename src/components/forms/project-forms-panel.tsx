@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { CircleCheck, Download, Loader2 } from "lucide-react";
+import { Circle, CircleCheck, Download, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -224,18 +224,11 @@ export function ProjectFormsPanel({
                       </p>
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
                         {form.form_code.toUpperCase()}
-                        {form.is_required ? ` · ${t("required")}` : ""}
                         {assignee
                           ? ` · ${assignee.displayName}`
                           : ` · ${t("projectScoped")}`}
                       </p>
                     </div>
-                    {ready ? (
-                      <CircleCheck
-                        className="size-4 shrink-0 text-emerald-600"
-                        aria-label={t("statuses.ready")}
-                      />
-                    ) : null}
                     {ready ? (
                       <div className="flex shrink-0 items-center opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[[data-downloading]]:opacity-100">
                         <Button
@@ -258,6 +251,17 @@ export function ProjectFormsPanel({
                         </Button>
                       </div>
                     ) : null}
+                    {ready ? (
+                      <CircleCheck
+                        className="size-4 shrink-0 text-emerald-600"
+                        aria-label={t("statuses.ready")}
+                      />
+                    ) : (
+                      <Circle
+                        className="size-4 shrink-0 text-gray-300"
+                        aria-label={t("statuses.todo")}
+                      />
+                    )}
                   </div>
                 </li>
               );
