@@ -76,6 +76,7 @@
     "orgLabel": "Organization",
     "roleLabel": "Role",
     "newProject": "New project",
+    "newPerson": "New person",
     "newProjectHint": "Open a file in one screen — people and program together.",
     "recentProjects": "Recent projects",
     "viewAllProjects": "View all projects",

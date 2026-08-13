@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   Plus,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -54,10 +55,42 @@ function persistSidebarCollapsed(collapsed: boolean) {
   document.cookie = `${SIDEBAR_COLLAPSED_COOKIE}=${collapsed ? "1" : "0"}; Path=/; Max-Age=31536000; SameSite=Lax`;
 }
 
+function SidebarCreateLink({
+  href,
+  label,
+  collapsed,
+  onNavigate,
+  icon: Icon,
+}: {
+  href: "/projects/new" | "/people/new";
+  label: string;
+  collapsed: boolean;
+  onNavigate?: () => void;
+  icon: typeof Plus;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      aria-label={label}
+      title={collapsed ? label : undefined}
+      className={cn(
+        collapsed
+          ? collapsedItemClass
+          : cn(buttonVariants({ size: "sm" }), "w-full"),
+        "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
+      )}
+    >
+      {collapsed ? <Icon className="size-4" aria-hidden /> : label}
+    </Link>
+  );
+}
+
 function SidebarBody({
   organizations,
   activeOrganizationId,
   newProjectLabel,
+  newPersonLabel,
   canCreate,
   collapsed = false,
   onNavigate,
@@ -66,6 +99,7 @@ function SidebarBody({
   organizations: OrgSwitcherOption[];
   activeOrganizationId: string;
   newProjectLabel: string;
+  newPersonLabel: string;
   canCreate: boolean;
   collapsed?: boolean;
   onNavigate?: () => void;
@@ -93,7 +127,7 @@ function SidebarBody({
       <div
         className={cn(
           "space-y-4 border-b border-sidebar-border py-5",
-          collapsed ? "flex flex-col items-center px-2" : "px-4 pr-10",
+          collapsed ? "flex flex-col items-center px-2" : "px-3",
         )}
       >
         {collapsed ? (
@@ -113,7 +147,9 @@ function SidebarBody({
             </button>
           ) : null
         ) : (
-          <BrandLogo href="/home" size="sm" inverted />
+          <div className="pr-8">
+            <BrandLogo href="/home" size="sm" inverted />
+          </div>
         )}
         <OrgSwitcher
           organizations={organizations}
@@ -122,24 +158,22 @@ function SidebarBody({
           collapsed={collapsed}
         />
         {canCreate ? (
-          <Link
-            href="/projects/new"
-            onClick={onNavigate}
-            aria-label={newProjectLabel}
-            title={collapsed ? newProjectLabel : undefined}
-            className={cn(
-              collapsed
-                ? collapsedItemClass
-                : cn(buttonVariants({ size: "sm" }), "w-full"),
-              "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
-            )}
-          >
-            {collapsed ? (
-              <Plus className="size-4" aria-hidden />
-            ) : (
-              newProjectLabel
-            )}
-          </Link>
+          <>
+            <SidebarCreateLink
+              href="/projects/new"
+              label={newProjectLabel}
+              collapsed={collapsed}
+              onNavigate={onNavigate}
+              icon={Plus}
+            />
+            <SidebarCreateLink
+              href="/people/new"
+              label={newPersonLabel}
+              collapsed={collapsed}
+              onNavigate={onNavigate}
+              icon={UserPlus}
+            />
+          </>
         ) : null}
       </div>
 
@@ -226,12 +260,14 @@ export function DesktopSidebar({
   organizations,
   activeOrganizationId,
   newProjectLabel,
+  newPersonLabel,
   canCreate,
   defaultCollapsed = false,
 }: {
   organizations: OrgSwitcherOption[];
   activeOrganizationId: string;
   newProjectLabel: string;
+  newPersonLabel: string;
   canCreate: boolean;
   defaultCollapsed?: boolean;
 }) {
@@ -248,6 +284,7 @@ export function DesktopSidebar({
         organizations={organizations}
         activeOrganizationId={activeOrganizationId}
         newProjectLabel={newProjectLabel}
+        newPersonLabel={newPersonLabel}
         canCreate={canCreate}
         collapsed={collapsed}
         onToggleCollapse={() => {
@@ -266,11 +303,13 @@ export function MobileSidebarTrigger({
   organizations,
   activeOrganizationId,
   newProjectLabel,
+  newPersonLabel,
   canCreate,
 }: {
   organizations: OrgSwitcherOption[];
   activeOrganizationId: string;
   newProjectLabel: string;
+  newPersonLabel: string;
   canCreate: boolean;
 }) {
   const t = useTranslations("nav");
@@ -299,6 +338,7 @@ export function MobileSidebarTrigger({
           organizations={organizations}
           activeOrganizationId={activeOrganizationId}
           newProjectLabel={newProjectLabel}
+          newPersonLabel={newPersonLabel}
           canCreate={canCreate}
           onNavigate={() => setOpen(false)}
         />

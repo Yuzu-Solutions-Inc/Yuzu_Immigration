@@ -42,7 +42,7 @@ export function OrgSwitcher({
       <p
         title={collapsed ? active.name : undefined}
         className={cn(
-          variant === "sidebar" && "text-xs text-sidebar-foreground/55",
+          variant === "sidebar" && "w-full text-xs text-sidebar-foreground/55",
           variant === "header" && "text-sm font-medium text-brand",
           collapsed
             ? "flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent text-[11px] font-semibold tracking-wide text-sidebar-foreground"
@@ -61,7 +61,7 @@ export function OrgSwitcher({
   return (
     <form
       action={switchOrganizationAction}
-      className={cn(collapsed && "flex justify-center")}
+      className={cn(collapsed ? "flex justify-center" : "w-full")}
     >
       <input type="hidden" name="locale" value={locale} />
       <label
@@ -91,7 +91,7 @@ export function OrgSwitcher({
           className={cn(
             "h-9 w-full min-w-0 truncate rounded-xl border px-2.5 text-sm font-medium outline-none focus-visible:ring-3",
             variant === "sidebar" &&
-              "h-8 border-sidebar-border bg-sidebar-accent px-2 text-xs text-sidebar-foreground focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/30",
+              "h-9 rounded-lg border-sidebar-border bg-sidebar-accent px-3 text-sm text-sidebar-foreground focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/30",
             variant === "header" &&
               "border-border bg-surface text-brand focus-visible:border-ring focus-visible:ring-ring/30",
             collapsed &&

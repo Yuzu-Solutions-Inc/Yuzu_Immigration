@@ -33,6 +33,7 @@ export async function DashboardShell({
         organizations={organizations}
         activeOrganizationId={activeOrganizationId}
         newProjectLabel={tHome("newProject")}
+        newPersonLabel={tHome("newPerson")}
         canCreate={canCreate}
         defaultCollapsed={sidebarCollapsed}
       />
@@ -43,6 +44,7 @@ export async function DashboardShell({
             organizations={organizations}
             activeOrganizationId={activeOrganizationId}
             newProjectLabel={tHome("newProject")}
+            newPersonLabel={tHome("newPerson")}
             canCreate={canCreate}
           />
           <div className="min-w-0 flex-1">

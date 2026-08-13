@@ -76,6 +76,7 @@
     "orgLabel": "Organización",
     "roleLabel": "Rol",
     "newProject": "Nuevo proyecto",
+    "newPerson": "Nueva persona",
     "newProjectHint": "Abra un expediente en una sola pantalla: personas y programa juntos.",
     "recentProjects": "Proyectos recientes",
     "viewAllProjects": "Ver todos los proyectos",
