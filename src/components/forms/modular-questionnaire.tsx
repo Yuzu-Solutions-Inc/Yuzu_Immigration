@@ -231,8 +231,8 @@ function FieldControl({
 
 function RevealedFromAnswer({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-3 ml-1 border-l-2 border-action/35 pl-4">
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    <div className="mt-3 ml-1 space-y-4 border-l-2 border-action/35 pl-4">
+      {children}
     </div>
   );
 }
@@ -248,7 +248,9 @@ function fieldColSpan(col: TableColumn) {
 function groupFieldLabel(
   key: string,
   t: ReturnType<typeof useTranslations>,
+  group: QuestionnaireFieldGroup,
 ): string {
+  if (group.useFieldLabels) return t(`fields.${key}`);
   if (key === "phoneCountryCode") return t("fields.phoneCode");
   if (key === "phone") return t("fields.phoneNumber");
   if (key === "phoneType") return t("fields.phoneKind");
@@ -282,8 +284,10 @@ function groupFieldLabel(
   return t(`fields.${key}`);
 }
 
-function groupFieldSpan(field: CanonicalField) {
-  if (field.type === "textarea" || field.wide) return "col-span-2 sm:col-span-3";
+function groupFieldSpan(field: CanonicalField, columns?: 2 | 3) {
+  if (field.type === "textarea" || field.wide) {
+    return columns === 2 ? "sm:col-span-2" : "col-span-2 sm:col-span-3";
+  }
   if (
     field.key === "streetName" ||
     field.key === "resStreetName" ||
@@ -306,26 +310,30 @@ function FieldGroupEditor({
   answers,
   onChange,
   t,
+  th,
 }: {
   group: QuestionnaireFieldGroup;
   fields: CanonicalField[];
   answers: Record<string, unknown>;
   onChange: (key: string, value: string) => void;
   t: ReturnType<typeof useTranslations>;
+  th: ReturnType<typeof useTranslations>;
 }) {
   if (fields.length === 0) return null;
+  const twoCol = group.columns === 2;
   const controls = fields.map((field) => (
     <div
       key={field.key}
       className={
         group.layout === "inline"
           ? inlineFieldClass(field.key)
-          : groupFieldSpan(field)
+          : groupFieldSpan(field, group.columns)
       }
     >
       <FieldControl
         id={`group-${group.key}-${field.key}`}
-        label={groupFieldLabel(field.key, t)}
+        label={groupFieldLabel(field.key, t, group)}
+        help={field.helpKey ? th(field.helpKey) : null}
         type={field.type}
         value={String(answers[field.key] ?? "")}
         onChange={(v) => onChange(field.key, v)}
@@ -339,7 +347,7 @@ function FieldGroupEditor({
     </div>
   ));
   return (
-    <div className="space-y-2 sm:col-span-2">
+    <div className="space-y-2">
       <h4 className="font-heading text-sm font-semibold text-brand">
         {t(`groups.${group.key}`)}
       </h4>
@@ -347,7 +355,14 @@ function FieldGroupEditor({
         <div className="flex min-w-0 gap-2">{controls}</div>
       ) : (
         <div className="rounded-xl border border-border bg-surface px-3 py-3">
-          <div className="grid min-w-0 grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3">
+          <div
+            className={cn(
+              "grid min-w-0 gap-x-3 gap-y-3",
+              twoCol
+                ? "grid-cols-1 sm:grid-cols-2"
+                : "grid-cols-2 sm:grid-cols-3",
+            )}
+          >
             {controls}
           </div>
         </div>
@@ -715,6 +730,7 @@ export function ModularQuestionnaire({
           answers={answers}
           onChange={update}
           t={t}
+          th={th}
         />,
       );
     }
@@ -736,6 +752,7 @@ export function ModularQuestionnaire({
             answers={answers}
             onChange={update}
             t={t}
+            th={th}
           />,
         );
       }
@@ -966,7 +983,7 @@ export function ModularQuestionnaire({
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">{buildSectionNodes()}</div>
+      <div className="space-y-6">{buildSectionNodes()}</div>
 
       {errorMessage ? (
         <p className="text-sm text-destructive" role="alert">

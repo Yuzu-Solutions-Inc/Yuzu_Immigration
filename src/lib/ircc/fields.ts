@@ -115,7 +115,19 @@ export type QuestionnaireFieldGroup = {
   fieldKeys: string[];
   /** Single-row compact controls instead of a wrapped card. */
   layout?: "inline";
+  /** Inner grid; omit for the compact 3-column address/family cards. */
+  columns?: 2 | 3;
+  /** Use full `forms.fields.*` labels instead of shortened card labels. */
+  useFieldLabels?: boolean;
 };
+
+function subsection(
+  key: string,
+  section: string,
+  fieldKeys: string[],
+): QuestionnaireFieldGroup {
+  return { key, section, fieldKeys, columns: 2, useFieldLabels: true };
+}
 
 export const QUESTIONNAIRE_SECTIONS = [
   "identity",
@@ -1871,6 +1883,171 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
 ];
 
 export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
+  subsection("identityName", "identity", [
+    "familyName",
+    "givenName",
+    "sex",
+    "dob",
+  ]),
+  subsection("identityBirth", "identity", [
+    "placeBirthCity",
+    "placeBirthCountry",
+    "citizenship",
+    "maritalStatus",
+  ]),
+  subsection("identityAlias", "identity", [
+    "hasAlias",
+    "aliasFamilyName",
+    "aliasGivenName",
+  ]),
+  subsection("identityLanguages", "identity", [
+    "nativeLang",
+    "ableToCommunicate",
+    "preferredLang",
+    "langTest",
+  ]),
+  subsection("designee", "identity", [
+    "hasDesignee",
+    "designeeFamilyName",
+    "designeeGivenName",
+    "designeeRelationship",
+  ]),
+  subsection("custodian", "identity", [
+    "needsCustodian",
+    "custodianFamilyName",
+    "custodianGivenName",
+    "custodianDob",
+    "custodianStatus",
+    "custodianAddress",
+    "custodianTelephone",
+  ]),
+  subsection("currentResidence", "residence", [
+    "currentCountry",
+    "currentStatus",
+    "corFrom",
+    "corTo",
+    "corOther",
+  ]),
+  subsection("countryWhereApplying", "residence", [
+    "cwaCountry",
+    "cwaStatus",
+    "cwaOther",
+    "cwaFrom",
+    "cwaTo",
+  ]),
+  subsection("passport", "passport", [
+    "passportNumber",
+    "passportCountry",
+    "passportIssue",
+    "passportExpiry",
+  ]),
+  subsection("nationalId", "passport", [
+    "natIdNumber",
+    "natIdCountry",
+    "natIdIssue",
+    "natIdExpiry",
+  ]),
+  subsection("usVisaCard", "passport", [
+    "usCardNumber",
+    "usCardExpiry",
+  ]),
+  subsection("school", "study", [
+    "schoolName",
+    "schoolAddress",
+    "schoolCity",
+    "schoolProvince",
+    "dli",
+    "caqNumber",
+    "caqExpiry",
+  ]),
+  subsection("studyProgram", "study", [
+    "studyLevel",
+    "fieldOfStudy",
+    "studyFrom",
+    "studyTo",
+  ]),
+  subsection("studyFunding", "study", [
+    "tuitionAmount",
+    "availableFunds",
+    "funds",
+    "fundsOtherPerson",
+  ]),
+  subsection("studyPal", "study", ["palNumber", "palExpiry"]),
+  subsection("visitPurposeGroup", "visit", [
+    "visitPurpose",
+    "visitPurposeOther",
+  ]),
+  subsection("visitStay", "visit", ["visitFrom", "visitTo"]),
+  subsection("visitHost", "visit", [
+    "visitHostName",
+    "visitHostRelationship",
+    "visitFunds",
+  ]),
+  subsection("visitInland", "visit", [
+    "visitorApplyExtend",
+    "visitorApplyRestore",
+    "visitorOrigEntryDate",
+    "visitorOrigEntryPlace",
+    "visitorRecentEntryDate",
+    "visitorRecentEntryPlace",
+    "visitorPrevDocNum",
+  ]),
+  subsection("workJob", "work", [
+    "employerName",
+    "employerAddress",
+    "jobTitle",
+    "jobDescription",
+  ]),
+  subsection("workLocation", "work", [
+    "workProvince",
+    "workCity",
+    "workLocationAddress",
+    "workFrom",
+    "workTo",
+    "workCaqNumber",
+    "workCaqExpiry",
+  ]),
+  subsection("workLcp", "work", [
+    "lcpChildCare",
+    "lcpDisabled",
+    "lcpElderly",
+    "lcpOther",
+    "lcpNoPersons",
+  ]),
+  subsection("workInlandApply", "work", [
+    "applyingExtend",
+    "applyingRestore",
+    "applyingNewEmployer",
+    "applyingTrp",
+  ]),
+  subsection("workInlandEntry", "work", [
+    "origEntryDate",
+    "origEntryPlace",
+    "purposeOfVisit",
+    "purposeOther",
+    "recentEntryDate",
+    "recentEntryPlace",
+    "prevDocNum",
+  ]),
+  subsection("workInlandPurpose", "work", [
+    "workPurposeType",
+    "workPurposeOther",
+    "provNominee",
+  ]),
+  subsection("bgMedical", "background", [
+    "bgTb",
+    "bgDisorder",
+    "bgMedicalDetails",
+  ]),
+  subsection("bgImmigration", "background", [
+    "bgOverstay",
+    "bgRefused",
+    "bgClaimAsylum",
+    "bgRefusedDetails",
+  ]),
+  subsection("bgCrime", "background", ["bgCrime", "bgCrimeDetails"]),
+  subsection("bgMilitary", "background", ["bgMilitary", "bgMilitaryDetails"]),
+  subsection("bgSecurity", "background", ["bgViolence", "bgWitness"]),
   {
     key: "phone",
     section: "contact",
