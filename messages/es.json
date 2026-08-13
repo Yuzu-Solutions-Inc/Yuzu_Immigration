@@ -72,7 +72,7 @@
     "title": "Inicio",
     "welcome": "Bienvenido de nuevo, {name}",
     "welcomeFallback": "Bienvenido de nuevo",
-    "dashboardSubtitle": "Plazos, revisiones y expedientes que requieren una decisión.",
+    "dashboardSubtitle": "Lo que vence, y cómo se mueve la carga de trabajo.",
     "orgLabel": "Organización",
     "roleLabel": "Rol",
     "newProject": "Añadir proyecto",
@@ -81,74 +81,37 @@
     "recentProjects": "Proyectos recientes",
     "viewAllProjects": "Ver todos los proyectos",
     "emptyProjects": "Aún no hay proyectos. Empiece por su primer expediente de inmigración.",
-    "stats": {
-      "activeProjects": "Proyectos abiertos",
-      "people": "Personas",
-      "blocked": "Atascados / en espera",
-      "openFiles": "Expedientes abiertos",
-      "openFilesHint": "Nuevos y en curso",
-      "openFilesHintSubmitted": "{count} presentados a IRCC",
-      "needsAttention": "Requieren atención",
-      "needsAttentionHint": "Atascados o en espera",
-      "docsToReview": "Docs por revisar",
-      "docsToReviewHint": "Subidos por clientes",
-      "deadlines": "Vencen en 30 días",
-      "deadlinesHint": "Fechas de presentación",
-      "expiries": "Vencimientos de estatus",
-      "expiriesHint": "Vencidos o próximos 30 días",
-      "awaitingClient": "En espera del cliente",
-      "awaitingClientHint": "Documentos aún solicitados"
+    "dueIn14": "{count, plural, one {# expediente por presentar en los próximos 14 días} other {# expedientes por presentar en los próximos 14 días}}",
+    "dueIn14None": "Ningún expediente por presentar en los próximos 14 días",
+    "overdue": "{count, plural, one {# vencido} other {# vencidos}}",
+    "docsToReview": "{count, plural, one {# documento por revisar} other {# documentos por revisar}}",
+    "stuckWaiting": "{count, plural, one {# atascado o en espera} other {# atascados o en espera}}",
+    "charts": {
+      "projectsByStatus": "Proyectos por estado",
+      "projectsByStatusEmpty": "Aún no hay proyectos para graficar.",
+      "peopleByVisa": "Personas por tipo de visa",
+      "peopleByVisaEmpty": "Nadie está vinculado a un expediente abierto.",
+      "submitTrend": "Proyectos por fecha de presentación",
+      "submitTrendHint": "Expedientes con fecha de presentación, agrupados por semana.",
+      "submitTrendEmpty": "No hay fechas de presentación en este periodo.",
+      "thisWeek": "Esta semana"
     },
-    "actions": {
-      "title": "Requieren su acción",
-      "empty": "Está al día: no hay nada urgente por ahora.",
-      "docReviewDetail": "{doc} · {person}",
-      "kinds": {
-        "doc_review": "Revisar documento",
-        "stuck": "Atascado",
-        "waiting": "En espera",
-        "submit_overdue": "Presentación vencida",
-        "expiry_overdue": "Estatus vencido",
-        "share_expiring": "Enlace del cliente"
-      }
-    },
-    "awaiting": {
-      "title": "En espera del cliente",
-      "empty": "No hay documentos pendientes en expedientes abiertos.",
-      "docs": "{count, plural, one {# documento} other {# documentos}} aún solicitado(s)"
-    },
-    "deadlines": {
-      "title": "Fechas de presentación",
-      "empty": "No hay fechas de presentación en los próximos 45 días."
-    },
-    "active": {
-      "title": "Expedientes activos",
-      "empty": "No hay expedientes abiertos.",
-      "forms": "Formularios {done}/{total}",
-      "docs": "Docs {done}/{total}"
-    },
-    "activity": {
-      "title": "Cambios de estatus recientes",
-      "empty": "Los cambios de estatus aparecerán aquí.",
-      "changedTo": "Marcado {status}"
-    },
-    "expiries": {
-      "title": "Vencimientos de estatus próximos",
-      "viewPeople": "Ver personas",
-      "empty": "No hay fechas de vencimiento en los próximos 90 días.",
+    "upcoming": {
+      "title": "Próximas presentaciones",
+      "empty": "No hay fechas de presentación en expedientes abiertos.",
       "columns": {
-        "person": "Persona",
-        "status": "Estatus",
-        "expires": "Vence",
-        "timing": "Plazo"
+        "project": "Proyecto",
+        "due": "Vence",
+        "documents": "Documentos",
+        "forms": "Formularios"
       },
+      "docs": "{done}/{total}",
+      "forms": "{percent}%"
+    },
+    "timing": {
       "overdue": "{days}d de retraso",
       "today": "Hoy",
       "inDays": "En {days}d"
-    },
-    "placeholders": {
-      "activityTitle": "Actividad reciente",
-      "activityBody": "Las actualizaciones de expedientes y eventos del portal aparecerán en este feed."
     }
   },
   "nav": {
@@ -278,6 +241,10 @@
     "columnCreated": "Creado",
     "columnSubmitBefore": "Enviar antes",
     "columnRepresentative": "Representante",
+    "columnDocuments": "Documentos",
+    "columnForms": "Formularios",
+    "docsProgress": "{done}/{total}",
+    "formsProgress": "{percent}%",
     "filterName": "Nombre del proyecto",
     "filterNamePlaceholder": "Buscar por nombre…",
     "filterProgram": "Tipo de visa",

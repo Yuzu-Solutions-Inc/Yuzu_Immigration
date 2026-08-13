@@ -59,13 +59,13 @@ export function isFormMandatoryComplete(
 }
 
 /**
- * Share of currently visible questionnaire questions that have an answer.
+ * Visible questionnaire questions that have an answer, plus the visible total.
  * Hidden/gated fields are excluded so the percent tracks what the person sees.
  */
-export function questionnaireFillPercent(
+export function questionnaireFillCounts(
   formCodes: string[],
   answers: Record<string, unknown>,
-): number {
+): { filled: number; total: number } {
   const codes = formCodes.map((code) => code.toLowerCase());
   let filled = 0;
   let total = 0;
@@ -94,6 +94,18 @@ export function questionnaireFillPercent(
     }
   }
 
+  return { filled, total };
+}
+
+/**
+ * Share of currently visible questionnaire questions that have an answer.
+ * Hidden/gated fields are excluded so the percent tracks what the person sees.
+ */
+export function questionnaireFillPercent(
+  formCodes: string[],
+  answers: Record<string, unknown>,
+): number {
+  const { filled, total } = questionnaireFillCounts(formCodes, answers);
   if (total === 0) return 0;
   return Math.round((filled / total) * 100);
 }

@@ -19,6 +19,22 @@ export function addDaysIso(days: number, from = new Date()) {
   return todayDateInputValue(date);
 }
 
+/** Monday of the ISO week containing `from`. */
+export function startOfIsoWeek(from = new Date()) {
+  const date = new Date(from);
+  date.setHours(12, 0, 0, 0);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  return todayDateInputValue(date);
+}
+
+export function shiftIsoDate(isoDate: string, days: number) {
+  const date = new Date(`${isoDateOnly(isoDate)}T12:00:00`);
+  date.setDate(date.getDate() + days);
+  return todayDateInputValue(date);
+}
+
 export function formatDisplayDate(isoDate: string, locale: string) {
   return new Date(`${isoDateOnly(isoDate)}T12:00:00`).toLocaleDateString(
     locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",

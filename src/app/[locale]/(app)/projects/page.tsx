@@ -5,6 +5,7 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectsTable } from "@/components/projects/projects-table";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { getProjectsProgress } from "@/lib/crm/progress";
 import { listOrgMembers, listProjects } from "@/lib/crm/queries";
 
 export default async function ProjectsPage({
@@ -19,10 +20,14 @@ export default async function ProjectsPage({
   const th = await getTranslations("appHome");
   const membership = await getPrimaryMembership();
   const canCreate = canCreateRecords(membership?.role);
-  const [projects, members] = await Promise.all([
-    listProjects(),
-    listOrgMembers(),
+  const projectsPromise = listProjects();
+  const membersPromise = listOrgMembers();
+  const projects = await projectsPromise;
+  const [members, progressMap] = await Promise.all([
+    membersPromise,
+    getProjectsProgress(projects.map((project) => project.id)),
   ]);
+  const progressById = Object.fromEntries(progressMap);
 
   return (
     <div className="space-y-6">
@@ -44,6 +49,7 @@ export default async function ProjectsPage({
       ) : (
         <ProjectsTable
           projects={projects}
+          progressById={progressById}
           members={members.map((m) => ({
             user_id: m.user_id,
             full_name: m.profile.full_name,

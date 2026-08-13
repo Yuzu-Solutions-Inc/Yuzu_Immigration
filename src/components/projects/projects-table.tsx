@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { setProjectsStatusAction } from "@/app/actions/projects";
+import { docsPercent, ProgressMeter } from "@/components/home/progress-meter";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +33,7 @@ import {
 import type { ProgramFamily, ProjectStatus } from "@/db/schema";
 import { Link, useRouter } from "@/i18n/navigation";
 import { SELECTABLE_PROGRAM_FAMILIES } from "@/lib/crm/programs";
+import type { ProjectProgress } from "@/lib/crm/progress";
 import type { ProjectRow } from "@/lib/crm/queries";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
 import { cn } from "@/lib/utils";
@@ -41,7 +43,9 @@ type SortKey =
   | "program_family"
   | "created_at"
   | "submit_before"
-  | "representative";
+  | "representative"
+  | "documents"
+  | "forms";
 type SortDir = "asc" | "desc";
 
 type MemberOption = {
@@ -77,12 +81,51 @@ const selectClassName =
 const headerControlClassName =
   "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
+function SortButton({
+  column,
+  label,
+  sortKey,
+  sortDir,
+  onToggle,
+}: {
+  column: SortKey;
+  label: string;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onToggle: (column: SortKey) => void;
+}) {
+  const active = sortKey === column;
+  const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(column)}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
+        "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        active ? "text-brand" : "text-foreground",
+      )}
+    >
+      {label}
+      <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
+    </button>
+  );
+}
+
+const EMPTY_PROGRESS: ProjectProgress = {
+  docsDone: 0,
+  docsTotal: 0,
+  formPercent: 0,
+};
+
 export function ProjectsTable({
   projects,
   members,
+  progressById,
 }: {
   projects: ProjectRow[];
   members: MemberOption[];
+  progressById: Record<string, ProjectProgress>;
 }) {
   const t = useTranslations("projects");
   const tprog = useTranslations("programs");
@@ -146,6 +189,16 @@ export function ProjectsTable({
         const bLabel =
           b.representative?.full_name || b.representative?.email || "";
         cmp = aLabel.localeCompare(bLabel, undefined, { sensitivity: "base" });
+      } else if (sortKey === "documents") {
+        const aDocs = progressById[a.id] ?? EMPTY_PROGRESS;
+        const bDocs = progressById[b.id] ?? EMPTY_PROGRESS;
+        cmp =
+          docsPercent(aDocs.docsDone, aDocs.docsTotal) -
+          docsPercent(bDocs.docsDone, bDocs.docsTotal);
+      } else if (sortKey === "forms") {
+        const aForms = progressById[a.id] ?? EMPTY_PROGRESS;
+        const bForms = progressById[b.id] ?? EMPTY_PROGRESS;
+        cmp = aForms.formPercent - bForms.formPercent;
       } else {
         cmp = compareNullableDates(a.submit_before, b.submit_before);
       }
@@ -161,6 +214,7 @@ export function ProjectsTable({
     representativeFilter,
     sortKey,
     sortDir,
+    progressById,
   ]);
 
   const visibleIds = filteredSorted.map((p) => p.id);
@@ -284,31 +338,6 @@ export function ProjectsTable({
     });
   }
 
-  function SortButton({
-    column,
-    label,
-  }: {
-    column: SortKey;
-    label: string;
-  }) {
-    const active = sortKey === column;
-    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
-    return (
-      <button
-        type="button"
-        onClick={() => toggleSort(column)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
-          "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-          active ? "text-brand" : "text-foreground",
-        )}
-      >
-        {label}
-        <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
-      </button>
-    );
-  }
-
   if (projects.length === 0) {
     return null;
   }
@@ -358,12 +387,21 @@ export function ProjectsTable({
                 />
               </TableHead>
               <TableHead className="min-w-[12rem]">
-                <SortButton column="title" label={t("columnName")} />
+                <SortButton
+                  column="title"
+                  label={t("columnName")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
               </TableHead>
               <TableHead className="min-w-[10rem]">
                 <SortButton
                   column="program_family"
                   label={t("columnProgram")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
                 />
               </TableHead>
               <TableHead className="min-w-[10rem]">
@@ -375,15 +413,45 @@ export function ProjectsTable({
                 <SortButton
                   column="representative"
                   label={t("columnRepresentative")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
                 />
               </TableHead>
               <TableHead>
-                <SortButton column="created_at" label={t("columnCreated")} />
+                <SortButton
+                  column="created_at"
+                  label={t("columnCreated")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
               </TableHead>
               <TableHead>
                 <SortButton
                   column="submit_before"
                   label={t("columnSubmitBefore")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+              </TableHead>
+              <TableHead className="min-w-[6.5rem]">
+                <SortButton
+                  column="documents"
+                  label={t("columnDocuments")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+              </TableHead>
+              <TableHead className="min-w-[5.5rem]">
+                <SortButton
+                  column="forms"
+                  label={t("columnForms")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
                 />
               </TableHead>
             </TableRow>
@@ -461,13 +529,15 @@ export function ProjectsTable({
               </TableHead>
               <TableHead className="h-auto pb-2.5 pt-0" />
               <TableHead className="h-auto pb-2.5 pt-0" />
+              <TableHead className="h-auto pb-2.5 pt-0" />
+              <TableHead className="h-auto pb-2.5 pt-0" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredSorted.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={7}
+                  colSpan={9}
                   className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
                 >
                   {t("noMatches")}
@@ -476,6 +546,7 @@ export function ProjectsTable({
             ) : (
               filteredSorted.map((project) => {
                 const isPending = pendingIds.has(project.id);
+                const progress = progressById[project.id] ?? EMPTY_PROGRESS;
                 return (
                   <TableRow
                     key={project.id}
@@ -537,6 +608,26 @@ export function ProjectsTable({
                     <TableCell className="text-muted-foreground">
                       {formatDate(project.submit_before, locale) ??
                         t("submitBeforeEmpty")}
+                    </TableCell>
+                    <TableCell>
+                      <ProgressMeter
+                        valueLabel={t("docsProgress", {
+                          done: progress.docsDone,
+                          total: progress.docsTotal,
+                        })}
+                        percent={docsPercent(
+                          progress.docsDone,
+                          progress.docsTotal,
+                        )}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <ProgressMeter
+                        valueLabel={t("formsProgress", {
+                          percent: progress.formPercent,
+                        })}
+                        percent={progress.formPercent}
+                      />
                     </TableCell>
                   </TableRow>
                 );

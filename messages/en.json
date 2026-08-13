@@ -72,7 +72,7 @@
     "title": "Home",
     "welcome": "Welcome back, {name}",
     "welcomeFallback": "Welcome back",
-    "dashboardSubtitle": "Deadlines, reviews, and files that need a decision.",
+    "dashboardSubtitle": "What is due, and how the caseload is moving.",
     "orgLabel": "Organization",
     "roleLabel": "Role",
     "newProject": "Add project",
@@ -81,74 +81,37 @@
     "recentProjects": "Recent projects",
     "viewAllProjects": "View all projects",
     "emptyProjects": "No projects yet. Start with your first immigration file.",
-    "stats": {
-      "activeProjects": "Open projects",
-      "people": "People",
-      "blocked": "Stuck / waiting",
-      "openFiles": "Open files",
-      "openFilesHint": "New and in progress",
-      "openFilesHintSubmitted": "{count} submitted to IRCC",
-      "needsAttention": "Needs attention",
-      "needsAttentionHint": "Stuck or waiting",
-      "docsToReview": "Docs to review",
-      "docsToReviewHint": "Uploaded by clients",
-      "deadlines": "Due in 30 days",
-      "deadlinesHint": "Submission dates",
-      "expiries": "Status expiries",
-      "expiriesHint": "Overdue or next 30 days",
-      "awaitingClient": "Awaiting client",
-      "awaitingClientHint": "Documents still requested"
+    "dueIn14": "{count, plural, one {# file to submit in the next 14 days} other {# files to submit in the next 14 days}}",
+    "dueIn14None": "No files to submit in the next 14 days",
+    "overdue": "{count, plural, one {# overdue} other {# overdue}}",
+    "docsToReview": "{count, plural, one {# document to review} other {# documents to review}}",
+    "stuckWaiting": "{count, plural, one {# stuck or waiting} other {# stuck or waiting}}",
+    "charts": {
+      "projectsByStatus": "Projects by status",
+      "projectsByStatusEmpty": "No projects to chart yet.",
+      "peopleByVisa": "People by visa type",
+      "peopleByVisaEmpty": "No people on open files yet.",
+      "submitTrend": "Projects by submit date",
+      "submitTrendHint": "Files with a submit-before date, grouped by week.",
+      "submitTrendEmpty": "No submit dates in this window.",
+      "thisWeek": "This week"
     },
-    "actions": {
-      "title": "Needs your action",
-      "empty": "You’re caught up — nothing urgent right now.",
-      "docReviewDetail": "{doc} · {person}",
-      "kinds": {
-        "doc_review": "Review document",
-        "stuck": "Stuck",
-        "waiting": "Waiting",
-        "submit_overdue": "Submission overdue",
-        "expiry_overdue": "Status expired",
-        "share_expiring": "Client link"
-      }
-    },
-    "awaiting": {
-      "title": "Awaiting client",
-      "empty": "No outstanding document requests on open files.",
-      "docs": "{count, plural, one {# document} other {# documents}} still requested"
-    },
-    "deadlines": {
-      "title": "Submission deadlines",
-      "empty": "No submission dates in the next 45 days."
-    },
-    "active": {
-      "title": "Active files",
-      "empty": "No open files.",
-      "forms": "Forms {done}/{total}",
-      "docs": "Docs {done}/{total}"
-    },
-    "activity": {
-      "title": "Recent status changes",
-      "empty": "Status changes will show up here as you update files.",
-      "changedTo": "Marked {status}"
-    },
-    "expiries": {
-      "title": "Upcoming visa expiries",
-      "viewPeople": "View people",
-      "empty": "No status expiration dates in the next 90 days.",
+    "upcoming": {
+      "title": "Next submissions",
+      "empty": "No submit dates on open files.",
       "columns": {
-        "person": "Person",
-        "status": "Status",
-        "expires": "Expires",
-        "timing": "Timing"
+        "project": "Project",
+        "due": "Due",
+        "documents": "Documents",
+        "forms": "Forms"
       },
+      "docs": "{done}/{total}",
+      "forms": "{percent}%"
+    },
+    "timing": {
       "overdue": "{days}d overdue",
       "today": "Today",
       "inDays": "In {days}d"
-    },
-    "placeholders": {
-      "activityTitle": "Recent activity",
-      "activityBody": "File updates and portal events will show up in this feed."
     }
   },
   "nav": {
@@ -278,6 +241,10 @@
     "columnCreated": "Created",
     "columnSubmitBefore": "Submit before",
     "columnRepresentative": "Representative",
+    "columnDocuments": "Documents",
+    "columnForms": "Forms",
+    "docsProgress": "{done}/{total}",
+    "formsProgress": "{percent}%",
     "filterName": "Project name",
     "filterNamePlaceholder": "Search by name…",
     "filterProgram": "Visa type",

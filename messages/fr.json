@@ -72,7 +72,7 @@
     "title": "Accueil",
     "welcome": "Bon retour, {name}",
     "welcomeFallback": "Bon retour",
-    "dashboardSubtitle": "Échéances, révisions et dossiers qui demandent une décision.",
+    "dashboardSubtitle": "Ce qui arrive à échéance, et comment le volume évolue.",
     "orgLabel": "Organisation",
     "roleLabel": "Rôle",
     "newProject": "Ajouter un projet",
@@ -81,74 +81,37 @@
     "recentProjects": "Projets récents",
     "viewAllProjects": "Voir tous les projets",
     "emptyProjects": "Aucun projet pour l’instant. Commencez par votre premier dossier.",
-    "stats": {
-      "activeProjects": "Projets ouverts",
-      "people": "Personnes",
-      "blocked": "Bloqués / en attente",
-      "openFiles": "Dossiers ouverts",
-      "openFilesHint": "Nouveaux et en cours",
-      "openFilesHintSubmitted": "{count} soumis à IRCC",
-      "needsAttention": "À traiter",
-      "needsAttentionHint": "Bloqués ou en attente",
-      "docsToReview": "Docs à réviser",
-      "docsToReviewHint": "Téléversés par les clients",
-      "deadlines": "Échéances (30 j)",
-      "deadlinesHint": "Dates de dépôt",
-      "expiries": "Expirations de statut",
-      "expiriesHint": "En retard ou 30 prochains jours",
-      "awaitingClient": "En attente du client",
-      "awaitingClientHint": "Documents encore demandés"
+    "dueIn14": "{count, plural, one {# dossier à déposer dans les 14 prochains jours} other {# dossiers à déposer dans les 14 prochains jours}}",
+    "dueIn14None": "Aucun dossier à déposer dans les 14 prochains jours",
+    "overdue": "{count, plural, one {# en retard} other {# en retard}}",
+    "docsToReview": "{count, plural, one {# document à réviser} other {# documents à réviser}}",
+    "stuckWaiting": "{count, plural, one {# bloqué ou en attente} other {# bloqués ou en attente}}",
+    "charts": {
+      "projectsByStatus": "Projets par statut",
+      "projectsByStatusEmpty": "Aucun projet à afficher.",
+      "peopleByVisa": "Personnes par type de visa",
+      "peopleByVisaEmpty": "Personne n’est encore liée à un dossier ouvert.",
+      "submitTrend": "Projets selon la date de dépôt",
+      "submitTrendHint": "Dossiers avec une date de dépôt, regroupés par semaine.",
+      "submitTrendEmpty": "Aucune date de dépôt dans cette période.",
+      "thisWeek": "Cette semaine"
     },
-    "actions": {
-      "title": "À traiter",
-      "empty": "Vous êtes à jour — rien d’urgent pour le moment.",
-      "docReviewDetail": "{doc} · {person}",
-      "kinds": {
-        "doc_review": "Réviser le document",
-        "stuck": "Bloqué",
-        "waiting": "En attente",
-        "submit_overdue": "Dépôt en retard",
-        "expiry_overdue": "Statut expiré",
-        "share_expiring": "Lien client"
-      }
-    },
-    "awaiting": {
-      "title": "En attente du client",
-      "empty": "Aucun document en attente sur les dossiers ouverts.",
-      "docs": "{count, plural, one {# document encore demandé} other {# documents encore demandés}}"
-    },
-    "deadlines": {
-      "title": "Dates de dépôt",
-      "empty": "Aucune date de dépôt dans les 45 prochains jours."
-    },
-    "active": {
-      "title": "Dossiers actifs",
-      "empty": "Aucun dossier ouvert.",
-      "forms": "Formulaires {done}/{total}",
-      "docs": "Docs {done}/{total}"
-    },
-    "activity": {
-      "title": "Changements de statut récents",
-      "empty": "Les mises à jour de statut apparaîtront ici.",
-      "changedTo": "Marqué {status}"
-    },
-    "expiries": {
-      "title": "Expirations de statut à venir",
-      "viewPeople": "Voir les personnes",
-      "empty": "Aucune date d’expiration dans les 90 prochains jours.",
+    "upcoming": {
+      "title": "Prochains dépôts",
+      "empty": "Aucune date de dépôt sur les dossiers ouverts.",
       "columns": {
-        "person": "Personne",
-        "status": "Statut",
-        "expires": "Expire",
-        "timing": "Échéance"
+        "project": "Projet",
+        "due": "Échéance",
+        "documents": "Documents",
+        "forms": "Formulaires"
       },
+      "docs": "{done}/{total}",
+      "forms": "{percent} %"
+    },
+    "timing": {
       "overdue": "{days} j en retard",
       "today": "Aujourd’hui",
       "inDays": "Dans {days} j"
-    },
-    "placeholders": {
-      "activityTitle": "Activité récente",
-      "activityBody": "Les mises à jour de dossiers et les événements du portail s’afficheront dans ce fil."
     }
   },
   "nav": {
@@ -278,6 +241,10 @@
     "columnCreated": "Créé le",
     "columnSubmitBefore": "Soumettre avant",
     "columnRepresentative": "Représentant",
+    "columnDocuments": "Documents",
+    "columnForms": "Formulaires",
+    "docsProgress": "{done}/{total}",
+    "formsProgress": "{percent} %",
     "filterName": "Nom du projet",
     "filterNamePlaceholder": "Rechercher par nom…",
     "filterProgram": "Type de visa",
