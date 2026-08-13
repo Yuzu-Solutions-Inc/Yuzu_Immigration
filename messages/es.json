@@ -573,9 +573,9 @@
       "background": "Background"
     },
     "sectionLedes": {
-      "identity": "Identidad e idiomas, más designado, unión de hecho o tutor si aplica.",
+      "identity": "Identidad e idiomas, más designado o tutor si aplica.",
       "contact": "Mailing address and phone. Residential address only if different.",
-      "family": "Spouse, parents, previous marriage, and children when needed.",
+      "family": "Cónyuge o pareja, padres, unión anterior e hijos cuando aplique.",
       "study": "School and funding details for the study permit.",
       "work": "Job and permit details for the work application.",
       "visit": "Motivo, fechas y anfitrión de la solicitud de visitante.",

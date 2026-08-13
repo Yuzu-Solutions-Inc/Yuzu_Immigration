@@ -550,11 +550,11 @@ export function patchImm5409(xml: string, a: CompanionAnswers): string {
     out = setEmptyTag(out, "yesno", "Y");
   }
   out = setEmptyTag(out, "NameDecl", `${ascii(a.givenName)} ${ascii(a.familyName)}`);
-  if (a.partnerGivenName || a.partnerFamilyName) {
+  if (a.partnerGivenName || a.partnerFamilyName || a.spouseGivenName || a.spouseFamilyName) {
     out = setEmptyTag(
       out,
       "NamePartner",
-      `${ascii(a.partnerGivenName)} ${ascii(a.partnerFamilyName)}`.trim(),
+      `${ascii(a.partnerGivenName || a.spouseGivenName)} ${ascii(a.partnerFamilyName || a.spouseFamilyName)}`.trim(),
     );
   }
   if (a.commonLawCity) out = setEmptyTag(out, "City", ascii(a.commonLawCity));

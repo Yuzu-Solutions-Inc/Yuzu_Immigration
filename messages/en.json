@@ -573,9 +573,9 @@
       "background": "Background"
     },
     "sectionLedes": {
-      "identity": "Identity and language details, plus designee, common-law, or custodian when needed.",
+      "identity": "Identity and language details, plus designee or custodian when needed.",
       "contact": "Mailing address and phone. Residential address only if different.",
-      "family": "Spouse, parents, previous marriage, and children when needed.",
+      "family": "Spouse or partner, parents, previous marriage, and children when needed.",
       "study": "School and funding details for the study permit.",
       "work": "Job and permit details for the work application.",
       "visit": "Purpose, dates, and host for the visitor application.",

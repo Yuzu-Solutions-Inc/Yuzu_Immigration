@@ -216,6 +216,14 @@ const marriedOrCl: ShowWhen = {
   key: "maritalStatus",
   oneOf: ["01", "03"],
 };
+const marriedOnly: ShowWhen = {
+  key: "maritalStatus",
+  equals: "01",
+};
+const commonLawOnly: ShowWhen = {
+  key: "maritalStatus",
+  equals: "03",
+};
 const tempStatus: ShowWhen = {
   key: "currentStatus",
   oneOf: ["03", "04", "05", "06"],
@@ -605,7 +613,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "family",
     type: "date",
     forms: [...PRIMARY],
-    showWhen: marriedOrCl,
+    showWhen: marriedOnly,
   },
   {
     key: "spouseDob",
@@ -645,6 +653,45 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     type: "yesno",
     forms: [...FAMILY_FORM],
     showWhen: marriedOrCl,
+  },
+  {
+    key: "yearsTogether",
+    section: "family",
+    type: "text",
+    maxLength: 10,
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    showWhen: commonLawOnly,
+  },
+  {
+    key: "commonLawStart",
+    section: "family",
+    type: "date",
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    showWhen: commonLawOnly,
+  },
+  {
+    key: "commonLawCity",
+    section: "family",
+    type: "text",
+    maxLength: 80,
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    showWhen: commonLawOnly,
+  },
+  {
+    key: "commonLawProvince",
+    section: "family",
+    type: "text",
+    maxLength: 40,
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    showWhen: commonLawOnly,
+  },
+  {
+    key: "commonLawCountry",
+    section: "family",
+    type: "text",
+    maxLength: 80,
+    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    showWhen: commonLawOnly,
   },
   {
     key: "previouslyMarried",
@@ -1441,93 +1488,20 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   },
   {
     key: "partnerFamilyName",
-    section: "identity",
+    section: "family",
     type: "text",
     maxLength: 80,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
-    showWhen: {
-      or: [
-        { key: "isCommonLaw", equals: "Y" },
-        { key: "maritalStatus", equals: "03" },
-      ],
-    },
+    /** Same person as spouseFamilyName. */
+    hidden: true,
   },
   {
     key: "partnerGivenName",
-    section: "identity",
+    section: "family",
     type: "text",
     maxLength: 80,
     forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
-    showWhen: {
-      or: [
-        { key: "isCommonLaw", equals: "Y" },
-        { key: "maritalStatus", equals: "03" },
-      ],
-    },
-  },
-  {
-    key: "yearsTogether",
-    section: "identity",
-    type: "text",
-    maxLength: 10,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
-    showWhen: {
-      or: [
-        { key: "isCommonLaw", equals: "Y" },
-        { key: "maritalStatus", equals: "03" },
-      ],
-    },
-  },
-  {
-    key: "commonLawCity",
-    section: "identity",
-    type: "text",
-    maxLength: 80,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
-    showWhen: {
-      or: [
-        { key: "isCommonLaw", equals: "Y" },
-        { key: "maritalStatus", equals: "03" },
-      ],
-    },
-  },
-  {
-    key: "commonLawProvince",
-    section: "identity",
-    type: "text",
-    maxLength: 40,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
-    showWhen: {
-      or: [
-        { key: "isCommonLaw", equals: "Y" },
-        { key: "maritalStatus", equals: "03" },
-      ],
-    },
-  },
-  {
-    key: "commonLawCountry",
-    section: "identity",
-    type: "text",
-    maxLength: 80,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
-    showWhen: {
-      or: [
-        { key: "isCommonLaw", equals: "Y" },
-        { key: "maritalStatus", equals: "03" },
-      ],
-    },
-  },
-  {
-    key: "commonLawStart",
-    section: "identity",
-    type: "date",
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
-    showWhen: {
-      or: [
-        { key: "isCommonLaw", equals: "Y" },
-        { key: "maritalStatus", equals: "03" },
-      ],
-    },
+    hidden: true,
   },
   {
     key: "needsCustodian",
@@ -1791,9 +1765,13 @@ export function deriveIsCommonLaw(
 export function applyDerivedAnswers(
   answers: Record<string, unknown>,
 ): Record<string, unknown> {
+  const spouseFamily = String(answers.spouseFamilyName ?? "").trim();
+  const spouseGiven = String(answers.spouseGivenName ?? "").trim();
   return {
     ...answers,
     isCommonLaw: deriveIsCommonLaw(answers.maritalStatus, answers.isCommonLaw),
+    partnerFamilyName: spouseFamily || answers.partnerFamilyName || "",
+    partnerGivenName: spouseGiven || answers.partnerGivenName || "",
   };
 }
 

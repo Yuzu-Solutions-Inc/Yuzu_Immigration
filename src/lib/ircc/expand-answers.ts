@@ -2,7 +2,7 @@
  * Expand questionnaire answers into the shapes IRCC fillers expect.
  */
 
-import { deriveIsCommonLaw, expandDobAnswers } from "./fields";
+import { applyDerivedAnswers, expandDobAnswers } from "./fields";
 
 function splitIsoDate(value: unknown): {
   year?: string;
@@ -111,9 +111,9 @@ function langFromFormLanguage(formLanguage: unknown): {
 export function expandAnswersForFill(
   raw: Record<string, unknown>,
 ): Record<string, unknown> {
-  const out: Record<string, unknown> = {
+  const out: Record<string, unknown> = applyDerivedAnswers({
     ...expandDobAnswers(raw),
-  };
+  });
 
   const derived = langFromFormLanguage(out.formLanguage);
   if (!out.ableToCommunicate) out.ableToCommunicate = derived.ableToCommunicate;
@@ -256,7 +256,7 @@ export function expandAnswersForFill(
   out.applyingTrp = yn(out.applyingTrp, "N") === "Y";
 
   out.hasDesignee = yn(out.hasDesignee, "N");
-  out.isCommonLaw = deriveIsCommonLaw(out.maritalStatus, out.isCommonLaw);
+  out.isCommonLaw = String(out.isCommonLaw ?? "N");
   out.needsCustodian = yn(out.needsCustodian, "N");
   out.hasSiblings = yn(out.hasSiblings, "N");
   if (!Array.isArray(out.siblings)) out.siblings = [];

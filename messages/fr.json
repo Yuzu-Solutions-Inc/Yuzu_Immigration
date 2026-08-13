@@ -573,9 +573,9 @@
       "background": "Antécédents"
     },
     "sectionLedes": {
-      "identity": "Identité et langues, ainsi que désigné, union de fait ou tuteur au besoin.",
+      "identity": "Identité et langues, ainsi que désigné ou tuteur au besoin.",
       "contact": "Adresse postale et téléphone.",
-      "family": "Conjoint, parents, union antérieure et enfants.",
+      "family": "Conjoint ou partenaire, parents, union antérieure et enfants.",
       "study": "École et financement pour le permis d’études.",
       "work": "Emploi et détails du permis de travail.",
       "visit": "Motif, dates et hôte pour la demande de visiteur.",
