@@ -30,6 +30,7 @@ export function LocaleSwitcher({
       <select
         value={locale}
         aria-label={t("label")}
+        title={compact ? LOCALE_LABELS[locale] : undefined}
         onChange={(e) => {
           const next = e.target.value as AppLocale;
           router.replace(pathname, { locale: next });
@@ -40,7 +41,10 @@ export function LocaleSwitcher({
             "border-border bg-surface text-brand focus-visible:border-ring focus-visible:ring-ring/30",
           variant === "sidebar" &&
             "border-sidebar-border bg-sidebar-accent text-sidebar-foreground focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/30",
-          compact && "h-8 px-2 text-xs",
+          compact && variant !== "sidebar" && "h-8 px-2 text-xs",
+          compact &&
+            variant === "sidebar" &&
+            "h-9 appearance-none px-0 text-center text-[11px] font-semibold tracking-wide",
         )}
       >
         {APP_LOCALES.map((code) => (

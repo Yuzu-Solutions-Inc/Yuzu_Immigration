@@ -158,7 +158,9 @@
     "login": "Connexion",
     "settings": "Paramètres",
     "switchOrg": "Changer d’organisation",
-    "switchOrgAria": "Changer d’organisation"
+    "switchOrgAria": "Changer d’organisation",
+    "collapse": "Réduire le menu",
+    "expand": "Développer le menu"
   },
   "locale": {
     "label": "Langue"

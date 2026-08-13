@@ -158,7 +158,9 @@
     "login": "Sign in",
     "settings": "Settings",
     "switchOrg": "Switch organization",
-    "switchOrgAria": "Switch organization"
+    "switchOrgAria": "Switch organization",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "locale": {
     "label": "Language"

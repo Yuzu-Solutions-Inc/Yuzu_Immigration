@@ -158,7 +158,9 @@
     "login": "Iniciar sesión",
     "settings": "Ajustes",
     "switchOrg": "Cambiar de organización",
-    "switchOrgAria": "Cambiar de organización"
+    "switchOrgAria": "Cambiar de organización",
+    "collapse": "Contraer el menú",
+    "expand": "Expandir el menú"
   },
   "locale": {
     "label": "Idioma"

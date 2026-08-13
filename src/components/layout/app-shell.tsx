@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
 import {
@@ -23,6 +24,8 @@ export async function DashboardShell({
   actions?: React.ReactNode;
 }) {
   const tHome = await getTranslations("appHome");
+  const sidebarCollapsed =
+    (await cookies()).get("sidebar-collapsed")?.value === "1";
 
   return (
     <div className="flex min-h-screen flex-1 bg-canvas">
@@ -31,6 +34,7 @@ export async function DashboardShell({
         activeOrganizationId={activeOrganizationId}
         newProjectLabel={tHome("newProject")}
         canCreate={canCreate}
+        defaultCollapsed={sidebarCollapsed}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
