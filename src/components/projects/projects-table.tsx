@@ -74,6 +74,9 @@ function compareNullableDates(a: string | null, b: string | null) {
 const selectClassName =
   "h-8 w-full min-w-[8.5rem] rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
+const headerControlClassName =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
+
 export function ProjectsTable({
   projects,
   members,
@@ -165,6 +168,12 @@ export function ProjectsTable({
     visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
   const someVisibleSelected =
     visibleIds.some((id) => selected.has(id)) && !allVisibleSelected;
+  const filtersActive = Boolean(
+    nameQuery.trim() ||
+      programFilter !== "all" ||
+      statusFilter !== "all" ||
+      representativeFilter !== "all",
+  );
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -289,7 +298,7 @@ export function ProjectsTable({
         type="button"
         onClick={() => toggleSort(column)}
         className={cn(
-          "inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left font-medium transition-colors",
+          "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
           "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
           active ? "text-brand" : "text-foreground",
         )}
@@ -306,94 +315,6 @@ export function ProjectsTable({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 shadow-elevated sm:flex-row sm:flex-wrap sm:items-end">
-        <div className="min-w-[12rem] flex-1 space-y-1.5">
-          <Label htmlFor="projects-filter-name">{t("filterName")}</Label>
-          <Input
-            id="projects-filter-name"
-            value={nameQuery}
-            onChange={(e) => setNameQuery(e.target.value)}
-            placeholder={t("filterNamePlaceholder")}
-            className="h-8 rounded-lg px-2 text-sm"
-          />
-        </div>
-        <div className="min-w-[10rem] space-y-1.5 sm:w-48">
-          <Label htmlFor="projects-filter-program">{t("filterProgram")}</Label>
-          <select
-            id="projects-filter-program"
-            value={programFilter}
-            onChange={(e) =>
-              setProgramFilter(e.target.value as ProgramFamily | "all")
-            }
-            className={selectClassName}
-          >
-            <option value="all">{t("filterAll")}</option>
-            {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
-              <option key={value} value={value}>
-                {tprog(value)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="min-w-[10rem] space-y-1.5 sm:w-44">
-          <Label htmlFor="projects-filter-status">{t("filterStatus")}</Label>
-          <select
-            id="projects-filter-status"
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as ProjectStatus | "all")
-            }
-            className={selectClassName}
-          >
-            <option value="all">{t("filterAll")}</option>
-            {PROJECT_STATUSES.map((value) => (
-              <option key={value} value={value}>
-                {t(`statuses.${value}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="min-w-[10rem] space-y-1.5 sm:w-48">
-          <Label htmlFor="projects-filter-rep">{t("filterRepresentative")}</Label>
-          <select
-            id="projects-filter-rep"
-            value={representativeFilter}
-            onChange={(e) =>
-              setRepresentativeFilter(
-                e.target.value as string | "all" | "unassigned",
-              )
-            }
-            className={selectClassName}
-          >
-            <option value="all">{t("filterAll")}</option>
-            <option value="unassigned">{t("representativeUnassigned")}</option>
-            {members.map((member) => (
-              <option key={member.user_id} value={member.user_id}>
-                {staffLabel(member) || member.user_id}
-              </option>
-            ))}
-          </select>
-        </div>
-        {(nameQuery ||
-          programFilter !== "all" ||
-          statusFilter !== "all" ||
-          representativeFilter !== "all") && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setNameQuery("");
-              setProgramFilter("all");
-              setStatusFilter("all");
-              setRepresentativeFilter("all");
-            }}
-          >
-            {t("clearFilters")}
-          </Button>
-        )}
-      </div>
-
       {selected.size > 0 ? (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2">
           <p className="text-sm text-brand">
@@ -423,7 +344,7 @@ export function ProjectsTable({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-10 px-3">
+              <TableHead className="h-auto w-10 px-3 py-2.5 align-top">
                 <input
                   type="checkbox"
                   className="size-4 accent-action"
@@ -436,23 +357,100 @@ export function ProjectsTable({
                   disabled={visibleIds.length === 0}
                 />
               </TableHead>
-              <TableHead className="min-w-[12rem]">
-                <SortButton column="title" label={t("columnName")} />
+              <TableHead className="h-auto min-w-[12rem] py-2.5 align-top">
+                <div className="flex flex-col gap-1.5">
+                  <SortButton column="title" label={t("columnName")} />
+                  <Input
+                    id="projects-filter-name"
+                    type="search"
+                    value={nameQuery}
+                    onChange={(e) => setNameQuery(e.target.value)}
+                    placeholder={t("filterNamePlaceholder")}
+                    aria-label={t("filterName")}
+                    className={headerControlClassName}
+                  />
+                </div>
               </TableHead>
-              <TableHead>
-                <SortButton column="program_family" label={t("columnProgram")} />
+              <TableHead className="h-auto min-w-[10rem] py-2.5 align-top">
+                <div className="flex flex-col gap-1.5">
+                  <SortButton
+                    column="program_family"
+                    label={t("columnProgram")}
+                  />
+                  <select
+                    id="projects-filter-program"
+                    value={programFilter}
+                    onChange={(e) =>
+                      setProgramFilter(e.target.value as ProgramFamily | "all")
+                    }
+                    aria-label={t("filterProgram")}
+                    className={headerControlClassName}
+                  >
+                    <option value="all">{t("filterAll")}</option>
+                    {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
+                      <option key={value} value={value}>
+                        {tprog(value)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </TableHead>
-              <TableHead>{t("columnStatus")}</TableHead>
-              <TableHead>
-                <SortButton
-                  column="representative"
-                  label={t("columnRepresentative")}
-                />
+              <TableHead className="h-auto min-w-[10rem] py-2.5 align-top">
+                <div className="flex flex-col gap-1.5">
+                  <span className="px-0.5 py-0.5 font-medium">
+                    {t("columnStatus")}
+                  </span>
+                  <select
+                    id="projects-filter-status"
+                    value={statusFilter}
+                    onChange={(e) =>
+                      setStatusFilter(e.target.value as ProjectStatus | "all")
+                    }
+                    aria-label={t("filterStatus")}
+                    className={headerControlClassName}
+                  >
+                    <option value="all">{t("filterAll")}</option>
+                    {PROJECT_STATUSES.map((value) => (
+                      <option key={value} value={value}>
+                        {t(`statuses.${value}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </TableHead>
-              <TableHead>
+              <TableHead className="h-auto min-w-[10rem] py-2.5 align-top">
+                <div className="flex flex-col gap-1.5">
+                  <SortButton
+                    column="representative"
+                    label={t("columnRepresentative")}
+                  />
+                  <select
+                    id="projects-filter-rep"
+                    value={representativeFilter}
+                    onChange={(e) =>
+                      setRepresentativeFilter(
+                        e.target.value as string | "all" | "unassigned",
+                      )
+                    }
+                    aria-label={t("filterRepresentative")}
+                    className={headerControlClassName}
+                  >
+                    <option value="all">{t("filterAll")}</option>
+                    <option value="unassigned">
+                      {t("representativeUnassigned")}
+                    </option>
+                    {members.map((member) => (
+                      <option key={member.user_id} value={member.user_id}>
+                        {staffLabel(member) || member.user_id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </TableHead>
+              <TableHead className="h-auto py-2.5 align-top">
                 <SortButton column="created_at" label={t("columnCreated")} />
               </TableHead>
-              <TableHead>
+              <TableHead className="h-auto py-2.5 align-top">
                 <SortButton
                   column="submit_before"
                   label={t("columnSubmitBefore")}
@@ -462,10 +460,10 @@ export function ProjectsTable({
           </TableHeader>
           <TableBody>
             {filteredSorted.length === 0 ? (
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={7}
-                  className="h-24 text-center text-muted-foreground whitespace-normal"
+                  className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
                 >
                   {t("noMatches")}
                 </TableCell>
@@ -543,12 +541,29 @@ export function ProjectsTable({
         </Table>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {t("showingCount", {
-          shown: filteredSorted.length,
-          total: projects.length,
-        })}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          {t("showingCount", {
+            shown: filteredSorted.length,
+            total: projects.length,
+          })}
+        </p>
+        {filtersActive ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setNameQuery("");
+              setProgramFilter("all");
+              setStatusFilter("all");
+              setRepresentativeFilter("all");
+            }}
+          >
+            {t("clearFilters")}
+          </Button>
+        ) : null}
+      </div>
 
       <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
         <DialogContent className="sm:max-w-md" showCloseButton>
