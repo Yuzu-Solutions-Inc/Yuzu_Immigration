@@ -159,8 +159,8 @@ export function ProjectFormsPanel({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
           <h2 className="font-heading text-lg font-semibold text-brand">
             {t("todoTitle")}
           </h2>
@@ -176,9 +176,9 @@ export function ProjectFormsPanel({
             </Button>
           ) : null}
         </div>
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+        <ul className="divide-y divide-border border-t border-border">
           {forms.length === 0 ? (
-            <li className="px-5 py-4 text-sm text-muted-foreground">
+            <li className="px-5 py-3 text-sm text-muted-foreground">
               {t("todoEmpty")}
             </li>
           ) : (
@@ -189,7 +189,7 @@ export function ProjectFormsPanel({
               return (
                 <li
                   key={form.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+                  className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-brand">
@@ -230,86 +230,81 @@ export function ProjectFormsPanel({
               );
             })
           )}
-        </ul>
-        {genError ? (
-          <p className="text-sm text-destructive" role="alert">
-            {genError.startsWith("Enter") ||
-            genError.startsWith("Could") ||
-            genError.includes(":")
-              ? genError
-              : t("errors.generateFailed")}
-          </p>
-        ) : null}
-        {genWarnings.length > 0 ? (
-          <ul className="list-disc space-y-1 pl-5 text-sm text-amber-700">
-            {genWarnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
-        ) : null}
-
-        <form action={addAction} className="flex flex-wrap items-end gap-2">
-          <input type="hidden" name="projectId" value={projectId} />
-          <input type="hidden" name="locale" value={locale} />
-          <div className="min-w-[220px] flex-1 space-y-1">
-            <label className="text-xs font-semibold text-muted-foreground uppercase">
-              {t("addForm")}
-            </label>
-            <select
-              name="formCode"
-              value={formCode}
-              onChange={(e) => setFormCode(e.target.value as FormCode)}
-              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
-            >
-              {addOptions.map((code) => (
-                <option key={code} value={code}>
-                  {formTitle(code, locale)}
-                  {isPersonScopedForm(code)
-                    ? ` · ${t("scopePerson")}`
-                    : ` · ${t("scopeProject")}`}
-                </option>
-              ))}
-            </select>
-          </div>
-          {personScoped ? (
-            <div className="min-w-[180px] space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("assignPerson")}
-              </label>
+          <li className="px-5 py-3">
+            <form action={addAction} className="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="projectId" value={projectId} />
+              <input type="hidden" name="locale" value={locale} />
               <select
-                name="personId"
-                value={personId}
-                onChange={(e) => setPersonId(e.target.value)}
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
+                name="formCode"
+                value={formCode}
+                onChange={(e) => setFormCode(e.target.value as FormCode)}
+                aria-label={t("addForm")}
+                className="h-10 min-w-[220px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
               >
-                {people.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.displayName} · {tr(person.role as never)}
+                {addOptions.map((code) => (
+                  <option key={code} value={code}>
+                    {formTitle(code, locale)}
+                    {isPersonScopedForm(code)
+                      ? ` · ${t("scopePerson")}`
+                      : ` · ${t("scopeProject")}`}
                   </option>
                 ))}
               </select>
-            </div>
-          ) : null}
-          <Button type="submit" disabled={addPending || (personScoped && !personId)}>
-            {addPending ? t("adding") : t("addForm")}
-          </Button>
-          {addState.error ? (
-            <p className="w-full text-sm text-destructive">
-              {addState.error === "person_required"
-                ? t("errors.personRequired")
-                : t("errors.addFailed")}
-            </p>
-          ) : null}
-        </form>
-      </section>
+              {personScoped && people.length > 1 ? (
+                <select
+                  name="personId"
+                  value={personId}
+                  onChange={(e) => setPersonId(e.target.value)}
+                  aria-label={t("assignPerson")}
+                  className="h-10 min-w-[160px] rounded-xl border border-input bg-surface px-3 text-sm"
+                >
+                  {people.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.displayName} · {tr(person.role as never)}
+                    </option>
+                  ))}
+                </select>
+              ) : personScoped ? (
+                <input type="hidden" name="personId" value={personId} />
+              ) : null}
+              <Button
+                type="submit"
+                disabled={addPending || (personScoped && !personId)}
+              >
+                {addPending ? t("adding") : t("addForm")}
+              </Button>
+            </form>
+            {addState.error ? (
+              <p className="mt-2 text-sm text-destructive">
+                {addState.error === "person_required"
+                  ? t("errors.personRequired")
+                  : t("errors.addFailed")}
+              </p>
+            ) : null}
+            {genError ? (
+              <p className="mt-2 text-sm text-destructive" role="alert">
+                {genError.startsWith("Enter") ||
+                genError.startsWith("Could") ||
+                genError.includes(":")
+                  ? genError
+                  : t("errors.generateFailed")}
+              </p>
+            ) : null}
+            {genWarnings.length > 0 ? (
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-700">
+                {genWarnings.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            ) : null}
+          </li>
+        </ul>
+      </SurfaceCard>
 
       <SurfaceCard className="space-y-4">
-        <div>
-          <h3 className="font-heading text-base font-semibold text-brand">
-            {t("shareTitle")}
-          </h3>
-          <p className="text-sm text-muted-foreground">{t("shareHelp")}</p>
-        </div>
+        <h3 className="font-heading text-base font-semibold text-brand">
+          {t("shareTitle")}
+        </h3>
         {activeShareExpiresAt ? (
           <p className="text-sm text-brand">
             {t("shareActive", {
