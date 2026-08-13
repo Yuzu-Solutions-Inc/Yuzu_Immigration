@@ -221,6 +221,15 @@ function groupFieldLabel(
   if (key === "commonLawCity") return t("tables.columns.colCity");
   if (key === "commonLawProvince") return t("tables.columns.colProvince");
   if (key === "commonLawCountry") return t("tables.columns.colCountry");
+  if (key === "streetNum" || key.endsWith("StreetNum")) return t("fields.streetNum");
+  if (key === "streetName" || key.endsWith("StreetName")) return t("fields.streetName");
+  if (key === "aptUnit" || key.endsWith("AptUnit")) return t("fields.aptUnit");
+  if (key === "postalCode" || key.endsWith("PostalCode")) return t("fields.postalCode");
+  if (key === "city" || key.endsWith("City")) return t("tables.columns.colCity");
+  if (key === "provinceState" || key.endsWith("ProvinceState")) {
+    return t("tables.columns.colProvince");
+  }
+  if (key === "country" || key.endsWith("Country")) return t("tables.columns.colCountry");
   if (key.endsWith("From")) return t("tables.columns.colFrom");
   if (key.endsWith("To")) return t("tables.columns.colTo");
   if (key.endsWith("FamilyName")) return t("tables.columns.colFamilyName");
@@ -234,6 +243,18 @@ function groupFieldLabel(
   if (key.endsWith("Accompanying")) return t("tables.columns.colAccompanying");
   if (key.endsWith("Relationship")) return t("tables.columns.colRelationship");
   return t(`fields.${key}`);
+}
+
+function groupFieldSpan(field: CanonicalField) {
+  if (field.type === "textarea" || field.wide) return "col-span-2 sm:col-span-3";
+  if (
+    field.key === "streetName" ||
+    field.key === "resStreetName" ||
+    field.key.endsWith("StreetName")
+  ) {
+    return "sm:col-span-2";
+  }
+  return undefined;
 }
 
 function FieldGroupEditor({
@@ -260,11 +281,7 @@ function FieldGroupEditor({
           {fields.map((field) => (
             <div
               key={field.key}
-              className={
-                field.type === "textarea" || field.wide
-                  ? "col-span-2 sm:col-span-3"
-                  : undefined
-              }
+              className={groupFieldSpan(field)}
             >
               <FieldControl
                 id={`group-${group.key}-${field.key}`}

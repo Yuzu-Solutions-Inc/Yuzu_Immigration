@@ -907,7 +907,9 @@
       "spouse": "Spouse / partner",
       "prevSpouse": "Previous spouse / partner",
       "parent1": "Parent 1",
-      "parent2": "Parent 2"
+      "parent2": "Parent 2",
+      "mailingAddress": "Mailing address",
+      "residentialAddress": "Residential address"
     },
     "tables": {
       "rowIndex": "#",

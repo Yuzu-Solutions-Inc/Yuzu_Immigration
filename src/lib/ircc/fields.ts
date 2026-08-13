@@ -1755,6 +1755,32 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
       "parent2Address",
     ],
   },
+  {
+    key: "mailingAddress",
+    section: "contact",
+    fieldKeys: [
+      "streetNum",
+      "streetName",
+      "aptUnit",
+      "city",
+      "provinceState",
+      "country",
+      "postalCode",
+    ],
+  },
+  {
+    key: "residentialAddress",
+    section: "contact",
+    fieldKeys: [
+      "resStreetNum",
+      "resStreetName",
+      "resAptUnit",
+      "resCity",
+      "resProvinceState",
+      "resCountry",
+      "resPostalCode",
+    ],
+  },
 ];
 
 export function fieldGroupForKey(key: string): QuestionnaireFieldGroup | undefined {
