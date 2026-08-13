@@ -291,6 +291,14 @@ export async function syncPersonScopedFormsForParticipants(input: {
       .filter((r) => r.person_id)
       .map((r) => `${r.form_code}:${r.person_id}`),
   );
+  const formCountByPerson = new Map<string, number>();
+  for (const row of rows) {
+    if (!row.person_id) continue;
+    formCountByPerson.set(
+      row.person_id,
+      (formCountByPerson.get(row.person_id) ?? 0) + 1,
+    );
+  }
 
   const inserts: Array<{
     organization_id: string;
@@ -308,6 +316,7 @@ export async function syncPersonScopedFormsForParticipants(input: {
     ) ?? rows.find((r) => r.form_code === code);
 
     for (const personId of input.personIds) {
+      if ((formCountByPerson.get(personId) ?? 0) > 0) continue;
       const key = `${code}:${personId}`;
       if (have.has(key)) continue;
       inserts.push({
@@ -534,14 +543,34 @@ export async function reconcileProjectKitForms(input: {
     }
   }
 
+  const remainingRows = rows.filter(
+    (row) => !toDelete.some((d) => d.id === row.id),
+  );
   const remainingKeys = new Set(
-    rows
-      .filter((row) => !toDelete.some((d) => d.id === row.id))
-      .map((row) => formRowKey(row.form_code, row.person_id)),
+    remainingRows.map((row) => formRowKey(row.form_code, row.person_id)),
+  );
+  const remainingCountByPerson = new Map<string | null, number>();
+  for (const row of remainingRows) {
+    remainingCountByPerson.set(
+      row.person_id,
+      (remainingCountByPerson.get(row.person_id) ?? 0) + 1,
+    );
+  }
+  const swappedPeople = new Set(
+    toDelete
+      .filter((row) => KIT_SWAP_FORMS.has(row.form_code))
+      .map((row) => row.person_id),
   );
 
   const inserts = desired
-    .filter((seed) => !remainingKeys.has(formRowKey(seed.formCode, seed.personId)))
+    .filter((seed) => {
+      const key = formRowKey(seed.formCode, seed.personId);
+      if (remainingKeys.has(key)) return false;
+      if ((remainingCountByPerson.get(seed.personId) ?? 0) === 0) return true;
+      return (
+        KIT_SWAP_FORMS.has(seed.formCode) && swappedPeople.has(seed.personId)
+      );
+    })
     .map((seed) => ({
       organization_id: input.organizationId,
       project_id: input.projectId,
@@ -726,6 +755,34 @@ export async function addProjectForm(input: {
   });
   if (error) {
     console.error("addProjectForm:", error.message);
+    throw new Error(error.message);
+  }
+}
+
+export async function removeProjectForm(input: {
+  organizationId: string;
+  projectId: string;
+  formId: string;
+}) {
+  const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("project_forms")
+    .select("id")
+    .eq("id", input.formId)
+    .eq("project_id", input.projectId)
+    .eq("organization_id", input.organizationId)
+    .maybeSingle();
+  if (!row) {
+    throw new Error("not_found");
+  }
+  const { error } = await supabase
+    .from("project_forms")
+    .delete()
+    .eq("id", input.formId)
+    .eq("project_id", input.projectId)
+    .eq("organization_id", input.organizationId);
+  if (error) {
+    console.error("removeProjectForm:", error.message);
     throw new Error(error.message);
   }
 }

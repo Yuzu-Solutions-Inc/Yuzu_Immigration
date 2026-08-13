@@ -8,7 +8,7 @@ import {
   addCustomDocumentRequestAction,
   downloadAllProjectDocumentsAction,
   downloadProjectDocumentAction,
-  removeCustomDocumentRequestAction,
+  removeDocumentRequestAction,
   type DocumentsActionState,
 } from "@/app/actions/documents";
 import { DocumentFileActions } from "@/components/documents/document-file-actions";
@@ -46,7 +46,7 @@ export function ProjectDocumentsPanel({
     initial,
   );
   const [removeState, removeAction, removePending] = useActionState(
-    removeCustomDocumentRequestAction,
+    removeDocumentRequestAction,
     initial,
   );
   const [personId, setPersonId] = useState(people[0]?.id ?? "");
@@ -132,20 +132,29 @@ export function ProjectDocumentsPanel({
                       </span>
                     ) : null}
                   </p>
-                    {row.file ? (
-                      <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
+                      {row.file ? (
                         <DocumentFileActions
                           compact
                           requestId={row.id}
                           filename={row.file.original_filename}
                           fetchFile={downloadProjectDocumentAction}
                         />
-                      </div>
-                    ) : null}
-                    {row.doc_key === "custom" ? (
+                      ) : null}
                       <form
                         action={removeAction}
-                        className="flex shrink-0 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100"
+                        className="flex shrink-0"
+                        onSubmit={(event) => {
+                          if (
+                            !window.confirm(
+                              t("removeConfirm", {
+                                name: documentLabel(row, t),
+                              }),
+                            )
+                          ) {
+                            event.preventDefault();
+                          }
+                        }}
                       >
                         <input type="hidden" name="requestId" value={row.id} />
                         <input
@@ -161,11 +170,12 @@ export function ProjectDocumentsPanel({
                           disabled={removePending}
                           aria-label={t("remove")}
                           title={t("remove")}
+                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="size-4" />
                         </Button>
                       </form>
-                    ) : null}
+                    </div>
                     {submitted ? (
                       <CircleCheck
                         className="size-4 shrink-0 text-emerald-600"

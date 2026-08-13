@@ -116,7 +116,7 @@ export async function addCustomDocumentRequestAction(
   return { message: "added" };
 }
 
-export async function removeCustomDocumentRequestAction(
+export async function removeDocumentRequestAction(
   _prev: DocumentsActionState,
   formData: FormData,
 ): Promise<DocumentsActionState> {
@@ -134,13 +134,13 @@ export async function removeCustomDocumentRequestAction(
   const supabase = await createClient();
   const { data: row } = await supabase
     .from("project_document_requests")
-    .select("id, doc_key")
+    .select("id")
     .eq("id", requestId)
     .eq("project_id", projectId)
     .eq("organization_id", orgId)
     .maybeSingle();
 
-  if (!row || row.doc_key !== "custom") return { error: "invalid" };
+  if (!row) return { error: "invalid" };
 
   const { data: file } = await supabase
     .from("project_document_files")
@@ -154,7 +154,7 @@ export async function removeCustomDocumentRequestAction(
     .eq("id", requestId);
 
   if (error) {
-    console.error("removeCustomDocumentRequest:", error.message);
+    console.error("removeDocumentRequest:", error.message);
     return { error: "remove_failed" };
   }
 
@@ -168,7 +168,7 @@ export async function removeCustomDocumentRequestAction(
         .storage.from(CLIENT_DOCUMENTS_BUCKET)
         .remove([file.storage_path as string]);
     } catch (err) {
-      console.error("removeCustomDocumentRequest storage:", err);
+      console.error("removeDocumentRequest storage:", err);
     }
   }
 

@@ -20,6 +20,7 @@ import {
   PROJECT_SCOPED_ANSWER_KEYS,
   SHARE_LINK_TTL_DAYS,
   addProjectForm,
+  removeProjectForm,
   getProjectFormAnswers,
   kitOptionsFromAnswersStore,
   listActiveProjectPeople,
@@ -87,6 +88,38 @@ export async function addFormToProjectAction(
 
   revalidatePath(`/${locale}/projects/${projectId}`);
   return { message: "added" };
+}
+
+export async function removeFormFromProjectAction(
+  _prev: FormsActionState,
+  formData: FormData,
+): Promise<FormsActionState> {
+  const projectId = String(formData.get("projectId") || "");
+  const formId = String(formData.get("formId") || "");
+  const locale = String(formData.get("locale") || "en");
+
+  if (
+    !z.string().uuid().safeParse(projectId).success ||
+    !z.string().uuid().safeParse(formId).success
+  ) {
+    return { error: "invalid" };
+  }
+
+  const orgId = await requireOrganizationId();
+  if (!orgId) return { error: "unauthorized" };
+
+  try {
+    await removeProjectForm({
+      organizationId: orgId,
+      projectId,
+      formId,
+    });
+  } catch {
+    return { error: "remove_failed" };
+  }
+
+  revalidatePath(`/${locale}/projects/${projectId}`);
+  return { message: "removed" };
 }
 
 export async function saveProjectAnswersAction(

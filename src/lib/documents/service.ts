@@ -126,17 +126,16 @@ export async function ensureProjectDocumentsSeeded(
 
   const { data: existing, error: existingError } = await supabase
     .from("project_document_requests")
-    .select("person_id, doc_key")
-    .eq("project_id", projectId)
-    .in("doc_key", ["passport", "photo"]);
+    .select("person_id")
+    .eq("project_id", projectId);
 
   if (existingError) {
     console.error("ensureProjectDocumentsSeeded existing:", existingError.message);
     throw new Error(existingError.message);
   }
 
-  const have = new Set(
-    (existing ?? []).map((r) => `${r.person_id}:${r.doc_key}`),
+  const seededPeople = new Set(
+    (existing ?? []).map((r) => r.person_id as string),
   );
   const defaults = defaultDocumentsForProgram(programFamily);
   const inserts: Array<{
@@ -150,9 +149,8 @@ export async function ensureProjectDocumentsSeeded(
   }> = [];
 
   for (const personId of ids) {
+    if (seededPeople.has(personId)) continue;
     for (const seed of defaults) {
-      const key = `${personId}:${seed.docKey}`;
-      if (have.has(key)) continue;
       inserts.push({
         organization_id: organizationId,
         project_id: projectId,

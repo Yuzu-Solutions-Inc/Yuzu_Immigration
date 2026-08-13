@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Circle, CircleCheck, Download, Loader2 } from "lucide-react";
+import { Circle, CircleCheck, Download, Loader2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
   addFormToProjectAction,
   createFormShareLinkAction,
   generateProjectPdfsAction,
+  removeFormFromProjectAction,
   revokeFormShareLinkAction,
   saveProjectAnswersAction,
   type FormsActionState,
@@ -74,6 +75,10 @@ export function ProjectFormsPanel({
   const tr = useTranslations("roles");
   const [addState, addAction, addPending] = useActionState(
     addFormToProjectAction,
+    initialState,
+  );
+  const [removeState, removeAction, removePending] = useActionState(
+    removeFormFromProjectAction,
     initialState,
   );
   const [shareState, shareAction, sharePending] = useActionState(
@@ -229,8 +234,8 @@ export function ProjectFormsPanel({
                           : ` · ${t("projectScoped")}`}
                       </p>
                     </div>
-                    {ready ? (
-                      <div className="flex shrink-0 items-center opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[[data-downloading]]:opacity-100">
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[[data-downloading]]:opacity-100">
+                      {ready ? (
                         <Button
                           type="button"
                           variant="ghost"
@@ -249,8 +254,41 @@ export function ProjectFormsPanel({
                             <Download className="size-4" />
                           )}
                         </Button>
-                      </div>
-                    ) : null}
+                      ) : null}
+                      <form
+                        action={removeAction}
+                        className="flex shrink-0"
+                        onSubmit={(event) => {
+                          if (
+                            !window.confirm(
+                              t("removeConfirm", {
+                                name: formTitle(
+                                  form.form_code as FormCode,
+                                  locale,
+                                ),
+                              }),
+                            )
+                          ) {
+                            event.preventDefault();
+                          }
+                        }}
+                      >
+                        <input type="hidden" name="projectId" value={projectId} />
+                        <input type="hidden" name="formId" value={form.id} />
+                        <input type="hidden" name="locale" value={locale} />
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="icon-xs"
+                          disabled={removePending}
+                          aria-label={t("remove")}
+                          title={t("remove")}
+                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </form>
+                    </div>
                     {ready ? (
                       <CircleCheck
                         className="size-4 shrink-0 text-emerald-600"
@@ -316,6 +354,11 @@ export function ProjectFormsPanel({
                 {addState.error === "person_required"
                   ? t("errors.personRequired")
                   : t("errors.addFailed")}
+              </p>
+            ) : null}
+            {removeState.error ? (
+              <p className="mt-2 text-sm text-destructive">
+                {t("errors.removeFailed")}
               </p>
             ) : null}
             {genError ? (
