@@ -122,6 +122,10 @@ export async function GET(request: Request) {
       accessTokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
       syncToken: null,
     });
+    const savedSecrets = await getGoogleCalendarSecrets(connectionId);
+    if (!savedSecrets) {
+      return fail("save_failed");
+    }
 
     const { data: connection } = await admin
       .from("google_calendar_connections")

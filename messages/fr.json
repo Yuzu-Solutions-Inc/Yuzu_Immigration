@@ -1340,6 +1340,7 @@
       "not_configured": "Google Agenda n’est pas encore configuré sur ce serveur.",
       "not_connected": "Connectez d’abord Google Agenda.",
       "sync_failed": "Impossible de synchroniser Google Agenda. Réessayez.",
+      "reconnect_required": "Reconnectez Google Agenda. La connexion précédente n’a pas ses jetons.",
       "denied": "L’accès Google n’a pas été accordé.",
       "no_refresh": "Google n’a pas renvoyé de jeton d’actualisation. Révoquez l’accès dans votre compte Google puis réessayez.",
       "callback_failed": "Impossible de terminer la connexion Google Agenda."

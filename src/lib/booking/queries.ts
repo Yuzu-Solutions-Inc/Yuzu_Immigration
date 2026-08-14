@@ -25,6 +25,7 @@ import {
   getUserGoogleConnection,
   queryGoogleFreeBusy,
 } from "@/lib/google/calendar";
+import { getGoogleCalendarSecrets } from "@/lib/google/secrets";
 
 export type {
   BookingAppointmentRow,
@@ -317,7 +318,7 @@ export async function getMyGoogleCalendarConnection(): Promise<GoogleCalendarCon
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("google_calendar_connections")
-    .select("user_id, google_email, last_synced_at, is_enabled")
+    .select("id, user_id, google_email, last_synced_at, is_enabled")
     .eq("organization_id", orgId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -325,7 +326,15 @@ export async function getMyGoogleCalendarConnection(): Promise<GoogleCalendarCon
     console.error("getMyGoogleCalendarConnection:", error.message);
     return null;
   }
-  return (data as GoogleCalendarConnectionPublic | null) ?? null;
+  if (!data?.is_enabled) return null;
+  const secrets = await getGoogleCalendarSecrets(data.id as string);
+  if (!secrets) return null;
+  return {
+    user_id: data.user_id as string,
+    google_email: data.google_email as string | null,
+    last_synced_at: data.last_synced_at as string | null,
+    is_enabled: data.is_enabled as boolean,
+  };
 }
 
 export async function listGoogleCalendarConnections(): Promise<
@@ -336,14 +345,26 @@ export async function listGoogleCalendarConnections(): Promise<
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("google_calendar_connections")
-    .select("user_id, google_email, last_synced_at, is_enabled")
+    .select("id, user_id, google_email, last_synced_at, is_enabled")
     .eq("organization_id", orgId)
     .eq("is_enabled", true);
   if (error) {
     console.error("listGoogleCalendarConnections:", error.message);
     return [];
   }
-  return (data ?? []) as GoogleCalendarConnectionPublic[];
+  const rows = data ?? [];
+  const ready: GoogleCalendarConnectionPublic[] = [];
+  for (const row of rows) {
+    const secrets = await getGoogleCalendarSecrets(row.id as string);
+    if (!secrets) continue;
+    ready.push({
+      user_id: row.user_id as string,
+      google_email: row.google_email as string | null,
+      last_synced_at: row.last_synced_at as string | null,
+      is_enabled: row.is_enabled as boolean,
+    });
+  }
+  return ready;
 }
 
 export async function findPersonByEmail(

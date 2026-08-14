@@ -17,6 +17,7 @@ import {
   googleAuthUrl,
   googleCalendarConfigured,
 } from "@/lib/google/oauth";
+import { getGoogleCalendarSecrets } from "@/lib/google/secrets";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export type GoogleCalendarActionState = {
@@ -87,6 +88,8 @@ export async function syncGoogleCalendarNowAction(
     gate.user.id,
   );
   if (!connection) return { error: "not_connected" };
+  const secrets = await getGoogleCalendarSecrets(connection.id);
+  if (!secrets) return { error: "reconnect_required" };
   try {
     await syncGoogleBusy(connection);
     const origin = await getAppBaseUrl();

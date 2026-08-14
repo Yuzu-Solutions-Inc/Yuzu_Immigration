@@ -1340,6 +1340,7 @@
       "not_configured": "Google Calendar aún no está configurado en este servidor.",
       "not_connected": "Conecte Google Calendar primero.",
       "sync_failed": "No se pudo sincronizar Google Calendar. Inténtelo de nuevo.",
+      "reconnect_required": "Vuelva a conectar Google Calendar. Faltan los tokens de la conexión anterior.",
       "denied": "No se concedió el acceso de Google.",
       "no_refresh": "Google no devolvió un token de actualización. Revoque el acceso en su cuenta de Google e inténtelo de nuevo.",
       "callback_failed": "No se pudo terminar la conexión con Google Calendar."
