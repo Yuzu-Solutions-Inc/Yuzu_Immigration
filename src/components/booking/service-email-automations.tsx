@@ -351,6 +351,21 @@ function AutomationForm({
         ) : null}
       </div>
 
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="includeDoNotReply"
+          defaultChecked={automation?.include_do_not_reply ?? true}
+          className="mt-0.5 size-4 rounded border-input"
+        />
+        <span>
+          <span className="block">{t("automationDoNotReply")}</span>
+          <span className="block text-xs text-muted-foreground">
+            {t("automationDoNotReplyHelp")}
+          </span>
+        </span>
+      </label>
+
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"

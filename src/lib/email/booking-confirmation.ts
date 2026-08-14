@@ -149,6 +149,8 @@ export async function sendBookingConfirmationEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      organizationName: input.organizationName,
+      locale: input.locale,
     });
   } catch (error) {
     console.error("booking confirmation email:", error);
@@ -203,6 +205,8 @@ export async function sendBookingCancelledEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      organizationName: input.organizationName,
+      locale: input.locale,
     });
   } catch (error) {
     console.error("booking cancelled email:", error);
@@ -283,6 +287,8 @@ export async function sendBookingManageLinksEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      organizationName: input.organizationName,
+      locale: input.locale,
     });
   } catch (error) {
     console.error("booking manage links email:", error);

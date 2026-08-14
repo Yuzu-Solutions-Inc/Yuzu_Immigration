@@ -25,6 +25,7 @@ const fieldsSchema = z.object({
   recipients: z.string(),
   serviceIds: z.array(z.string().uuid()).min(1).max(50),
   isEnabled: z.enum(["on", "true", "false"]).optional(),
+  includeDoNotReply: z.enum(["on", "true", "false"]).optional(),
 });
 
 async function requireManager() {
@@ -56,6 +57,7 @@ function parseForm(formData: FormData) {
     recipients: String(formData.get("recipients") || "[]"),
     serviceIds: parseServiceIds(String(formData.get("serviceIds") || "[]")),
     isEnabled: formData.get("isEnabled") ? "on" : "false",
+    includeDoNotReply: formData.get("includeDoNotReply") ? "on" : "false",
   };
 }
 
@@ -131,6 +133,7 @@ export async function createServiceAutomationAction(
       days_before: parsed.data.daysBefore,
       recipients,
       is_enabled: parsed.data.isEnabled === "on",
+      include_do_not_reply: parsed.data.includeDoNotReply === "on",
     })
     .select("id")
     .single();
@@ -189,6 +192,7 @@ export async function updateServiceAutomationAction(
       days_before: parsed.data.daysBefore,
       recipients,
       is_enabled: parsed.data.isEnabled === "on",
+      include_do_not_reply: parsed.data.includeDoNotReply === "on",
       updated_at: new Date().toISOString(),
     })
     .eq("id", parsed.data.automationId)

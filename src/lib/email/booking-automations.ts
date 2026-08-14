@@ -243,7 +243,16 @@ export async function processDueBookingAutomations(now = new Date()) {
 
       let allSent = true;
       for (const to of addresses) {
-        const result = await sendResendEmail({ to, subject, html, text });
+        const result = await sendResendEmail({
+          to,
+          subject,
+          html,
+          text,
+          organizationName:
+            orgName.get(appointment.organization_id) ?? "MyConsultant",
+          locale: "en",
+          includeDoNotReply: automation.include_do_not_reply !== false,
+        });
         if (!result.sent) allSent = false;
       }
       if (!allSent) {

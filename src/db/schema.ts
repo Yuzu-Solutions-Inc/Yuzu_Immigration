@@ -676,6 +676,7 @@ export const bookingServiceEmailAutomations = pgTable(
     daysBefore: integer("days_before").notNull().default(1),
     recipients: text("recipients").array().notNull(),
     isEnabled: boolean("is_enabled").notNull().default(true),
+    includeDoNotReply: boolean("include_do_not_reply").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

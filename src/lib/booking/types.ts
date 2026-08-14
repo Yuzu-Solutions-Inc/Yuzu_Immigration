@@ -65,6 +65,7 @@ export type ServiceEmailAutomationRow = {
   days_before: number;
   recipients: string[];
   is_enabled: boolean;
+  include_do_not_reply: boolean;
   service_ids: string[];
   created_at: string;
   updated_at: string;
