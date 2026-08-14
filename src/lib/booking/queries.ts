@@ -18,6 +18,8 @@ import type {
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
+  BookingFormRow,
+  BookingFormFieldRow,
   BookingServiceRow,
   BookingServiceFormFieldRow,
   BookingSettingsRow,
@@ -36,6 +38,8 @@ export type {
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
+  BookingFormRow,
+  BookingFormFieldRow,
   BookingServiceRow,
   BookingSettingsRow,
   BookingServiceFormFieldRow,
@@ -50,7 +54,7 @@ export type PublicBookingContext = {
   organizationName: string;
   settings: BookingSettingsRow;
   services: BookingServiceRow[];
-  formFields: BookingServiceFormFieldRow[];
+  formFields: BookingFormFieldRow[];
   hosts: PublicHostCalendar[];
 };
 
@@ -284,28 +288,61 @@ export async function listBookingServices(): Promise<BookingServiceRow[]> {
   return (data ?? []) as BookingServiceRow[];
 }
 
+export async function listBookingForms(): Promise<BookingFormRow[]> {
+  const orgId = await orgIdOrNull();
+  if (!orgId) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("booking_forms")
+    .select("*")
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("listBookingForms:", error.message);
+    return [];
+  }
+  return (data ?? []) as BookingFormRow[];
+}
+
 export async function listServiceEmailAutomations(): Promise<
   ServiceEmailAutomationRow[]
 > {
   const orgId = await orgIdOrNull();
   if (!orgId) return [];
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("booking_service_email_automations")
-    .select("*")
-    .eq("organization_id", orgId)
-    .order("days_before", { ascending: true })
-    .order("created_at", { ascending: true });
+  const [{ data, error }, linksRes] = await Promise.all([
+    supabase
+      .from("booking_service_email_automations")
+      .select("*")
+      .eq("organization_id", orgId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("booking_email_automation_services")
+      .select("automation_id, service_id")
+      .eq("organization_id", orgId),
+  ]);
   if (error) {
     console.error("listServiceEmailAutomations:", error.message);
     return [];
   }
-  return (data ?? []) as ServiceEmailAutomationRow[];
+  if (linksRes.error) {
+    console.error("listAutomationServices:", linksRes.error.message);
+  }
+  const serviceIdsByAutomation = new Map<string, string[]>();
+  for (const link of linksRes.data ?? []) {
+    const list = serviceIdsByAutomation.get(link.automation_id) ?? [];
+    list.push(link.service_id);
+    serviceIdsByAutomation.set(link.automation_id, list);
+  }
+  return ((data ?? []) as Omit<ServiceEmailAutomationRow, "service_ids">[]).map(
+    (row) => ({
+      ...row,
+      service_ids: serviceIdsByAutomation.get(row.id) ?? [],
+    }),
+  );
 }
 
-export async function listServiceFormFields(): Promise<
-  BookingServiceFormFieldRow[]
-> {
+export async function listServiceFormFields(): Promise<BookingFormFieldRow[]> {
   const orgId = await orgIdOrNull();
   if (!orgId) return [];
   const supabase = await createClient();
@@ -319,7 +356,7 @@ export async function listServiceFormFields(): Promise<
     console.error("listServiceFormFields:", error.message);
     return [];
   }
-  return (data ?? []) as BookingServiceFormFieldRow[];
+  return (data ?? []) as BookingFormFieldRow[];
 }
 
 export async function getBookingSettings(): Promise<BookingSettingsRow | null> {
@@ -477,7 +514,7 @@ export async function loadPublicBookingContext(
     organizationName: org.name as string,
     settings: row,
     services: (servicesRes.data ?? []) as BookingServiceRow[],
-    formFields: (fieldsRes.data ?? []) as BookingServiceFormFieldRow[],
+    formFields: (fieldsRes.data ?? []) as BookingFormFieldRow[],
     hosts,
   };
 }

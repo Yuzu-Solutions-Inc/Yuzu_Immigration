@@ -611,6 +611,23 @@ export const bookingServices = pgTable("booking_services", {
   currency: text("currency").notNull().default("CAD"),
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
+  formId: uuid("form_id").references(() => bookingForms.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const bookingForms = pgTable("booking_forms", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -626,9 +643,9 @@ export const bookingServiceFormFields = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    serviceId: uuid("service_id")
+    formId: uuid("form_id")
       .notNull()
-      .references(() => bookingServices.id, { onDelete: "cascade" }),
+      .references(() => bookingForms.id, { onDelete: "cascade" }),
     fieldKey: text("field_key").notNull(),
     label: text("label").notNull(),
     helpText: text("help_text"),
@@ -643,7 +660,7 @@ export const bookingServiceFormFields = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [unique().on(table.serviceId, table.fieldKey)],
+  (table) => [unique().on(table.formId, table.fieldKey)],
 );
 
 export const bookingServiceEmailAutomations = pgTable(
@@ -653,9 +670,7 @@ export const bookingServiceEmailAutomations = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    serviceId: uuid("service_id")
-      .notNull()
-      .references(() => bookingServices.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
     subject: text("subject").notNull(),
     body: text("body").notNull(),
     daysBefore: integer("days_before").notNull().default(1),
@@ -668,6 +683,24 @@ export const bookingServiceEmailAutomations = pgTable(
       .defaultNow()
       .notNull(),
   },
+);
+
+export const bookingEmailAutomationServices = pgTable(
+  "booking_email_automation_services",
+  {
+    automationId: uuid("automation_id")
+      .notNull()
+      .references(() => bookingServiceEmailAutomations.id, {
+        onDelete: "cascade",
+      }),
+    serviceId: uuid("service_id")
+      .notNull()
+      .references(() => bookingServices.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+  },
+  (table) => [unique().on(table.automationId, table.serviceId)],
 );
 
 export const bookingBlockedTimes = pgTable("booking_blocked_times", {

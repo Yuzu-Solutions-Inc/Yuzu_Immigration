@@ -6,6 +6,7 @@ import { z } from "zod";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
+  BOOKING_FORM_FIELD_TYPES,
   FORM_FIELD_KEY_RE,
   MAX_BOOKING_FORM_FIELDS,
   isReservedBookingFieldKey,
@@ -21,35 +22,24 @@ export type FormFieldActionState = {
 };
 
 const localeSchema = z.enum(["en", "fr", "es"]);
-const fieldTypeSchema = z.enum([
-  "text",
-  "textarea",
-  "email",
-  "phone",
-  "number",
-  "date",
-  "select",
-  "checkbox",
-]);
+const fieldTypeSchema = z.enum(BOOKING_FORM_FIELD_TYPES);
 
-const createSchema = z.object({
-  locale: localeSchema,
-  serviceId: z.string().uuid(),
+const draftFieldSchema = z.object({
+  id: z.string().uuid().optional().or(z.literal("")),
   label: z.string().trim().min(1).max(80),
   fieldKey: z.string().trim().max(40).optional().or(z.literal("")),
   helpText: z.string().trim().max(300).optional().or(z.literal("")),
   fieldType: fieldTypeSchema,
-  options: z.string().optional().or(z.literal("")),
-  required: z.enum(["on", "true", "false"]).optional(),
+  options: z.array(z.string().trim().min(1).max(80)).max(20),
+  required: z.boolean(),
 });
 
-const updateSchema = z.object({
+const saveSchema = z.object({
   locale: localeSchema,
-  fieldId: z.string().uuid(),
-  label: z.string().trim().min(1).max(80),
-  helpText: z.string().trim().max(300).optional().or(z.literal("")),
-  options: z.string().optional().or(z.literal("")),
-  required: z.enum(["on", "true", "false"]).optional(),
+  formId: z.string().uuid().optional().or(z.literal("")),
+  title: z.string().trim().min(1).max(80),
+  serviceIds: z.array(z.string().uuid()).min(1).max(50),
+  fields: z.array(draftFieldSchema).max(MAX_BOOKING_FORM_FIELDS),
 });
 
 async function requireManager() {
@@ -61,36 +51,69 @@ async function requireManager() {
   return { ok: true as const, membership };
 }
 
-function optionsForType(fieldType: string, raw: string | undefined) {
-  if (fieldType !== "select") return [] as string[];
-  const options = parseSelectOptions(raw ?? "");
-  return options.length > 0 ? options : null;
+function parseServiceIds(raw: string) {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((item): item is string => typeof item === "string");
+  } catch {
+    return null;
+  }
 }
 
-export async function createServiceFormFieldAction(
+function parseFields(raw: string) {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveBookingFormAction(
   _prev: FormFieldActionState,
   formData: FormData,
 ): Promise<FormFieldActionState> {
-  const parsed = createSchema.safeParse({
+  const parsed = saveSchema.safeParse({
     locale: formData.get("locale") || "en",
-    serviceId: String(formData.get("serviceId") || ""),
-    label: String(formData.get("label") || ""),
-    fieldKey: String(formData.get("fieldKey") || ""),
-    helpText: String(formData.get("helpText") || ""),
-    fieldType: String(formData.get("fieldType") || "text"),
-    options: String(formData.get("options") || ""),
-    required: formData.get("required") ? "on" : "false",
+    formId: String(formData.get("formId") || ""),
+    title: String(formData.get("title") || ""),
+    serviceIds: parseServiceIds(String(formData.get("serviceIds") || "[]")),
+    fields: parseFields(String(formData.get("fields") || "[]")),
   });
   if (!parsed.success) return { error: "invalid" };
 
-  const fieldKey = (
-    parsed.data.fieldKey || slugFromFieldLabel(parsed.data.label)
-  ).toLowerCase();
-  if (!FORM_FIELD_KEY_RE.test(fieldKey) || isReservedBookingFieldKey(fieldKey)) {
-    return { error: "invalid_key" };
+  const normalizedFields: {
+    label: string;
+    fieldKey: string;
+    helpText: string | null;
+    fieldType: (typeof BOOKING_FORM_FIELD_TYPES)[number];
+    options: string[];
+    required: boolean;
+  }[] = [];
+  const seenKeys = new Set<string>();
+  for (const field of parsed.data.fields) {
+    const fieldKey = (
+      field.fieldKey || slugFromFieldLabel(field.label)
+    ).toLowerCase();
+    if (!FORM_FIELD_KEY_RE.test(fieldKey) || isReservedBookingFieldKey(fieldKey)) {
+      return { error: "invalid_key" };
+    }
+    if (seenKeys.has(fieldKey)) return { error: "duplicate_key" };
+    seenKeys.add(fieldKey);
+    const options =
+      field.fieldType === "select" ? parseSelectOptions(field.options.join("\n")) : [];
+    if (field.fieldType === "select" && options.length === 0) {
+      return { error: "invalid_options" };
+    }
+    normalizedFields.push({
+      label: field.label,
+      fieldKey,
+      helpText: field.helpText || null,
+      fieldType: field.fieldType,
+      options,
+      required: field.required,
+    });
   }
-  const options = optionsForType(parsed.data.fieldType, parsed.data.options);
-  if (options == null) return { error: "invalid_options" };
 
   const gate = await requireManager();
   if (!gate.ok) return { error: gate.error };
@@ -98,137 +121,168 @@ export async function createServiceFormFieldAction(
   const user = await getSessionUser();
   const supabase = await createClient();
 
-  const { data: service } = await supabase
+  const { data: orgServices, error: servicesError } = await supabase
     .from("booking_services")
     .select("id")
-    .eq("id", parsed.data.serviceId)
     .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!service) return { error: "invalid" };
+    .in("id", parsed.data.serviceIds);
+  if (servicesError || (orgServices ?? []).length !== parsed.data.serviceIds.length) {
+    return { error: "invalid" };
+  }
 
-  const { count } = await supabase
-    .from("booking_service_form_fields")
-    .select("id", { count: "exact", head: true })
-    .eq("service_id", parsed.data.serviceId)
-    .eq("organization_id", orgId);
-  if ((count ?? 0) >= MAX_BOOKING_FORM_FIELDS) return { error: "too_many_fields" };
+  let formId = parsed.data.formId || "";
+  const isCreate = !formId;
+  if (isCreate) {
+    const { data: created, error } = await supabase
+      .from("booking_forms")
+      .insert({
+        organization_id: orgId,
+        title: parsed.data.title,
+      })
+      .select("id")
+      .single();
+    if (error || !created) {
+      console.error("createBookingForm:", error?.message);
+      return { error: "save_failed" };
+    }
+    formId = created.id;
+  } else {
+    const { data: existing } = await supabase
+      .from("booking_forms")
+      .select("id")
+      .eq("id", formId)
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    if (!existing) return { error: "invalid" };
+    const { error } = await supabase
+      .from("booking_forms")
+      .update({
+        title: parsed.data.title,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", formId)
+      .eq("organization_id", orgId);
+    if (error) {
+      console.error("updateBookingForm:", error.message);
+      return { error: "save_failed" };
+    }
+  }
 
-  const { data: last } = await supabase
-    .from("booking_service_form_fields")
-    .select("sort_order")
-    .eq("service_id", parsed.data.serviceId)
+  const { error: clearError } = await supabase
+    .from("booking_services")
+    .update({ form_id: null, updated_at: new Date().toISOString() })
     .eq("organization_id", orgId)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const { data, error } = await supabase
-    .from("booking_service_form_fields")
-    .insert({
-      organization_id: orgId,
-      service_id: parsed.data.serviceId,
-      field_key: fieldKey,
-      label: parsed.data.label,
-      help_text: parsed.data.helpText || null,
-      field_type: parsed.data.fieldType,
-      options,
-      required: parsed.data.required === "on",
-      sort_order: ((last?.sort_order as number | undefined) ?? -1) + 1,
-    })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    if (error?.code === "23505") return { error: "duplicate_key" };
-    console.error("createServiceFormField:", error?.message);
+    .eq("form_id", formId);
+  if (clearError) {
+    console.error("clearFormServices:", clearError.message);
+    return { error: "save_failed" };
+  }
+  const { error: assignError } = await supabase
+    .from("booking_services")
+    .update({ form_id: formId, updated_at: new Date().toISOString() })
+    .eq("organization_id", orgId)
+    .in("id", parsed.data.serviceIds);
+  if (assignError) {
+    console.error("assignFormServices:", assignError.message);
     return { error: "save_failed" };
   }
 
-  await recordAuditEvent({
-    organizationId: orgId,
-    actorUserId: user?.id,
-    actorKind: "staff",
-    action: "booking.service_form_field.create",
-    resourceType: "booking_service_form_field",
-    resourceId: data.id,
-    metadata: { serviceId: parsed.data.serviceId, fieldKey },
-  });
-
-  revalidatePath(`/${parsed.data.locale}/services`);
-  revalidatePath(`/${parsed.data.locale}/calendar`);
-  return { message: "created" };
-}
-
-export async function updateServiceFormFieldAction(
-  _prev: FormFieldActionState,
-  formData: FormData,
-): Promise<FormFieldActionState> {
-  const parsed = updateSchema.safeParse({
-    locale: formData.get("locale") || "en",
-    fieldId: String(formData.get("fieldId") || ""),
-    label: String(formData.get("label") || ""),
-    helpText: String(formData.get("helpText") || ""),
-    options: String(formData.get("options") || ""),
-    required: formData.get("required") ? "on" : "false",
-  });
-  if (!parsed.success) return { error: "invalid" };
-
-  const gate = await requireManager();
-  if (!gate.ok) return { error: gate.error };
-  const orgId = gate.membership.organization.id;
-  const user = await getSessionUser();
-  const supabase = await createClient();
-
-  const { data: existing } = await supabase
+  const { data: existingFields, error: existingError } = await supabase
     .from("booking_service_form_fields")
-    .select("id, field_type")
-    .eq("id", parsed.data.fieldId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!existing) return { error: "invalid" };
-
-  const options = optionsForType(
-    existing.field_type as string,
-    parsed.data.options,
+    .select("id, field_key, field_type")
+    .eq("form_id", formId)
+    .eq("organization_id", orgId);
+  if (existingError) {
+    console.error("listFormFields:", existingError.message);
+    return { error: "save_failed" };
+  }
+  const existingByKey = new Map(
+    (existingFields ?? []).map((row) => [
+      row.field_key as string,
+      { id: row.id as string, fieldType: row.field_type as string },
+    ]),
   );
-  if (options == null) return { error: "invalid_options" };
-
-  const { error } = await supabase
-    .from("booking_service_form_fields")
-    .update({
-      label: parsed.data.label,
-      help_text: parsed.data.helpText || null,
-      options,
-      required: parsed.data.required === "on",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", parsed.data.fieldId)
-    .eq("organization_id", orgId);
-
-  if (error) {
-    console.error("updateServiceFormField:", error.message);
-    return { error: "save_failed" };
+  const keepIds: string[] = [];
+  for (const [index, field] of normalizedFields.entries()) {
+    const existing = existingByKey.get(field.fieldKey);
+    if (existing) {
+      const { error } = await supabase
+        .from("booking_service_form_fields")
+        .update({
+          label: field.label,
+          help_text: field.helpText,
+          options: field.options,
+          required: field.required,
+          sort_order: index,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id)
+        .eq("organization_id", orgId);
+      if (error) {
+        console.error("updateFormField:", error.message);
+        return { error: "save_failed" };
+      }
+      keepIds.push(existing.id);
+    } else {
+      const { data: inserted, error } = await supabase
+        .from("booking_service_form_fields")
+        .insert({
+          organization_id: orgId,
+          form_id: formId,
+          field_key: field.fieldKey,
+          label: field.label,
+          help_text: field.helpText,
+          field_type: field.fieldType,
+          options: field.options,
+          required: field.required,
+          sort_order: index,
+        })
+        .select("id")
+        .single();
+      if (error || !inserted) {
+        if (error?.code === "23505") return { error: "duplicate_key" };
+        console.error("insertFormField:", error?.message);
+        return { error: "save_failed" };
+      }
+      keepIds.push(inserted.id);
+    }
+  }
+  const removeIds = (existingFields ?? [])
+    .map((row) => row.id as string)
+    .filter((id) => !keepIds.includes(id));
+  if (removeIds.length > 0) {
+    const { error } = await supabase
+      .from("booking_service_form_fields")
+      .delete()
+      .eq("organization_id", orgId)
+      .eq("form_id", formId)
+      .in("id", removeIds);
+    if (error) {
+      console.error("deleteFormFields:", error.message);
+      return { error: "save_failed" };
+    }
   }
 
   await recordAuditEvent({
     organizationId: orgId,
     actorUserId: user?.id,
     actorKind: "staff",
-    action: "booking.service_form_field.update",
-    resourceType: "booking_service_form_field",
-    resourceId: parsed.data.fieldId,
+    action: isCreate ? "booking.form.create" : "booking.form.update",
+    resourceType: "booking_form",
+    resourceId: formId,
+    metadata: { serviceIds: parsed.data.serviceIds },
   });
 
   revalidatePath(`/${parsed.data.locale}/services`);
   revalidatePath(`/${parsed.data.locale}/calendar`);
-  return { message: "saved" };
+  return { message: isCreate ? "created" : "saved" };
 }
 
-export async function deleteServiceFormFieldAction(
-  fieldId: string,
+export async function deleteBookingFormAction(
+  formId: string,
   locale: string,
 ): Promise<FormFieldActionState> {
-  if (!z.string().uuid().safeParse(fieldId).success) return { error: "invalid" };
+  if (!z.string().uuid().safeParse(formId).success) return { error: "invalid" };
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
 
@@ -239,12 +293,12 @@ export async function deleteServiceFormFieldAction(
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("booking_service_form_fields")
+    .from("booking_forms")
     .delete()
-    .eq("id", fieldId)
+    .eq("id", formId)
     .eq("organization_id", orgId);
   if (error) {
-    console.error("deleteServiceFormField:", error.message);
+    console.error("deleteBookingForm:", error.message);
     return { error: "save_failed" };
   }
 
@@ -252,9 +306,9 @@ export async function deleteServiceFormFieldAction(
     organizationId: orgId,
     actorUserId: user?.id,
     actorKind: "staff",
-    action: "booking.service_form_field.delete",
-    resourceType: "booking_service_form_field",
-    resourceId: fieldId,
+    action: "booking.form.delete",
+    resourceType: "booking_form",
+    resourceId: formId,
   });
 
   revalidatePath(`/${parsedLocale.data}/services`);

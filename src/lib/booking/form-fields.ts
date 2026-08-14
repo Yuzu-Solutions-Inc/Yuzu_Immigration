@@ -1,6 +1,6 @@
 import { AUTOMATION_VARIABLES } from "@/lib/email/automation-template";
 import type { BookingFormFieldType } from "@/db/schema";
-import type { BookingServiceFormFieldRow } from "@/lib/booking/types";
+import type { BookingFormFieldRow } from "@/lib/booking/types";
 
 export const BOOKING_FORM_FIELD_TYPES: BookingFormFieldType[] = [
   "text",
@@ -74,7 +74,7 @@ function validDate(value: string) {
 
 export function parseBookingFormAnswers(
   formData: FormData,
-  fields: BookingServiceFormFieldRow[],
+  fields: BookingFormFieldRow[],
 ): { ok: true; answers: Record<string, string> } | { ok: false } {
   const answers: Record<string, string> = {};
   for (const field of fields) {

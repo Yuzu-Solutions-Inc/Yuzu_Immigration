@@ -25,14 +25,23 @@ export type BookingServiceRow = {
   currency: string;
   is_active: boolean;
   sort_order: number;
+  form_id: string | null;
   created_at: string;
   updated_at: string;
 };
 
-export type BookingServiceFormFieldRow = {
+export type BookingFormRow = {
   id: string;
   organization_id: string;
-  service_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BookingFormFieldRow = {
+  id: string;
+  organization_id: string;
+  form_id: string;
   field_key: string;
   label: string;
   help_text: string | null;
@@ -44,15 +53,19 @@ export type BookingServiceFormFieldRow = {
   updated_at: string;
 };
 
+/** @deprecated use BookingFormFieldRow */
+export type BookingServiceFormFieldRow = BookingFormFieldRow;
+
 export type ServiceEmailAutomationRow = {
   id: string;
   organization_id: string;
-  service_id: string;
+  title: string;
   subject: string;
   body: string;
   days_before: number;
   recipients: string[];
   is_enabled: boolean;
+  service_ids: string[];
   created_at: string;
   updated_at: string;
 };

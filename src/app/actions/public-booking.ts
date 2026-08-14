@@ -168,7 +168,7 @@ export async function submitPublicBookingAction(
   if (expectedEnd !== parsed.data.endsAt) return { error: "slot_taken" };
 
   const serviceFields = (ctx.formFields ?? []).filter(
-    (field) => field.service_id === service.id,
+    (field) => service.form_id && field.form_id === service.form_id,
   );
   const parsedAnswers = parseBookingFormAnswers(formData, serviceFields);
   if (!parsedAnswers.ok) return { error: "invalid_form", guestEmail };

@@ -43,12 +43,36 @@ export async function processDueBookingAutomations(now = new Date()) {
     console.error("booking automations list:", automationError.message);
     return { processed: 0, sent: 0 };
   }
-  const enabled = (automations ?? []) as ServiceEmailAutomationRow[];
+  const enabled = (automations ?? []) as Omit<
+    ServiceEmailAutomationRow,
+    "service_ids"
+  >[];
   if (enabled.length === 0) return { processed: 0, sent: 0 };
+
+  const { data: links, error: linksError } = await admin
+    .from("booking_email_automation_services")
+    .select("automation_id, service_id")
+    .in(
+      "automation_id",
+      enabled.map((row) => row.id),
+    );
+  if (linksError) {
+    console.error("booking automations services:", linksError.message);
+    return { processed: 0, sent: 0 };
+  }
+  const serviceIdsByAutomation = new Map<string, Set<string>>();
+  for (const link of links ?? []) {
+    const set = serviceIdsByAutomation.get(link.automation_id) ?? new Set();
+    set.add(link.service_id);
+    serviceIdsByAutomation.set(link.automation_id, set);
+  }
+  const serviceIds = [
+    ...new Set((links ?? []).map((link) => link.service_id as string)),
+  ];
+  if (serviceIds.length === 0) return { processed: 0, sent: 0 };
 
   const maxDays = Math.max(0, ...enabled.map((row) => row.days_before));
   const windowEnd = new Date(now.getTime() + (maxDays + 1) * 86_400_000);
-  const serviceIds = [...new Set(enabled.map((row) => row.service_id))];
 
   const { data: appointments, error: appointmentError } = await admin
     .from("booking_appointments")
@@ -140,10 +164,8 @@ export async function processDueBookingAutomations(now = new Date()) {
   for (const appointment of upcoming) {
     const service = serviceById.get(appointment.service_id);
     if (!service) continue;
-    const matching = enabled.filter(
-      (row) =>
-        row.service_id === appointment.service_id &&
-        row.organization_id === appointment.organization_id,
+    const matching = enabled.filter((row) =>
+      serviceIdsByAutomation.get(row.id)?.has(appointment.service_id),
     );
     if (matching.length === 0) continue;
 

@@ -107,8 +107,11 @@ export function PublicBookingFlow({
   const serviceStep = hostStep ? 2 : 1;
   const slotStep = hostStep ? 3 : 2;
   const detailsStep = hostStep ? 4 : 3;
+  const selectedService = payload.services.find((row) => row.id === serviceId);
   const serviceFields = payload.formFields.filter(
-    (field) => field.service_id === serviceId,
+    (field) =>
+      Boolean(selectedService?.form_id) &&
+      field.form_id === selectedService?.form_id,
   );
   const warningEmail = state.guestEmail ?? guestEmail;
   const showExistingNotice =

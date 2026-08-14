@@ -295,7 +295,7 @@ export function CalendarWorkspace({
                   {Object.entries(row.form_answers ?? {}).map(([key, value]) => {
                     const field = formFields.find(
                       (item) =>
-                        item.service_id === row.service_id &&
+                        item.form_id === row.service?.form_id &&
                         item.field_key === key,
                     );
                     const display =
