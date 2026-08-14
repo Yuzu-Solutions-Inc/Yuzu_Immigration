@@ -4,6 +4,7 @@ import { addDaysToIsoDate, zonedCivilToUtc } from "@/lib/booking/timezone";
 import { getSessionUser } from "@/lib/auth/session";
 import { requireOrganizationId, type PersonRow } from "@/lib/crm/queries";
 import {
+  decryptBookingFormAnswers,
   decryptBookingGuestRow,
   decryptPersonRow,
   PII_AAD,
@@ -18,6 +19,7 @@ import type {
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
   BookingServiceRow,
+  BookingServiceFormFieldRow,
   BookingSettingsRow,
   GoogleCalendarConnectionPublic,
   ManageBookingPayload,
@@ -36,6 +38,7 @@ export type {
   BookingGoogleBusyRow,
   BookingServiceRow,
   BookingSettingsRow,
+  BookingServiceFormFieldRow,
   GoogleCalendarConnectionPublic,
   ManageBookingPayload,
   PublicHostCalendar,
@@ -47,6 +50,7 @@ export type PublicBookingContext = {
   organizationName: string;
   settings: BookingSettingsRow;
   services: BookingServiceRow[];
+  formFields: BookingServiceFormFieldRow[];
   hosts: PublicHostCalendar[];
 };
 
@@ -299,6 +303,25 @@ export async function listServiceEmailAutomations(): Promise<
   return (data ?? []) as ServiceEmailAutomationRow[];
 }
 
+export async function listServiceFormFields(): Promise<
+  BookingServiceFormFieldRow[]
+> {
+  const orgId = await orgIdOrNull();
+  if (!orgId) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("booking_service_form_fields")
+    .select("*")
+    .eq("organization_id", orgId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("listServiceFormFields:", error.message);
+    return [];
+  }
+  return (data ?? []) as BookingServiceFormFieldRow[];
+}
+
 export async function getBookingSettings(): Promise<BookingSettingsRow | null> {
   const orgId = await orgIdOrNull();
   if (!orgId) return null;
@@ -396,9 +419,13 @@ export async function listAppointmentsInRange(
     console.error("listAppointmentsInRange:", error.message);
     return [];
   }
-  return ((data ?? []) as BookingAppointmentRow[]).map((row) =>
-    decryptBookingGuestRow(row, key),
-  );
+  return ((data ?? []) as BookingAppointmentRow[]).map((row) => {
+    const guest = decryptBookingGuestRow(row, key);
+    return {
+      ...guest,
+      form_answers: decryptBookingFormAnswers(row.form_answers, key),
+    };
+  });
 }
 
 export async function loadPublicBookingContext(
@@ -425,12 +452,18 @@ export async function loadPublicBookingContext(
     .maybeSingle();
   if (!org) return null;
 
-  const [servicesRes, hosts] = await Promise.all([
+  const [servicesRes, fieldsRes, hosts] = await Promise.all([
     admin
       .from("booking_services")
       .select("*")
       .eq("organization_id", row.organization_id)
       .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
+    admin
+      .from("booking_service_form_fields")
+      .select("*")
+      .eq("organization_id", row.organization_id)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
     loadHostCalendars({
@@ -444,6 +477,7 @@ export async function loadPublicBookingContext(
     organizationName: org.name as string,
     settings: row,
     services: (servicesRes.data ?? []) as BookingServiceRow[],
+    formFields: (fieldsRes.data ?? []) as BookingServiceFormFieldRow[],
     hosts,
   };
 }

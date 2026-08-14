@@ -14,6 +14,7 @@ import {
   recordBookingAbuseEvent,
 } from "@/lib/booking/abuse";
 import { bookingManageUrls } from "@/lib/booking/manage-url";
+import { parseBookingFormAnswers } from "@/lib/booking/form-fields";
 import {
   findPersonByEmail,
   listFutureGuestAppointmentsByEmail,
@@ -24,6 +25,7 @@ import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
+  encryptBookingFormAnswers,
   encryptBookingGuestWrite,
   encryptPersonWrite,
 } from "@/lib/security/client-pii";
@@ -165,6 +167,12 @@ export async function submitPublicBookingAction(
   ).toISOString();
   if (expectedEnd !== parsed.data.endsAt) return { error: "slot_taken" };
 
+  const serviceFields = (ctx.formFields ?? []).filter(
+    (field) => field.service_id === service.id,
+  );
+  const parsedAnswers = parseBookingFormAnswers(formData, serviceFields);
+  if (!parsedAnswers.ok) return { error: "invalid_form", guestEmail };
+
   const existing = await listFutureGuestAppointmentsByEmail({
     organizationId: ctx.organizationId,
     email: guestEmail,
@@ -242,6 +250,10 @@ export async function submitPublicBookingAction(
       privacy_accepted_at: new Date().toISOString(),
       status: "confirmed",
       manage_token_hash: hashBookingToken(manageToken),
+      form_answers:
+        serviceFields.length > 0
+          ? encryptBookingFormAnswers(parsedAnswers.answers, dek)
+          : null,
     })
     .select("id")
     .single();

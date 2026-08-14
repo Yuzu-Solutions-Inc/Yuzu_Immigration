@@ -1,4 +1,4 @@
-import type { BookingAppointmentStatus } from "@/db/schema";
+import type { BookingAppointmentStatus, BookingFormFieldType } from "@/db/schema";
 
 export type BookingSettingsRow = {
   id: string;
@@ -24,6 +24,21 @@ export type BookingServiceRow = {
   price_cents: number;
   currency: string;
   is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BookingServiceFormFieldRow = {
+  id: string;
+  organization_id: string;
+  service_id: string;
+  field_key: string;
+  label: string;
+  help_text: string | null;
+  field_type: BookingFormFieldType;
+  options: string[];
+  required: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -90,6 +105,7 @@ export type BookingAppointmentRow = {
   google_event_id: string | null;
   meet_join_url: string | null;
   manage_token_hash: string | null;
+  form_answers: Record<string, string> | null;
   created_at: string;
   updated_at: string;
   service?: BookingServiceRow | null;

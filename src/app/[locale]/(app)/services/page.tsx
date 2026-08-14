@@ -3,7 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { ServicesManager } from "@/components/booking/services-manager";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
-import { listBookingServices, listServiceEmailAutomations } from "@/lib/booking/queries";
+import { listBookingServices, listServiceEmailAutomations, listServiceFormFields } from "@/lib/booking/queries";
 
 export default async function ServicesPage({
   params,
@@ -14,9 +14,10 @@ export default async function ServicesPage({
   setRequestLocale(locale);
 
   const membership = await getPrimaryMembership();
-  const [services, automations] = await Promise.all([
+  const [services, automations, formFields] = await Promise.all([
     listBookingServices(),
     listServiceEmailAutomations(),
+    listServiceFormFields(),
   ]);
 
   return (
@@ -25,6 +26,7 @@ export default async function ServicesPage({
       canManage={canCreateRecords(membership?.role)}
       services={services}
       automations={automations}
+      formFields={formFields}
     />
   );
 }

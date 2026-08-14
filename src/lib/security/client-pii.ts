@@ -42,6 +42,7 @@ export const PII_AAD = {
     guestEmail: "booking_appointments.guest_email",
     guestPhone: "booking_appointments.guest_phone",
     guestAddress: "booking_appointments.guest_address",
+    formAnswers: "booking_appointments.form_answers",
   },
 } as const;
 
@@ -361,6 +362,28 @@ export function decryptBookingGuestRow<T extends BookingGuestPii>(
       key,
     ) as T["guest_address"],
   };
+}
+
+export function encryptBookingFormAnswers(
+  answers: Record<string, string>,
+  key: Buffer,
+) {
+  return encryptJson(answers, PII_AAD.booking.formAnswers, key);
+}
+
+export function decryptBookingFormAnswers(
+  value: unknown,
+  key: Buffer,
+): Record<string, string> {
+  const decoded = decryptJson(value, PII_AAD.booking.formAnswers, key);
+  if (!decoded || typeof decoded !== "object" || Array.isArray(decoded)) {
+    return {};
+  }
+  const out: Record<string, string> = {};
+  for (const [itemKey, itemValue] of Object.entries(decoded)) {
+    if (typeof itemValue === "string") out[itemKey] = itemValue;
+  }
+  return out;
 }
 
 export function fieldNeedsSeal(value: string | null | undefined): boolean {

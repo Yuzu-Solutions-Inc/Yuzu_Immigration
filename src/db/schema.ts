@@ -534,6 +534,17 @@ export const bookingAppointmentStatusEnum = pgEnum("booking_appointment_status",
   "no_show",
 ]);
 
+export const bookingFormFieldTypeEnum = pgEnum("booking_form_field_type", [
+  "text",
+  "textarea",
+  "email",
+  "phone",
+  "number",
+  "date",
+  "select",
+  "checkbox",
+]);
+
 /** Per-org public booking page (hashed token + encrypted plaintext for recopy). */
 export const bookingSettings = pgTable("booking_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -608,6 +619,33 @@ export const bookingServices = pgTable("booking_services", {
     .notNull(),
 });
 
+export const bookingServiceFormFields = pgTable(
+  "booking_service_form_fields",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    serviceId: uuid("service_id")
+      .notNull()
+      .references(() => bookingServices.id, { onDelete: "cascade" }),
+    fieldKey: text("field_key").notNull(),
+    label: text("label").notNull(),
+    helpText: text("help_text"),
+    fieldType: bookingFormFieldTypeEnum("field_type").notNull().default("text"),
+    options: text("options").array().notNull(),
+    required: boolean("required").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.serviceId, table.fieldKey)],
+);
+
 export const bookingServiceEmailAutomations = pgTable(
   "booking_service_email_automations",
   {
@@ -680,6 +718,7 @@ export const bookingAppointments = pgTable("booking_appointments", {
   googleEventId: text("google_event_id"),
   meetJoinUrl: text("meet_join_url"),
   manageTokenHash: text("manage_token_hash"),
+  formAnswers: jsonb("form_answers"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -831,3 +870,5 @@ export type DocumentRequestStatus =
 export type DocumentDocKey = "passport" | "photo" | "custom";
 export type BookingAppointmentStatus =
   (typeof bookingAppointmentStatusEnum.enumValues)[number];
+export type BookingFormFieldType =
+  (typeof bookingFormFieldTypeEnum.enumValues)[number];

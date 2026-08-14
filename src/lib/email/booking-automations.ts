@@ -1,4 +1,4 @@
-import { decryptBookingGuestRow } from "@/lib/security/client-pii";
+import { decryptBookingFormAnswers, decryptBookingGuestRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { sendResendEmail } from "@/lib/email/resend";
@@ -9,6 +9,7 @@ import {
   renderAutomationPlain,
   resolveRecipientAddresses,
 } from "@/lib/email/automation-template";
+import { extraAutomationVariables } from "@/lib/booking/form-fields";
 import type {
   BookingAppointmentRow,
   BookingServiceRow,
@@ -29,6 +30,7 @@ type AppointmentSendRow = Pick<
   | "status"
   | "meet_join_url"
   | "person_id"
+  | "form_answers"
 >;
 
 export async function processDueBookingAutomations(now = new Date()) {
@@ -51,7 +53,7 @@ export async function processDueBookingAutomations(now = new Date()) {
   const { data: appointments, error: appointmentError } = await admin
     .from("booking_appointments")
     .select(
-      "id, organization_id, service_id, host_user_id, starts_at, guest_name, guest_email, status, meet_join_url, person_id",
+      "id, organization_id, service_id, host_user_id, starts_at, guest_name, guest_email, status, meet_join_url, person_id, form_answers",
     )
     .eq("status", "confirmed")
     .gt("starts_at", now.toISOString())
@@ -164,6 +166,9 @@ export async function processDueBookingAutomations(now = new Date()) {
       startsAt,
       durationMinutes: service.duration_minutes,
       meetJoinUrl: appointment.meet_join_url,
+      extra: extraAutomationVariables(
+        decryptBookingFormAnswers(appointment.form_answers, dek),
+      ),
     });
 
     for (const automation of matching) {

@@ -23,7 +23,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { ServiceEmailAutomationRow } from "@/lib/booking/types";
+import type {
+  BookingServiceFormFieldRow,
+  ServiceEmailAutomationRow,
+} from "@/lib/booking/types";
 import {
   AUTOMATION_VARIABLES,
   CONSULTANT_EMAIL_TOKEN,
@@ -70,11 +73,13 @@ function AutomationForm({
   locale,
   serviceId,
   automation,
+  formFields,
   onCancel,
 }: {
   locale: string;
   serviceId: string;
   automation?: ServiceEmailAutomationRow;
+  formFields: BookingServiceFormFieldRow[];
   onCancel: () => void;
 }) {
   const t = useTranslations("services");
@@ -129,7 +134,7 @@ function AutomationForm({
     setExtraDraft("");
   }
 
-  function insertVariable(name: (typeof AUTOMATION_VARIABLES)[number]) {
+  function insertVariable(name: string) {
     const token = `{{${name}}}`;
     if (lastField.current === "subject") {
       insertToken(subjectRef.current, token, subject, setSubject);
@@ -191,6 +196,16 @@ function AutomationForm({
               onClick={() => insertVariable(name)}
             >
               {t(`variables.${name}`)}
+            </button>
+          ))}
+          {formFields.map((field) => (
+            <button
+              key={field.id}
+              type="button"
+              className="rounded-full border border-action/30 bg-action/5 px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
+              onClick={() => insertVariable(field.field_key)}
+            >
+              {field.label}
             </button>
           ))}
         </div>
@@ -297,12 +312,14 @@ export function ServiceEmailAutomationsButton({
   serviceId,
   serviceTitle,
   automations,
+  formFields,
   canManage,
 }: {
   locale: string;
   serviceId: string;
   serviceTitle: string;
   automations: ServiceEmailAutomationRow[];
+  formFields: BookingServiceFormFieldRow[];
   canManage: boolean;
 }) {
   const t = useTranslations("services");
@@ -362,6 +379,7 @@ export function ServiceEmailAutomationsButton({
               locale={locale}
               serviceId={serviceId}
               automation={editing ?? undefined}
+              formFields={formFields}
               onCancel={closeForm}
             />
           ) : (

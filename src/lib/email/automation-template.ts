@@ -27,7 +27,7 @@ export type AutomationVariable = (typeof AUTOMATION_VARIABLES)[number];
 export const CUSTOMER_EMAIL_TOKEN = "{{customer_email}}";
 export const CONSULTANT_EMAIL_TOKEN = "{{consultant_email}}";
 
-const TOKEN_RE = /\{\{\s*([a-z_]+)\s*\}\}/gi;
+const TOKEN_RE = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/gi;
 
 function escapeHtml(value: string) {
   return value
@@ -44,7 +44,7 @@ export function renderAutomationPlain(template: string, vars: Record<string, str
 
 export function renderAutomationHtml(template: string, vars: Record<string, string>) {
   return escapeHtml(template)
-    .replace(/\{\{\s*([a-z_]+)\s*\}\}/gi, (_, key: string) =>
+    .replace(/\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/gi, (_, key: string) =>
       escapeHtml(vars[key.toLowerCase()] ?? ""),
     )
     .replaceAll("\n", "<br />");
@@ -75,11 +75,18 @@ export function automationVariablesFor(input: {
   startsAt: Date;
   durationMinutes: number;
   meetJoinUrl?: string | null;
+  extra?: Record<string, string>;
 }): Record<string, string> {
   const locale = toAppLocale(input.locale);
   const meet =
     input.meetJoinUrl?.startsWith("https://") ? input.meetJoinUrl : "";
+  const extra: Record<string, string> = {};
+  for (const [key, value] of Object.entries(input.extra ?? {})) {
+    if (!/^[a-z][a-z0-9_]{0,39}$/.test(key)) continue;
+    extra[key] = value;
+  }
   return {
+    ...extra,
     customer_name: input.customerName,
     customer_email: input.customerEmail,
     service_name: input.serviceName,

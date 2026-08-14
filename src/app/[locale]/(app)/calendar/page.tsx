@@ -14,6 +14,7 @@ import {
   listBlockedTimes,
   listBookingServices,
   listGoogleBusy,
+  listServiceFormFields,
 } from "@/lib/booking/queries";
 import { listOrgMembers } from "@/lib/crm/queries";
 import { addDaysToIsoDate, zonedDateIso } from "@/lib/booking/timezone";
@@ -29,10 +30,11 @@ export default async function CalendarPage({
 
   const membership = await getPrimaryMembership();
   const canManage = canCreateRecords(membership?.role);
-  const [settings, rules, services] = await Promise.all([
+  const [settings, rules, services, formFields] = await Promise.all([
     getBookingSettings(),
     listAvailabilityRules(),
     listBookingServices(),
+    listServiceFormFields(),
   ]);
 
   const timeZone = settings?.timezone ?? "America/Toronto";
@@ -70,6 +72,7 @@ export default async function CalendarPage({
         appointments={appointments}
         blocked={blocked}
         googleBusy={googleBusy}
+        formFields={formFields}
         hostNames={hostNames}
       />
     </div>

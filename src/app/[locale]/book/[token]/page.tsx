@@ -37,6 +37,7 @@ export default async function PublicBookPage({
         minNoticeHours: ctx.settings.min_notice_hours,
         bufferMinutes: ctx.settings.buffer_minutes,
         services: ctx.services,
+        formFields: ctx.formFields,
         hosts: ctx.hosts,
       }}
     />

@@ -12,6 +12,7 @@ import {
   type ServiceActionState,
 } from "@/app/actions/services";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { ServiceBookingFormButton } from "@/components/booking/service-booking-form";
 import { ServiceEmailAutomationsButton } from "@/components/booking/service-email-automations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { BookingServiceRow, ServiceEmailAutomationRow } from "@/lib/booking/types";
+import type {
+  BookingServiceFormFieldRow,
+  BookingServiceRow,
+  ServiceEmailAutomationRow,
+} from "@/lib/booking/types";
 import { centsToPriceInput, formatPriceCents } from "@/lib/booking/slots";
 
 const initialState: ServiceActionState = {};
@@ -106,11 +111,13 @@ export function ServicesManager({
   canManage,
   services,
   automations,
+  formFields,
 }: {
   locale: string;
   canManage: boolean;
   services: BookingServiceRow[];
   automations: ServiceEmailAutomationRow[];
+  formFields: BookingServiceFormFieldRow[];
 }) {
   const t = useTranslations("services");
   const automationsByService = new Map<string, ServiceEmailAutomationRow[]>();
@@ -118,6 +125,12 @@ export function ServicesManager({
     const list = automationsByService.get(automation.service_id) ?? [];
     list.push(automation);
     automationsByService.set(automation.service_id, list);
+  }
+  const fieldsByService = new Map<string, BookingServiceFormFieldRow[]>();
+  for (const field of formFields) {
+    const list = fieldsByService.get(field.service_id) ?? [];
+    list.push(field);
+    fieldsByService.set(field.service_id, list);
   }
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<BookingServiceRow | null>(null);
@@ -211,11 +224,19 @@ export function ServicesManager({
                     <Pencil className="size-4" />
                     {t("edit")}
                   </Button>
+                  <ServiceBookingFormButton
+                    locale={locale}
+                    serviceId={service.id}
+                    serviceTitle={service.title}
+                    fields={fieldsByService.get(service.id) ?? []}
+                    canManage={canManage}
+                  />
                   <ServiceEmailAutomationsButton
                     locale={locale}
                     serviceId={service.id}
                     serviceTitle={service.title}
                     automations={automationsByService.get(service.id) ?? []}
+                    formFields={fieldsByService.get(service.id) ?? []}
                     canManage={canManage}
                   />
                   <Button

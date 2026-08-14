@@ -14,9 +14,15 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@/i18n/navigation";
 import { formatPriceCents, generateServiceSlots } from "@/lib/booking/slots";
-import type { BookingServiceRow, PublicHostCalendar } from "@/lib/booking/types";
+import { formFieldInputName } from "@/lib/booking/form-fields";
+import type {
+  BookingServiceFormFieldRow,
+  BookingServiceRow,
+  PublicHostCalendar,
+} from "@/lib/booking/types";
 import {
   formatDateTimeInZone,
   formatTimeInZone,
@@ -31,6 +37,7 @@ export type PublicBookingPayload = {
   minNoticeHours: number;
   bufferMinutes: number;
   services: BookingServiceRow[];
+  formFields: BookingServiceFormFieldRow[];
   hosts: PublicHostCalendar[];
 };
 
@@ -100,6 +107,9 @@ export function PublicBookingFlow({
   const serviceStep = hostStep ? 2 : 1;
   const slotStep = hostStep ? 3 : 2;
   const detailsStep = hostStep ? 4 : 3;
+  const serviceFields = payload.formFields.filter(
+    (field) => field.service_id === serviceId,
+  );
   const warningEmail = state.guestEmail ?? guestEmail;
   const showExistingNotice =
     state.message === "existing_booking" || state.error === "too_many_bookings";
@@ -451,6 +461,9 @@ export function PublicBookingFlow({
                 onChange={(event) => setGuestAddress(event.target.value)}
               />
             </div>
+            {serviceFields.map((field) => (
+              <PublicCustomField key={field.id} field={field} />
+            ))}
             <label className="flex items-start gap-2 text-sm leading-relaxed">
               <input
                 type="checkbox"
@@ -481,6 +494,105 @@ export function PublicBookingFlow({
           </form>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+function PublicCustomField({ field }: { field: BookingServiceFormFieldRow }) {
+  const name = formFieldInputName(field.field_key);
+  const label = (
+    <Label htmlFor={name}>
+      {field.label}
+      {field.required ? " *" : ""}
+    </Label>
+  );
+  const help = field.help_text ? (
+    <p className="text-xs text-muted-foreground">{field.help_text}</p>
+  ) : null;
+
+  if (field.field_type === "checkbox") {
+    return (
+      <label className="flex items-start gap-2 text-sm leading-relaxed">
+        <input
+          id={name}
+          type="checkbox"
+          name={name}
+          value="on"
+          required={field.required}
+          className="mt-1 size-4 rounded border-input"
+        />
+        <span>
+          {field.label}
+          {field.required ? " *" : ""}
+          {help}
+        </span>
+      </label>
+    );
+  }
+
+  if (field.field_type === "textarea") {
+    return (
+      <div className="space-y-2">
+        {label}
+        <Textarea
+          id={name}
+          name={name}
+          rows={3}
+          required={field.required}
+          maxLength={2000}
+        />
+        {help}
+      </div>
+    );
+  }
+
+  if (field.field_type === "select") {
+    return (
+      <div className="space-y-2">
+        {label}
+        <select
+          id={name}
+          name={name}
+          required={field.required}
+          className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
+          defaultValue=""
+        >
+          <option value="" disabled>
+            —
+          </option>
+          {field.options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        {help}
+      </div>
+    );
+  }
+
+  const inputType =
+    field.field_type === "email"
+      ? "email"
+      : field.field_type === "phone"
+        ? "tel"
+        : field.field_type === "number"
+          ? "number"
+          : field.field_type === "date"
+            ? "date"
+            : "text";
+
+  return (
+    <div className="space-y-2">
+      {label}
+      <Input
+        id={name}
+        name={name}
+        type={inputType}
+        required={field.required}
+        maxLength={field.field_type === "text" ? 300 : undefined}
+      />
+      {help}
     </div>
   );
 }

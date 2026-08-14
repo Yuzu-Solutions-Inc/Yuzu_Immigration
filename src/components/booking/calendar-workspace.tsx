@@ -20,6 +20,7 @@ import type {
   BookingAppointmentRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
+  BookingServiceFormFieldRow,
   BookingSettingsRow,
 } from "@/lib/booking/types";
 import { formatPriceCents } from "@/lib/booking/slots";
@@ -36,6 +37,7 @@ export function CalendarWorkspace({
   appointments,
   blocked,
   googleBusy,
+  formFields,
   hostNames,
 }: {
   locale: string;
@@ -44,6 +46,7 @@ export function CalendarWorkspace({
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
   googleBusy: BookingGoogleBusyRow[];
+  formFields: BookingServiceFormFieldRow[];
   hostNames: Record<string, string>;
 }) {
   const t = useTranslations("calendar");
@@ -289,6 +292,24 @@ export function CalendarWorkspace({
                   <p className="text-xs text-muted-foreground">
                     {row.guest_address}
                   </p>
+                  {Object.entries(row.form_answers ?? {}).map(([key, value]) => {
+                    const field = formFields.find(
+                      (item) =>
+                        item.service_id === row.service_id &&
+                        item.field_key === key,
+                    );
+                    const display =
+                      field?.field_type === "checkbox"
+                        ? value === "true"
+                          ? t("formYes")
+                          : t("formNo")
+                        : value;
+                    return (
+                      <p key={key} className="text-xs text-muted-foreground">
+                        {field?.label ?? key}: {display}
+                      </p>
+                    );
+                  })}
                   {row.person_id ? (
                     <Link
                       href={`/people/${row.person_id}`}
