@@ -29,6 +29,7 @@ import {
   decryptProjectRow,
   encryptAnswersValue,
   encryptPersonWrite,
+  encryptProjectNoteBody,
   encryptProjectWrite,
 } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
@@ -1401,4 +1402,121 @@ export async function deleteProjectAction(
   revalidatePath(`/${parsed.data.locale}/people`);
   revalidatePath(`/${parsed.data.locale}/calendar`);
   redirect(`/${parsed.data.locale}/projects`);
+}
+
+const projectNoteSchema = z.object({
+  locale: z.enum(["en", "fr", "es"]).default("en"),
+  projectId: z.string().uuid(),
+  body: z.string().trim().min(1).max(20000),
+});
+
+export type ProjectNoteActionState = {
+  error?: string;
+  message?: string;
+};
+
+export async function addProjectNoteAction(
+  _prev: ProjectNoteActionState,
+  formData: FormData,
+): Promise<ProjectNoteActionState> {
+  const parsed = projectNoteSchema.safeParse({
+    locale: formData.get("locale") || "en",
+    projectId: String(formData.get("projectId") || ""),
+    body: String(formData.get("body") || ""),
+  });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  const { data } = parsed;
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${data.locale}/onboarding`);
+  }
+
+  const user = await getSessionUser();
+  const supabase = await createClient();
+  const { data: project, error: projectError } = await supabase
+    .from("immigration_projects")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("id", data.projectId)
+    .maybeSingle();
+
+  if (projectError || !project) {
+    return { error: "not_found" };
+  }
+
+  const { error: insertError } = await supabase.from("project_notes").insert({
+    organization_id: orgId,
+    project_id: data.projectId,
+    body: encryptProjectNoteBody(data.body, await getOrgDataKey(orgId)),
+    created_by: user?.id ?? null,
+  });
+
+  if (insertError) {
+    console.error("add project note:", insertError.message);
+    return { error: "save_failed" };
+  }
+
+  revalidatePath(`/${data.locale}/projects/${data.projectId}`);
+  return { message: "saved" };
+}
+
+const updateProjectNoteSchema = projectNoteSchema.extend({
+  noteId: z.string().uuid(),
+});
+
+export async function updateProjectNoteAction(
+  _prev: ProjectNoteActionState,
+  formData: FormData,
+): Promise<ProjectNoteActionState> {
+  const parsed = updateProjectNoteSchema.safeParse({
+    locale: formData.get("locale") || "en",
+    projectId: String(formData.get("projectId") || ""),
+    noteId: String(formData.get("noteId") || ""),
+    body: String(formData.get("body") || ""),
+  });
+
+  if (!parsed.success) {
+    return { error: "invalid" };
+  }
+
+  const { data } = parsed;
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${data.locale}/onboarding`);
+  }
+
+  const supabase = await createClient();
+  const { data: existing, error: existingError } = await supabase
+    .from("project_notes")
+    .select("id")
+    .eq("id", data.noteId)
+    .eq("project_id", data.projectId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
+  if (existingError || !existing) {
+    return { error: "not_found" };
+  }
+
+  const { error: updateError } = await supabase
+    .from("project_notes")
+    .update({
+      body: encryptProjectNoteBody(data.body, await getOrgDataKey(orgId)),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", data.noteId)
+    .eq("project_id", data.projectId)
+    .eq("organization_id", orgId);
+
+  if (updateError) {
+    console.error("update project note:", updateError.message);
+    return { error: "save_failed" };
+  }
+
+  revalidatePath(`/${data.locale}/projects/${data.projectId}`);
+  return { message: "updated" };
 }

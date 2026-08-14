@@ -20,6 +20,7 @@ import {
   getProjectParticipants,
   getProjectStatusHistory,
   listPersonNotes,
+  listProjectNotes,
 } from "@/lib/crm/queries";
 import {
   downloadDecryptedDocument,
@@ -109,6 +110,7 @@ export async function buildProjectFileZip(
   const notesMap = new Map(
     notesByPerson.map((entry) => [entry.personId, entry.notes]),
   );
+  const projectNotes = await listProjectNotes(projectId);
 
   const supabase = await createClient();
   const { data: shareLinks } = await supabase
@@ -134,6 +136,13 @@ export async function buildProjectFileZip(
       title: project.title,
       description: project.description,
       notes: project.notes,
+      file_notes: projectNotes.map((note) => ({
+        id: note.id,
+        body: note.body,
+        author_name: note.author_name,
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+      })),
       status: project.status,
       status_at: project.status_at,
       submit_before: project.submit_before,

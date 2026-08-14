@@ -4,13 +4,16 @@ import { notFound } from "next/navigation";
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
+import { ProjectShareLinkCard } from "@/components/forms/project-share-link-card";
 import {
   ExportProjectFileButton,
   ProjectRetentionPanel,
 } from "@/components/privacy/retention-export";
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
+import { ProjectNotesSection } from "@/components/projects/project-notes-section";
 import { ProjectParticipantsList } from "@/components/projects/project-participants-list";
+import { ProjectScheduleCallCard } from "@/components/projects/project-schedule-call-card";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { ProjectSubmitBeforeCard } from "@/components/projects/project-submit-before-card";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,7 +30,12 @@ import {
   getProjectStatusHistory,
   listOrgMembers,
   listProjectAssistantUserIds,
+  listProjectNotes,
 } from "@/lib/crm/queries";
+import {
+  listProjectCallInvites,
+  listProjectMeetingHistory,
+} from "@/lib/booking/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { ensureProjectDocumentsSeeded } from "@/lib/documents/service";
 import { listProjectDocumentRequests } from "@/lib/documents/service";
@@ -42,6 +50,7 @@ import {
 import { buildQuestionnairePeople } from "@/lib/ircc/questionnaire-people";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+
 export default async function ProjectDetailPage({
   params,
 }: {
@@ -74,17 +83,41 @@ export default async function ProjectDetailPage({
     project.program_family,
   );
 
-  const [participants, history, forms, answersRow, share, documentRequests, members, assistantIds] =
-    await Promise.all([
-      getProjectParticipants(id),
-      getProjectStatusHistory(id),
-      listProjectForms(id),
-      getProjectFormAnswers(id),
-      getActiveShareLink(id),
-      listProjectDocumentRequests(id),
-      canShare ? listOrgMembers() : Promise.resolve([]),
-      canShare ? listProjectAssistantUserIds(id) : Promise.resolve([]),
-    ]);
+  const [
+    participants,
+    history,
+    forms,
+    answersRow,
+    share,
+    documentRequests,
+    members,
+    assistantIds,
+    notes,
+    meetings,
+    callInvites,
+    bookingSettings,
+  ] = await Promise.all([
+    getProjectParticipants(id),
+    getProjectStatusHistory(id),
+    listProjectForms(id),
+    getProjectFormAnswers(id),
+    getActiveShareLink(id),
+    listProjectDocumentRequests(id),
+    canShare ? listOrgMembers() : Promise.resolve([]),
+    canShare ? listProjectAssistantUserIds(id) : Promise.resolve([]),
+    listProjectNotes(id),
+    listProjectMeetingHistory(id),
+    listProjectCallInvites(id),
+    (async () => {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("booking_settings")
+        .select("timezone")
+        .eq("organization_id", project.organization_id)
+        .maybeSingle();
+      return data;
+    })(),
+  ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
   const formLocale = locale === "fr" ? "fr" : "en";
@@ -204,21 +237,6 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated">
-        <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("notes")}
-        </p>
-        {project.notes ? (
-          <p className="mt-0.5 line-clamp-2 text-sm text-brand" title={project.notes}>
-            {project.notes}
-          </p>
-        ) : (
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {t("notesEmpty")}
-          </p>
-        )}
-      </div>
-
       <ProjectRetentionPanel
         locale={appLocale}
         projectId={project.id}
@@ -263,17 +281,41 @@ export default async function ProjectDetailPage({
               }))}
             />
           </div>
+
+          <div id="forms" className="scroll-mt-20">
+            <ProjectFormsPanel
+              locale={formLocale}
+              projectId={project.id}
+              programFamily={project.program_family}
+              forms={todoForms}
+              people={questionnairePeople}
+            />
+          </div>
         </div>
 
-        <div id="forms" className="min-w-0 scroll-mt-20">
-          <ProjectFormsPanel
+        <div className="min-w-0 space-y-6">
+          <ProjectShareLinkCard
             locale={formLocale}
             projectId={project.id}
-            programFamily={project.program_family}
-            forms={todoForms}
-            people={questionnairePeople}
             activeShareExpiresAt={share?.expires_at ?? null}
-            shareCanReveal={share?.canReveal ?? false}
+            canReveal={share?.canReveal ?? false}
+          />
+          <ProjectScheduleCallCard
+            locale={locale}
+            projectId={project.id}
+            timezone={bookingSettings?.timezone ?? "America/Toronto"}
+            canSchedule={Boolean(membership)}
+            principalEmail={
+              participants.find((row) => row.role === "principal")?.person
+                ?.email ?? null
+            }
+            meetings={meetings}
+            invites={callInvites}
+          />
+          <ProjectNotesSection
+            locale={locale}
+            projectId={project.id}
+            notes={notes}
           />
         </div>
       </div>

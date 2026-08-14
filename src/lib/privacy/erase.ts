@@ -514,6 +514,21 @@ export async function eraseProjectPersonalData(input: {
     .eq("organization_id", organizationId)
     .eq("project_id", projectId);
   await admin
+    .from("project_notes")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await admin
+    .from("project_booking_invites")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await admin
+    .from("booking_appointments")
+    .update({ project_id: null })
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await admin
     .from("project_participants")
     .delete()
     .eq("organization_id", organizationId)

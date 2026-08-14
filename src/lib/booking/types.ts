@@ -127,6 +127,7 @@ export type BookingAppointmentRow = {
   cancelled_at: string | null;
   cancelled_by: string | null;
   host_user_id: string;
+  project_id: string | null;
   google_event_id: string | null;
   meet_join_url: string | null;
   manage_token_hash: string | null;

@@ -12,6 +12,7 @@ import type {
 import {
   decryptNoteBody,
   decryptPersonRow,
+  decryptProjectNoteBody,
   decryptProjectRow,
 } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
@@ -36,6 +37,17 @@ export type PersonNoteRow = {
   id: string;
   organization_id: string;
   person_id: string;
+  body: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  author_name: string | null;
+};
+
+export type ProjectNoteRow = {
+  id: string;
+  organization_id: string;
+  project_id: string;
   body: string;
   created_by: string | null;
   created_at: string;
@@ -226,6 +238,58 @@ export async function listPersonNotes(
   return rows.map((row) => ({
     ...row,
     body: decryptNoteBody(row.body, key),
+    author_name: row.created_by ? (names.get(row.created_by) ?? null) : null,
+  }));
+}
+
+export async function listProjectNotes(
+  projectId: string,
+): Promise<ProjectNoteRow[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("project_notes")
+    .select(
+      "id, organization_id, project_id, body, created_by, created_at, updated_at",
+    )
+    .eq("organization_id", orgId)
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("listProjectNotes:", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []) as Omit<ProjectNoteRow, "author_name">[];
+  const key = await getOrgDataKey(orgId);
+  const authorIds = [
+    ...new Set(rows.map((row) => row.created_by).filter(Boolean)),
+  ] as string[];
+
+  let names = new Map<string, string | null>();
+  if (authorIds.length > 0) {
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", authorIds);
+    if (profileError) {
+      console.error("listProjectNotes authors:", profileError.message);
+    } else {
+      names = new Map(
+        (profiles ?? []).map((p) => [
+          p.id as string,
+          (p.full_name as string | null) || (p.email as string | null),
+        ]),
+      );
+    }
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    body: decryptProjectNoteBody(row.body, key),
     author_name: row.created_by ? (names.get(row.created_by) ?? null) : null,
   }));
 }

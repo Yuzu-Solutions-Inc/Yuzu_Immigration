@@ -16,6 +16,7 @@ export type SealClientPiiResult = {
   orgs: number;
   people: number;
   notes: number;
+  projectNotes: number;
   projects: number;
   answers: number;
   documentFiles: number;
@@ -149,6 +150,33 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
         .update({ body })
         .eq("id", row.id);
       if (error) throw new Error(`person_notes update: ${error.message}`);
+      return true;
+    },
+  );
+
+  const projectNotes = await forEachPage(
+    async (from, to) => {
+      const { data, error } = await admin
+        .from("project_notes")
+        .select("id, organization_id, body")
+        .order("created_at", { ascending: true })
+        .range(from, to);
+      if (error) throw new Error(`project_notes: ${error.message}`);
+      return (data ?? []) as Array<{
+        id: string;
+        organization_id: string;
+        body: string;
+      }>;
+    },
+    async (row) => {
+      const key = await orgKey(row.organization_id);
+      const body = rekeyString(row.body, PII_AAD.projectNotes.body, key);
+      if (body === undefined) return false;
+      const { error } = await admin
+        .from("project_notes")
+        .update({ body })
+        .eq("id", row.id);
+      if (error) throw new Error(`project_notes update: ${error.message}`);
       return true;
     },
   );
@@ -357,6 +385,7 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
     orgs,
     people,
     notes,
+    projectNotes,
     projects,
     answers,
     documentFiles,

@@ -7,6 +7,7 @@ import {
   decryptBookingFormAnswers,
   decryptBookingGuestRow,
   decryptPersonRow,
+  decryptProjectRow,
   PII_AAD,
 } from "@/lib/security/client-pii";
 import { decryptField } from "@/lib/security/field-crypto";
@@ -932,5 +933,314 @@ export async function listFutureGuestAppointmentsByEmail(input: {
     hostName: hostName.get(row.hostUserId) ?? row.hostUserId,
     meetJoinUrl: row.meetJoinUrl,
   }));
+}
+
+export const PROJECT_CALL_DURATION_MINUTES = 30;
+export const PROJECT_CALL_INVITE_TTL_DAYS = 14;
+
+export type ProjectCallInviteContext = {
+  inviteId: string;
+  organizationId: string;
+  organizationName: string;
+  projectId: string;
+  projectTitle: string;
+  personId: string;
+  guestFirstName: string;
+  guestLastName: string;
+  guestEmail: string;
+  guestPhone: string | null;
+  guestPreferredLocale: string;
+  host: PublicHostCalendar;
+  service: BookingServiceRow;
+  settings: BookingSettingsRow;
+  status: "open" | "used" | "expired" | "revoked";
+  appointmentStartsAt: string | null;
+};
+
+export type ProjectMeetingHistoryItem = {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  status: BookingAppointmentRow["status"];
+  hostName: string;
+  serviceTitle: string;
+  meetJoinUrl: string | null;
+  guestName: string;
+};
+
+export type ProjectInviteHistoryItem = {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  revokedAt: string | null;
+  appointmentId: string | null;
+  emailedTo: string | null;
+  hostName: string;
+  status: "open" | "used" | "expired" | "revoked";
+};
+
+/** Ensure the firm has an active 30-minute call service for project invites. */
+export async function ensureProjectCallService(
+  organizationId: string,
+): Promise<BookingServiceRow | null> {
+  const admin = createServiceClient();
+  const { data: existing } = await admin
+    .from("booking_services")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("is_active", true)
+    .eq("duration_minutes", PROJECT_CALL_DURATION_MINUTES)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) return existing as BookingServiceRow;
+
+  const { data: created, error } = await admin
+    .from("booking_services")
+    .insert({
+      organization_id: organizationId,
+      title: "Consultation call",
+      description: "30-minute call",
+      duration_minutes: PROJECT_CALL_DURATION_MINUTES,
+      price_cents: 0,
+      currency: "CAD",
+      is_active: true,
+      sort_order: 0,
+    })
+    .select("*")
+    .single();
+
+  if (error || !created) {
+    console.error("ensureProjectCallService:", error?.message);
+    return null;
+  }
+  return created as BookingServiceRow;
+}
+
+export async function loadProjectCallInviteContext(
+  token: string,
+): Promise<ProjectCallInviteContext | null> {
+  const admin = createServiceClient();
+  const hash = hashBookingToken(token);
+  const { data: invite, error } = await admin
+    .from("project_booking_invites")
+    .select("*")
+    .eq("token_hash", hash)
+    .maybeSingle();
+
+  if (error || !invite) {
+    if (error) console.error("loadProjectCallInviteContext:", error.message);
+    return null;
+  }
+
+  const [
+    { data: org },
+    { data: project },
+    { data: person },
+    { data: settings },
+    { data: service },
+    { data: appointment },
+  ] = await Promise.all([
+    admin
+      .from("organizations")
+      .select("id, name")
+      .eq("id", invite.organization_id)
+      .maybeSingle(),
+    admin
+      .from("immigration_projects")
+      .select("id, title")
+      .eq("id", invite.project_id)
+      .maybeSingle(),
+    admin
+      .from("people")
+      .select("*")
+      .eq("id", invite.person_id)
+      .maybeSingle(),
+    admin
+      .from("booking_settings")
+      .select("*")
+      .eq("organization_id", invite.organization_id)
+      .maybeSingle(),
+    admin
+      .from("booking_services")
+      .select("*")
+      .eq("id", invite.service_id)
+      .maybeSingle(),
+    invite.appointment_id
+      ? admin
+          .from("booking_appointments")
+          .select("starts_at")
+          .eq("id", invite.appointment_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  if (!org || !project || !person || !settings || !service) return null;
+
+  const dek = await getOrgDataKey(invite.organization_id as string);
+  const decrypted = decryptPersonRow(person as PersonRow, dek);
+  const projectDecrypted = decryptProjectRow(
+    project as { id: string; title: string },
+    dek,
+  );
+  const hosts = await loadHostCalendars({
+    organizationId: invite.organization_id as string,
+    bookingWindowDays: (settings as BookingSettingsRow).booking_window_days,
+  });
+  const host =
+    hosts.find((row) => row.userId === invite.host_user_id) ?? null;
+
+  let status: ProjectCallInviteContext["status"] = "open";
+  if (invite.revoked_at) status = "revoked";
+  else if (invite.appointment_id) status = "used";
+  else if (Date.parse(invite.expires_at as string) <= Date.now()) {
+    status = "expired";
+  }
+
+  return {
+    inviteId: invite.id as string,
+    organizationId: org.id as string,
+    organizationName: org.name as string,
+    projectId: projectDecrypted.id,
+    projectTitle: projectDecrypted.title,
+    personId: decrypted.id,
+    guestFirstName: decrypted.first_name,
+    guestLastName: decrypted.last_name,
+    guestEmail: decrypted.email ?? "",
+    guestPhone: decrypted.phone,
+    guestPreferredLocale: decrypted.preferred_locale || "en",
+    host: host ?? {
+      userId: invite.host_user_id as string,
+      name: "Consultant",
+      rules: [],
+      blocked: [],
+      busy: [],
+    },
+    service: service as BookingServiceRow,
+    settings: settings as BookingSettingsRow,
+    status,
+    appointmentStartsAt: (appointment?.starts_at as string | null) ?? null,
+  };
+}
+
+export async function listProjectMeetingHistory(
+  projectId: string,
+): Promise<ProjectMeetingHistoryItem[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("booking_appointments")
+    .select(
+      "id, starts_at, ends_at, status, host_user_id, service_id, meet_join_url, guest_name, guest_email, guest_phone, guest_address, form_answers",
+    )
+    .eq("organization_id", orgId)
+    .eq("project_id", projectId)
+    .order("starts_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error("listProjectMeetingHistory:", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []) as BookingAppointmentRow[];
+  if (rows.length === 0) return [];
+
+  const key = await getOrgDataKey(orgId);
+  const hostIds = [...new Set(rows.map((row) => row.host_user_id))];
+  const serviceIds = [...new Set(rows.map((row) => row.service_id))];
+  const [{ data: profiles }, { data: services }] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, email").in("id", hostIds),
+    supabase.from("booking_services").select("id, title").in("id", serviceIds),
+  ]);
+  const hostName = new Map(
+    (profiles ?? []).map((row) => [
+      row.id as string,
+      (row.full_name as string | null)?.trim() ||
+        (row.email as string | null) ||
+        row.id,
+    ]),
+  );
+  const serviceTitle = new Map(
+    (services ?? []).map((row) => [row.id as string, row.title as string]),
+  );
+
+  return rows.map((row) => {
+    const guest = decryptBookingGuestRow(row, key);
+    return {
+      id: row.id,
+      startsAt: row.starts_at,
+      endsAt: row.ends_at,
+      status: row.status,
+      hostName: hostName.get(row.host_user_id) ?? row.host_user_id,
+      serviceTitle: serviceTitle.get(row.service_id) ?? "Call",
+      meetJoinUrl: row.meet_join_url,
+      guestName: guest.guest_name,
+    };
+  });
+}
+
+export async function listProjectCallInvites(
+  projectId: string,
+): Promise<ProjectInviteHistoryItem[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("project_booking_invites")
+    .select(
+      "id, created_at, expires_at, revoked_at, appointment_id, emailed_to, host_user_id",
+    )
+    .eq("organization_id", orgId)
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error("listProjectCallInvites:", error.message);
+    return [];
+  }
+
+  const rows = data ?? [];
+  if (rows.length === 0) return [];
+
+  const hostIds = [
+    ...new Set(rows.map((row) => row.host_user_id as string)),
+  ];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", hostIds);
+  const hostName = new Map(
+    (profiles ?? []).map((row) => [
+      row.id as string,
+      (row.full_name as string | null)?.trim() ||
+        (row.email as string | null) ||
+        row.id,
+    ]),
+  );
+
+  const now = Date.now();
+  return rows.map((row) => {
+    let status: ProjectInviteHistoryItem["status"] = "open";
+    if (row.revoked_at) status = "revoked";
+    else if (row.appointment_id) status = "used";
+    else if (Date.parse(row.expires_at as string) <= now) status = "expired";
+    return {
+      id: row.id as string,
+      createdAt: row.created_at as string,
+      expiresAt: row.expires_at as string,
+      revokedAt: (row.revoked_at as string | null) ?? null,
+      appointmentId: (row.appointment_id as string | null) ?? null,
+      emailedTo: (row.emailed_to as string | null) ?? null,
+      hostName: hostName.get(row.host_user_id as string) ?? "Consultant",
+      status,
+    };
+  });
 }
 

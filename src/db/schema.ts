@@ -258,6 +258,27 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .notNull(),
 });
 
+/** Internal consultation notes for a project file (firm-only). */
+export const projectNotes = pgTable("project_notes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 /** Assistants only see projects they are shared on. */
 export const projectStaffAccess = pgTable(
   "project_staff_access",
@@ -814,6 +835,9 @@ export const bookingAppointments = pgTable("booking_appointments", {
   hostUserId: uuid("host_user_id")
     .notNull()
     .references(() => profiles.id, { onDelete: "restrict" }),
+  projectId: uuid("project_id").references(() => immigrationProjects.id, {
+    onDelete: "set null",
+  }),
   googleEventId: text("google_event_id"),
   meetJoinUrl: text("meet_join_url"),
   manageTokenHash: text("manage_token_hash"),
@@ -830,6 +854,40 @@ export const bookingAppointments = pgTable("booking_appointments", {
     table.manageTokenHash,
   ),
 ]);
+
+/** Single-use “schedule a call” links emailed from a project file. */
+export const projectBookingInvites = pgTable("project_booking_invites", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  personId: uuid("person_id")
+    .notNull()
+    .references(() => people.id, { onDelete: "cascade" }),
+  hostUserId: uuid("host_user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "restrict" }),
+  serviceId: uuid("service_id")
+    .notNull()
+    .references(() => bookingServices.id, { onDelete: "restrict" }),
+  tokenHash: text("token_hash").notNull().unique(),
+  tokenEncrypted: text("token_encrypted"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  appointmentId: uuid("appointment_id").references(() => bookingAppointments.id, {
+    onDelete: "set null",
+  }),
+  emailedTo: text("emailed_to"),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 export const bookingAutomationSends = pgTable(
   "booking_automation_sends",

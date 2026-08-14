@@ -52,7 +52,6 @@ export function ProjectShareLinkCard({
   );
   const [copied, setCopied] = useState(false);
   const [linkHidden, setLinkHidden] = useState(false);
-  const [revokedFeedback, setRevokedFeedback] = useState(false);
   const copiedUrlRef = useRef<string | null>(null);
 
   const shareUrl = linkHidden
@@ -70,7 +69,6 @@ export function ProjectShareLinkCard({
   useEffect(() => {
     if (shareState.message === "shared" && shareState.shareUrl) {
       setLinkHidden(false);
-      setRevokedFeedback(false);
     }
   }, [shareState]);
 
@@ -78,11 +76,8 @@ export function ProjectShareLinkCard({
     if (revokeState.message !== "revoked") return;
     setLinkHidden(true);
     setCopied(false);
-    setRevokedFeedback(true);
     copiedUrlRef.current = null;
     toast.success(t("shareRevoked"));
-    const timeout = window.setTimeout(() => setRevokedFeedback(false), 2500);
-    return () => window.clearTimeout(timeout);
   }, [revokeState, t]);
 
   useEffect(() => {
@@ -124,105 +119,97 @@ export function ProjectShareLinkCard({
       : null;
 
   return (
-    <SurfaceCard className="space-y-4">
-      <div className="space-y-1">
-        <h3 className="font-heading text-base font-semibold text-brand">
-          {t("shareTitle")}
-        </h3>
-        <p className="text-sm text-muted-foreground">{t("shareHelp")}</p>
+    <SurfaceCard className="space-y-3 p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="font-heading text-base font-semibold text-brand">
+            {t("shareTitle")}
+          </h3>
+          {active && expiresLabel ? (
+            <p className="text-xs text-muted-foreground">
+              {t("shareActiveShort", { date: expiresLabel })}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">{t("shareInactive")}</p>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {active && !shareUrl && canReveal ? (
+            <form action={revealAction}>
+              <input type="hidden" name="projectId" value={projectId} />
+              <input type="hidden" name="locale" value={locale} />
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+                disabled={revealPending}
+              >
+                {revealPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {revealPending ? t("shareShowing") : t("shareShowLink")}
+              </Button>
+            </form>
+          ) : null}
+          <form action={shareAction}>
+            <input type="hidden" name="projectId" value={projectId} />
+            <input type="hidden" name="locale" value={locale} />
+            <Button type="submit" size="sm" disabled={sharePending}>
+              {sharePending
+                ? t("sharing")
+                : active
+                  ? t("newShareLink")
+                  : t("createShareLink")}
+            </Button>
+          </form>
+          {active ? (
+            <form action={revokeAction}>
+              <input type="hidden" name="projectId" value={projectId} />
+              <input type="hidden" name="locale" value={locale} />
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+                disabled={revokePending}
+              >
+                {revokePending ? t("shareRevoking") : t("revokeShareLink")}
+              </Button>
+            </form>
+          ) : null}
+        </div>
       </div>
 
-      {active && expiresLabel ? (
-        <p className="text-sm text-brand">
-          {t("shareActive", { date: expiresLabel })}
-        </p>
-      ) : (
-        <p className="text-sm text-muted-foreground">{t("shareInactive")}</p>
-      )}
-
       {shareUrl ? (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("shareCopy")}
+        <div className="group relative rounded-xl border border-border bg-canvas px-3 py-2.5 pr-11">
+          <p className="truncate font-mono text-sm text-brand" title={shareUrl}>
+            {shareUrl}
           </p>
-          <div className="group relative rounded-xl border border-border bg-canvas p-3 pr-12">
-            <p className="break-all font-mono text-sm text-brand">{shareUrl}</p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => void copyLink()}
-              aria-label={copied ? t("shareCopied") : t("shareCopyButton")}
-              title={t("shareCopyButton")}
-              className={cn(
-                "absolute top-2 right-2 text-muted-foreground hover:text-brand",
-                "opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100",
-              )}
-            >
-              {copied ? (
-                <Check className="size-4 text-emerald-600" />
-              ) : (
-                <Copy className="size-4" />
-              )}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => void copyLink()}
+            aria-label={copied ? t("shareCopied") : t("shareCopyButton")}
+            title={t("shareCopyButton")}
+            className={cn(
+              "absolute top-1.5 right-1.5 text-muted-foreground hover:text-brand",
+            )}
+          >
+            {copied ? (
+              <Check className="size-4 text-emerald-600" />
+            ) : (
+              <Copy className="size-4" />
+            )}
+          </Button>
         </div>
       ) : null}
 
-      {copied && shareUrl ? (
-        <p className="text-sm font-medium text-emerald-700" role="status">
-          {t("shareCopied")}
-        </p>
-      ) : null}
-
-      {revokedFeedback ? (
-        <p className="text-sm font-medium text-emerald-700" role="status">
-          {t("shareRevoked")}
-        </p>
-      ) : null}
-
       {active && !shareUrl && !canReveal ? (
-        <p className="text-sm text-muted-foreground">{t("shareShowUnavailable")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("shareShowUnavailable")}
+        </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        {active && !shareUrl && canReveal ? (
-          <form action={revealAction}>
-            <input type="hidden" name="projectId" value={projectId} />
-            <input type="hidden" name="locale" value={locale} />
-            <Button type="submit" variant="outline" disabled={revealPending}>
-              {revealPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  {t("shareShowing")}
-                </>
-              ) : (
-                t("shareShowLink")
-              )}
-            </Button>
-          </form>
-        ) : null}
-        <form action={shareAction}>
-          <input type="hidden" name="projectId" value={projectId} />
-          <input type="hidden" name="locale" value={locale} />
-          <Button type="submit" disabled={sharePending}>
-            {sharePending
-              ? t("sharing")
-              : active
-                ? t("newShareLink")
-                : t("createShareLink")}
-          </Button>
-        </form>
-        {active ? (
-          <form action={revokeAction}>
-            <input type="hidden" name="projectId" value={projectId} />
-            <input type="hidden" name="locale" value={locale} />
-            <Button type="submit" variant="outline" disabled={revokePending}>
-              {revokePending ? t("shareRevoking") : t("revokeShareLink")}
-            </Button>
-          </form>
-        ) : null}
-      </div>
       {shareError ? (
         <p className="text-sm text-destructive" role="alert">
           {shareError}

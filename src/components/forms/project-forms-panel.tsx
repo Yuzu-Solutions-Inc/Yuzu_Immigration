@@ -15,7 +15,6 @@ import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
-import { ProjectShareLinkCard } from "@/components/forms/project-share-link-card";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -63,16 +62,12 @@ export function ProjectFormsPanel({
   programFamily,
   forms,
   people,
-  activeShareExpiresAt,
-  shareCanReveal,
 }: {
   locale: "en" | "fr";
   projectId: string;
   programFamily: ProgramFamily | string;
   forms: ProjectFormTodoRow[];
   people: QuestionnairePerson[];
-  activeShareExpiresAt: string | null;
-  shareCanReveal: boolean;
 }) {
   const t = useTranslations("forms");
   const tr = useTranslations("roles");
@@ -135,41 +130,33 @@ export function ProjectFormsPanel({
   }
 
   return (
-    <div className="space-y-6">
-      <ProjectShareLinkCard
-        locale={locale}
-        projectId={projectId}
-        activeShareExpiresAt={activeShareExpiresAt}
-        canReveal={shareCanReveal}
-      />
-
-      <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("todoTitle")}
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/projects/${projectId}/forms`}
-              className={cn(
-                buttonVariants({ size: "sm" }),
-                "bg-action text-white hover:bg-action/90",
-              )}
-            >
-              {t("openQuestionnaire")}
-            </Link>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={genPending || forms.length === 0}
-              onClick={() => handleDownload()}
-            >
-              {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
-            </Button>
-          </div>
+    <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("todoTitle")}
+        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/projects/${projectId}/forms`}
+            className={cn(
+              buttonVariants({ size: "sm" }),
+              "bg-action text-white hover:bg-action/90",
+            )}
+          >
+            {t("openQuestionnaire")}
+          </Link>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={genPending || forms.length === 0}
+            onClick={() => handleDownload()}
+          >
+            {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
+          </Button>
         </div>
-        <ul className="divide-y divide-border border-t border-border">
+      </div>
+      <ul className="divide-y divide-border border-t border-border">
           {forms.length === 0 ? (
             <li className="px-5 py-3 text-sm text-muted-foreground">
               {t("todoEmpty")}
@@ -341,7 +328,6 @@ export function ProjectFormsPanel({
           </li>
         </ul>
       </SurfaceCard>
-    </div>
   );
 }
 

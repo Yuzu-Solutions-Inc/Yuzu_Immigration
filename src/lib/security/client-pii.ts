@@ -17,6 +17,7 @@ export const PII_AAD = {
     phone: "people.phone",
   },
   notes: { body: "person_notes.body" },
+  projectNotes: { body: "project_notes.body" },
   projects: {
     title: "immigration_projects.title",
     description: "immigration_projects.description",
@@ -35,6 +36,9 @@ export const PII_AAD = {
   },
   shareLinks: {
     token: "form_share_links.token_encrypted",
+  },
+  bookingInvites: {
+    token: "project_booking_invites.token_encrypted",
   },
   booking: {
     token: "booking_settings.public_token_encrypted",
@@ -175,6 +179,17 @@ export function decryptNoteBody(
   key: Buffer,
 ): string {
   return decryptFieldMaybe(body, PII_AAD.notes.body, key) ?? "";
+}
+
+export function encryptProjectNoteBody(body: string, key: Buffer): string {
+  return encryptField(body, PII_AAD.projectNotes.body, key);
+}
+
+export function decryptProjectNoteBody(
+  body: string | null | undefined,
+  key: Buffer,
+): string {
+  return decryptFieldMaybe(body, PII_AAD.projectNotes.body, key) ?? "";
 }
 
 export function encryptAnswersValue(
