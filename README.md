@@ -50,4 +50,4 @@ Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_E
 
 ## Repo
 
-https://github.com/Yuzu-Solutions-Inc/MyConsultant
+https://github.com/Yuzu-Solutions-Inc/Yuzu_Immigration
