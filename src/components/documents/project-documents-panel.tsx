@@ -186,7 +186,7 @@ export function ProjectDocumentsPanel({
                     </div>
                     {submitted ? (
                       <CircleCheck
-                        className="size-4 shrink-0 text-emerald-600"
+                        className="size-4 shrink-0 text-success"
                         aria-label={t("statusUploaded")}
                       />
                     ) : (
@@ -259,7 +259,7 @@ export function ProjectDocumentsPanel({
             </p>
           ) : null}
           {addState.message === "added" ? (
-            <p className="mt-2 text-sm text-emerald-700">{t("added")}</p>
+            <p className="mt-2 text-sm text-success">{t("added")}</p>
           ) : null}
         </li>
       </ul>

@@ -694,7 +694,7 @@ function SectionProgressNav({
                     className={cn(
                       "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                       done && "bg-brand text-white",
-                      current && "bg-action text-white",
+                      current && "bg-action text-action-foreground",
                       !done && !current && "bg-muted text-white",
                     )}
                     aria-hidden
@@ -1176,7 +1176,7 @@ export function ModularQuestionnaire({
                       className={cn(
                         "flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                         selected
-                          ? "bg-action text-white"
+                          ? "bg-action text-action-foreground"
                           : "bg-muted text-muted-foreground",
                       )}
                       aria-hidden
@@ -1247,7 +1247,7 @@ export function ModularQuestionnaire({
           {t("saving")}
         </p>
       ) : saveNotice === "saved" ? (
-        <p className="text-sm font-medium text-emerald-700" role="status" aria-live="polite">
+        <p className="text-sm font-medium text-success" role="status" aria-live="polite">
           {t("saved")}
         </p>
       ) : (
@@ -1287,7 +1287,7 @@ export function ModularQuestionnaire({
               disabled={busy}
               aria-busy={busyIntent === "next"}
               className={cn(
-                "hover:bg-[#4338ca] hover:shadow-md active:bg-[#3730a3] active:scale-[0.97]",
+                "hover:bg-action-hover hover:shadow-md active:bg-action-active active:scale-[0.97]",
                 busyIntent === "next" && "disabled:opacity-100",
               )}
               onClick={() => requestSave("next")}
@@ -1307,7 +1307,7 @@ export function ModularQuestionnaire({
               disabled={busy}
               aria-busy={busyIntent === "finish"}
               className={cn(
-                "hover:bg-[#4338ca] hover:shadow-md active:bg-[#3730a3] active:scale-[0.97]",
+                "hover:bg-action-hover hover:shadow-md active:bg-action-active active:scale-[0.97]",
                 busyIntent === "finish" && "disabled:opacity-100",
               )}
               onClick={() => requestSave("finish")}

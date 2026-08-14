@@ -57,7 +57,7 @@ function ProductPreview() {
   return (
     <div
       aria-hidden
-      className="landing-preview relative mx-auto w-full max-w-5xl overflow-hidden rounded-t-[1.25rem] border border-white/10 border-b-0 bg-[#0b1220] shadow-[0_-24px_80px_-20px_rgba(17,24,39,0.55)]"
+      className="landing-preview relative mx-auto w-full max-w-5xl overflow-hidden rounded-t-[1.25rem] border border-white/10 border-b-0 bg-graphite-900 shadow-[0_-24px_80px_-20px_color-mix(in_srgb,var(--graphite-900)_55%,transparent)]"
     >
       <div className="flex items-center gap-2 border-b border-white/8 px-4 py-3">
         <span className="size-2.5 rounded-full bg-white/20" />
@@ -66,7 +66,7 @@ function ProductPreview() {
         <div className="ml-3 h-6 flex-1 rounded-md bg-white/6" />
       </div>
       <div className="grid grid-cols-[7.5rem_1fr] sm:grid-cols-[10rem_1fr]">
-        <div className="space-y-3 border-r border-white/8 bg-[#111827] p-4">
+        <div className="space-y-3 border-r border-white/8 bg-graphite-700 p-4">
           <div className="h-2.5 w-16 rounded bg-action/80" />
           <div className="h-2 w-12 rounded bg-white/15" />
           <div className="h-2 w-14 rounded bg-white/10" />
@@ -83,11 +83,11 @@ function ProductPreview() {
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-white/8 bg-white/4 p-3">
-              <div className="mb-3 h-2 w-16 rounded bg-emerald-400/70" />
+              <div className="mb-3 h-2 w-16 rounded bg-success/70" />
               <div className="h-8 rounded-md bg-white/8" />
             </div>
             <div className="rounded-xl border border-white/8 bg-white/4 p-3">
-              <div className="mb-3 h-2 w-14 rounded bg-amber-400/70" />
+              <div className="mb-3 h-2 w-14 rounded bg-warning/70" />
               <div className="h-8 rounded-md bg-white/8" />
             </div>
             <div className="hidden rounded-xl border border-white/8 bg-white/4 p-3 sm:block">
@@ -100,7 +100,7 @@ function ProductPreview() {
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-8 bg-[#0b1220]/70 sm:h-9"
+                  className="h-8 bg-graphite-900/70 sm:h-9"
                   style={{ opacity: 0.55 + (i % 4) * 0.1 }}
                 />
               ))}
@@ -116,7 +116,7 @@ export async function LandingPage() {
   const t = await getTranslations("home");
 
   return (
-    <main className="landing-page relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-[#f3f4f6]">
+    <main className="landing-page relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
       <style>{`
         @keyframes landing-fade-up {
           from { opacity: 0; transform: translateY(18px); }
@@ -152,7 +152,7 @@ export async function LandingPage() {
         }
       `}</style>
 
-      <header className="relative z-20 border-b border-brand/5 bg-[#f3f4f6]/80 backdrop-blur-md">
+      <header className="relative z-20 border-b border-brand/5 bg-canvas/80 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <BrandLogo size="md" />
           <div className="flex items-center gap-2 sm:gap-3">
@@ -173,13 +173,13 @@ export async function LandingPage() {
         </div>
       </header>
 
-      <section className="relative isolate overflow-hidden bg-[#111827] text-white">
+      <section className="relative isolate overflow-hidden bg-graphite-700 text-white">
         <div
           aria-hidden
           className="lp-mesh pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 80% 60% at 15% 20%, rgba(99,102,241,0.28), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 10%, rgba(5,150,105,0.18), transparent 50%), radial-gradient(ellipse 60% 40% at 70% 80%, rgba(245,158,11,0.12), transparent 55%), linear-gradient(180deg, #111827 0%, #0b1220 55%, #111827 100%)",
+              "radial-gradient(ellipse 80% 60% at 15% 20%, color-mix(in srgb, var(--indigo-500) 28%, transparent), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 10%, color-mix(in srgb, var(--emerald-500) 18%, transparent), transparent 50%), radial-gradient(ellipse 60% 40% at 70% 80%, color-mix(in srgb, var(--amber-500) 14%, transparent), transparent 55%), linear-gradient(180deg, var(--graphite-700) 0%, var(--graphite-900) 55%, var(--graphite-700) 100%)",
           }}
         />
         <div
@@ -235,13 +235,13 @@ export async function LandingPage() {
             <ProductPreview />
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#f3f4f6] to-transparent"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-canvas to-transparent"
             />
           </div>
         </div>
       </section>
 
-      <section className="relative z-10 border-b border-border bg-[#f3f4f6] py-20 sm:py-24">
+      <section className="relative z-10 border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
           <div className="max-w-2xl space-y-3">
             <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
@@ -310,7 +310,7 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="border-b border-border bg-[#f3f4f6] py-20 sm:py-24">
+      <section className="border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
           <div className="max-w-2xl space-y-3">
             <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
@@ -358,13 +358,13 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#111827] py-20 text-white sm:py-24">
+      <section className="relative overflow-hidden bg-graphite-700 py-20 text-white sm:py-24">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 70% 80% at 50% 120%, rgba(99,102,241,0.35), transparent 60%)",
+              "radial-gradient(ellipse 70% 80% at 50% 120%, color-mix(in srgb, var(--indigo-500) 35%, transparent), transparent 60%)",
           }}
         />
         <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 text-left sm:items-center sm:text-center">
@@ -398,7 +398,7 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-[#0b1220] py-8 text-white/50">
+      <footer className="bg-graphite-900 py-8 text-white/50">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <BrandLogo size="sm" inverted />

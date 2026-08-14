@@ -24,7 +24,6 @@ import {
   OrgSwitcher,
   type OrgSwitcherOption,
 } from "@/components/layout/org-switcher";
-import { SettingsNavLinks } from "@/components/layout/settings-menu";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -235,7 +234,6 @@ function SidebarBody({
           variant="sidebar"
           compact={collapsed}
         />
-        <SettingsNavLinks onNavigate={onNavigate} collapsed={collapsed} />
         <form
           action={signOutAction}
           className={cn(collapsed && "flex justify-center")}

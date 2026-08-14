@@ -91,7 +91,7 @@ export function ProjectRetentionPanel({
       </dl>
 
       {destroyedAt ? (
-        <p className="text-sm text-emerald-700">
+        <p className="text-sm text-success">
           {t("destroyedOn", {
             date: new Date(destroyedAt).toLocaleString(locale),
           })}
@@ -123,7 +123,7 @@ export function ProjectRetentionPanel({
             </p>
           ) : null}
           {state.message === "destroyed" ? (
-            <p className="text-sm text-emerald-700">{t("destroySuccess")}</p>
+            <p className="text-sm text-success">{t("destroySuccess")}</p>
           ) : null}
           <Button type="submit" variant="destructive" disabled={pending}>
             {pending ? t("destroying") : t("destroy")}

@@ -283,7 +283,7 @@ export function CalendarWorkspace({
           </div>
 
           {fullDayBlock ? (
-            <p className="shrink-0 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p className="shrink-0 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
               {t("dayIsBlocked")}
             </p>
           ) : null}

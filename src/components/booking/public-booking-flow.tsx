@@ -194,7 +194,7 @@ export function PublicBookingFlow({
               href={state.meetJoinUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-white hover:bg-action/90"
+              className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-action-foreground hover:bg-action/90"
             >
               {t("joinMeet")}
             </a>
@@ -418,7 +418,7 @@ export function PublicBookingFlow({
                             className={cn(
                               "rounded-xl border px-3 py-2 text-sm font-medium",
                               slotStart === slot.startsAt
-                                ? "border-action bg-action text-white"
+                                ? "border-action bg-action text-action-foreground"
                                 : "border-border bg-surface hover:border-action/40",
                             )}
                           >
@@ -506,7 +506,7 @@ export function PublicBookingFlow({
                 </p>
               ) : null}
               {showExistingNotice ? (
-                <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="space-y-3 rounded-xl border border-amber-100 bg-warning-bg p-4">
                   <p className="text-sm font-medium text-brand">
                     {atBookingCap ? t("tooManyTitle") : t("existingTitle")}
                   </p>

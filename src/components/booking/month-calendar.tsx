@@ -151,15 +151,15 @@ export function MonthCalendar({
                   ? "border-action bg-action/5 text-brand"
                   : "border-transparent hover:border-border hover:bg-muted/60",
                 isToday && !selected && "border-action/40",
-                isBlocked && !selected && "border-amber-200 bg-amber-50 text-amber-950 hover:border-amber-300 hover:bg-amber-50",
-                isBlocked && selected && "border-amber-500 bg-amber-50",
-                isBlocked && !cell.inMonth && "bg-amber-50/50",
+                isBlocked && !selected && "border-amber-100 bg-warning-bg text-warning-text hover:border-amber-300 hover:bg-warning-bg",
+                isBlocked && selected && "border-warning bg-warning-bg",
+                isBlocked && !cell.inMonth && "bg-warning-bg/50",
                 disabled && "cursor-not-allowed opacity-40 hover:border-transparent hover:bg-transparent",
               )}
             >
               {isBlocked ? (
                 <Ban
-                  className="absolute top-1.5 right-1.5 size-3 text-amber-600"
+                  className="absolute top-1.5 right-1.5 size-3 text-warning"
                   aria-hidden
                 />
               ) : null}
@@ -171,7 +171,7 @@ export function MonthCalendar({
                     : fillHeight
                       ? "size-7 lg:size-6 lg:text-[13px]"
                       : "size-7",
-                  isToday && "bg-action font-semibold text-white",
+                  isToday && "bg-action font-semibold text-action-foreground",
                 )}
               >
                 {dayNumber}
@@ -179,9 +179,9 @@ export function MonthCalendar({
               {count > 0 ? (
                 <span className="mt-1 h-1.5 w-1.5 rounded-full bg-action" />
               ) : hasAvailability ? (
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-success" />
               ) : isBlocked ? (
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-warning-bg0" />
               ) : null}
             </button>
           );
@@ -194,7 +194,7 @@ export function MonthCalendar({
             {t("legendBookings")}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Ban className="size-3 text-amber-600" aria-hidden />
+            <Ban className="size-3 text-warning" aria-hidden />
             {t("legendBlocked")}
           </span>
         </div>

@@ -2,6 +2,7 @@ import { createTranslator } from "next-intl";
 
 import { isSafeManageUrl } from "@/lib/booking/manage-url";
 import { formatDateTimeInZone } from "@/lib/booking/timezone";
+import { email } from "@/lib/design-tokens";
 import { sendResendEmail } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import en from "../../../messages/en.json";
@@ -41,16 +42,16 @@ function detailsTable(
 ) {
   return `<table style="width:100%;border-collapse:collapse;font-size:15px;">
         <tr>
-          <td style="padding:8px 0;color:#4A5568;width:140px;">${escapeHtml(t("when"))}</td>
-          <td style="padding:8px 0;color:#111827;font-weight:600;">${escapeHtml(when)}<br /><span style="font-weight:400;color:#4A5568;">${escapeHtml(timezone)}</span></td>
+          <td style="padding:8px 0;color:${email.textMuted};width:140px;">${escapeHtml(t("when"))}</td>
+          <td style="padding:8px 0;color:${email.text};font-weight:600;">${escapeHtml(when)}<br /><span style="font-weight:400;color:${email.textMuted};">${escapeHtml(timezone)}</span></td>
         </tr>
         <tr>
-          <td style="padding:8px 0;color:#4A5568;">${escapeHtml(t("consultant"))}</td>
-          <td style="padding:8px 0;color:#111827;font-weight:600;">${escapeHtml(hostName)}</td>
+          <td style="padding:8px 0;color:${email.textMuted};">${escapeHtml(t("consultant"))}</td>
+          <td style="padding:8px 0;color:${email.text};font-weight:600;">${escapeHtml(hostName)}</td>
         </tr>
         <tr>
-          <td style="padding:8px 0;color:#4A5568;">${escapeHtml(t("service"))}</td>
-          <td style="padding:8px 0;color:#111827;font-weight:600;">${escapeHtml(serviceTitle)}</td>
+          <td style="padding:8px 0;color:${email.textMuted};">${escapeHtml(t("service"))}</td>
+          <td style="padding:8px 0;color:${email.text};font-weight:600;">${escapeHtml(serviceTitle)}</td>
         </tr>
       </table>`;
 }
@@ -62,16 +63,16 @@ function manageLinksHtml(
 ) {
   if (!manageUrl && !cancelUrl) return "";
   const change = manageUrl
-    ? `<a href="${escapeHtml(manageUrl)}" style="color:#6366F1;font-weight:600;text-decoration:none;">${escapeHtml(t("changeTime"))}</a>`
+    ? `<a href="${escapeHtml(manageUrl)}" style="color:${email.link};font-weight:600;text-decoration:none;">${escapeHtml(t("changeTime"))}</a>`
     : "";
   const cancel = cancelUrl
-    ? `<a href="${escapeHtml(cancelUrl)}" style="color:#4A5568;font-weight:600;text-decoration:none;">${escapeHtml(t("cancelAppointment"))}</a>`
+    ? `<a href="${escapeHtml(cancelUrl)}" style="color:${email.textMuted};font-weight:600;text-decoration:none;">${escapeHtml(t("cancelAppointment"))}</a>`
     : "";
   const separator =
     change && cancel
-      ? `<span style="color:#E5E7EB;margin:0 10px;">|</span>`
+      ? `<span style="color:${email.border};margin:0 10px;">|</span>`
       : "";
-  return `<p style="margin:24px 0 0;font-size:15px;color:#4A5568;">${escapeHtml(t("manageIntro"))}</p>
+  return `<p style="margin:24px 0 0;font-size:15px;color:${email.textMuted};">${escapeHtml(t("manageIntro"))}</p>
       <p style="margin:12px 0 0;">${change}${separator}${cancel}</p>`;
 }
 
@@ -124,21 +125,21 @@ export async function sendBookingConfirmationEmail(input: {
   ].filter((line): line is string => Boolean(line));
 
   const meetHtml = meet
-    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(meet)}" style="display:inline-block;background:#6366F1;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("joinMeet"))}</a></p>`
+    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(meet)}" style="display:inline-block;background:${email.ctaBg};color:${email.ctaText};text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("joinMeet"))}</a></p>`
     : "";
 
   const html = `<!doctype html>
 <html lang="${locale}">
-  <body style="margin:0;padding:24px;background:#F9FAFB;color:#111827;font-family:Inter,Helvetica,Arial,sans-serif;">
-    <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 24px;">
-      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#4A5568;">${escapeHtml(input.organizationName)}</p>
-      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:#111827;">${escapeHtml(heading)}</h1>
-      <p style="margin:0 0 8px;font-size:15px;color:#111827;">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
-      <p style="margin:0 0 20px;font-size:15px;color:#4A5568;">${escapeHtml(intro)}</p>
+  <body style="margin:0;padding:24px;background:${email.bodyBg};color:${email.text};font-family:Inter,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:${email.cardBg};border:1px solid ${email.border};border-radius:12px;padding:28px 24px;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${email.textMuted};">${escapeHtml(input.organizationName)}</p>
+      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:${email.heading};">${escapeHtml(heading)}</h1>
+      <p style="margin:0 0 8px;font-size:15px;color:${email.text};">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
+      <p style="margin:0 0 20px;font-size:15px;color:${email.textMuted};">${escapeHtml(intro)}</p>
       ${detailsTable(t, when, input.timezone, input.hostName, input.serviceTitle)}
       ${meetHtml}
       ${manageLinksHtml(t, manageUrl, cancelUrl)}
-      <p style="margin:28px 0 0;font-size:13px;color:#4A5568;">${escapeHtml(t("footer"))}</p>
+      <p style="margin:28px 0 0;font-size:13px;color:${email.textMuted};">${escapeHtml(t("footer"))}</p>
     </div>
   </body>
 </html>`;
@@ -196,20 +197,20 @@ export async function sendBookingCancelledEmail(input: {
   ].filter((line): line is string => Boolean(line));
 
   const bookHtml = bookingUrl
-    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(bookingUrl)}" style="display:inline-block;background:#6366F1;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("bookAgain"))}</a></p>`
+    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(bookingUrl)}" style="display:inline-block;background:${email.ctaBg};color:${email.ctaText};text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("bookAgain"))}</a></p>`
     : "";
 
   const html = `<!doctype html>
 <html lang="${locale}">
-  <body style="margin:0;padding:24px;background:#F9FAFB;color:#111827;font-family:Inter,Helvetica,Arial,sans-serif;">
-    <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 24px;">
-      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#4A5568;">${escapeHtml(input.organizationName)}</p>
-      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:#111827;">${escapeHtml(t("cancelledHeading"))}</h1>
-      <p style="margin:0 0 8px;font-size:15px;color:#111827;">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
-      <p style="margin:0 0 20px;font-size:15px;color:#4A5568;">${escapeHtml(intro)}</p>
+  <body style="margin:0;padding:24px;background:${email.bodyBg};color:${email.text};font-family:Inter,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:${email.cardBg};border:1px solid ${email.border};border-radius:12px;padding:28px 24px;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${email.textMuted};">${escapeHtml(input.organizationName)}</p>
+      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:${email.heading};">${escapeHtml(t("cancelledHeading"))}</h1>
+      <p style="margin:0 0 8px;font-size:15px;color:${email.text};">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
+      <p style="margin:0 0 20px;font-size:15px;color:${email.textMuted};">${escapeHtml(intro)}</p>
       ${detailsTable(t, when, input.timezone, input.hostName, input.serviceTitle)}
       ${bookHtml}
-      <p style="margin:28px 0 0;font-size:13px;color:#4A5568;">${escapeHtml(footer)}</p>
+      <p style="margin:28px 0 0;font-size:13px;color:${email.textMuted};">${escapeHtml(footer)}</p>
     </div>
   </body>
 </html>`;
@@ -275,7 +276,7 @@ export async function sendBookingManageLinksEmail(input: {
   const itemsHtml = items
     .map((item) => {
       const links = manageLinksHtml(t, item.manageUrl, item.cancelUrl);
-      return `<div style="margin:20px 0 0;padding:16px 0 0;border-top:1px solid #E5E7EB;">
+      return `<div style="margin:20px 0 0;padding:16px 0 0;border-top:1px solid ${email.border};">
         ${detailsTable(t, item.when, input.timezone, item.hostName, item.serviceTitle)}
         ${links}
       </div>`;
@@ -284,14 +285,14 @@ export async function sendBookingManageLinksEmail(input: {
 
   const html = `<!doctype html>
 <html lang="${locale}">
-  <body style="margin:0;padding:24px;background:#F9FAFB;color:#111827;font-family:Inter,Helvetica,Arial,sans-serif;">
-    <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 24px;">
-      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#4A5568;">${escapeHtml(input.organizationName)}</p>
-      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:#111827;">${escapeHtml(t("manageLinksHeading"))}</h1>
-      <p style="margin:0 0 8px;font-size:15px;color:#111827;">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
-      <p style="margin:0 0 8px;font-size:15px;color:#4A5568;">${escapeHtml(t("manageLinksIntro", { org: input.organizationName }))}</p>
+  <body style="margin:0;padding:24px;background:${email.bodyBg};color:${email.text};font-family:Inter,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:${email.cardBg};border:1px solid ${email.border};border-radius:12px;padding:28px 24px;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${email.textMuted};">${escapeHtml(input.organizationName)}</p>
+      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:${email.heading};">${escapeHtml(t("manageLinksHeading"))}</h1>
+      <p style="margin:0 0 8px;font-size:15px;color:${email.text};">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
+      <p style="margin:0 0 8px;font-size:15px;color:${email.textMuted};">${escapeHtml(t("manageLinksIntro", { org: input.organizationName }))}</p>
       ${itemsHtml}
-      <p style="margin:28px 0 0;font-size:13px;color:#4A5568;">${escapeHtml(t("manageLinksFooter"))}</p>
+      <p style="margin:28px 0 0;font-size:13px;color:${email.textMuted};">${escapeHtml(t("manageLinksFooter"))}</p>
     </div>
   </body>
 </html>`;

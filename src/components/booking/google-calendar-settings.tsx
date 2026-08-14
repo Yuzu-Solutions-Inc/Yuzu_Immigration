@@ -35,7 +35,7 @@ export function GoogleCalendarSettings({
       </div>
 
       {!configured ? (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="rounded-lg bg-warning-bg px-3 py-2 text-xs text-warning-text">
           {t("googleNotConfigured")}
         </p>
       ) : null}

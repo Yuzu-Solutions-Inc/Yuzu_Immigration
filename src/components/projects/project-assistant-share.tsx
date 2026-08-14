@@ -89,7 +89,7 @@ export function ProjectAssistantShare({
           </p>
         ) : null}
         {state.message === "shared" ? (
-          <p className="text-sm text-emerald-700" role="status">
+          <p className="text-sm text-success" role="status">
             {t("shareSaved")}
           </p>
         ) : null}

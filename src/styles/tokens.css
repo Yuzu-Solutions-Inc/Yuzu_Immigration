@@ -1,0 +1,105 @@
+/*
+ * Yuzu Immigration design system — primitive + semantic tokens.
+ * Values match the product palette (graphite / indigo / emerald / amber)
+ * used before the official Yuzu brand trial. Prefer semantic aliases in UI.
+ */
+
+:root {
+  /* ── Graphite (brand, sidebar, neutrals) ── */
+  --graphite-50: #f9fafb;
+  --graphite-100: #f3f4f6;
+  --graphite-200: #e5e7eb;
+  --graphite-300: #9ca3af;
+  --graphite-400: #6b7280;
+  --graphite-500: #4a5568; /* muted text */
+  --graphite-700: #1f2937; /* sidebar accent */
+  --graphite-900: #111827; /* ★ Brand */
+
+  /* ── Indigo (action / primary) ── */
+  --indigo-50: #eef2ff;
+  --indigo-100: #e0e7ff;
+  --indigo-300: #a5b4fc;
+  --indigo-500: #6366f1; /* ★ Base */
+  --indigo-600: #4f46e5; /* hover */
+  --indigo-700: #4338ca; /* active */
+  --indigo-900: #3730a3;
+
+  /* ── Emerald (success) ── */
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-300: #6ee7b7;
+  --emerald-500: #059669; /* ★ Base */
+  --emerald-700: #047857;
+  --emerald-900: #064e3b;
+
+  /* ── Amber (highlight / warning) ── */
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-300: #fcd34d;
+  --amber-500: #f59e0b; /* ★ Base */
+  --amber-700: #b45309;
+  --amber-900: #78350f;
+
+  /* ── Semantic status ── */
+  --success: var(--emerald-500);
+  --success-bg: var(--emerald-100);
+  --success-text: var(--emerald-700);
+  --warning: var(--amber-500);
+  --warning-bg: var(--amber-100);
+  --warning-text: var(--amber-700);
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --error-text: #b91c1c;
+  --info: #3b82f6;
+  --info-bg: #eff6ff;
+  --info-text: #1d4ed8;
+
+  /* ── App semantic aliases ── */
+  --brand: var(--graphite-900);
+  --action: var(--indigo-500);
+  --action-foreground: #ffffff;
+  --action-hover: var(--indigo-600);
+  --action-active: var(--indigo-700);
+  --action-text: var(--indigo-500);
+  --highlight: var(--amber-500);
+  --surface: #ffffff;
+  --canvas: var(--graphite-50);
+  --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+  /* shadcn / product mapping */
+  --background: var(--canvas);
+  --foreground: var(--graphite-900);
+  --card: var(--surface);
+  --card-foreground: var(--graphite-900);
+  --popover: var(--surface);
+  --popover-foreground: var(--graphite-900);
+  --primary: var(--action);
+  --primary-foreground: var(--action-foreground);
+  --secondary: var(--graphite-100);
+  --secondary-foreground: var(--graphite-900);
+  --muted: var(--graphite-100);
+  --muted-foreground: var(--graphite-500);
+  --accent: var(--indigo-50);
+  --accent-foreground: var(--indigo-900);
+  --destructive: var(--error);
+  --border: var(--graphite-200);
+  --input: var(--graphite-200);
+  --ring: var(--action);
+  --radius: 0.75rem;
+
+  --chart-1: var(--indigo-500);
+  --chart-2: var(--emerald-500);
+  --chart-3: var(--amber-500);
+  --chart-4: var(--graphite-900);
+  --chart-5: var(--graphite-500);
+
+  --sidebar: var(--graphite-900);
+  --sidebar-foreground: var(--graphite-50);
+  --sidebar-primary: var(--action);
+  --sidebar-primary-foreground: var(--action-foreground);
+  --sidebar-accent: var(--graphite-700);
+  --sidebar-accent-foreground: var(--graphite-50);
+  --sidebar-border: var(--graphite-700);
+  --sidebar-ring: var(--action);
+}

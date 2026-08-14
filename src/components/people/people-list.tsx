@@ -37,7 +37,7 @@ function expiryClass(isoDate: string | null) {
   if (!isoDate) return "text-muted-foreground";
   const days = daysUntilIso(isoDate);
   if (days < 0) return "text-destructive";
-  if (days <= 7) return "text-[#b45309]";
+  if (days <= 7) return "text-warning-text";
   return "text-muted-foreground";
 }
 

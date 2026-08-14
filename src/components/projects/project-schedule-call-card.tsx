@@ -161,7 +161,7 @@ export function ProjectScheduleCallCard({
                       })}
                     </p>
                   </div>
-                  <span className="shrink-0 text-[11px] font-semibold tracking-wide text-amber-700 uppercase">
+                  <span className="shrink-0 text-[11px] font-semibold tracking-wide text-warning-text uppercase">
                     {t("inviteOpen")}
                   </span>
                 </li>

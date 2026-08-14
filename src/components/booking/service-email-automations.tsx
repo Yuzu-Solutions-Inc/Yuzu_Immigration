@@ -680,7 +680,7 @@ export function ServiceEmailAutomationsButton({
                                 className={cn(
                                   "relative h-6 w-11 shrink-0 rounded-full transition-colors",
                                   automation.is_enabled
-                                    ? "bg-emerald-600"
+                                    ? "bg-success"
                                     : "bg-muted",
                                 )}
                                 onClick={async () => {

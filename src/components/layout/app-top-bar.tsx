@@ -328,7 +328,7 @@ function AppNotifications() {
       >
         <Bell className="size-4" aria-hidden />
         {unreadCount > 0 ? (
-          <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-action text-[10px] font-semibold text-white">
+          <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-action text-[10px] font-semibold text-action-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}

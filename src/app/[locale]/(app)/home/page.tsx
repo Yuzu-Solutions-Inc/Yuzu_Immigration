@@ -34,7 +34,7 @@ function timingLabel(
 
 function timingClass(days: number) {
   if (days < 0) return "text-destructive";
-  if (days <= 7) return "text-[#b45309]";
+  if (days <= 7) return "text-warning-text";
   return "text-muted-foreground";
 }
 

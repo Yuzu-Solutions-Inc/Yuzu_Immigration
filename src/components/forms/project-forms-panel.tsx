@@ -140,7 +140,7 @@ export function ProjectFormsPanel({
             href={`/projects/${projectId}/forms`}
             className={cn(
               buttonVariants({ size: "sm" }),
-              "bg-action text-white hover:bg-action/90",
+              "bg-action text-action-foreground hover:bg-action/90",
             )}
           >
             {t("openQuestionnaire")}
@@ -239,7 +239,7 @@ export function ProjectFormsPanel({
                     </div>
                     {ready ? (
                       <CircleCheck
-                        className="size-4 shrink-0 text-emerald-600"
+                        className="size-4 shrink-0 text-success"
                         aria-label={t("statuses.ready")}
                       />
                     ) : (
@@ -319,7 +319,7 @@ export function ProjectFormsPanel({
               </p>
             ) : null}
             {genWarnings.length > 0 ? (
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-700">
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-warning-text">
                 {genWarnings.map((w) => (
                   <li key={w}>{w}</li>
                 ))}

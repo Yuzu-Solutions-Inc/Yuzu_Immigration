@@ -15,7 +15,7 @@ function NewPersonButton({ label }: { label: string }) {
       href="/people/new"
       className={cn(
         buttonVariants({ size: "sm" }),
-        "bg-action text-white hover:bg-action/90",
+        "bg-action text-action-foreground hover:bg-action/90",
       )}
     >
       {label}

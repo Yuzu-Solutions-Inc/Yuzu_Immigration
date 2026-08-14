@@ -50,7 +50,7 @@ function ValidationBadge({
     <span
       className={cn(
         "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase",
-        status === "passed" && "bg-emerald-50 text-emerald-800",
+        status === "passed" && "bg-success-bg text-success-text",
         status === "failed" && "bg-red-50 text-red-800",
         status === "pending" && "bg-canvas text-muted-foreground",
       )}

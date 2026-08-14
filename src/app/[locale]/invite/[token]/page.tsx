@@ -73,7 +73,7 @@ export default async function InvitePage({
         {result.error === "already_accepted" ? (
           <Link
             href="/home"
-            className={cn(buttonVariants(), "bg-action text-white hover:bg-action/90")}
+            className={cn(buttonVariants(), "bg-action text-action-foreground hover:bg-action/90")}
           >
             {t("goHome")}
           </Link>
@@ -100,7 +100,7 @@ export default async function InvitePage({
           href={`/${locale}/login?next=${encodeURIComponent(nextPath)}`}
           className={cn(
             buttonVariants({ size: "lg" }),
-            "bg-action text-white hover:bg-action/90",
+            "bg-action text-action-foreground hover:bg-action/90",
           )}
         >
           {t("signIn")}

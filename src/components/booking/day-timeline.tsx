@@ -196,7 +196,7 @@ export function DayTimeline({
 
       <div className="flex shrink-0 flex-wrap gap-3 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm bg-emerald-200 ring-1 ring-emerald-400/60" />
+          <span className="size-2.5 rounded-sm bg-emerald-100 ring-1 ring-success/60" />
           {t("legendOpen")}
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -204,7 +204,7 @@ export function DayTimeline({
           {t("legendBookings")}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm bg-amber-400" />
+          <span className="size-2.5 rounded-sm bg-warning" />
           {t("legendBlocked")}
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -265,7 +265,7 @@ export function DayTimeline({
             {mergedOpen.map((range) => (
               <div
                 key={`open-${range.start}-${range.end}`}
-                className="pointer-events-none absolute inset-x-0 z-0 bg-emerald-100/70"
+                className="pointer-events-none absolute inset-x-0 z-0 bg-success-bg/70"
                 style={styleForRange(range.start, range.end, gridHeight)}
                 aria-hidden
               />
@@ -313,7 +313,7 @@ export function DayTimeline({
                   disabled={!canManage || pending}
                   aria-label={t("clickToRemoveBlock")}
                   title={canManage ? t("clickToRemoveBlock") : undefined}
-                  className="group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-left text-[11px] leading-tight text-amber-950 hover:bg-amber-200 disabled:hover:bg-amber-100"
+                  className="group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg px-1.5 py-0.5 text-left text-[11px] leading-tight text-warning-text hover:bg-amber-100 disabled:hover:bg-warning-bg"
                   style={styleForRange(range.start, range.end, gridHeight)}
                   onClick={() => {
                     if (!canManage) return;
@@ -329,14 +329,14 @@ export function DayTimeline({
                       <span className="block truncate font-medium">
                         {t("legendBlocked")}
                       </span>
-                      <span className="block truncate text-[10px] text-amber-800/80">
+                      <span className="block truncate text-[10px] text-warning-text/80">
                         {formatHmLabel(range.start)}–{formatHmLabel(range.end)}
                       </span>
                     </span>
                     {canManage ? (
                       <Trash2
                         aria-hidden
-                        className="mt-px size-3 shrink-0 text-amber-950 opacity-0 transition-opacity group-hover:opacity-100"
+                        className="mt-px size-3 shrink-0 text-warning-text opacity-0 transition-opacity group-hover:opacity-100"
                       />
                     ) : null}
                   </span>
@@ -362,8 +362,8 @@ export function DayTimeline({
                   className={cn(
                     "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight text-white shadow-sm",
                     selected
-                      ? "bg-[#4f46e5] ring-2 ring-action ring-offset-1"
-                      : "bg-action hover:bg-[#4f46e5]",
+                      ? "bg-action-hover ring-2 ring-action ring-offset-1"
+                      : "bg-action hover:bg-action-hover",
                   )}
                   style={styleForRange(range.start, range.end, gridHeight)}
                   onClick={() =>
@@ -380,7 +380,7 @@ export function DayTimeline({
 
             {live ? (
               <div
-                className="pointer-events-none absolute inset-x-1 z-[4] rounded-md border-2 border-dashed border-amber-500 bg-amber-400/25 px-1.5 py-0.5 text-[11px] font-medium text-amber-950"
+                className="pointer-events-none absolute inset-x-1 z-[4] rounded-md border-2 border-dashed border-warning bg-warning/25 px-1.5 py-0.5 text-[11px] font-medium text-warning-text"
                 style={styleForRange(live.start, live.end, gridHeight)}
               >
                 {formatHmLabel(live.start)}–{formatHmLabel(live.end)}

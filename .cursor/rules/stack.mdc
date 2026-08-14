@@ -12,11 +12,12 @@ alwaysApply: true
 - **Forms**: React Hook Form + Zod
 - **i18n**: next-intl with `en`, `fr`, and `es` under `src/app/[locale]`
 
-## Visual system
-- Brand graphite `#111827`, action violet `#6366F1`, success emerald `#059669`, highlight amber `#F59E0B`
-- Canvas `#F9FAFB`, surfaces `#FFFFFF`, text secondary `#4A5568`, border `#E5E7EB`
-- Fonts: Plus Jakarta Sans (headings), Inter (body)
-- Radius 12px, soft elevation `0 4px 6px -1px rgba(0,0,0,0.05)`
+## Visual system (token-based)
+- Source of truth: `src/styles/tokens.css` (CSS) + `src/lib/design-tokens.ts` (TS/email)
+- Primitives: Graphite, Indigo, Emerald, Amber (product palette)
+- Semantic: `--brand` (graphite-900 `#111827`), `--action` (indigo `#6366F1`), `--action-foreground` (white), `--success` (emerald), `--warning`/`--highlight` (amber), canvas `#F9FAFB` / surface white
+- Prefer semantic utilities (`bg-action`, `text-brand`, `bg-canvas`) over hex or primitive classes
+- Fonts: Plus Jakarta Sans (headings), Inter (body); radius 12px; elevation via `--shadow-elevated`
 - No IRCC/MIFI government red/blue motifs or official icons
 
 ## Domain model
