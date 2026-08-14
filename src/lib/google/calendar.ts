@@ -6,6 +6,10 @@ import {
   refreshGoogleAccessToken,
 } from "@/lib/google/oauth";
 import { GOOGLE_CALENDAR_AAD } from "@/lib/google/oauth";
+import {
+  getGoogleCalendarSecrets,
+  updateGoogleCalendarSecrets,
+} from "@/lib/google/secrets";
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -47,20 +51,7 @@ function admin() {
 }
 
 async function loadSecrets(connectionId: string) {
-  const { data, error } = await admin()
-    .schema("private")
-    .from("google_calendar_secrets")
-    .select("*")
-    .eq("connection_id", connectionId)
-    .maybeSingle();
-  if (error) throw new Error(`google secrets: ${error.message}`);
-  return data as {
-    refresh_token_encrypted: string;
-    access_token_encrypted: string | null;
-    access_token_expires_at: string | null;
-    sync_token: string | null;
-    channel_token_encrypted: string | null;
-  } | null;
+  return getGoogleCalendarSecrets(connectionId);
 }
 
 export async function getValidAccessToken(connectionId: string) {
@@ -83,20 +74,13 @@ export async function getValidAccessToken(connectionId: string) {
     );
   }
   const refreshed = await refreshGoogleAccessToken(refreshToken);
-  await admin()
-    .schema("private")
-    .from("google_calendar_secrets")
-    .update({
-      access_token_encrypted: encryptField(
-        refreshed.access_token,
-        GOOGLE_CALENDAR_AAD.accessToken,
-      ),
-      access_token_expires_at: new Date(
-        Date.now() + refreshed.expires_in * 1000,
-      ).toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("connection_id", connectionId);
+  await updateGoogleCalendarSecrets(connectionId, {
+    accessTokenEncrypted: encryptField(
+      refreshed.access_token,
+      GOOGLE_CALENDAR_AAD.accessToken,
+    ),
+    accessTokenExpiresAt: new Date(Date.now() + refreshed.expires_in * 1000),
+  });
   return refreshed.access_token;
 }
 
@@ -324,14 +308,9 @@ export async function syncGoogleBusy(connection: GoogleCalendarConnectionRow) {
     );
   }
 
-  await admin()
-    .schema("private")
-    .from("google_calendar_secrets")
-    .update({
-      sync_token: nextSyncToken,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("connection_id", connection.id);
+  await updateGoogleCalendarSecrets(connection.id, {
+    syncToken: nextSyncToken,
+  });
 
   await admin()
     .from("google_calendar_connections")
@@ -399,17 +378,12 @@ export async function startGoogleWatch(
       updated_at: new Date().toISOString(),
     })
     .eq("id", connection.id);
-  await admin()
-    .schema("private")
-    .from("google_calendar_secrets")
-    .update({
-      channel_token_encrypted: encryptField(
-        channelToken,
-        GOOGLE_CALENDAR_AAD.channelToken,
-      ),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("connection_id", connection.id);
+  await updateGoogleCalendarSecrets(connection.id, {
+    channelTokenEncrypted: encryptField(
+      channelToken,
+      GOOGLE_CALENDAR_AAD.channelToken,
+    ),
+  });
 }
 
 export async function verifyGoogleChannelToken(
@@ -430,59 +404,98 @@ export async function verifyGoogleChannelToken(
   }
 }
 
-export async function getOrgGoogleConnection(organizationId: string) {
+export async function getUserGoogleConnection(
+  organizationId: string,
+  userId: string,
+) {
   const { data, error } = await admin()
     .from("google_calendar_connections")
     .select("*")
     .eq("organization_id", organizationId)
+    .eq("user_id", userId)
     .eq("is_enabled", true)
     .maybeSingle();
   if (error) {
-    console.error("getOrgGoogleConnection:", error.message);
+    console.error("getUserGoogleConnection:", error.message);
     return null;
   }
   return (data as GoogleCalendarConnectionRow | null) ?? null;
 }
 
-export async function refreshGoogleBusyIfStale(organizationId: string) {
-  const connection = await getOrgGoogleConnection(organizationId);
-  if (!connection) return;
-  const last = connection.last_synced_at
-    ? new Date(connection.last_synced_at).getTime()
-    : 0;
-  if (last < Date.now() - 15 * 60_000) {
-    try {
-      await syncGoogleBusy(connection);
-    } catch (error) {
-      console.error("stale google sync:", error);
-    }
+export async function getGoogleConnectionById(connectionId: string) {
+  const { data, error } = await admin()
+    .from("google_calendar_connections")
+    .select("*")
+    .eq("id", connectionId)
+    .maybeSingle();
+  if (error) {
+    console.error("getGoogleConnectionById:", error.message);
+    return null;
   }
+  return (data as GoogleCalendarConnectionRow | null) ?? null;
+}
+
+export async function listEnabledGoogleConnections(organizationId: string) {
+  const { data, error } = await admin()
+    .from("google_calendar_connections")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("is_enabled", true);
+  if (error) {
+    console.error("listEnabledGoogleConnections:", error.message);
+    return [];
+  }
+  return (data ?? []) as GoogleCalendarConnectionRow[];
+}
+
+async function maybeRenewWatch(connection: GoogleCalendarConnectionRow) {
   const expires = connection.channel_expiration
     ? new Date(connection.channel_expiration).getTime()
     : 0;
   if (expires > Date.now() + 2 * 86_400_000) return;
-  try {
-    const webhookBase = await getAppBaseUrl();
-    if (!webhookBase.startsWith("https://")) return;
-    await startGoogleWatch(
-      connection,
-      `${webhookBase.replace(/\/$/, "")}/api/calendar/google/webhook`,
-    );
-  } catch (error) {
-    console.error("renew google watch:", error);
+  const webhookBase = await getAppBaseUrl();
+  if (!webhookBase.startsWith("https://")) return;
+  await startGoogleWatch(
+    connection,
+    `${webhookBase.replace(/\/$/, "")}/api/calendar/google/webhook`,
+  );
+}
+
+export async function refreshGoogleBusyIfStale(organizationId: string) {
+  const connections = await listEnabledGoogleConnections(organizationId);
+  for (const connection of connections) {
+    const last = connection.last_synced_at
+      ? new Date(connection.last_synced_at).getTime()
+      : 0;
+    if (last < Date.now() - 15 * 60_000) {
+      try {
+        await syncGoogleBusy(connection);
+      } catch (error) {
+        console.error("stale google sync:", error);
+      }
+    }
+    try {
+      await maybeRenewWatch(connection);
+    } catch (error) {
+      console.error("renew google watch:", error);
+    }
   }
 }
 
 export async function pushAppointmentToGoogleCalendar(input: {
   organizationId: string;
+  hostUserId: string | null;
   appointmentId: string;
   title: string;
   description: string;
   startsAt: string;
   endsAt: string;
 }) {
-  if (!googleCalendarClientConfig()) return;
-  const connection = await getOrgGoogleConnection(input.organizationId);
+  if (!googleCalendarClientConfig() || !input.hostUserId) return;
+  const connection = await getUserGoogleConnection(
+    input.organizationId,
+    input.hostUserId,
+  );
   if (!connection) return;
   try {
     const eventId = await createBookingCalendarEvent({
@@ -510,9 +523,14 @@ export async function pushAppointmentToGoogleCalendar(input: {
 
 export async function deleteAppointmentGoogleEvent(input: {
   organizationId: string;
+  hostUserId: string | null;
   googleEventId: string;
 }) {
-  const connection = await getOrgGoogleConnection(input.organizationId);
+  if (!input.hostUserId) return;
+  const connection = await getUserGoogleConnection(
+    input.organizationId,
+    input.hostUserId,
+  );
   if (!connection) return;
   try {
     await deleteBookingCalendarEvent({

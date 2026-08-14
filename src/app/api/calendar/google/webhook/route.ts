@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
-  getOrgGoogleConnection,
+  getGoogleConnectionById,
   syncGoogleBusy,
   verifyGoogleChannelToken,
   type GoogleCalendarConnectionRow,
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const fresh = await getOrgGoogleConnection(connection.organization_id);
+    const fresh = await getGoogleConnectionById(connection.id);
     if (fresh) await syncGoogleBusy(fresh);
   } catch (error) {
     console.error("google webhook sync:", error);

@@ -14,12 +14,10 @@ import type { GoogleCalendarConnectionPublic } from "@/lib/booking/types";
 
 export function GoogleCalendarSettings({
   locale,
-  canManage,
   configured,
   connection,
 }: {
   locale: string;
-  canManage: boolean;
   configured: boolean;
   connection: GoogleCalendarConnectionPublic | null;
 }) {
@@ -28,11 +26,13 @@ export function GoogleCalendarSettings({
   const [pending, startTransition] = useTransition();
 
   return (
-    <section className="space-y-3 border-t border-border pt-4">
-      <h3 className="font-heading text-sm font-semibold text-brand">
-        {t("googleTitle")}
-      </h3>
-      <p className="text-xs text-muted-foreground">{t("googleHelp")}</p>
+    <section className="space-y-4">
+      <div>
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("googleTitle")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{t("googleHelp")}</p>
+      </div>
 
       {!configured ? (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
@@ -58,7 +58,7 @@ export function GoogleCalendarSettings({
         <p className="text-sm text-muted-foreground">{t("googleNotConnected")}</p>
       )}
 
-      {canManage && configured ? (
+      {configured ? (
         <div className="flex flex-wrap gap-2">
           {!connected ? (
             <form action={startGoogleCalendarConnectAction}>

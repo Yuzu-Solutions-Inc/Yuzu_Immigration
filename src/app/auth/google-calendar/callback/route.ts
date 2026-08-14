@@ -12,6 +12,7 @@ import {
   googleUserEmail,
 } from "@/lib/google/oauth";
 import { GOOGLE_CALENDAR_AAD } from "@/lib/google/oauth";
+import { getGoogleCalendarSecrets, upsertGoogleCalendarSecrets } from "@/lib/google/secrets";
 import { encryptField } from "@/lib/security/field-crypto";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
   const locale = state?.locale ?? "en";
   const fail = (reason: string) =>
     NextResponse.redirect(
-      `${origin}/${locale}/calendar?google=${encodeURIComponent(reason)}`,
+      `${origin}/${locale}/calendar/settings?google=${encodeURIComponent(reason)}`,
     );
 
   if (errorParam || !code || !state) {
@@ -48,24 +49,29 @@ export async function GET(request: Request) {
     .eq("organization_id", state.organizationId)
     .eq("user_id", user.id)
     .maybeSingle();
-  const role = membership?.role as string | undefined;
-  if (role !== "admin" && role !== "consultant") {
+  if (!membership) {
     return fail("forbidden");
   }
 
   try {
-    const tokens = await exchangeGoogleCode({ origin, code });
+    const redirectOrigin = state.origin || origin;
+    const tokens = await exchangeGoogleCode({ origin: redirectOrigin, code });
     const email = await googleUserEmail(tokens.access_token);
 
-    const { data: existing } = await admin
+    const { data: existing, error: existingError } = await admin
       .from("google_calendar_connections")
       .select("id")
       .eq("organization_id", state.organizationId)
+      .eq("user_id", user.id)
       .maybeSingle();
+    if (existingError) {
+      console.error("google connect read:", existingError.message);
+      return fail("save_failed");
+    }
 
     let connectionId = existing?.id as string | undefined;
     if (connectionId) {
-      await admin
+      const { error: updateError } = await admin
         .from("google_calendar_connections")
         .update({
           user_id: user.id,
@@ -75,6 +81,10 @@ export async function GET(request: Request) {
           updated_at: new Date().toISOString(),
         })
         .eq("id", connectionId);
+      if (updateError) {
+        console.error("google connect update:", updateError.message);
+        return fail("save_failed");
+      }
     } else {
       const inserted = await admin
         .from("google_calendar_connections")
@@ -94,32 +104,23 @@ export async function GET(request: Request) {
       connectionId = inserted.data.id as string;
     }
 
-    const { data: existingSecrets } = await admin
-      .schema("private")
-      .from("google_calendar_secrets")
-      .select("refresh_token_encrypted")
-      .eq("connection_id", connectionId)
-      .maybeSingle();
-
+    const existingSecrets = await getGoogleCalendarSecrets(connectionId);
     const refreshToken = tokens.refresh_token;
     if (!refreshToken && !existingSecrets?.refresh_token_encrypted) {
       return fail("no_refresh");
     }
 
-    await admin.schema("private").from("google_calendar_secrets").upsert({
-      connection_id: connectionId,
-      refresh_token_encrypted: refreshToken
+    await upsertGoogleCalendarSecrets({
+      connectionId,
+      refreshTokenEncrypted: refreshToken
         ? encryptField(refreshToken, GOOGLE_CALENDAR_AAD.refreshToken)
         : existingSecrets!.refresh_token_encrypted,
-      access_token_encrypted: encryptField(
+      accessTokenEncrypted: encryptField(
         tokens.access_token,
         GOOGLE_CALENDAR_AAD.accessToken,
       ),
-      access_token_expires_at: new Date(
-        Date.now() + tokens.expires_in * 1000,
-      ).toISOString(),
-      sync_token: null,
-      updated_at: new Date().toISOString(),
+      accessTokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+      syncToken: null,
     });
 
     const { data: connection } = await admin
@@ -130,14 +131,31 @@ export async function GET(request: Request) {
 
     if (connection) {
       const row = connection as GoogleCalendarConnectionRow;
-      await syncGoogleBusy(row);
+      try {
+        await syncGoogleBusy(row);
+      } catch (error) {
+        console.error("google initial sync:", error);
+      }
       const appUrl = await getAppBaseUrl();
       if (appUrl.startsWith("https://")) {
-        await startGoogleWatch(row, `${appUrl}/api/calendar/google/webhook`);
+        try {
+          await startGoogleWatch(row, `${appUrl}/api/calendar/google/webhook`);
+        } catch (error) {
+          console.error("google initial watch:", error);
+        }
       }
     }
 
-    return NextResponse.redirect(`${origin}/${locale}/calendar?google=connected`);
+    await admin
+      .from("booking_settings")
+      .update({
+        default_host_user_id: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("organization_id", state.organizationId)
+      .is("default_host_user_id", null);
+
+    return NextResponse.redirect(`${origin}/${locale}/calendar/settings?google=connected`);
   } catch (error) {
     console.error("google calendar callback:", error);
     return fail("callback_failed");

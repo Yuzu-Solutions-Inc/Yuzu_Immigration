@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, CalendarDays } from "lucide-react";
+import { Ban, CalendarDays, Settings2 } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -10,20 +10,17 @@ import {
   cancelAppointmentAction,
   unblockTimeAction,
 } from "@/app/actions/booking";
-import { CalendarSettingsSheet } from "@/components/booking/calendar-settings-sheet";
 import { CopyBookingLinkButton } from "@/components/booking/copy-booking-link-button";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Link } from "@/i18n/navigation";
 import type {
   BookingAppointmentRow,
-  BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
   BookingSettingsRow,
-  GoogleCalendarConnectionPublic,
 } from "@/lib/booking/types";
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
@@ -35,22 +32,16 @@ export function CalendarWorkspace({
   locale,
   canManage,
   settings,
-  rules,
   appointments,
   blocked,
   googleBusy,
-  googleConfigured,
-  googleConnection,
 }: {
   locale: string;
   canManage: boolean;
   settings: BookingSettingsRow | null;
-  rules: BookingAvailabilityRuleRow[];
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
   googleBusy: BookingGoogleBusyRow[];
-  googleConfigured: boolean;
-  googleConnection: GoogleCalendarConnectionPublic | null;
 }) {
   const t = useTranslations("calendar");
   const timeZone = settings?.timezone ?? "America/Toronto";
@@ -112,14 +103,13 @@ export function CalendarWorkspace({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <CopyBookingLinkButton locale={locale} />
-          <CalendarSettingsSheet
-            locale={locale}
-            canManage={canManage}
-            settings={settings}
-            rules={rules}
-            googleConfigured={googleConfigured}
-            googleConnection={googleConnection}
-          />
+          <Link
+            href="/calendar/settings"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <Settings2 className="size-4" />
+            {t("settings")}
+          </Link>
         </div>
       </div>
 
@@ -328,7 +318,14 @@ export function CalendarEmptyHint({
           >
             {t("goServices")}
           </Link>
-        ) : null}
+        ) : (
+          <Link
+            href="/calendar/settings"
+            className="text-sm font-medium text-action hover:underline"
+          >
+            {t("settings")}
+          </Link>
+        )}
       </div>
     </SurfaceCard>
   );

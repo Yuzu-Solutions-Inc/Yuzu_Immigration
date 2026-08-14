@@ -1,8 +1,8 @@
 import { generateServiceSlots } from "@/lib/booking/slots";
 import { hashBookingToken } from "@/lib/booking/token";
 import { addDaysToIsoDate, zonedCivilToUtc } from "@/lib/booking/timezone";
-import { requireOrganizationId } from "@/lib/crm/queries";
-import type { PersonRow } from "@/lib/crm/queries";
+import { getSessionUser } from "@/lib/auth/session";
+import { requireOrganizationId, type PersonRow } from "@/lib/crm/queries";
 import {
   decryptBookingGuestRow,
   decryptPersonRow,
@@ -22,7 +22,7 @@ import type {
   GoogleCalendarConnectionPublic,
 } from "@/lib/booking/types";
 import {
-  getOrgGoogleConnection,
+  getUserGoogleConnection,
   queryGoogleFreeBusy,
 } from "@/lib/google/calendar";
 
@@ -192,6 +192,11 @@ export async function loadPublicBookingContext(
     now.getTime() + (row.booking_window_days + 1) * 86_400_000,
   );
 
+  const hostUserId = row.default_host_user_id;
+  const hostConnection = hostUserId
+    ? await getUserGoogleConnection(row.organization_id, hostUserId)
+    : null;
+
   const [servicesRes, rulesRes, blockedRes, busyRes, googleBusyRes] =
     await Promise.all([
     admin
@@ -219,12 +224,15 @@ export async function loadPublicBookingContext(
       .eq("status", "confirmed")
       .lt("starts_at", windowEnd.toISOString())
       .gt("ends_at", now.toISOString()),
-    admin
-      .from("booking_google_busy")
-      .select("starts_at, ends_at")
-      .eq("organization_id", row.organization_id)
-      .lt("starts_at", windowEnd.toISOString())
-      .gt("ends_at", now.toISOString()),
+    hostConnection
+      ? admin
+          .from("booking_google_busy")
+          .select("starts_at, ends_at")
+          .eq("organization_id", row.organization_id)
+          .eq("connection_id", hostConnection.id)
+          .lt("starts_at", windowEnd.toISOString())
+          .gt("ends_at", now.toISOString())
+      : Promise.resolve({ data: [] as { starts_at: string; ends_at: string }[] }),
   ]);
 
   const busy = [
@@ -233,11 +241,10 @@ export async function loadPublicBookingContext(
   ];
 
   try {
-    const connection = await getOrgGoogleConnection(row.organization_id);
-    if (connection) {
+    if (hostConnection) {
       const live = await queryGoogleFreeBusy({
-        connectionId: connection.id,
-        calendarId: connection.calendar_id,
+        connectionId: hostConnection.id,
+        calendarId: hostConnection.calendar_id,
         timeMin: now.toISOString(),
         timeMax: windowEnd.toISOString(),
       });
@@ -303,20 +310,40 @@ export async function listGoogleBusy(
   return (data ?? []) as BookingGoogleBusyRow[];
 }
 
-export async function getGoogleCalendarConnectionPublic(): Promise<GoogleCalendarConnectionPublic | null> {
+export async function getMyGoogleCalendarConnection(): Promise<GoogleCalendarConnectionPublic | null> {
   const orgId = await orgIdOrNull();
-  if (!orgId) return null;
+  const user = await getSessionUser();
+  if (!orgId || !user) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("google_calendar_connections")
-    .select("google_email, last_synced_at, is_enabled")
+    .select("user_id, google_email, last_synced_at, is_enabled")
     .eq("organization_id", orgId)
+    .eq("user_id", user.id)
     .maybeSingle();
   if (error) {
-    console.error("getGoogleCalendarConnectionPublic:", error.message);
+    console.error("getMyGoogleCalendarConnection:", error.message);
     return null;
   }
   return (data as GoogleCalendarConnectionPublic | null) ?? null;
+}
+
+export async function listGoogleCalendarConnections(): Promise<
+  GoogleCalendarConnectionPublic[]
+> {
+  const orgId = await orgIdOrNull();
+  if (!orgId) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("google_calendar_connections")
+    .select("user_id, google_email, last_synced_at, is_enabled")
+    .eq("organization_id", orgId)
+    .eq("is_enabled", true);
+  if (error) {
+    console.error("listGoogleCalendarConnections:", error.message);
+    return [];
+  }
+  return (data ?? []) as GoogleCalendarConnectionPublic[];
 }
 
 export async function findPersonByEmail(

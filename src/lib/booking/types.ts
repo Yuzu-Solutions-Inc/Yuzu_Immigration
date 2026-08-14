@@ -10,6 +10,7 @@ export type BookingSettingsRow = {
   min_notice_hours: number;
   buffer_minutes: number;
   is_enabled: boolean;
+  default_host_user_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -62,6 +63,7 @@ export type BookingAppointmentRow = {
   status: BookingAppointmentStatus;
   cancelled_at: string | null;
   cancelled_by: string | null;
+  host_user_id: string | null;
   google_event_id: string | null;
   created_at: string;
   updated_at: string;
@@ -78,6 +80,7 @@ export type BookingGoogleBusyRow = {
 };
 
 export type GoogleCalendarConnectionPublic = {
+  user_id: string;
   google_email: string | null;
   last_synced_at: string | null;
   is_enabled: boolean;

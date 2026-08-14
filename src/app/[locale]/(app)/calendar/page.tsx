@@ -5,12 +5,10 @@ import {
   CalendarEmptyHint,
   CalendarWorkspace,
 } from "@/components/booking/calendar-workspace";
-import { GoogleCallbackToast } from "@/components/booking/google-callback-toast";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import {
   getBookingSettings,
-  getGoogleCalendarConnectionPublic,
   listAppointmentsInRange,
   listAvailabilityRules,
   listBlockedTimes,
@@ -19,26 +17,21 @@ import {
 } from "@/lib/booking/queries";
 import { addDaysToIsoDate, zonedDateIso } from "@/lib/booking/timezone";
 import { refreshGoogleBusyIfStale } from "@/lib/google/calendar";
-import { googleCalendarConfigured } from "@/lib/google/oauth";
 
 export default async function CalendarPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ google?: string }>;
 }) {
   const { locale } = await params;
-  const { google: googleStatus } = await searchParams;
   setRequestLocale(locale);
 
   const membership = await getPrimaryMembership();
   const canManage = canCreateRecords(membership?.role);
-  const [settings, rules, services, googleConnection] = await Promise.all([
+  const [settings, rules, services] = await Promise.all([
     getBookingSettings(),
     listAvailabilityRules(),
     listBookingServices(),
-    getGoogleCalendarConnectionPublic(),
   ]);
 
   const timeZone = settings?.timezone ?? "America/Toronto";
@@ -58,7 +51,6 @@ export default async function CalendarPage({
 
   return (
     <div className="space-y-6">
-      <GoogleCallbackToast status={googleStatus} />
       {rules.length === 0 || services.length === 0 ? (
         <CalendarEmptyHint hasServices={services.length > 0} />
       ) : null}
@@ -66,12 +58,9 @@ export default async function CalendarPage({
         locale={locale}
         canManage={canManage}
         settings={settings}
-        rules={rules}
         appointments={appointments}
         blocked={blocked}
         googleBusy={googleBusy}
-        googleConfigured={googleCalendarConfigured()}
-        googleConnection={googleConnection}
       />
     </div>
   );

@@ -138,6 +138,7 @@ export async function submitPublicBookingAction(
       organization_id: ctx.organizationId,
       service_id: service.id,
       person_id: personId,
+      host_user_id: ctx.settings.default_host_user_id,
       starts_at: parsed.data.startsAt,
       ends_at: parsed.data.endsAt,
       ...encryptBookingGuestWrite(
@@ -178,6 +179,7 @@ export async function submitPublicBookingAction(
     );
     await pushAppointmentToGoogleCalendar({
       organizationId: ctx.organizationId,
+      hostUserId: ctx.settings.default_host_user_id,
       appointmentId: appointment.id,
       title: `${service.title} — ${parsed.data.guestName}`,
       description: `Booked via MyConsultant\n${parsed.data.guestName}\n${parsed.data.guestEmail}\n${parsed.data.guestPhone}`,

@@ -7,11 +7,17 @@ import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import {
+  mergeMinuteRanges,
+  minutesToPgTime,
+  type MinuteRange,
+} from "@/lib/booking/availability";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import {
   BOOKING_TIMEZONES,
   addDaysToIsoDate,
   isBookingTimezone,
+  minutesFromHm,
   zonedCivilToUtc,
 } from "@/lib/booking/timezone";
 import { requireOrganizationId } from "@/lib/crm/queries";
@@ -41,6 +47,11 @@ async function requireManager() {
     return { ok: false as const, error: "forbidden" as const };
   }
   return { ok: true as const, membership };
+}
+
+function revalidateBooking(locale: string) {
+  revalidatePath(`/${locale}/calendar`);
+  revalidatePath(`/${locale}/calendar/settings`);
 }
 
 function mintTokenPayload(orgId: string, dek: Buffer) {
@@ -81,7 +92,7 @@ export async function ensureBookingSettingsAction(
     console.error("ensureBookingSettings:", error.message);
     return { error: "save_failed" };
   }
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return { message: "created" };
 }
 
@@ -139,7 +150,7 @@ export async function copyBookingLinkAction(
 
   const base = await getAppBaseUrl();
   const bookingUrl = `${base}/${parsedLocale.data}/book/${token}`;
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return { message: "copied", bookingUrl };
 }
 
@@ -198,7 +209,7 @@ export async function regenerateBookingLinkAction(
   });
 
   const base = await getAppBaseUrl();
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return {
     message: "regenerated",
     bookingUrl: `${base}/${parsedLocale.data}/book/${minted.token}`,
@@ -217,6 +228,7 @@ export async function saveBookingSettingsAction(
       minNoticeHours: z.coerce.number().int().min(0).max(168),
       bufferMinutes: z.coerce.number().int().min(0).max(120),
       isEnabled: z.enum(["on", "true", "false"]).optional(),
+      defaultHostUserId: z.string().uuid().optional().or(z.literal("")),
     })
     .safeParse({
       locale: formData.get("locale") || "en",
@@ -225,6 +237,7 @@ export async function saveBookingSettingsAction(
       minNoticeHours: formData.get("minNoticeHours"),
       bufferMinutes: formData.get("bufferMinutes"),
       isEnabled: formData.get("isEnabled") ? "on" : "false",
+      defaultHostUserId: String(formData.get("defaultHostUserId") || ""),
     });
 
   if (!parsed.success || !isBookingTimezone(parsed.data.timezone)) {
@@ -241,6 +254,17 @@ export async function saveBookingSettingsAction(
   const supabase = await createClient();
   const dek = await getOrgDataKey(orgId);
 
+  const hostUserId = parsed.data.defaultHostUserId || null;
+  if (hostUserId) {
+    const { data: hostMember } = await supabase
+      .from("organization_members")
+      .select("user_id")
+      .eq("organization_id", orgId)
+      .eq("user_id", hostUserId)
+      .maybeSingle();
+    if (!hostMember) return { error: "invalid" };
+  }
+
   const { data: existing } = await supabase
     .from("booking_settings")
     .select("id")
@@ -253,6 +277,7 @@ export async function saveBookingSettingsAction(
     min_notice_hours: parsed.data.minNoticeHours,
     buffer_minutes: parsed.data.bufferMinutes,
     is_enabled: parsed.data.isEnabled === "on",
+    default_host_user_id: hostUserId,
     updated_at: new Date().toISOString(),
   };
 
@@ -288,7 +313,7 @@ export async function saveBookingSettingsAction(
     resourceId: orgId,
   });
 
-  revalidatePath(`/${parsed.data.locale}/calendar`);
+  revalidateBooking(parsed.data.locale);
   return { message: "saved" };
 }
 
@@ -327,8 +352,132 @@ export async function addAvailabilityRuleAction(
     console.error("addAvailabilityRule:", error.message);
     return { error: "save_failed" };
   }
-  revalidatePath(`/${parsed.data.locale}/calendar`);
+  revalidateBooking(parsed.data.locale);
   return { message: "rule_added" };
+}
+
+async function replaceWeekdayHours(
+  orgId: string,
+  weekday: number,
+  ranges: MinuteRange[],
+) {
+  const supabase = await createClient();
+  const merged = mergeMinuteRanges(ranges);
+  const { error: deleteError } = await supabase
+    .from("booking_availability_rules")
+    .delete()
+    .eq("organization_id", orgId)
+    .eq("weekday", weekday);
+  if (deleteError) {
+    console.error("replaceWeekdayHours delete:", deleteError.message);
+    return false;
+  }
+  if (merged.length === 0) return true;
+  const { error: insertError } = await supabase
+    .from("booking_availability_rules")
+    .insert(
+      merged.map((range) => ({
+        organization_id: orgId,
+        weekday,
+        start_time: minutesToPgTime(range.start),
+        end_time: minutesToPgTime(range.end),
+      })),
+    );
+  if (insertError) {
+    console.error("replaceWeekdayHours insert:", insertError.message);
+    return false;
+  }
+  return true;
+}
+
+async function loadWeekdayRanges(orgId: string, weekday: number) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("booking_availability_rules")
+    .select("start_time, end_time")
+    .eq("organization_id", orgId)
+    .eq("weekday", weekday);
+  if (error) {
+    console.error("loadWeekdayRanges:", error.message);
+    return null;
+  }
+  return (data ?? []).map((row) => ({
+    start: minutesFromHm(String(row.start_time)),
+    end: minutesFromHm(String(row.end_time)),
+  }));
+}
+
+export async function addAvailabilityRangeAction(input: {
+  locale: string;
+  weekday: number;
+  startMinutes: number;
+  endMinutes: number;
+}): Promise<BookingActionState> {
+  const parsed = z
+    .object({
+      locale: localeSchema,
+      weekday: weekdaySchema,
+      startMinutes: z.number().int().min(0).max(24 * 60),
+      endMinutes: z.number().int().min(0).max(24 * 60),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { error: "invalid" };
+  if (parsed.data.endMinutes <= parsed.data.startMinutes) {
+    return { error: "invalid_range" };
+  }
+
+  const gate = await requireManager();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+  const existing = await loadWeekdayRanges(orgId, parsed.data.weekday);
+  if (!existing) return { error: "save_failed" };
+  const ok = await replaceWeekdayHours(orgId, parsed.data.weekday, [
+    ...existing,
+    { start: parsed.data.startMinutes, end: parsed.data.endMinutes },
+  ]);
+  if (!ok) return { error: "save_failed" };
+  revalidateBooking(parsed.data.locale);
+  return { message: "rule_added" };
+}
+
+export async function clearDayAvailabilityAction(
+  weekday: number,
+  locale: string,
+): Promise<BookingActionState> {
+  const parsed = z
+    .object({ weekday: weekdaySchema, locale: localeSchema })
+    .safeParse({ weekday, locale });
+  if (!parsed.success) return { error: "invalid" };
+  const gate = await requireManager();
+  if (!gate.ok) return { error: gate.error };
+  const ok = await replaceWeekdayHours(
+    gate.membership.organization.id,
+    parsed.data.weekday,
+    [],
+  );
+  if (!ok) return { error: "save_failed" };
+  revalidateBooking(parsed.data.locale);
+  return { message: "day_cleared" };
+}
+
+export async function clearWeekAvailabilityAction(
+  locale: string,
+): Promise<BookingActionState> {
+  const parsedLocale = localeSchema.safeParse(locale);
+  if (!parsedLocale.success) return { error: "invalid" };
+  const gate = await requireManager();
+  if (!gate.ok) return { error: gate.error };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("booking_availability_rules")
+    .delete()
+    .eq("organization_id", gate.membership.organization.id);
+  if (error) {
+    console.error("clearWeekAvailability:", error.message);
+    return { error: "save_failed" };
+  }
+  revalidateBooking(parsedLocale.data);
+  return { message: "week_cleared" };
 }
 
 export async function applyWeekdayHoursPresetAction(
@@ -340,24 +489,16 @@ export async function applyWeekdayHoursPresetAction(
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
-  const supabase = await createClient();
-  const rows = [1, 2, 3, 4, 5].map((weekday) => ({
-    organization_id: orgId,
-    weekday,
-    start_time: "09:00:00",
-    end_time: "17:00:00",
-  }));
-  const { error } = await supabase
-    .from("booking_availability_rules")
-    .upsert(rows, {
-      onConflict: "organization_id,weekday,start_time,end_time",
-      ignoreDuplicates: true,
-    });
-  if (error) {
-    console.error("applyWeekdayHoursPreset:", error.message);
-    return { error: "save_failed" };
+  for (const weekday of [1, 2, 3, 4, 5]) {
+    const existing = await loadWeekdayRanges(orgId, weekday);
+    if (!existing) return { error: "save_failed" };
+    const ok = await replaceWeekdayHours(orgId, weekday, [
+      ...existing,
+      { start: 9 * 60, end: 17 * 60 },
+    ]);
+    if (!ok) return { error: "save_failed" };
   }
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return { message: "preset_applied" };
 }
 
@@ -382,7 +523,7 @@ export async function deleteAvailabilityRuleAction(
     console.error("deleteAvailabilityRule:", error.message);
     return { error: "save_failed" };
   }
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return { message: "rule_removed" };
 }
 
@@ -418,7 +559,7 @@ export async function blockDayAction(
     console.error("blockDay:", error.message);
     return { error: "save_failed" };
   }
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return { message: "day_blocked" };
 }
 
@@ -443,7 +584,7 @@ export async function unblockTimeAction(
     console.error("unblockTime:", error.message);
     return { error: "save_failed" };
   }
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return { message: "day_unblocked" };
 }
 
@@ -464,7 +605,7 @@ export async function cancelAppointmentAction(
   const supabase = await createClient();
   const { data: existing } = await supabase
     .from("booking_appointments")
-    .select("google_event_id")
+    .select("google_event_id, host_user_id")
     .eq("id", appointmentId)
     .eq("organization_id", orgId)
     .maybeSingle();
@@ -493,6 +634,7 @@ export async function cancelAppointmentAction(
       );
       await deleteAppointmentGoogleEvent({
         organizationId: orgId,
+        hostUserId: (existing?.host_user_id as string | null) ?? null,
         googleEventId,
       });
     });
@@ -507,6 +649,6 @@ export async function cancelAppointmentAction(
     resourceId: appointmentId,
   });
 
-  revalidatePath(`/${parsedLocale.data}/calendar`);
+  revalidateBooking(parsedLocale.data);
   return { message: "cancelled" };
 }

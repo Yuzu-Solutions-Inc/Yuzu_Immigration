@@ -4,10 +4,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { getAppBaseUrl } from "@/lib/app-url";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
-  getOrgGoogleConnection,
+  getUserGoogleConnection,
   startGoogleWatch,
   stopGoogleWatch,
   syncGoogleBusy,
@@ -25,31 +24,30 @@ export type GoogleCalendarActionState = {
   message?: string;
 };
 
-async function requireManager() {
+async function requireMember() {
   const membership = await getPrimaryMembership();
-  if (!membership) return { ok: false as const, error: "unauthorized" as const };
-  if (!canCreateRecords(membership.role)) {
-    return { ok: false as const, error: "forbidden" as const };
+  const user = await getSessionUser();
+  if (!membership || !user) {
+    return { ok: false as const, error: "unauthorized" as const };
   }
-  return { ok: true as const, membership };
+  return { ok: true as const, membership, user };
 }
 
 export async function startGoogleCalendarConnectAction(formData: FormData) {
   const locale = String(formData.get("locale") || "en");
   const fail = (reason: string): never => {
-    redirect(`/${locale}/calendar?google=${encodeURIComponent(reason)}`);
+    redirect(`/${locale}/calendar/settings?google=${encodeURIComponent(reason)}`);
   };
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return fail(gate.error);
-  const user = await getSessionUser();
-  if (!user) return fail("unauthorized");
   if (!googleCalendarConfigured()) return fail("not_configured");
 
   const origin = await getAppBaseUrl();
   const state = encodeGoogleOAuthState({
     organizationId: gate.membership.organization.id,
-    userId: user.id,
+    userId: gate.user.id,
     locale,
+    origin,
   });
   redirect(googleAuthUrl({ origin, state }));
 }
@@ -57,32 +55,37 @@ export async function startGoogleCalendarConnectAction(formData: FormData) {
 export async function disconnectGoogleCalendarAction(
   locale: string,
 ): Promise<GoogleCalendarActionState> {
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const admin = createServiceClient();
-  const connection = await getOrgGoogleConnection(orgId);
+  const connection = await getUserGoogleConnection(orgId, gate.user.id);
   if (connection) {
     await stopGoogleWatch(connection);
   }
   const { error } = await admin
     .from("google_calendar_connections")
     .delete()
-    .eq("organization_id", orgId);
+    .eq("organization_id", orgId)
+    .eq("user_id", gate.user.id);
   if (error) {
     console.error("disconnect google:", error.message);
     return { error: "save_failed" };
   }
   revalidatePath(`/${locale}/calendar`);
+  revalidatePath(`/${locale}/calendar/settings`);
   return { message: "disconnected" };
 }
 
 export async function syncGoogleCalendarNowAction(
   locale: string,
 ): Promise<GoogleCalendarActionState> {
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
-  const connection = await getOrgGoogleConnection(gate.membership.organization.id);
+  const connection = await getUserGoogleConnection(
+    gate.membership.organization.id,
+    gate.user.id,
+  );
   if (!connection) return { error: "not_connected" };
   try {
     await syncGoogleBusy(connection);
@@ -95,6 +98,7 @@ export async function syncGoogleCalendarNowAction(
     return { error: "sync_failed" };
   }
   revalidatePath(`/${locale}/calendar`);
+  revalidatePath(`/${locale}/calendar/settings`);
   return { message: "synced" };
 }
 

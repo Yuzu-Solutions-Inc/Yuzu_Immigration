@@ -123,9 +123,12 @@ export type GoogleOAuthState = {
   userId: string;
   locale: string;
   nonce: string;
+  origin: string;
 };
 
-export function encodeGoogleOAuthState(input: Omit<GoogleOAuthState, "nonce">) {
+export function encodeGoogleOAuthState(
+  input: Omit<GoogleOAuthState, "nonce">,
+) {
   const payload: GoogleOAuthState = {
     ...input,
     nonce: randomBytes(12).toString("base64url"),

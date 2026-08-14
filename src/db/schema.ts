@@ -548,6 +548,9 @@ export const bookingSettings = pgTable("booking_settings", {
   minNoticeHours: integer("min_notice_hours").notNull().default(24),
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
   isEnabled: boolean("is_enabled").notNull().default(true),
+  defaultHostUserId: uuid("default_host_user_id").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -635,6 +638,9 @@ export const bookingAppointments = pgTable("booking_appointments", {
   cancelledBy: uuid("cancelled_by").references(() => profiles.id, {
     onDelete: "set null",
   }),
+  hostUserId: uuid("host_user_id").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
   googleEventId: text("google_event_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -644,30 +650,33 @@ export const bookingAppointments = pgTable("booking_appointments", {
     .notNull(),
 });
 
-/** One Google Calendar connection per firm. Tokens live in private.google_calendar_secrets. */
-export const googleCalendarConnections = pgTable("google_calendar_connections", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .unique()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
-  googleEmail: text("google_email"),
-  calendarId: text("calendar_id").notNull().default("primary"),
-  channelId: text("channel_id"),
-  channelResourceId: text("channel_resource_id"),
-  channelExpiration: timestamp("channel_expiration", { withTimezone: true }),
-  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
-  isEnabled: boolean("is_enabled").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+/** One Google Calendar connection per staff user. Tokens live in private.google_calendar_secrets. */
+export const googleCalendarConnections = pgTable(
+  "google_calendar_connections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    googleEmail: text("google_email"),
+    calendarId: text("calendar_id").notNull().default("primary"),
+    channelId: text("channel_id"),
+    channelResourceId: text("channel_resource_id"),
+    channelExpiration: timestamp("channel_expiration", { withTimezone: true }),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.organizationId, table.userId)],
+);
 
 /** External Google events mirrored as busy intervals (not our bookings). */
 export const bookingGoogleBusy = pgTable("booking_google_busy", {
