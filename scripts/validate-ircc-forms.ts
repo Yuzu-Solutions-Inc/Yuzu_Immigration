@@ -17,7 +17,7 @@ import { LOV_CONTRACT } from "../src/lib/ircc/lov-contract";
 import { extractXfaLovs, licsFor } from "../src/lib/ircc/xfa-extract";
 
 const UA =
-  "MyConsultant-IRCC-watch/1.0 (+https://github.com/Yuzu-Solutions-Inc/MyConsultant)";
+  "YuzuImmigration-IRCC-watch/1.0 (+https://github.com/Yuzu-Solutions-Inc/MyConsultant)";
 const IRCC_ORIGIN = "https://www.canada.ca";
 
 type FormRevision = {

@@ -324,7 +324,7 @@ export async function buildProjectFileZip(
     `${root}/manifest.json`,
     json({
       formatVersion: 1,
-      product: "My Consultant",
+      product: "Yuzu Immigration",
       exportedAt: new Date().toISOString(),
       projectId: project.id,
       title: project.title,
@@ -339,11 +339,11 @@ export async function buildProjectFileZip(
   zip.file(
     `${root}/README.txt`,
     [
-      "My Consultant — full file export",
+      "Yuzu Immigration — full file export",
       `Exported: ${new Date().toISOString()}`,
       `Project: ${project.title}`,
       "",
-      "This archive is a copy of the immigration file held in My Consultant:",
+      "This archive is a copy of the immigration file held in Yuzu Immigration:",
       "- project.json — file metadata, status history, representative",
       "- people/ — identity and consultation notes for each person on the file",
       "- forms/ — questionnaire answers, form checklist, and IRCC PDFs when they could be generated",

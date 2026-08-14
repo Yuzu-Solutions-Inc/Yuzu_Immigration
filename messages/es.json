@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "My Consultant",
+    "name": "Yuzu Immigration",
     "tagline": "CRM para consultores y abogados de inmigración canadiense"
   },
   "home": {
@@ -67,7 +67,7 @@
     },
     "securityEyebrow": "Seguridad, en claro",
     "securityTitle": "Hecho para expedientes de inmigración sensibles",
-    "securitySubtitle": "Sus clientes le confían pasaportes, biografías y datos familiares. Diseñamos My Consultant para sostener esa confianza con salvaguardas claras y prácticas.",
+    "securitySubtitle": "Sus clientes le confían pasaportes, biografías y datos familiares. Diseñamos Yuzu Immigration para sostener esa confianza con salvaguardas claras y prácticas.",
     "security": {
       "canada": {
         "title": "Datos principales en Canadá",
@@ -87,14 +87,14 @@
       }
     },
     "securityCta": "Leer la política de privacidad",
-    "finalTitle": "Pruebe My Consultant gratis durante la fase de prueba abierta",
+    "finalTitle": "Pruebe Yuzu Immigration gratis durante la fase de prueba abierta",
     "finalSubtitle": "Configure el espacio de su firma en minutos y vea si encaja con su práctica.",
     "finalCta": "Crear una cuenta gratuita",
     "finalNote": "Gratis durante la fase de prueba abierta.",
     "footerTagline": "Software de práctica para consultores y abogados de inmigración canadiense. Operado por Yuzu Solutions."
   },
   "auth": {
-    "title": "Sign in to My Consultant",
+    "title": "Sign in to Yuzu Immigration",
     "subtitle": "Access your organization workspace.",
     "continueGoogle": "Continue with Google",
     "orEmail": "or use email",
@@ -1388,14 +1388,14 @@
     "privacyLink": "Privacidad",
     "privacyTitle": "Política de privacidad",
     "privacyUpdated": "Última actualización: 14 de agosto de 2026",
-    "privacyIntro": "My Consultant es un software de gestión de práctica operado por Yuzu Solutions para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa My Consultant — incluido el espacio de trabajo del consultor, los enlaces compartidos, el portal del cliente y las páginas públicas de reserva. Está redactada para apoyar la rendición de cuentas prevista por PIPEDA. No es una certificación ni un asesoramiento jurídico.",
+    "privacyIntro": "Yuzu Immigration es un software de gestión de práctica operado por Yuzu Solutions para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa Yuzu Immigration — incluido el espacio de trabajo del consultor, los enlaces compartidos, el portal del cliente y las páginas públicas de reserva. Está redactada para apoyar la rendición de cuentas prevista por PIPEDA. No es una certificación ni un asesoramiento jurídico.",
     "backHome": "Volver al inicio",
     "consentTitle": "Cómo se usa su información",
-    "consentBody": "Al continuar, usted proporciona información personal y documentos para que esta firma prepare y gestione su expediente de inmigración en My Consultant. Los registros principales se almacenan en Canadá. Los archivos cargados y muchos campos de identidad están cifrados. El personal de la firma puede abrir el expediente en su espacio de trabajo; Yuzu Solutions lo trata para operar la plataforma. Los detalles sobre correo, calendario y alojamiento están en nuestra Política de privacidad.",
+    "consentBody": "Al continuar, usted proporciona información personal y documentos para que esta firma prepare y gestione su expediente de inmigración en Yuzu Immigration. Los registros principales se almacenan en Canadá. Los archivos cargados y muchos campos de identidad están cifrados. El personal de la firma puede abrir el expediente en su espacio de trabajo; Yuzu Solutions lo trata para operar la plataforma. Los detalles sobre correo, calendario y alojamiento están en nuestra Política de privacidad.",
     "sections": {
       "controller": {
         "title": "1. Quién es responsable",
-        "body": "Su firma consultora (la organización con un espacio My Consultant) decide por qué y cómo se trata la información personal de los clientes para sus servicios de inmigración. Esa firma es, en general, responsable del expediente.\n\nYuzu Solutions opera el software y trata esa información según las instrucciones de la firma, como proveedor de servicios. Yuzu Solutions es responsable de la información de cuenta del personal que usamos para operar el servicio (nombre, correo e identificadores de autenticación).\n\nSi reserva una cita o completa un formulario a través del enlace de una firma, entrega información a esa firma. Yuzu Solutions la aloja y la trata para que la firma pueda usar My Consultant."
+        "body": "Su firma consultora (la organización con un espacio Yuzu Immigration) decide por qué y cómo se trata la información personal de los clientes para sus servicios de inmigración. Esa firma es, en general, responsable del expediente.\n\nYuzu Solutions opera el software y trata esa información según las instrucciones de la firma, como proveedor de servicios. Yuzu Solutions es responsable de la información de cuenta del personal que usamos para operar el servicio (nombre, correo e identificadores de autenticación).\n\nSi reserva una cita o completa un formulario a través del enlace de una firma, entrega información a esa firma. Yuzu Solutions la aloja y la trata para que la firma pueda usar Yuzu Immigration."
       },
       "purposes": {
         "title": "2. Finalidades",
@@ -1419,7 +1419,7 @@
       },
       "sharing": {
         "title": "7. Compartir y proveedores",
-        "body": "Usamos estos proveedores para operar My Consultant:\n• Supabase (Canadá) — base de datos, autenticación y almacenamiento de archivos\n• Vercel — alojamiento de la aplicación, Web Analytics y Speed Insights\n• Resend — correo transaccional cuando el envío está configurado (confirmaciones, recordatorios y enlaces de gestión)\n• Google — solo si un miembro del personal inicia sesión con Google, o si un consultor conecta Google Calendar (OAuth, eventos de calendario y Google Meet)\n\nEsos proveedores tratan la información que les enviamos para prestar su servicio. No divulgamos el contenido de expedientes a terceros para su marketing. Puede haber divulgación si lo exige la ley, para proteger derechos y seguridad, o según instrucciones de la firma (por ejemplo enviar un recordatorio que la firma redactó).\n\nCuando un consultor conecta Google Calendar, Google recibe los datos de la cita que el producto escribe en ese calendario (incluidos nombre, correo y teléfono), y nosotros recibimos intervalos ocupados y títulos de eventos de ese calendario."
+        "body": "Usamos estos proveedores para operar Yuzu Immigration:\n• Supabase (Canadá) — base de datos, autenticación y almacenamiento de archivos\n• Vercel — alojamiento de la aplicación, Web Analytics y Speed Insights\n• Resend — correo transaccional cuando el envío está configurado (confirmaciones, recordatorios y enlaces de gestión)\n• Google — solo si un miembro del personal inicia sesión con Google, o si un consultor conecta Google Calendar (OAuth, eventos de calendario y Google Meet)\n\nEsos proveedores tratan la información que les enviamos para prestar su servicio. No divulgamos el contenido de expedientes a terceros para su marketing. Puede haber divulgación si lo exige la ley, para proteger derechos y seguridad, o según instrucciones de la firma (por ejemplo enviar un recordatorio que la firma redactó).\n\nCuando un consultor conecta Google Calendar, Google recibe los datos de la cita que el producto escribe en ese calendario (incluidos nombre, correo y teléfono), y nosotros recibimos intervalos ocupados y títulos de eventos de ese calendario."
       },
       "transfers": {
         "title": "8. Ubicación del tratamiento",
@@ -1447,7 +1447,7 @@
       },
       "contact": {
         "title": "14. Contacto",
-        "body": "Consultas de privacidad sobre la plataforma My Consultant:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente de inmigración o su cita."
+        "body": "Consultas de privacidad sobre la plataforma Yuzu Immigration:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente de inmigración o su cita."
       }
     }
   },
@@ -1812,7 +1812,7 @@
     "email": "Correo",
     "phone": "Teléfono",
     "address": "Dirección",
-    "privacyConsent": "Acepto que esta firma recopile mi nombre, datos de contacto, dirección, idioma preferido y cualquier respuesta extra que yo dé para programar esta cita, enviarme correo al respecto, guardar un registro de cliente en su espacio My Consultant y—si usa un calendario conectado—añadir la cita (incluido mi nombre, correo y teléfono) a ese calendario, según la",
+    "privacyConsent": "Acepto que esta firma recopile mi nombre, datos de contacto, dirección, idioma preferido y cualquier respuesta extra que yo dé para programar esta cita, enviarme correo al respecto, guardar un registro de cliente en su espacio Yuzu Immigration y—si usa un calendario conectado—añadir la cita (incluido mi nombre, correo y teléfono) a ese calendario, según la",
     "privacyPolicy": "política de privacidad",
     "confirm": "Confirmar reserva",
     "booking": "Reservando…",

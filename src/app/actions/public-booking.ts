@@ -313,7 +313,7 @@ export async function submitPublicBookingAction(
     hostUserId: host.userId,
     appointmentId: appointment.id,
     title: `${service.title} — ${guestName}`,
-    description: `Booked via MyConsultant\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
+    description: `Booked via Yuzu Immigration\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
   });

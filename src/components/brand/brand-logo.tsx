@@ -30,14 +30,14 @@ export function BrandLogo({
         className,
       )}
     >
-      <span className={cn(inverted ? "text-white" : "text-brand")}>My</span>
+      <span className={cn(inverted ? "text-white" : "text-brand")}>Yuzu</span>
       <span
         className={cn(
           "rounded-[0.28em] px-[0.22em] py-[0.08em]",
           inverted ? "bg-white/15 text-white" : "bg-action text-white",
         )}
       >
-        Consultant
+        Immigration
       </span>
     </span>
   );
@@ -50,7 +50,7 @@ export function BrandLogo({
     <Link
       href={href}
       className="inline-flex w-fit transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      aria-label="My Consultant"
+      aria-label="Yuzu Immigration"
     >
       {mark}
     </Link>

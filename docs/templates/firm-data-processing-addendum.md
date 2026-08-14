@@ -1,17 +1,17 @@
 # Firm Data Processing Addendum (template)
 
 **Status:** Template for legal review — not executed until signed.  
-**Product:** My Consultant (Yuzu Solutions)  
+**Product:** Yuzu Immigration (Yuzu Solutions)  
 **Aligned with:** PIPEDA accountability / comparable protection for processors
 
 ## Parties
 
 - **Firm (Controller):** ________________________________  
-- **Yuzu Solutions (Processor):** operator of My Consultant
+- **Yuzu Solutions (Processor):** operator of Yuzu Immigration
 
 ## Subject matter
 
-Processing of personal information entered into or uploaded to My Consultant by the Firm or the Firm’s clients and booking guests (identity and contact data, preferred language, immigration questionnaires, supporting documents, public bookings, reminder emails, portal/share-link activity, and calendar details when Google Calendar is connected) for the purpose of providing the SaaS practice-management service.
+Processing of personal information entered into or uploaded to Yuzu Immigration by the Firm or the Firm’s clients and booking guests (identity and contact data, preferred language, immigration questionnaires, supporting documents, public bookings, reminder emails, portal/share-link activity, and calendar details when Google Calendar is connected) for the purpose of providing the SaaS practice-management service.
 
 ## Obligations of the Processor
 

@@ -160,7 +160,7 @@ export async function sendProjectCallInviteAction(
     .select("name")
     .eq("id", orgId)
     .maybeSingle();
-  const organizationName = org?.name || "My Consultant";
+  const organizationName = org?.name || "Yuzu Immigration";
   const projectTitle = decryptProjectRow(
     { id: project.id as string, title: project.title as string },
     dek,
@@ -365,7 +365,7 @@ export async function submitProjectCallBookingAction(
     hostUserId: ctx.host.userId,
     appointmentId: appointment.id,
     title: `${ctx.service.title} — ${guestName}`,
-    description: `Project call via MyConsultant\n${guestName}\n${ctx.guestEmail}\nProject: ${ctx.projectTitle}`,
+    description: `Project call via Yuzu Immigration\n${guestName}\n${ctx.guestEmail}\nProject: ${ctx.projectTitle}`,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
   });

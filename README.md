@@ -1,4 +1,4 @@
-# MyConsultant
+# Yuzu Immigration
 
 Canadian immigration consultant CRM by Yuzu Solutions.
 
@@ -46,7 +46,7 @@ Add redirect URL: `http://localhost:3000/auth/callback` (and production URL late
 
 Staff Google **sign-in** is separate from **Calendar sync**. To sync bookings with Google Calendar and attach a Google Meet link to each booking, create a Google Cloud OAuth client, enable the Calendar API, set `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET`, and add redirect URI `{APP_URL}/auth/google-calendar/callback`. Each staff member connects their own Google Calendar in Calendar settings. Push notifications require HTTPS (they will not arrive on localhost).
 
-Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` (a verified domain, e.g. `My Consultant <bookings@yourdomain.com>`).
+Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` (a verified domain, e.g. `Yuzu Immigration <bookings@yourdomain.com>`).
 
 ## Repo
 

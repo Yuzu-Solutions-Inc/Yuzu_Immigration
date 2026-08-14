@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "My Consultant",
+    "name": "Yuzu Immigration",
     "tagline": "CRM pour consultants et avocats en immigration canadienne"
   },
   "home": {
@@ -67,7 +67,7 @@
     },
     "securityEyebrow": "Sécurité, simplement",
     "securityTitle": "Conçu pour des dossiers d’immigration sensibles",
-    "securitySubtitle": "Vos clients vous confient passeports, biographies et détails familiaux. My Consultant est conçu pour soutenir cette confiance avec des mesures claires et concrètes.",
+    "securitySubtitle": "Vos clients vous confient passeports, biographies et détails familiaux. Yuzu Immigration est conçu pour soutenir cette confiance avec des mesures claires et concrètes.",
     "security": {
       "canada": {
         "title": "Données principales au Canada",
@@ -87,14 +87,14 @@
       }
     },
     "securityCta": "Lire la politique de confidentialité",
-    "finalTitle": "Essayez My Consultant gratuitement pendant la phase de test",
+    "finalTitle": "Essayez Yuzu Immigration gratuitement pendant la phase de test",
     "finalSubtitle": "Créez l’espace de votre cabinet en quelques minutes et voyez s’il s’adapte à votre pratique.",
     "finalCta": "Créer un compte gratuit",
     "finalNote": "Gratuit pendant la phase de test ouverte.",
     "footerTagline": "Logiciel de pratique pour consultants et avocats en immigration canadienne. Exploité par Yuzu Solutions."
   },
   "auth": {
-    "title": "Connexion à My Consultant",
+    "title": "Connexion à Yuzu Immigration",
     "subtitle": "Accédez à l’espace de votre organisation.",
     "continueGoogle": "Continuer avec Google",
     "orEmail": "ou utiliser l’e-mail",
@@ -1388,14 +1388,14 @@
     "privacyLink": "Confidentialité",
     "privacyTitle": "Politique de confidentialité",
     "privacyUpdated": "Dernière mise à jour : 14 août 2026",
-    "privacyIntro": "My Consultant est un logiciel de gestion de pratique exploité par Yuzu Solutions pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez My Consultant — y compris l’espace de travail du cabinet, les liens de partage, le portail client et les pages de réservation publiques. Elle vise à appuyer l’obligation de rendre compte prévue par la LPRPDE. Elle ne constitue ni une certification ni un avis juridique.",
+    "privacyIntro": "Yuzu Immigration est un logiciel de gestion de pratique exploité par Yuzu Solutions pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez Yuzu Immigration — y compris l’espace de travail du cabinet, les liens de partage, le portail client et les pages de réservation publiques. Elle vise à appuyer l’obligation de rendre compte prévue par la LPRPDE. Elle ne constitue ni une certification ni un avis juridique.",
     "backHome": "Retour à l’accueil",
     "consentTitle": "Utilisation de vos renseignements",
-    "consentBody": "En continuant, vous fournissez des renseignements personnels et des documents afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans My Consultant. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier dans son espace de travail ; Yuzu Solutions les traite pour exploiter la plateforme. Les précisions sur le courriel, l’agenda et l’hébergement figurent dans notre politique de confidentialité.",
+    "consentBody": "En continuant, vous fournissez des renseignements personnels et des documents afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans Yuzu Immigration. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier dans son espace de travail ; Yuzu Solutions les traite pour exploiter la plateforme. Les précisions sur le courriel, l’agenda et l’hébergement figurent dans notre politique de confidentialité.",
     "sections": {
       "controller": {
         "title": "1. Responsables",
-        "body": "Votre cabinet (l’organisation qui a un espace My Consultant) décide pourquoi et comment les renseignements personnels des clients sont traités pour ses services d’immigration. Ce cabinet est généralement responsable du dossier client.\n\nYuzu Solutions exploite le logiciel et traite ces renseignements selon les instructions du cabinet, à titre de fournisseur de services. Yuzu Solutions est responsable des renseignements de compte du personnel que nous utilisons pour exploiter le service (nom, courriel et identifiants d’authentification).\n\nSi vous prenez rendez-vous ou remplissez un formulaire via le lien d’un cabinet, vous communiquez des renseignements à ce cabinet. Yuzu Solutions les héberge et les traite pour que le cabinet puisse utiliser My Consultant."
+        "body": "Votre cabinet (l’organisation qui a un espace Yuzu Immigration) décide pourquoi et comment les renseignements personnels des clients sont traités pour ses services d’immigration. Ce cabinet est généralement responsable du dossier client.\n\nYuzu Solutions exploite le logiciel et traite ces renseignements selon les instructions du cabinet, à titre de fournisseur de services. Yuzu Solutions est responsable des renseignements de compte du personnel que nous utilisons pour exploiter le service (nom, courriel et identifiants d’authentification).\n\nSi vous prenez rendez-vous ou remplissez un formulaire via le lien d’un cabinet, vous communiquez des renseignements à ce cabinet. Yuzu Solutions les héberge et les traite pour que le cabinet puisse utiliser Yuzu Immigration."
       },
       "purposes": {
         "title": "2. Fins",
@@ -1419,7 +1419,7 @@
       },
       "sharing": {
         "title": "7. Communication et fournisseurs",
-        "body": "Nous utilisons ces fournisseurs pour exploiter My Consultant :\n• Supabase (Canada) — base de données, authentification et stockage de fichiers\n• Vercel — hébergement de l’application, Web Analytics et Speed Insights\n• Resend — courriel transactionnel lorsque l’envoi est configuré (confirmations, rappels et liens de gestion)\n• Google — seulement si un membre du personnel se connecte avec Google, ou si un consultant connecte Google Agenda (OAuth, événements d’agenda et Google Meet)\n\nCes fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet (par exemple l’envoi d’un rappel rédigé par le cabinet).\n\nLorsqu’un consultant connecte Google Agenda, Google reçoit les détails du rendez-vous inscrits dans cet agenda (y compris nom, courriel et téléphone), et nous recevons les plages occupées et les titres d’événements de cet agenda."
+        "body": "Nous utilisons ces fournisseurs pour exploiter Yuzu Immigration :\n• Supabase (Canada) — base de données, authentification et stockage de fichiers\n• Vercel — hébergement de l’application, Web Analytics et Speed Insights\n• Resend — courriel transactionnel lorsque l’envoi est configuré (confirmations, rappels et liens de gestion)\n• Google — seulement si un membre du personnel se connecte avec Google, ou si un consultant connecte Google Agenda (OAuth, événements d’agenda et Google Meet)\n\nCes fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet (par exemple l’envoi d’un rappel rédigé par le cabinet).\n\nLorsqu’un consultant connecte Google Agenda, Google reçoit les détails du rendez-vous inscrits dans cet agenda (y compris nom, courriel et téléphone), et nous recevons les plages occupées et les titres d’événements de cet agenda."
       },
       "transfers": {
         "title": "8. Lieu de traitement",
@@ -1447,7 +1447,7 @@
       },
       "contact": {
         "title": "14. Contact",
-        "body": "Demandes de confidentialité pour la plateforme My Consultant :\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier d’immigration ou à votre rendez-vous."
+        "body": "Demandes de confidentialité pour la plateforme Yuzu Immigration :\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier d’immigration ou à votre rendez-vous."
       }
     }
   },
@@ -1812,7 +1812,7 @@
     "email": "Courriel",
     "phone": "Téléphone",
     "address": "Adresse",
-    "privacyConsent": "J’accepte que ce cabinet recueille mon nom, mes coordonnées, mon adresse, ma langue préférée et toute réponse supplémentaire que je fournis afin de planifier ce rendez-vous, de m’écrire à ce sujet, d’enregistrer une fiche client dans son espace My Consultant et — s’il utilise un agenda connecté — d’y ajouter le rendez-vous (y compris mon nom, courriel et téléphone), conformément à la",
+    "privacyConsent": "J’accepte que ce cabinet recueille mon nom, mes coordonnées, mon adresse, ma langue préférée et toute réponse supplémentaire que je fournis afin de planifier ce rendez-vous, de m’écrire à ce sujet, d’enregistrer une fiche client dans son espace Yuzu Immigration et — s’il utilise un agenda connecté — d’y ajouter le rendez-vous (y compris mon nom, courriel et téléphone), conformément à la",
     "privacyPolicy": "politique de confidentialité",
     "confirm": "Confirmer le rendez-vous",
     "booking": "Réservation…",

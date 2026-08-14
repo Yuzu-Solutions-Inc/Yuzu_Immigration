@@ -884,7 +884,7 @@ export async function rescheduleAppointmentAction(input: {
       appointmentId: ctx.appointmentId,
       googleEventId: ctx.googleEventId,
       title: `${ctx.serviceTitle} — ${ctx.guestName}`,
-      description: `Booked via MyConsultant\n${ctx.guestName}\n${ctx.guestEmail}`,
+      description: `Booked via Yuzu Immigration\n${ctx.guestName}\n${ctx.guestEmail}`,
       startsAt: parsed.data.startsAt,
       endsAt: parsed.data.endsAt,
       location: ctx.meetJoinUrl ?? undefined,

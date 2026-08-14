@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "My Consultant",
+    "name": "Yuzu Immigration",
     "tagline": "CRM for Canadian immigration consultants and lawyers"
   },
   "home": {
@@ -67,7 +67,7 @@
     },
     "securityEyebrow": "Security, simply",
     "securityTitle": "Built for sensitive immigration files",
-    "securitySubtitle": "Clients trust you with passports, biographies, and family details. We designed My Consultant so your firm can meet that trust with clear, practical safeguards.",
+    "securitySubtitle": "Clients trust you with passports, biographies, and family details. We designed Yuzu Immigration so your firm can meet that trust with clear, practical safeguards.",
     "security": {
       "canada": {
         "title": "Primary data in Canada",
@@ -87,14 +87,14 @@
       }
     },
     "securityCta": "Read the privacy policy",
-    "finalTitle": "Try My Consultant free while we’re in open testing",
+    "finalTitle": "Try Yuzu Immigration free while we’re in open testing",
     "finalSubtitle": "Set up your firm workspace in minutes and see whether it fits how you already practice.",
     "finalCta": "Create a free account",
     "finalNote": "Free during the open testing phase.",
     "footerTagline": "Practice software for Canadian immigration consultants and lawyers. Operated by Yuzu Solutions."
   },
   "auth": {
-    "title": "Sign in to My Consultant",
+    "title": "Sign in to Yuzu Immigration",
     "subtitle": "Access your organization workspace.",
     "continueGoogle": "Continue with Google",
     "orEmail": "or use email",
@@ -1388,14 +1388,14 @@
     "privacyLink": "Privacy",
     "privacyTitle": "Privacy Policy",
     "privacyUpdated": "Last updated: 14 August 2026",
-    "privacyIntro": "My Consultant is practice-management software operated by Yuzu Solutions for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use My Consultant — including the consultant workspace, client share links, the client portal, and public booking pages. It is written to support PIPEDA accountability. It is not a certification, and it is not legal advice.",
+    "privacyIntro": "Yuzu Immigration is practice-management software operated by Yuzu Solutions for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use Yuzu Immigration — including the consultant workspace, client share links, the client portal, and public booking pages. It is written to support PIPEDA accountability. It is not a certification, and it is not legal advice.",
     "backHome": "Back to home",
     "consentTitle": "How your information is used",
-    "consentBody": "By continuing, you provide personal information and documents so this consulting firm can prepare and manage your immigration file in My Consultant. Primary records are stored in Canada. Uploaded files and many identity fields are encrypted. The firm’s staff can open the file in their workspace; Yuzu Solutions processes it to operate the platform. Email, calendar, and hosting details are in our Privacy Policy.",
+    "consentBody": "By continuing, you provide personal information and documents so this consulting firm can prepare and manage your immigration file in Yuzu Immigration. Primary records are stored in Canada. Uploaded files and many identity fields are encrypted. The firm’s staff can open the file in their workspace; Yuzu Solutions processes it to operate the platform. Email, calendar, and hosting details are in our Privacy Policy.",
     "sections": {
       "controller": {
         "title": "1. Who is responsible",
-        "body": "Your consulting firm (the organization with a My Consultant workspace) decides why and how client personal information is processed for its immigration services. That firm is generally responsible for the client file.\n\nYuzu Solutions operates the software and processes that information on the firm’s instructions as a service provider. Yuzu Solutions is responsible for staff account information we use to run the service (name, email, and authentication identifiers).\n\nIf you book an appointment or complete a form through a firm’s link, you are giving information to that firm. Yuzu Solutions hosts and processes it so the firm can use My Consultant."
+        "body": "Your consulting firm (the organization with a Yuzu Immigration workspace) decides why and how client personal information is processed for its immigration services. That firm is generally responsible for the client file.\n\nYuzu Solutions operates the software and processes that information on the firm’s instructions as a service provider. Yuzu Solutions is responsible for staff account information we use to run the service (name, email, and authentication identifiers).\n\nIf you book an appointment or complete a form through a firm’s link, you are giving information to that firm. Yuzu Solutions hosts and processes it so the firm can use Yuzu Immigration."
       },
       "purposes": {
         "title": "2. Purposes",
@@ -1419,7 +1419,7 @@
       },
       "sharing": {
         "title": "7. Sharing and service providers",
-        "body": "We use these providers to run My Consultant:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, Web Analytics, and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, or a consultant connects Google Calendar (OAuth, calendar events, and Google Meet)\n\nThose providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects Google Calendar, Google receives the booking details the product writes to that calendar (including guest name, email, and phone), and we receive busy times and event titles from that calendar."
+        "body": "We use these providers to run Yuzu Immigration:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, Web Analytics, and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, or a consultant connects Google Calendar (OAuth, calendar events, and Google Meet)\n\nThose providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects Google Calendar, Google receives the booking details the product writes to that calendar (including guest name, email, and phone), and we receive busy times and event titles from that calendar."
       },
       "transfers": {
         "title": "8. Location of processing",
@@ -1447,7 +1447,7 @@
       },
       "contact": {
         "title": "14. Contact",
-        "body": "Privacy inquiries for the My Consultant platform:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file or booking."
+        "body": "Privacy inquiries for the Yuzu Immigration platform:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file or booking."
       }
     }
   },
@@ -1812,7 +1812,7 @@
     "email": "Email",
     "phone": "Phone",
     "address": "Address",
-    "privacyConsent": "I agree that this firm may collect my name, contact details, address, preferred language, and any extra answers I provide to schedule this appointment, email me about it, save a client record in their My Consultant workspace, and—if they use a connected calendar—add the appointment (including my name, email, and phone) to that calendar, as described in the",
+    "privacyConsent": "I agree that this firm may collect my name, contact details, address, preferred language, and any extra answers I provide to schedule this appointment, email me about it, save a client record in their Yuzu Immigration workspace, and—if they use a connected calendar—add the appointment (including my name, email, and phone) to that calendar, as described in the",
     "privacyPolicy": "privacy policy",
     "confirm": "Confirm booking",
     "booking": "Booking…",

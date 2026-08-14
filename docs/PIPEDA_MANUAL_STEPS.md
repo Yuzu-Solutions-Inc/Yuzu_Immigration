@@ -19,7 +19,7 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 - [ ] Optionally enable MFA for end-user (staff) Auth when ready (TOTP) — product UI not shipped yet
 
 ### Supabase project hardening
-- [ ] Confirm project region is **Canada Central (`ca-central-1`)** — already set for MyConsultant; verify after any restore/transfer
+- [ ] Confirm project region is **Canada Central (`ca-central-1`)** — already set for Yuzu Immigration; verify after any restore/transfer
 - [ ] Enable **SSL enforcement** for database connections  
   Dashboard → Database → Settings → SSL enforcement
 - [ ] Enable **Network restrictions** if you have stable egress IPs for admin/ops

@@ -1,5 +1,5 @@
 ---
-description: MyConsultant stack and architecture conventions
+description: Yuzu Immigration stack and architecture conventions
 alwaysApply: true
 ---
 
@@ -45,4 +45,4 @@ alwaysApply: true
 - `messages/` — locale JSON dictionaries
 
 ## Product context
-Canadian immigration consultant CRM (MyConsultant / Yuzu Solutions). Prefer bilingual UX and firm multi-tenancy with RLS. Primary create flow is one-screen **New project** with inline people.
+Canadian immigration consultant CRM (Yuzu Immigration / Yuzu Solutions). Prefer bilingual UX and firm multi-tenancy with RLS. Primary create flow is one-screen **New project** with inline people.

@@ -226,7 +226,7 @@ export async function processDueBookingAutomations(now = new Date()) {
         consultantName: host?.name ?? appointment.host_user_id,
         consultantEmail: host?.email ?? "",
         organizationName:
-          orgName.get(appointment.organization_id) ?? "MyConsultant",
+          orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
         startsAt,
         durationMinutes: service.duration_minutes,
         meetJoinUrl: appointment.meet_join_url,
@@ -273,7 +273,7 @@ export async function processDueBookingAutomations(now = new Date()) {
           html,
           text,
           organizationName:
-            orgName.get(appointment.organization_id) ?? "MyConsultant",
+            orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
           locale: emailLocale,
           includeDoNotReply: automation.include_do_not_reply !== false,
         });
