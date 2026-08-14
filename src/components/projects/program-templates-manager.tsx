@@ -1,9 +1,14 @@
 "use client";
 
-import { Copy, Pencil, Plus } from "lucide-react";
+import type { ReactNode } from "react";
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useActionState, useEffect } from "react";
 
-import { SurfaceCard } from "@/components/layout/surface-card";
+import {
+  deleteOrganizationProgramAction,
+  type OrgProgramActionState,
+} from "@/app/actions/org-programs";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import {
@@ -11,37 +16,127 @@ import {
   type BuiltinProgramTemplateKey,
   type OrganizationProgram,
 } from "@/lib/crm/org-programs";
-import { formTitle } from "@/lib/ircc/catalog";
 import { cn } from "@/lib/utils";
 
-function compositionSummary(
+const deleteInitial: OrgProgramActionState = {};
+
+function metaLine(
   program: Pick<
     OrganizationProgram,
-    "allows_individual" | "allows_couple" | "allows_family"
+    | "allows_individual"
+    | "allows_couple"
+    | "allows_family"
+    | "allows_inside_canada"
+    | "allows_outside_canada"
+    | "forms"
+    | "documents"
   >,
   t: ReturnType<typeof useTranslations<"orgPrograms">>,
 ) {
-  const parts: string[] = [];
-  if (program.allows_individual) parts.push(t("compositions.individual"));
-  if (program.allows_couple) parts.push(t("compositions.couple"));
-  if (program.allows_family) parts.push(t("compositions.family"));
-  return parts.join(" · ");
+  const composition: string[] = [];
+  if (program.allows_individual) composition.push(t("compositions.individual"));
+  if (program.allows_couple) composition.push(t("compositions.couple"));
+  if (program.allows_family) composition.push(t("compositions.family"));
+
+  const location: string[] = [];
+  if (program.allows_outside_canada) location.push(t("outsideCanada"));
+  if (program.allows_inside_canada) location.push(t("insideCanada"));
+
+  return [
+    composition.join(" / "),
+    location.join(" / "),
+    t("formsCount", { count: program.forms.length }),
+    t("documentsCount", { count: program.documents.length }),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
-function locationSummary(
-  program: Pick<
-    OrganizationProgram,
-    "allows_inside_canada" | "allows_outside_canada"
-  >,
-  t: ReturnType<typeof useTranslations<"orgPrograms">>,
-) {
-  const parts: string[] = [];
-  if (program.allows_outside_canada) parts.push(t("outsideCanada"));
-  if (program.allows_inside_canada) parts.push(t("insideCanada"));
-  return parts.join(" · ");
+function DeleteTemplateButton({
+  locale,
+  programId,
+  name,
+}: {
+  locale: string;
+  programId: string;
+  name: string;
+}) {
+  const t = useTranslations("orgPrograms");
+  const [state, action, pending] = useActionState(
+    deleteOrganizationProgramAction,
+    deleteInitial,
+  );
+
+  useEffect(() => {
+    if (state.error) {
+      window.alert(t(`errors.${state.error}`));
+    }
+  }, [state.error, t]);
+
+  return (
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (!window.confirm(t("deleteConfirm", { name }))) {
+          event.preventDefault();
+        }
+      }}
+    >
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="programId" value={programId} />
+      <button
+        type="submit"
+        disabled={pending}
+        className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+        aria-label={t("delete")}
+        title={t("delete")}
+      >
+        <Trash2 className="size-3.5" />
+      </button>
+    </form>
+  );
 }
 
-function BuiltinTemplateCard({
+function RowActions({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return <div className="flex shrink-0 items-center gap-0.5">{children}</div>;
+}
+
+function TemplateRow({
+  title,
+  subtitle,
+  badge,
+  actions,
+}: {
+  title: string;
+  subtitle?: string;
+  badge: string;
+  actions: ReactNode;
+}) {
+  return (
+    <li className="flex items-center gap-3 border-b border-border px-3 py-2.5 last:border-b-0">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <p className="truncate text-sm font-medium text-brand">{title}</p>
+          <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {badge}
+          </span>
+        </div>
+        {subtitle ? (
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
+      {actions}
+    </li>
+  );
+}
+
+function BuiltinTemplateRow({
   templateKey,
   canManage,
 }: {
@@ -52,34 +147,29 @@ function BuiltinTemplateCard({
   const tp = useTranslations("programs");
 
   return (
-    <SurfaceCard className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {t("builtinBadge")}
-          </p>
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {tp(templateKey)}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t("builtinDescription")}
-          </p>
-        </div>
-        {canManage ? (
-          <Link
-            href={`/projects/templates/new?fromBuiltin=${templateKey}`}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            <Copy className="size-4" />
-            {t("duplicate")}
-          </Link>
-        ) : null}
-      </div>
-    </SurfaceCard>
+    <TemplateRow
+      title={tp(templateKey)}
+      subtitle={t("builtinDescriptionShort")}
+      badge={t("builtinBadge")}
+      actions={
+        canManage ? (
+          <RowActions>
+            <Link
+              href={`/projects/templates/new?fromBuiltin=${templateKey}`}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-brand"
+              aria-label={t("duplicate")}
+              title={t("duplicate")}
+            >
+              <Copy className="size-3.5" />
+            </Link>
+          </RowActions>
+        ) : null
+      }
+    />
   );
 }
 
-function FirmTemplateCard({
+function FirmTemplateRow({
   program,
   locale,
   canManage,
@@ -89,58 +179,40 @@ function FirmTemplateCard({
   canManage: boolean;
 }) {
   const t = useTranslations("orgPrograms");
-  const formLocale = locale === "fr" ? "fr" : locale === "es" ? "es" : "en";
-  const formPreview = program.forms
-    .slice(0, 4)
-    .map((form) => formTitle(form.formCode, formLocale))
-    .join(" · ");
-  const moreForms =
-    program.forms.length > 4 ? ` +${program.forms.length - 4}` : "";
 
   return (
-    <SurfaceCard className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {t("firmBadge")}
-          </p>
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {program.name}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {compositionSummary(program, t)}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {locationSummary(program, t)}
-          </p>
-        </div>
-        {canManage ? (
-          <div className="flex flex-wrap gap-2">
+    <TemplateRow
+      title={program.name}
+      subtitle={metaLine(program, t)}
+      badge={t("firmBadge")}
+      actions={
+        canManage ? (
+          <RowActions>
             <Link
               href={`/projects/templates/new?from=${program.id}`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-brand"
+              aria-label={t("duplicate")}
+              title={t("duplicate")}
             >
-              <Copy className="size-4" />
-              {t("duplicate")}
+              <Copy className="size-3.5" />
             </Link>
             <Link
               href={`/projects/templates/${program.id}/edit`}
-              className={cn(buttonVariants({ size: "sm" }))}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-brand"
+              aria-label={t("edit")}
+              title={t("edit")}
             >
-              <Pencil className="size-4" />
-              {t("edit")}
+              <Pencil className="size-3.5" />
             </Link>
-          </div>
-        ) : null}
-      </div>
-      <div className="space-y-1 text-sm text-muted-foreground">
-        <p>
-          {t("formsCount", { count: program.forms.length })}
-          {formPreview ? ` — ${formPreview}${moreForms}` : ""}
-        </p>
-        <p>{t("documentsCount", { count: program.documents.length })}</p>
-      </div>
-    </SurfaceCard>
+            <DeleteTemplateButton
+              locale={locale}
+              programId={program.id}
+              name={program.name}
+            />
+          </RowActions>
+        ) : null
+      }
+    />
   );
 }
 
@@ -156,7 +228,7 @@ export function ProgramTemplatesManager({
   const t = useTranslations("orgPrograms");
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <Link
@@ -165,10 +237,10 @@ export function ProgramTemplatesManager({
           >
             ← {t("backToProjects")}
           </Link>
-          <h1 className="font-heading text-2xl font-semibold text-brand">
+          <h1 className="font-heading text-xl font-semibold text-brand">
             {t("manageTitle")}
           </h1>
-          <p className="max-w-2xl text-[15px] text-muted-foreground">
+          <p className="max-w-xl text-sm text-muted-foreground">
             {t("manageSubtitle")}
           </p>
         </div>
@@ -186,50 +258,46 @@ export function ProgramTemplatesManager({
         ) : null}
       </div>
 
-      <section className="space-y-3">
-        <h2 className="font-heading text-base font-semibold text-brand">
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-brand">
           {t("builtinSection")}
         </h2>
-        <p className="text-sm text-muted-foreground">{t("builtinSectionHelp")}</p>
-        <div className="grid gap-4">
+        <ul className="overflow-hidden rounded-xl border border-border bg-surface">
           {BUILTIN_PROGRAM_TEMPLATE_KEYS.map((key) => (
-            <BuiltinTemplateCard
+            <BuiltinTemplateRow
               key={key}
               templateKey={key}
               canManage={canManage}
             />
           ))}
-        </div>
+        </ul>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="font-heading text-base font-semibold text-brand">
-          {t("firmSection")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t("firmSectionHelp")}</p>
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-brand">{t("firmSection")}</h2>
         {programs.length === 0 ? (
-          <SurfaceCard>
-            <p className="text-[15px] text-muted-foreground">{t("firmEmpty")}</p>
+          <div className="rounded-xl border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
+            {t("firmEmpty")}{" "}
             {canManage ? (
               <Link
                 href="/projects/templates/new"
-                className="mt-3 inline-flex text-sm font-medium text-action hover:underline"
+                className="font-medium text-action hover:underline"
               >
                 {t("createShort")}
               </Link>
             ) : null}
-          </SurfaceCard>
+          </div>
         ) : (
-          <div className="grid gap-4">
+          <ul className="overflow-hidden rounded-xl border border-border bg-surface">
             {programs.map((program) => (
-              <FirmTemplateCard
+              <FirmTemplateRow
                 key={program.id}
                 program={program}
                 locale={locale}
                 canManage={canManage}
               />
             ))}
-          </div>
+          </ul>
         )}
       </section>
     </div>

@@ -578,7 +578,7 @@
   "orgPrograms": {
     "manageButton": "Gestionar plantillas",
     "manageTitle": "Plantillas de programa",
-    "manageSubtitle": "Kits IRCC integrados y plantillas del despacho compartidas con toda la organización. Editar una plantilla solo afecta a proyectos futuros.",
+    "manageSubtitle": "Kits IRCC predeterminados y plantillas del despacho. Los cambios solo afectan proyectos nuevos.",
     "backToProjects": "Volver a proyectos",
     "backToTemplates": "Volver a plantillas",
     "createTitle": "Nueva plantilla de programa",
@@ -595,10 +595,11 @@
     "builtinSectionHelp": "Kits IRCC integrados. Duplique uno para crear una plantilla personalizada.",
     "builtinBadge": "Predeterminada",
     "builtinDescription": "Kit del sistema usado al crear un proyecto con este programa. Duplíquelo para personalizar formularios y documentos.",
+    "builtinDescriptionShort": "Kit IRCC integrado — duplicar para personalizar",
     "firmSection": "Plantillas del despacho",
-    "firmSectionHelp": "Programas personalizados disponibles en el menú Nuevo proyecto para toda la organización. Se permiten nombres duplicados.",
+    "firmSectionHelp": "Programas personalizados de su organización. Los nombres deben ser únicos.",
     "firmBadge": "Despacho",
-    "firmEmpty": "Aún no hay plantillas del despacho. Duplique un kit predeterminado o cree una plantilla en blanco.",
+    "firmEmpty": "Aún no hay plantillas del despacho.",
     "formsCount": "{count, plural, one {# formulario} other {# formularios}}",
     "documentsCount": "{count, plural, one {# documento} other {# documentos}}",
     "templateHelp": "Los formularios y documentos de este programa los definió su despacho. Editar la plantilla más adelante no cambiará este expediente.",
@@ -634,14 +635,16 @@
     "save": "Guardar plantilla",
     "saving": "Guardando…",
     "cancel": "Cancelar",
-    "archive": "Archivar",
-    "archiving": "Archivando…",
+    "delete": "Eliminar",
+    "deleting": "Eliminando…",
+    "deleteConfirm": "¿Eliminar “{name}”? Los expedientes existentes conservan sus formularios y documentos.",
     "errors": {
       "invalid": "Revise los datos de la plantilla e inténtelo de nuevo.",
       "unauthorized": "Inicie sesión para continuar.",
       "forbidden": "No puede gestionar plantillas.",
       "save_failed": "No se pudo guardar la plantilla.",
-      "not_found": "Plantilla no encontrada."
+      "not_found": "Plantilla no encontrada.",
+      "duplicate_name": "Ya existe una plantilla con este nombre."
     }
   },
   "roles": {

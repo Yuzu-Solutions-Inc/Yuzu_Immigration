@@ -578,7 +578,7 @@
   "orgPrograms": {
     "manageButton": "Manage templates",
     "manageTitle": "Program templates",
-    "manageSubtitle": "Built-in IRCC kits plus firm templates shared with everyone in your organization. Editing a template only affects projects created later.",
+    "manageSubtitle": "Default IRCC kits and firm templates. Edits only affect new projects.",
     "backToProjects": "Back to projects",
     "backToTemplates": "Back to templates",
     "createTitle": "New program template",
@@ -595,10 +595,11 @@
     "builtinSectionHelp": "Built-in IRCC kits. Duplicate one to create a firm template you can customize.",
     "builtinBadge": "Default",
     "builtinDescription": "System kit used when creating a project with this program. Duplicate to personalize forms and documents for your firm.",
+    "builtinDescriptionShort": "Built-in IRCC kit — duplicate to customize",
     "firmSection": "Firm templates",
-    "firmSectionHelp": "Personalized programs available in the New project dropdown for your whole organization. Duplicate names are allowed.",
+    "firmSectionHelp": "Personalized programs for your organization. Names must be unique.",
     "firmBadge": "Firm",
-    "firmEmpty": "No firm templates yet. Duplicate a default kit or create a blank template.",
+    "firmEmpty": "No firm templates yet.",
     "formsCount": "{count, plural, one {# form} other {# forms}}",
     "documentsCount": "{count, plural, one {# document} other {# documents}}",
     "templateHelp": "Forms and documents for this program were defined by your firm. Editing the template later will not change this project.",
@@ -634,14 +635,16 @@
     "save": "Save template",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "archive": "Archive",
-    "archiving": "Archiving…",
+    "delete": "Delete",
+    "deleting": "Deleting…",
+    "deleteConfirm": "Delete “{name}”? Existing projects keep their forms and documents.",
     "errors": {
       "invalid": "Check the template details and try again.",
       "unauthorized": "Sign in to continue.",
       "forbidden": "You cannot manage templates.",
       "save_failed": "Could not save the template.",
-      "not_found": "Template not found."
+      "not_found": "Template not found.",
+      "duplicate_name": "A template with this name already exists."
     }
   },
   "roles": {

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 
 import {
-  archiveOrganizationProgramAction,
+  deleteOrganizationProgramAction,
   createOrganizationProgramAction,
   updateOrganizationProgramAction,
   type OrgProgramActionState,
@@ -96,12 +96,12 @@ export function OrganizationProgramForm({
     updateOrganizationProgramAction,
     initialState,
   );
-  const [archiveState, archiveAction, archivePending] = useActionState(
-    archiveOrganizationProgramAction,
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteOrganizationProgramAction,
     initialState,
   );
 
-  const pending = createPending || updatePending || archivePending;
+  const pending = createPending || updatePending || deletePending;
   const state = isEdit ? updateState : createState;
   const formLocale = locale === "fr" ? "fr" : locale === "es" ? "es" : "en";
   const selectedFormCodes = useMemo(
@@ -172,7 +172,7 @@ export function OrganizationProgramForm({
     setDocuments((prev) => prev.filter((doc) => doc.localId !== localId));
   }
 
-  const errorKey = state.error || archiveState.error;
+  const errorKey = state.error || deleteState.error;
 
   return (
     <form
@@ -424,15 +424,20 @@ export function OrganizationProgramForm({
       ) : null}
 
       <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-        {isEdit ? (
+        {isEdit && programId ? (
           <Button
             type="submit"
-            formAction={archiveAction}
+            formAction={deleteAction}
             variant="outline"
             disabled={pending}
             className="text-destructive"
+            onClick={(event) => {
+              if (!window.confirm(t("deleteConfirm", { name: name.trim() || "—" }))) {
+                event.preventDefault();
+              }
+            }}
           >
-            {archivePending ? t("archiving") : t("archive")}
+            {deletePending ? t("deleting") : t("delete")}
           </Button>
         ) : (
           <span />

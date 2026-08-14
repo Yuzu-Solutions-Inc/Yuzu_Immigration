@@ -142,6 +142,7 @@ export async function createOrganizationProgramAction(
 
   if (error || !data) {
     console.error("createOrganizationProgram:", error?.message);
+    if (error?.code === "23505") return { error: "duplicate_name" };
     return { error: "save_failed" };
   }
 
@@ -203,6 +204,7 @@ export async function updateOrganizationProgramAction(
 
   if (error) {
     console.error("updateOrganizationProgram:", error.message);
+    if (error.code === "23505") return { error: "duplicate_name" };
     return { error: "save_failed" };
   }
   if (!data) return { error: "not_found" };
@@ -221,7 +223,7 @@ export async function updateOrganizationProgramAction(
   redirect(`/${localeParsed.data}/projects/templates`);
 }
 
-export async function archiveOrganizationProgramAction(
+export async function deleteOrganizationProgramAction(
   _prev: OrgProgramActionState,
   formData: FormData,
 ): Promise<OrgProgramActionState> {
@@ -240,19 +242,18 @@ export async function archiveOrganizationProgramAction(
   const user = await getSessionUser();
   const supabase = await createClient();
 
+  // ON DELETE SET NULL on immigration_projects.organization_program_id —
+  // existing projects keep their snapshotted forms/docs.
   const { data, error } = await supabase
     .from("organization_programs")
-    .update({
-      is_active: false,
-      updated_at: new Date().toISOString(),
-    })
+    .delete()
     .eq("organization_id", orgId)
     .eq("id", programId)
     .select("id")
     .maybeSingle();
 
   if (error) {
-    console.error("archiveOrganizationProgram:", error.message);
+    console.error("deleteOrganizationProgram:", error.message);
     return { error: "save_failed" };
   }
   if (!data) return { error: "not_found" };
@@ -261,7 +262,7 @@ export async function archiveOrganizationProgramAction(
     organizationId: orgId,
     actorUserId: user?.id ?? null,
     actorKind: "staff",
-    action: "organization_program.archive",
+    action: "organization_program.delete",
     resourceType: "organization_program",
     resourceId: programId,
   });
