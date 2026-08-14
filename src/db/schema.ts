@@ -619,6 +619,20 @@ export const bookingAppointmentStatusEnum = pgEnum("booking_appointment_status",
   "cancelled",
   "completed",
   "no_show",
+  "pending_payment",
+]);
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
+  "paid",
+  "failed",
+  "cancelled",
+  "expired",
+]);
+
+export const paymentSourceEnum = pgEnum("payment_source", [
+  "booking",
+  "project",
 ]);
 
 export const bookingFormFieldTypeEnum = pgEnum("booking_form_field_type", [
@@ -844,6 +858,7 @@ export const bookingAppointments = pgTable("booking_appointments", {
   googleEventId: text("google_event_id"),
   meetJoinUrl: text("meet_join_url"),
   manageTokenHash: text("manage_token_hash"),
+  manageTokenEncrypted: text("manage_token_encrypted"),
   formAnswers: jsonb("form_answers"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -962,6 +977,76 @@ export const googleCalendarConnections = pgTable(
   (table) => [unique().on(table.organizationId, table.userId)],
 );
 
+/** One Square seller account per firm. Tokens in private.square_secrets. */
+export const squareConnections = pgTable("square_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" })
+    .unique(),
+  connectedBy: uuid("connected_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  merchantId: text("merchant_id").notNull(),
+  locationId: text("location_id").notNull(),
+  currency: text("currency").notNull().default("CAD"),
+  businessName: text("business_name"),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Checkout charges for bookings and ad-hoc project invoices. */
+export const paymentRequests = pgTable(
+  "payment_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    source: paymentSourceEnum("source").notNull(),
+    status: paymentStatusEnum("status").notNull().default("pending"),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull().default("CAD"),
+    description: text("description").notNull(),
+    projectId: uuid("project_id").references(() => immigrationProjects.id, {
+      onDelete: "set null",
+    }),
+    personId: uuid("person_id").references(() => people.id, {
+      onDelete: "set null",
+    }),
+    appointmentId: uuid("appointment_id").references(
+      () => bookingAppointments.id,
+      { onDelete: "set null" },
+    ),
+    createdBy: uuid("created_by").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    tokenHash: text("token_hash").notNull().unique(),
+    tokenEncrypted: text("token_encrypted"),
+    squarePaymentLinkId: text("square_payment_link_id"),
+    squareOrderId: text("square_order_id"),
+    squarePaymentId: text("square_payment_id"),
+    checkoutUrl: text("checkout_url"),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("payment_requests_square_order_uidx").on(table.squareOrderId),
+    uniqueIndex("payment_requests_appointment_uidx").on(table.appointmentId),
+  ],
+);
+
 /** External Google events mirrored as busy intervals (not our bookings). */
 export const bookingGoogleBusy = pgTable("booking_google_busy", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -1042,6 +1127,21 @@ export const googleCalendarSecrets = privateSchema.table(
   },
 );
 
+/** Square OAuth tokens — service_role only. */
+export const squareSecrets = privateSchema.table("square_secrets", {
+  connectionId: uuid("connection_id")
+    .primaryKey()
+    .references(() => squareConnections.id, { onDelete: "cascade" }),
+  accessTokenEncrypted: text("access_token_encrypted").notNull(),
+  refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", {
+    withTimezone: true,
+  }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export type ProgramFamily = (typeof programFamilyEnum.enumValues)[number];
 export type ProjectJurisdiction =
   (typeof projectJurisdictionEnum.enumValues)[number];
@@ -1057,3 +1157,5 @@ export type BookingAppointmentStatus =
   (typeof bookingAppointmentStatusEnum.enumValues)[number];
 export type BookingFormFieldType =
   (typeof bookingFormFieldTypeEnum.enumValues)[number];
+export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number];
+export type PaymentSource = (typeof paymentSourceEnum.enumValues)[number];

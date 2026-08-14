@@ -313,6 +313,25 @@
       "checklists": "Listas de documentos"
     },
     "organizationHelp": "Nombre del despacho, identificador del espacio, idioma predeterminado e invitaciones del personal.",
+    "squareTitle": "Pagos Square",
+    "squareHelp": "Conecte Square para cobrar servicios con precio y enlaces de pago de expediente.",
+    "squareConnect": "Conectar Square",
+    "squareDisconnect": "Desconectar Square",
+    "squareConnectedAs": "Cuenta conectada",
+    "squareNotConnected": "No conectado. Conecte Square para aceptar pagos.",
+    "squareNotConfigured": "Añada SQUARE_APPLICATION_ID y SQUARE_APPLICATION_SECRET al entorno del servidor, la URI OAuth /auth/square/callback y el webhook /api/square/webhook.",
+    "squareCurrency": "Moneda de liquidación: {currency}",
+    "squareConnectedFlash": "Square conectado.",
+    "squareDisconnected": "Square desconectado",
+    "squareErrors": {
+      "unauthorized": "Inicie sesión para continuar.",
+      "forbidden": "Solo los administradores pueden gestionar Square.",
+      "not_configured": "Square no está configurado en este servidor.",
+      "denied": "Autorización de Square cancelada.",
+      "token_failed": "No se pudo completar la autorización de Square.",
+      "save_failed": "No se pudo guardar la conexión de Square.",
+      "no_location": "Su cuenta Square necesita una ubicación activa."
+    },
     "securityHelp": "Acciones sensibles recientes en el espacio de tu despacho (solo administradores).",
     "securityForbidden": "Solo los administradores pueden ver el registro de auditoría.",
     "securityEmpty": "Aún no hay eventos auditados.",
@@ -1859,6 +1878,9 @@
     "booking": "Reservando…",
     "confirmedTitle": "Reserva confirmada",
     "confirmedBody": "{service} el {when} con {host} en {org}.",
+    "paymentRedirectTitle": "Continuar al pago",
+    "paymentRedirectBody": "Su horario está reservado. Pague con Square para confirmar la cita.",
+    "paymentContinue": "Pagar con Square",
     "joinMeet": "Unirse a Google Meet",
     "manageHint": "¿Necesita cambiar esta cita?",
     "changeTime": "Cambiar horario",
@@ -1885,6 +1907,7 @@
       "invalid_service": "Ese servicio no está disponible.",
       "slot_taken": "Ese horario acaba de ocuparse. Elija otro.",
       "book_failed": "No se pudo completar la reserva. Inténtelo de nuevo.",
+      "payment_failed": "No se pudo iniciar el pago. Inténtelo de nuevo o contacte al despacho.",
       "invalid_form": "Revise las preguntas adicionales de este servicio e inténtelo de nuevo.",
       "rate_limited": "Demasiados intentos de reserva. Inténtelo más tarde.",
       "too_many_bookings": "Este correo ya tiene el número máximo de citas próximas. Cambie o cancele una primero.",
@@ -1972,6 +1995,49 @@
       "expired": "Este enlace ha caducado.",
       "revoked": "Este enlace fue revocado."
     }
+  },
+  "projectPayments": {
+    "title": "Enlaces de pago",
+    "subtitle": "Cree un enlace Square por un importe personalizado en este expediente.",
+    "amount": "Importe",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Anticipo — residencia permanente",
+    "person": "Facturar a",
+    "personNone": "Ninguna persona concreta",
+    "create": "Crear enlace de pago",
+    "creating": "Creando…",
+    "created": "Enlace de pago creado y copiado",
+    "linkCopied": "Enlace:",
+    "connectSquareFirst": "Conecte Square en Ajustes de organización para crear enlaces.",
+    "history": "Historial de pagos",
+    "historyEmpty": "Aún no hay enlaces de pago.",
+    "openLink": "Abrir página de pago",
+    "statuses": {
+      "pending": "Pendiente",
+      "paid": "Pagado",
+      "failed": "Fallido",
+      "cancelled": "Cancelado",
+      "expired": "Caducado"
+    },
+    "errors": {
+      "invalid": "Revise el importe y la descripción.",
+      "invalidAmount": "Introduzca un importe válido mayor que cero.",
+      "unauthorized": "Inicie sesión para continuar.",
+      "forbidden": "No puede crear enlaces de pago.",
+      "notFound": "Proyecto no encontrado.",
+      "squareNotConnected": "Conecte Square primero en Organización.",
+      "createFailed": "No se pudo crear el enlace de pago."
+    }
+  },
+  "publicPay": {
+    "title": "Pago",
+    "paidTitle": "Pago recibido",
+    "paidBody": "Gracias. Este pago está completo.",
+    "payWithSquare": "Pagar con Square",
+    "expiredBody": "Este enlace de pago ha caducado. Pida uno nuevo a su consultor.",
+    "unavailableTitle": "Enlace no disponible",
+    "unavailableBody": "Este enlace de pago no es válido o ya no está disponible.",
+    "firmFallback": "Despacho"
   },
   "bookingManage": {
     "title": "Gestionar su cita",

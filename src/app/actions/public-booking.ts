@@ -42,6 +42,8 @@ export type PublicBookingState = {
   hostName?: string;
   meetJoinUrl?: string;
   manageToken?: string;
+  checkoutUrl?: string;
+  paymentToken?: string;
   existingCount?: number;
   guestEmail?: string;
 };
@@ -247,7 +249,19 @@ export async function submitPublicBookingAction(
       .eq("organization_id", ctx.organizationId);
   }
 
+  const { getOrgSquareConnection } = await import("@/lib/square/client");
+  const squareConnection =
+    service.price_cents > 0
+      ? await getOrgSquareConnection(ctx.organizationId)
+      : null;
+  const requiresPayment = Boolean(squareConnection && service.price_cents > 0);
+
   const manageToken = createBookingToken();
+  const { encryptField } = await import("@/lib/security/field-crypto");
+  const { MANAGE_TOKEN_AAD, createCheckoutPaymentRequest } = await import(
+    "@/lib/square/payments"
+  );
+
   const { data: appointment, error } = await admin
     .from("booking_appointments")
     .insert({
@@ -268,8 +282,9 @@ export async function submitPublicBookingAction(
       ),
       privacy_accepted_at: new Date().toISOString(),
       guest_preferred_locale: preferredLocale,
-      status: "confirmed",
+      status: requiresPayment ? "pending_payment" : "confirmed",
       manage_token_hash: hashBookingToken(manageToken),
+      manage_token_encrypted: encryptField(manageToken, MANAGE_TOKEN_AAD, dek),
       form_answers:
         serviceFields.length > 0
           ? encryptBookingFormAnswers(parsedAnswers.answers, dek)
@@ -299,8 +314,50 @@ export async function submitPublicBookingAction(
     action: "booking.appointment.create",
     resourceType: "booking_appointment",
     resourceId: appointment.id,
-    metadata: { serviceId: service.id },
+    metadata: {
+      serviceId: service.id,
+      paymentRequired: requiresPayment,
+    },
   });
+
+  if (requiresPayment) {
+    try {
+      const checkout = await createCheckoutPaymentRequest({
+        organizationId: ctx.organizationId,
+        source: "booking",
+        amountCents: service.price_cents,
+        currency: service.currency || "CAD",
+        description: `${service.title} — ${ctx.organizationName}`,
+        locale: preferredLocale,
+        appointmentId: appointment.id,
+        personId,
+        buyerEmail: guestEmail,
+        expiresInHours: 2,
+      });
+      return {
+        message: "payment_required",
+        appointmentId: appointment.id,
+        startsAt: parsed.data.startsAt,
+        endsAt: parsed.data.endsAt,
+        serviceTitle: service.title,
+        hostName: host.name,
+        manageToken,
+        checkoutUrl: checkout.checkoutUrl,
+        paymentToken: checkout.token,
+      };
+    } catch (err) {
+      console.error("booking payment link:", err);
+      await admin
+        .from("booking_appointments")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", appointment.id);
+      return { error: "payment_failed", guestEmail };
+    }
+  }
 
   const origin = await getAppBaseUrl();
   const urls = bookingManageUrls(origin, preferredLocale, manageToken);

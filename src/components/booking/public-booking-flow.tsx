@@ -169,6 +169,34 @@ export function PublicBookingFlow({
     setDateIso(null);
   }
 
+  useEffect(() => {
+    if (state.message === "payment_required" && state.checkoutUrl) {
+      window.location.assign(state.checkoutUrl);
+    }
+  }, [state.message, state.checkoutUrl]);
+
+  if (state.message === "payment_required" && state.checkoutUrl) {
+    return (
+      <div className="mx-auto max-w-lg space-y-6 px-4 py-12 text-center">
+        <BrandLogo size="sm" href="/" />
+        <h1 className="font-heading text-2xl font-semibold text-brand">
+          {t("paymentRedirectTitle")}
+        </h1>
+        <p className="text-[15px] text-muted-foreground">
+          {t("paymentRedirectBody")}
+        </p>
+        <p>
+          <a
+            href={state.checkoutUrl}
+            className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-action-foreground hover:bg-action/90"
+          >
+            {t("paymentContinue")}
+          </a>
+        </p>
+      </div>
+    );
+  }
+
   if (state.message === "booked" && state.startsAt && state.serviceTitle) {
     return (
       <div className="mx-auto max-w-lg space-y-6 px-4 py-12 text-center">

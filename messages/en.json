@@ -313,6 +313,25 @@
       "checklists": "Document checklists"
     },
     "organizationHelp": "Firm name, workspace slug, default language, and staff invitations.",
+    "squareTitle": "Square payments",
+    "squareHelp": "Connect Square so clients can pay for priced booking services and project payment links.",
+    "squareConnect": "Connect Square",
+    "squareDisconnect": "Disconnect Square",
+    "squareConnectedAs": "Connected account",
+    "squareNotConnected": "Not connected. Connect Square to collect payments.",
+    "squareNotConfigured": "Add SQUARE_APPLICATION_ID and SQUARE_APPLICATION_SECRET to the server environment, set the OAuth redirect to /auth/square/callback, and configure the webhook at /api/square/webhook.",
+    "squareCurrency": "Settlement currency: {currency}",
+    "squareConnectedFlash": "Square connected.",
+    "squareDisconnected": "Square disconnected",
+    "squareErrors": {
+      "unauthorized": "Sign in to continue.",
+      "forbidden": "Only organization admins can manage Square.",
+      "not_configured": "Square is not configured on this server.",
+      "denied": "Square authorization was cancelled.",
+      "token_failed": "Could not complete Square authorization.",
+      "save_failed": "Could not save the Square connection.",
+      "no_location": "Your Square account needs an active location."
+    },
     "orgDefaultLocale": "Default language",
     "orgDefaultLocaleHelp": "Default language for the workspace and for booking reminders when a client’s preferred language has no translated version. Staff can still switch language in the app.",
     "securityHelp": "Recent sensitive actions in your firm workspace (admins only).",
@@ -1859,6 +1878,9 @@
     "booking": "Booking…",
     "confirmedTitle": "You're booked",
     "confirmedBody": "{service} on {when} with {host} at {org}.",
+    "paymentRedirectTitle": "Continue to payment",
+    "paymentRedirectBody": "Your time is held. Complete payment with Square to confirm the appointment.",
+    "paymentContinue": "Pay with Square",
     "joinMeet": "Join Google Meet",
     "manageHint": "Need to change this appointment?",
     "changeTime": "Change time",
@@ -1885,6 +1907,7 @@
       "invalid_service": "That service is not available.",
       "slot_taken": "That time was just booked. Pick another slot.",
       "book_failed": "Could not complete the booking. Try again.",
+      "payment_failed": "Could not start payment. Try again or contact the firm.",
       "invalid_form": "Check the extra questions for this service and try again.",
       "rate_limited": "Too many booking attempts. Try again later.",
       "too_many_bookings": "This email already has the maximum number of upcoming appointments. Change or cancel one first.",
@@ -1972,6 +1995,49 @@
       "expired": "This link has expired.",
       "revoked": "This link was revoked."
     }
+  },
+  "projectPayments": {
+    "title": "Payment links",
+    "subtitle": "Create a Square checkout link for a custom amount on this project.",
+    "amount": "Amount",
+    "description": "Description",
+    "descriptionPlaceholder": "Retainer — permanent residence",
+    "person": "Bill to",
+    "personNone": "No specific person",
+    "create": "Create payment link",
+    "creating": "Creating…",
+    "created": "Payment link created and copied",
+    "linkCopied": "Link:",
+    "connectSquareFirst": "Connect Square in Organization settings to create payment links.",
+    "history": "Payment history",
+    "historyEmpty": "No payment links yet.",
+    "openLink": "Open payment page",
+    "statuses": {
+      "pending": "Awaiting payment",
+      "paid": "Paid",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "errors": {
+      "invalid": "Check the amount and description.",
+      "invalidAmount": "Enter a valid amount greater than zero.",
+      "unauthorized": "Sign in to continue.",
+      "forbidden": "You cannot create payment links.",
+      "notFound": "Project not found.",
+      "squareNotConnected": "Connect Square in Organization settings first.",
+      "createFailed": "Could not create the payment link."
+    }
+  },
+  "publicPay": {
+    "title": "Payment",
+    "paidTitle": "Payment received",
+    "paidBody": "Thank you. This payment is complete.",
+    "payWithSquare": "Pay with Square",
+    "expiredBody": "This payment link has expired. Ask your consultant for a new one.",
+    "unavailableTitle": "Link unavailable",
+    "unavailableBody": "This payment link is invalid or no longer available.",
+    "firmFallback": "Consulting firm"
   },
   "bookingManage": {
     "title": "Manage your appointment",

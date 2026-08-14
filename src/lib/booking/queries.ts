@@ -119,7 +119,7 @@ async function loadHostCalendars(input: {
       .from("booking_appointments")
       .select("id, starts_at, ends_at, host_user_id")
       .eq("organization_id", input.organizationId)
-      .eq("status", "confirmed")
+      .in("status", ["confirmed", "pending_payment"])
       .lt("starts_at", windowEnd.toISOString())
       .gt("ends_at", now.toISOString()),
     admin

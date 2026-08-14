@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { listProjectPaymentLinks } from "@/app/actions/project-payment";
+import { getOrgSquareConnection } from "@/lib/square/client";
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
@@ -13,6 +15,7 @@ import { DeleteProjectButton } from "@/components/projects/delete-project-button
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
 import { ProjectNotesSection } from "@/components/projects/project-notes-section";
 import { ProjectParticipantsList } from "@/components/projects/project-participants-list";
+import { ProjectPaymentsCard } from "@/components/projects/project-payments-card";
 import { ProjectScheduleCallCard } from "@/components/projects/project-schedule-call-card";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { ProjectSubmitBeforeCard } from "@/components/projects/project-submit-before-card";
@@ -20,6 +23,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import {
   canAdministerOrg,
+  canCreateRecords,
   canDeleteRecord,
   canShareProjects,
 } from "@/lib/auth/rbac";
@@ -96,6 +100,8 @@ export default async function ProjectDetailPage({
     meetings,
     callInvites,
     bookingSettings,
+    projectPayments,
+    squareConnection,
   ] = await Promise.all([
     getProjectParticipants(id),
     getProjectStatusHistory(id),
@@ -117,6 +123,8 @@ export default async function ProjectDetailPage({
         .maybeSingle();
       return data;
     })(),
+    listProjectPaymentLinks(id),
+    getOrgSquareConnection(project.organization_id),
   ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
@@ -311,6 +319,17 @@ export default async function ProjectDetailPage({
             }
             meetings={meetings}
             invites={callInvites}
+          />
+          <ProjectPaymentsCard
+            locale={locale}
+            projectId={project.id}
+            canCreate={canCreateRecords(membership?.role)}
+            squareConnected={Boolean(squareConnection)}
+            payments={projectPayments}
+            people={questionnairePeople.map((p) => ({
+              id: p.id,
+              label: p.displayName,
+            }))}
           />
           <ProjectNotesSection
             locale={locale}
