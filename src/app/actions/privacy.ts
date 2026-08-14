@@ -6,7 +6,7 @@ import { z } from "zod";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { requireOrganizationId } from "@/lib/crm/queries";
-import { CLIENT_DOCUMENTS_BUCKET } from "@/lib/documents/catalog";
+import { eraseProjectPersonalData } from "@/lib/privacy/erase";
 import { isEligibleForDestruction } from "@/lib/privacy/retention";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
@@ -14,11 +14,7 @@ import {
   decryptNoteBody,
   decryptPersonRow,
   decryptProjectRow,
-  encryptAnswersValue,
-  encryptDestructionWrite,
-  PII_AAD,
 } from "@/lib/security/client-pii";
-import { encryptOptionalField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -200,11 +196,6 @@ export async function destroyClosedProjectAction(
     return { error: "not_found" };
   }
 
-  const decryptedProject = decryptProjectRow(
-    project as { title: string; description?: string | null; notes?: string | null },
-    key,
-  );
-
   if (
     !isEligibleForDestruction({
       closedAt: project.closed_at as string | null,
@@ -215,48 +206,12 @@ export async function destroyClosedProjectAction(
     return { error: "not_eligible" };
   }
 
+  const decryptedProject = decryptProjectRow(
+    project as { title: string; description?: string | null; notes?: string | null },
+    key,
+  );
+
   const admin = createServiceClient();
-
-  const { data: files } = await admin
-    .from("project_document_files")
-    .select("id, storage_path")
-    .eq("project_id", project.id)
-    .eq("organization_id", orgId);
-
-  const paths = (files ?? []).map((f) => f.storage_path as string);
-  if (paths.length > 0) {
-    const { error: storageError } = await admin.storage
-      .from(CLIENT_DOCUMENTS_BUCKET)
-      .remove(paths);
-    if (storageError) {
-      console.error("destroy storage:", storageError.message);
-      return { error: "destroy_failed" };
-    }
-  }
-
-  await admin
-    .from("project_document_files")
-    .delete()
-    .eq("project_id", project.id)
-    .eq("organization_id", orgId);
-
-  await admin
-    .from("project_form_answers")
-    .update({
-      answers: encryptAnswersValue({}, key),
-      current_section: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("project_id", project.id)
-    .eq("organization_id", orgId);
-
-  await admin
-    .from("form_share_links")
-    .update({ revoked_at: new Date().toISOString() })
-    .eq("project_id", project.id)
-    .eq("organization_id", orgId)
-    .is("revoked_at", null);
-
   const { data: principalRows } = await admin
     .from("project_participants")
     .select("person_id")
@@ -285,57 +240,40 @@ export async function destroyClosedProjectAction(
     }
   }
 
-  const destroyedAt = new Date().toISOString();
+  try {
+    const summary = await eraseProjectPersonalData({
+      organizationId: orgId,
+      projectId: project.id as string,
+      actorUserId: user?.id ?? null,
+      keepProjectRow: true,
+      clientName,
+      serviceSummary: `${project.program_family} — ${decryptedProject.title}`,
+      fileClosedAt: project.closed_at as string | null,
+      destructionNote: parsed.data.note || null,
+    });
 
-  await admin.from("file_destruction_register").insert({
-    organization_id: orgId,
-    project_id: project.id,
-    ...encryptDestructionWrite(
-      {
-        client_name: clientName || "Unknown",
-        service_summary: `${project.program_family} — ${decryptedProject.title}`,
+    await recordAuditEvent({
+      organizationId: orgId,
+      actorUserId: user?.id,
+      actorKind: "staff",
+      action: "project.destroy",
+      resourceType: "immigration_project",
+      resourceId: project.id as string,
+      metadata: {
+        documentsRemoved: summary.documentsRemoved,
+        peopleErased: summary.peopleErased,
+        appointmentsRemoved: summary.appointmentsRemoved,
       },
-      key,
-    ),
-    file_closed_at: project.closed_at,
-    destroyed_at: destroyedAt,
-    destroyed_by: user?.id ?? null,
-  });
-
-  const { error: markError } = await admin
-    .from("immigration_projects")
-    .update({
-      description: null,
-      notes: null,
-      destroyed_at: destroyedAt,
-      destroyed_by: user?.id ?? null,
-      destruction_note: encryptOptionalField(
-        parsed.data.note || null,
-        PII_AAD.projects.destructionNote,
-        key,
-      ),
-      updated_at: destroyedAt,
-    })
-    .eq("id", project.id)
-    .eq("organization_id", orgId);
-
-  if (markError) {
-    console.error("mark destroyed:", markError.message);
+    });
+  } catch (error) {
+    console.error("destroy project:", error);
     return { error: "destroy_failed" };
   }
 
-  await recordAuditEvent({
-    organizationId: orgId,
-    actorUserId: user?.id,
-    actorKind: "staff",
-    action: "project.destroy",
-    resourceType: "immigration_project",
-    resourceId: project.id as string,
-    metadata: { documentsRemoved: paths.length },
-  });
-
   revalidatePath(`/${parsed.data.locale}/projects/${project.id}`);
   revalidatePath(`/${parsed.data.locale}/projects`);
+  revalidatePath(`/${parsed.data.locale}/people`);
+  revalidatePath(`/${parsed.data.locale}/calendar`);
   revalidatePath(`/${parsed.data.locale}/settings/security`);
   return { message: "destroyed" };
 }

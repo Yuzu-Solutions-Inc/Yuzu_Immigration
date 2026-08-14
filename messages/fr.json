@@ -339,7 +339,7 @@
     "delete": "Supprimer",
     "deleteAria": "Supprimer {title}",
     "deleting": "Suppression…",
-    "deleteConfirm": "Supprimer {title} ? Cette action est irréversible.",
+    "deleteConfirm": "Supprimer {title} ? Cette action efface définitivement le dossier, les documents, les réponses et les liens de partage. Les personnes sans autre dossier au cabinet sont aussi effacées, y compris leurs rendez-vous. Cette action est irréversible.",
     "shareWithAssistants": "Partager avec les adjoints",
     "shareHelp": "Les adjoints ne voient que les projets que vous partagez avec eux, ainsi que les personnes de ces dossiers.",
     "noAssistants": "Aucun adjoint dans cette organisation. Invitez-en un dans les paramètres de l’organisation.",
@@ -419,7 +419,7 @@
     "delete": "Supprimer",
     "deleteAria": "Supprimer {name}",
     "deleting": "Suppression…",
-    "deleteConfirm": "Supprimer {name} ? Cette action est irréversible. La personne sera retirée de tous les projets.",
+    "deleteConfirm": "Supprimer {name} ? Cette action efface définitivement sa fiche, ses documents, notes, accès au portail et rendez-vous, et la retire de tous les projets. Cette action est irréversible.",
     "notesTitle": "Notes de consultation",
     "notesHelp": "Privé à votre cabinet. Ajoutez une note après chaque consultation.",
     "notesPlaceholder": "Ce qui a été discuté, conseils donnés, prochaines étapes…",
@@ -1137,13 +1137,13 @@
     "retentionHelp": "Les dossiers fermés sont conservés au moins six ans pour respecter les obligations de gestion de dossiers du Collège, puis peuvent être détruits de façon sécuritaire.",
     "closedAt": "Dossier fermé",
     "retainUntil": "Conserver jusqu’au",
-    "destroyedOn": "Contenu sensible détruit le {date}",
-    "destroyHelp": "Supprime définitivement les documents chiffrés et efface les réponses au questionnaire de ce projet. Tapez DESTROY pour confirmer.",
+    "destroyedOn": "Dossier détruit le {date}",
+    "destroyHelp": "Efface définitivement les documents, les réponses au questionnaire, les liens de partage et — si ces personnes n’ont plus d’autre dossier au cabinet — leurs fiches clients, notes, accès au portail et rendez-vous. Tapez DESTROY pour confirmer.",
     "destroyConfirmLabel": "Tapez DESTROY pour confirmer",
     "destroyNote": "Note facultative",
-    "destroy": "Détruire le contenu sensible",
+    "destroy": "Détruire le dossier",
     "destroying": "Destruction…",
-    "destroySuccess": "Contenu sensible détruit et inscrit au registre de destruction.",
+    "destroySuccess": "Le dossier a été effacé et inscrit au registre de destruction.",
     "destroyNotYet": "La destruction sécuritaire sera disponible après la date de conservation.",
     "exportPerson": "Exporter les données",
     "downloadFile": "Télécharger le dossier complet",
@@ -1156,7 +1156,7 @@
       "notFound": "Enregistrement introuvable.",
       "exportFailed": "Impossible de télécharger le dossier. Réessayez.",
       "notEligible": "Ce dossier n’est pas encore admissible à la destruction.",
-      "destroyFailed": "Impossible de détruire le contenu. Réessayez.",
+      "destroyFailed": "Impossible d’effacer le dossier. Réessayez.",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },
@@ -1192,7 +1192,7 @@
       },
       "retention": {
         "title": "6. Conservation",
-        "body": "Les dossiers clients et projets restent tant que l’espace de travail du cabinet est actif. À la fermeture d’un dossier, le produit fixe une date de conservation de six ans pour appuyer les devoirs typiques du Collège des consultants en immigration et en citoyenneté. Après cette date, un administrateur du cabinet peut détruire les documents téléversés et vider les réponses au questionnaire de ce projet ; une inscription au registre de destruction est conservée. Cette action n’efface pas à elle seule les fiches personnes, les rendez-vous, les journaux d’audit ni les copies de sauvegarde.\n\nLes rendez-vous restent jusqu’à ce que le cabinet les retire ou que l’espace soit retiré. Les événements d’abus hachés sont supprimés après environ 14 jours.\n\nLes cabinets demeurent responsables de leurs devoirs professionnels de conservation et de destruction. Les suppressions dans l’application restent aussi sujettes aux copies de sauvegarde jusqu’à leur expiration."
+        "body": "Les dossiers clients et projets restent tant que l’espace de travail du cabinet est actif. À la fermeture d’un dossier, le produit fixe une date de conservation de six ans pour appuyer les devoirs typiques du Collège des consultants en immigration et en citoyenneté.\n\nSupprimer une personne ou un projet dans l’espace de travail efface les renseignements personnels de ce dossier dans l’application : identité et coordonnées, notes, documents téléversés, réponses au questionnaire, liens de partage, accès au portail et rendez-vous liés (y compris une tentative de suppression de l’événement Google Agenda correspondant). Les personnes qui restent sur un autre dossier du cabinet sont conservées. Après la date de conservation, un administrateur du cabinet peut détruire un dossier fermé de la même façon. Une fiche projet vide (sans renseignements personnels) et une inscription chiffrée au registre de destruction (nom du client et résumé du service) sont conservées pour le dossier professionnel du cabinet. Les journaux d’audit de ce dossier ou de cette personne sont conservés comme preuve de l’action, sans adresse IP, agent utilisateur ni métadonnées d’événement.\n\nLes événements d’abus hachés sont supprimés après environ 14 jours, et aussi pour le courriel d’une personne effacée.\n\nLes courriels déjà envoyés, les copies d’événements détenues par Google, et les copies de sauvegarde ou de reprise ponctuelle peuvent survivre à une suppression dans l’application jusqu’à leur expiration. Les cabinets demeurent responsables de leurs devoirs professionnels de conservation et de destruction."
       },
       "sharing": {
         "title": "7. Communication et fournisseurs",
@@ -1208,7 +1208,7 @@
       },
       "rights": {
         "title": "10. Vos droits",
-        "body": "Sous réserve de la LPRPDE et des autres lois applicables, les personnes peuvent demander l’accès, la correction ou des renseignements sur le traitement de leurs données.\n\nLes clients et les personnes qui réservent devraient d’abord contacter le cabinet. Les liens de modification ou d’annulation du courriel de confirmation restent utilisables tant qu’ils sont valides. Les administrateurs du cabinet peuvent utiliser les outils d’export du produit (export JSON d’une personne et ZIP du dossier) lorsqu’ils sont disponibles.\n\nVous pouvez aussi contacter Yuzu Solutions ci-dessous. Vous pouvez déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada et, au Québec, auprès de la Commission d’accès à l’information."
+        "body": "Sous réserve de la LPRPDE et des autres lois applicables, les personnes peuvent demander l’accès, la correction, la suppression ou des renseignements sur le traitement de leurs données.\n\nLes clients et les personnes qui réservent devraient d’abord contacter le cabinet. Les liens de modification ou d’annulation du courriel de confirmation restent utilisables tant qu’ils sont valides. Les administrateurs du cabinet peuvent utiliser les outils d’export du produit (export JSON d’une personne et ZIP du dossier) et, lorsque la conservation professionnelle le permet, supprimer une personne ou détruire un dossier fermé. La suppression dans le produit est décrite à la section 6.\n\nVous pouvez aussi contacter Yuzu Solutions ci-dessous. Vous pouvez déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada et, au Québec, auprès de la Commission d’accès à l’information."
       },
       "breach": {
         "title": "11. Atteintes",

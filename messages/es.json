@@ -339,7 +339,7 @@
     "delete": "Eliminar",
     "deleteAria": "Eliminar {title}",
     "deleting": "Eliminando…",
-    "deleteConfirm": "¿Eliminar {title}? Esta acción no se puede deshacer.",
+    "deleteConfirm": "¿Eliminar {title}? Esta acción borra de forma permanente el expediente, los documentos, las respuestas y los enlaces de compartir. Las personas sin otro expediente en la firma también se borran, incluidas sus citas. Esta acción no se puede deshacer.",
     "shareWithAssistants": "Compartir con asistentes",
     "shareHelp": "Los asistentes solo ven los proyectos que compartes con ellos y las personas de esos expedientes.",
     "noAssistants": "Aún no hay asistentes en esta organización. Invita uno en Ajustes de organización.",
@@ -419,7 +419,7 @@
     "delete": "Eliminar",
     "deleteAria": "Eliminar a {name}",
     "deleting": "Eliminando…",
-    "deleteConfirm": "¿Eliminar a {name}? Esta acción no se puede deshacer. Se quitará de todos los proyectos.",
+    "deleteConfirm": "¿Eliminar a {name}? Esta acción borra de forma permanente su ficha, documentos, notas, acceso al portal y citas, y la quita de todos los proyectos. Esta acción no se puede deshacer.",
     "notesTitle": "Notas de consulta",
     "notesHelp": "Privado para su despacho. Añada una nota después de cada consulta.",
     "notesPlaceholder": "Lo conversado, consejos dados, próximos pasos…",
@@ -1137,13 +1137,13 @@
     "retentionHelp": "Los expedientes cerrados se conservan al menos seis años según las obligaciones del College, y luego pueden destruirse de forma segura.",
     "closedAt": "Expediente cerrado",
     "retainUntil": "Conservar hasta",
-    "destroyedOn": "Contenido sensible destruido el {date}",
-    "destroyHelp": "Elimina permanentemente los documentos cifrados y borra las respuestas del cuestionario de este proyecto. Escriba DESTROY para confirmar.",
+    "destroyedOn": "Expediente destruido el {date}",
+    "destroyHelp": "Borra de forma permanente los documentos, las respuestas del cuestionario, los enlaces de compartir y — si estas personas no tienen otro expediente en la firma — sus fichas, notas, acceso al portal y citas. Escriba DESTROY para confirmar.",
     "destroyConfirmLabel": "Escriba DESTROY para confirmar",
     "destroyNote": "Nota opcional",
-    "destroy": "Destruir contenido sensible",
+    "destroy": "Destruir expediente",
     "destroying": "Destruyendo…",
-    "destroySuccess": "Contenido sensible destruido y registrado en el registro de destrucción.",
+    "destroySuccess": "El expediente se borró y se registró en el registro de destrucción.",
     "destroyNotYet": "La destrucción segura estará disponible después de la fecha de retención.",
     "exportPerson": "Exportar datos",
     "downloadFile": "Descargar expediente completo",
@@ -1156,7 +1156,7 @@
       "notFound": "Registro no encontrado.",
       "exportFailed": "No se pudo descargar el expediente. Inténtelo de nuevo.",
       "notEligible": "Este expediente aún no es elegible para destrucción.",
-      "destroyFailed": "No se pudo destruir el contenido. Inténtelo de nuevo.",
+      "destroyFailed": "No se pudo borrar el expediente. Inténtelo de nuevo.",
       "generic": "Algo salió mal. Inténtelo de nuevo."
     }
   },
@@ -1192,7 +1192,7 @@
       },
       "retention": {
         "title": "6. Conservación",
-        "body": "Los registros de clientes y proyectos permanecen mientras el espacio de la firma esté activo. Al cerrar un expediente, el producto fija una fecha de conservación de seis años para apoyar los deberes típicos del College of Immigration and Citizenship Consultants. Después de esa fecha, un administrador de la firma puede destruir documentos cargados y vaciar las respuestas del cuestionario de ese proyecto; se conserva una entrada en el registro de destrucción. Esa acción no borra por sí sola fichas de personas, citas, eventos de auditoría ni copias de seguridad.\n\nLas citas permanecen hasta que la firma las quite o se elimine el espacio. Los eventos de abuso con hash se eliminan a los 14 días aproximadamente.\n\nLas firmas siguen siendo responsables de sus deberes profesionales de conservación y destrucción. Las eliminaciones en la aplicación también quedan sujetas a copias de seguridad hasta que caduquen."
+        "body": "Los registros de clientes y proyectos permanecen mientras el espacio de la firma esté activo. Al cerrar un expediente, el producto fija una fecha de conservación de seis años para apoyar los deberes típicos del College of Immigration and Citizenship Consultants.\n\nEliminar una persona o un proyecto del espacio borra la información personal de ese registro en la aplicación: identidad y contacto, notas, documentos cargados, respuestas del cuestionario, enlaces de compartir, acceso al portal y citas vinculadas (incluido un intento de borrar el evento de Google Calendar correspondiente). Las personas que siguen en otro expediente de la firma se conservan. Después de la fecha de retención, un administrador puede destruir un expediente cerrado de la misma forma. Se conserva una fila de proyecto vacía (sin datos personales) y una entrada cifrada en el registro de destrucción (nombre del cliente y resumen del servicio) para el expediente profesional de la firma. Los eventos de auditoría de ese expediente o persona se conservan como constancia de la acción, sin dirección IP, agente de usuario ni metadatos del evento.\n\nLos eventos de abuso con hash se eliminan a los 14 días aproximadamente, y también para el correo de una persona borrada.\n\nLos correos ya enviados, las copias de eventos que conserve Google y las copias de seguridad o de recuperación puntual pueden sobrevivir a un borrado en la aplicación hasta que caduquen. Las firmas siguen siendo responsables de sus deberes profesionales de conservación y destrucción."
       },
       "sharing": {
         "title": "7. Compartir y proveedores",
@@ -1208,7 +1208,7 @@
       },
       "rights": {
         "title": "10. Sus derechos",
-        "body": "Sujeto a PIPEDA y otras leyes aplicables, las personas pueden solicitar acceso, corrección o información sobre el tratamiento de sus datos.\n\nLos clientes y quienes reservan deben contactar primero a la firma consultora. También pueden usar los enlaces de cambio o cancelación del correo de confirmación mientras sean válidos. Los administradores de la firma pueden usar las herramientas de exportación del producto (exportación JSON de una persona y ZIP del expediente) cuando estén disponibles.\n\nTambién puede contactar a Yuzu Solutions abajo. Puede presentar una queja ante el Comisionado de Privacidad de Canadá y, en Quebec, ante la Commission d’accès à l’information."
+        "body": "Sujeto a PIPEDA y otras leyes aplicables, las personas pueden solicitar acceso, corrección, supresión o información sobre el tratamiento de sus datos.\n\nLos clientes y quienes reservan deben contactar primero a la firma consultora. También pueden usar los enlaces de cambio o cancelación del correo de confirmación mientras sean válidos. Los administradores de la firma pueden usar las herramientas de exportación del producto (exportación JSON de una persona y ZIP del expediente) y, cuando la retención profesional lo permita, eliminar a una persona o destruir un expediente cerrado. La eliminación en el producto se describe en la sección 6.\n\nTambién puede contactar a Yuzu Solutions abajo. Puede presentar una queja ante el Comisionado de Privacidad de Canadá y, en Quebec, ante la Commission d’accès à l’information."
       },
       "breach": {
         "title": "11. Incidentes",

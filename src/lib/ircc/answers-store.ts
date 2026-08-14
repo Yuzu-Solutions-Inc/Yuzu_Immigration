@@ -151,6 +151,16 @@ export function setPersonAnswers(
   };
 }
 
+/** Drop one person’s bag so erasure does not leave their answers on a shared file. */
+export function stripPersonFromAnswersStore(
+  store: ProjectAnswersStore,
+  personId: string,
+): ProjectAnswersStore {
+  if (!(personId in store.byPerson)) return store;
+  const { [personId]: _removed, ...byPerson } = store.byPerson;
+  return { ...store, byPerson };
+}
+
 export function setProjectScopedAnswers(
   store: ProjectAnswersStore,
   answers: FlatAnswers,

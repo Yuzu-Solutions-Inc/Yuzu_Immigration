@@ -8,6 +8,7 @@ import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
 import { canCreateRecords, canDeleteRecord } from "@/lib/auth/rbac";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
+import { erasePersonPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { encryptNoteBody, encryptPersonWrite } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
@@ -247,30 +248,35 @@ export async function deletePersonAction(
     return { error: "forbidden" };
   }
 
-  const { error: deleteError } = await supabase
-    .from("people")
-    .delete()
-    .eq("id", data.personId)
-    .eq("organization_id", orgId);
+  try {
+    const summary = await erasePersonPersonalData({
+      organizationId: orgId,
+      personId: data.personId,
+      actorUserId: user?.id ?? null,
+    });
 
-  if (deleteError) {
-    console.error("delete person:", deleteError.message);
+    await recordAuditEvent({
+      organizationId: orgId,
+      actorUserId: user?.id,
+      actorKind: "staff",
+      action: "person.delete",
+      resourceType: "person",
+      resourceId: data.personId,
+      metadata: {
+        documentsRemoved: summary.documentsRemoved,
+        appointmentsRemoved: summary.appointmentsRemoved,
+      },
+    });
+  } catch (error) {
+    console.error("delete person:", error);
     return { error: "delete_failed" };
   }
-
-  await recordAuditEvent({
-    organizationId: orgId,
-    actorUserId: user?.id,
-    actorKind: "staff",
-    action: "person.delete",
-    resourceType: "person",
-    resourceId: data.personId,
-  });
 
   revalidatePath(`/${data.locale}/people`);
   revalidatePath(`/${data.locale}/people/${data.personId}`);
   revalidatePath(`/${data.locale}/home`);
   revalidatePath(`/${data.locale}/projects`);
+  revalidatePath(`/${data.locale}/calendar`);
   redirect(`/${data.locale}/people`);
 }
 

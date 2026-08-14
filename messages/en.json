@@ -339,7 +339,7 @@
     "delete": "Delete",
     "deleteAria": "Delete {title}",
     "deleting": "Deleting…",
-    "deleteConfirm": "Delete {title}? This cannot be undone.",
+    "deleteConfirm": "Delete {title}? This permanently erases the file, documents, answers, and share links. People with no other file at the firm are erased too, including their bookings. This cannot be undone.",
     "shareWithAssistants": "Share with assistants",
     "shareHelp": "Assistants only see projects you share with them, plus the people on those files.",
     "noAssistants": "No assistants in this organization yet. Invite one from Organization settings.",
@@ -419,7 +419,7 @@
     "delete": "Delete",
     "deleteAria": "Delete {name}",
     "deleting": "Deleting…",
-    "deleteConfirm": "Delete {name}? This cannot be undone. They will be removed from all projects.",
+    "deleteConfirm": "Delete {name}? This permanently erases their records, documents, notes, portal access, and bookings, and removes them from all projects. This cannot be undone.",
     "notesTitle": "Consultation notes",
     "notesHelp": "Private to your firm. Add a note after each consultation.",
     "notesPlaceholder": "What you discussed, advice given, next steps…",
@@ -1137,13 +1137,13 @@
     "retentionHelp": "Closed files are retained for at least six years to support College of Immigration and Citizenship Consultants file-management duties, then eligible for secure destruction.",
     "closedAt": "File closed",
     "retainUntil": "Retain until",
-    "destroyedOn": "Sensitive content destroyed on {date}",
-    "destroyHelp": "This permanently deletes encrypted documents and clears questionnaire answers for this project. Type DESTROY to confirm.",
+    "destroyedOn": "File destroyed on {date}",
+    "destroyHelp": "This permanently erases documents, questionnaire answers, share links, and — if these people have no other file at the firm — their client records, notes, portal access, and bookings. Type DESTROY to confirm.",
     "destroyConfirmLabel": "Type DESTROY to confirm",
     "destroyNote": "Optional note",
-    "destroy": "Destroy sensitive content",
+    "destroy": "Destroy file",
     "destroying": "Destroying…",
-    "destroySuccess": "Sensitive content destroyed and recorded in the destruction register.",
+    "destroySuccess": "The file was erased and recorded in the destruction register.",
     "destroyNotYet": "Secure destruction becomes available after the retention date.",
     "exportPerson": "Export data",
     "downloadFile": "Download full file",
@@ -1156,7 +1156,7 @@
       "notFound": "Record not found.",
       "exportFailed": "Could not download the file. Try again.",
       "notEligible": "This file is not yet eligible for destruction.",
-      "destroyFailed": "Could not destroy content. Try again.",
+      "destroyFailed": "Could not erase the file. Try again.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -1192,7 +1192,7 @@
       },
       "retention": {
         "title": "6. Retention",
-        "body": "Client and project records remain while the firm’s workspace is active. When a file is closed, the product sets a retain-until date of six years after closure to support typical College of Immigration and Citizenship Consultants closed-file duties. After that date, a firm administrator can destroy uploaded documents and clear questionnaire answers for that project; a destruction-register entry is kept. That action does not by itself erase person records, bookings, security audit events, or backups.\n\nBooking appointments remain until the firm removes them or the workspace is removed. Hashed booking abuse events are deleted after about 14 days.\n\nFirms remain responsible for their professional retention and secure-destruction duties. Application deletes are also subject to backup and disaster-recovery copies until those copies expire."
+        "body": "Client and project records remain while the firm’s workspace is active. When a file is closed, the product sets a retain-until date of six years after closure to support typical College of Immigration and Citizenship Consultants closed-file duties.\n\nDeleting a person or a project from the workspace erases that record’s personal information in the application: identity and contact fields, notes, uploaded documents, questionnaire answers, share links, portal access, and linked bookings (including an attempt to delete the matching Google Calendar event). People who remain on another file at the firm are kept. After the retain-until date, a firm administrator can destroy a closed file the same way. A placeholder project row and an encrypted destruction-register entry (client name and service summary) are kept for the firm’s professional record. Security audit rows for that file or person are kept as a record that the action occurred, with IP address, user agent, and event metadata removed.\n\nHashed booking abuse events are deleted after about 14 days, and are also removed for an erased person’s email.\n\nEmails already sent, copies of calendar events held by Google, and database backups or point-in-time recovery copies can outlive an application delete until those copies expire. Firms remain responsible for their professional retention and secure-destruction duties."
       },
       "sharing": {
         "title": "7. Sharing and service providers",
@@ -1208,7 +1208,7 @@
       },
       "rights": {
         "title": "10. Your rights",
-        "body": "Subject to PIPEDA and other applicable law, individuals may request access to, correction of, or information about the handling of their personal information.\n\nClients and booking guests should normally contact the consulting firm first. Guests can also use the change or cancel links in their confirmation email while those links are valid. Firm administrators may use in-product export tools (person JSON export and project file ZIP) where available.\n\nYou may also contact Yuzu Solutions using the details below. You may complain to the Office of the Privacy Commissioner of Canada, and in Québec to the Commission d’accès à l’information."
+        "body": "Subject to PIPEDA and other applicable law, individuals may request access to, correction of, deletion of, or information about the handling of their personal information.\n\nClients and booking guests should normally contact the consulting firm first. Guests can also use the change or cancel links in their confirmation email while those links are valid. Firm administrators may use in-product export tools (person JSON export and project file ZIP) and, where professional retention allows, delete a person or destroy a closed file. Deletion in the product is described in section 6.\n\nYou may also contact Yuzu Solutions using the details below. You may complain to the Office of the Privacy Commissioner of Canada, and in Québec to the Commission d’accès à l’information."
       },
       "breach": {
         "title": "11. Breaches",

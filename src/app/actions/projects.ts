@@ -21,10 +21,12 @@ import {
 } from "@/lib/crm/status-history";
 import { isTerminalStatus } from "@/lib/crm/statuses";
 import { computeRetainUntil } from "@/lib/privacy/retention";
+import { eraseProjectPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
   decryptAnswersValue,
   decryptPersonRow,
+  decryptProjectRow,
   encryptAnswersValue,
   encryptPersonWrite,
   encryptProjectWrite,
@@ -1209,7 +1211,7 @@ export async function deleteProjectAction(
   const supabase = await createClient();
   const { data: existing, error: existingError } = await supabase
     .from("immigration_projects")
-    .select("id, created_by")
+    .select("id, created_by, title, program_family, closed_at")
     .eq("organization_id", orgId)
     .eq("id", parsed.data.projectId)
     .maybeSingle();
@@ -1228,29 +1230,45 @@ export async function deleteProjectAction(
     return { error: "forbidden" };
   }
 
-  const { error: deleteError } = await supabase
-    .from("immigration_projects")
-    .delete()
-    .eq("id", parsed.data.projectId)
-    .eq("organization_id", orgId);
+  const key = await getOrgDataKey(orgId);
+  const decrypted = decryptProjectRow(
+    existing as { title: string },
+    key,
+  );
 
-  if (deleteError) {
-    console.error("delete project:", deleteError.message);
+  try {
+    const summary = await eraseProjectPersonalData({
+      organizationId: orgId,
+      projectId: parsed.data.projectId,
+      actorUserId: user?.id ?? null,
+      keepProjectRow: false,
+      clientName: decrypted.title,
+      serviceSummary: `${existing.program_family} — ${decrypted.title}`,
+      fileClosedAt: (existing.closed_at as string | null) ?? null,
+    });
+
+    await recordAuditEvent({
+      organizationId: orgId,
+      actorUserId: user?.id,
+      actorKind: "staff",
+      action: "project.delete",
+      resourceType: "immigration_project",
+      resourceId: parsed.data.projectId,
+      metadata: {
+        documentsRemoved: summary.documentsRemoved,
+        peopleErased: summary.peopleErased,
+        appointmentsRemoved: summary.appointmentsRemoved,
+      },
+    });
+  } catch (error) {
+    console.error("delete project:", error);
     return { error: "delete_failed" };
   }
-
-  await recordAuditEvent({
-    organizationId: orgId,
-    actorUserId: user?.id,
-    actorKind: "staff",
-    action: "project.delete",
-    resourceType: "immigration_project",
-    resourceId: parsed.data.projectId,
-  });
 
   revalidatePath(`/${parsed.data.locale}/projects`);
   revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
   revalidatePath(`/${parsed.data.locale}/home`);
   revalidatePath(`/${parsed.data.locale}/people`);
+  revalidatePath(`/${parsed.data.locale}/calendar`);
   redirect(`/${parsed.data.locale}/projects`);
 }
