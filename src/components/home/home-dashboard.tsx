@@ -1,12 +1,4 @@
-import {
-  AlertTriangle,
-  Briefcase,
-  CalendarDays,
-  ClipboardList,
-  FileWarning,
-  FolderKanban,
-  Users,
-} from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { HorizontalBarList } from "@/components/home/caseload-charts";
@@ -38,46 +30,97 @@ function timingClass(days: number) {
   return "text-muted-foreground";
 }
 
-function ActionTile({
+type KpiAccent = "none" | "action" | "warning" | "danger";
+
+function KpiCell({
   href,
   label,
   value,
   hint,
-  icon: Icon,
-  tone = "neutral",
+  accent = "none",
+  groupStart = false,
 }: {
   href: string;
   label: string;
   value: number;
   hint?: string;
-  icon: typeof FolderKanban;
-  tone?: "neutral" | "warning" | "danger" | "action";
+  accent?: KpiAccent;
+  /** Visual break between caseload and schedule/people. */
+  groupStart?: boolean;
 }) {
-  const toneClass =
-    tone === "danger"
-      ? "text-destructive"
-      : tone === "warning"
-        ? "text-warning-text"
-        : tone === "action"
-          ? "text-action"
-          : "text-brand";
+  const quiet = value === 0;
+  const mark =
+    accent === "danger"
+      ? "bg-destructive"
+      : accent === "warning"
+        ? "bg-warning"
+        : accent === "action"
+          ? "bg-action"
+          : null;
 
   return (
     <Link
       href={href}
-      className="flex min-w-0 flex-col gap-1 rounded-xl border border-border bg-surface px-3 py-2.5 shadow-elevated transition-colors hover:border-action/40 hover:bg-action/5"
+      className={cn(
+        "relative flex min-w-0 flex-col gap-1.5 px-3.5 py-3 transition-colors",
+        "hover:bg-canvas focus-visible:bg-canvas focus-visible:outline-none",
+        groupStart && "xl:border-l-2 xl:border-l-border",
+        quiet && "opacity-65 hover:opacity-100",
+      )}
     >
-      <span className="flex items-center gap-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-        <Icon className="size-3.5 shrink-0 opacity-80" aria-hidden />
-        <span className="truncate">{label}</span>
-      </span>
-      <span className={cn("font-heading text-2xl font-semibold tabular-nums", toneClass)}>
-        {value}
-      </span>
-      {hint ? (
-        <span className="truncate text-[11px] text-muted-foreground">{hint}</span>
-      ) : null}
+      <div className="flex items-baseline justify-between gap-2">
+        <p
+          className={cn(
+            "font-heading text-[1.65rem] leading-none font-semibold tracking-tight tabular-nums",
+            quiet ? "text-muted-foreground" : "text-brand",
+            accent === "danger" && !quiet && "text-destructive",
+          )}
+        >
+          {value}
+        </p>
+        {mark ? (
+          <span
+            className={cn("size-1.5 shrink-0 rounded-full", mark)}
+            aria-hidden
+          />
+        ) : null}
+      </div>
+      <div className="min-w-0 space-y-0.5">
+        <p className="truncate text-[13px] font-medium text-brand">{label}</p>
+        {hint ? (
+          <p className="truncate text-[11px] leading-snug text-muted-foreground">
+            {hint}
+          </p>
+        ) : null}
+      </div>
     </Link>
+  );
+}
+
+function KpiStrip({
+  items,
+  ariaLabel,
+}: {
+  items: Array<{
+    href: string;
+    label: string;
+    value: number;
+    hint?: string;
+    accent?: KpiAccent;
+    groupStart?: boolean;
+  }>;
+  ariaLabel: string;
+}) {
+  return (
+    <div
+      role="navigation"
+      aria-label={ariaLabel}
+      className="grid shrink-0 grid-cols-2 divide-x divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface sm:grid-cols-3 xl:grid-cols-6 xl:divide-y-0"
+    >
+      {items.map((item) => (
+        <KpiCell key={item.label} {...item} />
+      ))}
+    </div>
   );
 }
 
@@ -160,55 +203,53 @@ export async function HomeDashboardView({
         </SurfaceCard>
       ) : (
         <>
-          <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-            <ActionTile
-              href="/projects"
-              icon={FolderKanban}
-              label={t("tiles.openProjects")}
-              value={kpis.openProjects}
-              hint={t("tiles.openProjectsHint")}
-            />
-            <ActionTile
-              href="/projects"
-              icon={ClipboardList}
-              label={t("tiles.docsToReview")}
-              value={kpis.docsToReview}
-              tone={kpis.docsToReview > 0 ? "action" : "neutral"}
-              hint={t("tiles.docsToReviewHint")}
-            />
-            <ActionTile
-              href="/projects"
-              icon={FileWarning}
-              label={t("tiles.overdue")}
-              value={kpis.overdueSubmissions}
-              tone={kpis.overdueSubmissions > 0 ? "danger" : "neutral"}
-              hint={t("dueIn14", { count: kpis.dueIn14Days })}
-            />
-            <ActionTile
-              href="/projects"
-              icon={AlertTriangle}
-              label={t("tiles.stuck")}
-              value={kpis.stuckWaiting}
-              tone={kpis.stuckWaiting > 0 ? "warning" : "neutral"}
-              hint={t("tiles.stuckHint")}
-            />
-            <ActionTile
-              href="/calendar"
-              icon={CalendarDays}
-              label={t("tiles.todayBookings")}
-              value={booking.todayCount}
-              tone={booking.todayCount > 0 ? "action" : "neutral"}
-              hint={t("tiles.weekBookings", { count: booking.next7Count })}
-            />
-            <ActionTile
-              href="/people"
-              icon={Users}
-              label={t("tiles.statusExpiring")}
-              value={kpis.statusExpiring30}
-              tone={kpis.statusExpiring30 > 0 ? "warning" : "neutral"}
-              hint={t("tiles.peopleCount", { count: kpis.peopleCount })}
-            />
-          </div>
+          <KpiStrip
+            ariaLabel={t("tiles.aria")}
+            items={[
+              {
+                href: "/projects",
+                label: t("tiles.openProjects"),
+                value: kpis.openProjects,
+                hint: t("tiles.openProjectsHint"),
+              },
+              {
+                href: "/projects",
+                label: t("tiles.docsToReview"),
+                value: kpis.docsToReview,
+                hint: t("tiles.docsToReviewHint"),
+                accent: kpis.docsToReview > 0 ? "action" : "none",
+              },
+              {
+                href: "/projects",
+                label: t("tiles.overdue"),
+                value: kpis.overdueSubmissions,
+                hint: t("dueIn14", { count: kpis.dueIn14Days }),
+                accent: kpis.overdueSubmissions > 0 ? "danger" : "none",
+              },
+              {
+                href: "/projects",
+                label: t("tiles.stuck"),
+                value: kpis.stuckWaiting,
+                hint: t("tiles.stuckHint"),
+                accent: kpis.stuckWaiting > 0 ? "warning" : "none",
+              },
+              {
+                href: "/calendar",
+                label: t("tiles.todayBookings"),
+                value: booking.todayCount,
+                hint: t("tiles.weekBookings", { count: booking.next7Count }),
+                accent: booking.todayCount > 0 ? "action" : "none",
+                groupStart: true,
+              },
+              {
+                href: "/people",
+                label: t("tiles.statusExpiring"),
+                value: kpis.statusExpiring30,
+                hint: t("tiles.peopleCount", { count: kpis.peopleCount }),
+                accent: kpis.statusExpiring30 > 0 ? "warning" : "none",
+              },
+            ]}
+          />
 
           {booking.needsSetup ? (
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-100 bg-warning-bg px-3 py-2 text-sm text-warning-text">

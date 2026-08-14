@@ -171,17 +171,18 @@
     "docsToReview": "{count, plural, one {# documento por revisar} other {# documentos por revisar}}",
     "stuckWaiting": "{count, plural, one {# atascado o en espera} other {# atascados o en espera}}",
     "tiles": {
-      "openProjects": "Expedientes",
+      "aria": "Resumen del despacho",
+      "openProjects": "Expedientes abiertos",
       "openProjectsHint": "Proyectos de inmigración activos",
       "docsToReview": "Docs por revisar",
       "docsToReviewHint": "Subidas de clientes",
       "overdue": "Vencidos",
       "stuck": "Atascados",
       "stuckHint": "Necesitan avance de estado",
-      "todayBookings": "Hoy",
+      "todayBookings": "Citas de hoy",
       "weekBookings": "{count, plural, one {# esta semana} other {# esta semana}}",
-      "statusExpiring": "Por vencer",
-      "peopleCount": "{count, plural, one {# persona} other {# personas}}"
+      "statusExpiring": "Estatus por vencer",
+      "peopleCount": "{count, plural, one {# persona en archivo} other {# personas en archivo}}"
     },
     "bookingSetup": {
       "banner": "La reserva pública aún no está completamente configurada.",

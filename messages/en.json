@@ -171,6 +171,7 @@
     "docsToReview": "{count, plural, one {# document to review} other {# documents to review}}",
     "stuckWaiting": "{count, plural, one {# stuck or waiting} other {# stuck or waiting}}",
     "tiles": {
+      "aria": "Practice snapshot",
       "openProjects": "Open files",
       "openProjectsHint": "Active immigration projects",
       "docsToReview": "Docs to review",
@@ -178,10 +179,10 @@
       "overdue": "Overdue",
       "stuck": "Stuck / waiting",
       "stuckHint": "Need a status push",
-      "todayBookings": "Today",
+      "todayBookings": "Bookings today",
       "weekBookings": "{count, plural, one {# this week} other {# this week}}",
-      "statusExpiring": "Expiring",
-      "peopleCount": "{count, plural, one {# person} other {# people}}"
+      "statusExpiring": "Status expiring",
+      "peopleCount": "{count, plural, one {# person on file} other {# people on file}}"
     },
     "bookingSetup": {
       "banner": "Public booking is not fully set up yet.",

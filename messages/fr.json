@@ -171,6 +171,7 @@
     "docsToReview": "{count, plural, one {# document à réviser} other {# documents à réviser}}",
     "stuckWaiting": "{count, plural, one {# bloqué ou en attente} other {# bloqués ou en attente}}",
     "tiles": {
+      "aria": "Aperçu du cabinet",
       "openProjects": "Dossiers ouverts",
       "openProjectsHint": "Projets d’immigration actifs",
       "docsToReview": "Docs à réviser",
@@ -178,10 +179,10 @@
       "overdue": "En retard",
       "stuck": "Bloqué / attente",
       "stuckHint": "Statut à faire avancer",
-      "todayBookings": "Aujourd’hui",
+      "todayBookings": "Rendez-vous aujourd’hui",
       "weekBookings": "{count, plural, one {# cette semaine} other {# cette semaine}}",
-      "statusExpiring": "Expirations",
-      "peopleCount": "{count, plural, one {# personne} other {# personnes}}"
+      "statusExpiring": "Statuts qui expirent",
+      "peopleCount": "{count, plural, one {# personne au dossier} other {# personnes au dossier}}"
     },
     "bookingSetup": {
       "banner": "La réservation publique n’est pas encore complètement configurée.",
