@@ -1164,63 +1164,67 @@
     "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI).",
     "privacyLink": "Confidentialité",
     "privacyTitle": "Politique de confidentialité",
-    "privacyUpdated": "Dernière mise à jour : 12 août 2026",
-    "privacyIntro": "My Consultant (exploité par Yuzu Solutions) est une plateforme de gestion de pratique pour les consultants en immigration au Canada. Cette politique explique comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés conformément à la LPRPDE et aux attentes de confidentialité professionnelle.",
+    "privacyUpdated": "Dernière mise à jour : 14 août 2026",
+    "privacyIntro": "My Consultant est un logiciel de gestion de pratique exploité par Yuzu Solutions pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez My Consultant — y compris l’espace de travail du cabinet, les liens de partage, le portail client et les pages de réservation publiques. Elle vise à appuyer l’obligation de rendre compte prévue par la LPRPDE. Elle ne constitue ni une certification ni un avis juridique.",
     "backHome": "Retour à l’accueil",
     "consentTitle": "Utilisation de vos renseignements",
-    "consentBody": "En continuant, vous fournissez des renseignements personnels (et des documents) afin que votre consultant en immigration puisse préparer et gérer votre dossier. Les renseignements sont hébergés au Canada, chiffrés en transit et au repos pour les fichiers téléversés, et accessibles uniquement à votre cabinet via ce lien sécurisé. Consultez notre politique de confidentialité pour les droits, la conservation et les coordonnées.",
+    "consentBody": "En continuant, vous fournissez des renseignements personnels et des documents afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans My Consultant. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier dans son espace de travail ; Yuzu Solutions les traite pour exploiter la plateforme. Les précisions sur le courriel, l’agenda et l’hébergement figurent dans notre politique de confidentialité.",
     "sections": {
       "controller": {
         "title": "1. Responsables",
-        "body": "Votre cabinet (l’organisation qui utilise My Consultant) est généralement l’organisation qui décide pourquoi et comment vos renseignements clients sont traités pour les services d’immigration.\n\nYuzu Solutions exploite le logiciel My Consultant et traite ces renseignements pour le compte du cabinet à titre de fournisseur de services / sous-traitant. Pour les données de compte et de facturation du personnel du cabinet, Yuzu Solutions est l’organisation responsable."
+        "body": "Votre cabinet (l’organisation qui a un espace My Consultant) décide pourquoi et comment les renseignements personnels des clients sont traités pour ses services d’immigration. Ce cabinet est généralement responsable du dossier client.\n\nYuzu Solutions exploite le logiciel et traite ces renseignements selon les instructions du cabinet, à titre de fournisseur de services. Yuzu Solutions est responsable des renseignements de compte du personnel que nous utilisons pour exploiter le service (nom, courriel et identifiants d’authentification).\n\nSi vous prenez rendez-vous ou remplissez un formulaire via le lien d’un cabinet, vous communiquez des renseignements à ce cabinet. Yuzu Solutions les héberge et les traite pour que le cabinet puisse utiliser My Consultant."
       },
       "purposes": {
         "title": "2. Fins",
-        "body": "Nous traitons les renseignements personnels afin de :\n• Fournir le CRM, les formulaires, les documents et les liens de partage\n• Authentifier le personnel et, le cas échéant, l’accès portail client\n• Assurer la sécurité, prévenir les abus et maintenir la fiabilité\n• Respecter les obligations légales et professionnelles applicables\n\nNous ne vendons pas les renseignements personnels."
+        "body": "Nous traitons les renseignements personnels afin de :\n• Fournir le CRM, les questionnaires, la préparation de formulaires, le dépôt de documents, les liens de partage, le portail client, le calendrier et la réservation publique\n• Authentifier le personnel et, si le cabinet l’active, l’accès au portail client\n• Envoyer les confirmations de rendez-vous, les liens de modification ou d’annulation, et les rappels configurés par le cabinet\n• Synchroniser les plages occupées et les rendez-vous avec Google Agenda lorsqu’un consultant le connecte\n• Assurer la sécurité, prévenir les abus de réservation, tenir des journaux d’audit et exploiter le service\n• Respecter les obligations légales applicables à Yuzu Solutions comme fournisseur de services\n\nNous ne vendons pas les renseignements personnels. Nous n’utilisons pas le contenu des dossiers à des fins publicitaires."
       },
       "collection": {
         "title": "3. Ce que nous recueillons",
-        "body": "Selon l’utilisation du produit, cela peut inclure :\n• Coordonnées du personnel (nom, courriel, identifiants d’authentification, profil de représentant)\n• Identité et coordonnées des clients saisies par le cabinet ou le client\n• Réponses aux questionnaires et données de formulaires\n• Documents justificatifs téléversés (stockés sous forme de texte chiffré)\n• Journaux techniques nécessaires à la sécurité et aux opérations\n\nLes cabinets ne doivent recueillir que ce qui est nécessaire au mandat."
+        "body": "Selon l’utilisation du produit, cela peut inclure :\n\nPersonnel et cabinet : nom, courriel, rôle, champs de profil de représentant utilisés pour le IMM 5476, identifiants d’authentification, langue par défaut du cabinet et — si un consultant connecte Google Agenda — le courriel de ce compte Google.\n\nClients et personnes qui réservent : prénom, nom, courriel, téléphone, adresse (lorsque demandée à la réservation), langue préférée, champs de statut d’immigration saisis par le cabinet, réponses aux questionnaires, questions supplémentaires d’un formulaire de réservation, documents justificatifs, notes de consultation et fichiers de formulaires générés.\n\nRendez-vous : horaire, service, consultant, moment de l’acceptation de l’avis de confidentialité, liens Google Meet lorsqu’ils sont créés, et hachage du courriel et de l’adresse IP uniquement pour limiter les abus sur la page publique.\n\nSynchronisation d’agenda (seulement si un consultant connecte Google Agenda) : jetons OAuth chiffrés, plages occupées et titres d’événements de cet agenda. Les nouveaux rendez-vous y sont inscrits avec le nom, le courriel et le téléphone de la personne.\n\nTechnique : journaux d’audit de sécurité (y compris l’adresse IP et l’agent utilisateur du navigateur pour certaines actions), hachages d’IP et de courriel pour le contrôle des abus (environ 14 jours), et mesures anonymes d’utilisation et de performance.\n\nLes cabinets ne doivent recueillir que ce qui est nécessaire au mandat. Les questions supplémentaires de réservation sont stockées avec le rendez-vous."
       },
       "legalBasis": {
         "title": "4. Consentement et avis",
-        "body": "Les cabinets sont responsables d’obtenir un consentement valable lorsque requis, et d’expliquer leurs propres mandats et pratiques de confidentialité.\n\nLes liens de partage affichent un court avis avant la soumission de documents ou de formulaires. Continuer d’utiliser ces liens constitue un consentement au traitement décrit pour le dossier d’immigration, sous réserve des instructions du cabinet et de la loi applicable."
+        "body": "Les cabinets sont responsables d’obtenir un consentement valable lorsque la loi l’exige, et d’expliquer leurs mandats et pratiques de confidentialité — y compris les devoirs de la Loi 25 du Québec le cas échéant.\n\nLes liens de partage affichent un court avis avant la soumission de documents ou de formulaires. La réservation publique exige une case à cocher renvoyant à cette politique. Continuer après cet avis, ou cocher la case, constitue un consentement au traitement décrit ici pour le dossier ou le rendez-vous de ce cabinet, sous réserve des instructions du cabinet et de la loi applicable.\n\nVous pouvez refuser en n’utilisant pas le lien ou en ne réservant pas. Vous pouvez demander au cabinet de retirer le consentement ou de supprimer des renseignements, sous réserve des règles professionnelles de conservation. Certains traitements (journaux de sécurité et conservation légale) peuvent se poursuivre lorsque la loi le permet."
       },
       "safeguards": {
         "title": "5. Mesures de protection",
-        "body": "Nous appliquons des mesures administratives, techniques et organisationnelles proportionnées à la sensibilité des données d’immigration, notamment :\n• Chiffrement en transit (TLS)\n• Chiffrement au repos pour le stockage, plus AES-256-GCM au niveau applicatif pour les documents clients\n• Contrôles d’accès par ligne limités à chaque cabinet\n• Privilèges service_role limités à des chemins serveur audités\n• Conception à moindre privilège pour les fonctions base de données sensibles\n\nAucune méthode n’est parfaitement sûre; nous réduisons les risques de façon continue."
+        "body": "Nous appliquons des mesures proportionnées à la sensibilité des dossiers d’immigration, notamment :\n• Chiffrement en transit (TLS)\n• Chiffrement au repos côté infrastructure pour la base de données, l’authentification et le stockage de fichiers\n• AES-256-GCM au niveau applicatif pour les documents clients et pour plusieurs champs (noms, courriels, téléphones, notes, réponses aux questionnaires, coordonnées des personnes qui réservent), avec une clé distincte par cabinet\n• Certains champs opérationnels ne reçoivent pas ce chiffrement applicatif (par exemple la langue préférée, les libellés de statut d’immigration, les horaires de rendez-vous et les métadonnées d’audit)\n• Contrôles d’accès limités à chaque cabinet ; les adjoints ne voient que les dossiers qui leur sont partagés\n• Privilèges service_role de la base de données limités à des chemins serveur\n• Liens de réservation et de partage identifiés par des jetons difficiles à deviner ; les limites de débit utilisent un hachage du courriel et de l’IP\n• Mots de passe du personnel gérés par Supabase Auth ; mots de passe du portail client stockés dans un schéma privé et vérifiés seulement côté serveur\n\nLe personnel Yuzu qui détient la clé d’enveloppe de la plateforme peut techniquement déchiffrer les clés des cabinets pour exploiter et restaurer le service. Nous limitons cet accès sur le plan opérationnel. Aucune méthode n’est parfaitement sûre."
       },
       "retention": {
         "title": "6. Conservation",
-        "body": "Les dossiers projet et client sont conservés tant que l’espace de travail du cabinet est actif et selon les contrôles de conservation du produit (alignés sur la conservation typique du Collège des consultants en immigration et en citoyenneté d’au moins six ans après la fermeture du dossier).\n\nLes cabinets demeurent responsables de leurs obligations professionnelles de conservation et de destruction sécuritaire."
+        "body": "Les dossiers clients et projets restent tant que l’espace de travail du cabinet est actif. À la fermeture d’un dossier, le produit fixe une date de conservation de six ans pour appuyer les devoirs typiques du Collège des consultants en immigration et en citoyenneté. Après cette date, un administrateur du cabinet peut détruire les documents téléversés et vider les réponses au questionnaire de ce projet ; une inscription au registre de destruction est conservée. Cette action n’efface pas à elle seule les fiches personnes, les rendez-vous, les journaux d’audit ni les copies de sauvegarde.\n\nLes rendez-vous restent jusqu’à ce que le cabinet les retire ou que l’espace soit retiré. Les événements d’abus hachés sont supprimés après environ 14 jours.\n\nLes cabinets demeurent responsables de leurs devoirs professionnels de conservation et de destruction. Les suppressions dans l’application restent aussi sujettes aux copies de sauvegarde jusqu’à leur expiration."
       },
       "sharing": {
-        "title": "7. Communication et sous-traitants",
-        "body": "Les renseignements personnels peuvent être traités par des fournisseurs d’infrastructure qui nous aident à exploiter le service (par ex. base de données / authentification / stockage et hébergement). Ces fournisseurs sont liés par des contrats exigeant une protection appropriée.\n\nNous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou avec une autorisation appropriée."
+        "title": "7. Communication et fournisseurs",
+        "body": "Nous utilisons ces fournisseurs pour exploiter My Consultant :\n• Supabase (Canada) — base de données, authentification et stockage de fichiers\n• Vercel — hébergement de l’application, Web Analytics et Speed Insights\n• Resend — courriel transactionnel lorsque l’envoi est configuré (confirmations, rappels et liens de gestion)\n• Google — seulement si un membre du personnel se connecte avec Google, ou si un consultant connecte Google Agenda (OAuth, événements d’agenda et Google Meet)\n\nCes fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet (par exemple l’envoi d’un rappel rédigé par le cabinet).\n\nLorsqu’un consultant connecte Google Agenda, Google reçoit les détails du rendez-vous inscrits dans cet agenda (y compris nom, courriel et téléphone), et nous recevons les plages occupées et les titres d’événements de cet agenda."
       },
       "transfers": {
         "title": "8. Lieu de traitement",
-        "body": "Les données applicatives principales de ce produit sont hébergées au Canada (AWS Canada Central). Certains outils opérationnels (surveillance d’erreurs ou courriel, le cas échéant) peuvent traiter des métadonnées limitées ailleurs. Nous mettrons à jour cette politique lorsque les sous-traitants ou régions changent."
+        "body": "Les données applicatives principales (base de données, authentification et fichiers) sont hébergées au Canada (AWS Canada Central, via Supabase).\n\nL’application est hébergée chez Vercel. Le calcul, les journaux, Web Analytics et Speed Insights peuvent être traités hors du Canada, y compris aux États-Unis.\n\nLe courriel transactionnel via Resend, ainsi que la connexion Google ou Google Agenda/Meet lorsqu’ils sont utilisés, sont traités par ces fournisseurs hors du Canada.\n\nSi vous êtes au Québec, certains renseignements personnels peuvent donc être communiqués à l’extérieur du Québec. Les cabinets demeurent responsables de leurs propres évaluations de transfert lorsque la Loi 25 l’exige."
+      },
+      "cookies": {
+        "title": "9. Témoins et données d’utilisation",
+        "body": "Des témoins essentiels conservent une session authentifiée (personnel ou portail client) et quelques préférences d’interface, comme l’état replié de la barre latérale. La langue de la page vient de l’URL.\n\nVercel Web Analytics et Speed Insights recueillent des données anonymes de pages vues et de performance pour nous aider à exploiter le produit. Elles ne servent pas à vendre de la publicité."
       },
       "rights": {
-        "title": "9. Vos droits",
-        "body": "Sous réserve de la LPRPDE et des autres lois applicables, les personnes peuvent demander l’accès, la correction ou des renseignements sur le traitement de leurs données.\n\nLes clients devraient d’abord contacter leur cabinet. Le personnel peut utiliser les outils d’export du produit lorsque disponibles. Vous pouvez aussi contacter Yuzu Solutions ci-dessous, ou déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada."
+        "title": "10. Vos droits",
+        "body": "Sous réserve de la LPRPDE et des autres lois applicables, les personnes peuvent demander l’accès, la correction ou des renseignements sur le traitement de leurs données.\n\nLes clients et les personnes qui réservent devraient d’abord contacter le cabinet. Les liens de modification ou d’annulation du courriel de confirmation restent utilisables tant qu’ils sont valides. Les administrateurs du cabinet peuvent utiliser les outils d’export du produit (export JSON d’une personne et ZIP du dossier) lorsqu’ils sont disponibles.\n\nVous pouvez aussi contacter Yuzu Solutions ci-dessous. Vous pouvez déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada et, au Québec, auprès de la Commission d’accès à l’information."
       },
       "breach": {
-        "title": "10. Atteintes",
-        "body": "Nous maintenons un processus d’incident pour évaluer les atteintes à la vie privée. Lorsqu’une atteinte crée un risque réel de préjudice grave, nous aviserons les organisations et personnes concernées et déclarerons au CPVP comme l’exige la loi, et appuierons les cabinets pour leurs propres avis."
+        "title": "11. Atteintes",
+        "body": "Si nous prenons connaissance d’une atteinte à la vie privée, nous évaluerons si elle crée un risque réel de préjudice grave. Lorsque la loi l’exige, nous aviserons les organisations et les personnes concernées, nous déclarerons au Commissariat à la protection de la vie privée du Canada, et nous fournirons aux cabinets les informations nécessaires à leurs propres avis."
       },
       "children": {
-        "title": "11. Enfants et personnes à charge",
-        "body": "Le service peut stocker des renseignements sur des mineurs lorsqu’ils font partie d’un dossier d’immigration. Les cabinets doivent s’assurer que la collecte est nécessaire et dûment autorisée."
+        "title": "12. Enfants et personnes à charge",
+        "body": "Le service peut stocker des renseignements sur des mineurs lorsqu’ils font partie d’un dossier d’immigration. Les cabinets doivent s’assurer que la collecte est nécessaire et dûment autorisée par un parent, un tuteur, ou autrement permise par la loi."
       },
       "changes": {
-        "title": "12. Modifications",
-        "body": "Nous pouvons mettre à jour cette politique pour refléter des changements produit, juridiques ou de sécurité. La date de « Dernière mise à jour » changera alors. Les changements importants seront signalés dans le produit ou aux administrateurs du cabinet lorsque possible."
+        "title": "13. Modifications de cette politique",
+        "body": "Nous pouvons mettre à jour cette politique pour refléter des changements de produit, de droit ou de sécurité. La date de « Dernière mise à jour » changera alors. Les changements importants seront signalés dans le produit ou aux administrateurs du cabinet lorsque c’est possible."
       },
       "contact": {
-        "title": "13. Contact",
-        "body": "Demandes de confidentialité pour la plateforme My Consultant :\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier d’immigration."
+        "title": "14. Contact",
+        "body": "Demandes de confidentialité pour la plateforme My Consultant :\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier d’immigration ou à votre rendez-vous."
       }
     }
   },
@@ -1318,6 +1322,16 @@
     "cancelAppointment": "Annuler le rendez-vous",
     "cancelConfirm": "Annuler ce rendez-vous et libérer le créneau ?",
     "cancelled": "Rendez-vous annulé",
+    "changeTime": "Modifier l’horaire",
+    "changeTimeTitle": "Choisir un nouvel horaire",
+    "changeTimeHelp": "Créneaux ouverts pour ce consultant. Le client recevra la mise à jour par courriel.",
+    "noRescheduleSlots": "Aucun autre créneau ouvert dans la fenêtre de réservation.",
+    "noRescheduleSlotsDay": "Plus de créneaux ce jour-là.",
+    "saveNewTime": "Enregistrer le nouvel horaire",
+    "rescheduleBack": "Retour",
+    "rescheduled": "Rendez-vous mis à jour",
+    "moreDetails": "Plus de détails",
+    "hideDetails": "Masquer les détails",
     "openPerson": "Ouvrir la fiche client",
     "unknownService": "Service",
     "setupHint": "Ajoutez vos heures hebdomadaires dans Paramètres pour que les clients puissent réserver avec vous.",
@@ -1354,6 +1368,7 @@
       "unauthorized": "Connectez-vous pour continuer.",
       "forbidden": "Vous n’avez pas le droit de modifier ces paramètres.",
       "save_failed": "Enregistrement impossible. Réessayez.",
+      "slot_taken": "Ce créneau vient d’être réservé. Choisissez-en un autre.",
       "generic": "Une erreur s’est produite. Réessayez.",
       "not_configured": "Google Agenda n’est pas encore configuré sur ce serveur.",
       "not_connected": "Connectez d’abord Google Agenda.",
@@ -1574,7 +1589,7 @@
     "email": "Courriel",
     "phone": "Téléphone",
     "address": "Adresse",
-    "privacyConsent": "J’accepte que ce cabinet recueille et utilise mes renseignements personnels pour planifier ce rendez-vous, conformément à la",
+    "privacyConsent": "J’accepte que ce cabinet recueille mon nom, mes coordonnées, mon adresse, ma langue préférée et toute réponse supplémentaire que je fournis afin de planifier ce rendez-vous, de m’écrire à ce sujet, d’enregistrer une fiche client dans son espace My Consultant et — s’il utilise un agenda connecté — d’y ajouter le rendez-vous (y compris mon nom, courriel et téléphone), conformément à la",
     "privacyPolicy": "politique de confidentialité",
     "confirm": "Confirmer le rendez-vous",
     "booking": "Réservation…",
@@ -1631,6 +1646,9 @@
     "cancelledHeading": "Votre rendez-vous a été annulé",
     "cancelledIntro": "Ce rendez-vous avec {org} n’est plus réservé.",
     "cancelledFooter": "Si vous avez encore besoin d’une consultation, utilisez le lien de réservation du cabinet pour choisir un nouvel horaire.",
+    "cancelledByOrgIntro": "{org} a annulé ce rendez-vous.",
+    "cancelledByOrgFooter": "Vous pouvez réserver une nouvelle consultation quand vous le souhaitez.",
+    "bookAgain": "Réserver un nouveau créneau",
     "footer": "Si vous n’avez pas demandé ce rendez-vous, vous pouvez ignorer ce courriel.",
     "doNotReply": "Ceci est un message automatique. Merci de ne pas y répondre ; les réponses ne sont pas lues.",
     "manageLinksSubject": "Gérer vos rendez-vous avec {org}",

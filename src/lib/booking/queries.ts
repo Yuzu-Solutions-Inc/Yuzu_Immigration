@@ -67,6 +67,7 @@ export type ManageBookingContext = {
   status: BookingAppointmentRow["status"];
   guestName: string;
   guestEmail: string;
+  guestPreferredLocale: string | null;
   hostUserId: string;
   hostName: string;
   serviceId: string;
@@ -594,6 +595,7 @@ export async function loadManageBookingContext(
     status: row.status,
     guestName: guest.guest_name,
     guestEmail: guest.guest_email,
+    guestPreferredLocale: row.guest_preferred_locale,
     hostUserId: row.host_user_id,
     hostName,
     serviceId: row.service_id,
@@ -605,6 +607,109 @@ export async function loadManageBookingContext(
     googleEventId: row.google_event_id,
     host,
   };
+}
+
+/**
+ * Staff-side appointment context for cancel/reschedule emails and slot picking.
+ * Excludes this appointment from busy so the current slot can be re-chosen.
+ */
+export async function loadStaffAppointmentContext(
+  appointmentId: string,
+): Promise<ManageBookingContext | null> {
+  const orgId = await orgIdOrNull();
+  if (!orgId) return null;
+  const supabase = await createClient();
+  const { data: appointment, error } = await supabase
+    .from("booking_appointments")
+    .select("*")
+    .eq("id", appointmentId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (error || !appointment) {
+    if (error) console.error("loadStaffAppointmentContext:", error.message);
+    return null;
+  }
+
+  const row = appointment as BookingAppointmentRow;
+  const dek = await getOrgDataKey(orgId);
+  const guest = decryptBookingGuestRow(row, dek);
+
+  const [{ data: org }, { data: settings }, { data: service }, { data: profile }] =
+    await Promise.all([
+      supabase
+        .from("organizations")
+        .select("id, name, default_locale")
+        .eq("id", orgId)
+        .maybeSingle(),
+      supabase
+        .from("booking_settings")
+        .select("*")
+        .eq("organization_id", orgId)
+        .maybeSingle(),
+      supabase
+        .from("booking_services")
+        .select("id, title, duration_minutes")
+        .eq("id", row.service_id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("id", row.host_user_id)
+        .maybeSingle(),
+    ]);
+  if (!org || !settings || !service) return null;
+
+  const settingsRow = settings as BookingSettingsRow;
+  const hosts = await loadHostCalendars({
+    organizationId: orgId,
+    bookingWindowDays: settingsRow.booking_window_days,
+    excludeAppointmentId: row.id,
+    excludeBusyRange: {
+      starts_at: row.starts_at,
+      ends_at: row.ends_at,
+    },
+  });
+  const host = hosts.find((item) => item.userId === row.host_user_id) ?? null;
+  const hostName =
+    host?.name ||
+    (profile?.full_name as string | null)?.trim() ||
+    (profile?.email as string | null) ||
+    row.host_user_id;
+
+  return {
+    organizationId: orgId,
+    organizationName: org.name as string,
+    settings: settingsRow,
+    appointmentId: row.id,
+    status: row.status,
+    guestName: guest.guest_name,
+    guestEmail: guest.guest_email,
+    guestPreferredLocale:
+      row.guest_preferred_locale ||
+      (org.default_locale as string | null) ||
+      null,
+    hostUserId: row.host_user_id,
+    hostName,
+    serviceId: row.service_id,
+    serviceTitle: service.title as string,
+    durationMinutes: service.duration_minutes as number,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    meetJoinUrl: row.meet_join_url,
+    googleEventId: row.google_event_id,
+    host,
+  };
+}
+
+export async function resolvePublicBookingUrl(
+  settings: BookingSettingsRow,
+  locale: string,
+): Promise<string | null> {
+  const token = await revealBookingToken(settings);
+  if (!token) return null;
+  const { getAppBaseUrl } = await import("@/lib/app-url");
+  const base = await getAppBaseUrl();
+  return `${base.replace(/\/$/, "")}/${locale}/book/${token}`;
 }
 
 export function toManageBookingPayload(

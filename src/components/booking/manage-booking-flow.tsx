@@ -10,6 +10,7 @@ import {
 } from "@/app/actions/manage-booking";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { PrivacyLink } from "@/components/legal/privacy-link";
 import { Button } from "@/components/ui/button";
 import { generateServiceSlots } from "@/lib/booking/slots";
 import type { ManageBookingPayload } from "@/lib/booking/types";
@@ -169,6 +170,7 @@ export function ManageBookingFlow({
           </p>
           <p className="mt-1 font-medium text-brand">{when}</p>
         </div>
+        <PrivacyLink />
       </header>
 
       {error ? (

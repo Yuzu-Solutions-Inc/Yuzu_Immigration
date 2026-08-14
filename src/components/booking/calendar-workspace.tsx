@@ -10,10 +10,10 @@ import {
   cancelAppointmentAction,
   unblockTimeAction,
 } from "@/app/actions/booking";
+import { AppointmentDetailCard } from "@/components/booking/appointment-detail-card";
 import { CopyBookingLinkButton } from "@/components/booking/copy-booking-link-button";
 import { DayTimeline } from "@/components/booking/day-timeline";
 import { MonthCalendar } from "@/components/booking/month-calendar";
-import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Link } from "@/i18n/navigation";
@@ -26,13 +26,11 @@ import type {
   BookingServiceFormFieldRow,
   BookingSettingsRow,
 } from "@/lib/booking/types";
-import { formatPriceCents } from "@/lib/booking/slots";
 import {
   addDaysToIsoDate,
   clipToDayMinutes,
   coversCivilDay,
   formatDateInZone,
-  formatTimeInZone,
   minutesFromHm,
   weekdayFromIsoDate,
   zonedCivilToUtc,
@@ -304,14 +302,9 @@ export function CalendarWorkspace({
             className="min-h-[22rem] lg:min-h-0"
           />
 
-          <div
-            className={cn(
-              "shrink-0",
-              selectedAppointment && "max-h-40 overflow-y-auto lg:max-h-44",
-            )}
-          >
+          <div className="shrink-0">
             {selectedAppointment ? (
-              <AppointmentDetail
+              <AppointmentDetailCard
                 locale={locale}
                 canManage={canManage}
                 pending={pending}
@@ -330,6 +323,9 @@ export function CalendarWorkspace({
                     }
                   });
                 }}
+                onRescheduled={(dateIso) => {
+                  setSelectedDateIso(dateIso);
+                }}
               />
             ) : dayAppointments.filter((row) => row.status !== "cancelled")
                 .length === 0 ? (
@@ -344,109 +340,6 @@ export function CalendarWorkspace({
           </div>
         </SurfaceCard>
       </div>
-    </div>
-  );
-}
-
-function AppointmentDetail({
-  locale,
-  canManage,
-  pending,
-  timeZone,
-  row,
-  formFields,
-  hostNames,
-  onCancel,
-}: {
-  locale: string;
-  canManage: boolean;
-  pending: boolean;
-  timeZone: string;
-  row: BookingAppointmentRow;
-  formFields: BookingServiceFormFieldRow[];
-  hostNames: Record<string, string>;
-  onCancel: (id: string) => void;
-}) {
-  const t = useTranslations("calendar");
-  return (
-    <div className="space-y-2 rounded-xl border border-border p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="font-medium text-brand">{row.guest_name}</p>
-          <p className="text-sm text-muted-foreground">
-            {formatTimeInZone(new Date(row.starts_at), timeZone, locale)}
-            {" – "}
-            {formatTimeInZone(new Date(row.ends_at), timeZone, locale)}
-          </p>
-        </div>
-        <Badge variant={row.status === "confirmed" ? "default" : "secondary"}>
-          {t(`status.${row.status}`)}
-        </Badge>
-      </div>
-      <p className="text-sm">
-        {row.service?.title ?? t("unknownService")}
-        {row.service
-          ? ` · ${formatPriceCents(row.service.price_cents, locale, row.service.currency)}`
-          : null}
-      </p>
-      {hostNames[row.host_user_id] ? (
-        <p className="text-xs text-muted-foreground">
-          {t("hostedBy", { name: hostNames[row.host_user_id] })}
-        </p>
-      ) : null}
-      {row.meet_join_url?.startsWith("https://") ? (
-        <a
-          href={row.meet_join_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs font-medium text-action hover:underline"
-        >
-          {t("joinMeet")}
-        </a>
-      ) : null}
-      <p className="text-xs text-muted-foreground">
-        {row.guest_email} · {row.guest_phone}
-      </p>
-      <p className="text-xs text-muted-foreground">{row.guest_address}</p>
-      {Object.entries(row.form_answers ?? {}).map(([key, value]) => {
-        const field = formFields.find(
-          (item) =>
-            item.form_id === row.service?.form_id && item.field_key === key,
-        );
-        const display =
-          field?.field_type === "checkbox"
-            ? value === "true"
-              ? t("formYes")
-              : t("formNo")
-            : value;
-        return (
-          <p key={key} className="text-xs text-muted-foreground">
-            {field?.label ?? key}: {display}
-          </p>
-        );
-      })}
-      {row.person_id ? (
-        <Link
-          href={`/people/${row.person_id}`}
-          className="text-xs font-medium text-action hover:underline"
-        >
-          {t("openPerson")}
-        </Link>
-      ) : null}
-      {canManage && row.status === "confirmed" ? (
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          disabled={pending}
-          onClick={() => {
-            if (!window.confirm(t("cancelConfirm"))) return;
-            onCancel(row.id);
-          }}
-        >
-          {t("cancelAppointment")}
-        </Button>
-      ) : null}
     </div>
   );
 }

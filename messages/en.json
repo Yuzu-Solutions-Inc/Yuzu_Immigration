@@ -1164,63 +1164,67 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacy",
     "privacyTitle": "Privacy Policy",
-    "privacyUpdated": "Last updated: 12 August 2026",
-    "privacyIntro": "My Consultant (operated by Yuzu Solutions) is a practice-management platform for Canadian immigration consultants. This policy explains how personal information is collected, used, disclosed, and protected in line with PIPEDA and professional confidentiality expectations for regulated consultants.",
+    "privacyUpdated": "Last updated: 14 August 2026",
+    "privacyIntro": "My Consultant is practice-management software operated by Yuzu Solutions for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use My Consultant — including the consultant workspace, client share links, the client portal, and public booking pages. It is written to support PIPEDA accountability. It is not a certification, and it is not legal advice.",
     "backHome": "Back to home",
     "consentTitle": "How your information is used",
-    "consentBody": "By continuing, you provide personal information (and documents) so your immigration consultant can prepare and manage your file. Information is stored in Canada, encrypted in transit and at rest for uploaded files, and accessible only to your consulting firm through this secure link. See our Privacy Policy for rights, retention, and contact details.",
+    "consentBody": "By continuing, you provide personal information and documents so this consulting firm can prepare and manage your immigration file in My Consultant. Primary records are stored in Canada. Uploaded files and many identity fields are encrypted. The firm’s staff can open the file in their workspace; Yuzu Solutions processes it to operate the platform. Email, calendar, and hosting details are in our Privacy Policy.",
     "sections": {
       "controller": {
         "title": "1. Who is responsible",
-        "body": "Your consulting firm (the organization using My Consultant) is generally the organization that decides why and how your client personal information is processed for immigration services.\n\nYuzu Solutions operates the My Consultant software and processes that information on behalf of the firm as a service provider / processor. For account and billing data about firm staff users, Yuzu Solutions is the organization responsible for that information."
+        "body": "Your consulting firm (the organization with a My Consultant workspace) decides why and how client personal information is processed for its immigration services. That firm is generally responsible for the client file.\n\nYuzu Solutions operates the software and processes that information on the firm’s instructions as a service provider. Yuzu Solutions is responsible for staff account information we use to run the service (name, email, and authentication identifiers).\n\nIf you book an appointment or complete a form through a firm’s link, you are giving information to that firm. Yuzu Solutions hosts and processes it so the firm can use My Consultant."
       },
       "purposes": {
         "title": "2. Purposes",
-        "body": "We process personal information to:\n• Provide the CRM, form, document, and share-link features firms use to serve clients\n• Authenticate staff and (where enabled) client portal access\n• Maintain security, prevent abuse, and improve reliability\n• Meet legal and professional obligations applicable to the service\n\nWe do not sell personal information."
+        "body": "We process personal information to:\n• Provide the CRM, questionnaires, form preparation, document intake, share links, client portal, calendar, and public booking features\n• Authenticate staff and, where a firm enables it, client portal access\n• Send appointment confirmations, change/cancel links, and reminder emails the firm configures\n• Sync busy times and bookings with a consultant’s Google Calendar when that consultant connects it\n• Maintain security, prevent booking abuse, keep audit records, and operate the service\n• Meet legal obligations that apply to Yuzu Solutions as a service provider\n\nWe do not sell personal information. We do not use client file contents for advertising."
       },
       "collection": {
         "title": "3. What we collect",
-        "body": "Depending on how the product is used, this may include:\n• Staff account details (name, email, authentication identifiers, representative profile fields)\n• Client identity and contact details entered by the firm or the client\n• Immigration-related questionnaire answers and generated form data\n• Uploaded supporting documents (stored as ciphertext)\n• Technical logs needed for security and operations (IP, timestamps, action metadata)\n\nFirms should collect only what is needed for the engagement."
+        "body": "Depending on how the product is used, this may include:\n\nStaff and firm: name, email, role, representative profile fields used on IMM 5476, authentication identifiers, the firm’s default language, and — if a consultant connects Google Calendar — that Google account email.\n\nClients and booking guests: first name, last name, email, phone, address (when asked at booking), preferred language, immigration-status fields a firm records, questionnaire answers, extra questions a firm adds to a booking form, uploaded supporting documents, consultation notes, and generated form files.\n\nBookings: appointment time, service, consultant, when privacy notice was accepted, Google Meet join links when created, and hashed email and IP used only to rate-limit the public booking page.\n\nCalendar sync (only if a consultant connects Google Calendar): encrypted OAuth tokens, busy intervals, and event titles from that calendar so the firm can see when the consultant is busy. New bookings are written to that calendar with the guest’s name, email, and phone in the event details.\n\nTechnical: security audit events (including IP address and browser user-agent for some actions), hashed IP and email for booking abuse control (about 14 days), and anonymous product usage and performance metrics.\n\nFirms should collect only what they need for the engagement. Extra booking questions are stored with the appointment."
       },
       "legalBasis": {
         "title": "4. Consent and notice",
-        "body": "Firms are responsible for obtaining meaningful consent from clients where required, and for explaining their own retainers and privacy practices.\n\nClient share links show a short notice before documents or forms are submitted. Continuing to use those links constitutes consent to the described processing for the immigration file, subject to the firm’s instructions and applicable law."
+        "body": "Firms are responsible for obtaining meaningful consent from clients where required, and for explaining their own retainers and privacy practices — including Québec Law 25 duties where those apply.\n\nClient share links show a short notice before documents or forms are submitted. Public booking requires a checkbox linking to this policy before a booking can be submitted. Continuing after that notice, or checking the booking box, is consent to the processing described here for that firm’s file or appointment, subject to the firm’s instructions and applicable law.\n\nYou may refuse by not using the link or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
       },
       "safeguards": {
         "title": "5. Safeguards",
-        "body": "We apply administrative, technical, and organizational safeguards proportionate to the sensitivity of immigration data, including:\n• Encryption in transit (TLS)\n• Encryption at rest for platform storage, plus application-level AES-256-GCM for client document files\n• Row-level access controls scoped to each consulting firm\n• Service-role privileges restricted to audited server paths\n• Least-privilege design for privileged database functions\n\nNo method of transmission or storage is perfectly secure; we work continuously to reduce risk."
+        "body": "We apply safeguards proportionate to the sensitivity of immigration files, including:\n• Encryption in transit (TLS)\n• Infrastructure encryption at rest for the database, authentication, and file storage\n• Application-level AES-256-GCM for uploaded client documents and for many client fields (names, emails, phones, notes, questionnaire answers, booking guest details, and similar), using a separate encryption key per firm\n• Some operational fields are stored without that application-level encryption (for example preferred language, immigration-status labels, appointment times, and security audit metadata)\n• Access controls scoped to each firm; assistants only see projects they are shared on\n• Database service-role privileges restricted to server-only paths\n• Public booking and share links identified by unguessable tokens; booking rate limits use hashed email and IP\n• Staff passwords handled by Supabase Auth; client portal passwords stored in a private schema and verified only on the server\n\nYuzu personnel who hold the platform wrap key can technically decrypt firm keys in order to operate and restore the service. We limit that access operationally. No method of transmission or storage is perfectly secure."
       },
       "retention": {
         "title": "6. Retention",
-        "body": "Project and client records are retained while the firm’s workspace is active and according to retention controls in the product (aligned with typical College of Immigration and Citizenship Consultants closed-file retention of at least six years after file closure).\n\nFirms remain responsible for their professional retention and secure destruction duties. When a firm deletes or destroys records through the product, we remove associated application data and encrypted objects subject to backup cycles."
+        "body": "Client and project records remain while the firm’s workspace is active. When a file is closed, the product sets a retain-until date of six years after closure to support typical College of Immigration and Citizenship Consultants closed-file duties. After that date, a firm administrator can destroy uploaded documents and clear questionnaire answers for that project; a destruction-register entry is kept. That action does not by itself erase person records, bookings, security audit events, or backups.\n\nBooking appointments remain until the firm removes them or the workspace is removed. Hashed booking abuse events are deleted after about 14 days.\n\nFirms remain responsible for their professional retention and secure-destruction duties. Application deletes are also subject to backup and disaster-recovery copies until those copies expire."
       },
       "sharing": {
-        "title": "7. Sharing and subprocessors",
-        "body": "Personal information may be processed by infrastructure providers that help us run the service (for example database/auth/storage and application hosting). Those providers are bound by contracts requiring appropriate protection.\n\nWe do not disclose client file contents to third parties for their own marketing. Disclosure may occur if required by law, to protect rights and security, or with appropriate authorization."
+        "title": "7. Sharing and service providers",
+        "body": "We use these providers to run My Consultant:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, Web Analytics, and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, or a consultant connects Google Calendar (OAuth, calendar events, and Google Meet)\n\nThose providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects Google Calendar, Google receives the booking details the product writes to that calendar (including guest name, email, and phone), and we receive busy times and event titles from that calendar."
       },
       "transfers": {
         "title": "8. Location of processing",
-        "body": "Primary application data for this product is hosted in Canada (AWS Canada Central). Some operational tooling (for example error monitoring or email delivery, if enabled) may process limited metadata in other regions. We will update this policy and firm documentation when subprocessors or regions change."
+        "body": "Primary application data (database, authentication, and stored files) is hosted in Canada (AWS Canada Central, via Supabase).\n\nThe application is hosted on Vercel. Compute, logs, Web Analytics, and Speed Insights may be processed outside Canada, including in the United States.\n\nTransactional email via Resend, and Google sign-in or Google Calendar/Meet when used, are processed by those providers outside Canada.\n\nIf you are in Québec, some personal information may therefore be communicated outside Québec. Firms remain responsible for their own transfer assessments where Law 25 requires them."
+      },
+      "cookies": {
+        "title": "9. Cookies and usage data",
+        "body": "Essential cookies store a signed-in session (staff or client portal) and a few interface preferences, such as whether the sidebar is collapsed. The language of the page comes from the URL.\n\nVercel Web Analytics and Speed Insights collect anonymous page-view and performance data to help us operate the product. They are not used to sell advertising."
       },
       "rights": {
-        "title": "9. Your rights",
-        "body": "Subject to PIPEDA and other applicable law, individuals may request access to, correction of, or information about the handling of their personal information.\n\nClients should normally contact their consulting firm first. Firm staff may use product export tools where available. You may also contact Yuzu Solutions using the details below. You may complain to the Office of the Privacy Commissioner of Canada."
+        "title": "10. Your rights",
+        "body": "Subject to PIPEDA and other applicable law, individuals may request access to, correction of, or information about the handling of their personal information.\n\nClients and booking guests should normally contact the consulting firm first. Guests can also use the change or cancel links in their confirmation email while those links are valid. Firm administrators may use in-product export tools (person JSON export and project file ZIP) where available.\n\nYou may also contact Yuzu Solutions using the details below. You may complain to the Office of the Privacy Commissioner of Canada, and in Québec to the Commission d’accès à l’information."
       },
       "breach": {
-        "title": "10. Breaches",
-        "body": "We maintain an incident process to assess privacy breaches. Where a breach creates a real risk of significant harm, we will notify affected organizations and individuals and report to the OPC as required by law, and support firms with information they need for their own notifications."
+        "title": "11. Breaches",
+        "body": "If we become aware of a privacy breach, we will assess whether it creates a real risk of significant harm. Where the law requires, we will notify affected organizations and individuals and report to the Office of the Privacy Commissioner of Canada, and we will give firms information they need for their own notices."
       },
       "children": {
-        "title": "11. Children and dependents",
+        "title": "12. Children and dependents",
         "body": "The service may store information about minors when they are part of an immigration file. Firms must ensure collection is necessary and appropriately authorized by a parent, guardian, or as otherwise permitted by law."
       },
       "changes": {
-        "title": "12. Changes to this policy",
+        "title": "13. Changes to this policy",
         "body": "We may update this policy to reflect product, legal, or security changes. The “Last updated” date will change when we do. Material changes will be highlighted in-product or by notice to firm administrators when practical."
       },
       "contact": {
-        "title": "13. Contact",
-        "body": "Privacy inquiries for the My Consultant platform:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file."
+        "title": "14. Contact",
+        "body": "Privacy inquiries for the My Consultant platform:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file or booking."
       }
     }
   },
@@ -1318,6 +1322,16 @@
     "cancelAppointment": "Cancel booking",
     "cancelConfirm": "Cancel this booking and free the slot?",
     "cancelled": "Booking cancelled",
+    "changeTime": "Change time",
+    "changeTimeTitle": "Pick a new time",
+    "changeTimeHelp": "Open times for this consultant. The client will be emailed the update.",
+    "noRescheduleSlots": "No other open times in the booking window.",
+    "noRescheduleSlotsDay": "No times left on this day.",
+    "saveNewTime": "Save new time",
+    "rescheduleBack": "Back",
+    "rescheduled": "Booking updated",
+    "moreDetails": "More details",
+    "hideDetails": "Hide details",
     "openPerson": "Open client record",
     "unknownService": "Service",
     "setupHint": "Add your weekly open hours in Settings so clients can book with you.",
@@ -1354,6 +1368,7 @@
       "unauthorized": "Sign in to continue.",
       "forbidden": "You do not have permission to change booking settings.",
       "save_failed": "Could not save. Try again.",
+      "slot_taken": "That time was just booked. Pick another slot.",
       "generic": "Something went wrong. Try again.",
       "not_configured": "Google Calendar is not configured on this server yet.",
       "not_connected": "Connect Google Calendar first.",
@@ -1574,7 +1589,7 @@
     "email": "Email",
     "phone": "Phone",
     "address": "Address",
-    "privacyConsent": "I agree that this firm may collect and use my personal information to schedule this appointment, as described in the",
+    "privacyConsent": "I agree that this firm may collect my name, contact details, address, preferred language, and any extra answers I provide to schedule this appointment, email me about it, save a client record in their My Consultant workspace, and—if they use a connected calendar—add the appointment (including my name, email, and phone) to that calendar, as described in the",
     "privacyPolicy": "privacy policy",
     "confirm": "Confirm booking",
     "booking": "Booking…",
@@ -1631,6 +1646,9 @@
     "cancelledHeading": "Your appointment was cancelled",
     "cancelledIntro": "This appointment with {org} is no longer booked.",
     "cancelledFooter": "If you still need a consultation, use the firm’s booking link to choose a new time.",
+    "cancelledByOrgIntro": "{org} has cancelled this appointment.",
+    "cancelledByOrgFooter": "You can book a new consultation whenever you’re ready.",
+    "bookAgain": "Book a new time",
     "footer": "If you did not request this appointment, you can ignore this email.",
     "doNotReply": "This is an automated message. Please do not reply to this email; replies are not read.",
     "manageLinksSubject": "Manage your appointments with {org}",

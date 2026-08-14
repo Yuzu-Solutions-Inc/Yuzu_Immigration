@@ -12,6 +12,7 @@ import {
 } from "@/app/actions/public-booking";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { PrivacyLink } from "@/components/legal/privacy-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,6 +219,7 @@ export function PublicBookingFlow({
             </p>
           </div>
         ) : null}
+        <PrivacyLink />
       </div>
     );
   }
@@ -277,11 +279,14 @@ export function PublicBookingFlow({
             </h1>
           </div>
         </div>
-        {host && payload.hosts.length === 1 ? (
-          <p className="hidden shrink-0 text-sm font-medium text-brand sm:block">
-            {t("bookingWith", { name: host.name })}
-          </p>
-        ) : null}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {host && payload.hosts.length === 1 ? (
+            <p className="hidden text-sm font-medium text-brand sm:block">
+              {t("bookingWith", { name: host.name })}
+            </p>
+          ) : null}
+          <PrivacyLink />
+        </div>
       </header>
 
       <div

@@ -13,6 +13,7 @@ const SECTIONS = [
   "retention",
   "sharing",
   "transfers",
+  "cookies",
   "rights",
   "breach",
   "children",

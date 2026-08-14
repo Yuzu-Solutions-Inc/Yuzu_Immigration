@@ -166,6 +166,9 @@ export async function sendBookingCancelledEmail(input: {
   serviceTitle: string;
   startsAt: string;
   timezone: string;
+  /** Who initiated the cancellation. Organization sends rebook CTA. */
+  cancelledBy?: "guest" | "organization";
+  bookingUrl?: string | null;
 }) {
   const locale = toAppLocale(input.locale);
   const t = translator(locale);
@@ -174,16 +177,27 @@ export async function sendBookingCancelledEmail(input: {
     input.timezone,
     locale,
   );
+  const byOrg = input.cancelledBy === "organization";
+  const intro = byOrg
+    ? t("cancelledByOrgIntro", { org: input.organizationName })
+    : t("cancelledIntro", { org: input.organizationName });
+  const footer = byOrg ? t("cancelledByOrgFooter") : t("cancelledFooter");
+  const bookingUrl = safeLink(input.bookingUrl);
   const subject = t("cancelledSubject", { service: input.serviceTitle });
   const textLines = [
     t("greeting", { name: input.guestName }),
     t("cancelledHeading"),
-    t("cancelledIntro", { org: input.organizationName }),
+    intro,
     `${t("when")}: ${when} (${input.timezone})`,
     `${t("consultant")}: ${input.hostName}`,
     `${t("service")}: ${input.serviceTitle}`,
-    t("cancelledFooter"),
-  ];
+    bookingUrl ? `${t("bookAgain")}: ${bookingUrl}` : null,
+    footer,
+  ].filter((line): line is string => Boolean(line));
+
+  const bookHtml = bookingUrl
+    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(bookingUrl)}" style="display:inline-block;background:#6366F1;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("bookAgain"))}</a></p>`
+    : "";
 
   const html = `<!doctype html>
 <html lang="${locale}">
@@ -192,9 +206,10 @@ export async function sendBookingCancelledEmail(input: {
       <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#4A5568;">${escapeHtml(input.organizationName)}</p>
       <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:#111827;">${escapeHtml(t("cancelledHeading"))}</h1>
       <p style="margin:0 0 8px;font-size:15px;color:#111827;">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
-      <p style="margin:0 0 20px;font-size:15px;color:#4A5568;">${escapeHtml(t("cancelledIntro", { org: input.organizationName }))}</p>
+      <p style="margin:0 0 20px;font-size:15px;color:#4A5568;">${escapeHtml(intro)}</p>
       ${detailsTable(t, when, input.timezone, input.hostName, input.serviceTitle)}
-      <p style="margin:28px 0 0;font-size:13px;color:#4A5568;">${escapeHtml(t("cancelledFooter"))}</p>
+      ${bookHtml}
+      <p style="margin:28px 0 0;font-size:13px;color:#4A5568;">${escapeHtml(footer)}</p>
     </div>
   </body>
 </html>`;

@@ -673,14 +673,14 @@ export async function cancelAppointmentAction(
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
 
-  const supabase = await createClient();
-  const { data: existing } = await supabase
-    .from("booking_appointments")
-    .select("google_event_id, host_user_id")
-    .eq("id", appointmentId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
+  const { loadStaffAppointmentContext, resolvePublicBookingUrl } = await import(
+    "@/lib/booking/queries"
+  );
+  const ctx = await loadStaffAppointmentContext(appointmentId);
+  if (!ctx || ctx.organizationId !== orgId) return { error: "invalid" };
+  if (ctx.status !== "confirmed") return { error: "invalid" };
 
+  const supabase = await createClient();
   const { error } = await supabase
     .from("booking_appointments")
     .update({
@@ -697,20 +697,39 @@ export async function cancelAppointmentAction(
     return { error: "save_failed" };
   }
 
-  const googleEventId = existing?.google_event_id as string | null;
-  const hostUserId = (existing?.host_user_id as string | null) ?? null;
-  if (googleEventId) {
-    after(async () => {
-      const { deleteAppointmentGoogleEvent } = await import(
-        "@/lib/google/calendar"
-      );
-      await deleteAppointmentGoogleEvent({
-        organizationId: orgId,
-        hostUserId,
-        googleEventId,
-      });
-    });
-  }
+  const { toAppLocale } = await import("@/lib/i18n/locales");
+  const emailLocale = toAppLocale(ctx.guestPreferredLocale || parsedLocale.data);
+  const bookingUrl = await resolvePublicBookingUrl(ctx.settings, emailLocale);
+
+  after(async () => {
+    const { deleteAppointmentGoogleEvent } = await import(
+      "@/lib/google/calendar"
+    );
+    const { sendBookingCancelledEmail } = await import(
+      "@/lib/email/booking-confirmation"
+    );
+    await Promise.all([
+      ctx.googleEventId
+        ? deleteAppointmentGoogleEvent({
+            organizationId: orgId,
+            hostUserId: ctx.hostUserId,
+            googleEventId: ctx.googleEventId,
+          })
+        : Promise.resolve(),
+      sendBookingCancelledEmail({
+        locale: emailLocale,
+        to: ctx.guestEmail,
+        guestName: ctx.guestName,
+        organizationName: ctx.organizationName,
+        hostName: ctx.hostName,
+        serviceTitle: ctx.serviceTitle,
+        startsAt: ctx.startsAt,
+        timezone: ctx.settings.timezone,
+        cancelledBy: "organization",
+        bookingUrl,
+      }),
+    ]);
+  });
 
   await recordAuditEvent({
     organizationId: orgId,
@@ -723,4 +742,177 @@ export async function cancelAppointmentAction(
 
   revalidateBooking(parsedLocale.data);
   return { message: "cancelled" };
+}
+
+export type RescheduleSlotOption = {
+  startsAt: string;
+  endsAt: string;
+  dateIso: string;
+};
+
+export async function listAppointmentRescheduleSlotsAction(
+  appointmentId: string,
+): Promise<{ error?: string; slots?: RescheduleSlotOption[]; timezone?: string }> {
+  if (!z.string().uuid().safeParse(appointmentId).success) {
+    return { error: "invalid" };
+  }
+  const gate = await requireManager();
+  if (!gate.ok) return { error: gate.error };
+
+  const { loadStaffAppointmentContext } = await import("@/lib/booking/queries");
+  const { generateServiceSlots } = await import("@/lib/booking/slots");
+  const ctx = await loadStaffAppointmentContext(appointmentId);
+  if (!ctx || ctx.organizationId !== gate.membership.organization.id) {
+    return { error: "invalid" };
+  }
+  if (ctx.status !== "confirmed" || !ctx.host) {
+    return { error: "invalid", slots: [], timezone: ctx.settings.timezone };
+  }
+
+  const slots = generateServiceSlots({
+    durationMinutes: ctx.durationMinutes,
+    rules: ctx.host.rules,
+    blocked: ctx.host.blocked,
+    busy: ctx.host.busy,
+    window: {
+      timezone: ctx.settings.timezone,
+      bookingWindowDays: ctx.settings.booking_window_days,
+      // Staff can move sooner than the public notice window.
+      minNoticeHours: 0,
+      bufferMinutes: ctx.settings.buffer_minutes,
+    },
+  }).filter((slot) => slot.startsAt !== ctx.startsAt);
+
+  return {
+    slots: slots.map((slot) => ({
+      startsAt: slot.startsAt,
+      endsAt: slot.endsAt,
+      dateIso: slot.dateIso,
+    })),
+    timezone: ctx.settings.timezone,
+  };
+}
+
+export async function rescheduleAppointmentAction(input: {
+  appointmentId: string;
+  locale: string;
+  startsAt: string;
+  endsAt: string;
+}): Promise<BookingActionState> {
+  const parsed = z
+    .object({
+      appointmentId: z.string().uuid(),
+      locale: localeSchema,
+      startsAt: z.string().refine((value) => Number.isFinite(Date.parse(value))),
+      endsAt: z.string().refine((value) => Number.isFinite(Date.parse(value))),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { error: "invalid" };
+
+  const gate = await requireManager();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+  const user = await getSessionUser();
+
+  const { loadStaffAppointmentContext } = await import("@/lib/booking/queries");
+  const { isSlotStillOpen } = await import("@/lib/booking/slots");
+  const { toAppLocale } = await import("@/lib/i18n/locales");
+
+  const ctx = await loadStaffAppointmentContext(parsed.data.appointmentId);
+  if (!ctx || ctx.organizationId !== orgId) return { error: "invalid" };
+  if (ctx.status !== "confirmed" || !ctx.host) return { error: "invalid" };
+
+  const expectedEnd = new Date(
+    new Date(parsed.data.startsAt).getTime() + ctx.durationMinutes * 60_000,
+  ).toISOString();
+  if (expectedEnd !== parsed.data.endsAt) return { error: "slot_taken" };
+
+  if (
+    parsed.data.startsAt === ctx.startsAt &&
+    parsed.data.endsAt === ctx.endsAt
+  ) {
+    return { message: "rescheduled" };
+  }
+
+  const open = isSlotStillOpen({
+    startsAt: parsed.data.startsAt,
+    endsAt: parsed.data.endsAt,
+    durationMinutes: ctx.durationMinutes,
+    rules: ctx.host.rules,
+    blocked: ctx.host.blocked,
+    busy: ctx.host.busy,
+    window: {
+      timezone: ctx.settings.timezone,
+      bookingWindowDays: ctx.settings.booking_window_days,
+      minNoticeHours: 0,
+      bufferMinutes: ctx.settings.buffer_minutes,
+    },
+  });
+  if (!open) return { error: "slot_taken" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("booking_appointments")
+    .update({
+      starts_at: parsed.data.startsAt,
+      ends_at: parsed.data.endsAt,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.data.appointmentId)
+    .eq("organization_id", orgId)
+    .eq("status", "confirmed");
+  if (error) {
+    if (error.code === "23P01" || error.message.includes("no_overlap")) {
+      return { error: "slot_taken" };
+    }
+    console.error("staff booking reschedule:", error.message);
+    return { error: "save_failed" };
+  }
+
+  const emailLocale = toAppLocale(ctx.guestPreferredLocale || parsed.data.locale);
+
+  after(async () => {
+    const { updateAppointmentGoogleEvent } = await import(
+      "@/lib/google/calendar"
+    );
+    const { sendBookingConfirmationEmail } = await import(
+      "@/lib/email/booking-confirmation"
+    );
+    const google = await updateAppointmentGoogleEvent({
+      organizationId: orgId,
+      hostUserId: ctx.hostUserId,
+      appointmentId: ctx.appointmentId,
+      googleEventId: ctx.googleEventId,
+      title: `${ctx.serviceTitle} — ${ctx.guestName}`,
+      description: `Booked via MyConsultant\n${ctx.guestName}\n${ctx.guestEmail}`,
+      startsAt: parsed.data.startsAt,
+      endsAt: parsed.data.endsAt,
+      location: ctx.meetJoinUrl ?? undefined,
+    });
+    const meetJoinUrl = google?.meetJoinUrl ?? ctx.meetJoinUrl;
+    await sendBookingConfirmationEmail({
+      locale: emailLocale,
+      to: ctx.guestEmail,
+      guestName: ctx.guestName,
+      organizationName: ctx.organizationName,
+      hostName: ctx.hostName,
+      serviceTitle: ctx.serviceTitle,
+      startsAt: parsed.data.startsAt,
+      timezone: ctx.settings.timezone,
+      meetJoinUrl,
+      variant: "updated",
+    });
+  });
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action: "booking.appointment.reschedule",
+    resourceType: "booking_appointment",
+    resourceId: parsed.data.appointmentId,
+  });
+
+  revalidateBooking(parsed.data.locale);
+  return { message: "rescheduled" };
 }
