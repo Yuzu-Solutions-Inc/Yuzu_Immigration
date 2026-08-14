@@ -26,9 +26,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import type {
-  BookingServiceFormFieldRow,
+  BookingFormFieldRow,
+  BookingFormRow,
   BookingServiceRow,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
@@ -110,27 +119,27 @@ export function ServicesManager({
   locale,
   canManage,
   services,
+  forms,
   automations,
   formFields,
 }: {
   locale: string;
   canManage: boolean;
   services: BookingServiceRow[];
+  forms: BookingFormRow[];
   automations: ServiceEmailAutomationRow[];
-  formFields: BookingServiceFormFieldRow[];
+  formFields: BookingFormFieldRow[];
 }) {
   const t = useTranslations("services");
-  const automationsByService = new Map<string, ServiceEmailAutomationRow[]>();
+  const formById = new Map(forms.map((form) => [form.id, form]));
+  const reminderCountByService = new Map<string, number>();
   for (const automation of automations) {
-    const list = automationsByService.get(automation.service_id) ?? [];
-    list.push(automation);
-    automationsByService.set(automation.service_id, list);
-  }
-  const fieldsByService = new Map<string, BookingServiceFormFieldRow[]>();
-  for (const field of formFields) {
-    const list = fieldsByService.get(field.service_id) ?? [];
-    list.push(field);
-    fieldsByService.set(field.service_id, list);
+    for (const serviceId of automation.service_ids) {
+      reminderCountByService.set(
+        serviceId,
+        (reminderCountByService.get(serviceId) ?? 0) + 1,
+      );
+    }
   }
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<BookingServiceRow | null>(null);
@@ -168,12 +177,28 @@ export function ServicesManager({
           </h1>
           <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
         </div>
-        {canManage ? (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            {t("new")}
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <ServiceBookingFormButton
+            locale={locale}
+            services={services}
+            forms={forms}
+            formFields={formFields}
+            canManage={canManage}
+          />
+          <ServiceEmailAutomationsButton
+            locale={locale}
+            services={services}
+            formFields={formFields}
+            automations={automations}
+            canManage={canManage}
+          />
+          {canManage ? (
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              {t("new")}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {services.length === 0 ? (
@@ -186,85 +211,99 @@ export function ServicesManager({
           ) : null}
         </SurfaceCard>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {services.map((service) => (
-            <SurfaceCard key={service.id} className="space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h2 className="font-heading text-lg font-semibold text-brand">
-                    {service.title}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
+        <SurfaceCard className="overflow-hidden p-0 sm:p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("titleLabel")}</TableHead>
+                <TableHead>{t("duration")}</TableHead>
+                <TableHead>{t("price")}</TableHead>
+                <TableHead>{t("columnForm")}</TableHead>
+                <TableHead>{t("columnReminders")}</TableHead>
+                <TableHead>{t("active")}</TableHead>
+                {canManage ? (
+                  <TableHead className="text-right">{t("actions")}</TableHead>
+                ) : null}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {services.map((service) => (
+                <TableRow key={service.id}>
+                  <TableCell>
+                    <p className="font-medium text-brand">{service.title}</p>
+                    {service.description ? (
+                      <p className="max-w-md truncate text-xs text-muted-foreground">
+                        {service.description}
+                      </p>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>
                     {t("durationMinutes", { minutes: service.duration_minutes })}
-                    {" · "}
+                  </TableCell>
+                  <TableCell>
                     {formatPriceCents(
                       service.price_cents,
                       locale,
                       service.currency,
                     )}
-                  </p>
-                </div>
-                <Badge variant={service.is_active ? "default" : "secondary"}>
-                  {service.is_active ? t("active") : t("inactive")}
-                </Badge>
-              </div>
-              {service.description ? (
-                <p className="text-sm text-muted-foreground">
-                  {service.description}
-                </p>
-              ) : null}
-              {canManage ? (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditing(service)}
-                  >
-                    <Pencil className="size-4" />
-                    {t("edit")}
-                  </Button>
-                  <ServiceBookingFormButton
-                    locale={locale}
-                    serviceId={service.id}
-                    serviceTitle={service.title}
-                    fields={fieldsByService.get(service.id) ?? []}
-                    canManage={canManage}
-                  />
-                  <ServiceEmailAutomationsButton
-                    locale={locale}
-                    serviceId={service.id}
-                    serviceTitle={service.title}
-                    automations={automationsByService.get(service.id) ?? []}
-                    formFields={fieldsByService.get(service.id) ?? []}
-                    canManage={canManage}
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={async () => {
-                      if (!window.confirm(t("deleteConfirm"))) return;
-                      const result = await deleteServiceAction(
-                        service.id,
-                        locale,
-                      );
-                      if (result.error) toast.error(t(`errors.${result.error}`));
-                      else if (result.message === "archived") {
-                        toast.success(t("archived"));
-                      } else {
-                        toast.success(t("deleted"));
-                      }
-                    }}
-                  >
-                    <Trash2 className="size-4" />
-                    {t("delete")}
-                  </Button>
-                </div>
-              ) : null}
-            </SurfaceCard>
-          ))}
-        </div>
+                  </TableCell>
+                  <TableCell>
+                    {service.form_id
+                      ? (formById.get(service.form_id)?.title ?? t("noneAssigned"))
+                      : t("noneAssigned")}
+                  </TableCell>
+                  <TableCell>
+                    {t("remindersCount", {
+                      count: reminderCountByService.get(service.id) ?? 0,
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={service.is_active ? "default" : "secondary"}>
+                      {service.is_active ? t("active") : t("inactive")}
+                    </Badge>
+                  </TableCell>
+                  {canManage ? (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditing(service)}
+                        >
+                          <Pencil className="size-4" />
+                          {t("edit")}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            if (!window.confirm(t("deleteConfirm"))) return;
+                            const result = await deleteServiceAction(
+                              service.id,
+                              locale,
+                            );
+                            if (result.error) {
+                              toast.error(t(`errors.${result.error}`));
+                            } else if (result.message === "archived") {
+                              toast.success(t("archived"));
+                            } else {
+                              toast.success(t("deleted"));
+                            }
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                          {t("delete")}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  ) : null}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </SurfaceCard>
       )}
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

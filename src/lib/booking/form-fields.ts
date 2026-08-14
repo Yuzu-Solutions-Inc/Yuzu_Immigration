@@ -2,7 +2,7 @@ import { AUTOMATION_VARIABLES } from "@/lib/email/automation-template";
 import type { BookingFormFieldType } from "@/db/schema";
 import type { BookingFormFieldRow } from "@/lib/booking/types";
 
-export const BOOKING_FORM_FIELD_TYPES: BookingFormFieldType[] = [
+export const BOOKING_FORM_FIELD_TYPES = [
   "text",
   "textarea",
   "email",
@@ -11,7 +11,7 @@ export const BOOKING_FORM_FIELD_TYPES: BookingFormFieldType[] = [
   "date",
   "select",
   "checkbox",
-];
+] as const satisfies readonly BookingFormFieldType[];
 
 export const MAX_BOOKING_FORM_FIELDS = 20;
 export const FORM_FIELD_KEY_RE = /^[a-z][a-z0-9_]{0,39}$/;

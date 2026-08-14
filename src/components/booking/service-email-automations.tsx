@@ -1,13 +1,14 @@
 "use client";
 
 import { Mail, Pencil, Plus, Trash2 } from "lucide-react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
   createServiceAutomationAction,
   deleteServiceAutomationAction,
+  toggleServiceAutomationAction,
   updateServiceAutomationAction,
   type AutomationActionState,
 } from "@/app/actions/service-automations";
@@ -23,8 +24,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import type {
-  BookingServiceFormFieldRow,
+  BookingFormFieldRow,
+  BookingServiceRow,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
 import {
@@ -71,25 +74,29 @@ function insertToken(
 
 function AutomationForm({
   locale,
-  serviceId,
-  automation,
+  services,
   formFields,
+  automation,
   onCancel,
 }: {
   locale: string;
-  serviceId: string;
+  services: BookingServiceRow[];
+  formFields: BookingFormFieldRow[];
   automation?: ServiceEmailAutomationRow;
-  formFields: BookingServiceFormFieldRow[];
   onCancel: () => void;
 }) {
   const t = useTranslations("services");
   const subjectRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const lastField = useRef<"subject" | "body">("body");
+  const [title, setTitle] = useState(automation?.title ?? "");
   const [subject, setSubject] = useState(
     automation?.subject ?? DEFAULT_SUBJECT,
   );
   const [body, setBody] = useState(automation?.body ?? DEFAULT_BODY);
+  const [serviceIds, setServiceIds] = useState<string[]>(
+    automation?.service_ids ?? [],
+  );
   const [includeCustomer, setIncludeCustomer] = useState(
     automation ? automation.recipients.includes(CUSTOMER_EMAIL_TOKEN) : true,
   );
@@ -125,6 +132,22 @@ function AutomationForm({
     ...extraEmails,
   ];
 
+  const extraVariables = useMemo(() => {
+    const formIds = new Set(
+      services
+        .filter((service) => serviceIds.includes(service.id) && service.form_id)
+        .map((service) => service.form_id as string),
+    );
+    const seen = new Set<string>();
+    const fields: BookingFormFieldRow[] = [];
+    for (const field of formFields) {
+      if (!formIds.has(field.form_id) || seen.has(field.field_key)) continue;
+      seen.add(field.field_key);
+      fields.push(field);
+    }
+    return fields;
+  }, [formFields, serviceIds, services]);
+
   function addExtra() {
     const email = extraDraft.trim().toLowerCase();
     if (!email || extraEmails.includes(email) || recipients.includes(email)) {
@@ -146,11 +169,54 @@ function AutomationForm({
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="locale" value={locale} />
-      <input type="hidden" name="serviceId" value={serviceId} />
       {automation ? (
         <input type="hidden" name="automationId" value={automation.id} />
       ) : null}
       <input type="hidden" name="recipients" value={JSON.stringify(recipients)} />
+      <input type="hidden" name="serviceIds" value={JSON.stringify(serviceIds)} />
+
+      <div className="space-y-2">
+        <Label htmlFor="automation-title">{t("automationTitle")}</Label>
+        <Input
+          id="automation-title"
+          name="title"
+          required
+          maxLength={80}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t("automationServices")}</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {services.map((service) => {
+            const checked = serviceIds.includes(service.id);
+            return (
+              <label
+                key={service.id}
+                className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) => {
+                    if (event.target.checked) {
+                      setServiceIds((prev) => [...prev, service.id]);
+                    } else {
+                      setServiceIds((prev) =>
+                        prev.filter((id) => id !== service.id),
+                      );
+                    }
+                  }}
+                  className="size-4 rounded border-input"
+                />
+                <span className="min-w-0 truncate">{service.title}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="automation-subject">{t("automationSubject")}</Label>
@@ -198,7 +264,7 @@ function AutomationForm({
               {t(`variables.${name}`)}
             </button>
           ))}
-          {formFields.map((field) => (
+          {extraVariables.map((field) => (
             <button
               key={field.id}
               type="button"
@@ -299,7 +365,10 @@ function AutomationForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("automationBack")}
         </Button>
-        <Button type="submit" disabled={pending || recipients.length === 0}>
+        <Button
+          type="submit"
+          disabled={pending || recipients.length === 0 || serviceIds.length === 0}
+        >
           {pending ? t("saving") : automation ? t("save") : t("automationCreate")}
         </Button>
       </DialogFooter>
@@ -309,23 +378,25 @@ function AutomationForm({
 
 export function ServiceEmailAutomationsButton({
   locale,
-  serviceId,
-  serviceTitle,
-  automations,
+  services,
   formFields,
+  automations,
   canManage,
 }: {
   locale: string;
-  serviceId: string;
-  serviceTitle: string;
+  services: BookingServiceRow[];
+  formFields: BookingFormFieldRow[];
   automations: ServiceEmailAutomationRow[];
-  formFields: BookingServiceFormFieldRow[];
   canManage: boolean;
 }) {
   const t = useTranslations("services");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceEmailAutomationRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const serviceTitleById = useMemo(
+    () => new Map(services.map((service) => [service.id, service.title])),
+    [services],
+  );
 
   function closeForm() {
     setCreating(false);
@@ -356,7 +427,7 @@ export function ServiceEmailAutomationsButton({
         }}
       >
         <DialogContent
-          className="max-h-[90vh] overflow-y-auto sm:max-w-lg"
+          className="flex max-h-[90vh] w-full flex-col overflow-hidden sm:max-w-4xl"
           showCloseButton
         >
           <DialogHeader>
@@ -370,95 +441,157 @@ export function ServiceEmailAutomationsButton({
             <DialogDescription>
               {creating || editing
                 ? t("automationFormSubtitle")
-                : t("automationsSubtitle", { service: serviceTitle })}
+                : t("automationsListSubtitle")}
             </DialogDescription>
           </DialogHeader>
 
-          {creating || editing ? (
-            <AutomationForm
-              locale={locale}
-              serviceId={serviceId}
-              automation={editing ?? undefined}
-              formFields={formFields}
-              onCancel={closeForm}
-            />
-          ) : (
-            <div className="space-y-4">
-              {automations.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("automationsEmpty")}
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {automations.map((automation) => (
-                    <li
-                      key={automation.id}
-                      className="rounded-xl border border-border bg-surface p-3"
-                    >
-                      <p className="font-medium text-brand">{automation.subject}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {t("automationSummary", {
-                          days: automation.days_before,
-                          count: automation.recipients.length,
-                        })}
-                        {automation.is_enabled
-                          ? ""
-                          : ` · ${t("automationPaused")}`}
-                      </p>
-                      {canManage ? (
-                        <div className="mt-2 flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditing(automation)}
-                          >
-                            <Pencil className="size-4" />
-                            {t("edit")}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={async () => {
-                              if (!window.confirm(t("automationDeleteConfirm"))) {
-                                return;
-                              }
-                              const result = await deleteServiceAutomationAction(
-                                automation.id,
-                                locale,
-                              );
-                              if (result.error) {
-                                toast.error(t(`errors.${result.error}`));
-                              } else {
-                                toast.success(t("automationDeleted"));
-                              }
-                            }}
-                          >
-                            <Trash2 className="size-4" />
-                            {t("delete")}
-                          </Button>
-                        </div>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {canManage ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => {
-                    setEditing(null);
-                    setCreating(true);
-                  }}
-                >
-                  <Plus className="size-4" />
-                  {t("newAutomation")}
-                </Button>
-              ) : null}
-            </div>
-          )}
+          <div className="min-h-0 overflow-y-auto pr-1">
+            {creating || editing ? (
+              <AutomationForm
+                locale={locale}
+                services={services}
+                formFields={formFields}
+                automation={editing ?? undefined}
+                onCancel={closeForm}
+              />
+            ) : (
+              <div className="space-y-4">
+                {automations.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    {t("automationsEmpty")}
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {automations.map((automation) => {
+                      const names = automation.service_ids
+                        .map((id) => serviceTitleById.get(id))
+                        .filter(Boolean);
+                      return (
+                        <li
+                          key={automation.id}
+                          className="rounded-xl border border-border bg-surface p-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-medium text-brand">
+                                {automation.title}
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {names.length === 0
+                                  ? t("noneAssigned")
+                                  : names.join(", ")}
+                                {" · "}
+                                {t("automationSummary", {
+                                  days: automation.days_before,
+                                  count: automation.recipients.length,
+                                })}
+                              </p>
+                            </div>
+                            {canManage ? (
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={automation.is_enabled}
+                                aria-label={
+                                  automation.is_enabled
+                                    ? t("automationActive")
+                                    : t("automationPaused")
+                                }
+                                className={cn(
+                                  "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                                  automation.is_enabled
+                                    ? "bg-emerald-600"
+                                    : "bg-muted",
+                                )}
+                                onClick={async () => {
+                                  const result =
+                                    await toggleServiceAutomationAction(
+                                      automation.id,
+                                      locale,
+                                      !automation.is_enabled,
+                                    );
+                                  if (result.error) {
+                                    toast.error(t(`errors.${result.error}`));
+                                  }
+                                }}
+                              >
+                                <span
+                                  className={cn(
+                                    "absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform",
+                                    automation.is_enabled
+                                      ? "translate-x-5"
+                                      : "translate-x-0.5",
+                                  )}
+                                />
+                              </button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                {automation.is_enabled
+                                  ? t("automationActive")
+                                  : t("automationPaused")}
+                              </span>
+                            )}
+                          </div>
+                          {canManage ? (
+                            <div className="mt-2 flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditing(automation)}
+                              >
+                                <Pencil className="size-4" />
+                                {t("edit")}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={async () => {
+                                  if (
+                                    !window.confirm(t("automationDeleteConfirm"))
+                                  ) {
+                                    return;
+                                  }
+                                  const result =
+                                    await deleteServiceAutomationAction(
+                                      automation.id,
+                                      locale,
+                                    );
+                                  if (result.error) {
+                                    toast.error(t(`errors.${result.error}`));
+                                  } else {
+                                    toast.success(t("automationDeleted"));
+                                  }
+                                }}
+                              >
+                                <Trash2 className="size-4" />
+                                {t("delete")}
+                              </Button>
+                            </div>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {canManage ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={services.length === 0}
+                    onClick={() => {
+                      setEditing(null);
+                      setCreating(true);
+                    }}
+                  >
+                    <Plus className="size-4" />
+                    {t("newAutomation")}
+                  </Button>
+                ) : null}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
