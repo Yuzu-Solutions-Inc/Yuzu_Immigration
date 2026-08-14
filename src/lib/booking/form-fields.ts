@@ -22,10 +22,16 @@ const RESERVED_FIELD_KEYS = new Set<string>([
   "email",
   "phone",
   "address",
+  "first_name",
+  "last_name",
+  "preferred_language",
   "guest_name",
   "guest_email",
   "guest_phone",
   "guest_address",
+  "guest_first_name",
+  "guest_last_name",
+  "guest_preferred_locale",
 ]);
 
 export function isReservedBookingFieldKey(key: string) {
@@ -147,19 +153,6 @@ export const BOOKING_FORM_PRESETS: BookingFormPreset[] = [
         labelKey: "formFieldUci",
         fieldType: "text",
         required: false,
-      },
-    ],
-  },
-  {
-    id: "preferred_language",
-    labelKey: "formPresetLanguage",
-    fields: [
-      {
-        fieldKey: "preferred_language",
-        labelKey: "formFieldLanguage",
-        fieldType: "select",
-        required: false,
-        optionsKey: "formOptionsLanguage",
       },
     ],
   },

@@ -5,6 +5,8 @@ import { sendResendEmail } from "@/lib/email/resend";
 import {
   automationVariablesFor,
   isAutomationDue,
+  parseAutomationTranslations,
+  pickAutomationCopy,
   renderAutomationHtml,
   renderAutomationPlain,
   resolveRecipientAddresses,
@@ -31,6 +33,7 @@ type AppointmentSendRow = Pick<
   | "meet_join_url"
   | "person_id"
   | "form_answers"
+  | "guest_preferred_locale"
 >;
 
 export async function processDueBookingAutomations(now = new Date()) {
@@ -77,7 +80,7 @@ export async function processDueBookingAutomations(now = new Date()) {
   const { data: appointments, error: appointmentError } = await admin
     .from("booking_appointments")
     .select(
-      "id, organization_id, service_id, host_user_id, starts_at, guest_name, guest_email, status, meet_join_url, person_id, form_answers",
+      "id, organization_id, service_id, host_user_id, starts_at, guest_name, guest_email, status, meet_join_url, person_id, form_answers, guest_preferred_locale",
     )
     .eq("status", "confirmed")
     .gt("starts_at", now.toISOString())
@@ -96,7 +99,7 @@ export async function processDueBookingAutomations(now = new Date()) {
 
   const [orgsRes, settingsRes, servicesRes, profilesRes, sendsRes] =
     await Promise.all([
-      admin.from("organizations").select("id, name").in("id", orgIds),
+      admin.from("organizations").select("id, name, default_locale").in("id", orgIds),
       admin
         .from("booking_settings")
         .select("organization_id, timezone")
@@ -117,6 +120,12 @@ export async function processDueBookingAutomations(now = new Date()) {
 
   const orgName = new Map(
     (orgsRes.data ?? []).map((row) => [row.id as string, row.name as string]),
+  );
+  const orgDefaultLocale = new Map(
+    (orgsRes.data ?? []).map((row) => [
+      row.id as string,
+      (row.default_locale as string | null) || "en",
+    ]),
   );
   const timezoneByOrg = new Map(
     (settingsRes.data ?? []).map((row) => [
@@ -175,23 +184,14 @@ export async function processDueBookingAutomations(now = new Date()) {
     const dek = await dekFor(appointment.organization_id);
     const guest = decryptBookingGuestRow(appointment, dek);
     const host = profileById.get(appointment.host_user_id);
-    const vars = automationVariablesFor({
-      locale: "en",
-      timeZone,
-      customerName: guest.guest_name,
-      customerEmail: guest.guest_email,
-      serviceName: service.title,
-      consultantName: host?.name ?? appointment.host_user_id,
-      consultantEmail: host?.email ?? "",
-      organizationName:
-        orgName.get(appointment.organization_id) ?? "MyConsultant",
-      startsAt,
-      durationMinutes: service.duration_minutes,
-      meetJoinUrl: appointment.meet_join_url,
-      extra: extraAutomationVariables(
-        decryptBookingFormAnswers(appointment.form_answers, dek),
-      ),
-    });
+    const formAnswers = decryptBookingFormAnswers(appointment.form_answers, dek);
+    const answers = extraAutomationVariables(formAnswers);
+    const preferredLocale =
+      appointment.guest_preferred_locale ||
+      formAnswers?.preferred_language ||
+      null;
+    const defaultLocale =
+      orgDefaultLocale.get(appointment.organization_id) ?? "en";
 
     for (const automation of matching) {
       processed += 1;
@@ -208,6 +208,30 @@ export async function processDueBookingAutomations(now = new Date()) {
       const sendKey = `${automation.id}:${appointment.id}:${appointment.starts_at}`;
       if (sentKeys.has(sendKey)) continue;
 
+      const { copy, locale: emailLocale } = pickAutomationCopy({
+        translations: parseAutomationTranslations(automation.translations),
+        fallback: {
+          subject: automation.subject,
+          body: automation.body,
+        },
+        preferredLocale,
+        orgDefaultLocale: defaultLocale,
+      });
+      const vars = automationVariablesFor({
+        locale: emailLocale,
+        timeZone,
+        customerName: guest.guest_name,
+        customerEmail: guest.guest_email,
+        serviceName: service.title,
+        consultantName: host?.name ?? appointment.host_user_id,
+        consultantEmail: host?.email ?? "",
+        organizationName:
+          orgName.get(appointment.organization_id) ?? "MyConsultant",
+        startsAt,
+        durationMinutes: service.duration_minutes,
+        meetJoinUrl: appointment.meet_join_url,
+        extra: answers,
+      });
       const addresses = resolveRecipientAddresses(
         automation.recipients ?? [],
         vars,
@@ -230,13 +254,13 @@ export async function processDueBookingAutomations(now = new Date()) {
       }
       sentKeys.add(sendKey);
 
-      const subject = renderAutomationPlain(automation.subject, vars);
-      const text = renderAutomationPlain(automation.body, vars);
+      const subject = renderAutomationPlain(copy.subject, vars);
+      const text = renderAutomationPlain(copy.body, vars);
       const html = `<!doctype html>
-<html>
+<html lang="${emailLocale}">
   <body style="margin:0;padding:24px;background:#F9FAFB;color:#111827;font-family:Inter,Helvetica,Arial,sans-serif;">
     <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 24px;font-size:15px;line-height:1.5;">
-      ${renderAutomationHtml(automation.body, vars)}
+      ${renderAutomationHtml(copy.body, vars)}
     </div>
   </body>
 </html>`;
@@ -250,7 +274,7 @@ export async function processDueBookingAutomations(now = new Date()) {
           text,
           organizationName:
             orgName.get(appointment.organization_id) ?? "MyConsultant",
-          locale: "en",
+          locale: emailLocale,
           includeDoNotReply: automation.include_do_not_reply !== false,
         });
         if (!result.sent) allSent = false;

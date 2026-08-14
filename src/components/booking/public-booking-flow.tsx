@@ -17,12 +17,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@/i18n/navigation";
 import { formatPriceCents, generateServiceSlots } from "@/lib/booking/slots";
-import { formFieldInputName } from "@/lib/booking/form-fields";
+import { formFieldInputName, isReservedBookingFieldKey } from "@/lib/booking/form-fields";
 import type {
   BookingServiceFormFieldRow,
   BookingServiceRow,
   PublicHostCalendar,
 } from "@/lib/booking/types";
+import {
+  APP_LOCALES,
+  LOCALE_LABELS,
+} from "@/lib/i18n/locales";
 import {
   formatDateTimeInZone,
   formatTimeInZone,
@@ -73,7 +77,9 @@ export function PublicBookingFlow({
     sendPublicBookingManageLinksAction,
     initialLinksState,
   );
-  const [guestName, setGuestName] = useState("");
+  const [guestFirstName, setGuestFirstName] = useState("");
+  const [guestLastName, setGuestLastName] = useState("");
+  const [guestPreferredLocale, setGuestPreferredLocale] = useState(locale);
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
@@ -111,7 +117,8 @@ export function PublicBookingFlow({
   const serviceFields = payload.formFields.filter(
     (field) =>
       Boolean(selectedService?.form_id) &&
-      field.form_id === selectedService?.form_id,
+      field.form_id === selectedService?.form_id &&
+      !isReservedBookingFieldKey(field.field_key),
   );
   const warningEmail = state.guestEmail ?? guestEmail;
   const showExistingNotice =
@@ -416,16 +423,46 @@ export function PublicBookingFlow({
             guestEmail.trim().toLowerCase() === warningEmail.trim().toLowerCase() ? (
               <input type="hidden" name="confirmAnother" value="on" />
             ) : null}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="guestFirstName">{t("firstName")}</Label>
+                <Input
+                  id="guestFirstName"
+                  name="guestFirstName"
+                  required
+                  autoComplete="given-name"
+                  value={guestFirstName}
+                  onChange={(event) => setGuestFirstName(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="guestLastName">{t("lastName")}</Label>
+                <Input
+                  id="guestLastName"
+                  name="guestLastName"
+                  required
+                  autoComplete="family-name"
+                  value={guestLastName}
+                  onChange={(event) => setGuestLastName(event.target.value)}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="guestName">{t("name")}</Label>
-              <Input
-                id="guestName"
-                name="guestName"
+              <Label htmlFor="guestPreferredLocale">{t("preferredLanguage")}</Label>
+              <select
+                id="guestPreferredLocale"
+                name="guestPreferredLocale"
                 required
-                autoComplete="name"
-                value={guestName}
-                onChange={(event) => setGuestName(event.target.value)}
-              />
+                value={guestPreferredLocale}
+                onChange={(event) => setGuestPreferredLocale(event.target.value)}
+                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
+              >
+                {APP_LOCALES.map((code) => (
+                  <option key={code} value={code}>
+                    {LOCALE_LABELS[code]}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">

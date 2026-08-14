@@ -24,6 +24,7 @@ export default async function ServicesPage({
   return (
     <ServicesManager
       locale={locale}
+      orgDefaultLocale={membership?.organization.defaultLocale ?? "en"}
       canManage={canCreateRecords(membership?.role)}
       services={services}
       forms={forms}

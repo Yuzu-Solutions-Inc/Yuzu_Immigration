@@ -5,7 +5,13 @@ import { z } from "zod";
 
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
-import { parseAutomationRecipients } from "@/lib/email/automation-template";
+import type { AutomationTranslations } from "@/lib/booking/types";
+import {
+  hasAutomationCopy,
+  parseAutomationRecipients,
+  parseAutomationTranslations,
+} from "@/lib/email/automation-template";
+import { APP_LOCALES, toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,8 +25,7 @@ const localeSchema = z.enum(["en", "fr", "es"]);
 const fieldsSchema = z.object({
   locale: localeSchema,
   title: z.string().trim().min(1).max(80),
-  subject: z.string().trim().min(1).max(200),
-  body: z.string().trim().min(1).max(8000),
+  translations: z.string(),
   daysBefore: z.coerce.number().int().min(0).max(90),
   recipients: z.string(),
   serviceIds: z.array(z.string().uuid()).min(1).max(50),
@@ -51,8 +56,7 @@ function parseForm(formData: FormData) {
   return {
     locale: formData.get("locale") || "en",
     title: String(formData.get("title") || ""),
-    subject: String(formData.get("subject") || ""),
-    body: String(formData.get("body") || ""),
+    translations: String(formData.get("translations") || "{}"),
     daysBefore: formData.get("daysBefore"),
     recipients: String(formData.get("recipients") || "[]"),
     serviceIds: parseServiceIds(String(formData.get("serviceIds") || "[]")),
@@ -67,6 +71,60 @@ function parseRecipientsJson(raw: string) {
   } catch {
     return null;
   }
+}
+
+function resolveTranslations(
+  raw: string,
+  orgDefault: AppLocale,
+):
+  | { ok: true; translations: AutomationTranslations; subject: string; body: string }
+  | { ok: false; error: "invalid" | "incomplete_translation" | "missing_default_locale" } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: "invalid" };
+  }
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    for (const locale of APP_LOCALES) {
+      const entry = (parsed as Record<string, unknown>)[locale];
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+      const subject =
+        typeof (entry as { subject?: unknown }).subject === "string"
+          ? (entry as { subject: string }).subject.trim()
+          : "";
+      const body =
+        typeof (entry as { body?: unknown }).body === "string"
+          ? (entry as { body: string }).body.trim()
+          : "";
+      if ((subject && !body) || (body && !subject)) {
+        return { ok: false, error: "incomplete_translation" };
+      }
+    }
+  }
+  const translations = parseAutomationTranslations(parsed);
+  const fallback = translations[orgDefault];
+  if (!hasAutomationCopy(fallback) || !fallback) {
+    return { ok: false, error: "missing_default_locale" };
+  }
+  return {
+    ok: true,
+    translations,
+    subject: fallback.subject,
+    body: fallback.body,
+  };
+}
+
+async function loadOrgDefaultLocale(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+) {
+  const { data } = await supabase
+    .from("organizations")
+    .select("default_locale")
+    .eq("id", orgId)
+    .maybeSingle();
+  return toAppLocale(data?.default_locale);
 }
 
 async function replaceAutomationServices(input: {
@@ -122,14 +180,18 @@ export async function createServiceAutomationAction(
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
   const supabase = await createClient();
+  const orgDefault = await loadOrgDefaultLocale(supabase, orgId);
+  const copy = resolveTranslations(parsed.data.translations, orgDefault);
+  if (!copy.ok) return { error: copy.error };
 
   const { data, error } = await supabase
     .from("booking_service_email_automations")
     .insert({
       organization_id: orgId,
       title: parsed.data.title,
-      subject: parsed.data.subject,
-      body: parsed.data.body,
+      subject: copy.subject,
+      body: copy.body,
+      translations: copy.translations,
       days_before: parsed.data.daysBefore,
       recipients,
       is_enabled: parsed.data.isEnabled === "on",
@@ -182,13 +244,17 @@ export async function updateServiceAutomationAction(
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
   const supabase = await createClient();
+  const orgDefault = await loadOrgDefaultLocale(supabase, orgId);
+  const copy = resolveTranslations(parsed.data.translations, orgDefault);
+  if (!copy.ok) return { error: copy.error };
 
   const { error } = await supabase
     .from("booking_service_email_automations")
     .update({
       title: parsed.data.title,
-      subject: parsed.data.subject,
-      body: parsed.data.body,
+      subject: copy.subject,
+      body: copy.body,
+      translations: copy.translations,
       days_before: parsed.data.daysBefore,
       recipients,
       is_enabled: parsed.data.isEnabled === "on",

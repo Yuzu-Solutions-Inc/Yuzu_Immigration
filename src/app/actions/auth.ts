@@ -5,7 +5,9 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppBaseUrl } from "@/lib/app-url";
+import { getPrimaryMembership } from "@/lib/auth/session";
 import { safeInternalPath } from "@/lib/auth/next-path";
+import { replacePathLocale } from "@/lib/i18n/locales";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -18,6 +20,15 @@ export type AuthActionState = {
   error?: string;
   success?: string;
 };
+
+async function destForSignedInUser(fallbackPath: string) {
+  const membership = await getPrimaryMembership();
+  if (!membership) return fallbackPath;
+  return replacePathLocale(
+    fallbackPath,
+    membership.organization.defaultLocale,
+  );
+}
 
 export async function signInWithPassword(
   _prev: AuthActionState,
@@ -47,7 +58,7 @@ export async function signInWithPassword(
     formData.get("next"),
     `/${parsed.data.locale}/home`,
   );
-  redirect(next);
+  redirect(await destForSignedInUser(next));
 }
 
 export async function signUpWithPassword(
@@ -79,7 +90,6 @@ export async function signUpWithPassword(
       emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
       data: {
         full_name: parsed.data.fullName,
-        preferred_locale: parsed.data.locale,
       },
     },
   });
@@ -90,7 +100,7 @@ export async function signUpWithPassword(
 
   // If email confirmation is disabled, session exists immediately.
   if (data.session) {
-    redirect(next);
+    redirect(await destForSignedInUser(next));
   }
 
   return { success: "check_email" };

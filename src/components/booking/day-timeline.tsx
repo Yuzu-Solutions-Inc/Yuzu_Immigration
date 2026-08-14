@@ -1,12 +1,22 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useLayoutEffect, useRef, useState, useTransition } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { blockRangeAction, unblockTimeAction } from "@/app/actions/booking";
-import { formatHmLabel, snapMinutes } from "@/lib/booking/availability";
+import {
+  formatHmLabel,
+  mergeMinuteRanges,
+  snapMinutes,
+  type MinuteRange,
+} from "@/lib/booking/availability";
 import type {
   BookingAppointmentRow,
   BookingBlockedTimeRow,
@@ -16,12 +26,13 @@ import { clipToDayMinutes, zonedDateIso, zonedParts } from "@/lib/booking/timezo
 import { cn } from "@/lib/utils";
 
 const HOURS = 24;
-const HOUR_PX = 48;
-const GRID_HEIGHT = HOURS * HOUR_PX;
+const DEFAULT_HOUR_PX = 56;
+const MIN_HOUR_PX = 36;
 const SNAP = 30;
 const DAY_MINUTES = HOURS * 60;
-const FOCUS_START_HOUR = 6;
-const FOCUS_HOURS = 12;
+/** Visible window: 09:00–17:00 (8 hours). Full day remains scrollable. */
+const FOCUS_START_HOUR = 9;
+const FOCUS_HOURS = 8;
 
 type Draft = {
   anchor: number;
@@ -42,10 +53,14 @@ function draftRange(draft: Draft) {
   return { start, end };
 }
 
-function styleForRange(start: number, end: number) {
+function styleForRange(
+  start: number,
+  end: number,
+  gridHeight: number,
+) {
   return {
-    top: (start / DAY_MINUTES) * GRID_HEIGHT,
-    height: Math.max(18, ((end - start) / DAY_MINUTES) * GRID_HEIGHT),
+    top: (start / DAY_MINUTES) * gridHeight,
+    height: Math.max(18, ((end - start) / DAY_MINUTES) * gridHeight),
   };
 }
 
@@ -57,8 +72,10 @@ export function DayTimeline({
   appointments,
   blocked,
   googleBusy,
+  openRanges,
   selectedAppointmentId,
   onSelectAppointment,
+  className,
 }: {
   locale: string;
   canManage: boolean;
@@ -67,21 +84,47 @@ export function DayTimeline({
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
   googleBusy: BookingGoogleBusyRow[];
+  openRanges: MinuteRange[];
   selectedAppointmentId: string | null;
   onSelectAppointment: (id: string | null) => void;
+  className?: string;
 }) {
   const t = useTranslations("calendar");
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [hourPx, setHourPx] = useState(DEFAULT_HOUR_PX);
   const draftRef = useRef<Draft | null>(null);
   const columnRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
+  const gridHeight = HOURS * hourPx;
+  const mergedOpen = mergeMinuteRanges(openRanges);
+
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTop = FOCUS_START_HOUR * HOUR_PX;
-  }, [dateIso]);
+
+    const syncHourPx = () => {
+      const available = el.clientHeight;
+      if (available <= 0) return;
+      const next = Math.max(
+        MIN_HOUR_PX,
+        Math.round(available / FOCUS_HOURS),
+      );
+      setHourPx((prev) => (prev === next ? prev : next));
+    };
+
+    syncHourPx();
+    const observer = new ResizeObserver(syncHourPx);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = FOCUS_START_HOUR * hourPx;
+  }, [dateIso, hourPx]);
 
   function setLiveDraft(next: Draft | null) {
     draftRef.current = next;
@@ -143,13 +186,19 @@ export function DayTimeline({
   const live = draft ? draftRange(draft) : null;
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">{t("timelineHint")}</p>
+    <div className={cn("flex min-h-0 flex-1 flex-col gap-2", className)}>
+      <p className="shrink-0 text-xs text-muted-foreground">{t("timelineHint")}</p>
       {canManage ? (
-        <p className="text-xs text-muted-foreground">{t("timelineDragHelp")}</p>
+        <p className="shrink-0 text-xs text-muted-foreground">
+          {t("timelineDragHelp")}
+        </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+      <div className="flex shrink-0 flex-wrap gap-3 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="size-2.5 rounded-sm bg-emerald-200 ring-1 ring-emerald-400/60" />
+          {t("legendOpen")}
+        </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2.5 rounded-sm bg-action" />
           {t("legendBookings")}
@@ -166,8 +215,7 @@ export function DayTimeline({
 
       <div
         ref={scrollRef}
-        className="overflow-y-auto rounded-xl border border-border bg-surface select-none"
-        style={{ maxHeight: FOCUS_HOURS * HOUR_PX }}
+        className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-surface select-none"
       >
         <div
           className="grid"
@@ -178,18 +226,18 @@ export function DayTimeline({
               <div
                 key={hour}
                 className="absolute right-1 text-[10px] tabular-nums text-muted-foreground"
-                style={{ top: hour * HOUR_PX + 2 }}
+                style={{ top: hour * hourPx + 2 }}
               >
                 {formatHmLabel(hour * 60)}
               </div>
             ))}
             <div
               className="absolute right-1 text-[10px] tabular-nums text-muted-foreground"
-              style={{ top: GRID_HEIGHT - 10 }}
+              style={{ top: gridHeight - 10 }}
             >
               24:00
             </div>
-            <div style={{ height: GRID_HEIGHT }} />
+            <div style={{ height: gridHeight }} />
           </div>
 
           <div
@@ -198,7 +246,7 @@ export function DayTimeline({
               "relative bg-canvas/40",
               canManage && "cursor-crosshair touch-none",
             )}
-            style={{ height: GRID_HEIGHT }}
+            style={{ height: gridHeight }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -208,10 +256,19 @@ export function DayTimeline({
               <div
                 key={hour}
                 className="pointer-events-none absolute inset-x-0 border-t border-border/70"
-                style={{ top: hour * HOUR_PX, height: HOUR_PX }}
+                style={{ top: hour * hourPx, height: hourPx }}
               >
                 <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-border/50" />
               </div>
+            ))}
+
+            {mergedOpen.map((range) => (
+              <div
+                key={`open-${range.start}-${range.end}`}
+                className="pointer-events-none absolute inset-x-0 z-0 bg-emerald-100/70"
+                style={styleForRange(range.start, range.end, gridHeight)}
+                aria-hidden
+              />
             ))}
 
             {googleBusy.map((row) => {
@@ -227,7 +284,7 @@ export function DayTimeline({
                   key={row.id}
                   data-slot-item
                   className="absolute inset-x-1 z-[1] overflow-hidden rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-left text-[11px] leading-tight text-slate-700"
-                  style={styleForRange(range.start, range.end)}
+                  style={styleForRange(range.start, range.end, gridHeight)}
                   title={row.summary ?? t("googleEventUntitled")}
                 >
                   <p className="truncate font-medium">
@@ -257,7 +314,7 @@ export function DayTimeline({
                   aria-label={t("clickToRemoveBlock")}
                   title={canManage ? t("clickToRemoveBlock") : undefined}
                   className="group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-left text-[11px] leading-tight text-amber-950 hover:bg-amber-200 disabled:hover:bg-amber-100"
-                  style={styleForRange(range.start, range.end)}
+                  style={styleForRange(range.start, range.end, gridHeight)}
                   onClick={() => {
                     if (!canManage) return;
                     startTransition(async () => {
@@ -304,9 +361,11 @@ export function DayTimeline({
                   data-slot-item
                   className={cn(
                     "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight text-white shadow-sm",
-                    selected ? "bg-[#4f46e5] ring-2 ring-action ring-offset-1" : "bg-action hover:bg-[#4f46e5]",
+                    selected
+                      ? "bg-[#4f46e5] ring-2 ring-action ring-offset-1"
+                      : "bg-action hover:bg-[#4f46e5]",
                   )}
-                  style={styleForRange(range.start, range.end)}
+                  style={styleForRange(range.start, range.end, gridHeight)}
                   onClick={() =>
                     onSelectAppointment(selected ? null : row.id)
                   }
@@ -322,7 +381,7 @@ export function DayTimeline({
             {live ? (
               <div
                 className="pointer-events-none absolute inset-x-1 z-[4] rounded-md border-2 border-dashed border-amber-500 bg-amber-400/25 px-1.5 py-0.5 text-[11px] font-medium text-amber-950"
-                style={styleForRange(live.start, live.end)}
+                style={styleForRange(live.start, live.end, gridHeight)}
               >
                 {formatHmLabel(live.start)}–{formatHmLabel(live.end)}
               </div>
@@ -331,7 +390,7 @@ export function DayTimeline({
             {nowMinutes != null ? (
               <div
                 className="pointer-events-none absolute inset-x-0 z-[5] flex items-center"
-                style={{ top: (nowMinutes / DAY_MINUTES) * GRID_HEIGHT }}
+                style={{ top: (nowMinutes / DAY_MINUTES) * gridHeight }}
               >
                 <span className="sr-only">{t("timelineNow")}</span>
                 <span className="size-2 -ml-1 rounded-full bg-destructive" />

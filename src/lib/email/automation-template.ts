@@ -5,7 +5,8 @@ import {
   formatTimeInZone,
   zonedDateIso,
 } from "@/lib/booking/timezone";
-import { toAppLocale } from "@/lib/i18n/locales";
+import { APP_LOCALES, isAppLocale, toAppLocale, type AppLocale } from "@/lib/i18n/locales";
+import type { AutomationLocaleCopy, AutomationTranslations } from "@/lib/booking/types";
 
 export const AUTOMATION_VARIABLES = [
   "customer_name",
@@ -121,6 +122,63 @@ export function parseAutomationRecipients(raw: unknown): string[] | null {
     if (!unique.includes(item)) unique.push(item);
   }
   return unique.length > 0 ? unique : null;
+}
+
+export function hasAutomationCopy(copy?: AutomationLocaleCopy | null) {
+  return Boolean(copy?.subject?.trim() && copy?.body?.trim());
+}
+
+export function parseAutomationTranslations(
+  raw: unknown,
+): AutomationTranslations {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const translations: AutomationTranslations = {};
+  for (const locale of APP_LOCALES) {
+    const entry = (raw as Record<string, unknown>)[locale];
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const subject =
+      typeof (entry as { subject?: unknown }).subject === "string"
+        ? (entry as { subject: string }).subject.trim()
+        : "";
+    const body =
+      typeof (entry as { body?: unknown }).body === "string"
+        ? (entry as { body: string }).body.trim()
+        : "";
+    if (!subject || !body) continue;
+    if (subject.length > 200 || body.length > 8000) continue;
+    translations[locale] = { subject, body };
+  }
+  return translations;
+}
+
+export function pickAutomationCopy(input: {
+  translations: AutomationTranslations | null | undefined;
+  fallback: AutomationLocaleCopy;
+  preferredLocale?: string | null;
+  orgDefaultLocale?: string | null;
+}): { copy: AutomationLocaleCopy; locale: AppLocale } {
+  const translations = input.translations ?? {};
+  const orgDefault = toAppLocale(input.orgDefaultLocale);
+  const preferred =
+    input.preferredLocale && isAppLocale(input.preferredLocale)
+      ? input.preferredLocale
+      : null;
+
+  if (preferred && hasAutomationCopy(translations[preferred])) {
+    return { copy: translations[preferred]!, locale: preferred };
+  }
+  if (hasAutomationCopy(translations[orgDefault])) {
+    return { copy: translations[orgDefault]!, locale: orgDefault };
+  }
+  if (hasAutomationCopy(input.fallback)) {
+    return { copy: input.fallback, locale: orgDefault };
+  }
+  for (const locale of APP_LOCALES) {
+    if (hasAutomationCopy(translations[locale])) {
+      return { copy: translations[locale]!, locale };
+    }
+  }
+  return { copy: input.fallback, locale: orgDefault };
 }
 
 export function resolveRecipientAddresses(

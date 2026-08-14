@@ -81,6 +81,10 @@ export async function createOrganizationAction(
   const org = data as { id?: string };
   if (org.id) {
     await setActiveOrganizationId(org.id);
+    await admin
+      .from("organizations")
+      .update({ default_locale: parsed.data.locale })
+      .eq("id", org.id);
     const { loadOrCreateOrgDataKey } = await import(
       "@/lib/security/org-data-key"
     );
@@ -124,5 +128,5 @@ export async function switchOrganizationAction(formData: FormData) {
 
   await setActiveOrganizationId(next.organization.id);
   revalidatePath("/", "layout");
-  redirect(`/${parsed.data.locale}/home`);
+  redirect(`/${next.organization.defaultLocale}/home`);
 }

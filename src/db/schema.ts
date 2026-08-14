@@ -80,6 +80,8 @@ export const organizations = pgTable("organizations", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  /** Firm default language for client-facing copy such as booking reminders. */
+  defaultLocale: text("default_locale").notNull().default("en"),
   /** Org AES key wrapped with DOCUMENT_ENCRYPTION_KEY. Never store plaintext. */
   wrappedDek: text("wrapped_dek"),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -677,6 +679,7 @@ export const bookingServiceEmailAutomations = pgTable(
     recipients: text("recipients").array().notNull(),
     isEnabled: boolean("is_enabled").notNull().default(true),
     includeDoNotReply: boolean("include_do_not_reply").notNull().default(true),
+    translations: jsonb("translations").notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -740,6 +743,7 @@ export const bookingAppointments = pgTable("booking_appointments", {
   guestEmail: text("guest_email").notNull(),
   guestPhone: text("guest_phone").notNull(),
   guestAddress: text("guest_address").notNull(),
+  guestPreferredLocale: text("guest_preferred_locale"),
   privacyAcceptedAt: timestamp("privacy_accepted_at", { withTimezone: true }).notNull(),
   status: bookingAppointmentStatusEnum("status").notNull().default("confirmed"),
   cancelledAt: timestamp("cancelled_at", { withTimezone: true }),

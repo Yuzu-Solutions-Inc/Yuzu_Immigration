@@ -27,7 +27,6 @@ const optionalText = (max: number) =>
 const accountSchema = z.object({
   locale: localeEnum,
   fullName: z.string().trim().min(1).max(120),
-  preferredLocale: localeEnum,
   repFamilyName: optionalText(80),
   repGivenName: optionalText(80),
   repOrganization: optionalText(120),
@@ -53,6 +52,7 @@ const orgSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
     .min(2)
     .max(48),
+  defaultLocale: localeEnum,
 });
 
 export async function updateAccountSettingsAction(
@@ -63,7 +63,6 @@ export async function updateAccountSettingsAction(
   const parsed = accountSchema.safeParse({
     locale: formData.get("locale") || "en",
     fullName: formData.get("fullName"),
-    preferredLocale: formData.get("preferredLocale") || "en",
     repFamilyName: empty("repFamilyName"),
     repGivenName: empty("repGivenName"),
     repOrganization: empty("repOrganization"),
@@ -93,7 +92,6 @@ export async function updateAccountSettingsAction(
     .from("profiles")
     .update({
       full_name: parsed.data.fullName,
-      preferred_locale: parsed.data.preferredLocale,
       rep_family_name: parsed.data.repFamilyName || null,
       rep_given_name: parsed.data.repGivenName || null,
       rep_organization: parsed.data.repOrganization || null,
@@ -117,11 +115,6 @@ export async function updateAccountSettingsAction(
   }
 
   revalidatePath(`/${parsed.data.locale}/settings/account`);
-  revalidatePath(`/${parsed.data.preferredLocale}/settings/account`);
-
-  if (parsed.data.preferredLocale !== parsed.data.locale) {
-    redirect(`/${parsed.data.preferredLocale}/settings/account`);
-  }
 
   return { success: true };
 }
@@ -135,6 +128,7 @@ export async function updateOrganizationSettingsAction(
     locale: formData.get("locale") || "en",
     name: formData.get("name"),
     slug: formData.get("slug") || slugifyOrganizationName(empty("name")),
+    defaultLocale: formData.get("defaultLocale") || "en",
   });
 
   if (!parsed.success) {
@@ -157,6 +151,7 @@ export async function updateOrganizationSettingsAction(
     .update({
       name: parsed.data.name,
       slug: parsed.data.slug,
+      default_locale: parsed.data.defaultLocale,
       updated_at: new Date().toISOString(),
     })
     .eq("id", orgId);
@@ -184,6 +179,10 @@ export async function updateOrganizationSettingsAction(
   });
 
   revalidatePath(`/${parsed.data.locale}/settings/organization`);
+  revalidatePath(`/${parsed.data.defaultLocale}/settings/organization`);
   revalidatePath(`/${parsed.data.locale}/home`);
+  if (parsed.data.defaultLocale !== parsed.data.locale) {
+    redirect(`/${parsed.data.defaultLocale}/settings/organization`);
+  }
   return { success: true };
 }

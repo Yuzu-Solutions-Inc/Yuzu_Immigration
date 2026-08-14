@@ -56,6 +56,15 @@ export type BookingFormFieldRow = {
 /** @deprecated use BookingFormFieldRow */
 export type BookingServiceFormFieldRow = BookingFormFieldRow;
 
+export type AutomationLocaleCopy = {
+  subject: string;
+  body: string;
+};
+
+export type AutomationTranslations = Partial<
+  Record<"en" | "fr" | "es", AutomationLocaleCopy>
+>;
+
 export type ServiceEmailAutomationRow = {
   id: string;
   organization_id: string;
@@ -66,6 +75,7 @@ export type ServiceEmailAutomationRow = {
   recipients: string[];
   is_enabled: boolean;
   include_do_not_reply: boolean;
+  translations: AutomationTranslations;
   service_ids: string[];
   created_at: string;
   updated_at: string;
@@ -111,6 +121,7 @@ export type BookingAppointmentRow = {
   guest_email: string;
   guest_phone: string;
   guest_address: string;
+  guest_preferred_locale: string | null;
   privacy_accepted_at: string;
   status: BookingAppointmentStatus;
   cancelled_at: string | null;

@@ -23,7 +23,7 @@ export default async function AccountSettingsPage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, email, preferred_locale, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
+      "full_name, email, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -42,7 +42,6 @@ export default async function AccountSettingsPage({
         locale={locale}
         email={profile?.email || user.email || ""}
         fullName={profile?.full_name || ""}
-        preferredLocale={toAppLocale(profile?.preferred_locale)}
         representative={{
           repFamilyName: profile?.rep_family_name ?? "",
           repGivenName: profile?.rep_given_name ?? "",

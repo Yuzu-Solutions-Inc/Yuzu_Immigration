@@ -28,6 +28,7 @@ import type {
   PublicHostCalendar,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
+import { parseAutomationTranslations } from "@/lib/email/automation-template";
 import {
   queryGoogleFreeBusy,
 } from "@/lib/google/calendar";
@@ -337,6 +338,7 @@ export async function listServiceEmailAutomations(): Promise<
   return ((data ?? []) as Omit<ServiceEmailAutomationRow, "service_ids">[]).map(
     (row) => ({
       ...row,
+      translations: parseAutomationTranslations(row.translations),
       service_ids: serviceIdsByAutomation.get(row.id) ?? [],
     }),
   );

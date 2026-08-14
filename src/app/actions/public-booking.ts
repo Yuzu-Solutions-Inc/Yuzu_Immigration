@@ -14,7 +14,7 @@ import {
   recordBookingAbuseEvent,
 } from "@/lib/booking/abuse";
 import { bookingManageUrls } from "@/lib/booking/manage-url";
-import { parseBookingFormAnswers } from "@/lib/booking/form-fields";
+import { parseBookingFormAnswers, isReservedBookingFieldKey } from "@/lib/booking/form-fields";
 import {
   findPersonByEmail,
   listFutureGuestAppointmentsByEmail,
@@ -58,7 +58,9 @@ const bookSchema = z.object({
   serviceId: z.string().uuid(),
   startsAt: z.string().refine((value) => Number.isFinite(Date.parse(value))),
   endsAt: z.string().refine((value) => Number.isFinite(Date.parse(value))),
-  guestName: z.string().trim().min(1).max(120),
+  guestFirstName: z.string().trim().min(1).max(80),
+  guestLastName: z.string().trim().min(1).max(80),
+  guestPreferredLocale: z.enum(["en", "fr", "es"]),
   guestEmail: z.string().trim().email().max(160),
   guestPhone: z.string().trim().min(6).max(40),
   guestAddress: z.string().trim().min(3).max(300),
@@ -72,12 +74,8 @@ const manageLinksSchema = z.object({
   guestEmail: z.string().trim().email().max(160),
 });
 
-function splitName(name: string) {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return { firstName: parts[0], lastName: parts[0] };
-  }
-  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+function joinGuestName(firstName: string, lastName: string) {
+  return `${firstName} ${lastName}`.trim();
 }
 
 async function bookingSubjectHashes(
@@ -107,7 +105,11 @@ export async function submitPublicBookingAction(
     serviceId: String(formData.get("serviceId") || ""),
     startsAt: String(formData.get("startsAt") || ""),
     endsAt: String(formData.get("endsAt") || ""),
-    guestName: String(formData.get("guestName") || ""),
+    guestFirstName: String(formData.get("guestFirstName") || ""),
+    guestLastName: String(formData.get("guestLastName") || ""),
+    guestPreferredLocale: toAppLocale(
+      String(formData.get("guestPreferredLocale") || formData.get("locale") || "en"),
+    ),
     guestEmail: String(formData.get("guestEmail") || ""),
     guestPhone: String(formData.get("guestPhone") || ""),
     guestAddress: String(formData.get("guestAddress") || ""),
@@ -168,10 +170,19 @@ export async function submitPublicBookingAction(
   if (expectedEnd !== parsed.data.endsAt) return { error: "slot_taken" };
 
   const serviceFields = (ctx.formFields ?? []).filter(
-    (field) => service.form_id && field.form_id === service.form_id,
+    (field) =>
+      Boolean(service.form_id) &&
+      field.form_id === service.form_id &&
+      !isReservedBookingFieldKey(field.field_key),
   );
   const parsedAnswers = parseBookingFormAnswers(formData, serviceFields);
   if (!parsedAnswers.ok) return { error: "invalid_form", guestEmail };
+
+  const guestName = joinGuestName(
+    parsed.data.guestFirstName,
+    parsed.data.guestLastName,
+  );
+  const preferredLocale = parsed.data.guestPreferredLocale;
 
   const existing = await listFutureGuestAppointmentsByEmail({
     organizationId: ctx.organizationId,
@@ -202,21 +213,20 @@ export async function submitPublicBookingAction(
   let personId = existingPerson?.id ?? null;
 
   if (!personId) {
-    const names = splitName(parsed.data.guestName);
     const { data: created, error: personError } = await admin
       .from("people")
       .insert({
         organization_id: ctx.organizationId,
         ...encryptPersonWrite(
           {
-            first_name: names.firstName,
-            last_name: names.lastName,
+            first_name: parsed.data.guestFirstName,
+            last_name: parsed.data.guestLastName,
             email: guestEmail,
             phone: parsed.data.guestPhone,
           },
           dek,
         ),
-        preferred_locale: parsed.data.locale,
+        preferred_locale: preferredLocale,
         immigration_status: "none",
       })
       .select("id")
@@ -226,6 +236,15 @@ export async function submitPublicBookingAction(
       return { error: "book_failed" };
     }
     personId = created.id as string;
+  } else if (existingPerson?.preferred_locale !== preferredLocale) {
+    await admin
+      .from("people")
+      .update({
+        preferred_locale: preferredLocale,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", personId)
+      .eq("organization_id", ctx.organizationId);
   }
 
   const manageToken = createBookingToken();
@@ -240,7 +259,7 @@ export async function submitPublicBookingAction(
       ends_at: parsed.data.endsAt,
       ...encryptBookingGuestWrite(
         {
-          guest_name: parsed.data.guestName,
+          guest_name: guestName,
           guest_email: guestEmail,
           guest_phone: parsed.data.guestPhone,
           guest_address: parsed.data.guestAddress,
@@ -248,6 +267,7 @@ export async function submitPublicBookingAction(
         dek,
       ),
       privacy_accepted_at: new Date().toISOString(),
+      guest_preferred_locale: preferredLocale,
       status: "confirmed",
       manage_token_hash: hashBookingToken(manageToken),
       form_answers:
@@ -283,7 +303,7 @@ export async function submitPublicBookingAction(
   });
 
   const origin = await getAppBaseUrl();
-  const urls = bookingManageUrls(origin, parsed.data.locale, manageToken);
+  const urls = bookingManageUrls(origin, preferredLocale, manageToken);
 
   const { pushAppointmentToGoogleCalendar } = await import(
     "@/lib/google/calendar"
@@ -292,8 +312,8 @@ export async function submitPublicBookingAction(
     organizationId: ctx.organizationId,
     hostUserId: host.userId,
     appointmentId: appointment.id,
-    title: `${service.title} — ${parsed.data.guestName}`,
-    description: `Booked via MyConsultant\n${parsed.data.guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
+    title: `${service.title} — ${guestName}`,
+    description: `Booked via MyConsultant\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
   });
@@ -304,9 +324,9 @@ export async function submitPublicBookingAction(
       "@/lib/email/booking-confirmation"
     );
     await sendBookingConfirmationEmail({
-      locale: parsed.data.locale,
+      locale: preferredLocale,
       to: guestEmail,
-      guestName: parsed.data.guestName,
+      guestName,
       organizationName: ctx.organizationName,
       hostName: host.name,
       serviceTitle: service.title,

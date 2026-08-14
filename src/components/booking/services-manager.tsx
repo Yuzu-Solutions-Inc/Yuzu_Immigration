@@ -41,6 +41,7 @@ import type {
   BookingServiceRow,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
+import type { AppLocale } from "@/lib/i18n/locales";
 import { centsToPriceInput, formatPriceCents } from "@/lib/booking/slots";
 
 const initialState: ServiceActionState = {};
@@ -117,6 +118,7 @@ function ServiceFormFields({
 
 export function ServicesManager({
   locale,
+  orgDefaultLocale,
   canManage,
   services,
   forms,
@@ -124,6 +126,7 @@ export function ServicesManager({
   formFields,
 }: {
   locale: string;
+  orgDefaultLocale: AppLocale;
   canManage: boolean;
   services: BookingServiceRow[];
   forms: BookingFormRow[];
@@ -187,6 +190,7 @@ export function ServicesManager({
           />
           <ServiceEmailAutomationsButton
             locale={locale}
+            orgDefaultLocale={orgDefaultLocale}
             services={services}
             formFields={formFields}
             automations={automations}

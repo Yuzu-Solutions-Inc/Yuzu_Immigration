@@ -26,6 +26,7 @@ export function MonthCalendar({
   markers,
   availableDays,
   blockedDays,
+  fillHeight = false,
 }: {
   year: number;
   monthIndex: number;
@@ -38,6 +39,8 @@ export function MonthCalendar({
   markers?: Record<string, number>;
   availableDays?: Set<string>;
   blockedDays?: Set<string>;
+  /** Stretch day cells so the month grid fills its parent (desktop calendar). */
+  fillHeight?: boolean;
 }) {
   const t = useTranslations("calendar");
   const start = weekStartsOn(locale);
@@ -47,10 +50,16 @@ export function MonthCalendar({
   ];
   const cells = monthGrid(year, monthIndex, start);
   const todayIso = zonedDateIso(new Date(), timeZone);
+  const weekRows = Math.ceil(cells.length / 7);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      className={cn(
+        "flex flex-col gap-3",
+        fillHeight && "lg:h-full lg:min-h-0",
+      )}
+    >
+      <div className="flex shrink-0 items-center justify-between gap-3">
         <h2 className="font-heading text-lg font-semibold text-brand">
           {formatMonthYear(year, monthIndex, locale)}
         </h2>
@@ -76,7 +85,7 @@ export function MonthCalendar({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
+      <div className="grid shrink-0 grid-cols-7 gap-1 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {orderedWeekdays.map((key) => (
           <div key={key} className="py-1">
             {t(`weekdaysShort.${key}`)}
@@ -84,7 +93,17 @@ export function MonthCalendar({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div
+        className={cn(
+          "grid grid-cols-7 gap-1",
+          fillHeight && "lg:min-h-0 lg:flex-1 lg:auto-rows-fr",
+        )}
+        style={
+          fillHeight
+            ? { gridTemplateRows: `repeat(${weekRows}, minmax(0, 1fr))` }
+            : undefined
+        }
+      >
         {cells.map((cell) => {
           const count = markers?.[cell.dateIso] ?? 0;
           const selected = selectedDateIso === cell.dateIso;
@@ -105,7 +124,10 @@ export function MonthCalendar({
                   : undefined
               }
               className={cn(
-                "relative flex min-h-16 flex-col items-center rounded-xl border px-1 py-2 text-sm transition-colors",
+                "relative flex flex-col items-center rounded-xl border px-1 text-sm transition-colors",
+                fillHeight
+                  ? "min-h-16 py-2 lg:h-full lg:min-h-0 lg:justify-center lg:py-1"
+                  : "min-h-16 py-2",
                 cell.inMonth ? "bg-surface" : "bg-canvas/60 text-muted-foreground",
                 selected
                   ? "border-action bg-action/5 text-brand"
@@ -125,7 +147,8 @@ export function MonthCalendar({
               ) : null}
               <span
                 className={cn(
-                  "inline-flex size-7 items-center justify-center rounded-full",
+                  "inline-flex items-center justify-center rounded-full",
+                  fillHeight ? "size-7 lg:size-6 lg:text-[13px]" : "size-7",
                   isToday && "bg-action font-semibold text-white",
                 )}
               >
@@ -143,7 +166,7 @@ export function MonthCalendar({
         })}
       </div>
       {blockedDays ? (
-        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex shrink-0 flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-action" />
             {t("legendBookings")}

@@ -17,8 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Link } from "@/i18n/navigation";
+import { mergeMinuteRanges } from "@/lib/booking/availability";
 import type {
   BookingAppointmentRow,
+  BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
   BookingServiceFormFieldRow,
@@ -31,28 +33,36 @@ import {
   coversCivilDay,
   formatDateInZone,
   formatTimeInZone,
+  minutesFromHm,
+  weekdayFromIsoDate,
   zonedCivilToUtc,
   zonedDateIso,
 } from "@/lib/booking/timezone";
+import { cn } from "@/lib/utils";
 
 export function CalendarWorkspace({
   locale,
   canManage,
   settings,
+  rules,
   appointments,
   blocked,
   googleBusy,
   formFields,
   hostNames,
+  fillViewport = true,
 }: {
   locale: string;
   canManage: boolean;
   settings: BookingSettingsRow | null;
+  rules: BookingAvailabilityRuleRow[];
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
   googleBusy: BookingGoogleBusyRow[];
   formFields: BookingServiceFormFieldRow[];
   hostNames: Record<string, string>;
+  /** Pin the workspace to one desktop viewport (minus main padding). */
+  fillViewport?: boolean;
 }) {
   const t = useTranslations("calendar");
   const timeZone = settings?.timezone ?? "America/Toronto";
@@ -152,6 +162,18 @@ export function CalendarWorkspace({
   const selectedAppointment =
     dayAppointments.find((row) => row.id === selectedAppointmentId) ?? null;
 
+  const openRanges = useMemo(() => {
+    const weekday = weekdayFromIsoDate(selectedDateIso);
+    return mergeMinuteRanges(
+      rules
+        .filter((rule) => rule.weekday === weekday)
+        .map((rule) => ({
+          start: minutesFromHm(rule.start_time),
+          end: minutesFromHm(rule.end_time),
+        })),
+    );
+  }, [rules, selectedDateIso]);
+
   function shiftMonth(delta: number) {
     setCursor((prev) => {
       const date = new Date(Date.UTC(prev.year, prev.monthIndex + delta, 1));
@@ -162,13 +184,21 @@ export function CalendarWorkspace({
   const selectedNoon = zonedCivilToUtc(selectedDateIso, "12:00", timeZone);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div
+      className={cn(
+        "flex flex-col gap-4",
+        fillViewport
+          ? "lg:h-[calc(100dvh-4rem)] lg:min-h-0 lg:overflow-hidden lg:gap-3"
+          : "h-full min-h-0 lg:overflow-hidden lg:gap-3",
+      )}
+    >      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="font-heading text-2xl font-semibold text-brand">
+          <h1 className="font-heading text-2xl font-semibold text-brand lg:text-xl">
             {t("title")}
           </h1>
-          <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
+          <p className="text-[15px] text-muted-foreground lg:text-sm">
+            {t("subtitle")}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <CopyBookingLinkButton locale={locale} />
@@ -182,8 +212,8 @@ export function CalendarWorkspace({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(22rem,1fr)]">
-        <SurfaceCard>
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,1fr)] lg:gap-4 lg:overflow-hidden">
+        <SurfaceCard className="min-h-0 p-4 sm:p-5 lg:flex lg:flex-col lg:overflow-hidden">
           <MonthCalendar
             year={cursor.year}
             monthIndex={cursor.monthIndex}
@@ -195,11 +225,12 @@ export function CalendarWorkspace({
             onNextMonth={() => shiftMonth(1)}
             markers={markers}
             blockedDays={blockedDays}
+            fillHeight
           />
         </SurfaceCard>
 
-        <SurfaceCard className="space-y-4">
-          <div className="flex items-start justify-between gap-3">
+        <SurfaceCard className="flex min-h-0 flex-col gap-3 p-4 sm:p-5 lg:overflow-hidden">
+          <div className="flex shrink-0 items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 {t("dayDetail")}
@@ -253,7 +284,7 @@ export function CalendarWorkspace({
           </div>
 
           {fullDayBlock ? (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p className="shrink-0 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {t("dayIsBlocked")}
             </p>
           ) : null}
@@ -266,37 +297,50 @@ export function CalendarWorkspace({
             appointments={dayAppointments}
             blocked={dayBlocks}
             googleBusy={dayGoogleBusy}
+            openRanges={openRanges}
             selectedAppointmentId={selectedAppointmentId}
             onSelectAppointment={setSelectedAppointmentId}
+            className="min-h-[22rem] lg:min-h-0"
           />
 
-          {selectedAppointment ? (
-            <AppointmentDetail
-              locale={locale}
-              canManage={canManage}
-              pending={pending}
-              timeZone={timeZone}
-              row={selectedAppointment}
-              formFields={formFields}
-              hostNames={hostNames}
-              onCancel={(id) => {
-                startTransition(async () => {
-                  const result = await cancelAppointmentAction(id, locale);
-                  if (result.error) {
-                    toast.error(t(`errors.${result.error}`));
-                  } else {
-                    toast.success(t("cancelled"));
-                    setSelectedAppointmentId(null);
-                  }
-                });
-              }}
-            />
-          ) : dayAppointments.filter((row) => row.status !== "cancelled")
-              .length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noAppointments")}</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("selectBookingHint")}</p>
-          )}
+          <div
+            className={cn(
+              "shrink-0",
+              selectedAppointment && "max-h-40 overflow-y-auto lg:max-h-44",
+            )}
+          >
+            {selectedAppointment ? (
+              <AppointmentDetail
+                locale={locale}
+                canManage={canManage}
+                pending={pending}
+                timeZone={timeZone}
+                row={selectedAppointment}
+                formFields={formFields}
+                hostNames={hostNames}
+                onCancel={(id) => {
+                  startTransition(async () => {
+                    const result = await cancelAppointmentAction(id, locale);
+                    if (result.error) {
+                      toast.error(t(`errors.${result.error}`));
+                    } else {
+                      toast.success(t("cancelled"));
+                      setSelectedAppointmentId(null);
+                    }
+                  });
+                }}
+              />
+            ) : dayAppointments.filter((row) => row.status !== "cancelled")
+                .length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t("noAppointments")}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t("selectBookingHint")}
+              </p>
+            )}
+          </div>
         </SurfaceCard>
       </div>
     </div>

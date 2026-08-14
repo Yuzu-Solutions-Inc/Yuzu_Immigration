@@ -10,13 +10,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { AppLocale } from "@/lib/i18n/locales";
+import {
+  APP_LOCALES,
+  LOCALE_LABELS,
+  type AppLocale,
+} from "@/lib/i18n/locales";
 
 const initial: SettingsActionState = {};
 
 export type OrgSettingsValues = {
   name: string;
   slug: string;
+  defaultLocale: AppLocale;
 };
 
 export function OrganizationSettingsForm({
@@ -71,6 +76,24 @@ export function OrganizationSettingsForm({
               maxLength={48}
             />
             <p className="text-xs text-muted-foreground">{t("orgSlugHelp")}</p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="defaultLocale">{t("orgDefaultLocale")}</Label>
+            <select
+              id="defaultLocale"
+              name="defaultLocale"
+              defaultValue={initialValues.defaultLocale}
+              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px]"
+            >
+              {APP_LOCALES.map((code) => (
+                <option key={code} value={code}>
+                  {LOCALE_LABELS[code]}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              {t("orgDefaultLocaleHelp")}
+            </p>
           </div>
         </div>
       </section>

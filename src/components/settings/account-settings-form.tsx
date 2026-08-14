@@ -10,11 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  APP_LOCALES,
-  LOCALE_LABELS,
-  type AppLocale,
-} from "@/lib/i18n/locales";
+import type { AppLocale } from "@/lib/i18n/locales";
 
 const initial: SettingsActionState = {};
 
@@ -38,13 +34,11 @@ export function AccountSettingsForm({
   locale,
   email,
   fullName,
-  preferredLocale,
   representative,
 }: {
   locale: AppLocale;
   email: string;
   fullName: string;
-  preferredLocale: AppLocale;
   representative: AccountRepValues;
 }) {
   const t = useTranslations("settings");
@@ -81,25 +75,6 @@ export function AccountSettingsForm({
             required
             maxLength={120}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="preferredLocale">{t("preferredLocale")}</Label>
-          <select
-            id="preferredLocale"
-            name="preferredLocale"
-            defaultValue={preferredLocale}
-            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px]"
-          >
-            {APP_LOCALES.map((code) => (
-              <option key={code} value={code}>
-                {LOCALE_LABELS[code]}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-muted-foreground">
-            {t("preferredLocaleHelp")}
-          </p>
         </div>
       </section>
 

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/auth/active-org";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { isOrgRole } from "@/lib/auth/rbac";
+import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 
 export type OrgMembership = {
   id: string;
@@ -10,6 +11,7 @@ export type OrgMembership = {
     id: string;
     name: string;
     slug: string;
+    defaultLocale: AppLocale;
   };
 };
 
@@ -55,7 +57,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
   const orgIds = membershipRows.map((row) => row.organization_id as string);
   const { data: orgs, error: orgError } = await supabase
     .from("organizations")
-    .select("id, name, slug")
+    .select("id, name, slug, default_locale")
     .in("id", orgIds);
 
   if (orgError) {
@@ -79,6 +81,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
           id: organization.id as string,
           name: organization.name as string,
           slug: organization.slug as string,
+          defaultLocale: toAppLocale(organization.default_locale as string | null),
         },
       };
     })

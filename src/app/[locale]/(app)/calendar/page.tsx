@@ -60,21 +60,35 @@ export default async function CalendarPage({
     after(() => refreshGoogleBusyIfStale(orgId));
   }
 
+  const showSetupHint = rules.length === 0 || services.length === 0;
+
   return (
-    <div className="space-y-6">
-      {rules.length === 0 || services.length === 0 ? (
-        <CalendarEmptyHint hasServices={services.length > 0} />
+    <div
+      className={
+        showSetupHint
+          ? "flex flex-col gap-3 lg:h-[calc(100dvh-4rem)] lg:overflow-hidden"
+          : undefined
+      }
+    >
+      {showSetupHint ? (
+        <div className="shrink-0">
+          <CalendarEmptyHint hasServices={services.length > 0} />
+        </div>
       ) : null}
-      <CalendarWorkspace
-        locale={locale}
-        canManage={canManage}
-        settings={settings}
-        appointments={appointments}
-        blocked={blocked}
-        googleBusy={googleBusy}
-        formFields={formFields}
-        hostNames={hostNames}
-      />
+      <div className={showSetupHint ? "min-h-0 flex-1 lg:overflow-hidden" : undefined}>
+        <CalendarWorkspace
+          locale={locale}
+          canManage={canManage}
+          settings={settings}
+          rules={rules}
+          appointments={appointments}
+          blocked={blocked}
+          googleBusy={googleBusy}
+          formFields={formFields}
+          hostNames={hostNames}
+          fillViewport={!showSetupHint}
+        />
+      </div>
     </div>
   );
 }

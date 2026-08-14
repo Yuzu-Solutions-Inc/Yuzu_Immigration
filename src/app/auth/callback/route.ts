@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { safeInternalPath } from "@/lib/auth/next-path";
+import { getPrimaryMembership } from "@/lib/auth/session";
+import { replacePathLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -14,7 +16,11 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       await acceptPendingInvitationsForUser();
-      return NextResponse.redirect(`${origin}${next}`);
+      const membership = await getPrimaryMembership();
+      const dest = membership
+        ? replacePathLocale(next, membership.organization.defaultLocale)
+        : next;
+      return NextResponse.redirect(`${origin}${dest}`);
     }
   }
 

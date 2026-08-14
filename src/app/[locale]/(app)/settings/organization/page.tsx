@@ -29,7 +29,7 @@ export default async function OrganizationSettingsPage({
   const supabase = await createClient();
   const { data: org } = await supabase
     .from("organizations")
-    .select("name, slug")
+    .select("name, slug, default_locale")
     .eq("id", membership.organization.id)
     .maybeSingle();
 
@@ -55,6 +55,7 @@ export default async function OrganizationSettingsPage({
         initialValues={{
           name: org.name ?? "",
           slug: org.slug ?? "",
+          defaultLocale: toAppLocale(org.default_locale),
         }}
       />
       <TeamSettings

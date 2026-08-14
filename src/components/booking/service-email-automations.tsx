@@ -24,6 +24,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type {
   BookingFormFieldRow,
@@ -34,16 +40,79 @@ import {
   AUTOMATION_VARIABLES,
   CONSULTANT_EMAIL_TOKEN,
   CUSTOMER_EMAIL_TOKEN,
+  parseAutomationTranslations,
 } from "@/lib/email/automation-template";
+import {
+  APP_LOCALES,
+  LOCALE_LABELS,
+  isAppLocale,
+  type AppLocale,
+} from "@/lib/i18n/locales";
 
 const initialState: AutomationActionState = {};
 
-const DEFAULT_SUBJECT = "Reminder: {{service_name}} on {{date}}";
-const DEFAULT_BODY = `Hi {{customer_name}},
+const EMPTY_COPY = { subject: "", body: "" };
+
+const DEFAULT_COPY: Record<AppLocale, { subject: string; body: string }> = {
+  en: {
+    subject: "Reminder: {{service_name}} on {{date}}",
+    body: `Hi {{customer_name}},
 
 This is a reminder of your {{service_name}} with {{consultant_name}} on {{datetime}} ({{timezone}}).
 
-{{meet_link}}`;
+{{meet_link}}`,
+  },
+  fr: {
+    subject: "Rappel : {{service_name}} le {{date}}",
+    body: `Bonjour {{customer_name}},
+
+Ceci est un rappel de votre {{service_name}} avec {{consultant_name}} le {{datetime}} ({{timezone}}).
+
+{{meet_link}}`,
+  },
+  es: {
+    subject: "Recordatorio: {{service_name}} el {{date}}",
+    body: `Hola {{customer_name}},
+
+Este es un recordatorio de su {{service_name}} con {{consultant_name}} el {{datetime}} ({{timezone}}).
+
+{{meet_link}}`,
+  },
+};
+
+function emptyCopies(): Record<AppLocale, { subject: string; body: string }> {
+  return {
+    en: { ...EMPTY_COPY },
+    fr: { ...EMPTY_COPY },
+    es: { ...EMPTY_COPY },
+  };
+}
+
+function initialCopies(
+  automation: ServiceEmailAutomationRow | undefined,
+  orgDefaultLocale: AppLocale,
+) {
+  const copies = emptyCopies();
+  if (!automation) {
+    copies[orgDefaultLocale] = { ...DEFAULT_COPY[orgDefaultLocale] };
+    return copies;
+  }
+  const translations = parseAutomationTranslations(automation.translations);
+  let any = false;
+  for (const locale of APP_LOCALES) {
+    if (translations[locale]) {
+      copies[locale] = { ...translations[locale]! };
+      any = true;
+    }
+  }
+  if (!any) {
+    copies[orgDefaultLocale] = {
+      subject: automation.subject,
+      body: automation.body,
+    };
+  }
+  return copies;
+}
 
 function extraEmailsFrom(recipients: string[]) {
   return recipients.filter(
@@ -74,26 +143,32 @@ function insertToken(
 
 function AutomationForm({
   locale,
+  orgDefaultLocale,
   services,
   formFields,
   automation,
   onCancel,
 }: {
   locale: string;
+  orgDefaultLocale: AppLocale;
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   automation?: ServiceEmailAutomationRow;
   onCancel: () => void;
 }) {
   const t = useTranslations("services");
-  const subjectRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
-  const lastField = useRef<"subject" | "body">("body");
-  const [title, setTitle] = useState(automation?.title ?? "");
-  const [subject, setSubject] = useState(
-    automation?.subject ?? DEFAULT_SUBJECT,
+  const subjectRefs = useRef<Partial<Record<AppLocale, HTMLInputElement | null>>>(
+    {},
   );
-  const [body, setBody] = useState(automation?.body ?? DEFAULT_BODY);
+  const bodyRefs = useRef<
+    Partial<Record<AppLocale, HTMLTextAreaElement | null>>
+  >({});
+  const lastField = useRef<"subject" | "body">("body");
+  const lastLocale = useRef<AppLocale>(orgDefaultLocale);
+  const [title, setTitle] = useState(automation?.title ?? "");
+  const [copies, setCopies] = useState(() =>
+    initialCopies(automation, orgDefaultLocale),
+  );
   const [serviceIds, setServiceIds] = useState<string[]>(
     automation?.service_ids ?? [],
   );
@@ -159,12 +234,36 @@ function AutomationForm({
 
   function insertVariable(name: string) {
     const token = `{{${name}}}`;
+    const activeLocale = lastLocale.current;
+    const copy = copies[activeLocale];
     if (lastField.current === "subject") {
-      insertToken(subjectRef.current, token, subject, setSubject);
+      insertToken(
+        subjectRefs.current[activeLocale] ?? null,
+        token,
+        copy.subject,
+        (next) =>
+          setCopies((prev) => ({
+            ...prev,
+            [activeLocale]: { ...prev[activeLocale], subject: next },
+          })),
+      );
     } else {
-      insertToken(bodyRef.current, token, body, setBody);
+      insertToken(
+        bodyRefs.current[activeLocale] ?? null,
+        token,
+        copy.body,
+        (next) =>
+          setCopies((prev) => ({
+            ...prev,
+            [activeLocale]: { ...prev[activeLocale], body: next },
+          })),
+      );
     }
   }
+
+  const defaultCopyReady =
+    copies[orgDefaultLocale].subject.trim().length > 0 &&
+    copies[orgDefaultLocale].body.trim().length > 0;
 
   return (
     <form action={formAction} className="space-y-4">
@@ -174,6 +273,11 @@ function AutomationForm({
       ) : null}
       <input type="hidden" name="recipients" value={JSON.stringify(recipients)} />
       <input type="hidden" name="serviceIds" value={JSON.stringify(serviceIds)} />
+      <input
+        type="hidden"
+        name="translations"
+        value={JSON.stringify(copies)}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="automation-title">{t("automationTitle")}</Label>
@@ -219,36 +323,89 @@ function AutomationForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="automation-subject">{t("automationSubject")}</Label>
-        <Input
-          ref={subjectRef}
-          id="automation-subject"
-          name="subject"
-          required
-          maxLength={200}
-          value={subject}
-          onChange={(event) => setSubject(event.target.value)}
-          onFocus={() => {
-            lastField.current = "subject";
+        <p className="text-sm font-medium">{t("automationCopy")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("automationCopyHelp", {
+            language: LOCALE_LABELS[orgDefaultLocale],
+          })}
+        </p>
+        <Tabs
+          defaultValue={orgDefaultLocale}
+          onValueChange={(value) => {
+            if (isAppLocale(String(value))) lastLocale.current = value;
           }}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="automation-body">{t("automationBody")}</Label>
-        <Textarea
-          ref={bodyRef}
-          id="automation-body"
-          name="body"
-          required
-          rows={8}
-          maxLength={8000}
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          onFocus={() => {
-            lastField.current = "body";
-          }}
-        />
+        >
+          <TabsList variant="line" className="w-full">
+            {APP_LOCALES.map((code) => (
+              <TabsTrigger key={code} value={code}>
+                {LOCALE_LABELS[code]}
+                {code === orgDefaultLocale ? (
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {t("automationDefaultLang")}
+                  </span>
+                ) : null}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {APP_LOCALES.map((code) => (
+            <TabsContent
+              key={code}
+              value={code}
+              keepMounted
+              className="space-y-3 pt-3"
+            >
+              <div className="space-y-2">
+                <Label htmlFor={`automation-subject-${code}`}>
+                  {t("automationSubject")}
+                  {code === orgDefaultLocale ? " *" : ""}
+                </Label>
+                <Input
+                  ref={(el) => {
+                    subjectRefs.current[code] = el;
+                  }}
+                  id={`automation-subject-${code}`}
+                  maxLength={200}
+                  value={copies[code].subject}
+                  onChange={(event) =>
+                    setCopies((prev) => ({
+                      ...prev,
+                      [code]: { ...prev[code], subject: event.target.value },
+                    }))
+                  }
+                  onFocus={() => {
+                    lastField.current = "subject";
+                    lastLocale.current = code;
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`automation-body-${code}`}>
+                  {t("automationBody")}
+                  {code === orgDefaultLocale ? " *" : ""}
+                </Label>
+                <Textarea
+                  ref={(el) => {
+                    bodyRefs.current[code] = el;
+                  }}
+                  id={`automation-body-${code}`}
+                  rows={8}
+                  maxLength={8000}
+                  value={copies[code].body}
+                  onChange={(event) =>
+                    setCopies((prev) => ({
+                      ...prev,
+                      [code]: { ...prev[code], body: event.target.value },
+                    }))
+                  }
+                  onFocus={() => {
+                    lastField.current = "body";
+                    lastLocale.current = code;
+                  }}
+                />
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
 
       <div className="space-y-2">
@@ -382,7 +539,12 @@ function AutomationForm({
         </Button>
         <Button
           type="submit"
-          disabled={pending || recipients.length === 0 || serviceIds.length === 0}
+          disabled={
+            pending ||
+            recipients.length === 0 ||
+            serviceIds.length === 0 ||
+            !defaultCopyReady
+          }
         >
           {pending ? t("saving") : automation ? t("save") : t("automationCreate")}
         </Button>
@@ -393,12 +555,14 @@ function AutomationForm({
 
 export function ServiceEmailAutomationsButton({
   locale,
+  orgDefaultLocale,
   services,
   formFields,
   automations,
   canManage,
 }: {
   locale: string;
+  orgDefaultLocale: AppLocale;
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   automations: ServiceEmailAutomationRow[];
@@ -464,6 +628,7 @@ export function ServiceEmailAutomationsButton({
             {creating || editing ? (
               <AutomationForm
                 locale={locale}
+                orgDefaultLocale={orgDefaultLocale}
                 services={services}
                 formFields={formFields}
                 automation={editing ?? undefined}

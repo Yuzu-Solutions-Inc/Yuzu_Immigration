@@ -26,6 +26,7 @@ import {
   BOOKING_FORM_FIELD_TYPES,
   BOOKING_FORM_PRESETS,
   MAX_BOOKING_FORM_FIELDS,
+  isReservedBookingFieldKey,
   slugFromFieldLabel,
   type BookingFormPreset,
 } from "@/lib/booking/form-fields";
@@ -39,10 +40,12 @@ import type {
 const initialState: FormFieldActionState = {};
 
 const BUILTIN_QUESTIONS = [
-  { key: "name", labelKey: "formBuiltinName" },
+  { key: "first_name", labelKey: "formBuiltinFirstName" },
+  { key: "last_name", labelKey: "formBuiltinLastName" },
   { key: "email", labelKey: "formBuiltinEmail" },
   { key: "phone", labelKey: "formBuiltinPhone" },
   { key: "address", labelKey: "formBuiltinAddress" },
+  { key: "preferred_language", labelKey: "formBuiltinLanguage" },
 ] as const;
 
 type DraftField = {
@@ -63,6 +66,7 @@ function newClientId() {
 
 function draftsFromFields(fields: BookingFormFieldRow[]): DraftField[] {
   return [...fields]
+    .filter((field) => !isReservedBookingFieldKey(field.field_key))
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((field) => ({
       clientId: field.id,
