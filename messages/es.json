@@ -1,13 +1,97 @@
 {
   "app": {
     "name": "My Consultant",
-    "tagline": "Canadian immigration consultant CRM"
+    "tagline": "CRM para consultores y abogados de inmigración canadiense"
   },
   "home": {
-    "title": "The CRM built for Canadian immigration consultants",
-    "subtitle": "Manage clients, cases, and shared portals — in English and French.",
-    "cta": "Sign in",
-    "secondaryCta": "Create account"
+    "audience": "Para consultores y abogados de inmigración",
+    "title": "Gestione su práctica de inmigración en un espacio seguro",
+    "subtitle": "Clientes, expedientes, cuestionarios IRCC, documentos, citas y portales — pensado para inmigración canadiense, no un CRM genérico.",
+    "cta": "Empezar gratis — fase de prueba",
+    "secondaryCta": "Iniciar sesión",
+    "ctaNote": "Gratis durante la fase de prueba abierta. Sin tarjeta de crédito.",
+    "navSignIn": "Iniciar sesión",
+    "navCta": "Empezar gratis",
+    "featuresEyebrow": "Qué incluye",
+    "featuresTitle": "Todo lo que su firma necesita para avanzar expedientes",
+    "featuresSubtitle": "Sustituya hojas de cálculo, hilos de correo y portales improvisados por un sistema diseñado en torno a expedientes de inmigración.",
+    "features": {
+      "projects": {
+        "title": "Proyectos de inmigración",
+        "body": "Abra un expediente una vez: familia de programa, jurisdicción, estado, participantes y lista de formularios según la vía."
+      },
+      "people": {
+        "title": "Clientes de por vida",
+        "body": "Mantenga a las personas como clientes duraderos — contacto, historial, notas y proyectos vinculados en un solo lugar."
+      },
+      "forms": {
+        "title": "Cuestionarios de una sola vez",
+        "body": "El cliente responde una vez. Su equipo usa esas respuestas para preparar formularios IRCC, incluido el IMM 5476."
+      },
+      "share": {
+        "title": "Enlaces seguros para clientes",
+        "body": "Envíe un enlace con caducidad para formularios y documentos. Regenere el acceso sin perder respuestas ya recogidas."
+      },
+      "booking": {
+        "title": "Reservas y calendario",
+        "body": "Publique servicios de consulta, acepte reservas públicas y sincronice Google Calendar y Meet si lo conecta."
+      },
+      "portal": {
+        "title": "Acceso al portal del cliente",
+        "body": "Ofrezca un regreso seguro al expediente con códigos y contraseñas tratados en el servidor, no en el navegador."
+      },
+      "team": {
+        "title": "Espacio de la firma",
+        "body": "Cada firma tiene su propio inquilino. El personal inicia sesión con correo o Google dentro de datos limitados a la firma."
+      },
+      "languages": {
+        "title": "Multilingüe de origen",
+        "body": "Trabaje en inglés, francés o español — para su equipo y para los flujos orientados al cliente."
+      }
+    },
+    "howEyebrow": "Cómo funciona",
+    "howTitle": "De la primera consulta al expediente listo para presentar",
+    "how": {
+      "one": {
+        "title": "Cree el proyecto",
+        "body": "Añada personas, elija el programa y genere la lista de formularios en una sola pantalla."
+      },
+      "two": {
+        "title": "Recoja una vez",
+        "body": "Comparta un enlace seguro para documentos y el cuestionario."
+      },
+      "three": {
+        "title": "Prepare y siga",
+        "body": "Su firma revisa, completa formularios, agenda seguimientos y mantiene el estado visible."
+      }
+    },
+    "securityEyebrow": "Seguridad, en claro",
+    "securityTitle": "Hecho para expedientes de inmigración sensibles",
+    "securitySubtitle": "Sus clientes le confían pasaportes, biografías y datos familiares. Diseñamos My Consultant para sostener esa confianza con salvaguardas claras y prácticas.",
+    "security": {
+      "canada": {
+        "title": "Datos principales en Canadá",
+        "body": "Base de datos, autenticación y archivos en Supabase en Canadá (AWS Canada Central)."
+      },
+      "encryption": {
+        "title": "Cifrado acorde al riesgo",
+        "body": "TLS en tránsito, cifrado de infraestructura en reposo y AES-256-GCM por firma para documentos y muchos campos de identidad."
+      },
+      "access": {
+        "title": "Los datos de su firma siguen siendo suyos",
+        "body": "El acceso se limita a cada organización. Los enlaces públicos usan tokens impredecibles, con límites y caducidad según la configuración."
+      },
+      "privacy": {
+        "title": "Privacidad que se puede explicar",
+        "body": "Redactado para apoyar la responsabilidad PIPEDA, con herramientas de retención de expedientes cerrados alineadas con los seis años típicos del CICC — no es una certificación ni asesoramiento jurídico."
+      }
+    },
+    "securityCta": "Leer la política de privacidad",
+    "finalTitle": "Pruebe My Consultant gratis durante la fase de prueba abierta",
+    "finalSubtitle": "Configure el espacio de su firma en minutos y vea si encaja con su práctica.",
+    "finalCta": "Crear una cuenta gratuita",
+    "finalNote": "Gratis durante la fase de prueba abierta.",
+    "footerTagline": "Software de práctica para consultores y abogados de inmigración canadiense. Operado por Yuzu Solutions."
   },
   "auth": {
     "title": "Sign in to My Consultant",
@@ -490,6 +574,58 @@
     "quebec_family": "Quebec family",
     "quebec_temporary": "Quebec temporary",
     "other": "Proyecto personalizado"
+  },
+  "orgPrograms": {
+    "createTitle": "Nuevo programa personalizado",
+    "editTitle": "Editar programa personalizado",
+    "subtitle": "Disponible para todo el despacho. Los cambios solo afectan proyectos nuevos: los expedientes existentes conservan sus formularios y documentos.",
+    "createShort": "Nuevo programa",
+    "edit": "Editar programa",
+    "builtinGroup": "Programas estándar",
+    "customGroup": "Programas del despacho",
+    "templateHelp": "Los formularios y documentos de este programa los definió su despacho. Editar el programa más adelante no cambiará este expediente.",
+    "name": "Nombre del programa",
+    "namePlaceholder": "p. ej. Patrocinio conyugal — dentro de Canadá",
+    "composition": "¿Quién puede usar este programa?",
+    "compositionHelp": "Solo estos tipos de expediente pueden elegir este programa.",
+    "compositions": {
+      "individual": "Individual",
+      "couple": "Pareja",
+      "family": "Familia"
+    },
+    "location": "Solicitud desde",
+    "locationHelp": "Dónde pueden estar los solicitantes al usar este programa.",
+    "outsideCanada": "Fuera de Canadá",
+    "insideCanada": "Dentro de Canadá",
+    "forms": "Formularios IRCC",
+    "formsHelp": "Seleccione los formularios que se añadirán al usar este programa.",
+    "documents": "Documentos",
+    "documentsHelp": "Elija documentos propuestos, añada solicitudes personalizadas y defina si cada uno es por persona o por expediente.",
+    "proposedDocuments": "Documentos propuestos",
+    "customDocuments": "Solicitudes de documentos personalizadas",
+    "docKeys": {
+      "passport": "Pasaporte",
+      "photo": "Foto"
+    },
+    "scopePerson": "Por persona",
+    "scopeProject": "Por expediente",
+    "customLabelPlaceholder": "p. ej. Carta de aceptación",
+    "addCustomDocument": "Añadir",
+    "removeDocument": "Quitar documento",
+    "create": "Crear programa",
+    "save": "Guardar programa",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "archive": "Archivar",
+    "archiving": "Archivando…",
+    "errors": {
+      "invalid": "Revise los datos del programa e inténtelo de nuevo.",
+      "unauthorized": "Inicie sesión para continuar.",
+      "forbidden": "No puede gestionar programas.",
+      "save_failed": "No se pudo guardar el programa.",
+      "not_found": "Programa no encontrado.",
+      "duplicate_name": "Ya existe un programa con este nombre."
+    }
   },
   "roles": {
     "principal": "Principal",
@@ -1085,6 +1221,7 @@
     "adding": "Añadiendo…",
     "added": "Solicitud de documento añadida.",
     "customFallback": "Documento personalizado",
+    "scopeProject": "Expediente completo",
     "upload": "Subir",
     "replace": "Reemplazar archivo",
     "uploading": "Subiendo…",

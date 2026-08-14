@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   boolean,
   date,
   integer,
@@ -224,6 +225,14 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .notNull()
     .default("federal"),
   programFamily: programFamilyEnum("program_family").notNull().default("other"),
+  /**
+   * Optional firm-defined program template used at create time.
+   * Template edits do not mutate forms/docs already on this project.
+   */
+  organizationProgramId: uuid("organization_program_id").references(
+    (): AnyPgColumn => organizationPrograms.id,
+    { onDelete: "set null" },
+  ),
   /** IRCC PDF blank language: en or fr. */
   formLanguage: text("form_language").notNull().default("en"),
   representativeUserId: uuid("representative_user_id").references(
@@ -443,10 +452,62 @@ export const projectDocumentRequests = pgTable("project_document_requests", {
     .references(() => people.id, { onDelete: "cascade" }),
   docKey: text("doc_key").notNull(),
   customLabel: text("custom_label"),
+  /** person = per participant; project = one for the file (person_id = principal). */
+  requestScope: text("request_scope").notNull().default("person"),
   isRequired: boolean("is_required").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   status: documentRequestStatusEnum("status").notNull().default("requested"),
   consultantNote: text("consultant_note"),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
+ * Firm-defined program templates available in the New Project dropdown.
+ * Forms/documents are snapshotted onto projects at create time.
+ */
+export const organizationPrograms = pgTable("organization_programs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  allowsIndividual: boolean("allows_individual").notNull().default(true),
+  allowsCouple: boolean("allows_couple").notNull().default(true),
+  allowsFamily: boolean("allows_family").notNull().default(true),
+  allowsInsideCanada: boolean("allows_inside_canada").notNull().default(true),
+  allowsOutsideCanada: boolean("allows_outside_canada").notNull().default(true),
+  forms: jsonb("forms")
+    .$type<
+      Array<{
+        formCode: string;
+        isRequired: boolean;
+        sortOrder: number;
+      }>
+    >()
+    .notNull()
+    .default([]),
+  documents: jsonb("documents")
+    .$type<
+      Array<{
+        docKey: "passport" | "photo" | "custom";
+        customLabel?: string | null;
+        scope: "person" | "project";
+        isRequired: boolean;
+        sortOrder: number;
+      }>
+    >()
+    .notNull()
+    .default([]),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
   createdBy: uuid("created_by").references(() => profiles.id, {
     onDelete: "set null",
   }),
@@ -907,6 +968,7 @@ export type PersonImmigrationStatus =
 export type DocumentRequestStatus =
   (typeof documentRequestStatusEnum.enumValues)[number];
 export type DocumentDocKey = "passport" | "photo" | "custom";
+export type DocumentRequestScope = "person" | "project";
 export type BookingAppointmentStatus =
   (typeof bookingAppointmentStatusEnum.enumValues)[number];
 export type BookingFormFieldType =

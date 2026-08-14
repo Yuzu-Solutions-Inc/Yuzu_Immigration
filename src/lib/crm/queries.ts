@@ -67,6 +67,7 @@ export type ProjectRow = {
   submit_before: string | null;
   jurisdiction: ProjectJurisdiction;
   program_family: ProgramFamily;
+  organization_program_id: string | null;
   form_language: "en" | "fr";
   representative_user_id: string | null;
   created_by: string | null;
@@ -77,6 +78,7 @@ export type ProjectRow = {
   created_at: string;
   updated_at: string;
   representative?: StaffProfileRow | null;
+  organization_program_name?: string | null;
 };
 
 export type ParticipantRow = {
@@ -310,29 +312,49 @@ export async function listProjects(): Promise<ProjectRow[]> {
         .filter((id): id is string => Boolean(id)),
     ),
   ];
+  const programIds = [
+    ...new Set(
+      projects
+        .map((p) => p.organization_program_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
 
-  if (repIds.length === 0) {
-    return projects.map((p) => ({ ...p, representative: null }));
+  const profileById = new Map<string, StaffProfileRow>();
+  if (repIds.length > 0) {
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", repIds);
+
+    if (profileError) {
+      console.error("listProjects representatives:", profileError.message);
+    } else {
+      for (const p of profiles ?? []) {
+        profileById.set(p.id as string, p as StaffProfileRow);
+      }
+    }
   }
 
-  const { data: profiles, error: profileError } = await supabase
-    .from("profiles")
-    .select("id, full_name, email")
-    .in("id", repIds);
-
-  if (profileError) {
-    console.error("listProjects representatives:", profileError.message);
-    return projects.map((p) => ({ ...p, representative: null }));
+  const programNameById = new Map<string, string>();
+  if (programIds.length > 0) {
+    const { data: programs } = await supabase
+      .from("organization_programs")
+      .select("id, name")
+      .eq("organization_id", orgId)
+      .in("id", programIds);
+    for (const row of programs ?? []) {
+      programNameById.set(row.id as string, row.name as string);
+    }
   }
-
-  const profileById = new Map(
-    (profiles ?? []).map((p) => [p.id as string, p as StaffProfileRow]),
-  );
 
   return projects.map((p) => ({
     ...p,
     representative: p.representative_user_id
       ? (profileById.get(p.representative_user_id) ?? null)
+      : null,
+    organization_program_name: p.organization_program_id
+      ? (programNameById.get(p.organization_program_id) ?? null)
       : null,
   }));
 }
@@ -359,8 +381,24 @@ export async function getProject(projectId: string): Promise<ProjectRow | null> 
     data as ProjectRow,
     await getOrgDataKey(orgId),
   );
+
+  let organizationProgramName: string | null = null;
+  if (project.organization_program_id) {
+    const { data: program } = await supabase
+      .from("organization_programs")
+      .select("name")
+      .eq("organization_id", orgId)
+      .eq("id", project.organization_program_id)
+      .maybeSingle();
+    organizationProgramName = (program?.name as string | undefined) ?? null;
+  }
+
   if (!project.representative_user_id) {
-    return { ...project, representative: null };
+    return {
+      ...project,
+      representative: null,
+      organization_program_name: organizationProgramName,
+    };
   }
 
   const { data: profile } = await supabase
@@ -372,6 +410,7 @@ export async function getProject(projectId: string): Promise<ProjectRow | null> 
   return {
     ...project,
     representative: (profile as StaffProfileRow | null) ?? null,
+    organization_program_name: organizationProgramName,
   };
 }
 

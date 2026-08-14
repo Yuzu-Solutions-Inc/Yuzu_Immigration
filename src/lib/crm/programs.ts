@@ -51,8 +51,15 @@ export function isPermitProgramFamily(
 /** Mixed file: each participant can have a different permit + applying-from. */
 export function isCustomProgram(
   program: ProgramFamily | string,
+  organizationProgramId?: string | null,
 ): boolean {
-  return program === "other";
+  return program === "other" && !organizationProgramId;
+}
+
+export function isOrganizationProgramSelection(
+  organizationProgramId?: string | null,
+): boolean {
+  return Boolean(organizationProgramId);
 }
 
 export type ProjectComposition = "individual" | "couple" | "family";

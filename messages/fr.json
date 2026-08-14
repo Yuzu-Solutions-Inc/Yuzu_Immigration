@@ -1,13 +1,97 @@
 {
   "app": {
     "name": "My Consultant",
-    "tagline": "CRM pour consultants en immigration canadienne"
+    "tagline": "CRM pour consultants et avocats en immigration canadienne"
   },
   "home": {
-    "title": "Le CRM conçu pour les consultants en immigration canadienne",
-    "subtitle": "Gérez clients, dossiers et portails partagés — en français et en anglais.",
-    "cta": "Se connecter",
-    "secondaryCta": "Créer un compte"
+    "audience": "Pour les consultants et avocats en immigration",
+    "title": "Gérez votre pratique d’immigration dans un espace sécurisé",
+    "subtitle": "Clients, dossiers, questionnaires IRCC, documents, rendez-vous et portails — pensé pour l’immigration canadienne, pas un CRM générique.",
+    "cta": "Commencer gratuitement — phase de test",
+    "secondaryCta": "Se connecter",
+    "ctaNote": "Gratuit pendant la phase de test ouverte. Aucune carte de crédit.",
+    "navSignIn": "Se connecter",
+    "navCta": "Essai gratuit",
+    "featuresEyebrow": "Ce que vous obtenez",
+    "featuresTitle": "Tout ce qu’il faut pour faire avancer les dossiers",
+    "featuresSubtitle": "Remplacez tableurs, fils de courriels et portails improvisés par un système conçu autour des dossiers d’immigration.",
+    "features": {
+      "projects": {
+        "title": "Projets d’immigration",
+        "body": "Ouvrez un dossier une fois : famille de programme, juridiction, statut, participants et liste de formulaires selon le parcours."
+      },
+      "people": {
+        "title": "Clients à vie",
+        "body": "Conservez les personnes comme clients durables — coordonnées, historique, notes et projets liés au même endroit."
+      },
+      "forms": {
+        "title": "Questionnaires une seule fois",
+        "body": "Le client répond une fois. Votre équipe utilise ces réponses pour préparer les formulaires IRCC, y compris l’IMM 5476."
+      },
+      "share": {
+        "title": "Liens clients sécurisés",
+        "body": "Envoyez un lien à durée limitée pour les formulaires et le dépôt de documents. Régénérez l’accès sans perdre les réponses."
+      },
+      "booking": {
+        "title": "Réservation et calendrier",
+        "body": "Publiez vos services de consultation, acceptez les réservations publiques et synchronisez Google Calendar et Meet si vous le branchez."
+      },
+      "portal": {
+        "title": "Accès portail client",
+        "body": "Offrez un retour sécurisé au dossier avec codes d’accès et mots de passe traités côté serveur, jamais dans le navigateur."
+      },
+      "team": {
+        "title": "Espace cabinet",
+        "body": "Chaque cabinet a son propre locataire. Le personnel se connecte par courriel ou Google dans des données limitées au cabinet."
+      },
+      "languages": {
+        "title": "Bilingue dès le départ",
+        "body": "Travaillez en français, anglais ou espagnol — pour votre équipe et pour les parcours clients."
+      }
+    },
+    "howEyebrow": "Comment ça marche",
+    "howTitle": "Du premier rendez-vous au dossier prêt à déposer",
+    "how": {
+      "one": {
+        "title": "Créez le projet",
+        "body": "Ajoutez les personnes, choisissez le programme et générez la liste de formulaires en un écran."
+      },
+      "two": {
+        "title": "Collectez une fois",
+        "body": "Partagez un lien sécurisé pour les documents et le questionnaire."
+      },
+      "three": {
+        "title": "Préparez et suivez",
+        "body": "Votre cabinet révise, remplit les formulaires, planifie les suivis et garde le statut visible."
+      }
+    },
+    "securityEyebrow": "Sécurité, simplement",
+    "securityTitle": "Conçu pour des dossiers d’immigration sensibles",
+    "securitySubtitle": "Vos clients vous confient passeports, biographies et détails familiaux. My Consultant est conçu pour soutenir cette confiance avec des mesures claires et concrètes.",
+    "security": {
+      "canada": {
+        "title": "Données principales au Canada",
+        "body": "Base de données, authentification et fichiers sur Supabase au Canada (AWS Canada Central)."
+      },
+      "encryption": {
+        "title": "Chiffrement adapté au risque",
+        "body": "TLS en transit, chiffrement d’infrastructure au repos, et AES-256-GCM par cabinet pour les documents et de nombreux champs d’identité."
+      },
+      "access": {
+        "title": "Les données de votre cabinet restent les vôtres",
+        "body": "L’accès est limité à chaque organisation. Les liens publics utilisent des jetons non devinables, avec limites et expiration selon la configuration."
+      },
+      "privacy": {
+        "title": "Une confidentialité explicable",
+        "body": "Rédigé pour soutenir la responsabilité LPRPDE, avec des outils de conservation des dossiers fermés alignés sur les six ans typiques du CRCIC — ce n’est ni une certification ni un avis juridique."
+      }
+    },
+    "securityCta": "Lire la politique de confidentialité",
+    "finalTitle": "Essayez My Consultant gratuitement pendant la phase de test",
+    "finalSubtitle": "Créez l’espace de votre cabinet en quelques minutes et voyez s’il s’adapte à votre pratique.",
+    "finalCta": "Créer un compte gratuit",
+    "finalNote": "Gratuit pendant la phase de test ouverte.",
+    "footerTagline": "Logiciel de pratique pour consultants et avocats en immigration canadienne. Exploité par Yuzu Solutions."
   },
   "auth": {
     "title": "Connexion à My Consultant",
@@ -490,6 +574,58 @@
     "quebec_family": "Réunification Québec",
     "quebec_temporary": "Temporaire Québec",
     "other": "Projet personnalisé"
+  },
+  "orgPrograms": {
+    "createTitle": "Nouveau programme personnalisé",
+    "editTitle": "Modifier le programme personnalisé",
+    "subtitle": "Disponible pour toute l’équipe. Les changements s’appliquent aux nouveaux dossiers seulement — les dossiers existants gardent leurs formulaires et documents.",
+    "createShort": "Nouveau programme",
+    "edit": "Modifier",
+    "builtinGroup": "Programmes standards",
+    "customGroup": "Programmes du cabinet",
+    "templateHelp": "Les formulaires et documents de ce programme ont été définis par votre cabinet. Modifier le programme plus tard ne changera pas ce dossier.",
+    "name": "Nom du programme",
+    "namePlaceholder": "ex. Parrainage conjugal — à l’intérieur",
+    "composition": "Qui peut utiliser ce programme ?",
+    "compositionHelp": "Seuls ces types de dossiers peuvent choisir ce programme.",
+    "compositions": {
+      "individual": "Individu",
+      "couple": "Couple",
+      "family": "Famille"
+    },
+    "location": "Lieu de la demande",
+    "locationHelp": "Où les demandeurs peuvent se trouver pour ce programme.",
+    "outsideCanada": "Hors du Canada",
+    "insideCanada": "Au Canada",
+    "forms": "Formulaires IRCC",
+    "formsHelp": "Choisissez les formulaires à ajouter lorsqu’un projet utilise ce programme.",
+    "documents": "Documents",
+    "documentsHelp": "Choisissez les documents proposés, ajoutez des demandes personnalisées, et indiquez si chacun est par personne ou par dossier.",
+    "proposedDocuments": "Documents proposés",
+    "customDocuments": "Demandes de documents personnalisées",
+    "docKeys": {
+      "passport": "Passeport",
+      "photo": "Photo"
+    },
+    "scopePerson": "Par personne",
+    "scopeProject": "Par dossier",
+    "customLabelPlaceholder": "ex. Lettre d’acceptation",
+    "addCustomDocument": "Ajouter",
+    "removeDocument": "Retirer le document",
+    "create": "Créer le programme",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "cancel": "Annuler",
+    "archive": "Archiver",
+    "archiving": "Archivage…",
+    "errors": {
+      "invalid": "Vérifiez les détails du programme et réessayez.",
+      "unauthorized": "Connectez-vous pour continuer.",
+      "forbidden": "Vous ne pouvez pas gérer les programmes.",
+      "save_failed": "Impossible d’enregistrer le programme.",
+      "not_found": "Programme introuvable.",
+      "duplicate_name": "Un programme porte déjà ce nom."
+    }
   },
   "roles": {
     "principal": "Principal",
@@ -1085,6 +1221,7 @@
     "adding": "Ajout…",
     "added": "Demande de document ajoutée.",
     "customFallback": "Document personnalisé",
+    "scopeProject": "Dossier entier",
     "upload": "Téléverser",
     "replace": "Remplacer le fichier",
     "uploading": "Téléversement…",

@@ -18,12 +18,14 @@ const initialState: AuthActionState = {};
 export function LoginForm({
   locale,
   nextPath,
+  initialMode = "signin",
 }: {
   locale: string;
   nextPath?: string;
+  initialMode?: "signin" | "signup";
 }) {
   const t = useTranslations("auth");
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const action = mode === "signin" ? signInWithPassword : signUpWithPassword;
   const [state, formAction, pending] = useActionState(action, initialState);
 

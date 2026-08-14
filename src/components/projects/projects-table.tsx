@@ -600,7 +600,8 @@ export function ProjectsTable({
                       ) : null}
                     </TableCell>
                     <TableCell className="whitespace-normal">
-                      {tprog(project.program_family)}
+                      {project.organization_program_name ||
+                        tprog(project.program_family)}
                     </TableCell>
                     <TableCell>
                       <select

@@ -1,13 +1,97 @@
 {
   "app": {
     "name": "My Consultant",
-    "tagline": "Canadian immigration consultant CRM"
+    "tagline": "CRM for Canadian immigration consultants and lawyers"
   },
   "home": {
-    "title": "The CRM built for Canadian immigration consultants",
-    "subtitle": "Manage clients, cases, and shared portals — in English and French.",
-    "cta": "Sign in",
-    "secondaryCta": "Create account"
+    "audience": "For immigration consultants and lawyers",
+    "title": "Run your immigration practice in one secure workspace",
+    "subtitle": "Clients, files, IRCC questionnaires, documents, booking, and portals — built for Canadian immigration work, not generic CRM.",
+    "cta": "Start free — open testing",
+    "secondaryCta": "Sign in",
+    "ctaNote": "Free during open testing. No credit card required.",
+    "navSignIn": "Sign in",
+    "navCta": "Start free",
+    "featuresEyebrow": "What you get",
+    "featuresTitle": "Everything your firm needs to move files forward",
+    "featuresSubtitle": "Replace scattered spreadsheets, email threads, and ad-hoc portals with a practice system designed around immigration files.",
+    "features": {
+      "projects": {
+        "title": "Immigration projects",
+        "body": "Open a file once: program family, jurisdiction, status, participants, and the forms checklist seeded for that pathway."
+      },
+      "people": {
+        "title": "Lifelong client records",
+        "body": "Keep people as durable clients across engagements — contact details, history, notes, and linked projects in one place."
+      },
+      "forms": {
+        "title": "Ask-once questionnaires",
+        "body": "Clients answer once. Your team uses those answers to prepare IRCC forms, including IMM 5476 representative details."
+      },
+      "share": {
+        "title": "Secure client links",
+        "body": "Send a time-limited link for forms and document upload. Regenerate access without losing answers already collected."
+      },
+      "booking": {
+        "title": "Booking and calendar",
+        "body": "Publish consultation services, take public bookings, and sync busy times with Google Calendar and Meet when you connect it."
+      },
+      "portal": {
+        "title": "Client portal access",
+        "body": "Give clients a firm-branded way back into their file with access codes and passwords handled on the server, not in the browser."
+      },
+      "team": {
+        "title": "Firm workspace",
+        "body": "Each consulting firm gets its own tenant. Staff sign in with email or Google and work inside firm-scoped data."
+      },
+      "languages": {
+        "title": "Built bilingual",
+        "body": "Work in English, French, or Spanish — for your team and for the client-facing flows they use."
+      }
+    },
+    "howEyebrow": "How it works",
+    "howTitle": "From first consult to submission-ready",
+    "how": {
+      "one": {
+        "title": "Create the project",
+        "body": "Add people inline, pick the program, and seed the forms checklist in one screen."
+      },
+      "two": {
+        "title": "Collect once",
+        "body": "Share a secure link so clients upload documents and complete the questionnaire."
+      },
+      "three": {
+        "title": "Prepare and track",
+        "body": "Your firm reviews answers, fills forms, books follow-ups, and keeps status visible."
+      }
+    },
+    "securityEyebrow": "Security, simply",
+    "securityTitle": "Built for sensitive immigration files",
+    "securitySubtitle": "Clients trust you with passports, biographies, and family details. We designed My Consultant so your firm can meet that trust with clear, practical safeguards.",
+    "security": {
+      "canada": {
+        "title": "Primary data in Canada",
+        "body": "Database, authentication, and file storage run on Supabase in Canada (AWS Canada Central)."
+      },
+      "encryption": {
+        "title": "Encryption that matches the risk",
+        "body": "TLS in transit, infrastructure encryption at rest, and firm-level AES-256-GCM for uploaded documents and many identity fields."
+      },
+      "access": {
+        "title": "Your firm’s data stays yours",
+        "body": "Access is scoped to each organization. Public booking and share links use unguessable tokens with rate limits and expiry where configured."
+      },
+      "privacy": {
+        "title": "Privacy you can explain",
+        "body": "Written to support PIPEDA accountability, with closed-file retention tools aligned to typical CICC six-year duties — not a certification, and not legal advice."
+      }
+    },
+    "securityCta": "Read the privacy policy",
+    "finalTitle": "Try My Consultant free while we’re in open testing",
+    "finalSubtitle": "Set up your firm workspace in minutes and see whether it fits how you already practice.",
+    "finalCta": "Create a free account",
+    "finalNote": "Free during the open testing phase.",
+    "footerTagline": "Practice software for Canadian immigration consultants and lawyers. Operated by Yuzu Solutions."
   },
   "auth": {
     "title": "Sign in to My Consultant",
@@ -490,6 +574,58 @@
     "quebec_family": "Quebec family",
     "quebec_temporary": "Quebec temporary",
     "other": "Custom project"
+  },
+  "orgPrograms": {
+    "createTitle": "New personalized program",
+    "editTitle": "Edit personalized program",
+    "subtitle": "Available to everyone in your firm. Changes apply to new projects only — existing files keep their current forms and documents.",
+    "createShort": "New program",
+    "edit": "Edit program",
+    "builtinGroup": "Standard programs",
+    "customGroup": "Firm programs",
+    "templateHelp": "Forms and documents for this program were defined by your firm. Editing the program later will not change this project.",
+    "name": "Program name",
+    "namePlaceholder": "e.g. Spousal sponsorship — inland",
+    "composition": "Who can use this program?",
+    "compositionHelp": "Only these file types can select this program.",
+    "compositions": {
+      "individual": "Individual",
+      "couple": "Couple",
+      "family": "Family"
+    },
+    "location": "Applying from",
+    "locationHelp": "Where applicants may be when this program is used.",
+    "outsideCanada": "Outside Canada",
+    "insideCanada": "Inside Canada",
+    "forms": "IRCC forms",
+    "formsHelp": "Select the forms to seed when a project uses this program.",
+    "documents": "Documents",
+    "documentsHelp": "Choose proposed documents, add custom requests, and set whether each is per person or per project.",
+    "proposedDocuments": "Proposed documents",
+    "customDocuments": "Custom document requests",
+    "docKeys": {
+      "passport": "Passport",
+      "photo": "Photo"
+    },
+    "scopePerson": "Per person",
+    "scopeProject": "Per project",
+    "customLabelPlaceholder": "e.g. Letter of acceptance",
+    "addCustomDocument": "Add",
+    "removeDocument": "Remove document",
+    "create": "Create program",
+    "save": "Save program",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "archive": "Archive",
+    "archiving": "Archiving…",
+    "errors": {
+      "invalid": "Check the program details and try again.",
+      "unauthorized": "Sign in to continue.",
+      "forbidden": "You cannot manage programs.",
+      "save_failed": "Could not save the program.",
+      "not_found": "Program not found.",
+      "duplicate_name": "A program with this name already exists."
+    }
   },
   "roles": {
     "principal": "Principal",
@@ -1085,6 +1221,7 @@
     "adding": "Adding…",
     "added": "Document request added.",
     "customFallback": "Custom document",
+    "scopeProject": "Whole file",
     "upload": "Upload",
     "replace": "Replace upload",
     "uploading": "Uploading…",

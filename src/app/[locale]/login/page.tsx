@@ -10,12 +10,13 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; mode?: string }>;
 }) {
   const { locale } = await params;
-  const { next } = await searchParams;
+  const { next, mode } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("auth");
+  const initialMode = mode === "signup" ? "signup" : "signin";
 
   return (
     <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col justify-center gap-6 px-6 py-14">
@@ -28,7 +29,11 @@ export default async function LoginPage({
       </div>
 
       <SurfaceCard>
-        <LoginForm locale={locale as "en" | "fr"} nextPath={next} />
+        <LoginForm
+          locale={locale as "en" | "fr" | "es"}
+          nextPath={next}
+          initialMode={initialMode}
+        />
       </SurfaceCard>
 
       <div className="flex justify-center sm:justify-start">

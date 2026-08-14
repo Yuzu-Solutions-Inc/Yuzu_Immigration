@@ -13,6 +13,7 @@ import {
   listOrgMembers,
   listPeople,
 } from "@/lib/crm/queries";
+import { listOrganizationPrograms } from "@/app/actions/org-programs";
 import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
 import {
   detectCommonLaw,
@@ -38,7 +39,7 @@ export default async function EditProjectPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const [participants, people, members, user, membership, t, answersRow, forms] =
+  const [participants, people, members, user, membership, t, answersRow, forms, organizationPrograms] =
     await Promise.all([
       getProjectParticipants(id),
       listPeople(),
@@ -48,6 +49,7 @@ export default async function EditProjectPage({
       getTranslations("projects"),
       getProjectFormAnswers(id),
       listProjectForms(id),
+      listOrganizationPrograms(),
     ]);
 
   const principal = participants.find((row) => row.role === "principal");
@@ -131,6 +133,7 @@ export default async function EditProjectPage({
           }))}
           currentUserId={user?.id}
           canCreatePeople={canCreateRecords(membership?.role)}
+          organizationPrograms={organizationPrograms}
           initial={{
             projectId: project.id,
             title: project.title,
@@ -141,6 +144,7 @@ export default async function EditProjectPage({
             submitBefore: project.submit_before ?? "",
             composition,
             programFamily: project.program_family,
+            organizationProgramId: project.organization_program_id ?? undefined,
             jurisdiction: project.jurisdiction,
             formLanguage:
               project.form_language === "fr" ? "fr" : "en",

@@ -24,6 +24,7 @@ export type DocumentRequestRow = {
   person_id: string;
   doc_key: DocumentDocKey;
   custom_label: string | null;
+  request_scope: "person" | "project";
   is_required: boolean;
   sort_order: number;
   status: DocumentRequestStatus;
@@ -61,6 +62,16 @@ function storagePath(input: {
   return `${input.organizationId}/${input.projectId}/${input.personId}/${input.requestId}/${input.fileId}.enc`;
 }
 
+function normalizeDocumentRequestRow(
+  row: Record<string, unknown>,
+): DocumentRequestRow {
+  return {
+    ...(row as DocumentRequestRow),
+    request_scope:
+      row.request_scope === "project" ? "project" : "person",
+  };
+}
+
 export async function listProjectDocumentRequests(
   projectId: string,
 ): Promise<DocumentRequestWithFile[]> {
@@ -94,12 +105,18 @@ export async function listProjectDocumentRequests(
   const orgId = ((requests ?? [])[0] as DocumentRequestRow | undefined)
     ?.organization_id;
   const key = orgId ? await getOrgDataKey(orgId) : Buffer.alloc(0);
-  return ((requests ?? []) as DocumentRequestRow[]).map((row) => ({
-    ...decryptDocumentRequestRow(row, key),
-    file: filesByRequest.get(row.id)
-      ? decryptDocumentFileRow(filesByRequest.get(row.id)!, key)
-      : null,
-  }));
+  return ((requests ?? []) as DocumentRequestRow[]).map((row) => {
+    const normalized = normalizeDocumentRequestRow(
+      row as unknown as Record<string, unknown>,
+    );
+    return {
+      ...decryptDocumentRequestRow(normalized, key),
+      request_scope: normalized.request_scope,
+      file: filesByRequest.get(row.id)
+        ? decryptDocumentFileRow(filesByRequest.get(row.id)!, key)
+        : null,
+    };
+  });
 }
 
 export async function ensureProjectDocumentsSeeded(
@@ -214,9 +231,13 @@ export async function listShareDocumentRequests(
     ?.organization_id;
   const key = orgId ? await getOrgDataKey(orgId) : Buffer.alloc(0);
   return ((requests ?? []) as DocumentRequestRow[]).map((row) => {
+    const normalized = normalizeDocumentRequestRow(
+      row as unknown as Record<string, unknown>,
+    );
     const file = filesByRequest.get(row.id);
     return {
-      ...decryptDocumentRequestRow(row, key),
+      ...decryptDocumentRequestRow(normalized, key),
+      request_scope: normalized.request_scope,
       file: file
         ? decryptDocumentFileRow(
             {

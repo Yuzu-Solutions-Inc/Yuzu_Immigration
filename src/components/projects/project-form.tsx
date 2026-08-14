@@ -26,6 +26,13 @@ import {
   type ProjectComposition,
 } from "@/lib/crm/programs";
 import {
+  compositionAllowed,
+  orgProgramSelectValue,
+  parseOrgProgramSelectValue,
+  resolveOrgProgramApplicationLocation,
+  type OrganizationProgram,
+} from "@/lib/crm/org-programs";
+import {
   defaultApplicationLocation,
   isCustomProgram,
   isFederalPermitProgram,
@@ -39,6 +46,12 @@ import {
   personStatusAllowsExpiry,
 } from "@/lib/crm/person-status";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
+import {
+  OrganizationProgramEditor,
+  OrganizationProgramManageButton,
+} from "@/components/projects/organization-program-editor";
+import { useRouter } from "@/i18n/navigation";
+import { Plus } from "lucide-react";
 
 type ExistingPerson = {
   id: string;
@@ -77,6 +90,7 @@ export type ProjectFormInitial = {
   submitBefore: string;
   composition: ProjectComposition;
   programFamily: ProgramFamily;
+  organizationProgramId?: string;
   jurisdiction: ProjectJurisdiction;
   formLanguage: "en" | "fr";
   representativeUserId: string;
@@ -120,6 +134,7 @@ export function ProjectForm({
   presetPersonId,
   initial,
   canCreatePeople = true,
+  organizationPrograms = [],
 }: {
   locale: string;
   people: ExistingPerson[];
@@ -128,15 +143,23 @@ export function ProjectForm({
   presetPersonId?: string;
   initial?: ProjectFormInitial;
   canCreatePeople?: boolean;
+  organizationPrograms?: OrganizationProgram[];
 }) {
   const t = useTranslations("projects");
   const tp = useTranslations("programs");
+  const to = useTranslations("orgPrograms");
   const tr = useTranslations("roles");
   const ti = useTranslations("immigrationStatus");
+  const router = useRouter();
   const isEdit = Boolean(initial);
   const defaultPersonMode: "new" | "existing" = canCreatePeople
     ? "new"
     : "existing";
+
+  const [orgPrograms, setOrgPrograms] = useState(organizationPrograms);
+  const [programEditorOpen, setProgramEditorOpen] = useState(false);
+  const [editingProgram, setEditingProgram] =
+    useState<OrganizationProgram | null>(null);
 
   const [composition, setComposition] = useState<ProjectComposition>(
     initial?.composition ?? "individual",
@@ -144,6 +167,9 @@ export function ProjectForm({
   const [programFamily, setProgramFamily] = useState<ProgramFamily>(
     initial?.programFamily ?? "work_permit",
   );
+  const [organizationProgramId, setOrganizationProgramId] = useState<
+    string | null
+  >(initial?.organizationProgramId ?? null);
   const [formLanguage, setFormLanguage] = useState<"en" | "fr">(
     initial?.formLanguage ?? (locale === "fr" ? "fr" : "en"),
   );
@@ -176,7 +202,17 @@ export function ProjectForm({
   const [needsCustodian, setNeedsCustodian] = useState(
     initial?.needsCustodian ?? false,
   );
-  const customFile = isCustomProgram(programFamily);
+  const selectedOrgProgram = useMemo(
+    () =>
+      organizationProgramId
+        ? (orgPrograms.find((p) => p.id === organizationProgramId) ?? null)
+        : null,
+    [orgPrograms, organizationProgramId],
+  );
+  const customFile = isCustomProgram(programFamily, organizationProgramId);
+  const programSelectValue = organizationProgramId
+    ? orgProgramSelectValue(organizationProgramId)
+    : programFamily;
   const [slots, setSlots] = useState<ProjectFormSlot[]>(
     initial?.slots?.length ? initial.slots : [emptySlot("principal", { mode: defaultPersonMode })],
   );
@@ -226,14 +262,71 @@ export function ProjectForm({
   ]);
 
   useEffect(() => {
+    setOrgPrograms(organizationPrograms);
+  }, [organizationPrograms]);
+
+  useEffect(() => {
+    if (!selectedOrgProgram) return;
+    if (!compositionAllowed(selectedOrgProgram, composition)) {
+      if (selectedOrgProgram.allows_individual) setComposition("individual");
+      else if (selectedOrgProgram.allows_couple) setComposition("couple");
+      else if (selectedOrgProgram.allows_family) setComposition("family");
+    }
+    const nextLocation = resolveOrgProgramApplicationLocation(
+      selectedOrgProgram,
+      applicationLocation,
+    );
+    if (nextLocation && nextLocation !== applicationLocation) {
+      setApplicationLocation(nextLocation);
+    }
+  }, [selectedOrgProgram, composition, applicationLocation]);
+
+  useEffect(() => {
     if (skipJurisdictionSync.current) {
       skipJurisdictionSync.current = false;
       return;
     }
-    if (!isEdit) {
+    if (!isEdit && !organizationProgramId) {
       setApplicationLocation(defaultApplicationLocation(programFamily));
     }
-  }, [programFamily, isEdit]);
+  }, [programFamily, isEdit, organizationProgramId]);
+
+  function handleProgramSelectChange(value: string) {
+    const parsed = parseOrgProgramSelectValue(value);
+    if (parsed.kind === "org") {
+      setOrganizationProgramId(parsed.id);
+      setProgramFamily("other");
+      return;
+    }
+    setOrganizationProgramId(null);
+    setProgramFamily(parsed.family as ProgramFamily);
+  }
+
+  function openCreateProgram() {
+    setEditingProgram(null);
+    setProgramEditorOpen(true);
+  }
+
+  function openEditProgram() {
+    if (!selectedOrgProgram) return;
+    setEditingProgram(selectedOrgProgram);
+    setProgramEditorOpen(true);
+  }
+
+  function handleProgramSaved(program: OrganizationProgram) {
+    setOrgPrograms((prev) => {
+      const exists = prev.some((p) => p.id === program.id);
+      if (exists) {
+        return prev.map((p) => (p.id === program.id ? { ...p, ...program } : p));
+      }
+      return [...prev, program].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
+    });
+    setOrganizationProgramId(program.id);
+    setProgramFamily("other");
+    router.refresh();
+  }
 
   const participantsPayload = useMemo(
     () =>
@@ -292,6 +385,7 @@ export function ProjectForm({
   }
 
   return (
+    <>
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="locale" value={locale} />
       {initial ? (
@@ -299,6 +393,11 @@ export function ProjectForm({
       ) : null}
       <input type="hidden" name="composition" value={composition} />
       <input type="hidden" name="programFamily" value={programFamily} />
+      <input
+        type="hidden"
+        name="organizationProgramId"
+        value={organizationProgramId ?? ""}
+      />
       <input type="hidden" name="jurisdiction" value="federal" />
       <input type="hidden" name="formLanguage" value={formLanguage} />
       <input type="hidden" name="applicationLocation" value={applicationLocation} />
@@ -469,43 +568,82 @@ export function ProjectForm({
       <div className="space-y-2">
         <Label>{t("composition")}</Label>
         <div className="grid grid-cols-3 gap-2">
-          {(["individual", "couple", "family"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setComposition(value)}
-              className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
-                composition === value
-                  ? "border-action bg-accent text-accent-foreground"
-                  : "border-border bg-surface text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {t(`compositions.${value}`)}
-            </button>
-          ))}
+          {(["individual", "couple", "family"] as const).map((value) => {
+            const allowed = selectedOrgProgram
+              ? compositionAllowed(selectedOrgProgram, value)
+              : true;
+            return (
+              <button
+                key={value}
+                type="button"
+                disabled={!allowed}
+                onClick={() => setComposition(value)}
+                className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                  composition === value
+                    ? "border-action bg-accent text-accent-foreground"
+                    : "border-border bg-surface text-muted-foreground hover:bg-muted"
+                } disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                {t(`compositions.${value}`)}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="programFamily">{t("program")}</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="programFamily">{t("program")}</Label>
+            <div className="flex items-center gap-2">
+              {selectedOrgProgram ? (
+                <OrganizationProgramManageButton onClick={openEditProgram} />
+              ) : null}
+              <button
+                type="button"
+                onClick={openCreateProgram}
+                className="inline-flex items-center gap-1 text-xs font-medium text-action hover:underline"
+              >
+                <Plus className="size-3.5" />
+                {to("createShort")}
+              </button>
+            </div>
+          </div>
           <select
             id="programFamily"
-            value={programFamily}
-            onChange={(e) => setProgramFamily(e.target.value as ProgramFamily)}
+            value={programSelectValue}
+            onChange={(e) => handleProgramSelectChange(e.target.value)}
             className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
-            {(SELECTABLE_PROGRAM_FAMILIES.includes(programFamily)
-              ? SELECTABLE_PROGRAM_FAMILIES
-              : [programFamily, ...SELECTABLE_PROGRAM_FAMILIES]
-            ).map((family) => (
-              <option key={family} value={family}>
-                {tp(family)}
-              </option>
-            ))}
+            <optgroup label={to("builtinGroup")}>
+              {(SELECTABLE_PROGRAM_FAMILIES.includes(programFamily) ||
+              organizationProgramId
+                ? SELECTABLE_PROGRAM_FAMILIES
+                : [programFamily, ...SELECTABLE_PROGRAM_FAMILIES]
+              ).map((family) => (
+                <option key={family} value={family}>
+                  {tp(family)}
+                </option>
+              ))}
+            </optgroup>
+            {orgPrograms.length > 0 ? (
+              <optgroup label={to("customGroup")}>
+                {orgPrograms.map((program) => (
+                  <option
+                    key={program.id}
+                    value={orgProgramSelectValue(program.id)}
+                  >
+                    {program.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
           </select>
           {customFile ? (
             <p className="text-xs text-muted-foreground">{t("customHelp")}</p>
+          ) : null}
+          {selectedOrgProgram ? (
+            <p className="text-xs text-muted-foreground">{to("templateHelp")}</p>
           ) : null}
         </div>
         <div className="space-y-2 sm:col-span-2">
@@ -523,9 +661,14 @@ export function ProjectForm({
           </select>
           <p className="text-xs text-muted-foreground">{t("formLanguageHelp")}</p>
         </div>
-        {isFederalPermitProgram(programFamily) || customFile ? (
+        {isFederalPermitProgram(programFamily) ||
+        customFile ||
+        selectedOrgProgram ? (
           <>
-            {isFederalPermitProgram(programFamily) ? (
+            {isFederalPermitProgram(programFamily) ||
+            (selectedOrgProgram &&
+              selectedOrgProgram.allows_inside_canada &&
+              selectedOrgProgram.allows_outside_canada) ? (
               <div className="space-y-2">
                 <Label htmlFor="applicationLocation">
                   {t("applicationLocation")}
@@ -540,45 +683,64 @@ export function ProjectForm({
                   }
                   className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                 >
-                  <option value="outside">{t("locationOutside")}</option>
-                  <option value="inside">{t("locationInside")}</option>
+                  {(selectedOrgProgram
+                    ? [
+                        ...(selectedOrgProgram.allows_outside_canada
+                          ? (["outside"] as const)
+                          : []),
+                        ...(selectedOrgProgram.allows_inside_canada
+                          ? (["inside"] as const)
+                          : []),
+                      ]
+                    : (["outside", "inside"] as const)
+                  ).map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc === "outside"
+                        ? t("locationOutside")
+                        : t("locationInside")}
+                    </option>
+                  ))}
                 </select>
                 <p className="text-xs text-muted-foreground">
                   {t("applicationLocationHelp")}
                 </p>
               </div>
             ) : null}
-            <div className="space-y-2">
-              <Label htmlFor="isCommonLaw">{t("isCommonLaw")}</Label>
-              <select
-                id="isCommonLaw"
-                value={isCommonLaw ? "Y" : "N"}
-                onChange={(e) => setIsCommonLaw(e.target.value === "Y")}
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-              >
-                <option value="N">{t("commonLawNo")}</option>
-                <option value="Y">{t("commonLawYes")}</option>
-              </select>
-              <p className="text-xs text-muted-foreground">
-                {t("isCommonLawHelp")}
-              </p>
-            </div>
-            {isStudyPermitProgram(programFamily) ? (
-              <div className="space-y-2">
-                <Label htmlFor="needsCustodian">{t("isMinor")}</Label>
-                <select
-                  id="needsCustodian"
-                  value={needsCustodian ? "Y" : "N"}
-                  onChange={(e) => setNeedsCustodian(e.target.value === "Y")}
-                  className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-                >
-                  <option value="N">{t("commonLawNo")}</option>
-                  <option value="Y">{t("commonLawYes")}</option>
-                </select>
-                <p className="text-xs text-muted-foreground">
-                  {t("isMinorHelp")}
-                </p>
-              </div>
+            {!selectedOrgProgram ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="isCommonLaw">{t("isCommonLaw")}</Label>
+                  <select
+                    id="isCommonLaw"
+                    value={isCommonLaw ? "Y" : "N"}
+                    onChange={(e) => setIsCommonLaw(e.target.value === "Y")}
+                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                  >
+                    <option value="N">{t("commonLawNo")}</option>
+                    <option value="Y">{t("commonLawYes")}</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    {t("isCommonLawHelp")}
+                  </p>
+                </div>
+                {isStudyPermitProgram(programFamily) ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="needsCustodian">{t("isMinor")}</Label>
+                    <select
+                      id="needsCustodian"
+                      value={needsCustodian ? "Y" : "N"}
+                      onChange={(e) => setNeedsCustodian(e.target.value === "Y")}
+                      className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                    >
+                      <option value="N">{t("commonLawNo")}</option>
+                      <option value="Y">{t("commonLawYes")}</option>
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      {t("isMinorHelp")}
+                    </p>
+                  </div>
+                ) : null}
+              </>
             ) : null}
           </>
         ) : null}
@@ -845,6 +1007,14 @@ export function ProjectForm({
             : t("create")}
       </Button>
     </form>
+    <OrganizationProgramEditor
+      locale={locale}
+      open={programEditorOpen}
+      onOpenChange={setProgramEditorOpen}
+      initial={editingProgram}
+      onSaved={handleProgramSaved}
+    />
+    </>
   );
 }
 
@@ -856,6 +1026,7 @@ export function CreateProjectForm(props: {
   currentUserId?: string;
   presetPersonId?: string;
   canCreatePeople?: boolean;
+  organizationPrograms?: OrganizationProgram[];
 }) {
   return <ProjectForm {...props} />;
 }

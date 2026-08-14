@@ -97,6 +97,7 @@ const projectFieldsSchema = z.object({
   locale: z.enum(["en", "fr", "es"]).default("en"),
   composition: z.enum(["individual", "couple", "family"]),
   programFamily: z.enum(PROGRAM_FAMILIES as [ProgramFamily, ...ProgramFamily[]]),
+  organizationProgramId: z.string().uuid().optional(),
   jurisdiction: z.enum(["federal"]).optional(),
   formLanguage: z.enum(["en", "fr"]).default("en"),
   title: z.string().trim().max(200).optional(),
@@ -175,6 +176,9 @@ function parseProjectForm(formData: FormData) {
   const locale = (formData.get("locale") as "en" | "fr" | "es") || "en";
   const composition = formData.get("composition") as ProjectComposition;
   const programFamily = formData.get("programFamily") as ProgramFamily;
+  const organizationProgramIdRaw = String(
+    formData.get("organizationProgramId") || "",
+  ).trim();
   const jurisdictionRaw = "federal";
   const formLanguageRaw = String(formData.get("formLanguage") || "").trim();
   const titleRaw = String(formData.get("title") || "").trim();
@@ -204,6 +208,7 @@ function parseProjectForm(formData: FormData) {
     locale,
     composition,
     programFamily,
+    organizationProgramId: organizationProgramIdRaw || undefined,
     jurisdiction: jurisdictionRaw || undefined,
     formLanguage: formLanguageRaw || (locale === "fr" ? "fr" : "en"),
     title: titleRaw || undefined,
@@ -375,7 +380,14 @@ export async function createProjectAction(
   if ("error" in parsed) return { error: parsed.error };
 
   const { data } = parsed;
-  if (!SELECTABLE_PROGRAM_FAMILIES.includes(data.programFamily)) {
+  const organizationProgramId = data.organizationProgramId ?? null;
+  if (
+    !organizationProgramId &&
+    !SELECTABLE_PROGRAM_FAMILIES.includes(data.programFamily)
+  ) {
+    return { error: "invalid" };
+  }
+  if (organizationProgramId && data.programFamily !== "other") {
     return { error: "invalid" };
   }
   const membership = await getPrimaryMembership();
@@ -391,6 +403,30 @@ export async function createProjectAction(
   const jurisdiction = defaultJurisdictionForProgram(data.programFamily);
   const user = await getSessionUser();
 
+  let orgProgram: import("@/lib/crm/org-programs").OrganizationProgram | null =
+    null;
+  if (organizationProgramId) {
+    const { mapOrganizationProgramRow, compositionAllowed } = await import(
+      "@/lib/crm/org-programs"
+    );
+    const { data: programRow, error: programError } = await supabase
+      .from("organization_programs")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("id", organizationProgramId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (programError || !programRow) {
+      return { error: "invalid" };
+    }
+    orgProgram = mapOrganizationProgramRow(
+      programRow as Record<string, unknown>,
+    );
+    if (!compositionAllowed(orgProgram, data.composition)) {
+      return { error: "invalid" };
+    }
+  }
+
   const resolved = await resolveParticipants(
     orgId,
     data.locale,
@@ -403,7 +439,9 @@ export async function createProjectAction(
     data.title ||
     buildProjectTitle({
       programFamily: data.programFamily,
-      programLabel: programLabel(data.programFamily, data.locale),
+      programLabel: orgProgram
+        ? orgProgram.name
+        : programLabel(data.programFamily, data.locale),
       peopleNames: resolved.people.map((p) => p.displayName),
     });
 
@@ -432,6 +470,7 @@ export async function createProjectAction(
       submit_before: submitBefore,
       jurisdiction,
       program_family: data.programFamily,
+      organization_program_id: organizationProgramId,
       form_language: data.formLanguage,
       representative_user_id: representativeUserId,
       created_by: user?.id ?? null,
@@ -476,10 +515,18 @@ export async function createProjectAction(
       resolveApplicationLocation,
       seedFormsForProgram,
     } = await import("@/lib/ircc/kits");
-    const applicationLocation = resolveApplicationLocation(
-      data.applicationLocation,
-      data.programFamily,
+    const { resolveOrgProgramApplicationLocation } = await import(
+      "@/lib/crm/org-programs"
     );
+    const applicationLocation = orgProgram
+      ? (resolveOrgProgramApplicationLocation(
+          orgProgram,
+          data.applicationLocation,
+        ) ?? "outside")
+      : resolveApplicationLocation(
+          data.applicationLocation,
+          data.programFamily,
+        );
     const isCommonLaw = detectCommonLaw({
       isCommonLaw: data.isCommonLaw,
       participantRoles: resolved.people.map((p) => p.role),
@@ -491,29 +538,33 @@ export async function createProjectAction(
       ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
       ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
     ];
-    const custom = isCustomProgram(data.programFamily);
+    const custom = isCustomProgram(data.programFamily, organizationProgramId);
     const personKits = custom
       ? personKitsFromParticipantInputs(resolved.people, data.participants)
       : {};
-    const seeds = custom
-      ? expandMixedPersonKits(
-          personIds.map((personId) => ({
-            personId,
-            programFamily: personKits[personId]?.programFamily ?? "work_permit",
-            applicationLocation:
-              personKits[personId]?.applicationLocation ?? "outside",
-            needsCustodian: personKits[personId]?.needsCustodian,
-          })),
-          { isCommonLaw },
-        )
-      : expandSeedsForParticipants(
-          seedFormsForProgram(data.programFamily, {
-            applicationLocation,
-            isCommonLaw,
-            needsCustodian,
-          }),
-          personIds,
-        );
+    const seeds = orgProgram
+      ? (
+          await import("@/lib/crm/org-program-seed")
+        ).expandOrgProgramFormSeeds(orgProgram.forms, personIds)
+      : custom
+        ? expandMixedPersonKits(
+            personIds.map((personId) => ({
+              personId,
+              programFamily: personKits[personId]?.programFamily ?? "work_permit",
+              applicationLocation:
+                personKits[personId]?.applicationLocation ?? "outside",
+              needsCustodian: personKits[personId]?.needsCustodian,
+            })),
+            { isCommonLaw },
+          )
+        : expandSeedsForParticipants(
+            seedFormsForProgram(data.programFamily, {
+              applicationLocation,
+              isCommonLaw,
+              needsCustodian,
+            }),
+            personIds,
+          );
     const { error: formsError } = await supabase.from("project_forms").insert(
       seeds.map((seed) => ({
         organization_id: orgId,
@@ -529,27 +580,67 @@ export async function createProjectAction(
       console.error("seed project forms:", formsError.message);
     }
 
-    const { defaultDocumentsForProgram } = await import(
-      "@/lib/documents/catalog"
-    );
-    const docSeeds = defaultDocumentsForProgram(data.programFamily);
-    const { error: docsError } = await supabase
-      .from("project_document_requests")
-      .insert(
-        personIds.flatMap((personId) =>
-          docSeeds.map((seed) => ({
-            organization_id: orgId,
-            project_id: project.id,
-            person_id: personId,
-            doc_key: seed.docKey,
-            is_required: seed.isRequired,
-            sort_order: seed.sortOrder,
-            status: "requested",
-          })),
-        ),
+    const orgKey = await getOrgDataKey(orgId);
+    if (orgProgram) {
+      const { expandOrgProgramDocumentSeeds } = await import(
+        "@/lib/crm/org-program-seed"
       );
-    if (docsError) {
-      console.error("seed project documents:", docsError.message);
+      const { encryptDocumentRequestWrite } = await import(
+        "@/lib/security/client-pii"
+      );
+      const docSeeds = expandOrgProgramDocumentSeeds(
+        orgProgram.documents,
+        personIds,
+      );
+      if (docSeeds.length > 0) {
+        const { error: docsError } = await supabase
+          .from("project_document_requests")
+          .insert(
+            docSeeds.map((seed) => ({
+              organization_id: orgId,
+              project_id: project.id,
+              person_id: seed.personId,
+              doc_key: seed.docKey,
+              request_scope: seed.requestScope,
+              ...(seed.docKey === "custom"
+                ? encryptDocumentRequestWrite(
+                    { custom_label: seed.customLabel },
+                    orgKey,
+                  )
+                : { custom_label: null }),
+              is_required: seed.isRequired,
+              sort_order: seed.sortOrder,
+              status: "requested",
+            })),
+          );
+        if (docsError) {
+          console.error("seed org program documents:", docsError.message);
+        }
+      }
+    } else {
+      const { defaultDocumentsForProgram } = await import(
+        "@/lib/documents/catalog"
+      );
+      const docSeeds = defaultDocumentsForProgram(data.programFamily);
+      const { error: docsError } = await supabase
+        .from("project_document_requests")
+        .insert(
+          personIds.flatMap((personId) =>
+            docSeeds.map((seed) => ({
+              organization_id: orgId,
+              project_id: project.id,
+              person_id: personId,
+              doc_key: seed.docKey,
+              request_scope: "person",
+              is_required: seed.isRequired,
+              sort_order: seed.sortOrder,
+              status: "requested",
+            })),
+          ),
+        );
+      if (docsError) {
+        console.error("seed project documents:", docsError.message);
+      }
     }
 
     const { accountRepAnswersFromProfile, PROFILE_REP_SELECT } = await import(
@@ -587,7 +678,7 @@ export async function createProjectAction(
     await supabase.from("project_form_answers").insert({
       organization_id: orgId,
       project_id: project.id,
-      answers: encryptAnswersValue(initialAnswers, await getOrgDataKey(orgId)),
+      answers: encryptAnswersValue(initialAnswers, orgKey),
       current_section: "identity",
     });
   } catch (error) {
@@ -610,6 +701,10 @@ export async function updateProjectAction(
   if ("error" in parsed) return { error: parsed.error };
 
   const { data } = parsed;
+  const organizationProgramId = data.organizationProgramId ?? null;
+  if (organizationProgramId && data.programFamily !== "other") {
+    return { error: "invalid" };
+  }
   const membership = await getPrimaryMembership();
   if (!membership) {
     redirect(`/${data.locale}/onboarding`);
@@ -629,6 +724,27 @@ export async function updateProjectAction(
     user?.id ?? null,
   );
 
+  if (organizationProgramId) {
+    const { mapOrganizationProgramRow, compositionAllowed } = await import(
+      "@/lib/crm/org-programs"
+    );
+    const { data: programRow, error: programError } = await supabase
+      .from("organization_programs")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("id", organizationProgramId)
+      .maybeSingle();
+    if (programError || !programRow) {
+      return { error: "invalid" };
+    }
+    const orgProgram = mapOrganizationProgramRow(
+      programRow as Record<string, unknown>,
+    );
+    if (!compositionAllowed(orgProgram, data.composition)) {
+      return { error: "invalid" };
+    }
+  }
+
   const resolved = await resolveParticipants(
     orgId,
     data.locale,
@@ -640,11 +756,21 @@ export async function updateProjectAction(
   );
   if ("error" in resolved) return { error: resolved.error };
 
+  let programDisplayLabel = programLabel(data.programFamily, data.locale);
+  if (organizationProgramId) {
+    const { data: named } = await supabase
+      .from("organization_programs")
+      .select("name")
+      .eq("id", organizationProgramId)
+      .maybeSingle();
+    if (named?.name) programDisplayLabel = named.name as string;
+  }
+
   const title =
     data.title ||
     buildProjectTitle({
       programFamily: data.programFamily,
-      programLabel: programLabel(data.programFamily, data.locale),
+      programLabel: programDisplayLabel,
       peopleNames: resolved.people.map((p) => p.displayName),
     });
 
@@ -675,6 +801,7 @@ export async function updateProjectAction(
       submit_before: data.submitBefore || null,
       jurisdiction,
       program_family: data.programFamily,
+      organization_program_id: organizationProgramId,
       form_language: data.formLanguage,
       representative_user_id: representativeUserId,
       ...closedAndRetainFields(status, statusAt),
@@ -742,7 +869,7 @@ export async function updateProjectAction(
         ? "Y"
         : "N";
     }
-    if (isCustomProgram(data.programFamily)) {
+    if (isCustomProgram(data.programFamily, organizationProgramId)) {
       store.project.personKits = personKitsFromParticipantInputs(
         resolved.people,
         data.participants,
@@ -880,57 +1007,60 @@ export async function updateProjectAction(
       isCustomProgram,
       resolveApplicationLocation,
     } = await import("@/lib/ircc/kits");
-    const { data: latestAnswers } = await supabase
-      .from("project_form_answers")
-      .select("answers")
-      .eq("project_id", projectId)
-      .eq("organization_id", orgId)
-      .maybeSingle();
-    const store = normalizeAnswersStore(
-      decryptAnswersValue(latestAnswers?.answers, await getOrgDataKey(orgId)),
-      {
-        principalPersonId: principal?.id,
-      },
-    );
-    const { data: existingFormRows } = await supabase
-      .from("project_forms")
-      .select("form_code")
-      .eq("project_id", projectId)
-      .eq("organization_id", orgId);
-    const kit = kitOptionsFromAnswersStore(
-      store,
-      data.programFamily,
-      resolved.people.map((p) => p.role),
-      (existingFormRows ?? []).map((r: { form_code: string }) => r.form_code),
-    );
-    const personIds = [
-      ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
-      ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
-    ];
-    await reconcileProjectKitForms({
-      organizationId: orgId,
-      projectId,
-      programFamily: data.programFamily,
-      personIds,
-      applicationLocation: resolveApplicationLocation(
-        data.applicationLocation,
+    // Org program templates are snapshotted at create time — do not re-seed kits on edit.
+    if (!organizationProgramId) {
+      const { data: latestAnswers } = await supabase
+        .from("project_form_answers")
+        .select("answers")
+        .eq("project_id", projectId)
+        .eq("organization_id", orgId)
+        .maybeSingle();
+      const store = normalizeAnswersStore(
+        decryptAnswersValue(latestAnswers?.answers, await getOrgDataKey(orgId)),
+        {
+          principalPersonId: principal?.id,
+        },
+      );
+      const { data: existingFormRows } = await supabase
+        .from("project_forms")
+        .select("form_code")
+        .eq("project_id", projectId)
+        .eq("organization_id", orgId);
+      const kit = kitOptionsFromAnswersStore(
+        store,
         data.programFamily,
-      ),
-      isCommonLaw:
-        data.isCommonLaw != null
-          ? detectCommonLaw({
-              isCommonLaw: data.isCommonLaw,
-              participantRoles: resolved.people.map((p) => p.role),
-            })
-          : kit.isCommonLaw,
-      needsCustodian:
-        data.needsCustodian != null
-          ? detectMinor({ needsCustodian: data.needsCustodian })
-          : kit.needsCustodian,
-      personKits: isCustomProgram(data.programFamily)
-        ? personKitAssignments(personIds, personKitsFromAnswersStore(store))
-        : undefined,
-    });
+        resolved.people.map((p) => p.role),
+        (existingFormRows ?? []).map((r: { form_code: string }) => r.form_code),
+      );
+      const personIds = [
+        ...resolved.people.filter((p) => p.role === "principal").map((p) => p.id),
+        ...resolved.people.filter((p) => p.role !== "principal").map((p) => p.id),
+      ];
+      await reconcileProjectKitForms({
+        organizationId: orgId,
+        projectId,
+        programFamily: data.programFamily,
+        personIds,
+        applicationLocation: resolveApplicationLocation(
+          data.applicationLocation,
+          data.programFamily,
+        ),
+        isCommonLaw:
+          data.isCommonLaw != null
+            ? detectCommonLaw({
+                isCommonLaw: data.isCommonLaw,
+                participantRoles: resolved.people.map((p) => p.role),
+              })
+            : kit.isCommonLaw,
+        needsCustodian:
+          data.needsCustodian != null
+            ? detectMinor({ needsCustodian: data.needsCustodian })
+            : kit.needsCustodian,
+        personKits: isCustomProgram(data.programFamily, organizationProgramId)
+          ? personKitAssignments(personIds, personKitsFromAnswersStore(store))
+          : undefined,
+      });
+    }
   } catch (error) {
     console.error("sync person forms after participant update:", error);
   }

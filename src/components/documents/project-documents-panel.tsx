@@ -113,7 +113,11 @@ export function ProjectDocumentsPanel({
             const submitted = Boolean(row.file);
             const title = [
               documentLabel(row, t),
-              showPerson && person ? person.displayName : null,
+              row.request_scope === "project"
+                ? t("scopeProject")
+                : showPerson && person
+                  ? person.displayName
+                  : null,
               row.consultant_note,
             ]
               .filter(Boolean)
@@ -126,7 +130,11 @@ export function ProjectDocumentsPanel({
                     title={title}
                   >
                     {documentLabel(row, t)}
-                    {showPerson && person ? (
+                    {row.request_scope === "project" ? (
+                      <span className="font-normal text-muted-foreground">
+                        {` · ${t("scopeProject")}`}
+                      </span>
+                    ) : showPerson && person ? (
                       <span className="font-normal text-muted-foreground">
                         {` · ${person.displayName}`}
                       </span>

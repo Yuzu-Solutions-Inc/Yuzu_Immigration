@@ -48,8 +48,9 @@ export function isPermitKitFamily(
 
 export function isCustomProgram(
   programFamily: ProgramFamily | string,
+  organizationProgramId?: string | null,
 ): boolean {
-  return programFamily === "other";
+  return programFamily === "other" && !organizationProgramId;
 }
 
 export function isWorkPermitProgram(

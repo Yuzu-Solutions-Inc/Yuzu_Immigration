@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { listOrgMembers, listPeople } from "@/lib/crm/queries";
+import { listOrganizationPrograms } from "@/app/actions/org-programs";
 
 export default async function NewProjectPage({
   params,
@@ -24,10 +25,11 @@ export default async function NewProjectPage({
   if (!canCreateRecords(membership?.role)) {
     redirect(`/${locale}/projects`);
   }
-  const [people, members, user] = await Promise.all([
+  const [people, members, user, organizationPrograms] = await Promise.all([
     listPeople(),
     listOrgMembers(),
     getSessionUser(),
+    listOrganizationPrograms(),
   ]);
 
   return (
@@ -56,6 +58,7 @@ export default async function NewProjectPage({
           }))}
           currentUserId={user?.id}
           presetPersonId={presetPersonId}
+          organizationPrograms={organizationPrograms}
         />
       </SurfaceCard>
     </div>

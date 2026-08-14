@@ -170,7 +170,8 @@ export default async function ProjectDetailPage({
             {project.title}
           </h1>
           <p className="text-[15px] text-muted-foreground">
-            {tprog(project.program_family)}
+            {project.organization_program_name ||
+              tprog(project.program_family)}
             {project.jurisdiction !== "federal"
               ? ` · ${t(`jurisdictions.${project.jurisdiction}`)}`
               : ""}{" "}
