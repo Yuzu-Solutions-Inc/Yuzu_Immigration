@@ -13,10 +13,10 @@ alwaysApply: true
 - **i18n**: next-intl with `en`, `fr`, and `es` under `src/app/[locale]`
 
 ## Visual system
-- Brand graphite `#111827`, action violet `#6366F1`, success emerald `#059669`, highlight amber `#F59E0B`
-- Canvas `#F9FAFB`, surfaces `#FFFFFF`, text secondary `#4A5568`, border `#E5E7EB`
+- Official Yuzu Solutions tokens: Electric Yuzu `#F8C607`, Zest Green `#86C54A`, Soft Kumquat `#FF9F43`, Carbon Slate `#2D3436`, Paper White `#F9F9F9`
+- App aliases: brand → carbon, action → yuzu (CTA), success → zest, highlight → kumquat
 - Fonts: Plus Jakarta Sans (headings), Inter (body)
-- Radius 12px, soft elevation `0 4px 6px -1px rgba(0,0,0,0.05)`
+- Radius 12px, soft elevation `0 4px 6px -1px rgba(15,18,19,0.06)`
 - No IRCC/MIFI government red/blue motifs or official icons
 
 ## Domain model

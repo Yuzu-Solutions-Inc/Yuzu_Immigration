@@ -271,7 +271,7 @@ export function WeekTemplateHours({
                       disabled={!canManage || pending}
                       aria-label={t("removeRule")}
                       title={canManage ? t("clickToRemoveSlot") : undefined}
-                      className="group absolute inset-x-1 overflow-hidden rounded-md bg-action px-1.5 py-1 text-left text-[11px] font-medium leading-tight text-white shadow-sm hover:bg-[#4f46e5]"
+                      className="group absolute inset-x-1 overflow-hidden rounded-md bg-action px-1.5 py-1 text-left text-[11px] font-medium leading-tight text-action-foreground shadow-sm hover:bg-[var(--action-hover)]"
                       style={{
                         top: (start / DAY_MINUTES) * GRID_HEIGHT,
                         height: Math.max(

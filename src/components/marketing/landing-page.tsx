@@ -57,7 +57,7 @@ function ProductPreview() {
   return (
     <div
       aria-hidden
-      className="landing-preview relative mx-auto w-full max-w-5xl overflow-hidden rounded-t-[1.25rem] border border-white/10 border-b-0 bg-[#0b1220] shadow-[0_-24px_80px_-20px_rgba(17,24,39,0.55)]"
+      className="landing-preview relative mx-auto w-full max-w-5xl overflow-hidden rounded-t-[1.25rem] border border-white/10 border-b-0 bg-[var(--carbon-900)] shadow-[0_-24px_80px_-20px_rgba(15,18,19,0.55)]"
     >
       <div className="flex items-center gap-2 border-b border-white/8 px-4 py-3">
         <span className="size-2.5 rounded-full bg-white/20" />
@@ -66,7 +66,7 @@ function ProductPreview() {
         <div className="ml-3 h-6 flex-1 rounded-md bg-white/6" />
       </div>
       <div className="grid grid-cols-[7.5rem_1fr] sm:grid-cols-[10rem_1fr]">
-        <div className="space-y-3 border-r border-white/8 bg-[#111827] p-4">
+        <div className="space-y-3 border-r border-white/8 bg-[var(--carbon-700)] p-4">
           <div className="h-2.5 w-16 rounded bg-action/80" />
           <div className="h-2 w-12 rounded bg-white/15" />
           <div className="h-2 w-14 rounded bg-white/10" />
@@ -100,7 +100,7 @@ function ProductPreview() {
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-8 bg-[#0b1220]/70 sm:h-9"
+                  className="h-8 bg-[var(--carbon-900)]/70 sm:h-9"
                   style={{ opacity: 0.55 + (i % 4) * 0.1 }}
                 />
               ))}
@@ -116,7 +116,7 @@ export async function LandingPage() {
   const t = await getTranslations("home");
 
   return (
-    <main className="landing-page relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-[#f3f4f6]">
+    <main className="landing-page relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-[var(--paper-500)]">
       <style>{`
         @keyframes landing-fade-up {
           from { opacity: 0; transform: translateY(18px); }
@@ -152,7 +152,7 @@ export async function LandingPage() {
         }
       `}</style>
 
-      <header className="relative z-20 border-b border-brand/5 bg-[#f3f4f6]/80 backdrop-blur-md">
+      <header className="relative z-20 border-b border-brand/5 bg-[var(--paper-500)]/80 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <BrandLogo size="md" />
           <div className="flex items-center gap-2 sm:gap-3">
@@ -173,13 +173,13 @@ export async function LandingPage() {
         </div>
       </header>
 
-      <section className="relative isolate overflow-hidden bg-[#111827] text-white">
+      <section className="relative isolate overflow-hidden bg-[var(--carbon-700)] text-white">
         <div
           aria-hidden
           className="lp-mesh pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 80% 60% at 15% 20%, rgba(99,102,241,0.28), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 10%, rgba(5,150,105,0.18), transparent 50%), radial-gradient(ellipse 60% 40% at 70% 80%, rgba(245,158,11,0.12), transparent 55%), linear-gradient(180deg, #111827 0%, #0b1220 55%, #111827 100%)",
+              "radial-gradient(ellipse 80% 60% at 15% 20%, rgba(248,198,7,0.28), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 10%, rgba(134,197,74,0.18), transparent 50%), radial-gradient(ellipse 60% 40% at 70% 80%, rgba(255,159,67,0.14), transparent 55%), linear-gradient(180deg, #1F2426 0%, #0F1213 55%, #1F2426 100%)",
           }}
         />
         <div
@@ -241,7 +241,7 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="relative z-10 border-b border-border bg-[#f3f4f6] py-20 sm:py-24">
+      <section className="relative z-10 border-b border-border bg-[var(--paper-500)] py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
           <div className="max-w-2xl space-y-3">
             <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
@@ -310,7 +310,7 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="border-b border-border bg-[#f3f4f6] py-20 sm:py-24">
+      <section className="border-b border-border bg-[var(--paper-500)] py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
           <div className="max-w-2xl space-y-3">
             <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
@@ -358,13 +358,13 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#111827] py-20 text-white sm:py-24">
+      <section className="relative overflow-hidden bg-[var(--carbon-700)] py-20 text-white sm:py-24">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 70% 80% at 50% 120%, rgba(99,102,241,0.35), transparent 60%)",
+              "radial-gradient(ellipse 70% 80% at 50% 120%, rgba(248,198,7,0.35), transparent 60%)",
           }}
         />
         <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 text-left sm:items-center sm:text-center">
@@ -398,7 +398,7 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-[#0b1220] py-8 text-white/50">
+      <footer className="bg-[var(--carbon-900)] py-8 text-white/50">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <BrandLogo size="sm" inverted />

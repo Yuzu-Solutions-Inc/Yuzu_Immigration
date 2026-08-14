@@ -115,7 +115,7 @@ export default async function PersonDetailPage({
                 href={`/projects/new?person=${person.id}`}
                 className={cn(
                   buttonVariants({ size: "sm" }),
-                  "bg-action text-white hover:bg-action/90",
+                  "bg-action text-action-foreground hover:bg-action/90",
                 )}
               >
                 {t("newProject")}

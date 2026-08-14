@@ -42,10 +42,25 @@
   --color-card: var(--card);
   --color-brand: var(--brand);
   --color-action: var(--action);
+  --color-action-foreground: var(--action-foreground);
   --color-success: var(--success);
-  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-text: var(--success-text);
   --color-highlight: var(--highlight);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-text: var(--warning-text);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-error-text: var(--error-text);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-text: var(--info-text);
   --color-surface: var(--surface);
+  --color-yuzu: var(--yuzu-500);
+  --color-zest: var(--zest-500);
+  --color-kumquat: var(--kumquat-500);
+  --color-carbon: var(--carbon-500);
   --shadow-elevated: var(--shadow-elevated);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -57,49 +72,110 @@
 }
 
 :root {
-  /* Brand tokens */
-  --brand: #111827;
-  --action: #6366f1;
-  --success: #059669;
-  --highlight: #f59e0b;
-  --surface: #ffffff;
-  --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  /* ── Electric Yuzu ── */
+  --yuzu-25: #fffdf5;
+  --yuzu-50: #fefaeb;
+  --yuzu-100: #fef6da;
+  --yuzu-300: #fbe077;
+  --yuzu-500: #f8c607; /* ★ Base */
+  --yuzu-700: #bc9605;
+  --yuzu-900: #685303;
+
+  /* ── Zest Green ── */
+  --zest-25: #fafdf8;
+  --zest-50: #f5fbef;
+  --zest-100: #eef8e4;
+  --zest-300: #a8d97a;
+  --zest-500: #86c54a; /* ★ Base */
+  --zest-700: #5e8f33;
+  --zest-900: #2f4719;
+
+  /* ── Soft Kumquat ── */
+  --kumquat-25: #fffbf7;
+  --kumquat-50: #fff8f0;
+  --kumquat-100: #fff3e6;
+  --kumquat-300: #ffb870;
+  --kumquat-500: #ff9f43; /* ★ Base */
+  --kumquat-700: #cc7f36;
+  --kumquat-900: #663f1b;
+
+  /* ── Carbon Slate ── */
+  --carbon-25: #f7f8f8;
+  --carbon-50: #f4f5f5;
+  --carbon-100: #e8e9ea;
+  --carbon-300: #8b9294;
+  --carbon-500: #2d3436; /* ★ Base */
+  --carbon-700: #1f2426;
+  --carbon-900: #0f1213;
+
+  /* ── Paper White ── */
+  --paper-25: #ffffff;
+  --paper-50: #ffffff;
+  --paper-100: #ffffff;
+  --paper-300: #fcfcfc;
+  --paper-500: #f9f9f9; /* ★ Base */
+  --paper-700: #e5e5e5;
+  --paper-900: #b3b3b3;
+
+  /* ── Semantic (official) ── */
+  --success: var(--zest-500);
+  --success-bg: var(--zest-100);
+  --success-text: var(--zest-700);
+  --warning: var(--kumquat-500);
+  --warning-bg: var(--kumquat-100);
+  --warning-text: var(--kumquat-700);
+  --error: #e74c3c;
+  --error-bg: #fdecea;
+  --error-text: #c0392b;
+  --info: #3498db;
+  --info-bg: #ebf5fb;
+  --info-text: #2471a3;
+
+  /* App aliases → official palette */
+  --brand: var(--carbon-500);
+  --action: var(--yuzu-500);
+  --action-foreground: var(--carbon-900);
+  --action-hover: var(--yuzu-700);
+  --action-active: var(--yuzu-900);
+  --highlight: var(--kumquat-500);
+  --surface: var(--paper-25);
+  --shadow-elevated: 0 4px 6px -1px rgba(15, 18, 19, 0.06);
 
   /* Mapped shadcn tokens */
-  --background: #f9fafb;
-  --foreground: #111827;
-  --card: #ffffff;
-  --card-foreground: #111827;
-  --popover: #ffffff;
-  --popover-foreground: #111827;
-  --primary: #6366f1;
-  --primary-foreground: #ffffff;
-  --secondary: #f3f4f6;
-  --secondary-foreground: #111827;
-  --muted: #f3f4f6;
-  --muted-foreground: #4a5568;
-  --accent: #eef2ff;
-  --accent-foreground: #3730a3;
-  --destructive: #dc2626;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #6366f1;
+  --background: var(--paper-500);
+  --foreground: var(--carbon-500);
+  --card: var(--paper-25);
+  --card-foreground: var(--carbon-500);
+  --popover: var(--paper-25);
+  --popover-foreground: var(--carbon-500);
+  --primary: var(--yuzu-500);
+  --primary-foreground: var(--carbon-900);
+  --secondary: var(--carbon-50);
+  --secondary-foreground: var(--carbon-500);
+  --muted: var(--carbon-50);
+  --muted-foreground: var(--carbon-300);
+  --accent: var(--yuzu-100);
+  --accent-foreground: var(--yuzu-900);
+  --destructive: var(--error);
+  --border: var(--carbon-100);
+  --input: var(--carbon-100);
+  --ring: var(--yuzu-700);
   --radius: 0.75rem;
 
-  --chart-1: #6366f1;
-  --chart-2: #059669;
-  --chart-3: #f59e0b;
-  --chart-4: #111827;
-  --chart-5: #4a5568;
+  --chart-1: var(--yuzu-500);
+  --chart-2: var(--zest-500);
+  --chart-3: var(--kumquat-500);
+  --chart-4: var(--carbon-500);
+  --chart-5: var(--carbon-300);
 
-  --sidebar: #111827;
-  --sidebar-foreground: #f9fafb;
-  --sidebar-primary: #6366f1;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1f2937;
-  --sidebar-accent-foreground: #f9fafb;
-  --sidebar-border: #1f2937;
-  --sidebar-ring: #6366f1;
+  --sidebar: var(--carbon-700);
+  --sidebar-foreground: var(--paper-300);
+  --sidebar-primary: var(--yuzu-500);
+  --sidebar-primary-foreground: var(--carbon-900);
+  --sidebar-accent: var(--carbon-500);
+  --sidebar-accent-foreground: var(--paper-25);
+  --sidebar-border: var(--carbon-500);
+  --sidebar-ring: var(--yuzu-500);
 }
 
 @layer base {
@@ -146,11 +222,15 @@
   }
 
   .text-action {
-    color: var(--action);
+    color: var(--yuzu-700);
   }
 
   .bg-action {
     background-color: var(--action);
+  }
+
+  .text-action-foreground {
+    color: var(--action-foreground);
   }
 
   .bg-canvas {
@@ -160,30 +240,32 @@
   .bg-surface {
     background-color: var(--surface);
   }
+
+  .animate-submit-attention {
+    animation: submit-attention 0.85s ease-in-out 3;
+  }
+
+  .text-success {
+    color: var(--success-text);
+  }
+
+  .bg-success {
+    background-color: var(--success);
+  }
 }
 
 @keyframes submit-attention {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 0 0 0 rgba(5, 150, 105, 0.45);
+    box-shadow:
+      0 4px 6px -1px rgba(15, 18, 19, 0.06),
+      0 0 0 0 rgba(134, 197, 74, 0.45);
   }
   40% {
     transform: scale(1.05);
-    box-shadow: 0 8px 16px -4px rgba(5, 150, 105, 0.35), 0 0 0 8px rgba(5, 150, 105, 0.2);
-  }
-}
-
-@layer utilities {
-  .animate-submit-attention {
-    animation: submit-attention 0.85s ease-in-out 3;
-  }
-
-  .text-success {
-    color: var(--success);
-  }
-
-  .bg-success {
-    background-color: var(--success);
+    box-shadow:
+      0 8px 16px -4px rgba(134, 197, 74, 0.35),
+      0 0 0 8px rgba(134, 197, 74, 0.2);
   }
 }

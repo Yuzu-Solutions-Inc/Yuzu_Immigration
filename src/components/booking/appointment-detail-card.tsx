@@ -341,7 +341,7 @@ export function AppointmentDetailCard({
                         className={cn(
                           "rounded-lg border px-2 py-1.5 text-xs tabular-nums transition-colors",
                           selected
-                            ? "border-action bg-action text-white"
+                            ? "border-action bg-action text-action-foreground"
                             : "border-border bg-canvas hover:border-action/50",
                         )}
                       >
