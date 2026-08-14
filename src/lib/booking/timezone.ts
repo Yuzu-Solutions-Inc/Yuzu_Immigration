@@ -118,6 +118,20 @@ export function hmFromMinutes(total: number) {
   return `${pad2(Math.floor(wrapped / 60))}:${pad2(wrapped % 60)}`;
 }
 
+export function formatDateInZone(
+  date: Date,
+  timeZone: string,
+  locale: string,
+) {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    timeZone,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
 export function formatTimeInZone(
   date: Date,
   timeZone: string,

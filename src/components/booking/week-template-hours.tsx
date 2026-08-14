@@ -126,6 +126,7 @@ export function WeekTemplateHours({
           <h2 className="font-heading text-lg font-semibold text-brand">
             {t("weekTemplate")}
           </h2>
+          <p className="text-sm text-muted-foreground">{t("weekTemplateHelp")}</p>
           <p className="text-sm text-muted-foreground">{t("weekTemplateDragHelp")}</p>
         </div>
         {canManage ? (

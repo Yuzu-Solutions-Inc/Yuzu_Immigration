@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/navigation";
 import { formatPriceCents, generateServiceSlots } from "@/lib/booking/slots";
-import type { BookingServiceRow } from "@/lib/booking/types";
+import type { BookingServiceRow, PublicHostCalendar } from "@/lib/booking/types";
 import {
   formatDateTimeInZone,
   formatTimeInZone,
@@ -29,9 +29,7 @@ export type PublicBookingPayload = {
   minNoticeHours: number;
   bufferMinutes: number;
   services: BookingServiceRow[];
-  rules: { weekday: number; start_time: string; end_time: string }[];
-  blocked: { starts_at: string; ends_at: string }[];
-  busy: { starts_at: string; ends_at: string }[];
+  hosts: PublicHostCalendar[];
 };
 
 const initialState: PublicBookingState = {};
@@ -44,6 +42,9 @@ export function PublicBookingFlow({
   payload: PublicBookingPayload;
 }) {
   const t = useTranslations("booking");
+  const [hostUserId, setHostUserId] = useState<string | null>(
+    payload.hosts[0]?.userId ?? null,
+  );
   const [serviceId, setServiceId] = useState<string | null>(
     payload.services[0]?.id ?? null,
   );
@@ -59,14 +60,15 @@ export function PublicBookingFlow({
     initialState,
   );
 
+  const host = payload.hosts.find((row) => row.userId === hostUserId) ?? null;
   const service = payload.services.find((row) => row.id === serviceId) ?? null;
   const slots = useMemo(() => {
-    if (!service) return [];
+    if (!service || !host) return [];
     return generateServiceSlots({
       durationMinutes: service.duration_minutes,
-      rules: payload.rules,
-      blocked: payload.blocked,
-      busy: payload.busy,
+      rules: host.rules,
+      blocked: host.blocked,
+      busy: host.busy,
       window: {
         timezone: payload.timezone,
         bookingWindowDays: payload.bookingWindowDays,
@@ -74,7 +76,7 @@ export function PublicBookingFlow({
         bufferMinutes: payload.bufferMinutes,
       },
     });
-  }, [payload, service]);
+  }, [host, payload, service]);
 
   const availableDays = useMemo(
     () => new Set(slots.map((slot) => slot.dateIso)),
@@ -82,6 +84,10 @@ export function PublicBookingFlow({
   );
   const daySlots = slots.filter((slot) => slot.dateIso === dateIso);
   const selectedSlot = slots.find((slot) => slot.startsAt === slotStart) ?? null;
+  const hostStep = payload.hosts.length > 1;
+  const serviceStep = hostStep ? 2 : 1;
+  const slotStep = hostStep ? 3 : 2;
+  const detailsStep = hostStep ? 4 : 3;
 
   function shiftMonth(delta: number) {
     setCursor((prev) => {
@@ -105,8 +111,53 @@ export function PublicBookingFlow({
               payload.timezone,
               locale,
             ),
+            host: state.hostName ?? payload.organizationName,
             org: payload.organizationName,
           })}
+        </p>
+        {state.meetJoinUrl?.startsWith("https://") ? (
+          <p>
+            <a
+              href={state.meetJoinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-white hover:bg-action/90"
+            >
+              {t("joinMeet")}
+            </a>
+          </p>
+        ) : null}
+        {state.manageToken ? (
+          <div className="space-y-2 text-sm">
+            <p className="text-muted-foreground">{t("manageHint")}</p>
+            <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+              <Link
+                href={`/booking/${state.manageToken}`}
+                className="font-medium text-action underline-offset-2 hover:underline"
+              >
+                {t("changeTime")}
+              </Link>
+              <Link
+                href={`/booking/${state.manageToken}?action=cancel`}
+                className="font-medium text-muted-foreground underline-offset-2 hover:underline"
+              >
+                {t("cancelAppointment")}
+              </Link>
+            </p>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (payload.hosts.length === 0) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <h1 className="font-heading text-2xl font-semibold text-brand">
+          {t("noHostsTitle")}
+        </h1>
+        <p className="mt-2 text-[15px] text-muted-foreground">
+          {t("noHostsBody")}
         </p>
       </div>
     );
@@ -136,11 +187,49 @@ export function PublicBookingFlow({
           {t("title")}
         </h1>
         <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
+        {host && payload.hosts.length === 1 ? (
+          <p className="text-sm font-medium text-brand">
+            {t("bookingWith", { name: host.name })}
+          </p>
+        ) : null}
       </header>
+
+      {payload.hosts.length > 1 ? (
+        <section className="space-y-3">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {t("chooseHost", { n: 1 })}
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {payload.hosts.map((row) => {
+              const selected = row.userId === hostUserId;
+              return (
+                <button
+                  key={row.userId}
+                  type="button"
+                  onClick={() => {
+                    setHostUserId(row.userId);
+                    setSlotStart(null);
+                    setDateIso(null);
+                  }}
+                  className={`rounded-xl border p-4 text-left transition-colors ${
+                    selected
+                      ? "border-action bg-action/5"
+                      : "border-border bg-surface hover:border-action/40"
+                  }`}
+                >
+                  <p className="font-heading font-semibold text-brand">
+                    {row.name}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("chooseService")}
+          {t("chooseService", { n: serviceStep })}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {payload.services.map((row) => {
@@ -179,7 +268,7 @@ export function PublicBookingFlow({
 
       <section className="space-y-3">
         <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("chooseSlot")}
+          {t("chooseSlot", { n: slotStep })}
         </h2>
         {slots.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("noSlots")}</p>
@@ -236,9 +325,10 @@ export function PublicBookingFlow({
       {selectedSlot && service ? (
         <section className="space-y-4 rounded-xl border border-border bg-surface p-5">
           <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("yourDetails")}
+            {t("yourDetails", { n: detailsStep })}
           </h2>
           <p className="text-sm text-muted-foreground">
+            {host ? `${host.name} · ` : null}
             {service.title} ·{" "}
             {formatDateTimeInZone(
               new Date(selectedSlot.startsAt),
@@ -254,6 +344,7 @@ export function PublicBookingFlow({
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="token" value={payload.token} />
             <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="hostUserId" value={host?.userId ?? ""} />
             <input type="hidden" name="serviceId" value={service.id} />
             <input type="hidden" name="startsAt" value={selectedSlot.startsAt} />
             <input type="hidden" name="endsAt" value={selectedSlot.endsAt} />

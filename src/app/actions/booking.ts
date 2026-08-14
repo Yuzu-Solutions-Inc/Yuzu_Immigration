@@ -49,6 +49,15 @@ async function requireManager() {
   return { ok: true as const, membership };
 }
 
+async function requireMember() {
+  const membership = await getPrimaryMembership();
+  const user = await getSessionUser();
+  if (!membership || !user) {
+    return { ok: false as const, error: "unauthorized" as const };
+  }
+  return { ok: true as const, membership, user };
+}
+
 function revalidateBooking(locale: string) {
   revalidatePath(`/${locale}/calendar`);
   revalidatePath(`/${locale}/calendar/settings`);
@@ -228,7 +237,6 @@ export async function saveBookingSettingsAction(
       minNoticeHours: z.coerce.number().int().min(0).max(168),
       bufferMinutes: z.coerce.number().int().min(0).max(120),
       isEnabled: z.enum(["on", "true", "false"]).optional(),
-      defaultHostUserId: z.string().uuid().optional().or(z.literal("")),
     })
     .safeParse({
       locale: formData.get("locale") || "en",
@@ -237,7 +245,6 @@ export async function saveBookingSettingsAction(
       minNoticeHours: formData.get("minNoticeHours"),
       bufferMinutes: formData.get("bufferMinutes"),
       isEnabled: formData.get("isEnabled") ? "on" : "false",
-      defaultHostUserId: String(formData.get("defaultHostUserId") || ""),
     });
 
   if (!parsed.success || !isBookingTimezone(parsed.data.timezone)) {
@@ -254,17 +261,6 @@ export async function saveBookingSettingsAction(
   const supabase = await createClient();
   const dek = await getOrgDataKey(orgId);
 
-  const hostUserId = parsed.data.defaultHostUserId || null;
-  if (hostUserId) {
-    const { data: hostMember } = await supabase
-      .from("organization_members")
-      .select("user_id")
-      .eq("organization_id", orgId)
-      .eq("user_id", hostUserId)
-      .maybeSingle();
-    if (!hostMember) return { error: "invalid" };
-  }
-
   const { data: existing } = await supabase
     .from("booking_settings")
     .select("id")
@@ -277,7 +273,6 @@ export async function saveBookingSettingsAction(
     min_notice_hours: parsed.data.minNoticeHours,
     buffer_minutes: parsed.data.bufferMinutes,
     is_enabled: parsed.data.isEnabled === "on",
-    default_host_user_id: hostUserId,
     updated_at: new Date().toISOString(),
   };
 
@@ -337,13 +332,14 @@ export async function addAvailabilityRuleAction(
   if (!parsed.success) return { error: "invalid" };
   if (parsed.data.endTime <= parsed.data.startTime) return { error: "invalid_range" };
 
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
   const supabase = await createClient();
   const { error } = await supabase.from("booking_availability_rules").insert({
     organization_id: orgId,
+    user_id: gate.user.id,
     weekday: parsed.data.weekday,
     start_time: `${parsed.data.startTime}:00`,
     end_time: `${parsed.data.endTime}:00`,
@@ -358,6 +354,7 @@ export async function addAvailabilityRuleAction(
 
 async function replaceWeekdayHours(
   orgId: string,
+  userId: string,
   weekday: number,
   ranges: MinuteRange[],
 ) {
@@ -367,6 +364,7 @@ async function replaceWeekdayHours(
     .from("booking_availability_rules")
     .delete()
     .eq("organization_id", orgId)
+    .eq("user_id", userId)
     .eq("weekday", weekday);
   if (deleteError) {
     console.error("replaceWeekdayHours delete:", deleteError.message);
@@ -378,6 +376,7 @@ async function replaceWeekdayHours(
     .insert(
       merged.map((range) => ({
         organization_id: orgId,
+        user_id: userId,
         weekday,
         start_time: minutesToPgTime(range.start),
         end_time: minutesToPgTime(range.end),
@@ -390,12 +389,17 @@ async function replaceWeekdayHours(
   return true;
 }
 
-async function loadWeekdayRanges(orgId: string, weekday: number) {
+async function loadWeekdayRanges(
+  orgId: string,
+  userId: string,
+  weekday: number,
+) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("booking_availability_rules")
     .select("start_time, end_time")
     .eq("organization_id", orgId)
+    .eq("user_id", userId)
     .eq("weekday", weekday);
   if (error) {
     console.error("loadWeekdayRanges:", error.message);
@@ -426,12 +430,16 @@ export async function addAvailabilityRangeAction(input: {
     return { error: "invalid_range" };
   }
 
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
-  const existing = await loadWeekdayRanges(orgId, parsed.data.weekday);
+  const existing = await loadWeekdayRanges(
+    orgId,
+    gate.user.id,
+    parsed.data.weekday,
+  );
   if (!existing) return { error: "save_failed" };
-  const ok = await replaceWeekdayHours(orgId, parsed.data.weekday, [
+  const ok = await replaceWeekdayHours(orgId, gate.user.id, parsed.data.weekday, [
     ...existing,
     { start: parsed.data.startMinutes, end: parsed.data.endMinutes },
   ]);
@@ -448,10 +456,11 @@ export async function clearDayAvailabilityAction(
     .object({ weekday: weekdaySchema, locale: localeSchema })
     .safeParse({ weekday, locale });
   if (!parsed.success) return { error: "invalid" };
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const ok = await replaceWeekdayHours(
     gate.membership.organization.id,
+    gate.user.id,
     parsed.data.weekday,
     [],
   );
@@ -465,13 +474,14 @@ export async function clearWeekAvailabilityAction(
 ): Promise<BookingActionState> {
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const supabase = await createClient();
   const { error } = await supabase
     .from("booking_availability_rules")
     .delete()
-    .eq("organization_id", gate.membership.organization.id);
+    .eq("organization_id", gate.membership.organization.id)
+    .eq("user_id", gate.user.id);
   if (error) {
     console.error("clearWeekAvailability:", error.message);
     return { error: "save_failed" };
@@ -485,14 +495,14 @@ export async function applyWeekdayHoursPresetAction(
 ): Promise<BookingActionState> {
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
   for (const weekday of [1, 2, 3, 4, 5]) {
-    const existing = await loadWeekdayRanges(orgId, weekday);
+    const existing = await loadWeekdayRanges(orgId, gate.user.id, weekday);
     if (!existing) return { error: "save_failed" };
-    const ok = await replaceWeekdayHours(orgId, weekday, [
+    const ok = await replaceWeekdayHours(orgId, gate.user.id, weekday, [
       ...existing,
       { start: 9 * 60, end: 17 * 60 },
     ]);
@@ -509,7 +519,7 @@ export async function deleteAvailabilityRuleAction(
   if (!z.string().uuid().safeParse(ruleId).success) return { error: "invalid" };
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
@@ -518,7 +528,8 @@ export async function deleteAvailabilityRuleAction(
     .from("booking_availability_rules")
     .delete()
     .eq("id", ruleId)
-    .eq("organization_id", orgId);
+    .eq("organization_id", orgId)
+    .eq("user_id", gate.user.id);
   if (error) {
     console.error("deleteAvailabilityRule:", error.message);
     return { error: "save_failed" };
@@ -534,10 +545,9 @@ export async function blockDayAction(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateIso)) return { error: "invalid" };
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
-  const user = await getSessionUser();
 
   const supabase = await createClient();
   const { data: settings } = await supabase
@@ -551,9 +561,10 @@ export async function blockDayAction(
 
   const { error } = await supabase.from("booking_blocked_times").insert({
     organization_id: orgId,
+    user_id: gate.user.id,
     starts_at: startsAt.toISOString(),
     ends_at: endsAt.toISOString(),
-    created_by: user?.id ?? null,
+    created_by: gate.user.id,
   });
   if (error) {
     console.error("blockDay:", error.message);
@@ -570,7 +581,7 @@ export async function unblockTimeAction(
   if (!z.string().uuid().safeParse(blockId).success) return { error: "invalid" };
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
@@ -579,7 +590,8 @@ export async function unblockTimeAction(
     .from("booking_blocked_times")
     .delete()
     .eq("id", blockId)
-    .eq("organization_id", orgId);
+    .eq("organization_id", orgId)
+    .eq("user_id", gate.user.id);
   if (error) {
     console.error("unblockTime:", error.message);
     return { error: "save_failed" };
@@ -627,6 +639,7 @@ export async function cancelAppointmentAction(
   }
 
   const googleEventId = existing?.google_event_id as string | null;
+  const hostUserId = (existing?.host_user_id as string | null) ?? null;
   if (googleEventId) {
     after(async () => {
       const { deleteAppointmentGoogleEvent } = await import(
@@ -634,7 +647,7 @@ export async function cancelAppointmentAction(
       );
       await deleteAppointmentGoogleEvent({
         organizationId: orgId,
-        hostUserId: (existing?.host_user_id as string | null) ?? null,
+        hostUserId,
         googleEventId,
       });
     });

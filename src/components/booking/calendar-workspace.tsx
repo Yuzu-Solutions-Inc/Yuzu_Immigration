@@ -24,6 +24,7 @@ import type {
 } from "@/lib/booking/types";
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
+  addDaysToIsoDate,
   formatTimeInZone,
   zonedDateIso,
 } from "@/lib/booking/timezone";
@@ -35,6 +36,7 @@ export function CalendarWorkspace({
   appointments,
   blocked,
   googleBusy,
+  hostNames,
 }: {
   locale: string;
   canManage: boolean;
@@ -42,6 +44,7 @@ export function CalendarWorkspace({
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
   googleBusy: BookingGoogleBusyRow[];
+  hostNames: Record<string, string>;
 }) {
   const t = useTranslations("calendar");
   const timeZone = settings?.timezone ?? "America/Toronto";
@@ -62,6 +65,23 @@ export function CalendarWorkspace({
     }
     return counts;
   }, [appointments, timeZone]);
+
+  const blockedDays = useMemo(() => {
+    const days = new Set<string>();
+    for (const row of blocked) {
+      const start = zonedDateIso(new Date(row.starts_at), timeZone);
+      const endInclusive = zonedDateIso(
+        new Date(new Date(row.ends_at).getTime() - 1),
+        timeZone,
+      );
+      let current = start;
+      while (current <= endInclusive) {
+        days.add(current);
+        current = addDaysToIsoDate(current, 1);
+      }
+    }
+    return days;
+  }, [blocked, timeZone]);
 
   const dayAppointments = appointments.filter((row) => {
     return zonedDateIso(new Date(row.starts_at), timeZone) === selectedDateIso;
@@ -125,6 +145,7 @@ export function CalendarWorkspace({
             onPrevMonth={() => shiftMonth(-1)}
             onNextMonth={() => shiftMonth(1)}
             markers={markers}
+            blockedDays={blockedDays}
           />
         </SurfaceCard>
 
@@ -138,8 +159,7 @@ export function CalendarWorkspace({
                 {selectedDateIso}
               </h2>
             </div>
-            {canManage ? (
-              dayBlocks.length > 0 ? (
+            {dayBlocks.length > 0 ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -178,8 +198,7 @@ export function CalendarWorkspace({
                   <Ban className="size-4" />
                   {t("blockDay")}
                 </Button>
-              )
-            ) : null}
+              )}
           </div>
 
           {dayBlocks.length > 0 ? (
@@ -249,6 +268,21 @@ export function CalendarWorkspace({
                       ? ` · ${formatPriceCents(row.service.price_cents, locale, row.service.currency)}`
                       : null}
                   </p>
+                  {hostNames[row.host_user_id] ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("hostedBy", { name: hostNames[row.host_user_id] })}
+                    </p>
+                  ) : null}
+                  {row.meet_join_url?.startsWith("https://") ? (
+                    <a
+                      href={row.meet_join_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-action hover:underline"
+                    >
+                      {t("joinMeet")}
+                    </a>
+                  ) : null}
                   <p className="text-xs text-muted-foreground">
                     {row.guest_email} · {row.guest_phone}
                   </p>

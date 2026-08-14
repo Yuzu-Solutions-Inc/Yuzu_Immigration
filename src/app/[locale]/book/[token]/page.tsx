@@ -37,16 +37,7 @@ export default async function PublicBookPage({
         minNoticeHours: ctx.settings.min_notice_hours,
         bufferMinutes: ctx.settings.buffer_minutes,
         services: ctx.services,
-        rules: ctx.rules.map((rule) => ({
-          weekday: rule.weekday,
-          start_time: rule.start_time,
-          end_time: rule.end_time,
-        })),
-        blocked: ctx.blocked.map((row) => ({
-          starts_at: row.starts_at,
-          ends_at: row.ends_at,
-        })),
-        busy: ctx.busy,
+        hosts: ctx.hosts,
       }}
     />
   );

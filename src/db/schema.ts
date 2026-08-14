@@ -567,6 +567,9 @@ export const bookingAvailabilityRules = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
     weekday: smallint("weekday").notNull(),
     startTime: time("start_time").notNull(),
     endTime: time("end_time").notNull(),
@@ -575,7 +578,13 @@ export const bookingAvailabilityRules = pgTable(
       .notNull(),
   },
   (table) => [
-    unique().on(table.organizationId, table.weekday, table.startTime, table.endTime),
+    unique().on(
+      table.organizationId,
+      table.userId,
+      table.weekday,
+      table.startTime,
+      table.endTime,
+    ),
   ],
 );
 
@@ -599,11 +608,38 @@ export const bookingServices = pgTable("booking_services", {
     .notNull(),
 });
 
+export const bookingServiceEmailAutomations = pgTable(
+  "booking_service_email_automations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    serviceId: uuid("service_id")
+      .notNull()
+      .references(() => bookingServices.id, { onDelete: "cascade" }),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    daysBefore: integer("days_before").notNull().default(1),
+    recipients: text("recipients").array().notNull(),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+);
+
 export const bookingBlockedTimes = pgTable("booking_blocked_times", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
   reason: text("reason"),
@@ -638,17 +674,53 @@ export const bookingAppointments = pgTable("booking_appointments", {
   cancelledBy: uuid("cancelled_by").references(() => profiles.id, {
     onDelete: "set null",
   }),
-  hostUserId: uuid("host_user_id").references(() => profiles.id, {
-    onDelete: "set null",
-  }),
+  hostUserId: uuid("host_user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "restrict" }),
   googleEventId: text("google_event_id"),
+  meetJoinUrl: text("meet_join_url"),
+  manageTokenHash: text("manage_token_hash"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+},
+(table) => [
+  uniqueIndex("booking_appointments_manage_token_hash_uidx").on(
+    table.manageTokenHash,
+  ),
+]);
+
+export const bookingAutomationSends = pgTable(
+  "booking_automation_sends",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    automationId: uuid("automation_id")
+      .notNull()
+      .references(() => bookingServiceEmailAutomations.id, {
+        onDelete: "cascade",
+      }),
+    appointmentId: uuid("appointment_id")
+      .notNull()
+      .references(() => bookingAppointments.id, { onDelete: "cascade" }),
+    appointmentStartsAt: timestamp("appointment_starts_at", {
+      withTimezone: true,
+    }).notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("booking_automation_sends_once_uidx").on(
+      table.automationId,
+      table.appointmentId,
+      table.appointmentStartsAt,
+    ),
+  ],
+);
 
 /** One Google Calendar connection per staff user. Tokens live in private.google_calendar_secrets. */
 export const googleCalendarConnections = pgTable(

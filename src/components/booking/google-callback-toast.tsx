@@ -4,12 +4,18 @@ import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-export function GoogleCallbackToast({ status }: { status?: string }) {
+export function GoogleCallbackToast({
+  status,
+}: {
+  status?: string;
+}) {
   const t = useTranslations("calendar");
 
   useEffect(() => {
     if (!status) return;
-    if (status === "connected") toast.success(t("googleConnected"));
+    if (status === "connected") {
+      toast.success(t("googleConnected"));
+    }
     else if (
       status === "denied" ||
       status === "unauthorized" ||

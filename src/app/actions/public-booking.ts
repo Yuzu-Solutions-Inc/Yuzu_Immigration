@@ -3,11 +3,14 @@
 import { after } from "next/server";
 import { z } from "zod";
 
+import { getAppBaseUrl } from "@/lib/app-url";
+import { bookingManageUrls } from "@/lib/booking/manage-url";
 import { isSlotStillOpen } from "@/lib/booking/slots";
 import {
   findPersonByEmail,
   loadPublicBookingContext,
 } from "@/lib/booking/queries";
+import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
@@ -24,11 +27,15 @@ export type PublicBookingState = {
   startsAt?: string;
   endsAt?: string;
   serviceTitle?: string;
+  hostName?: string;
+  meetJoinUrl?: string;
+  manageToken?: string;
 };
 
 const bookSchema = z.object({
   token: z.string().min(16).max(200),
   locale: z.enum(["en", "fr", "es"]),
+  hostUserId: z.string().uuid(),
   serviceId: z.string().uuid(),
   startsAt: z.string().refine((value) => Number.isFinite(Date.parse(value))),
   endsAt: z.string().refine((value) => Number.isFinite(Date.parse(value))),
@@ -54,6 +61,7 @@ export async function submitPublicBookingAction(
   const parsed = bookSchema.safeParse({
     token: String(formData.get("token") || ""),
     locale: toAppLocale(String(formData.get("locale") || "en")),
+    hostUserId: String(formData.get("hostUserId") || ""),
     serviceId: String(formData.get("serviceId") || ""),
     startsAt: String(formData.get("startsAt") || ""),
     endsAt: String(formData.get("endsAt") || ""),
@@ -71,6 +79,9 @@ export async function submitPublicBookingAction(
   const ctx = await loadPublicBookingContext(parsed.data.token);
   if (!ctx) return { error: "unavailable" };
 
+  const host = ctx.hosts.find((row) => row.userId === parsed.data.hostUserId);
+  if (!host) return { error: "invalid_host" };
+
   const service = ctx.services.find((row) => row.id === parsed.data.serviceId);
   if (!service) return { error: "invalid_service" };
 
@@ -78,9 +89,9 @@ export async function submitPublicBookingAction(
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
     durationMinutes: service.duration_minutes,
-    rules: ctx.rules,
-    blocked: ctx.blocked,
-    busy: ctx.busy,
+    rules: host.rules,
+    blocked: host.blocked,
+    busy: host.busy,
     window: {
       timezone: ctx.settings.timezone,
       bookingWindowDays: ctx.settings.booking_window_days,
@@ -132,13 +143,14 @@ export async function submitPublicBookingAction(
     personId = created.id as string;
   }
 
+  const manageToken = createBookingToken();
   const { data: appointment, error } = await admin
     .from("booking_appointments")
     .insert({
       organization_id: ctx.organizationId,
       service_id: service.id,
       person_id: personId,
-      host_user_id: ctx.settings.default_host_user_id,
+      host_user_id: host.userId,
       starts_at: parsed.data.startsAt,
       ends_at: parsed.data.endsAt,
       ...encryptBookingGuestWrite(
@@ -152,6 +164,7 @@ export async function submitPublicBookingAction(
       ),
       privacy_accepted_at: new Date().toISOString(),
       status: "confirmed",
+      manage_token_hash: hashBookingToken(manageToken),
     })
     .select("id")
     .single();
@@ -173,18 +186,39 @@ export async function submitPublicBookingAction(
     metadata: { serviceId: service.id },
   });
 
+  const origin = await getAppBaseUrl();
+  const urls = bookingManageUrls(origin, parsed.data.locale, manageToken);
+
+  const { pushAppointmentToGoogleCalendar } = await import(
+    "@/lib/google/calendar"
+  );
+  const google = await pushAppointmentToGoogleCalendar({
+    organizationId: ctx.organizationId,
+    hostUserId: host.userId,
+    appointmentId: appointment.id,
+    title: `${service.title} — ${parsed.data.guestName}`,
+    description: `Booked via MyConsultant\n${parsed.data.guestName}\n${parsed.data.guestEmail}\n${parsed.data.guestPhone}`,
+    startsAt: parsed.data.startsAt,
+    endsAt: parsed.data.endsAt,
+  });
+  const meetJoinUrl = google?.meetJoinUrl ?? null;
+
   after(async () => {
-    const { pushAppointmentToGoogleCalendar } = await import(
-      "@/lib/google/calendar"
+    const { sendBookingConfirmationEmail } = await import(
+      "@/lib/email/booking-confirmation"
     );
-    await pushAppointmentToGoogleCalendar({
-      organizationId: ctx.organizationId,
-      hostUserId: ctx.settings.default_host_user_id,
-      appointmentId: appointment.id,
-      title: `${service.title} — ${parsed.data.guestName}`,
-      description: `Booked via MyConsultant\n${parsed.data.guestName}\n${parsed.data.guestEmail}\n${parsed.data.guestPhone}`,
+    await sendBookingConfirmationEmail({
+      locale: parsed.data.locale,
+      to: parsed.data.guestEmail,
+      guestName: parsed.data.guestName,
+      organizationName: ctx.organizationName,
+      hostName: host.name,
+      serviceTitle: service.title,
       startsAt: parsed.data.startsAt,
-      endsAt: parsed.data.endsAt,
+      timezone: ctx.settings.timezone,
+      meetJoinUrl,
+      manageUrl: urls.manageUrl,
+      cancelUrl: urls.cancelUrl,
     });
   });
 
@@ -194,5 +228,8 @@ export async function submitPublicBookingAction(
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
     serviceTitle: service.title,
+    hostName: host.name,
+    meetJoinUrl: meetJoinUrl ?? undefined,
+    manageToken,
   };
 }

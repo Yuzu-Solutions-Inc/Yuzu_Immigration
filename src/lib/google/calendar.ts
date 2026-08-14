@@ -41,9 +41,28 @@ type CalendarEvent = {
   id?: string;
   status?: string;
   transparency?: string;
+  hangoutLink?: string;
+  conferenceData?: {
+    entryPoints?: { entryPointType?: string; uri?: string }[];
+  };
   start?: { dateTime?: string; date?: string };
   end?: { dateTime?: string; date?: string };
   extendedProperties?: { private?: Record<string, string> };
+};
+
+function meetJoinUrlFromEvent(event: CalendarEvent) {
+  const hangout = event.hangoutLink?.trim();
+  if (hangout?.startsWith("https://")) return hangout;
+  const video = event.conferenceData?.entryPoints?.find(
+    (entry) => entry.entryPointType === "video",
+  )?.uri?.trim();
+  if (video?.startsWith("https://")) return video;
+  return null;
+}
+
+export type CreatedCalendarEvent = {
+  eventId: string;
+  meetJoinUrl: string | null;
 };
 
 function admin() {
@@ -108,35 +127,125 @@ export async function createBookingCalendarEvent(input: {
   description: string;
   startsAt: string;
   endsAt: string;
+  location?: string;
   attendeeEmail?: string;
-}) {
+}): Promise<CreatedCalendarEvent | null> {
   if (!googleCalendarClientConfig()) return null;
   const accessToken = await getValidAccessToken(input.connectionId);
-  const response = await calendarFetch(
+  const body = {
+    summary: input.title,
+    description: input.description,
+    location: input.location,
+    start: { dateTime: input.startsAt },
+    end: { dateTime: input.endsAt },
+    extendedProperties: {
+      private: { [APPOINTMENT_PROP]: input.appointmentId },
+    },
+    attendees: input.attendeeEmail
+      ? [{ email: input.attendeeEmail }]
+      : undefined,
+    conferenceData: {
+      createRequest: {
+        requestId: randomBytes(16).toString("hex"),
+        conferenceSolutionKey: { type: "hangoutsMeet" },
+      },
+    },
+  };
+  let response = await calendarFetch(
     accessToken,
-    `/calendars/${encodeURIComponent(input.calendarId)}/events?sendUpdates=none`,
+    `/calendars/${encodeURIComponent(input.calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`,
     {
       method: "POST",
-      body: JSON.stringify({
-        summary: input.title,
-        description: input.description,
-        start: { dateTime: input.startsAt },
-        end: { dateTime: input.endsAt },
-        extendedProperties: {
-          private: { [APPOINTMENT_PROP]: input.appointmentId },
-        },
-        attendees: input.attendeeEmail
-          ? [{ email: input.attendeeEmail }]
-          : undefined,
-      }),
+      body: JSON.stringify(body),
     },
   );
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`google_event_create:${response.status}:${text.slice(0, 240)}`);
+    console.error(
+      "google event create with meet failed:",
+      response.status,
+      text.slice(0, 240),
+    );
+    response = await calendarFetch(
+      accessToken,
+      `/calendars/${encodeURIComponent(input.calendarId)}/events?sendUpdates=none`,
+      {
+        method: "POST",
+        body: JSON.stringify({ ...body, conferenceData: undefined }),
+      },
+    );
+    if (!response.ok) {
+      const retryText = await response.text();
+      throw new Error(
+        `google_event_create:${response.status}:${retryText.slice(0, 240)}`,
+      );
+    }
   }
   const event = (await response.json()) as CalendarEvent;
-  return event.id ?? null;
+  if (!event.id) return null;
+  return {
+    eventId: event.id,
+    meetJoinUrl: meetJoinUrlFromEvent(event),
+  };
+}
+
+export async function updateBookingCalendarEvent(input: {
+  connectionId: string;
+  calendarId: string;
+  googleEventId: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+  location?: string;
+}) {
+  const accessToken = await getValidAccessToken(input.connectionId);
+  const eventPath = `/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.googleEventId)}?conferenceDataVersion=1&sendUpdates=none`;
+  const baseBody = {
+    summary: input.title,
+    description: input.description,
+    location: input.location,
+    start: { dateTime: input.startsAt },
+    end: { dateTime: input.endsAt },
+  };
+
+  async function patchEvent(body: object) {
+    const response = await calendarFetch(accessToken, eventPath, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+    if (response.status === 404 || response.status === 410) return null;
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(
+        `google_event_update:${response.status}:${text.slice(0, 240)}`,
+      );
+    }
+    return (await response.json()) as CalendarEvent;
+  }
+
+  let event = await patchEvent(baseBody);
+  if (!event) return null;
+  if (!meetJoinUrlFromEvent(event)) {
+    try {
+      const withMeet = await patchEvent({
+        ...baseBody,
+        conferenceData: {
+          createRequest: {
+            requestId: randomBytes(16).toString("hex"),
+            conferenceSolutionKey: { type: "hangoutsMeet" },
+          },
+        },
+      });
+      if (withMeet) event = withMeet;
+    } catch (error) {
+      console.error("google meet update create:", error);
+    }
+  }
+  return {
+    eventId: input.googleEventId,
+    meetJoinUrl: meetJoinUrlFromEvent(event),
+  };
 }
 
 export async function deleteBookingCalendarEvent(input: {
@@ -490,15 +599,16 @@ export async function pushAppointmentToGoogleCalendar(input: {
   description: string;
   startsAt: string;
   endsAt: string;
-}) {
-  if (!googleCalendarClientConfig() || !input.hostUserId) return;
+  location?: string;
+}): Promise<CreatedCalendarEvent | null> {
+  if (!googleCalendarClientConfig() || !input.hostUserId) return null;
   const connection = await getUserGoogleConnection(
     input.organizationId,
     input.hostUserId,
   );
-  if (!connection) return;
+  if (!connection) return null;
   try {
-    const eventId = await createBookingCalendarEvent({
+    const created = await createBookingCalendarEvent({
       connectionId: connection.id,
       calendarId: connection.calendar_id,
       appointmentId: input.appointmentId,
@@ -506,18 +616,81 @@ export async function pushAppointmentToGoogleCalendar(input: {
       description: input.description,
       startsAt: input.startsAt,
       endsAt: input.endsAt,
+      location: input.location,
     });
-    if (!eventId) return;
+    if (!created) return null;
     await admin()
       .from("booking_appointments")
       .update({
-        google_event_id: eventId,
+        google_event_id: created.eventId,
+        meet_join_url: created.meetJoinUrl,
         updated_at: new Date().toISOString(),
       })
       .eq("id", input.appointmentId)
       .eq("organization_id", input.organizationId);
+    return created;
   } catch (error) {
     console.error("push appointment to google:", error);
+    return null;
+  }
+}
+
+export async function updateAppointmentGoogleEvent(input: {
+  organizationId: string;
+  hostUserId: string | null;
+  appointmentId: string;
+  googleEventId: string | null;
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+  location?: string;
+}): Promise<CreatedCalendarEvent | null> {
+  if (!googleCalendarClientConfig() || !input.hostUserId) return null;
+  const connection = await getUserGoogleConnection(
+    input.organizationId,
+    input.hostUserId,
+  );
+  if (!connection) return null;
+  try {
+    if (input.googleEventId) {
+      const updated = await updateBookingCalendarEvent({
+        connectionId: connection.id,
+        calendarId: connection.calendar_id,
+        googleEventId: input.googleEventId,
+        title: input.title,
+        description: input.description,
+        startsAt: input.startsAt,
+        endsAt: input.endsAt,
+        location: input.location,
+      });
+      if (updated) {
+        if (updated.meetJoinUrl) {
+          await admin()
+            .from("booking_appointments")
+            .update({
+              meet_join_url: updated.meetJoinUrl,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", input.appointmentId)
+            .eq("organization_id", input.organizationId);
+        }
+        return updated;
+      }
+    }
+    return await pushAppointmentToGoogleCalendar({
+      organizationId: input.organizationId,
+      hostUserId: input.hostUserId,
+      appointmentId: input.appointmentId,
+      title: input.title,
+      description: input.description,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      location: input.location,
+    });
+  } catch (error) {
+    console.error("update appointment google event:", error);
+    return null;
   }
 }
 

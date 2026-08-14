@@ -11,9 +11,7 @@ import {
   getBookingSettings,
   getMyGoogleCalendarConnection,
   listAvailabilityRules,
-  listGoogleCalendarConnections,
 } from "@/lib/booking/queries";
-import { listOrgMembers } from "@/lib/crm/queries";
 import { googleCalendarConfigured } from "@/lib/google/oauth";
 import { cn } from "@/lib/utils";
 
@@ -30,14 +28,11 @@ export default async function CalendarSettingsRoute({
   const t = await getTranslations("calendar");
 
   const membership = await getPrimaryMembership();
-  const [settings, rules, googleConnection, googleConnections, members] =
-    await Promise.all([
-      getBookingSettings(),
-      listAvailabilityRules(),
-      getMyGoogleCalendarConnection(),
-      listGoogleCalendarConnections(),
-      listOrgMembers(),
-    ]);
+  const [settings, rules, googleConnection] = await Promise.all([
+    getBookingSettings(),
+    listAvailabilityRules(),
+    getMyGoogleCalendarConnection(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -69,11 +64,6 @@ export default async function CalendarSettingsRoute({
         rules={rules}
         googleConfigured={googleCalendarConfigured()}
         googleConnection={googleConnection}
-        googleConnections={googleConnections}
-        members={members.map((member) => ({
-          userId: member.user_id,
-          name: member.profile.full_name || member.profile.email || member.user_id,
-        }))}
       />
     </div>
   );

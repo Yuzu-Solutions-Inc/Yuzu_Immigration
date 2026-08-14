@@ -20,9 +20,11 @@ import type {
   BookingServiceRow,
   BookingSettingsRow,
   GoogleCalendarConnectionPublic,
+  ManageBookingPayload,
+  PublicHostCalendar,
+  ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
 import {
-  getUserGoogleConnection,
   queryGoogleFreeBusy,
 } from "@/lib/google/calendar";
 import { getGoogleCalendarSecrets } from "@/lib/google/secrets";
@@ -35,6 +37,9 @@ export type {
   BookingServiceRow,
   BookingSettingsRow,
   GoogleCalendarConnectionPublic,
+  ManageBookingPayload,
+  PublicHostCalendar,
+  ServiceEmailAutomationRow,
 };
 
 export type PublicBookingContext = {
@@ -42,10 +47,217 @@ export type PublicBookingContext = {
   organizationName: string;
   settings: BookingSettingsRow;
   services: BookingServiceRow[];
-  rules: BookingAvailabilityRuleRow[];
-  blocked: BookingBlockedTimeRow[];
-  busy: { starts_at: string; ends_at: string }[];
+  hosts: PublicHostCalendar[];
 };
+
+export type ManageBookingContext = {
+  organizationId: string;
+  organizationName: string;
+  settings: BookingSettingsRow;
+  appointmentId: string;
+  status: BookingAppointmentRow["status"];
+  guestName: string;
+  guestEmail: string;
+  hostUserId: string;
+  hostName: string;
+  serviceId: string;
+  serviceTitle: string;
+  durationMinutes: number;
+  startsAt: string;
+  endsAt: string;
+  meetJoinUrl: string | null;
+  googleEventId: string | null;
+  host: PublicHostCalendar | null;
+};
+
+function sameBusyRange(
+  a: { starts_at: string; ends_at: string },
+  b: { starts_at: string; ends_at: string },
+) {
+  return (
+    Date.parse(a.starts_at) === Date.parse(b.starts_at) &&
+    Date.parse(a.ends_at) === Date.parse(b.ends_at)
+  );
+}
+
+async function loadHostCalendars(input: {
+  organizationId: string;
+  bookingWindowDays: number;
+  excludeAppointmentId?: string;
+  excludeBusyRange?: { starts_at: string; ends_at: string };
+}): Promise<PublicHostCalendar[]> {
+  const admin = createServiceClient();
+  const now = new Date();
+  const windowEnd = new Date(
+    now.getTime() + (input.bookingWindowDays + 1) * 86_400_000,
+  );
+
+  const [rulesRes, blockedRes, busyRes, connectionsRes] = await Promise.all([
+    admin
+      .from("booking_availability_rules")
+      .select("*")
+      .eq("organization_id", input.organizationId)
+      .order("weekday", { ascending: true }),
+    admin
+      .from("booking_blocked_times")
+      .select("*")
+      .eq("organization_id", input.organizationId)
+      .lt("starts_at", windowEnd.toISOString())
+      .gt("ends_at", now.toISOString()),
+    admin
+      .from("booking_appointments")
+      .select("id, starts_at, ends_at, host_user_id")
+      .eq("organization_id", input.organizationId)
+      .eq("status", "confirmed")
+      .lt("starts_at", windowEnd.toISOString())
+      .gt("ends_at", now.toISOString()),
+    admin
+      .from("google_calendar_connections")
+      .select("id, user_id, calendar_id, is_enabled")
+      .eq("organization_id", input.organizationId)
+      .eq("is_enabled", true),
+  ]);
+
+  const rules = (rulesRes.data ?? []) as BookingAvailabilityRuleRow[];
+  const { data: memberRows } = await admin
+    .from("organization_members")
+    .select("user_id")
+    .eq("organization_id", input.organizationId);
+  const memberIds = new Set(
+    (memberRows ?? []).map((member) => member.user_id as string),
+  );
+  const hostIds = [
+    ...new Set(
+      rules
+        .map((rule) => rule.user_id)
+        .filter((userId) => memberIds.has(userId)),
+    ),
+  ];
+  if (hostIds.length === 0) return [];
+
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", hostIds);
+  const nameById = new Map(
+    (profiles ?? []).map((profile) => [
+      profile.id as string,
+      (profile.full_name as string | null)?.trim() ||
+        (profile.email as string | null) ||
+        (profile.id as string),
+    ]),
+  );
+
+  const connections = (connectionsRes.data ?? []) as {
+    id: string;
+    user_id: string;
+    calendar_id: string;
+    is_enabled: boolean;
+  }[];
+  const connectionByUser = new Map(
+    connections.map((connection) => [connection.user_id, connection]),
+  );
+  const connectionIds = connections.map((connection) => connection.id);
+  const { data: googleBusyRows } =
+    connectionIds.length > 0
+      ? await admin
+          .from("booking_google_busy")
+          .select("connection_id, starts_at, ends_at")
+          .eq("organization_id", input.organizationId)
+          .in("connection_id", connectionIds)
+          .lt("starts_at", windowEnd.toISOString())
+          .gt("ends_at", now.toISOString())
+      : { data: [] as { connection_id: string; starts_at: string; ends_at: string }[] };
+
+  const googleBusyByConnection = new Map<
+    string,
+    { starts_at: string; ends_at: string }[]
+  >();
+  for (const busy of googleBusyRows ?? []) {
+    const interval = { starts_at: busy.starts_at, ends_at: busy.ends_at };
+    if (
+      input.excludeBusyRange &&
+      sameBusyRange(interval, input.excludeBusyRange)
+    ) {
+      continue;
+    }
+    const list = googleBusyByConnection.get(busy.connection_id) ?? [];
+    list.push(interval);
+    googleBusyByConnection.set(busy.connection_id, list);
+  }
+
+  const liveBusyByUser = new Map<string, { starts_at: string; ends_at: string }[]>();
+  await Promise.all(
+    hostIds.map(async (hostId) => {
+      const connection = connectionByUser.get(hostId);
+      if (!connection) return;
+      try {
+        const live = await queryGoogleFreeBusy({
+          connectionId: connection.id,
+          calendarId: connection.calendar_id,
+          timeMin: now.toISOString(),
+          timeMax: windowEnd.toISOString(),
+        });
+        liveBusyByUser.set(
+          hostId,
+          input.excludeBusyRange
+            ? live.filter(
+                (interval) => !sameBusyRange(interval, input.excludeBusyRange!),
+              )
+            : live,
+        );
+      } catch (error) {
+        console.error("public booking google freeBusy:", error);
+      }
+    }),
+  );
+
+  const blocked = (blockedRes.data ?? []) as BookingBlockedTimeRow[];
+  const appointments = (busyRes.data ?? []) as {
+    id: string;
+    starts_at: string;
+    ends_at: string;
+    host_user_id: string;
+  }[];
+
+  return hostIds.map((hostId) => {
+    const connection = connectionByUser.get(hostId);
+    const googleBusy = connection
+      ? (googleBusyByConnection.get(connection.id) ?? [])
+      : [];
+    return {
+      userId: hostId,
+      name: nameById.get(hostId) ?? hostId,
+      rules: rules
+        .filter((rule) => rule.user_id === hostId)
+        .map((rule) => ({
+          weekday: rule.weekday,
+          start_time: rule.start_time,
+          end_time: rule.end_time,
+        })),
+      blocked: blocked
+        .filter((item) => item.user_id === hostId)
+        .map((item) => ({
+          starts_at: item.starts_at,
+          ends_at: item.ends_at,
+        })),
+      busy: [
+        ...appointments
+          .filter(
+            (item) =>
+              item.host_user_id === hostId &&
+              item.id !== input.excludeAppointmentId,
+          )
+          .map((item) => ({
+            starts_at: item.starts_at,
+            ends_at: item.ends_at,
+          })),
+        ...googleBusy,
+        ...(liveBusyByUser.get(hostId) ?? []),
+      ],
+    };
+  });
+}
 
 async function orgIdOrNull() {
   return requireOrganizationId();
@@ -66,6 +278,25 @@ export async function listBookingServices(): Promise<BookingServiceRow[]> {
     return [];
   }
   return (data ?? []) as BookingServiceRow[];
+}
+
+export async function listServiceEmailAutomations(): Promise<
+  ServiceEmailAutomationRow[]
+> {
+  const orgId = await orgIdOrNull();
+  if (!orgId) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("booking_service_email_automations")
+    .select("*")
+    .eq("organization_id", orgId)
+    .order("days_before", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("listServiceEmailAutomations:", error.message);
+    return [];
+  }
+  return (data ?? []) as ServiceEmailAutomationRow[];
 }
 
 export async function getBookingSettings(): Promise<BookingSettingsRow | null> {
@@ -106,10 +337,13 @@ export async function listAvailabilityRules(): Promise<
   const orgId = await orgIdOrNull();
   if (!orgId) return [];
   const supabase = await createClient();
+  const user = await getSessionUser();
+  if (!user) return [];
   const { data, error } = await supabase
     .from("booking_availability_rules")
     .select("*")
     .eq("organization_id", orgId)
+    .eq("user_id", user.id)
     .order("weekday", { ascending: true })
     .order("start_time", { ascending: true });
   if (error) {
@@ -126,10 +360,13 @@ export async function listBlockedTimes(
   const orgId = await orgIdOrNull();
   if (!orgId) return [];
   const supabase = await createClient();
+  const user = await getSessionUser();
+  if (!user) return [];
   const { data, error } = await supabase
     .from("booking_blocked_times")
     .select("*")
     .eq("organization_id", orgId)
+    .eq("user_id", user.id)
     .lt("starts_at", toIso)
     .gt("ends_at", fromIso)
     .order("starts_at", { ascending: true });
@@ -188,18 +425,7 @@ export async function loadPublicBookingContext(
     .maybeSingle();
   if (!org) return null;
 
-  const now = new Date();
-  const windowEnd = new Date(
-    now.getTime() + (row.booking_window_days + 1) * 86_400_000,
-  );
-
-  const hostUserId = row.default_host_user_id;
-  const hostConnection = hostUserId
-    ? await getUserGoogleConnection(row.organization_id, hostUserId)
-    : null;
-
-  const [servicesRes, rulesRes, blockedRes, busyRes, googleBusyRes] =
-    await Promise.all([
+  const [servicesRes, hosts] = await Promise.all([
     admin
       .from("booking_services")
       .select("*")
@@ -207,79 +433,147 @@ export async function loadPublicBookingContext(
       .eq("is_active", true)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
-    admin
-      .from("booking_availability_rules")
-      .select("*")
-      .eq("organization_id", row.organization_id)
-      .order("weekday", { ascending: true }),
-    admin
-      .from("booking_blocked_times")
-      .select("*")
-      .eq("organization_id", row.organization_id)
-      .lt("starts_at", windowEnd.toISOString())
-      .gt("ends_at", now.toISOString()),
-    admin
-      .from("booking_appointments")
-      .select("starts_at, ends_at")
-      .eq("organization_id", row.organization_id)
-      .eq("status", "confirmed")
-      .lt("starts_at", windowEnd.toISOString())
-      .gt("ends_at", now.toISOString()),
-    hostConnection
-      ? admin
-          .from("booking_google_busy")
-          .select("starts_at, ends_at")
-          .eq("organization_id", row.organization_id)
-          .eq("connection_id", hostConnection.id)
-          .lt("starts_at", windowEnd.toISOString())
-          .gt("ends_at", now.toISOString())
-      : Promise.resolve({ data: [] as { starts_at: string; ends_at: string }[] }),
+    loadHostCalendars({
+      organizationId: row.organization_id,
+      bookingWindowDays: row.booking_window_days,
+    }),
   ]);
-
-  const busy = [
-    ...((busyRes.data ?? []) as { starts_at: string; ends_at: string }[]),
-    ...((googleBusyRes.data ?? []) as { starts_at: string; ends_at: string }[]),
-  ];
-
-  try {
-    if (hostConnection) {
-      const live = await queryGoogleFreeBusy({
-        connectionId: hostConnection.id,
-        calendarId: hostConnection.calendar_id,
-        timeMin: now.toISOString(),
-        timeMax: windowEnd.toISOString(),
-      });
-      busy.push(...live);
-    }
-  } catch (error) {
-    console.error("public booking google freeBusy:", error);
-  }
 
   return {
     organizationId: org.id as string,
     organizationName: org.name as string,
     settings: row,
     services: (servicesRes.data ?? []) as BookingServiceRow[],
-    rules: (rulesRes.data ?? []) as BookingAvailabilityRuleRow[],
-    blocked: (blockedRes.data ?? []) as BookingBlockedTimeRow[],
-    busy,
+    hosts,
+  };
+}
+
+export async function loadManageBookingContext(
+  token: string,
+): Promise<ManageBookingContext | null> {
+  const admin = createServiceClient();
+  const hash = hashBookingToken(token);
+  const { data: appointment, error } = await admin
+    .from("booking_appointments")
+    .select("*")
+    .eq("manage_token_hash", hash)
+    .maybeSingle();
+  if (error || !appointment) {
+    if (error) console.error("loadManageBookingContext:", error.message);
+    return null;
+  }
+
+  const row = appointment as BookingAppointmentRow;
+  const dek = await getOrgDataKey(row.organization_id);
+  const guest = decryptBookingGuestRow(row, dek);
+
+  const [{ data: org }, { data: settings }, { data: service }, { data: profile }] =
+    await Promise.all([
+      admin
+        .from("organizations")
+        .select("id, name")
+        .eq("id", row.organization_id)
+        .maybeSingle(),
+      admin
+        .from("booking_settings")
+        .select("*")
+        .eq("organization_id", row.organization_id)
+        .maybeSingle(),
+      admin
+        .from("booking_services")
+        .select("id, title, duration_minutes")
+        .eq("id", row.service_id)
+        .maybeSingle(),
+      admin
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("id", row.host_user_id)
+        .maybeSingle(),
+    ]);
+  if (!org || !settings || !service) return null;
+
+  const settingsRow = settings as BookingSettingsRow;
+  const canManage =
+    row.status === "confirmed" && Date.parse(row.starts_at) > Date.now();
+  const hosts = canManage
+    ? await loadHostCalendars({
+        organizationId: row.organization_id,
+        bookingWindowDays: settingsRow.booking_window_days,
+        excludeAppointmentId: row.id,
+        excludeBusyRange: {
+          starts_at: row.starts_at,
+          ends_at: row.ends_at,
+        },
+      })
+    : [];
+  const host = hosts.find((item) => item.userId === row.host_user_id) ?? null;
+  const hostName =
+    host?.name ||
+    (profile?.full_name as string | null)?.trim() ||
+    (profile?.email as string | null) ||
+    row.host_user_id;
+
+  return {
+    organizationId: org.id as string,
+    organizationName: org.name as string,
+    settings: settingsRow,
+    appointmentId: row.id,
+    status: row.status,
+    guestName: guest.guest_name,
+    guestEmail: guest.guest_email,
+    hostUserId: row.host_user_id,
+    hostName,
+    serviceId: row.service_id,
+    serviceTitle: service.title as string,
+    durationMinutes: service.duration_minutes as number,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    meetJoinUrl: row.meet_join_url,
+    googleEventId: row.google_event_id,
+    host,
+  };
+}
+
+export function toManageBookingPayload(
+  token: string,
+  ctx: ManageBookingContext,
+): ManageBookingPayload {
+  return {
+    token,
+    organizationName: ctx.organizationName,
+    timezone: ctx.settings.timezone,
+    bookingWindowDays: ctx.settings.booking_window_days,
+    minNoticeHours: ctx.settings.min_notice_hours,
+    bufferMinutes: ctx.settings.buffer_minutes,
+    guestName: ctx.guestName,
+    hostName: ctx.hostName,
+    serviceTitle: ctx.serviceTitle,
+    durationMinutes: ctx.durationMinutes,
+    startsAt: ctx.startsAt,
+    endsAt: ctx.endsAt,
+    status: ctx.status,
+    meetJoinUrl: ctx.meetJoinUrl,
+    canManage:
+      ctx.status === "confirmed" && Date.parse(ctx.startsAt) > Date.now(),
+    host: ctx.host,
   };
 }
 
 export function publicSlotsForService(
-  ctx: PublicBookingContext,
+  host: PublicHostCalendar,
   service: BookingServiceRow,
+  settings: BookingSettingsRow,
 ) {
   return generateServiceSlots({
     durationMinutes: service.duration_minutes,
-    rules: ctx.rules,
-    blocked: ctx.blocked,
-    busy: ctx.busy,
+    rules: host.rules,
+    blocked: host.blocked,
+    busy: host.busy,
     window: {
-      timezone: ctx.settings.timezone,
-      bookingWindowDays: ctx.settings.booking_window_days,
-      minNoticeHours: ctx.settings.min_notice_hours,
-      bufferMinutes: ctx.settings.buffer_minutes,
+      timezone: settings.timezone,
+      bookingWindowDays: settings.booking_window_days,
+      minNoticeHours: settings.min_notice_hours,
+      bufferMinutes: settings.buffer_minutes,
     },
   });
 }
@@ -295,12 +589,21 @@ export async function listGoogleBusy(
   toIso: string,
 ): Promise<BookingGoogleBusyRow[]> {
   const orgId = await orgIdOrNull();
-  if (!orgId) return [];
+  const user = await getSessionUser();
+  if (!orgId || !user) return [];
   const supabase = await createClient();
+  const { data: connection } = await supabase
+    .from("google_calendar_connections")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!connection) return [];
   const { data, error } = await supabase
     .from("booking_google_busy")
     .select("*")
     .eq("organization_id", orgId)
+    .eq("connection_id", connection.id)
     .lt("starts_at", toIso)
     .gt("ends_at", fromIso)
     .order("starts_at", { ascending: true });
@@ -335,36 +638,6 @@ export async function getMyGoogleCalendarConnection(): Promise<GoogleCalendarCon
     last_synced_at: data.last_synced_at as string | null,
     is_enabled: data.is_enabled as boolean,
   };
-}
-
-export async function listGoogleCalendarConnections(): Promise<
-  GoogleCalendarConnectionPublic[]
-> {
-  const orgId = await orgIdOrNull();
-  if (!orgId) return [];
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("google_calendar_connections")
-    .select("id, user_id, google_email, last_synced_at, is_enabled")
-    .eq("organization_id", orgId)
-    .eq("is_enabled", true);
-  if (error) {
-    console.error("listGoogleCalendarConnections:", error.message);
-    return [];
-  }
-  const rows = data ?? [];
-  const ready: GoogleCalendarConnectionPublic[] = [];
-  for (const row of rows) {
-    const secrets = await getGoogleCalendarSecrets(row.id as string);
-    if (!secrets) continue;
-    ready.push({
-      user_id: row.user_id as string,
-      google_email: row.google_email as string | null,
-      last_synced_at: row.last_synced_at as string | null,
-      is_enabled: row.is_enabled as boolean,
-    });
-  }
-  return ready;
 }
 
 export async function findPersonByEmail(

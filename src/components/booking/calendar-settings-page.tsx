@@ -32,8 +32,6 @@ export function CalendarSettingsPage({
   rules,
   googleConfigured,
   googleConnection,
-  googleConnections,
-  members,
 }: {
   locale: string;
   canManage: boolean;
@@ -41,8 +39,6 @@ export function CalendarSettingsPage({
   rules: BookingAvailabilityRuleRow[];
   googleConfigured: boolean;
   googleConnection: GoogleCalendarConnectionPublic | null;
-  googleConnections: GoogleCalendarConnectionPublic[];
-  members: { userId: string; name: string }[];
 }) {
   const t = useTranslations("calendar");
   const [saveState, saveAction, savePending] = useActionState(
@@ -104,34 +100,6 @@ export function CalendarSettingsPage({
               </select>
               <p className="text-xs text-muted-foreground">{t("timezoneHelp")}</p>
             </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="defaultHostUserId">{t("googleHostLabel")}</Label>
-              <select
-                id="defaultHostUserId"
-                name="defaultHostUserId"
-                defaultValue={settings?.default_host_user_id ?? ""}
-                disabled={!canManage}
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-              >
-                <option value="">{t("googleHostNone")}</option>
-                {members.map((member) => {
-                  const connected = googleConnections.find(
-                    (row) => row.user_id === member.userId,
-                  );
-                  return (
-                    <option key={member.userId} value={member.userId}>
-                      {connected?.google_email
-                        ? t("googleHostOptionConnected", {
-                            name: member.name,
-                            email: connected.google_email,
-                          })
-                        : t("googleHostOption", { name: member.name })}
-                    </option>
-                  );
-                })}
-              </select>
-              <p className="text-xs text-muted-foreground">{t("googleHostHelp")}</p>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="bookingWindowDays">{t("windowDays")}</Label>
               <Input
@@ -184,11 +152,7 @@ export function CalendarSettingsPage({
       </SurfaceCard>
 
       <SurfaceCard className="space-y-4 sm:p-6">
-        <WeekTemplateHours
-          locale={locale}
-          canManage={canManage}
-          rules={rules}
-        />
+        <WeekTemplateHours locale={locale} canManage rules={rules} />
       </SurfaceCard>
 
       <div className="grid gap-6 lg:grid-cols-2">

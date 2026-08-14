@@ -12,6 +12,7 @@ import {
   type ServiceActionState,
 } from "@/app/actions/services";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { ServiceEmailAutomationsButton } from "@/components/booking/service-email-automations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { BookingServiceRow } from "@/lib/booking/types";
+import type { BookingServiceRow, ServiceEmailAutomationRow } from "@/lib/booking/types";
 import { centsToPriceInput, formatPriceCents } from "@/lib/booking/slots";
 
 const initialState: ServiceActionState = {};
@@ -104,12 +105,20 @@ export function ServicesManager({
   locale,
   canManage,
   services,
+  automations,
 }: {
   locale: string;
   canManage: boolean;
   services: BookingServiceRow[];
+  automations: ServiceEmailAutomationRow[];
 }) {
   const t = useTranslations("services");
+  const automationsByService = new Map<string, ServiceEmailAutomationRow[]>();
+  for (const automation of automations) {
+    const list = automationsByService.get(automation.service_id) ?? [];
+    list.push(automation);
+    automationsByService.set(automation.service_id, list);
+  }
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<BookingServiceRow | null>(null);
   const [createState, createAction, createPending] = useActionState(
@@ -192,7 +201,7 @@ export function ServicesManager({
                 </p>
               ) : null}
               {canManage ? (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -202,6 +211,13 @@ export function ServicesManager({
                     <Pencil className="size-4" />
                     {t("edit")}
                   </Button>
+                  <ServiceEmailAutomationsButton
+                    locale={locale}
+                    serviceId={service.id}
+                    serviceTitle={service.title}
+                    automations={automationsByService.get(service.id) ?? []}
+                    canManage={canManage}
+                  />
                   <Button
                     type="button"
                     variant="destructive"
