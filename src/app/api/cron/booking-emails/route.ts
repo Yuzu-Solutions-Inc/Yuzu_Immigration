@@ -22,6 +22,8 @@ async function run(request: Request) {
   }
   try {
     const result = await processDueBookingAutomations();
+    const { pruneBookingAbuseEvents } = await import("@/lib/booking/abuse");
+    await pruneBookingAbuseEvents();
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     console.error("booking automation cron:", error);

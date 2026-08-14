@@ -722,6 +722,19 @@ export const bookingAutomationSends = pgTable(
   ],
 );
 
+export const bookingAbuseEvents = pgTable("booking_abuse_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  emailHash: text("email_hash"),
+  ipHash: text("ip_hash"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 /** One Google Calendar connection per staff user. Tokens live in private.google_calendar_secrets. */
 export const googleCalendarConnections = pgTable(
   "google_calendar_connections",

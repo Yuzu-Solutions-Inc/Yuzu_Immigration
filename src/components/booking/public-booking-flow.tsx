@@ -4,7 +4,9 @@ import { useActionState, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
+  sendPublicBookingManageLinksAction,
   submitPublicBookingAction,
+  type ManageLinksState,
   type PublicBookingState,
 } from "@/app/actions/public-booking";
 import { MonthCalendar } from "@/components/booking/month-calendar";
@@ -33,6 +35,7 @@ export type PublicBookingPayload = {
 };
 
 const initialState: PublicBookingState = {};
+const initialLinksState: ManageLinksState = {};
 
 export function PublicBookingFlow({
   locale,
@@ -59,6 +62,15 @@ export function PublicBookingFlow({
     submitPublicBookingAction,
     initialState,
   );
+  const [linksState, linksAction, linksPending] = useActionState(
+    sendPublicBookingManageLinksAction,
+    initialLinksState,
+  );
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestAddress, setGuestAddress] = useState("");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   const host = payload.hosts.find((row) => row.userId === hostUserId) ?? null;
   const service = payload.services.find((row) => row.id === serviceId) ?? null;
@@ -88,6 +100,10 @@ export function PublicBookingFlow({
   const serviceStep = hostStep ? 2 : 1;
   const slotStep = hostStep ? 3 : 2;
   const detailsStep = hostStep ? 4 : 3;
+  const warningEmail = state.guestEmail ?? guestEmail;
+  const showExistingNotice =
+    state.message === "existing_booking" || state.error === "too_many_bookings";
+  const atBookingCap = state.error === "too_many_bookings";
 
   function shiftMonth(delta: number) {
     setCursor((prev) => {
@@ -336,10 +352,44 @@ export function PublicBookingFlow({
               locale,
             )}
           </p>
-          {state.error ? (
+          {state.error && !atBookingCap ? (
             <p className="text-sm text-destructive">
               {t(`errors.${state.error}`)}
             </p>
+          ) : null}
+          {showExistingNotice ? (
+            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-medium text-brand">
+                {atBookingCap ? t("tooManyTitle") : t("existingTitle")}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {atBookingCap ? t("tooManyBody") : t("existingBody")}
+              </p>
+              <form action={linksAction} className="space-y-2">
+                <input type="hidden" name="token" value={payload.token} />
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="guestEmail" value={warningEmail} />
+                <Button
+                  type="submit"
+                  variant="outline"
+                  disabled={linksPending || pending || !warningEmail}
+                  className="w-full sm:w-auto"
+                >
+                  {linksPending ? t("sendingLinks") : t("sendLinks")}
+                </Button>
+                {linksState.message === "links_sent" ? (
+                  <p className="text-sm text-muted-foreground">{t("linksSent")}</p>
+                ) : null}
+                {linksState.error === "cooldown" ? (
+                  <p className="text-sm text-destructive">{t("linksCooldown")}</p>
+                ) : null}
+                {linksState.error && linksState.error !== "cooldown" ? (
+                  <p className="text-sm text-destructive">
+                    {t(`errors.${linksState.error}`)}
+                  </p>
+                ) : null}
+              </form>
+            </div>
           ) : null}
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="token" value={payload.token} />
@@ -348,9 +398,21 @@ export function PublicBookingFlow({
             <input type="hidden" name="serviceId" value={service.id} />
             <input type="hidden" name="startsAt" value={selectedSlot.startsAt} />
             <input type="hidden" name="endsAt" value={selectedSlot.endsAt} />
+            {showExistingNotice &&
+            !atBookingCap &&
+            guestEmail.trim().toLowerCase() === warningEmail.trim().toLowerCase() ? (
+              <input type="hidden" name="confirmAnother" value="on" />
+            ) : null}
             <div className="space-y-2">
               <Label htmlFor="guestName">{t("name")}</Label>
-              <Input id="guestName" name="guestName" required autoComplete="name" />
+              <Input
+                id="guestName"
+                name="guestName"
+                required
+                autoComplete="name"
+                value={guestName}
+                onChange={(event) => setGuestName(event.target.value)}
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -361,6 +423,8 @@ export function PublicBookingFlow({
                   type="email"
                   required
                   autoComplete="email"
+                  value={guestEmail}
+                  onChange={(event) => setGuestEmail(event.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -371,6 +435,8 @@ export function PublicBookingFlow({
                   type="tel"
                   required
                   autoComplete="tel"
+                  value={guestPhone}
+                  onChange={(event) => setGuestPhone(event.target.value)}
                 />
               </div>
             </div>
@@ -381,6 +447,8 @@ export function PublicBookingFlow({
                 name="guestAddress"
                 required
                 autoComplete="street-address"
+                value={guestAddress}
+                onChange={(event) => setGuestAddress(event.target.value)}
               />
             </div>
             <label className="flex items-start gap-2 text-sm leading-relaxed">
@@ -389,6 +457,8 @@ export function PublicBookingFlow({
                 name="privacyAccepted"
                 value="on"
                 required
+                checked={privacyAccepted}
+                onChange={(event) => setPrivacyAccepted(event.target.checked)}
                 className="mt-1 size-4 rounded border-input"
               />
               <span>
@@ -399,9 +469,15 @@ export function PublicBookingFlow({
                 .
               </span>
             </label>
-            <Button type="submit" disabled={pending} className="w-full">
-              {pending ? t("booking") : t("confirm")}
-            </Button>
+            {atBookingCap ? null : (
+              <Button type="submit" disabled={pending || linksPending} className="w-full">
+                {pending
+                  ? t("booking")
+                  : showExistingNotice
+                    ? t("bookAnyway")
+                    : t("confirm")}
+              </Button>
+            )}
           </form>
         </section>
       ) : null}

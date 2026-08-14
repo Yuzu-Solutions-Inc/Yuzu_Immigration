@@ -1454,6 +1454,15 @@
     "manageHint": "¿Necesita cambiar esta cita?",
     "changeTime": "Cambiar horario",
     "cancelAppointment": "Cancelar cita",
+    "existingTitle": "Este correo ya tiene una cita próxima",
+    "existingBody": "No podemos saber si es usted u otra persona usando la misma dirección. Si solo necesita una cita, cambie o cancele la existente en lugar de reservar otra.",
+    "tooManyTitle": "Este correo alcanzó el límite de reservas",
+    "tooManyBody": "Esta dirección ya tiene el número máximo de citas próximas con esta firma. Cambie o cancele una primero.",
+    "sendLinks": "Enviar enlaces de cambio y cancelación a esta dirección",
+    "sendingLinks": "Enviando…",
+    "linksSent": "Si esta dirección tiene citas próximas, los enlaces están en camino. Los enlaces de gestión anteriores de esas reservas dejarán de funcionar.",
+    "linksCooldown": "Acabamos de enviar los enlaces. Revise la bandeja de entrada o inténtelo de nuevo en unos minutos.",
+    "bookAnyway": "Aun así necesito otra cita",
     "unavailableTitle": "Reserva no disponible",
     "unavailableBody": "Este enlace no es válido o la firma no acepta reservas en este momento.",
     "noHostsTitle": "Ningún consultor disponible",
@@ -1466,7 +1475,10 @@
       "invalid_host": "Ese consultor no está disponible.",
       "invalid_service": "Ese servicio no está disponible.",
       "slot_taken": "Ese horario acaba de ocuparse. Elija otro.",
-      "book_failed": "No se pudo completar la reserva. Inténtelo de nuevo."
+      "book_failed": "No se pudo completar la reserva. Inténtelo de nuevo.",
+      "rate_limited": "Demasiados intentos de reserva. Inténtelo más tarde.",
+      "too_many_bookings": "Este correo ya tiene el número máximo de citas próximas. Cambie o cancele una primero.",
+      "cooldown": "Acabamos de enviar los enlaces. Inténtelo de nuevo en unos minutos."
     }
   },
   "bookingEmail": {
@@ -1488,7 +1500,11 @@
     "cancelledHeading": "Su cita fue cancelada",
     "cancelledIntro": "Esta cita con {org} ya no está reservada.",
     "cancelledFooter": "Si aún necesita una consulta, use el enlace de reserva de la firma para elegir un nuevo horario.",
-    "footer": "Si no solicitó esta cita, puede ignorar este correo."
+    "footer": "Si no solicitó esta cita, puede ignorar este correo.",
+    "manageLinksSubject": "Gestione sus citas con {org}",
+    "manageLinksHeading": "Cambie o cancele sus citas",
+    "manageLinksIntro": "Alguien pidió enviar a esta dirección los enlaces para gestionar las citas próximas con {org}. Si no fue usted, ignore este correo.",
+    "manageLinksFooter": "Estos enlaces sustituyen cualquier enlace anterior de cambio o cancelación de las citas indicadas arriba."
   },
   "bookingManage": {
     "title": "Gestionar su cita",

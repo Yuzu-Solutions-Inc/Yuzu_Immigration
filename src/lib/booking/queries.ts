@@ -665,3 +665,94 @@ export async function findPersonByEmail(
   return null;
 }
 
+export type FutureGuestAppointmentMatch = {
+  id: string;
+  startsAt: string;
+  guestName: string;
+  guestEmail: string;
+  serviceTitle: string;
+  hostName: string;
+  meetJoinUrl: string | null;
+};
+
+export async function listFutureGuestAppointmentsByEmail(input: {
+  organizationId: string;
+  email: string;
+}): Promise<FutureGuestAppointmentMatch[]> {
+  const admin = createServiceClient();
+  const key = await getOrgDataKey(input.organizationId);
+  const needle = input.email.trim().toLowerCase();
+  const { data, error } = await admin
+    .from("booking_appointments")
+    .select(
+      "id, starts_at, guest_name, guest_email, service_id, host_user_id, meet_join_url, status",
+    )
+    .eq("organization_id", input.organizationId)
+    .eq("status", "confirmed")
+    .gt("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(200);
+  if (error) {
+    console.error("listFutureGuestAppointmentsByEmail:", error.message);
+    return [];
+  }
+
+  const matched: {
+    id: string;
+    startsAt: string;
+    guestName: string;
+    guestEmail: string;
+    serviceId: string;
+    hostUserId: string;
+    meetJoinUrl: string | null;
+  }[] = [];
+  for (const row of data ?? []) {
+    const guest = decryptBookingGuestRow(
+      {
+        guest_name: row.guest_name as string,
+        guest_email: row.guest_email as string,
+      },
+      key,
+    );
+    if ((guest.guest_email ?? "").trim().toLowerCase() !== needle) continue;
+    matched.push({
+      id: row.id as string,
+      startsAt: row.starts_at as string,
+      guestName: guest.guest_name,
+      guestEmail: guest.guest_email,
+      serviceId: row.service_id as string,
+      hostUserId: row.host_user_id as string,
+      meetJoinUrl: (row.meet_join_url as string | null) ?? null,
+    });
+  }
+  if (matched.length === 0) return [];
+
+  const serviceIds = [...new Set(matched.map((row) => row.serviceId))];
+  const hostIds = [...new Set(matched.map((row) => row.hostUserId))];
+  const [{ data: services }, { data: profiles }] = await Promise.all([
+    admin.from("booking_services").select("id, title").in("id", serviceIds),
+    admin.from("profiles").select("id, full_name, email").in("id", hostIds),
+  ]);
+  const serviceTitle = new Map(
+    (services ?? []).map((row) => [row.id as string, row.title as string]),
+  );
+  const hostName = new Map(
+    (profiles ?? []).map((row) => [
+      row.id as string,
+      (row.full_name as string | null)?.trim() ||
+        (row.email as string | null) ||
+        row.id,
+    ]),
+  );
+
+  return matched.map((row) => ({
+    id: row.id,
+    startsAt: row.startsAt,
+    guestName: row.guestName,
+    guestEmail: row.guestEmail,
+    serviceTitle: serviceTitle.get(row.serviceId) ?? "Service",
+    hostName: hostName.get(row.hostUserId) ?? row.hostUserId,
+    meetJoinUrl: row.meetJoinUrl,
+  }));
+}
+

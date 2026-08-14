@@ -1454,6 +1454,15 @@
     "manageHint": "Besoin de modifier ce rendez-vous ?",
     "changeTime": "Changer l’horaire",
     "cancelAppointment": "Annuler le rendez-vous",
+    "existingTitle": "Cette adresse a déjà un rendez-vous à venir",
+    "existingBody": "Nous ne pouvons pas savoir s’il s’agit de vous ou de quelqu’un d’autre utilisant la même adresse. Si un seul rendez-vous suffit, modifiez ou annulez l’existant plutôt que d’en réserver un autre.",
+    "tooManyTitle": "Cette adresse a atteint la limite de réservations",
+    "tooManyBody": "Cette adresse a déjà le nombre maximal de rendez-vous à venir avec ce cabinet. Modifiez ou annulez-en un d’abord.",
+    "sendLinks": "Envoyer les liens de modification et d’annulation à cette adresse",
+    "sendingLinks": "Envoi…",
+    "linksSent": "Si cette adresse a des rendez-vous à venir, les liens sont en route. Les anciens liens de gestion de ces rendez-vous cesseront de fonctionner.",
+    "linksCooldown": "Des liens viennent d’être envoyés. Vérifiez la boîte de réception, ou réessayez dans quelques minutes.",
+    "bookAnyway": "J’ai tout de même besoin d’un autre rendez-vous",
     "unavailableTitle": "Réservation indisponible",
     "unavailableBody": "Ce lien est invalide ou ce cabinet n’accepte pas de rendez-vous pour le moment.",
     "noHostsTitle": "Aucun consultant disponible",
@@ -1466,7 +1475,10 @@
       "invalid_host": "Ce consultant n’est pas disponible.",
       "invalid_service": "Ce service n’est pas disponible.",
       "slot_taken": "Ce créneau vient d’être pris. Choisissez-en un autre.",
-      "book_failed": "Impossible de terminer la réservation. Réessayez."
+      "book_failed": "Impossible de terminer la réservation. Réessayez.",
+      "rate_limited": "Trop de tentatives de réservation. Réessayez plus tard.",
+      "too_many_bookings": "Cette adresse a déjà le nombre maximal de rendez-vous à venir. Modifiez ou annulez-en un d’abord.",
+      "cooldown": "Des liens viennent d’être envoyés. Réessayez dans quelques minutes."
     }
   },
   "bookingEmail": {
@@ -1488,7 +1500,11 @@
     "cancelledHeading": "Votre rendez-vous a été annulé",
     "cancelledIntro": "Ce rendez-vous avec {org} n’est plus réservé.",
     "cancelledFooter": "Si vous avez encore besoin d’une consultation, utilisez le lien de réservation du cabinet pour choisir un nouvel horaire.",
-    "footer": "Si vous n’avez pas demandé ce rendez-vous, vous pouvez ignorer ce courriel."
+    "footer": "Si vous n’avez pas demandé ce rendez-vous, vous pouvez ignorer ce courriel.",
+    "manageLinksSubject": "Gérer vos rendez-vous avec {org}",
+    "manageLinksHeading": "Modifier ou annuler vos rendez-vous",
+    "manageLinksIntro": "Quelqu’un a demandé l’envoi des liens de gestion des rendez-vous à venir avec {org} à cette adresse. Si ce n’était pas vous, ignorez ce courriel.",
+    "manageLinksFooter": "Ces liens remplacent les précédents liens de modification ou d’annulation pour les rendez-vous ci-dessus."
   },
   "bookingManage": {
     "title": "Gérer votre rendez-vous",

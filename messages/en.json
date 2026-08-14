@@ -1454,6 +1454,15 @@
     "manageHint": "Need to change this appointment?",
     "changeTime": "Change time",
     "cancelAppointment": "Cancel appointment",
+    "existingTitle": "This email already has an upcoming appointment",
+    "existingBody": "We can’t tell if this is you or someone else using the same address. If you only need one appointment, change or cancel the existing one instead of booking another.",
+    "tooManyTitle": "This email is at the booking limit",
+    "tooManyBody": "This address already has the maximum number of upcoming appointments with this firm. Change or cancel one first.",
+    "sendLinks": "Email change and cancel links to this address",
+    "sendingLinks": "Sending…",
+    "linksSent": "If this address has upcoming appointments, the links are on their way. Previous manage links for those bookings will stop working.",
+    "linksCooldown": "Links were just sent. Check that inbox, or try again in a few minutes.",
+    "bookAnyway": "I still need another appointment",
     "unavailableTitle": "Booking unavailable",
     "unavailableBody": "This link is invalid or this firm is not accepting bookings right now.",
     "noHostsTitle": "No consultants available",
@@ -1466,7 +1475,10 @@
       "invalid_host": "That consultant is not available.",
       "invalid_service": "That service is not available.",
       "slot_taken": "That time was just booked. Pick another slot.",
-      "book_failed": "Could not complete the booking. Try again."
+      "book_failed": "Could not complete the booking. Try again.",
+      "rate_limited": "Too many booking attempts. Try again later.",
+      "too_many_bookings": "This email already has the maximum number of upcoming appointments. Change or cancel one first.",
+      "cooldown": "Links were just sent. Try again in a few minutes."
     }
   },
   "bookingEmail": {
@@ -1488,7 +1500,11 @@
     "cancelledHeading": "Your appointment was cancelled",
     "cancelledIntro": "This appointment with {org} is no longer booked.",
     "cancelledFooter": "If you still need a consultation, use the firm’s booking link to choose a new time.",
-    "footer": "If you did not request this appointment, you can ignore this email."
+    "footer": "If you did not request this appointment, you can ignore this email.",
+    "manageLinksSubject": "Manage your appointments with {org}",
+    "manageLinksHeading": "Change or cancel your appointments",
+    "manageLinksIntro": "Someone asked to send the manage links for upcoming appointments with {org} to this address. If this wasn’t you, you can ignore this email.",
+    "manageLinksFooter": "These links replace any previous change or cancel links for the appointments listed above."
   },
   "bookingManage": {
     "title": "Manage your appointment",

@@ -208,3 +208,83 @@ export async function sendBookingCancelledEmail(input: {
     console.error("booking cancelled email:", error);
   }
 }
+
+export async function sendBookingManageLinksEmail(input: {
+  locale: string;
+  to: string;
+  guestName: string;
+  organizationName: string;
+  timezone: string;
+  appointments: {
+    serviceTitle: string;
+    hostName: string;
+    startsAt: string;
+    manageUrl: string;
+    cancelUrl: string;
+  }[];
+}) {
+  if (input.appointments.length === 0) return;
+  const locale = toAppLocale(input.locale);
+  const t = translator(locale);
+  const items = input.appointments
+    .map((appointment) => {
+      const manageUrl = safeLink(appointment.manageUrl);
+      const cancelUrl = safeLink(appointment.cancelUrl);
+      if (!manageUrl && !cancelUrl) return null;
+      const when = formatDateTimeInZone(
+        new Date(appointment.startsAt),
+        input.timezone,
+        locale,
+      );
+      return { ...appointment, when, manageUrl, cancelUrl };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  if (items.length === 0) return;
+
+  const subject = t("manageLinksSubject", { org: input.organizationName });
+  const textLines = [
+    t("greeting", { name: input.guestName }),
+    t("manageLinksIntro", { org: input.organizationName }),
+    ...items.flatMap((item) => [
+      `${item.serviceTitle} — ${item.when} (${input.timezone}) — ${item.hostName}`,
+      item.manageUrl ? `${t("changeTime")}: ${item.manageUrl}` : null,
+      item.cancelUrl ? `${t("cancelAppointment")}: ${item.cancelUrl}` : null,
+    ]),
+    t("manageLinksFooter"),
+  ].filter((line): line is string => Boolean(line));
+
+  const itemsHtml = items
+    .map((item) => {
+      const links = manageLinksHtml(t, item.manageUrl, item.cancelUrl);
+      return `<div style="margin:20px 0 0;padding:16px 0 0;border-top:1px solid #E5E7EB;">
+        ${detailsTable(t, item.when, input.timezone, item.hostName, item.serviceTitle)}
+        ${links}
+      </div>`;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+<html lang="${locale}">
+  <body style="margin:0;padding:24px;background:#F9FAFB;color:#111827;font-family:Inter,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 24px;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#4A5568;">${escapeHtml(input.organizationName)}</p>
+      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:#111827;">${escapeHtml(t("manageLinksHeading"))}</h1>
+      <p style="margin:0 0 8px;font-size:15px;color:#111827;">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
+      <p style="margin:0 0 8px;font-size:15px;color:#4A5568;">${escapeHtml(t("manageLinksIntro", { org: input.organizationName }))}</p>
+      ${itemsHtml}
+      <p style="margin:28px 0 0;font-size:13px;color:#4A5568;">${escapeHtml(t("manageLinksFooter"))}</p>
+    </div>
+  </body>
+</html>`;
+
+  try {
+    await sendResendEmail({
+      to: input.to,
+      subject,
+      html,
+      text: textLines.join("\n"),
+    });
+  } catch (error) {
+    console.error("booking manage links email:", error);
+  }
+}
