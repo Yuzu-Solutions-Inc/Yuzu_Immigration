@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
-import { ProjectFormsPanel, ProjectQuestionnaire } from "@/components/forms/project-forms-panel";
-import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
+import { ProjectFormCompletion } from "@/components/forms/project-form-completion";
+import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import {
   ExportProjectFileButton,
   ProjectRetentionPanel,
@@ -31,24 +31,17 @@ import {
 import { toAppLocale } from "@/lib/i18n/locales";
 import { ensureProjectDocumentsSeeded } from "@/lib/documents/service";
 import { listProjectDocumentRequests } from "@/lib/documents/service";
-import {
-  answersForPersonFill,
-  normalizeAnswersStore,
-} from "@/lib/ircc/answers-store";
+import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
 import { isFormMandatoryComplete } from "@/lib/ircc/form-readiness";
-import { withProjectFormLanguage } from "@/lib/ircc/form-language";
-import {
-  mergeAccountRepIntoAnswers,
-  PROFILE_REP_SELECT,
-} from "@/lib/ircc/account-rep";
+import { PROFILE_REP_SELECT } from "@/lib/ircc/account-rep";
 import {
   getActiveShareLink,
   getProjectFormAnswers,
   listProjectForms,
 } from "@/lib/ircc/project-forms";
+import { buildQuestionnairePeople } from "@/lib/ircc/questionnaire-people";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
-
 export default async function ProjectDetailPage({
   params,
 }: {
@@ -110,30 +103,13 @@ export default async function ProjectDetailPage({
         .maybeSingle()
     : { data: null };
 
-  const questionnairePeople: QuestionnairePerson[] = participants
-    .filter((row) => row.person)
-    .map((row) => {
-      const person = row.person!;
-      const formCodes = forms
-        .filter(
-          (f) =>
-            f.person_id === person.id ||
-            (row.role === "principal" && !f.person_id),
-        )
-        .map((f) => f.form_code);
-      const raw = answersForPersonFill(store, person.id);
-      if (person.email) raw.email = person.email;
-      return {
-        id: person.id,
-        displayName: `${person.first_name} ${person.last_name}`.trim(),
-        role: row.role,
-        formCodes,
-        answers: withProjectFormLanguage(
-          mergeAccountRepIntoAnswers(raw, repProfile),
-          project.form_language,
-        ),
-      };
-    });
+  const questionnairePeople = buildQuestionnairePeople({
+    participants,
+    forms,
+    store,
+    formLanguage: project.form_language,
+    repProfile,
+  });
 
   const principalAnswers =
     questionnairePeople.find((person) => person.role === "principal")
@@ -342,8 +318,7 @@ export default async function ProjectDetailPage({
       </div>
 
       <div id="questionnaire" className="scroll-mt-20">
-        <ProjectQuestionnaire
-          locale={formLocale}
+        <ProjectFormCompletion
           projectId={project.id}
           people={questionnairePeople}
         />

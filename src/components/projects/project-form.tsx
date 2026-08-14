@@ -46,12 +46,6 @@ import {
   personStatusAllowsExpiry,
 } from "@/lib/crm/person-status";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
-import {
-  OrganizationProgramEditor,
-  OrganizationProgramManageButton,
-} from "@/components/projects/organization-program-editor";
-import { useRouter } from "@/i18n/navigation";
-import { Plus } from "lucide-react";
 
 type ExistingPerson = {
   id: string;
@@ -150,16 +144,12 @@ export function ProjectForm({
   const to = useTranslations("orgPrograms");
   const tr = useTranslations("roles");
   const ti = useTranslations("immigrationStatus");
-  const router = useRouter();
   const isEdit = Boolean(initial);
   const defaultPersonMode: "new" | "existing" = canCreatePeople
     ? "new"
     : "existing";
 
   const [orgPrograms, setOrgPrograms] = useState(organizationPrograms);
-  const [programEditorOpen, setProgramEditorOpen] = useState(false);
-  const [editingProgram, setEditingProgram] =
-    useState<OrganizationProgram | null>(null);
 
   const [composition, setComposition] = useState<ProjectComposition>(
     initial?.composition ?? "individual",
@@ -302,32 +292,6 @@ export function ProjectForm({
     setProgramFamily(parsed.family as ProgramFamily);
   }
 
-  function openCreateProgram() {
-    setEditingProgram(null);
-    setProgramEditorOpen(true);
-  }
-
-  function openEditProgram() {
-    if (!selectedOrgProgram) return;
-    setEditingProgram(selectedOrgProgram);
-    setProgramEditorOpen(true);
-  }
-
-  function handleProgramSaved(program: OrganizationProgram) {
-    setOrgPrograms((prev) => {
-      const exists = prev.some((p) => p.id === program.id);
-      if (exists) {
-        return prev.map((p) => (p.id === program.id ? { ...p, ...program } : p));
-      }
-      return [...prev, program].sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-      );
-    });
-    setOrganizationProgramId(program.id);
-    setProgramFamily("other");
-    router.refresh();
-  }
-
   const participantsPayload = useMemo(
     () =>
       slots.map((slot) => {
@@ -385,7 +349,6 @@ export function ProjectForm({
   }
 
   return (
-    <>
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="locale" value={locale} />
       {initial ? (
@@ -593,22 +556,7 @@ export function ProjectForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="programFamily">{t("program")}</Label>
-            <div className="flex items-center gap-2">
-              {selectedOrgProgram ? (
-                <OrganizationProgramManageButton onClick={openEditProgram} />
-              ) : null}
-              <button
-                type="button"
-                onClick={openCreateProgram}
-                className="inline-flex items-center gap-1 text-xs font-medium text-action hover:underline"
-              >
-                <Plus className="size-3.5" />
-                {to("createShort")}
-              </button>
-            </div>
-          </div>
+          <Label htmlFor="programFamily">{t("program")}</Label>
           <select
             id="programFamily"
             value={programSelectValue}
@@ -1007,14 +955,6 @@ export function ProjectForm({
             : t("create")}
       </Button>
     </form>
-    <OrganizationProgramEditor
-      locale={locale}
-      open={programEditorOpen}
-      onOpenChange={setProgramEditorOpen}
-      initial={editingProgram}
-      onSaved={handleProgramSaved}
-    />
-    </>
   );
 }
 

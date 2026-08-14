@@ -4,6 +4,11 @@ import type { FormCode } from "@/lib/ircc/catalog";
 import { ALL_FORM_CODES, isFormCode } from "@/lib/ircc/catalog";
 import type { ProjectComposition } from "@/lib/crm/programs";
 import type { ApplicationLocation } from "@/lib/ircc/kits";
+import {
+  studyPermitKitForms,
+  visitorKitForms,
+  workPermitKitForms,
+} from "@/lib/ircc/kits";
 
 export const ORG_PROGRAM_VALUE_PREFIX = "org:" as const;
 
@@ -236,6 +241,100 @@ export function defaultOrgProgramDraft(): {
         sortOrder: 20,
       },
     ],
+  };
+}
+
+export const BUILTIN_PROGRAM_TEMPLATE_KEYS = [
+  "study_permit",
+  "work_permit",
+  "visitor",
+] as const;
+
+export type BuiltinProgramTemplateKey =
+  (typeof BUILTIN_PROGRAM_TEMPLATE_KEYS)[number];
+
+export function isBuiltinProgramTemplateKey(
+  value: string,
+): value is BuiltinProgramTemplateKey {
+  return (BUILTIN_PROGRAM_TEMPLATE_KEYS as readonly string[]).includes(value);
+}
+
+/**
+ * Seed values when duplicating a built-in IRCC kit into a firm template.
+ * Uses the outside-Canada kit as the starting checklist; both locations stay allowed.
+ */
+export function builtinProgramTemplateDraft(
+  key: BuiltinProgramTemplateKey,
+): {
+  nameKey: BuiltinProgramTemplateKey;
+  allowsIndividual: boolean;
+  allowsCouple: boolean;
+  allowsFamily: boolean;
+  allowsInsideCanada: boolean;
+  allowsOutsideCanada: boolean;
+  forms: OrgProgramFormSeed[];
+  documents: OrgProgramDocumentSeed[];
+} {
+  const kitForms =
+    key === "study_permit"
+      ? studyPermitKitForms({ applicationLocation: "outside" })
+      : key === "visitor"
+        ? visitorKitForms({ applicationLocation: "outside" })
+        : workPermitKitForms({ applicationLocation: "outside" });
+
+  const docs = defaultOrgProgramDraft().documents;
+
+  return {
+    nameKey: key,
+    allowsIndividual: true,
+    allowsCouple: true,
+    allowsFamily: true,
+    allowsInsideCanada: true,
+    allowsOutsideCanada: true,
+    forms: kitForms.map((seed) => ({
+      formCode: seed.formCode,
+      isRequired: seed.isRequired,
+      sortOrder: seed.sortOrder,
+    })),
+    documents: docs,
+  };
+}
+
+export type OrganizationProgramDraftInput = {
+  name: string;
+  allows_individual: boolean;
+  allows_couple: boolean;
+  allows_family: boolean;
+  allows_inside_canada: boolean;
+  allows_outside_canada: boolean;
+  forms: OrgProgramFormSeed[];
+  documents: OrgProgramDocumentSeed[];
+};
+
+export function draftFromOrganizationProgram(
+  program: Pick<
+    OrganizationProgram,
+    | "name"
+    | "allows_individual"
+    | "allows_couple"
+    | "allows_family"
+    | "allows_inside_canada"
+    | "allows_outside_canada"
+    | "forms"
+    | "documents"
+  >,
+  options?: { nameSuffix?: string },
+): OrganizationProgramDraftInput {
+  const suffix = options?.nameSuffix?.trim();
+  return {
+    name: suffix ? `${program.name} ${suffix}`.trim().slice(0, 120) : program.name,
+    allows_individual: program.allows_individual,
+    allows_couple: program.allows_couple,
+    allows_family: program.allows_family,
+    allows_inside_canada: program.allows_inside_canada,
+    allows_outside_canada: program.allows_outside_canada,
+    forms: program.forms,
+    documents: program.documents,
   };
 }
 

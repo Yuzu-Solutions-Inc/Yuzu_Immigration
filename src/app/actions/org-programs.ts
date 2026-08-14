@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
@@ -51,6 +52,12 @@ function parseOrgProgramForm(formData: FormData) {
     forms,
     documents,
   };
+}
+
+function revalidateProgramPaths(locale: string) {
+  revalidatePath(`/${locale}/projects`);
+  revalidatePath(`/${locale}/projects/new`);
+  revalidatePath(`/${locale}/projects/templates`);
 }
 
 export async function listOrganizationPrograms(): Promise<OrganizationProgram[]> {
@@ -135,7 +142,6 @@ export async function createOrganizationProgramAction(
 
   if (error || !data) {
     console.error("createOrganizationProgram:", error?.message);
-    if (error?.code === "23505") return { error: "duplicate_name" };
     return { error: "save_failed" };
   }
 
@@ -149,9 +155,8 @@ export async function createOrganizationProgramAction(
     metadata: { name: parsed.data.name },
   });
 
-  revalidatePath(`/${localeParsed.data}/projects`);
-  revalidatePath(`/${localeParsed.data}/projects/new`);
-  return { message: "created", programId: data.id as string };
+  revalidateProgramPaths(localeParsed.data);
+  redirect(`/${localeParsed.data}/projects/templates`);
 }
 
 export async function updateOrganizationProgramAction(
@@ -198,7 +203,6 @@ export async function updateOrganizationProgramAction(
 
   if (error) {
     console.error("updateOrganizationProgram:", error.message);
-    if (error.code === "23505") return { error: "duplicate_name" };
     return { error: "save_failed" };
   }
   if (!data) return { error: "not_found" };
@@ -213,9 +217,8 @@ export async function updateOrganizationProgramAction(
     metadata: { name: parsed.data.name },
   });
 
-  revalidatePath(`/${localeParsed.data}/projects`);
-  revalidatePath(`/${localeParsed.data}/projects/new`);
-  return { message: "saved", programId };
+  revalidateProgramPaths(localeParsed.data);
+  redirect(`/${localeParsed.data}/projects/templates`);
 }
 
 export async function archiveOrganizationProgramAction(
@@ -263,7 +266,6 @@ export async function archiveOrganizationProgramAction(
     resourceId: programId,
   });
 
-  revalidatePath(`/${localeParsed.data}/projects`);
-  revalidatePath(`/${localeParsed.data}/projects/new`);
-  return { message: "archived", programId };
+  revalidateProgramPaths(localeParsed.data);
+  redirect(`/${localeParsed.data}/projects/templates`);
 }

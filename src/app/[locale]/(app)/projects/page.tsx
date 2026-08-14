@@ -3,10 +3,13 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectsTable } from "@/components/projects/projects-table";
+import { buttonVariants } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { getProjectsProgress } from "@/lib/crm/progress";
 import { listOrgMembers, listProjects } from "@/lib/crm/queries";
+import { cn } from "@/lib/utils";
 
 export default async function ProjectsPage({
   params,
@@ -18,6 +21,7 @@ export default async function ProjectsPage({
 
   const t = await getTranslations("projects");
   const th = await getTranslations("appHome");
+  const to = await getTranslations("orgPrograms");
   const membership = await getPrimaryMembership();
   const canCreate = canCreateRecords(membership?.role);
   const projectsPromise = listProjects();
@@ -38,7 +42,15 @@ export default async function ProjectsPage({
           </h1>
           <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
         </div>
-        {canCreate ? <NewProjectButton label={t("new")} /> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/projects/templates"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            {to("manageButton")}
+          </Link>
+          {canCreate ? <NewProjectButton label={t("new")} /> : null}
+        </div>
       </div>
 
       {projects.length === 0 ? (
