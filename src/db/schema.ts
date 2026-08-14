@@ -980,6 +980,29 @@ export const bookingGoogleBusy = pgTable("booking_google_busy", {
     .notNull(),
 });
 
+/** In-app notifications for firm staff (document uploads, form completion, IRCC cert). */
+export const staffNotifications = pgTable("staff_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").references(() => immigrationProjects.id, {
+    onDelete: "cascade",
+  }),
+  kind: text("kind").notNull(),
+  title: text("title").notNull(),
+  body: text("body"),
+  href: text("href"),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 const privateSchema = pgSchema("private");
 
 /** bcrypt hashes — never exposed to anon/authenticated Data API. */

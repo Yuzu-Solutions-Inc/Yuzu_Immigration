@@ -514,6 +514,13 @@ export async function uploadShareDocumentAction(
       uploadedVia: "share_link",
       client: admin,
     });
+    const { notifyDocumentsUploaded } = await import(
+      "@/lib/notifications/emit"
+    );
+    await notifyDocumentsUploaded({
+      organizationId: resolved.organizationId,
+      projectId: resolved.projectId,
+    });
     await recordAuditEvent({
       organizationId: resolved.organizationId,
       actorKind: "share_link",

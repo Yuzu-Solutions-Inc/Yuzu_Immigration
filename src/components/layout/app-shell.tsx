@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
+import { AppTopBar } from "@/components/layout/app-top-bar";
 import {
   DesktopSidebar,
   MobileSidebarTrigger,
 } from "@/components/layout/sidebar-nav";
-import { OrgSwitcher, type OrgSwitcherOption } from "@/components/layout/org-switcher";
+import { type OrgSwitcherOption } from "@/components/layout/org-switcher";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,16 @@ export async function DashboardShell({
   const sidebarCollapsed =
     (await cookies()).get("sidebar-collapsed")?.value === "1";
 
+  const mobileTrigger = (
+    <MobileSidebarTrigger
+      organizations={organizations}
+      activeOrganizationId={activeOrganizationId}
+      newProjectLabel={tHome("newProject")}
+      newPersonLabel={tHome("newPerson")}
+      canCreate={canCreate}
+    />
+  );
+
   return (
     <div className="flex min-h-screen flex-1 bg-canvas">
       <DesktopSidebar
@@ -39,22 +50,7 @@ export async function DashboardShell({
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="sticky top-0 z-20 flex h-12 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur supports-backdrop-filter:bg-surface/80 lg:hidden">
-          <MobileSidebarTrigger
-            organizations={organizations}
-            activeOrganizationId={activeOrganizationId}
-            newProjectLabel={tHome("newProject")}
-            newPersonLabel={tHome("newPerson")}
-            canCreate={canCreate}
-          />
-          <div className="min-w-0 flex-1">
-            <OrgSwitcher
-              organizations={organizations}
-              activeOrganizationId={activeOrganizationId}
-              variant="header"
-            />
-          </div>
-        </div>
+        <AppTopBar mobileTrigger={mobileTrigger} />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
           {children}

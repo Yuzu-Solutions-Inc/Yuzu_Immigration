@@ -1087,6 +1087,14 @@ export async function saveShareAnswers(input: {
     ),
     client: admin,
   });
+
+  const { maybeNotifyFormsComplete } = await import(
+    "@/lib/notifications/emit"
+  );
+  await maybeNotifyFormsComplete({
+    organizationId: resolved.organizationId,
+    projectId: resolved.projectId,
+  });
 }
 
 export function buildInitialAnswersStore(input: {

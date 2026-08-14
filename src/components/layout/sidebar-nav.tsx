@@ -323,8 +323,8 @@ export function MobileSidebarTrigger({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         className={cn(
-          buttonVariants({ variant: "outline", size: "icon-sm" }),
-          "lg:hidden",
+          buttonVariants({ variant: "ghost", size: "icon-sm" }),
+          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground lg:hidden",
         )}
         aria-label={t("menu")}
       >

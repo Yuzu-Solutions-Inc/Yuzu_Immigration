@@ -6,7 +6,9 @@ import { questionnaireFillCounts } from "@/lib/ircc/form-readiness";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { decryptAnswersValue } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ProjectProgress = {
   docsDone: number;
@@ -75,13 +77,36 @@ function formPercentForProject(
 export async function getProjectsProgress(
   projectIds: string[],
 ): Promise<Map<string, ProjectProgress>> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return new Map();
+  return getProjectsProgressForOrg(orgId, projectIds, await createClient());
+}
+
+/** Form completion % for project ids (bypasses RLS via service role). */
+export async function formPercentForProjectIds(
+  organizationId: string,
+  projectIds: string[],
+): Promise<Map<string, number>> {
+  const full = await getProjectsProgressForOrg(
+    organizationId,
+    projectIds,
+    createServiceClient(),
+  );
+  const map = new Map<string, number>();
+  for (const [id, stats] of full) {
+    map.set(id, stats.formPercent);
+  }
+  return map;
+}
+
+async function getProjectsProgressForOrg(
+  orgId: string,
+  projectIds: string[],
+  supabase: SupabaseClient,
+): Promise<Map<string, ProjectProgress>> {
   const progress = new Map<string, ProjectProgress>();
   if (projectIds.length === 0) return progress;
 
-  const orgId = await requireOrganizationId();
-  if (!orgId) return progress;
-
-  const supabase = await createClient();
   const key = await getOrgDataKey(orgId);
 
   const [docsResult, formsResult, answersResult, participantsResult] =

@@ -250,6 +250,13 @@ export async function saveProjectAnswersAction(
         personKitsFromAnswersStore(store),
       ),
     });
+    const { maybeNotifyFormsComplete } = await import(
+      "@/lib/notifications/emit"
+    );
+    await maybeNotifyFormsComplete({
+      organizationId: orgId,
+      projectId,
+    });
   } catch {
     return { error: "save_failed" };
   }
