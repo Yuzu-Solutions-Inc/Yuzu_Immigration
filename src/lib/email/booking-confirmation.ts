@@ -62,7 +62,7 @@ function manageLinksHtml(
 ) {
   if (!manageUrl && !cancelUrl) return "";
   const change = manageUrl
-    ? `<a href="${escapeHtml(manageUrl)}" style="color:#2471A3;font-weight:600;text-decoration:none;">${escapeHtml(t("changeTime"))}</a>`
+    ? `<a href="${escapeHtml(manageUrl)}" style="color:#5E8F33;font-weight:600;text-decoration:none;">${escapeHtml(t("changeTime"))}</a>`
     : "";
   const cancel = cancelUrl
     ? `<a href="${escapeHtml(cancelUrl)}" style="color:#8B9294;font-weight:600;text-decoration:none;">${escapeHtml(t("cancelAppointment"))}</a>`
@@ -124,7 +124,7 @@ export async function sendBookingConfirmationEmail(input: {
   ].filter((line): line is string => Boolean(line));
 
   const meetHtml = meet
-    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(meet)}" style="display:inline-block;background:#3498DB;color:#FFFFFF;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("joinMeet"))}</a></p>`
+    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(meet)}" style="display:inline-block;background:#86C54A;color:#0F1213;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("joinMeet"))}</a></p>`
     : "";
 
   const html = `<!doctype html>
@@ -196,7 +196,7 @@ export async function sendBookingCancelledEmail(input: {
   ].filter((line): line is string => Boolean(line));
 
   const bookHtml = bookingUrl
-    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(bookingUrl)}" style="display:inline-block;background:#3498DB;color:#FFFFFF;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("bookAgain"))}</a></p>`
+    ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(bookingUrl)}" style="display:inline-block;background:#86C54A;color:#0F1213;text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("bookAgain"))}</a></p>`
     : "";
 
   const html = `<!doctype html>
