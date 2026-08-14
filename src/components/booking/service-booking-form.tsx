@@ -24,8 +24,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   BOOKING_FORM_FIELD_TYPES,
+  BOOKING_FORM_PRESETS,
   MAX_BOOKING_FORM_FIELDS,
   slugFromFieldLabel,
+  type BookingFormPreset,
 } from "@/lib/booking/form-fields";
 import type { BookingFormFieldType } from "@/db/schema";
 import type {
@@ -160,6 +162,38 @@ function FormEditor({
     );
   }
 
+  function addPreset(preset: BookingFormPreset) {
+    const used = new Set(drafts.map((field) => field.fieldKey).filter(Boolean));
+    const room = MAX_BOOKING_FORM_FIELDS - drafts.length;
+    if (room <= 0) {
+      toast.error(t("formPresetTooMany"));
+      return;
+    }
+    const added: DraftField[] = [];
+    for (const field of preset.fields) {
+      if (added.length >= room) break;
+      if (used.has(field.fieldKey)) continue;
+      used.add(field.fieldKey);
+      added.push({
+        clientId: newClientId(),
+        persisted: false,
+        label: t(field.labelKey),
+        fieldKey: field.fieldKey,
+        helpText: "",
+        fieldType: field.fieldType,
+        optionsText: field.optionsKey ? t(field.optionsKey) : "",
+        required: field.required,
+        keyTouched: true,
+      });
+    }
+    if (added.length === 0) {
+      toast.info(t("formPresetSkipped"));
+      return;
+    }
+    setDrafts((prev) => [...prev, ...added]);
+    toast.success(t("formPresetAdded", { count: added.length }));
+  }
+
   const payload = drafts.map((field) => ({
     id: field.persisted ? field.clientId : "",
     label: field.label,
@@ -222,6 +256,21 @@ function FormEditor({
 
       <div className="space-y-3">
         <p className="text-sm font-medium">{t("formExtraSection")}</p>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">{t("formQuickAdd")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {BOOKING_FORM_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
+                onClick={() => addPreset(preset)}
+              >
+                {t(preset.labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
         {drafts.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("bookingFormEmpty")}</p>
         ) : (

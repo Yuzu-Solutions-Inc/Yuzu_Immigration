@@ -32,6 +32,188 @@ export function isReservedBookingFieldKey(key: string) {
   return RESERVED_FIELD_KEYS.has(key);
 }
 
+export type BookingFormPresetField = {
+  fieldKey: string;
+  labelKey: string;
+  fieldType: BookingFormFieldType;
+  required: boolean;
+  optionsKey?: string;
+};
+
+export type BookingFormPreset = {
+  id: string;
+  labelKey: string;
+  fields: BookingFormPresetField[];
+};
+
+export const BOOKING_FORM_PRESETS: BookingFormPreset[] = [
+  {
+    id: "address_parts",
+    labelKey: "formPresetAddress",
+    fields: [
+      {
+        fieldKey: "street_line",
+        labelKey: "formFieldStreet",
+        fieldType: "text",
+        required: true,
+      },
+      {
+        fieldKey: "unit_number",
+        labelKey: "formFieldUnit",
+        fieldType: "text",
+        required: false,
+      },
+      {
+        fieldKey: "city",
+        labelKey: "formFieldCity",
+        fieldType: "text",
+        required: true,
+      },
+      {
+        fieldKey: "province",
+        labelKey: "formFieldProvince",
+        fieldType: "text",
+        required: true,
+      },
+      {
+        fieldKey: "postal_code",
+        labelKey: "formFieldPostalCode",
+        fieldType: "text",
+        required: true,
+      },
+      {
+        fieldKey: "country",
+        labelKey: "formFieldCountry",
+        fieldType: "text",
+        required: true,
+      },
+    ],
+  },
+  {
+    id: "date_of_birth",
+    labelKey: "formPresetDob",
+    fields: [
+      {
+        fieldKey: "date_of_birth",
+        labelKey: "formFieldDob",
+        fieldType: "date",
+        required: true,
+      },
+    ],
+  },
+  {
+    id: "citizenship",
+    labelKey: "formPresetCitizenship",
+    fields: [
+      {
+        fieldKey: "country_of_citizenship",
+        labelKey: "formFieldCitizenship",
+        fieldType: "text",
+        required: true,
+      },
+    ],
+  },
+  {
+    id: "immigration_status",
+    labelKey: "formPresetStatus",
+    fields: [
+      {
+        fieldKey: "immigration_status",
+        labelKey: "formFieldStatus",
+        fieldType: "select",
+        required: true,
+        optionsKey: "formOptionsStatus",
+      },
+    ],
+  },
+  {
+    id: "passport_number",
+    labelKey: "formPresetPassport",
+    fields: [
+      {
+        fieldKey: "passport_number",
+        labelKey: "formFieldPassport",
+        fieldType: "text",
+        required: false,
+      },
+    ],
+  },
+  {
+    id: "uci_number",
+    labelKey: "formPresetUci",
+    fields: [
+      {
+        fieldKey: "uci_number",
+        labelKey: "formFieldUci",
+        fieldType: "text",
+        required: false,
+      },
+    ],
+  },
+  {
+    id: "preferred_language",
+    labelKey: "formPresetLanguage",
+    fields: [
+      {
+        fieldKey: "preferred_language",
+        labelKey: "formFieldLanguage",
+        fieldType: "select",
+        required: false,
+        optionsKey: "formOptionsLanguage",
+      },
+    ],
+  },
+  {
+    id: "employer_name",
+    labelKey: "formPresetEmployer",
+    fields: [
+      {
+        fieldKey: "employer_name",
+        labelKey: "formFieldEmployer",
+        fieldType: "text",
+        required: false,
+      },
+    ],
+  },
+  {
+    id: "family_members",
+    labelKey: "formPresetFamily",
+    fields: [
+      {
+        fieldKey: "family_members",
+        labelKey: "formFieldFamily",
+        fieldType: "number",
+        required: false,
+      },
+    ],
+  },
+  {
+    id: "consultation_topic",
+    labelKey: "formPresetTopic",
+    fields: [
+      {
+        fieldKey: "consultation_topic",
+        labelKey: "formFieldTopic",
+        fieldType: "textarea",
+        required: false,
+      },
+    ],
+  },
+  {
+    id: "referral_source",
+    labelKey: "formPresetReferral",
+    fields: [
+      {
+        fieldKey: "referral_source",
+        labelKey: "formFieldReferral",
+        fieldType: "select",
+        required: false,
+        optionsKey: "formOptionsReferral",
+      },
+    ],
+  },
+];
+
 export function slugFromFieldLabel(label: string) {
   const slug = label
     .normalize("NFKD")
