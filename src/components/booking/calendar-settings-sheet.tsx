@@ -1,17 +1,17 @@
 "use client";
 
-import { Plus, Settings2, Trash2 } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
-  addAvailabilityRuleAction,
-  deleteAvailabilityRuleAction,
   regenerateBookingLinkAction,
   saveBookingSettingsAction,
   type BookingActionState,
 } from "@/app/actions/booking";
+import { GoogleCalendarSettings } from "@/components/booking/google-calendar-settings";
+import { WeekTemplateHours } from "@/components/booking/week-template-hours";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,11 +26,11 @@ import {
 import type {
   BookingAvailabilityRuleRow,
   BookingSettingsRow,
+  GoogleCalendarConnectionPublic,
 } from "@/lib/booking/types";
-import { BOOKING_TIMEZONES, normalizeTimeHm } from "@/lib/booking/timezone";
+import { BOOKING_TIMEZONES } from "@/lib/booking/timezone";
 import { cn } from "@/lib/utils";
 
-const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const initialState: BookingActionState = {};
 
 export function CalendarSettingsSheet({
@@ -38,11 +38,15 @@ export function CalendarSettingsSheet({
   canManage,
   settings,
   rules,
+  googleConfigured,
+  googleConnection,
 }: {
   locale: string;
   canManage: boolean;
   settings: BookingSettingsRow | null;
   rules: BookingAvailabilityRuleRow[];
+  googleConfigured: boolean;
+  googleConnection: GoogleCalendarConnectionPublic | null;
 }) {
   const t = useTranslations("calendar");
   const [open, setOpen] = useState(false);
@@ -50,22 +54,12 @@ export function CalendarSettingsSheet({
     saveBookingSettingsAction,
     initialState,
   );
-  const [ruleState, ruleAction, rulePending] = useActionState(
-    addAvailabilityRuleAction,
-    initialState,
-  );
   const [regenPending, startRegen] = useTransition();
-  const [deletePending, startDelete] = useTransition();
 
   useEffect(() => {
     if (saveState.message === "saved") toast.success(t("settingsSaved"));
     if (saveState.error) toast.error(t(`errors.${saveState.error}`));
   }, [saveState, t]);
-
-  useEffect(() => {
-    if (ruleState.message === "rule_added") toast.success(t("ruleAdded"));
-    if (ruleState.error) toast.error(t(`errors.${ruleState.error}`));
-  }, [ruleState, t]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -80,7 +74,7 @@ export function CalendarSettingsSheet({
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full overflow-y-auto sm:max-w-md"
+        className="w-full overflow-y-auto sm:max-w-5xl"
         showCloseButton
       >
         <SheetHeader>
@@ -166,80 +160,18 @@ export function CalendarSettingsSheet({
             ) : null}
           </form>
 
-          <section className="space-y-3">
-            <h3 className="font-heading text-sm font-semibold text-brand">
-              {t("openHours")}
-            </h3>
-            <p className="text-xs text-muted-foreground">{t("openHoursHelp")}</p>
-            {rules.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("noRules")}</p>
-            ) : (
-              <ul className="space-y-2">
-                {rules.map((rule) => (
-                  <li
-                    key={rule.id}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm"
-                  >
-                    <span>
-                      {t(`weekdays.${WEEKDAYS[rule.weekday]}`)}{" "}
-                      {normalizeTimeHm(rule.start_time)}–
-                      {normalizeTimeHm(rule.end_time)}
-                    </span>
-                    {canManage ? (
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:text-destructive"
-                        aria-label={t("removeRule")}
-                        disabled={deletePending}
-                        onClick={() => {
-                          startDelete(async () => {
-                            const result = await deleteAvailabilityRuleAction(
-                              rule.id,
-                              locale,
-                            );
-                            if (result.error) {
-                              toast.error(t(`errors.${result.error}`));
-                            }
-                          });
-                        }}
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {canManage ? (
-              <form action={ruleAction} className="grid grid-cols-3 gap-2">
-                <input type="hidden" name="locale" value={locale} />
-                <select
-                  name="weekday"
-                  defaultValue="1"
-                  className="h-10 rounded-xl border border-input bg-surface px-2 text-sm"
-                  aria-label={t("weekday")}
-                >
-                  {WEEKDAYS.map((key, index) => (
-                    <option key={key} value={index}>
-                      {t(`weekdays.${key}`)}
-                    </option>
-                  ))}
-                </select>
-                <Input name="startTime" type="time" required defaultValue="09:00" />
-                <Input name="endTime" type="time" required defaultValue="17:00" />
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="sm"
-                  className="col-span-3"
-                  disabled={rulePending}
-                >
-                  <Plus className="size-4" />
-                  {rulePending ? t("saving") : t("addRule")}
-                </Button>
-              </form>
-            ) : null}
-          </section>
+          <WeekTemplateHours
+            locale={locale}
+            canManage={canManage}
+            rules={rules}
+          />
+
+          <GoogleCalendarSettings
+            locale={locale}
+            canManage={canManage}
+            configured={googleConfigured}
+            connection={googleConnection}
+          />
 
           {canManage ? (
             <section className="space-y-2 border-t border-border pt-4">

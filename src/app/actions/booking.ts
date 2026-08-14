@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
@@ -28,7 +29,10 @@ export type BookingActionState = {
 
 const localeSchema = z.enum(["en", "fr", "es"]);
 const weekdaySchema = z.coerce.number().int().min(0).max(6);
-const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const timeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/)
+  .transform((value) => value.slice(0, 5));
 
 async function requireManager() {
   const membership = await getPrimaryMembership();
@@ -327,6 +331,36 @@ export async function addAvailabilityRuleAction(
   return { message: "rule_added" };
 }
 
+export async function applyWeekdayHoursPresetAction(
+  locale: string,
+): Promise<BookingActionState> {
+  const parsedLocale = localeSchema.safeParse(locale);
+  if (!parsedLocale.success) return { error: "invalid" };
+  const gate = await requireManager();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+
+  const supabase = await createClient();
+  const rows = [1, 2, 3, 4, 5].map((weekday) => ({
+    organization_id: orgId,
+    weekday,
+    start_time: "09:00:00",
+    end_time: "17:00:00",
+  }));
+  const { error } = await supabase
+    .from("booking_availability_rules")
+    .upsert(rows, {
+      onConflict: "organization_id,weekday,start_time,end_time",
+      ignoreDuplicates: true,
+    });
+  if (error) {
+    console.error("applyWeekdayHoursPreset:", error.message);
+    return { error: "save_failed" };
+  }
+  revalidatePath(`/${parsedLocale.data}/calendar`);
+  return { message: "preset_applied" };
+}
+
 export async function deleteAvailabilityRuleAction(
   ruleId: string,
   locale: string,
@@ -428,6 +462,13 @@ export async function cancelAppointmentAction(
   const user = await getSessionUser();
 
   const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("booking_appointments")
+    .select("google_event_id")
+    .eq("id", appointmentId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("booking_appointments")
     .update({
@@ -442,6 +483,19 @@ export async function cancelAppointmentAction(
   if (error) {
     console.error("cancelAppointment:", error.message);
     return { error: "save_failed" };
+  }
+
+  const googleEventId = existing?.google_event_id as string | null;
+  if (googleEventId) {
+    after(async () => {
+      const { deleteAppointmentGoogleEvent } = await import(
+        "@/lib/google/calendar"
+      );
+      await deleteAppointmentGoogleEvent({
+        organizationId: orgId,
+        googleEventId,
+      });
+    });
   }
 
   await recordAuditEvent({

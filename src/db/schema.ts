@@ -635,6 +635,52 @@ export const bookingAppointments = pgTable("booking_appointments", {
   cancelledBy: uuid("cancelled_by").references(() => profiles.id, {
     onDelete: "set null",
   }),
+  googleEventId: text("google_event_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** One Google Calendar connection per firm. Tokens live in private.google_calendar_secrets. */
+export const googleCalendarConnections = pgTable("google_calendar_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .unique()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  googleEmail: text("google_email"),
+  calendarId: text("calendar_id").notNull().default("primary"),
+  channelId: text("channel_id"),
+  channelResourceId: text("channel_resource_id"),
+  channelExpiration: timestamp("channel_expiration", { withTimezone: true }),
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** External Google events mirrored as busy intervals (not our bookings). */
+export const bookingGoogleBusy = pgTable("booking_google_busy", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  connectionId: uuid("connection_id")
+    .notNull()
+    .references(() => googleCalendarConnections.id, { onDelete: "cascade" }),
+  googleEventId: text("google_event_id").notNull(),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -653,6 +699,26 @@ export const customerPortalSecrets = privateSchema.table(
       .primaryKey()
       .references(() => people.id, { onDelete: "cascade" }),
     passwordHash: text("password_hash").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+);
+
+/** Google OAuth + watch tokens — service_role only. */
+export const googleCalendarSecrets = privateSchema.table(
+  "google_calendar_secrets",
+  {
+    connectionId: uuid("connection_id")
+      .primaryKey()
+      .references(() => googleCalendarConnections.id, { onDelete: "cascade" }),
+    refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+    accessTokenEncrypted: text("access_token_encrypted"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", {
+      withTimezone: true,
+    }),
+    syncToken: text("sync_token"),
+    channelTokenEncrypted: text("channel_token_encrypted"),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

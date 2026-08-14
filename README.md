@@ -44,6 +44,8 @@ Canadian immigration consultant CRM by Yuzu Solutions.
 Enable Google under Supabase Dashboard → Authentication → Providers.
 Add redirect URL: `http://localhost:3000/auth/callback` (and production URL later).
 
+Staff Google **sign-in** is separate from **Calendar sync**. To sync bookings with Google Calendar, create a Google Cloud OAuth client, enable the Calendar API, set `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET`, and add redirect URI `{APP_URL}/auth/google-calendar/callback`. Push notifications require HTTPS (they will not arrive on localhost).
+
 ## Repo
 
 https://github.com/Yuzu-Solutions-Inc/MyConsultant

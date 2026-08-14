@@ -16,16 +16,24 @@ import type {
   BookingAppointmentRow,
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
+  BookingGoogleBusyRow,
   BookingServiceRow,
   BookingSettingsRow,
+  GoogleCalendarConnectionPublic,
 } from "@/lib/booking/types";
+import {
+  getOrgGoogleConnection,
+  queryGoogleFreeBusy,
+} from "@/lib/google/calendar";
 
 export type {
   BookingAppointmentRow,
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
+  BookingGoogleBusyRow,
   BookingServiceRow,
   BookingSettingsRow,
+  GoogleCalendarConnectionPublic,
 };
 
 export type PublicBookingContext = {
@@ -184,7 +192,8 @@ export async function loadPublicBookingContext(
     now.getTime() + (row.booking_window_days + 1) * 86_400_000,
   );
 
-  const [servicesRes, rulesRes, blockedRes, busyRes] = await Promise.all([
+  const [servicesRes, rulesRes, blockedRes, busyRes, googleBusyRes] =
+    await Promise.all([
     admin
       .from("booking_services")
       .select("*")
@@ -210,7 +219,33 @@ export async function loadPublicBookingContext(
       .eq("status", "confirmed")
       .lt("starts_at", windowEnd.toISOString())
       .gt("ends_at", now.toISOString()),
+    admin
+      .from("booking_google_busy")
+      .select("starts_at, ends_at")
+      .eq("organization_id", row.organization_id)
+      .lt("starts_at", windowEnd.toISOString())
+      .gt("ends_at", now.toISOString()),
   ]);
+
+  const busy = [
+    ...((busyRes.data ?? []) as { starts_at: string; ends_at: string }[]),
+    ...((googleBusyRes.data ?? []) as { starts_at: string; ends_at: string }[]),
+  ];
+
+  try {
+    const connection = await getOrgGoogleConnection(row.organization_id);
+    if (connection) {
+      const live = await queryGoogleFreeBusy({
+        connectionId: connection.id,
+        calendarId: connection.calendar_id,
+        timeMin: now.toISOString(),
+        timeMax: windowEnd.toISOString(),
+      });
+      busy.push(...live);
+    }
+  } catch (error) {
+    console.error("public booking google freeBusy:", error);
+  }
 
   return {
     organizationId: org.id as string,
@@ -219,7 +254,7 @@ export async function loadPublicBookingContext(
     services: (servicesRes.data ?? []) as BookingServiceRow[],
     rules: (rulesRes.data ?? []) as BookingAvailabilityRuleRow[],
     blocked: (blockedRes.data ?? []) as BookingBlockedTimeRow[],
-    busy: (busyRes.data ?? []) as { starts_at: string; ends_at: string }[],
+    busy,
   };
 }
 
@@ -245,6 +280,43 @@ export function dayBoundsUtc(dateIso: string, timeZone: string) {
   const start = zonedCivilToUtc(dateIso, "00:00", timeZone);
   const end = zonedCivilToUtc(addDaysToIsoDate(dateIso, 1), "00:00", timeZone);
   return { start, end };
+}
+
+export async function listGoogleBusy(
+  fromIso: string,
+  toIso: string,
+): Promise<BookingGoogleBusyRow[]> {
+  const orgId = await orgIdOrNull();
+  if (!orgId) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("booking_google_busy")
+    .select("*")
+    .eq("organization_id", orgId)
+    .lt("starts_at", toIso)
+    .gt("ends_at", fromIso)
+    .order("starts_at", { ascending: true });
+  if (error) {
+    console.error("listGoogleBusy:", error.message);
+    return [];
+  }
+  return (data ?? []) as BookingGoogleBusyRow[];
+}
+
+export async function getGoogleCalendarConnectionPublic(): Promise<GoogleCalendarConnectionPublic | null> {
+  const orgId = await orgIdOrNull();
+  if (!orgId) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("google_calendar_connections")
+    .select("google_email, last_synced_at, is_enabled")
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (error) {
+    console.error("getGoogleCalendarConnectionPublic:", error.message);
+    return null;
+  }
+  return (data as GoogleCalendarConnectionPublic | null) ?? null;
 }
 
 export async function findPersonByEmail(

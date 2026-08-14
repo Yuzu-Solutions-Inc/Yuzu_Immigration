@@ -21,7 +21,9 @@ import type {
   BookingAppointmentRow,
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
+  BookingGoogleBusyRow,
   BookingSettingsRow,
+  GoogleCalendarConnectionPublic,
 } from "@/lib/booking/types";
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
@@ -36,6 +38,9 @@ export function CalendarWorkspace({
   rules,
   appointments,
   blocked,
+  googleBusy,
+  googleConfigured,
+  googleConnection,
 }: {
   locale: string;
   canManage: boolean;
@@ -43,6 +48,9 @@ export function CalendarWorkspace({
   rules: BookingAvailabilityRuleRow[];
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
+  googleBusy: BookingGoogleBusyRow[];
+  googleConfigured: boolean;
+  googleConnection: GoogleCalendarConnectionPublic | null;
 }) {
   const t = useTranslations("calendar");
   const timeZone = settings?.timezone ?? "America/Toronto";
@@ -77,6 +85,15 @@ export function CalendarWorkspace({
     return selectedDateIso >= start && selectedDateIso <= endExclusive;
   });
 
+  const dayGoogleBusy = googleBusy.filter((row) => {
+    const start = zonedDateIso(new Date(row.starts_at), timeZone);
+    const endExclusive = zonedDateIso(
+      new Date(new Date(row.ends_at).getTime() - 1),
+      timeZone,
+    );
+    return selectedDateIso >= start && selectedDateIso <= endExclusive;
+  });
+
   function shiftMonth(delta: number) {
     setCursor((prev) => {
       const date = new Date(Date.UTC(prev.year, prev.monthIndex + delta, 1));
@@ -100,6 +117,8 @@ export function CalendarWorkspace({
             canManage={canManage}
             settings={settings}
             rules={rules}
+            googleConfigured={googleConfigured}
+            googleConnection={googleConnection}
           />
         </div>
       </div>
@@ -177,6 +196,27 @@ export function CalendarWorkspace({
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {t("dayIsBlocked")}
             </p>
+          ) : null}
+
+          {dayGoogleBusy.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                {t("googleBusyTitle")}
+              </p>
+              <ul className="space-y-1.5">
+                {dayGoogleBusy.map((row) => (
+                  <li
+                    key={row.id}
+                    className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-muted-foreground"
+                  >
+                    {formatTimeInZone(new Date(row.starts_at), timeZone, locale)}
+                    {" – "}
+                    {formatTimeInZone(new Date(row.ends_at), timeZone, locale)}
+                    <span className="ml-2 text-xs">{t("googleBusyLabel")}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
 
           {dayAppointments.length === 0 ? (

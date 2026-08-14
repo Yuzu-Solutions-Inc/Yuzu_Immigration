@@ -1,0 +1,526 @@
+import { randomBytes } from "node:crypto";
+
+import { getAppBaseUrl } from "@/lib/app-url";
+import {
+  googleCalendarClientConfig,
+  refreshGoogleAccessToken,
+} from "@/lib/google/oauth";
+import { GOOGLE_CALENDAR_AAD } from "@/lib/google/oauth";
+import { decryptField, encryptField } from "@/lib/security/field-crypto";
+import { createServiceClient } from "@/lib/supabase/admin";
+
+const APPOINTMENT_PROP = "myconsultantAppointmentId";
+
+export type GoogleCalendarConnectionRow = {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  google_email: string | null;
+  calendar_id: string;
+  channel_id: string | null;
+  channel_resource_id: string | null;
+  channel_expiration: string | null;
+  last_synced_at: string | null;
+  is_enabled: boolean;
+};
+
+export type GoogleBusyRow = {
+  id: string;
+  organization_id: string;
+  connection_id: string;
+  google_event_id: string;
+  starts_at: string;
+  ends_at: string;
+};
+
+type CalendarEvent = {
+  id?: string;
+  status?: string;
+  transparency?: string;
+  start?: { dateTime?: string; date?: string };
+  end?: { dateTime?: string; date?: string };
+  extendedProperties?: { private?: Record<string, string> };
+};
+
+function admin() {
+  return createServiceClient();
+}
+
+async function loadSecrets(connectionId: string) {
+  const { data, error } = await admin()
+    .schema("private")
+    .from("google_calendar_secrets")
+    .select("*")
+    .eq("connection_id", connectionId)
+    .maybeSingle();
+  if (error) throw new Error(`google secrets: ${error.message}`);
+  return data as {
+    refresh_token_encrypted: string;
+    access_token_encrypted: string | null;
+    access_token_expires_at: string | null;
+    sync_token: string | null;
+    channel_token_encrypted: string | null;
+  } | null;
+}
+
+export async function getValidAccessToken(connectionId: string) {
+  const secrets = await loadSecrets(connectionId);
+  if (!secrets) throw new Error("google_not_connected");
+  const refreshToken = decryptField(
+    secrets.refresh_token_encrypted,
+    GOOGLE_CALENDAR_AAD.refreshToken,
+  );
+  const expiresAt = secrets.access_token_expires_at
+    ? new Date(secrets.access_token_expires_at).getTime()
+    : 0;
+  if (
+    secrets.access_token_encrypted &&
+    expiresAt > Date.now() + 60_000
+  ) {
+    return decryptField(
+      secrets.access_token_encrypted,
+      GOOGLE_CALENDAR_AAD.accessToken,
+    );
+  }
+  const refreshed = await refreshGoogleAccessToken(refreshToken);
+  await admin()
+    .schema("private")
+    .from("google_calendar_secrets")
+    .update({
+      access_token_encrypted: encryptField(
+        refreshed.access_token,
+        GOOGLE_CALENDAR_AAD.accessToken,
+      ),
+      access_token_expires_at: new Date(
+        Date.now() + refreshed.expires_in * 1000,
+      ).toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("connection_id", connectionId);
+  return refreshed.access_token;
+}
+
+async function calendarFetch(
+  accessToken: string,
+  path: string,
+  init?: RequestInit,
+) {
+  const response = await fetch(`https://www.googleapis.com/calendar/v3${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  return response;
+}
+
+export async function createBookingCalendarEvent(input: {
+  connectionId: string;
+  calendarId: string;
+  appointmentId: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+  attendeeEmail?: string;
+}) {
+  if (!googleCalendarClientConfig()) return null;
+  const accessToken = await getValidAccessToken(input.connectionId);
+  const response = await calendarFetch(
+    accessToken,
+    `/calendars/${encodeURIComponent(input.calendarId)}/events?sendUpdates=none`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        summary: input.title,
+        description: input.description,
+        start: { dateTime: input.startsAt },
+        end: { dateTime: input.endsAt },
+        extendedProperties: {
+          private: { [APPOINTMENT_PROP]: input.appointmentId },
+        },
+        attendees: input.attendeeEmail
+          ? [{ email: input.attendeeEmail }]
+          : undefined,
+      }),
+    },
+  );
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`google_event_create:${response.status}:${text.slice(0, 240)}`);
+  }
+  const event = (await response.json()) as CalendarEvent;
+  return event.id ?? null;
+}
+
+export async function deleteBookingCalendarEvent(input: {
+  connectionId: string;
+  calendarId: string;
+  googleEventId: string;
+}) {
+  const accessToken = await getValidAccessToken(input.connectionId);
+  const response = await calendarFetch(
+    accessToken,
+    `/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.googleEventId)}`,
+    { method: "DELETE" },
+  );
+  if (response.status === 404 || response.status === 410) return;
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`google_event_delete:${response.status}:${text.slice(0, 240)}`);
+  }
+}
+
+export async function queryGoogleFreeBusy(input: {
+  connectionId: string;
+  calendarId: string;
+  timeMin: string;
+  timeMax: string;
+}): Promise<{ starts_at: string; ends_at: string }[]> {
+  const accessToken = await getValidAccessToken(input.connectionId);
+  const response = await calendarFetch(accessToken, "/freeBusy", {
+    method: "POST",
+    body: JSON.stringify({
+      timeMin: input.timeMin,
+      timeMax: input.timeMax,
+      items: [{ id: input.calendarId }],
+    }),
+  });
+  if (!response.ok) {
+    console.error("google freeBusy:", response.status);
+    return [];
+  }
+  const data = (await response.json()) as {
+    calendars?: Record<string, { busy?: { start: string; end: string }[] }>;
+  };
+  const busy = data.calendars?.[input.calendarId]?.busy ?? [];
+  return busy.map((slot) => ({ starts_at: slot.start, ends_at: slot.end }));
+}
+
+function eventBounds(event: CalendarEvent) {
+  const start = event.start?.dateTime ?? (event.start?.date ? `${event.start.date}T00:00:00.000Z` : null);
+  const end = event.end?.dateTime ?? (event.end?.date ? `${event.end.date}T00:00:00.000Z` : null);
+  if (!start || !end) return null;
+  return { starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString() };
+}
+
+export async function syncGoogleBusy(connection: GoogleCalendarConnectionRow) {
+  const accessToken = await getValidAccessToken(connection.id);
+  const secrets = await loadSecrets(connection.id);
+  if (!secrets) return;
+
+  const ourEventIds = new Set<string>();
+  const { data: ours } = await admin()
+    .from("booking_appointments")
+    .select("google_event_id")
+    .eq("organization_id", connection.organization_id)
+    .not("google_event_id", "is", null);
+  for (const row of ours ?? []) {
+    if (row.google_event_id) ourEventIds.add(row.google_event_id as string);
+  }
+
+  let syncToken = secrets.sync_token;
+  const collected: CalendarEvent[] = [];
+  let pageToken: string | undefined;
+  let nextSyncToken: string | null = null;
+
+  const runList = async (params: URLSearchParams) => {
+    const response = await calendarFetch(
+      accessToken,
+      `/calendars/${encodeURIComponent(connection.calendar_id)}/events?${params.toString()}`,
+    );
+    return response;
+  };
+
+  const firstParams = new URLSearchParams({
+    singleEvents: "true",
+    showDeleted: "true",
+    maxResults: "250",
+  });
+  if (syncToken) {
+    firstParams.set("syncToken", syncToken);
+  } else {
+    firstParams.set("timeMin", new Date(Date.now() - 7 * 86_400_000).toISOString());
+    firstParams.set(
+      "timeMax",
+      new Date(Date.now() + 120 * 86_400_000).toISOString(),
+    );
+  }
+
+  let params = firstParams;
+  for (let i = 0; i < 20; i += 1) {
+    if (pageToken) params.set("pageToken", pageToken);
+    const response = await runList(params);
+    if (response.status === 410) {
+      syncToken = null;
+      params = new URLSearchParams({
+        singleEvents: "true",
+        showDeleted: "true",
+        maxResults: "250",
+        timeMin: new Date(Date.now() - 7 * 86_400_000).toISOString(),
+        timeMax: new Date(Date.now() + 120 * 86_400_000).toISOString(),
+      });
+      pageToken = undefined;
+      continue;
+    }
+    if (!response.ok) {
+      console.error("google events.list:", response.status, await response.text());
+      break;
+    }
+    const payload = (await response.json()) as {
+      items?: CalendarEvent[];
+      nextPageToken?: string;
+      nextSyncToken?: string;
+    };
+    collected.push(...(payload.items ?? []));
+    nextSyncToken = payload.nextSyncToken ?? nextSyncToken;
+    pageToken = payload.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  if (!syncToken) {
+    await admin()
+      .from("booking_google_busy")
+      .delete()
+      .eq("connection_id", connection.id);
+  }
+
+  for (const event of collected) {
+    const eventId = event.id;
+    if (!eventId) continue;
+    if (event.status === "cancelled" || ourEventIds.has(eventId)) {
+      await admin()
+        .from("booking_google_busy")
+        .delete()
+        .eq("connection_id", connection.id)
+        .eq("google_event_id", eventId);
+      continue;
+    }
+    if (event.extendedProperties?.private?.[APPOINTMENT_PROP]) {
+      continue;
+    }
+    if (event.transparency === "transparent") {
+      await admin()
+        .from("booking_google_busy")
+        .delete()
+        .eq("connection_id", connection.id)
+        .eq("google_event_id", eventId);
+      continue;
+    }
+    const bounds = eventBounds(event);
+    if (!bounds) continue;
+    await admin().from("booking_google_busy").upsert(
+      {
+        organization_id: connection.organization_id,
+        connection_id: connection.id,
+        google_event_id: eventId,
+        starts_at: bounds.starts_at,
+        ends_at: bounds.ends_at,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "connection_id,google_event_id" },
+    );
+  }
+
+  await admin()
+    .schema("private")
+    .from("google_calendar_secrets")
+    .update({
+      sync_token: nextSyncToken,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("connection_id", connection.id);
+
+  await admin()
+    .from("google_calendar_connections")
+    .update({
+      last_synced_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", connection.id);
+}
+
+export async function stopGoogleWatch(connection: GoogleCalendarConnectionRow) {
+  if (!connection.channel_id || !connection.channel_resource_id) return;
+  try {
+    const accessToken = await getValidAccessToken(connection.id);
+    await calendarFetch(accessToken, "/channels/stop", {
+      method: "POST",
+      body: JSON.stringify({
+        id: connection.channel_id,
+        resourceId: connection.channel_resource_id,
+      }),
+    });
+  } catch (error) {
+    console.error("google watch stop:", error);
+  }
+}
+
+export async function startGoogleWatch(
+  connection: GoogleCalendarConnectionRow,
+  webhookUrl: string,
+) {
+  await stopGoogleWatch(connection);
+  const accessToken = await getValidAccessToken(connection.id);
+  const channelId = randomBytes(16).toString("hex");
+  const channelToken = randomBytes(24).toString("base64url");
+  const response = await calendarFetch(
+    accessToken,
+    `/calendars/${encodeURIComponent(connection.calendar_id)}/events/watch`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        id: channelId,
+        type: "web_hook",
+        address: webhookUrl,
+        token: channelToken,
+        params: { ttl: "604800" },
+      }),
+    },
+  );
+  if (!response.ok) {
+    console.error("google watch:", response.status, await response.text());
+    return;
+  }
+  const channel = (await response.json()) as {
+    resourceId?: string;
+    expiration?: string;
+  };
+  await admin()
+    .from("google_calendar_connections")
+    .update({
+      channel_id: channelId,
+      channel_resource_id: channel.resourceId ?? null,
+      channel_expiration: channel.expiration
+        ? new Date(Number(channel.expiration)).toISOString()
+        : new Date(Date.now() + 7 * 86_400_000).toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", connection.id);
+  await admin()
+    .schema("private")
+    .from("google_calendar_secrets")
+    .update({
+      channel_token_encrypted: encryptField(
+        channelToken,
+        GOOGLE_CALENDAR_AAD.channelToken,
+      ),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("connection_id", connection.id);
+}
+
+export async function verifyGoogleChannelToken(
+  connectionId: string,
+  incomingToken: string | null,
+) {
+  if (!incomingToken) return false;
+  const secrets = await loadSecrets(connectionId);
+  if (!secrets?.channel_token_encrypted) return false;
+  try {
+    const expected = decryptField(
+      secrets.channel_token_encrypted,
+      GOOGLE_CALENDAR_AAD.channelToken,
+    );
+    return expected === incomingToken;
+  } catch {
+    return false;
+  }
+}
+
+export async function getOrgGoogleConnection(organizationId: string) {
+  const { data, error } = await admin()
+    .from("google_calendar_connections")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("is_enabled", true)
+    .maybeSingle();
+  if (error) {
+    console.error("getOrgGoogleConnection:", error.message);
+    return null;
+  }
+  return (data as GoogleCalendarConnectionRow | null) ?? null;
+}
+
+export async function refreshGoogleBusyIfStale(organizationId: string) {
+  const connection = await getOrgGoogleConnection(organizationId);
+  if (!connection) return;
+  const last = connection.last_synced_at
+    ? new Date(connection.last_synced_at).getTime()
+    : 0;
+  if (last < Date.now() - 15 * 60_000) {
+    try {
+      await syncGoogleBusy(connection);
+    } catch (error) {
+      console.error("stale google sync:", error);
+    }
+  }
+  const expires = connection.channel_expiration
+    ? new Date(connection.channel_expiration).getTime()
+    : 0;
+  if (expires > Date.now() + 2 * 86_400_000) return;
+  try {
+    const webhookBase = await getAppBaseUrl();
+    if (!webhookBase.startsWith("https://")) return;
+    await startGoogleWatch(
+      connection,
+      `${webhookBase.replace(/\/$/, "")}/api/calendar/google/webhook`,
+    );
+  } catch (error) {
+    console.error("renew google watch:", error);
+  }
+}
+
+export async function pushAppointmentToGoogleCalendar(input: {
+  organizationId: string;
+  appointmentId: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+}) {
+  if (!googleCalendarClientConfig()) return;
+  const connection = await getOrgGoogleConnection(input.organizationId);
+  if (!connection) return;
+  try {
+    const eventId = await createBookingCalendarEvent({
+      connectionId: connection.id,
+      calendarId: connection.calendar_id,
+      appointmentId: input.appointmentId,
+      title: input.title,
+      description: input.description,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+    });
+    if (!eventId) return;
+    await admin()
+      .from("booking_appointments")
+      .update({
+        google_event_id: eventId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", input.appointmentId)
+      .eq("organization_id", input.organizationId);
+  } catch (error) {
+    console.error("push appointment to google:", error);
+  }
+}
+
+export async function deleteAppointmentGoogleEvent(input: {
+  organizationId: string;
+  googleEventId: string;
+}) {
+  const connection = await getOrgGoogleConnection(input.organizationId);
+  if (!connection) return;
+  try {
+    await deleteBookingCalendarEvent({
+      connectionId: connection.id,
+      calendarId: connection.calendar_id,
+      googleEventId: input.googleEventId,
+    });
+  } catch (error) {
+    console.error("delete appointment google event:", error);
+  }
+}

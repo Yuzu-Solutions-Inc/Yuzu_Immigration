@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { z } from "zod";
 
 import { isSlotStillOpen } from "@/lib/booking/slots";
@@ -169,6 +170,20 @@ export async function submitPublicBookingAction(
     resourceType: "booking_appointment",
     resourceId: appointment.id,
     metadata: { serviceId: service.id },
+  });
+
+  after(async () => {
+    const { pushAppointmentToGoogleCalendar } = await import(
+      "@/lib/google/calendar"
+    );
+    await pushAppointmentToGoogleCalendar({
+      organizationId: ctx.organizationId,
+      appointmentId: appointment.id,
+      title: `${service.title} — ${parsed.data.guestName}`,
+      description: `Booked via MyConsultant\n${parsed.data.guestName}\n${parsed.data.guestEmail}\n${parsed.data.guestPhone}`,
+      startsAt: parsed.data.startsAt,
+      endsAt: parsed.data.endsAt,
+    });
   });
 
   return {
