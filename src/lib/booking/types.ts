@@ -150,6 +150,7 @@ export type BookingGoogleBusyRow = {
   google_event_id: string;
   starts_at: string;
   ends_at: string;
+  summary: string | null;
 };
 
 export type GoogleCalendarConnectionPublic = {

@@ -118,6 +118,52 @@ export function hmFromMinutes(total: number) {
   return `${pad2(Math.floor(wrapped / 60))}:${pad2(wrapped % 60)}`;
 }
 
+const DAY_MINUTES = 24 * 60;
+
+/**
+ * Clip an interval to a civil day and return start/end as minutes from 00:00
+ * in `timeZone`. End-of-day is 1440. Returns null when there is no overlap.
+ */
+export function clipToDayMinutes(
+  startsAt: Date,
+  endsAt: Date,
+  dateIso: string,
+  timeZone: string,
+): { start: number; end: number } | null {
+  const dayStart = zonedCivilToUtc(dateIso, "00:00", timeZone);
+  const dayEnd = zonedCivilToUtc(addDaysToIsoDate(dateIso, 1), "00:00", timeZone);
+  const startMs = Math.max(startsAt.getTime(), dayStart.getTime());
+  const endMs = Math.min(endsAt.getTime(), dayEnd.getTime());
+  if (endMs <= startMs) return null;
+
+  const toMinutes = (ms: number) => {
+    if (ms <= dayStart.getTime()) return 0;
+    if (ms >= dayEnd.getTime()) return DAY_MINUTES;
+    const parts = zonedParts(new Date(ms), timeZone);
+    return parts.hour * 60 + parts.minute;
+  };
+
+  const start = toMinutes(startMs);
+  const end = toMinutes(endMs);
+  if (end <= start) return null;
+  return { start, end };
+}
+
+export function coversCivilDay(
+  startsAt: Date,
+  endsAt: Date,
+  dateIso: string,
+  timeZone: string,
+) {
+  const dayStart = zonedCivilToUtc(dateIso, "00:00", timeZone).getTime();
+  const dayEnd = zonedCivilToUtc(
+    addDaysToIsoDate(dateIso, 1),
+    "00:00",
+    timeZone,
+  ).getTime();
+  return startsAt.getTime() <= dayStart && endsAt.getTime() >= dayEnd;
+}
+
 export function formatDateInZone(
   date: Date,
   timeZone: string,

@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -270,7 +271,7 @@ export function WeekTemplateHours({
                       disabled={!canManage || pending}
                       aria-label={t("removeRule")}
                       title={canManage ? t("clickToRemoveSlot") : undefined}
-                      className="absolute inset-x-1 overflow-hidden rounded-md bg-action px-1.5 py-1 text-left text-[11px] font-medium leading-tight text-white shadow-sm hover:bg-[#4f46e5]"
+                      className="group absolute inset-x-1 overflow-hidden rounded-md bg-action px-1.5 py-1 text-left text-[11px] font-medium leading-tight text-white shadow-sm hover:bg-[#4f46e5]"
                       style={{
                         top: (start / DAY_MINUTES) * GRID_HEIGHT,
                         height: Math.max(
@@ -291,7 +292,17 @@ export function WeekTemplateHours({
                         });
                       }}
                     >
-                      {formatHmLabel(start)}–{formatHmLabel(end)}
+                      <span className="flex items-start justify-between gap-1">
+                        <span className="min-w-0 truncate">
+                          {formatHmLabel(start)}–{formatHmLabel(end)}
+                        </span>
+                        {canManage ? (
+                          <Trash2
+                            aria-hidden
+                            className="mt-px size-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                          />
+                        ) : null}
+                      </span>
                     </button>
                   );
                 })}

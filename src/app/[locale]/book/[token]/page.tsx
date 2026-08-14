@@ -1,7 +1,9 @@
+import { after } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PublicBookingFlow } from "@/components/booking/public-booking-flow";
 import { loadPublicBookingContext } from "@/lib/booking/queries";
+import { refreshGoogleBusyIfStale } from "@/lib/google/calendar";
 
 export default async function PublicBookPage({
   params,
@@ -12,6 +14,10 @@ export default async function PublicBookPage({
   setRequestLocale(locale);
   const t = await getTranslations("booking");
   const ctx = await loadPublicBookingContext(token);
+
+  if (ctx) {
+    after(() => refreshGoogleBusyIfStale(ctx.organizationId));
+  }
 
   if (!ctx) {
     return (

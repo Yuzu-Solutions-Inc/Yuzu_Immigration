@@ -574,6 +574,65 @@ export async function blockDayAction(
   return { message: "day_blocked" };
 }
 
+const blockRangeSchema = z
+  .object({
+    dateIso: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startMinutes: z.number().int().min(0).max(24 * 60 - 30),
+    endMinutes: z.number().int().min(30).max(24 * 60),
+    locale: localeSchema,
+  })
+  .refine((value) => value.endMinutes - value.startMinutes >= 30);
+
+export async function blockRangeAction(input: {
+  dateIso: string;
+  startMinutes: number;
+  endMinutes: number;
+  locale: string;
+}): Promise<BookingActionState> {
+  const parsed = blockRangeSchema.safeParse(input);
+  if (!parsed.success) return { error: "invalid" };
+  const gate = await requireMember();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+
+  const supabase = await createClient();
+  const { data: settings } = await supabase
+    .from("booking_settings")
+    .select("timezone")
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  const timezone = settings?.timezone ?? "America/Toronto";
+  const startHm = minutesToPgTime(parsed.data.startMinutes).slice(0, 5);
+  const startsAt = zonedCivilToUtc(parsed.data.dateIso, startHm, timezone);
+  const endsAt =
+    parsed.data.endMinutes >= 24 * 60
+      ? zonedCivilToUtc(
+          addDaysToIsoDate(parsed.data.dateIso, 1),
+          "00:00",
+          timezone,
+        )
+      : zonedCivilToUtc(
+          parsed.data.dateIso,
+          minutesToPgTime(parsed.data.endMinutes).slice(0, 5),
+          timezone,
+        );
+  if (endsAt.getTime() <= startsAt.getTime()) return { error: "invalid" };
+
+  const { error } = await supabase.from("booking_blocked_times").insert({
+    organization_id: orgId,
+    user_id: gate.user.id,
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
+    created_by: gate.user.id,
+  });
+  if (error) {
+    console.error("blockRange:", error.message);
+    return { error: "save_failed" };
+  }
+  revalidateBooking(parsed.data.locale);
+  return { message: "range_blocked" };
+}
+
 export async function unblockTimeAction(
   blockId: string,
   locale: string,

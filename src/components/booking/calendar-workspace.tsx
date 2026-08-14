@@ -1,7 +1,7 @@
 "use client";
 
 import { Ban, CalendarDays, Settings2 } from "lucide-react";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import {
   unblockTimeAction,
 } from "@/app/actions/booking";
 import { CopyBookingLinkButton } from "@/components/booking/copy-booking-link-button";
+import { DayTimeline } from "@/components/booking/day-timeline";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -26,7 +27,11 @@ import type {
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
   addDaysToIsoDate,
+  clipToDayMinutes,
+  coversCivilDay,
+  formatDateInZone,
   formatTimeInZone,
+  zonedCivilToUtc,
   zonedDateIso,
 } from "@/lib/booking/timezone";
 
@@ -57,7 +62,14 @@ export function CalendarWorkspace({
     return { year: parts[0], monthIndex: parts[1] - 1 };
   });
   const [selectedDateIso, setSelectedDateIso] = useState(todayIso);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    string | null
+  >(null);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setSelectedAppointmentId(null);
+  }, [selectedDateIso]);
 
   const markers = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -79,7 +91,16 @@ export function CalendarWorkspace({
       );
       let current = start;
       while (current <= endInclusive) {
-        days.add(current);
+        if (
+          coversCivilDay(
+            new Date(row.starts_at),
+            new Date(row.ends_at),
+            current,
+            timeZone,
+          )
+        ) {
+          days.add(current);
+        }
         current = addDaysToIsoDate(current, 1);
       }
     }
@@ -87,26 +108,49 @@ export function CalendarWorkspace({
   }, [blocked, timeZone]);
 
   const dayAppointments = appointments.filter((row) => {
-    return zonedDateIso(new Date(row.starts_at), timeZone) === selectedDateIso;
+    return (
+      clipToDayMinutes(
+        new Date(row.starts_at),
+        new Date(row.ends_at),
+        selectedDateIso,
+        timeZone,
+      ) !== null
+    );
   });
 
   const dayBlocks = blocked.filter((row) => {
-    const start = zonedDateIso(new Date(row.starts_at), timeZone);
-    const endExclusive = zonedDateIso(
-      new Date(new Date(row.ends_at).getTime() - 1),
-      timeZone,
+    return (
+      clipToDayMinutes(
+        new Date(row.starts_at),
+        new Date(row.ends_at),
+        selectedDateIso,
+        timeZone,
+      ) !== null
     );
-    return selectedDateIso >= start && selectedDateIso <= endExclusive;
   });
 
   const dayGoogleBusy = googleBusy.filter((row) => {
-    const start = zonedDateIso(new Date(row.starts_at), timeZone);
-    const endExclusive = zonedDateIso(
-      new Date(new Date(row.ends_at).getTime() - 1),
-      timeZone,
+    return (
+      clipToDayMinutes(
+        new Date(row.starts_at),
+        new Date(row.ends_at),
+        selectedDateIso,
+        timeZone,
+      ) !== null
     );
-    return selectedDateIso >= start && selectedDateIso <= endExclusive;
   });
+
+  const fullDayBlock = dayBlocks.find((row) =>
+    coversCivilDay(
+      new Date(row.starts_at),
+      new Date(row.ends_at),
+      selectedDateIso,
+      timeZone,
+    ),
+  );
+
+  const selectedAppointment =
+    dayAppointments.find((row) => row.id === selectedAppointmentId) ?? null;
 
   function shiftMonth(delta: number) {
     setCursor((prev) => {
@@ -114,6 +158,8 @@ export function CalendarWorkspace({
       return { year: date.getUTCFullYear(), monthIndex: date.getUTCMonth() };
     });
   }
+
+  const selectedNoon = zonedCivilToUtc(selectedDateIso, "12:00", timeZone);
 
   return (
     <div className="space-y-6">
@@ -136,7 +182,7 @@ export function CalendarWorkspace({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(22rem,1fr)]">
         <SurfaceCard>
           <MonthCalendar
             year={cursor.year}
@@ -159,10 +205,11 @@ export function CalendarWorkspace({
                 {t("dayDetail")}
               </p>
               <h2 className="font-heading text-lg font-semibold text-brand">
-                {selectedDateIso}
+                {formatDateInZone(selectedNoon, timeZone, locale)}
               </h2>
             </div>
-            {dayBlocks.length > 0 ? (
+            {canManage ? (
+              fullDayBlock ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -171,7 +218,7 @@ export function CalendarWorkspace({
                   onClick={() => {
                     startTransition(async () => {
                       const result = await unblockTimeAction(
-                        dayBlocks[0].id,
+                        fullDayBlock.id,
                         locale,
                       );
                       if (result.error) toast.error(t(`errors.${result.error}`));
@@ -201,153 +248,160 @@ export function CalendarWorkspace({
                   <Ban className="size-4" />
                   {t("blockDay")}
                 </Button>
-              )}
+              )
+            ) : null}
           </div>
 
-          {dayBlocks.length > 0 ? (
+          {fullDayBlock ? (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {t("dayIsBlocked")}
             </p>
           ) : null}
 
-          {dayGoogleBusy.length > 0 ? (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                {t("googleBusyTitle")}
-              </p>
-              <ul className="space-y-1.5">
-                {dayGoogleBusy.map((row) => (
-                  <li
-                    key={row.id}
-                    className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-muted-foreground"
-                  >
-                    {formatTimeInZone(new Date(row.starts_at), timeZone, locale)}
-                    {" – "}
-                    {formatTimeInZone(new Date(row.ends_at), timeZone, locale)}
-                    <span className="ml-2 text-xs">{t("googleBusyLabel")}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          <DayTimeline
+            locale={locale}
+            canManage={canManage}
+            dateIso={selectedDateIso}
+            timeZone={timeZone}
+            appointments={dayAppointments}
+            blocked={dayBlocks}
+            googleBusy={dayGoogleBusy}
+            selectedAppointmentId={selectedAppointmentId}
+            onSelectAppointment={setSelectedAppointmentId}
+          />
 
-          {dayAppointments.length === 0 ? (
+          {selectedAppointment ? (
+            <AppointmentDetail
+              locale={locale}
+              canManage={canManage}
+              pending={pending}
+              timeZone={timeZone}
+              row={selectedAppointment}
+              formFields={formFields}
+              hostNames={hostNames}
+              onCancel={(id) => {
+                startTransition(async () => {
+                  const result = await cancelAppointmentAction(id, locale);
+                  if (result.error) {
+                    toast.error(t(`errors.${result.error}`));
+                  } else {
+                    toast.success(t("cancelled"));
+                    setSelectedAppointmentId(null);
+                  }
+                });
+              }}
+            />
+          ) : dayAppointments.filter((row) => row.status !== "cancelled")
+              .length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noAppointments")}</p>
           ) : (
-            <ul className="space-y-3">
-              {dayAppointments.map((row) => (
-                <li
-                  key={row.id}
-                  className="space-y-2 rounded-xl border border-border p-3"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-brand">{row.guest_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatTimeInZone(
-                          new Date(row.starts_at),
-                          timeZone,
-                          locale,
-                        )}
-                        {" – "}
-                        {formatTimeInZone(
-                          new Date(row.ends_at),
-                          timeZone,
-                          locale,
-                        )}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        row.status === "confirmed" ? "default" : "secondary"
-                      }
-                    >
-                      {t(`status.${row.status}`)}
-                    </Badge>
-                  </div>
-                  <p className="text-sm">
-                    {row.service?.title ?? t("unknownService")}
-                    {row.service
-                      ? ` · ${formatPriceCents(row.service.price_cents, locale, row.service.currency)}`
-                      : null}
-                  </p>
-                  {hostNames[row.host_user_id] ? (
-                    <p className="text-xs text-muted-foreground">
-                      {t("hostedBy", { name: hostNames[row.host_user_id] })}
-                    </p>
-                  ) : null}
-                  {row.meet_join_url?.startsWith("https://") ? (
-                    <a
-                      href={row.meet_join_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-medium text-action hover:underline"
-                    >
-                      {t("joinMeet")}
-                    </a>
-                  ) : null}
-                  <p className="text-xs text-muted-foreground">
-                    {row.guest_email} · {row.guest_phone}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {row.guest_address}
-                  </p>
-                  {Object.entries(row.form_answers ?? {}).map(([key, value]) => {
-                    const field = formFields.find(
-                      (item) =>
-                        item.form_id === row.service?.form_id &&
-                        item.field_key === key,
-                    );
-                    const display =
-                      field?.field_type === "checkbox"
-                        ? value === "true"
-                          ? t("formYes")
-                          : t("formNo")
-                        : value;
-                    return (
-                      <p key={key} className="text-xs text-muted-foreground">
-                        {field?.label ?? key}: {display}
-                      </p>
-                    );
-                  })}
-                  {row.person_id ? (
-                    <Link
-                      href={`/people/${row.person_id}`}
-                      className="text-xs font-medium text-action hover:underline"
-                    >
-                      {t("openPerson")}
-                    </Link>
-                  ) : null}
-                  {canManage && row.status === "confirmed" ? (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      disabled={pending}
-                      onClick={() => {
-                        if (!window.confirm(t("cancelConfirm"))) return;
-                        startTransition(async () => {
-                          const result = await cancelAppointmentAction(
-                            row.id,
-                            locale,
-                          );
-                          if (result.error) {
-                            toast.error(t(`errors.${result.error}`));
-                          } else {
-                            toast.success(t("cancelled"));
-                          }
-                        });
-                      }}
-                    >
-                      {t("cancelAppointment")}
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-muted-foreground">{t("selectBookingHint")}</p>
           )}
         </SurfaceCard>
       </div>
+    </div>
+  );
+}
+
+function AppointmentDetail({
+  locale,
+  canManage,
+  pending,
+  timeZone,
+  row,
+  formFields,
+  hostNames,
+  onCancel,
+}: {
+  locale: string;
+  canManage: boolean;
+  pending: boolean;
+  timeZone: string;
+  row: BookingAppointmentRow;
+  formFields: BookingServiceFormFieldRow[];
+  hostNames: Record<string, string>;
+  onCancel: (id: string) => void;
+}) {
+  const t = useTranslations("calendar");
+  return (
+    <div className="space-y-2 rounded-xl border border-border p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-medium text-brand">{row.guest_name}</p>
+          <p className="text-sm text-muted-foreground">
+            {formatTimeInZone(new Date(row.starts_at), timeZone, locale)}
+            {" – "}
+            {formatTimeInZone(new Date(row.ends_at), timeZone, locale)}
+          </p>
+        </div>
+        <Badge variant={row.status === "confirmed" ? "default" : "secondary"}>
+          {t(`status.${row.status}`)}
+        </Badge>
+      </div>
+      <p className="text-sm">
+        {row.service?.title ?? t("unknownService")}
+        {row.service
+          ? ` · ${formatPriceCents(row.service.price_cents, locale, row.service.currency)}`
+          : null}
+      </p>
+      {hostNames[row.host_user_id] ? (
+        <p className="text-xs text-muted-foreground">
+          {t("hostedBy", { name: hostNames[row.host_user_id] })}
+        </p>
+      ) : null}
+      {row.meet_join_url?.startsWith("https://") ? (
+        <a
+          href={row.meet_join_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-medium text-action hover:underline"
+        >
+          {t("joinMeet")}
+        </a>
+      ) : null}
+      <p className="text-xs text-muted-foreground">
+        {row.guest_email} · {row.guest_phone}
+      </p>
+      <p className="text-xs text-muted-foreground">{row.guest_address}</p>
+      {Object.entries(row.form_answers ?? {}).map(([key, value]) => {
+        const field = formFields.find(
+          (item) =>
+            item.form_id === row.service?.form_id && item.field_key === key,
+        );
+        const display =
+          field?.field_type === "checkbox"
+            ? value === "true"
+              ? t("formYes")
+              : t("formNo")
+            : value;
+        return (
+          <p key={key} className="text-xs text-muted-foreground">
+            {field?.label ?? key}: {display}
+          </p>
+        );
+      })}
+      {row.person_id ? (
+        <Link
+          href={`/people/${row.person_id}`}
+          className="text-xs font-medium text-action hover:underline"
+        >
+          {t("openPerson")}
+        </Link>
+      ) : null}
+      {canManage && row.status === "confirmed" ? (
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          disabled={pending}
+          onClick={() => {
+            if (!window.confirm(t("cancelConfirm"))) return;
+            onCancel(row.id);
+          }}
+        >
+          {t("cancelAppointment")}
+        </Button>
+      ) : null}
     </div>
   );
 }

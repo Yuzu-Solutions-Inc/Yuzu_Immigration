@@ -845,6 +845,7 @@ export const bookingGoogleBusy = pgTable("booking_google_busy", {
     .notNull()
     .references(() => googleCalendarConnections.id, { onDelete: "cascade" }),
   googleEventId: text("google_event_id").notNull(),
+  summary: text("summary"),
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -40,6 +40,7 @@ export type GoogleBusyRow = {
 type CalendarEvent = {
   id?: string;
   status?: string;
+  summary?: string;
   transparency?: string;
   hangoutLink?: string;
   conferenceData?: {
@@ -49,6 +50,12 @@ type CalendarEvent = {
   end?: { dateTime?: string; date?: string };
   extendedProperties?: { private?: Record<string, string> };
 };
+
+function eventSummary(event: CalendarEvent) {
+  const value = event.summary?.trim();
+  if (!value) return null;
+  return value.slice(0, 200);
+}
 
 function meetJoinUrlFromEvent(event: CalendarEvent) {
   const hangout = event.hangoutLink?.trim();
@@ -409,6 +416,7 @@ export async function syncGoogleBusy(connection: GoogleCalendarConnectionRow) {
         organization_id: connection.organization_id,
         connection_id: connection.id,
         google_event_id: eventId,
+        summary: eventSummary(event),
         starts_at: bounds.starts_at,
         ends_at: bounds.ends_at,
         updated_at: new Date().toISOString(),
@@ -557,6 +565,18 @@ export async function listEnabledGoogleConnections(organizationId: string) {
   return (data ?? []) as GoogleCalendarConnectionRow[];
 }
 
+export async function listAllEnabledGoogleConnections() {
+  const { data, error } = await admin()
+    .from("google_calendar_connections")
+    .select("*")
+    .eq("is_enabled", true);
+  if (error) {
+    console.error("listAllEnabledGoogleConnections:", error.message);
+    return [];
+  }
+  return (data ?? []) as GoogleCalendarConnectionRow[];
+}
+
 async function maybeRenewWatch(connection: GoogleCalendarConnectionRow) {
   const expires = connection.channel_expiration
     ? new Date(connection.channel_expiration).getTime()
@@ -589,6 +609,27 @@ export async function refreshGoogleBusyIfStale(organizationId: string) {
       console.error("renew google watch:", error);
     }
   }
+}
+
+export async function refreshAllGoogleCalendars() {
+  const connections = await listAllEnabledGoogleConnections();
+  let synced = 0;
+  let failed = 0;
+  for (const connection of connections) {
+    try {
+      await syncGoogleBusy(connection);
+      synced += 1;
+    } catch (error) {
+      failed += 1;
+      console.error("cron google sync:", connection.id, error);
+    }
+    try {
+      await maybeRenewWatch(connection);
+    } catch (error) {
+      console.error("cron google watch:", connection.id, error);
+    }
+  }
+  return { connections: connections.length, synced, failed };
 }
 
 export async function pushAppointmentToGoogleCalendar(input: {
