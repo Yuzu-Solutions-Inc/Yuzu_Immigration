@@ -570,6 +570,7 @@ function SectionProgressNav({
   onSelect,
   disabled,
   t,
+  clientSubmit,
 }: {
   sections: QuestionnaireSection[];
   sectionIndex: number;
@@ -577,12 +578,75 @@ function SectionProgressNav({
   onSelect: (index: number) => void;
   disabled?: boolean;
   t: ReturnType<typeof useTranslations>;
+  clientSubmit?: {
+    allComplete: boolean;
+    pending: boolean;
+    submitted: boolean;
+    attention: boolean;
+    onSubmit: () => void;
+  };
 }) {
+  const submitRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!clientSubmit?.attention || !clientSubmit.allComplete) return;
+    submitRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [clientSubmit?.attention, clientSubmit?.allComplete]);
+
   return (
     <nav
       aria-label={t("sectionStepsLabel")}
       className="rounded-xl bg-canvas p-4 lg:sticky lg:top-4 lg:w-56 lg:shrink-0"
     >
+      {clientSubmit ? (
+        <div className="mb-4 space-y-2 border-b border-border pb-4">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("clientSubmitLabel")}
+          </p>
+          <Button
+            ref={submitRef}
+            type="button"
+            disabled={!clientSubmit.allComplete || clientSubmit.pending}
+            aria-busy={clientSubmit.pending}
+            onClick={clientSubmit.onSubmit}
+            className={cn(
+              "h-11 w-full text-sm font-semibold shadow-elevated",
+              clientSubmit.allComplete && !clientSubmit.pending
+                ? "bg-success text-white hover:bg-success/90"
+                : "border-transparent bg-muted text-muted-foreground hover:bg-muted disabled:opacity-100",
+              clientSubmit.attention &&
+                clientSubmit.allComplete &&
+                "animate-submit-attention",
+            )}
+          >
+            {clientSubmit.pending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t("clientSubmitting")}
+              </>
+            ) : clientSubmit.submitted && clientSubmit.allComplete ? (
+              t("clientSubmitAgain")
+            ) : (
+              t("clientSubmit")
+            )}
+          </Button>
+          <p
+            className={cn(
+              "text-xs leading-snug",
+              clientSubmit.allComplete
+                ? "font-medium text-success"
+                : "text-muted-foreground",
+            )}
+          >
+            {clientSubmit.submitted && !clientSubmit.attention
+              ? t("clientSubmitDoneHint")
+              : clientSubmit.allComplete
+                ? t("clientSubmitReadyHint")
+                : t("clientSubmitLockedHint")}
+          </p>
+        </div>
+      ) : null}
+
       <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {t("progressLabel")}
       </p>
@@ -689,6 +753,10 @@ export function ModularQuestionnaire({
   onSave,
   pending,
   errorMessage,
+  mode = "staff",
+  onSubmitQuestionnaire,
+  submitPending,
+  submittedAt,
 }: {
   people: QuestionnairePerson[];
   onSave: (
@@ -698,6 +766,14 @@ export function ModularQuestionnaire({
   ) => void;
   pending?: boolean;
   errorMessage?: string | null;
+  mode?: "staff" | "client";
+  onSubmitQuestionnaire?: (
+    personId: string,
+    answers: Record<string, unknown>,
+    section: string,
+  ) => void;
+  submitPending?: boolean;
+  submittedAt?: string | null;
 }) {
   const t = useTranslations("forms");
   const th = useTranslations("forms.help");
@@ -791,6 +867,31 @@ export function ModularQuestionnaire({
   const activeFillPercent = activePerson
     ? (fillPercentByPerson.get(activePerson.id) ?? 0)
     : 0;
+
+  const allPeopleComplete = useMemo(() => {
+    if (people.length === 0) return false;
+    return people.every((person) => {
+      if (!person.formCodes.length) return true;
+      return (fillPercentByPerson.get(person.id) ?? 0) >= 100;
+    });
+  }, [people, fillPercentByPerson]);
+
+  const [submitAttention, setSubmitAttention] = useState(false);
+  const wasAllCompleteRef = useRef(false);
+
+  useEffect(() => {
+    if (mode !== "client") return;
+    if (allPeopleComplete && !wasAllCompleteRef.current) {
+      setSubmitAttention(true);
+      const id = window.setTimeout(() => setSubmitAttention(false), 3200);
+      wasAllCompleteRef.current = true;
+      return () => window.clearTimeout(id);
+    }
+    if (!allPeopleComplete) {
+      wasAllCompleteRef.current = false;
+      setSubmitAttention(false);
+    }
+  }, [allPeopleComplete, mode]);
 
   const section = (sections[sectionIndex] ??
     "identity") as QuestionnaireSection;
@@ -1033,7 +1134,13 @@ export function ModularQuestionnaire({
   }
 
   const showPersonTabs = people.length > 1;
-  const busy = Boolean(pending) || busyIntent != null;
+  const busy = Boolean(pending) || busyIntent != null || Boolean(submitPending);
+
+  function handleClientSubmit() {
+    if (!activePerson || !onSubmitQuestionnaire || !allPeopleComplete) return;
+    const payload = applyDerivedAnswers({ ...answers, ...tableData });
+    onSubmitQuestionnaire(activePerson.id, payload, section);
+  }
 
   return (
     <div className="space-y-6">
@@ -1106,6 +1213,17 @@ export function ModularQuestionnaire({
           onSelect={setSectionIndex}
           disabled={busy}
           t={t}
+          clientSubmit={
+            mode === "client"
+              ? {
+                  allComplete: allPeopleComplete,
+                  pending: Boolean(submitPending),
+                  submitted: Boolean(submittedAt),
+                  attention: submitAttention,
+                  onSubmit: handleClientSubmit,
+                }
+              : undefined
+          }
         />
 
         <div className="min-w-0 flex-1 space-y-6">

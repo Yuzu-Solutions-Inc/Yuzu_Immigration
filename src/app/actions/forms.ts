@@ -29,6 +29,7 @@ import {
   personKitsFromAnswersStore,
   reconcileProjectKitForms,
   saveShareAnswers,
+  submitShareQuestionnaire,
   upsertProjectFormAnswers,
 } from "@/lib/ircc/project-forms";
 import { requireOrganizationId } from "@/lib/crm/queries";
@@ -47,6 +48,7 @@ export type FormsActionState = {
   shareUrl?: string;
   expiresAt?: string;
   warnings?: string[];
+  submittedAt?: string;
 };
 
 function hashToken(token: string) {
@@ -250,13 +252,6 @@ export async function saveProjectAnswersAction(
         personKitsFromAnswersStore(store),
       ),
     });
-    const { maybeNotifyFormsComplete } = await import(
-      "@/lib/notifications/emit"
-    );
-    await maybeNotifyFormsComplete({
-      organizationId: orgId,
-      projectId,
-    });
   } catch {
     return { error: "save_failed" };
   }
@@ -298,6 +293,47 @@ export async function saveShareAnswersAction(
   }
 
   return { message: "saved" };
+}
+
+export async function submitShareQuestionnaireAction(
+  _prev: FormsActionState,
+  formData: FormData,
+): Promise<FormsActionState> {
+  const token = String(formData.get("token") || "");
+  const personId = String(formData.get("personId") || "");
+  const currentSection = String(formData.get("currentSection") || "") || null;
+  const answersRaw = String(formData.get("answers") || "");
+
+  if (!token) return { error: "invalid" };
+
+  let answers: Record<string, unknown> | undefined;
+  if (answersRaw) {
+    if (!z.string().uuid().safeParse(personId).success) {
+      return { error: "invalid" };
+    }
+    try {
+      answers = JSON.parse(answersRaw) as Record<string, unknown>;
+      answers.hasRepresentative = "Y";
+    } catch {
+      return { error: "invalid" };
+    }
+  }
+
+  try {
+    const result = await submitShareQuestionnaire({
+      token,
+      personId: answers ? personId : undefined,
+      answers,
+      currentSection: answers ? currentSection : undefined,
+    });
+    return { message: "submitted", submittedAt: result.submittedAt };
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "expired") return { error: "expired" };
+      if (error.message === "incomplete") return { error: "incomplete" };
+    }
+    return { error: "submit_failed" };
+  }
 }
 
 export async function createFormShareLinkAction(

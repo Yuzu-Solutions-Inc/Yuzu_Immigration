@@ -55,6 +55,7 @@ export default async function ClientFillFormsPage({
         people={people}
         projectTitle={String(ctx.project.title)}
         expiresAt={ctx.expiresAt}
+        initialSubmittedAt={ctx.questionnaireSubmittedAt}
       />
     </div>
   );

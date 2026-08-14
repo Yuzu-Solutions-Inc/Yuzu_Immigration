@@ -36,6 +36,7 @@ import {
   mergeAccountRepIntoAnswers,
   PROFILE_REP_SELECT,
 } from "@/lib/ircc/account-rep";
+import { questionnaireFillCounts } from "@/lib/ircc/form-readiness";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { CANONICAL_FIELDS } from "@/lib/ircc/fields";
@@ -980,6 +981,8 @@ export async function loadShareContext(token: string) {
     people: peopleWithAnswers,
     currentSection:
       (answersRes.data?.current_section as string | null) ?? null,
+    questionnaireSubmittedAt:
+      (answersRes.data?.questionnaire_submitted_at as string | null) ?? null,
     organization: orgRes.data,
   };
 }
@@ -1087,14 +1090,66 @@ export async function saveShareAnswers(input: {
     ),
     client: admin,
   });
+}
 
-  const { maybeNotifyFormsComplete } = await import(
-    "@/lib/notifications/emit"
-  );
-  await maybeNotifyFormsComplete({
-    organizationId: resolved.organizationId,
-    projectId: resolved.projectId,
+export async function submitShareQuestionnaire(input: {
+  token: string;
+  personId?: string;
+  answers?: Record<string, unknown>;
+  currentSection?: string | null;
+}): Promise<{ submittedAt: string }> {
+  if (input.personId && input.answers) {
+    await saveShareAnswers({
+      token: input.token,
+      personId: input.personId,
+      answers: input.answers,
+      currentSection: input.currentSection,
+    });
+  }
+
+  const ctx = await loadShareContext(input.token);
+  if (!ctx) throw new Error("expired");
+
+  const incomplete = ctx.people.filter((person) => {
+    const { filled, total } = questionnaireFillCounts(
+      person.formCodes,
+      person.answers,
+    );
+    if (total === 0) return false;
+    return filled < total;
   });
+  if (incomplete.length > 0) {
+    throw new Error("incomplete");
+  }
+
+  const admin = createServiceClient();
+  const submittedAt = new Date().toISOString();
+  const { error, data } = await admin
+    .from("project_form_answers")
+    .update({
+      questionnaire_submitted_at: submittedAt,
+      updated_at: submittedAt,
+    })
+    .eq("project_id", ctx.projectId)
+    .eq("organization_id", ctx.organizationId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error(
+      "submitShareQuestionnaire:",
+      error?.message ?? "no answers row",
+    );
+    throw new Error("submit_failed");
+  }
+
+  const { notifyFormsSubmitted } = await import("@/lib/notifications/emit");
+  await notifyFormsSubmitted({
+    organizationId: ctx.organizationId,
+    projectId: ctx.projectId,
+  });
+
+  return { submittedAt };
 }
 
 export function buildInitialAnswersStore(input: {

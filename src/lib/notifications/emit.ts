@@ -1,9 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/admin";
 import { decryptProjectRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
-import {
-  formPercentForProjectIds,
-} from "@/lib/crm/progress";
 
 export type StaffNotificationKind =
   | "documents_uploaded"
@@ -135,33 +132,12 @@ export async function notifyDocumentsUploaded(input: {
   }
 }
 
-export async function maybeNotifyFormsComplete(input: {
+export async function notifyFormsSubmitted(input: {
   organizationId: string;
   projectId: string;
 }): Promise<void> {
   try {
-    const progress = await formPercentForProjectIds(
-      input.organizationId,
-      [input.projectId],
-    );
-    const percent = progress.get(input.projectId) ?? 0;
-    if (percent < 100) return;
-
     const admin = createServiceClient();
-    const { data: recent } = await admin
-      .from("staff_notifications")
-      .select("id")
-      .eq("organization_id", input.organizationId)
-      .eq("project_id", input.projectId)
-      .eq("kind", "forms_complete")
-      .gte(
-        "created_at",
-        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      )
-      .limit(1)
-      .maybeSingle();
-    if (recent?.id) return;
-
     const recipients = await recipientUserIds(input);
     if (recipients.length === 0) return;
 
@@ -172,18 +148,18 @@ export async function maybeNotifyFormsComplete(input: {
       project_id: input.projectId,
       kind: "forms_complete" as const,
       title,
-      body: "Forms are 100% complete",
+      body: "Client submitted the questionnaire",
       href: `/projects/${input.projectId}/forms`,
       metadata: {
         projectId: input.projectId,
         projectTitle: title,
-        formPercent: 100,
+        submitted: true,
       },
     }));
     const { error } = await admin.from("staff_notifications").insert(rows);
-    if (error) console.error("maybeNotifyFormsComplete:", error.message);
+    if (error) console.error("notifyFormsSubmitted:", error.message);
   } catch (err) {
-    console.error("maybeNotifyFormsComplete:", err);
+    console.error("notifyFormsSubmitted:", err);
   }
 }
 

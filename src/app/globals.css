@@ -43,6 +43,7 @@
   --color-brand: var(--brand);
   --color-action: var(--action);
   --color-success: var(--success);
+  --color-success: var(--success);
   --color-highlight: var(--highlight);
   --color-surface: var(--surface);
   --shadow-elevated: var(--shadow-elevated);
@@ -158,5 +159,31 @@
 
   .bg-surface {
     background-color: var(--surface);
+  }
+}
+
+@keyframes submit-attention {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 0 0 0 rgba(5, 150, 105, 0.45);
+  }
+  40% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px -4px rgba(5, 150, 105, 0.35), 0 0 0 8px rgba(5, 150, 105, 0.2);
+  }
+}
+
+@layer utilities {
+  .animate-submit-attention {
+    animation: submit-attention 0.85s ease-in-out 3;
+  }
+
+  .text-success {
+    color: var(--success);
+  }
+
+  .bg-success {
+    background-color: var(--success);
   }
 }

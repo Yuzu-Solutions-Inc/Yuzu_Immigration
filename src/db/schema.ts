@@ -422,6 +422,9 @@ export const projectFormAnswers = pgTable("project_form_answers", {
     .unique(),
   answers: jsonb("answers").$type<Record<string, unknown>>().notNull().default({}),
   currentSection: text("current_section"),
+  questionnaireSubmittedAt: timestamp("questionnaire_submitted_at", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
