@@ -27,6 +27,7 @@ export function MonthCalendar({
   availableDays,
   blockedDays,
   fillHeight = false,
+  compact = false,
 }: {
   year: number;
   monthIndex: number;
@@ -41,6 +42,8 @@ export function MonthCalendar({
   blockedDays?: Set<string>;
   /** Stretch day cells so the month grid fills its parent (desktop calendar). */
   fillHeight?: boolean;
+  /** Tighter cells for public booking, where the month should stay close to square. */
+  compact?: boolean;
 }) {
   const t = useTranslations("calendar");
   const start = weekStartsOn(locale);
@@ -60,7 +63,12 @@ export function MonthCalendar({
       )}
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
-        <h2 className="font-heading text-lg font-semibold text-brand">
+        <h2
+          className={cn(
+            "font-heading font-semibold text-brand",
+            compact ? "text-base" : "text-lg",
+          )}
+        >
           {formatMonthYear(year, monthIndex, locale)}
         </h2>
         <div className="flex items-center gap-1">
@@ -85,9 +93,14 @@ export function MonthCalendar({
         </div>
       </div>
 
-      <div className="grid shrink-0 grid-cols-7 gap-1 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
+      <div
+        className={cn(
+          "grid shrink-0 grid-cols-7 gap-1 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase",
+          compact && "text-[11px]",
+        )}
+      >
         {orderedWeekdays.map((key) => (
-          <div key={key} className="py-1">
+          <div key={key} className={compact ? "py-0.5" : "py-1"}>
             {t(`weekdaysShort.${key}`)}
           </div>
         ))}
@@ -96,7 +109,7 @@ export function MonthCalendar({
       <div
         className={cn(
           "grid grid-cols-7 gap-1",
-          fillHeight && "lg:min-h-0 lg:flex-1 lg:auto-rows-fr",
+          fillHeight && "lg:min-h-0 lg:flex-1",
         )}
         style={
           fillHeight
@@ -126,8 +139,13 @@ export function MonthCalendar({
               className={cn(
                 "relative flex flex-col items-center rounded-xl border px-1 text-sm transition-colors",
                 fillHeight
-                  ? "min-h-16 py-2 lg:h-full lg:min-h-0 lg:justify-center lg:py-1"
-                  : "min-h-16 py-2",
+                  ? cn(
+                      "lg:h-full lg:min-h-0 lg:justify-center",
+                      compact ? "min-h-11 py-1 lg:py-0.5" : "min-h-16 py-2 lg:py-1",
+                    )
+                  : compact
+                    ? "min-h-11 py-1"
+                    : "min-h-16 py-2",
                 cell.inMonth ? "bg-surface" : "bg-canvas/60 text-muted-foreground",
                 selected
                   ? "border-action bg-action/5 text-brand"
@@ -148,7 +166,11 @@ export function MonthCalendar({
               <span
                 className={cn(
                   "inline-flex items-center justify-center rounded-full",
-                  fillHeight ? "size-7 lg:size-6 lg:text-[13px]" : "size-7",
+                  compact
+                    ? "size-6 text-[13px]"
+                    : fillHeight
+                      ? "size-7 lg:size-6 lg:text-[13px]"
+                      : "size-7",
                   isToday && "bg-action font-semibold text-white",
                 )}
               >

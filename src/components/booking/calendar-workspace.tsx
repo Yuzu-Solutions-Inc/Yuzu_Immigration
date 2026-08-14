@@ -191,7 +191,8 @@ export function CalendarWorkspace({
           ? "lg:h-[calc(100dvh-4rem)] lg:min-h-0 lg:overflow-hidden lg:gap-3"
           : "h-full min-h-0 lg:overflow-hidden lg:gap-3",
       )}
-    >      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
+    >
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <h1 className="font-heading text-2xl font-semibold text-brand lg:text-xl">
             {t("title")}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -28,10 +29,13 @@ import {
   LOCALE_LABELS,
 } from "@/lib/i18n/locales";
 import {
+  formatDateInZone,
   formatDateTimeInZone,
   formatTimeInZone,
+  zonedCivilToUtc,
   zonedDateIso,
 } from "@/lib/booking/timezone";
+import { cn } from "@/lib/utils";
 
 export type PublicBookingPayload = {
   token: string;
@@ -56,6 +60,7 @@ export function PublicBookingFlow({
   payload: PublicBookingPayload;
 }) {
   const t = useTranslations("booking");
+  const [step, setStep] = useState<"schedule" | "details">("schedule");
   const [hostUserId, setHostUserId] = useState<string | null>(
     payload.hosts[0]?.userId ?? null,
   );
@@ -107,12 +112,19 @@ export function PublicBookingFlow({
     () => new Set(slots.map((slot) => slot.dateIso)),
     [slots],
   );
-  const daySlots = slots.filter((slot) => slot.dateIso === dateIso);
+  const firstAvailableDay = useMemo(() => {
+    const days = [...availableDays].sort();
+    return days[0] ?? null;
+  }, [availableDays]);
+  const cursorPrefix = `${cursor.year}-${String(cursor.monthIndex + 1).padStart(2, "0")}-`;
+  const effectiveDateIso =
+    dateIso && availableDays.has(dateIso)
+      ? dateIso
+      : firstAvailableDay?.startsWith(cursorPrefix)
+        ? firstAvailableDay
+        : null;
+  const daySlots = slots.filter((slot) => slot.dateIso === effectiveDateIso);
   const selectedSlot = slots.find((slot) => slot.startsAt === slotStart) ?? null;
-  const hostStep = payload.hosts.length > 1;
-  const serviceStep = hostStep ? 2 : 1;
-  const slotStep = hostStep ? 3 : 2;
-  const detailsStep = hostStep ? 4 : 3;
   const selectedService = payload.services.find((row) => row.id === serviceId);
   const serviceFields = payload.formFields.filter(
     (field) =>
@@ -125,11 +137,35 @@ export function PublicBookingFlow({
     state.message === "existing_booking" || state.error === "too_many_bookings";
   const atBookingCap = state.error === "too_many_bookings";
 
+  useEffect(() => {
+    if (pending || state.error !== "slot_taken") return;
+    setStep("schedule");
+    setSlotStart(null);
+  }, [pending, state.error]);
+
+  useEffect(() => {
+    if (!firstAvailableDay) return;
+    const [year, month] = firstAvailableDay.split("-").map(Number);
+    setCursor({ year, monthIndex: month - 1 });
+    setDateIso(firstAvailableDay);
+  }, [serviceId, hostUserId, firstAvailableDay]);
+
   function shiftMonth(delta: number) {
-    setCursor((prev) => {
-      const date = new Date(Date.UTC(prev.year, prev.monthIndex + delta, 1));
-      return { year: date.getUTCFullYear(), monthIndex: date.getUTCMonth() };
-    });
+    const next = new Date(Date.UTC(cursor.year, cursor.monthIndex + delta, 1));
+    const year = next.getUTCFullYear();
+    const monthIndex = next.getUTCMonth();
+    const prefix = `${year}-${String(monthIndex + 1).padStart(2, "0")}-`;
+    const inMonth =
+      [...availableDays].filter((day) => day.startsWith(prefix)).sort()[0] ??
+      null;
+    setCursor({ year, monthIndex });
+    setDateIso(inMonth);
+    setSlotStart(null);
+  }
+
+  function resetSlot() {
+    setSlotStart(null);
+    setDateIso(null);
   }
 
   if (state.message === "booked" && state.startsAt && state.serviceTitle) {
@@ -212,328 +248,435 @@ export function PublicBookingFlow({
     );
   }
 
+  const selectedWhen = selectedSlot
+    ? formatDateTimeInZone(
+        new Date(selectedSlot.startsAt),
+        payload.timezone,
+        locale,
+      )
+    : null;
+  const dayHeading = effectiveDateIso
+    ? formatDateInZone(
+        zonedCivilToUtc(effectiveDateIso, "12:00", payload.timezone),
+        payload.timezone,
+        locale,
+      )
+    : null;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
-      <header className="space-y-3">
-        <BrandLogo size="sm" href="/" />
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {payload.organizationName}
-        </p>
-        <h1 className="font-heading text-3xl font-semibold text-brand">
-          {t("title")}
-        </h1>
-        <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
+    <div className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4 py-4 lg:h-dvh lg:max-h-dvh lg:overflow-hidden lg:py-5">
+      <header className="flex shrink-0 items-center justify-between gap-4 pb-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <BrandLogo size="sm" href="/" />
+          <div className="min-w-0 border-l border-border pl-3">
+            <p className="truncate text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {payload.organizationName}
+            </p>
+            <h1 className="font-heading truncate text-lg font-semibold text-brand lg:text-xl">
+              {t("title")}
+            </h1>
+          </div>
+        </div>
         {host && payload.hosts.length === 1 ? (
-          <p className="text-sm font-medium text-brand">
+          <p className="hidden shrink-0 text-sm font-medium text-brand sm:block">
             {t("bookingWith", { name: host.name })}
           </p>
         ) : null}
       </header>
 
-      {payload.hosts.length > 1 ? (
-        <section className="space-y-3">
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("chooseHost", { n: 1 })}
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-3",
+          step !== "schedule" && "hidden",
+        )}
+        inert={step !== "schedule"}
+      >
+        {payload.hosts.length > 1 ? (
+          <section className="shrink-0 space-y-1.5">
+            <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {t("chooseHost")}
+            </h2>
+            <div className="flex gap-2 overflow-x-auto pb-0.5">
+              {payload.hosts.map((row) => {
+                const selected = row.userId === hostUserId;
+                return (
+                  <button
+                    key={row.userId}
+                    type="button"
+                    onClick={() => {
+                      setHostUserId(row.userId);
+                      resetSlot();
+                    }}
+                    className={cn(
+                      "shrink-0 rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
+                      selected
+                        ? "border-action bg-action/5 text-brand"
+                        : "border-border bg-surface text-muted-foreground hover:border-action/40",
+                    )}
+                  >
+                    {row.name}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="shrink-0 space-y-1.5">
+          <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("chooseService")}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {payload.hosts.map((row) => {
-              const selected = row.userId === hostUserId;
+          <div className="flex gap-2 overflow-x-auto pb-0.5">
+            {payload.services.map((row) => {
+              const selected = row.id === serviceId;
               return (
                 <button
-                  key={row.userId}
+                  key={row.id}
                   type="button"
                   onClick={() => {
-                    setHostUserId(row.userId);
-                    setSlotStart(null);
-                    setDateIso(null);
+                    setServiceId(row.id);
+                    resetSlot();
                   }}
-                  className={`rounded-xl border p-4 text-left transition-colors ${
+                  className={cn(
+                    "shrink-0 rounded-xl border px-3 py-2 text-left transition-colors",
                     selected
                       ? "border-action bg-action/5"
-                      : "border-border bg-surface hover:border-action/40"
-                  }`}
+                      : "border-border bg-surface hover:border-action/40",
+                  )}
                 >
-                  <p className="font-heading font-semibold text-brand">
-                    {row.name}
+                  <p className="text-sm font-semibold text-brand">{row.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("durationMinutes", { minutes: row.duration_minutes })}
+                    {" · "}
+                    {formatPriceCents(row.price_cents, locale, row.currency)}
                   </p>
                 </button>
               );
             })}
           </div>
         </section>
-      ) : null}
 
-      <section className="space-y-3">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("chooseService", { n: serviceStep })}
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {payload.services.map((row) => {
-            const selected = row.id === serviceId;
-            return (
-              <button
-                key={row.id}
-                type="button"
-                onClick={() => {
-                  setServiceId(row.id);
-                  setSlotStart(null);
-                  setDateIso(null);
-                }}
-                className={`rounded-xl border p-4 text-left transition-colors ${
-                  selected
-                    ? "border-action bg-action/5"
-                    : "border-border bg-surface hover:border-action/40"
-                }`}
-              >
-                <p className="font-heading font-semibold text-brand">{row.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t("durationMinutes", { minutes: row.duration_minutes })}
-                  {" · "}
-                  {formatPriceCents(row.price_cents, locale, row.currency)}
-                </p>
-                {row.description ? (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {row.description}
-                  </p>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("chooseSlot", { n: slotStep })}
-        </h2>
-        {slots.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("noSlots")}</p>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(16rem,1fr)]">
-            <div className="rounded-xl border border-border bg-surface p-4">
-              <MonthCalendar
-                year={cursor.year}
-                monthIndex={cursor.monthIndex}
-                locale={locale}
-                timeZone={payload.timezone}
-                selectedDateIso={dateIso}
-                onSelectDate={(next) => {
-                  setDateIso(next);
-                  setSlotStart(null);
-                }}
-                onPrevMonth={() => shiftMonth(-1)}
-                onNextMonth={() => shiftMonth(1)}
-                availableDays={availableDays}
-              />
-            </div>
-            <div className="space-y-2">
-              {!dateIso ? (
-                <p className="text-sm text-muted-foreground">{t("pickDay")}</p>
-              ) : daySlots.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("noSlotsDay")}</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {daySlots.map((slot) => (
-                    <button
-                      key={slot.startsAt}
-                      type="button"
-                      onClick={() => setSlotStart(slot.startsAt)}
-                      className={`rounded-xl border px-3 py-2 text-sm font-medium ${
-                        slotStart === slot.startsAt
-                          ? "border-action bg-action text-white"
-                          : "border-border bg-surface hover:border-action/40"
-                      }`}
-                    >
-                      {formatTimeInZone(
-                        new Date(slot.startsAt),
-                        payload.timezone,
-                        locale,
-                      )}
-                    </button>
-                  ))}
+        <section className="flex min-h-0 flex-1 flex-col">
+          {slots.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("noSlots")}</p>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center lg:justify-center lg:gap-5">
+              <div className="min-h-[22rem] w-full max-w-[32rem] lg:h-[min(100%,32rem)] lg:min-h-0">
+                <div className="flex h-full min-h-0 flex-col rounded-xl border border-border bg-surface p-3 sm:p-4">
+                  <MonthCalendar
+                    year={cursor.year}
+                    monthIndex={cursor.monthIndex}
+                    locale={locale}
+                    timeZone={payload.timezone}
+                    selectedDateIso={effectiveDateIso}
+                    onSelectDate={(next) => {
+                      setDateIso(next);
+                      setSlotStart(null);
+                    }}
+                    onPrevMonth={() => shiftMonth(-1)}
+                    onNextMonth={() => shiftMonth(1)}
+                    availableDays={availableDays}
+                    fillHeight
+                    compact
+                  />
                 </div>
-              )}
+              </div>
+              <div className="flex min-h-0 w-full max-w-[32rem] flex-col lg:h-[min(100%,32rem)] lg:w-[15.5rem] lg:shrink-0">
+                <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-border bg-surface p-3 sm:p-4">
+                  <div className="shrink-0 pb-2">
+                    <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      {t("availableTimes")}
+                    </p>
+                    {dayHeading ? (
+                      <p className="font-heading text-sm font-semibold text-brand">
+                        {dayHeading}
+                      </p>
+                    ) : null}
+                    <p className="text-[11px] text-muted-foreground">
+                      {t("timesInZone", {
+                        zone: payload.timezone.replaceAll("_", " "),
+                      })}
+                    </p>
+                  </div>
+                  {!effectiveDateIso ? (
+                    <p className="text-sm text-muted-foreground">{t("pickDay")}</p>
+                  ) : daySlots.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">{t("noSlotsDay")}</p>
+                  ) : (
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-1">
+                        {daySlots.map((slot) => (
+                          <button
+                            key={slot.startsAt}
+                            type="button"
+                            onClick={() => setSlotStart(slot.startsAt)}
+                            className={cn(
+                              "rounded-xl border px-3 py-2 text-sm font-medium",
+                              slotStart === slot.startsAt
+                                ? "border-action bg-action text-white"
+                                : "border-border bg-surface hover:border-action/40",
+                            )}
+                          >
+                            {formatTimeInZone(
+                              new Date(slot.startsAt),
+                              payload.timezone,
+                              locale,
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
 
-      {selectedSlot && service ? (
-        <section className="space-y-4 rounded-xl border border-border bg-surface p-5">
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("yourDetails", { n: detailsStep })}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {host ? `${host.name} · ` : null}
-            {service.title} ·{" "}
-            {formatDateTimeInZone(
-              new Date(selectedSlot.startsAt),
-              payload.timezone,
-              locale,
+        <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 items-center justify-between gap-3 border-t border-border bg-background/95 py-3 backdrop-blur-sm lg:static lg:bg-transparent lg:backdrop-blur-none">
+          <p
+            className={cn(
+              "min-w-0 text-sm",
+              state.error === "slot_taken"
+                ? "text-destructive"
+                : "text-muted-foreground",
             )}
+          >
+            {state.error === "slot_taken"
+              ? t("errors.slot_taken")
+              : selectedWhen && service
+                ? `${service.title} · ${selectedWhen}`
+                : t("selectTimeHint")}
           </p>
-          {state.error && !atBookingCap ? (
-            <p className="text-sm text-destructive">
-              {t(`errors.${state.error}`)}
-            </p>
-          ) : null}
-          {showExistingNotice ? (
-            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p className="text-sm font-medium text-brand">
-                {atBookingCap ? t("tooManyTitle") : t("existingTitle")}
+          <Button
+            type="button"
+            disabled={!selectedSlot}
+            onClick={() => {
+              setStep("details");
+              window.scrollTo(0, 0);
+            }}
+          >
+            {t("continue")}
+            <ChevronRight data-icon="inline-end" />
+          </Button>
+        </div>
+      </div>
+
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col",
+          step !== "details" && "hidden",
+        )}
+        inert={step !== "details"}
+      >
+        <div className="flex shrink-0 items-start gap-2 pb-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setStep("schedule")}
+          >
+            <ChevronLeft data-icon="inline-start" />
+            {t("back")}
+          </Button>
+          <div className="min-w-0 pt-0.5">
+            <h2 className="font-heading text-lg font-semibold text-brand">
+              {t("yourDetails")}
+            </h2>
+            {selectedWhen && service ? (
+              <p className="truncate text-sm text-muted-foreground">
+                {host ? `${host.name} · ` : null}
+                {service.title} · {selectedWhen}
               </p>
-              <p className="text-sm text-muted-foreground">
-                {atBookingCap ? t("tooManyBody") : t("existingBody")}
-              </p>
-              <form action={linksAction} className="space-y-2">
+            ) : null}
+          </div>
+        </div>
+
+        {selectedSlot && service ? (
+          <div className="min-h-0 flex-1 overflow-y-auto pb-4">
+            <div className="mx-auto w-full max-w-lg space-y-4">
+              {state.error && !atBookingCap && state.error !== "slot_taken" ? (
+                <p className="text-sm text-destructive">
+                  {t(`errors.${state.error}`)}
+                </p>
+              ) : null}
+              {showExistingNotice ? (
+                <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-medium text-brand">
+                    {atBookingCap ? t("tooManyTitle") : t("existingTitle")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {atBookingCap ? t("tooManyBody") : t("existingBody")}
+                  </p>
+                  <form action={linksAction} className="space-y-2">
+                    <input type="hidden" name="token" value={payload.token} />
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="guestEmail" value={warningEmail} />
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      disabled={linksPending || pending || !warningEmail}
+                      className="w-full sm:w-auto"
+                    >
+                      {linksPending ? t("sendingLinks") : t("sendLinks")}
+                    </Button>
+                    {linksState.message === "links_sent" ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t("linksSent")}
+                      </p>
+                    ) : null}
+                    {linksState.error === "cooldown" ? (
+                      <p className="text-sm text-destructive">
+                        {t("linksCooldown")}
+                      </p>
+                    ) : null}
+                    {linksState.error && linksState.error !== "cooldown" ? (
+                      <p className="text-sm text-destructive">
+                        {t(`errors.${linksState.error}`)}
+                      </p>
+                    ) : null}
+                  </form>
+                </div>
+              ) : null}
+              <form action={formAction} className="space-y-4">
                 <input type="hidden" name="token" value={payload.token} />
                 <input type="hidden" name="locale" value={locale} />
-                <input type="hidden" name="guestEmail" value={warningEmail} />
-                <Button
-                  type="submit"
-                  variant="outline"
-                  disabled={linksPending || pending || !warningEmail}
-                  className="w-full sm:w-auto"
-                >
-                  {linksPending ? t("sendingLinks") : t("sendLinks")}
-                </Button>
-                {linksState.message === "links_sent" ? (
-                  <p className="text-sm text-muted-foreground">{t("linksSent")}</p>
+                <input type="hidden" name="hostUserId" value={host?.userId ?? ""} />
+                <input type="hidden" name="serviceId" value={service.id} />
+                <input type="hidden" name="startsAt" value={selectedSlot.startsAt} />
+                <input type="hidden" name="endsAt" value={selectedSlot.endsAt} />
+                {showExistingNotice &&
+                !atBookingCap &&
+                guestEmail.trim().toLowerCase() ===
+                  warningEmail.trim().toLowerCase() ? (
+                  <input type="hidden" name="confirmAnother" value="on" />
                 ) : null}
-                {linksState.error === "cooldown" ? (
-                  <p className="text-sm text-destructive">{t("linksCooldown")}</p>
-                ) : null}
-                {linksState.error && linksState.error !== "cooldown" ? (
-                  <p className="text-sm text-destructive">
-                    {t(`errors.${linksState.error}`)}
-                  </p>
-                ) : null}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="guestFirstName">{t("firstName")}</Label>
+                    <Input
+                      id="guestFirstName"
+                      name="guestFirstName"
+                      required
+                      autoComplete="given-name"
+                      value={guestFirstName}
+                      onChange={(event) => setGuestFirstName(event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="guestLastName">{t("lastName")}</Label>
+                    <Input
+                      id="guestLastName"
+                      name="guestLastName"
+                      required
+                      autoComplete="family-name"
+                      value={guestLastName}
+                      onChange={(event) => setGuestLastName(event.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="guestPreferredLocale">
+                    {t("preferredLanguage")}
+                  </Label>
+                  <select
+                    id="guestPreferredLocale"
+                    name="guestPreferredLocale"
+                    required
+                    value={guestPreferredLocale}
+                    onChange={(event) =>
+                      setGuestPreferredLocale(event.target.value)
+                    }
+                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
+                  >
+                    {APP_LOCALES.map((code) => (
+                      <option key={code} value={code}>
+                        {LOCALE_LABELS[code]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="guestEmail">{t("email")}</Label>
+                    <Input
+                      id="guestEmail"
+                      name="guestEmail"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={guestEmail}
+                      onChange={(event) => setGuestEmail(event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="guestPhone">{t("phone")}</Label>
+                    <Input
+                      id="guestPhone"
+                      name="guestPhone"
+                      type="tel"
+                      required
+                      autoComplete="tel"
+                      value={guestPhone}
+                      onChange={(event) => setGuestPhone(event.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="guestAddress">{t("address")}</Label>
+                  <Input
+                    id="guestAddress"
+                    name="guestAddress"
+                    required
+                    autoComplete="street-address"
+                    value={guestAddress}
+                    onChange={(event) => setGuestAddress(event.target.value)}
+                  />
+                </div>
+                {serviceFields.map((field) => (
+                  <PublicCustomField key={field.id} field={field} />
+                ))}
+                <label className="flex items-start gap-2 text-sm leading-relaxed">
+                  <input
+                    type="checkbox"
+                    name="privacyAccepted"
+                    value="on"
+                    required
+                    checked={privacyAccepted}
+                    onChange={(event) =>
+                      setPrivacyAccepted(event.target.checked)
+                    }
+                    className="mt-1 size-4 rounded border-input"
+                  />
+                  <span>
+                    {t("privacyConsent")}{" "}
+                    <Link
+                      href="/privacy"
+                      className="text-action underline-offset-2 hover:underline"
+                    >
+                      {t("privacyPolicy")}
+                    </Link>
+                    .
+                  </span>
+                </label>
+                {atBookingCap ? null : (
+                  <Button
+                    type="submit"
+                    disabled={pending || linksPending}
+                    className="w-full"
+                  >
+                    {pending
+                      ? t("booking")
+                      : showExistingNotice
+                        ? t("bookAnyway")
+                        : t("confirm")}
+                  </Button>
+                )}
               </form>
             </div>
-          ) : null}
-          <form action={formAction} className="space-y-4">
-            <input type="hidden" name="token" value={payload.token} />
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="hostUserId" value={host?.userId ?? ""} />
-            <input type="hidden" name="serviceId" value={service.id} />
-            <input type="hidden" name="startsAt" value={selectedSlot.startsAt} />
-            <input type="hidden" name="endsAt" value={selectedSlot.endsAt} />
-            {showExistingNotice &&
-            !atBookingCap &&
-            guestEmail.trim().toLowerCase() === warningEmail.trim().toLowerCase() ? (
-              <input type="hidden" name="confirmAnother" value="on" />
-            ) : null}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="guestFirstName">{t("firstName")}</Label>
-                <Input
-                  id="guestFirstName"
-                  name="guestFirstName"
-                  required
-                  autoComplete="given-name"
-                  value={guestFirstName}
-                  onChange={(event) => setGuestFirstName(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="guestLastName">{t("lastName")}</Label>
-                <Input
-                  id="guestLastName"
-                  name="guestLastName"
-                  required
-                  autoComplete="family-name"
-                  value={guestLastName}
-                  onChange={(event) => setGuestLastName(event.target.value)}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="guestPreferredLocale">{t("preferredLanguage")}</Label>
-              <select
-                id="guestPreferredLocale"
-                name="guestPreferredLocale"
-                required
-                value={guestPreferredLocale}
-                onChange={(event) => setGuestPreferredLocale(event.target.value)}
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
-              >
-                {APP_LOCALES.map((code) => (
-                  <option key={code} value={code}>
-                    {LOCALE_LABELS[code]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="guestEmail">{t("email")}</Label>
-                <Input
-                  id="guestEmail"
-                  name="guestEmail"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={guestEmail}
-                  onChange={(event) => setGuestEmail(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="guestPhone">{t("phone")}</Label>
-                <Input
-                  id="guestPhone"
-                  name="guestPhone"
-                  type="tel"
-                  required
-                  autoComplete="tel"
-                  value={guestPhone}
-                  onChange={(event) => setGuestPhone(event.target.value)}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="guestAddress">{t("address")}</Label>
-              <Input
-                id="guestAddress"
-                name="guestAddress"
-                required
-                autoComplete="street-address"
-                value={guestAddress}
-                onChange={(event) => setGuestAddress(event.target.value)}
-              />
-            </div>
-            {serviceFields.map((field) => (
-              <PublicCustomField key={field.id} field={field} />
-            ))}
-            <label className="flex items-start gap-2 text-sm leading-relaxed">
-              <input
-                type="checkbox"
-                name="privacyAccepted"
-                value="on"
-                required
-                checked={privacyAccepted}
-                onChange={(event) => setPrivacyAccepted(event.target.checked)}
-                className="mt-1 size-4 rounded border-input"
-              />
-              <span>
-                {t("privacyConsent")}{" "}
-                <Link href="/privacy" className="text-action underline-offset-2 hover:underline">
-                  {t("privacyPolicy")}
-                </Link>
-                .
-              </span>
-            </label>
-            {atBookingCap ? null : (
-              <Button type="submit" disabled={pending || linksPending} className="w-full">
-                {pending
-                  ? t("booking")
-                  : showExistingNotice
-                    ? t("bookAnyway")
-                    : t("confirm")}
-              </Button>
-            )}
-          </form>
-        </section>
-      ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
