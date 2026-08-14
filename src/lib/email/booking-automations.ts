@@ -258,7 +258,7 @@ export async function processDueBookingAutomations(now = new Date()) {
       const text = renderAutomationPlain(copy.body, vars);
       const html = `<!doctype html>
 <html lang="${emailLocale}">
-  <body style="margin:0;padding:24px;background:#F9F9F9;color:#2D3436;font-family:Inter,Helvetica,Arial,sans-serif;">
+  <body style="margin:0;padding:24px;background:#F9FAFB;color:#111827;font-family:Inter,Helvetica,Arial,sans-serif;">
     <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E5E7EB;border-radius:12px;padding:28px 24px;font-size:15px;line-height:1.5;">
       ${renderAutomationHtml(copy.body, vars)}
     </div>

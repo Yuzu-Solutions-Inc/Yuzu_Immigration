@@ -53,7 +53,7 @@ function doNotReplyCopy(locale: AppLocale) {
 
 function withDoNotReplyNotice(html: string, text: string, locale: AppLocale) {
   const notice = doNotReplyCopy(locale);
-  const footerHtml = `<div style="max-width:560px;margin:16px auto 0;padding:0 8px;font-size:12px;line-height:1.5;color:#8B9294;">${escapeHtml(notice)}</div>`;
+  const footerHtml = `<div style="max-width:560px;margin:16px auto 0;padding:0 8px;font-size:12px;line-height:1.5;color:#4A5568;">${escapeHtml(notice)}</div>`;
   const htmlOut = /<\/body>/i.test(html)
     ? html.replace(/<\/body>/i, `${footerHtml}</body>`)
     : `${html}${footerHtml}`;

@@ -171,7 +171,7 @@ export function MonthCalendar({
                     : fillHeight
                       ? "size-7 lg:size-6 lg:text-[13px]"
                       : "size-7",
-                  isToday && "bg-action font-semibold text-action-foreground",
+                  isToday && "bg-action font-semibold text-white",
                 )}
               >
                 {dayNumber}

@@ -249,7 +249,7 @@ export function ProgramTemplatesManager({
             href="/projects/templates/new"
             className={cn(
               buttonVariants({ size: "sm" }),
-              "bg-action text-action-foreground hover:bg-action/90",
+              "bg-action text-white hover:bg-action/90",
             )}
           >
             <Plus className="size-4" />

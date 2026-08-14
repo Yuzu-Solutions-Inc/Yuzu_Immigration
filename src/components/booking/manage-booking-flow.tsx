@@ -127,7 +127,7 @@ export function ManageBookingFlow({
               href={meet}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-action-foreground hover:bg-action/90"
+              className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-white hover:bg-action/90"
             >
               {t("joinMeet")}
             </a>
@@ -215,7 +215,7 @@ export function ManageBookingFlow({
                       onClick={() => setSlotStart(slot.startsAt)}
                       className={`rounded-xl border px-3 py-2 text-sm font-medium ${
                         slotStart === slot.startsAt
-                          ? "border-action bg-action text-action-foreground"
+                          ? "border-action bg-action text-white"
                           : "border-border bg-surface hover:border-action/40"
                       }`}
                     >

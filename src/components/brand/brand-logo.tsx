@@ -34,7 +34,7 @@ export function BrandLogo({
       <span
         className={cn(
           "rounded-[0.28em] px-[0.22em] py-[0.08em]",
-          inverted ? "bg-white/15 text-white" : "bg-action text-action-foreground",
+          inverted ? "bg-white/15 text-white" : "bg-action text-white",
         )}
       >
         Immigration

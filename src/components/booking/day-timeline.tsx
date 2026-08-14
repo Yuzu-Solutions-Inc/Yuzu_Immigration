@@ -360,10 +360,10 @@ export function DayTimeline({
                   type="button"
                   data-slot-item
                   className={cn(
-                    "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight text-action-foreground shadow-sm",
+                    "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight text-white shadow-sm",
                     selected
-                      ? "bg-[var(--action-hover)] ring-2 ring-action ring-offset-1"
-                      : "bg-action hover:bg-[var(--action-hover)]",
+                      ? "bg-[#4f46e5] ring-2 ring-action ring-offset-1"
+                      : "bg-action hover:bg-[#4f46e5]",
                   )}
                   style={styleForRange(range.start, range.end, gridHeight)}
                   onClick={() =>
