@@ -387,7 +387,108 @@ export function ProjectsTable({
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+      <div className="space-y-3 md:hidden">
+        <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
+          <Input
+            type="search"
+            value={nameQuery}
+            onChange={(e) => setNameQuery(e.target.value)}
+            placeholder={t("filterNamePlaceholder")}
+            aria-label={t("filterName")}
+            className="h-10"
+          />
+          <select
+            value={programFilter}
+            onChange={(e) =>
+              setProgramFilter(e.target.value as ProgramFamily | "all")
+            }
+            aria-label={t("filterProgram")}
+            className={cn(headerControlClassName, "h-10")}
+          >
+            <option value="all">{t("filterAll")}</option>
+            {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
+              <option key={value} value={value}>
+                {tprog(value)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as ProjectStatus | "all")
+            }
+            aria-label={t("filterStatus")}
+            className={cn(headerControlClassName, "h-10")}
+          >
+            <option value="all">{t("filterAll")}</option>
+            {PROJECT_STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {t(`statuses.${value}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {filteredSorted.length === 0 ? (
+          <p className="rounded-xl border border-border bg-surface px-4 py-8 text-center text-[15px] text-muted-foreground">
+            {t("noMatches")}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {filteredSorted.map((project) => {
+              const progress = progressById[project.id] ?? EMPTY_PROGRESS;
+              return (
+                <li key={project.id}>
+                  <Link
+                    href={`/projects/${project.id}`}
+                    className="block space-y-2 rounded-xl border border-border bg-surface p-3 shadow-elevated"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="min-w-0 font-medium text-brand">
+                        {project.title}
+                      </p>
+                      <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-brand">
+                        {t(`statuses.${project.status}`)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {project.organization_program_name ||
+                        tprog(project.program_family)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("columnSubmitBefore")}:{" "}
+                      {formatDate(project.submit_before, locale) ??
+                        t("submitBeforeEmpty")}
+                    </p>
+                    <div className="flex gap-4">
+                      <ProgressMeter
+                        compact
+                        valueLabel={t("docsProgress", {
+                          done: progress.docsDone,
+                          total: progress.docsTotal,
+                        })}
+                        percent={docsPercent(
+                          progress.docsDone,
+                          progress.docsTotal,
+                        )}
+                      />
+                      <ProgressMeter
+                        compact
+                        valueLabel={t("formsProgress", {
+                          percent: progress.formPercent,
+                        })}
+                        percent={progress.formPercent}
+                      />
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface shadow-elevated md:block">
         <Table>
           <TableHeader className="[&_tr:first-child]:border-b-0">
             <TableRow className="hover:bg-transparent">

@@ -321,12 +321,12 @@ export function MobileSidebarTrigger({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         className={cn(
-          buttonVariants({ variant: "ghost", size: "icon-sm" }),
+          buttonVariants({ variant: "ghost", size: "icon" }),
           "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground lg:hidden",
         )}
         aria-label={t("menu")}
       >
-        <Menu className="size-4" />
+        <Menu className="size-5" />
       </SheetTrigger>
       <SheetContent
         side="left"

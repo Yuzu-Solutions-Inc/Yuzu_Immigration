@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -29,6 +29,10 @@ const GRID_HEIGHT = HOURS * HOUR_PX;
 const SNAP = 30;
 const DAY_MINUTES = HOURS * 60;
 
+const TIME_OPTIONS = Array.from({ length: (DAY_MINUTES / SNAP) + 1 }, (_, i) =>
+  i * SNAP,
+);
+
 type Draft = {
   weekday: number;
   anchor: number;
@@ -49,6 +53,12 @@ function draftRange(draft: Draft) {
   return { start, end };
 }
 
+function minutesToHm(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 export function WeekTemplateHours({
   locale,
   canManage,
@@ -61,8 +71,36 @@ export function WeekTemplateHours({
   const t = useTranslations("calendar");
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [dragEnabled, setDragEnabled] = useState(false);
+  const [addByDay, setAddByDay] = useState<
+    Record<number, { start: number; end: number }>
+  >({});
   const draftRef = useRef<Draft | null>(null);
   const columnRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setDragEnabled(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  const rulesByDay = useMemo(() => {
+    const map = new Map<number, BookingAvailabilityRuleRow[]>();
+    for (const weekday of TEMPLATE_WEEKDAYS) {
+      map.set(
+        weekday,
+        rules
+          .filter((rule) => rule.weekday === weekday)
+          .sort(
+            (a, b) =>
+              minutesFromHm(a.start_time) - minutesFromHm(b.start_time),
+          ),
+      );
+    }
+    return map;
+  }, [rules]);
 
   function setLiveDraft(next: Draft | null) {
     draftRef.current = next;
@@ -87,7 +125,7 @@ export function WeekTemplateHours({
     weekday: number,
     event: React.PointerEvent<HTMLDivElement>,
   ) {
-    if (!canManage || pending) return;
+    if (!dragEnabled || !canManage || pending) return;
     if ((event.target as HTMLElement).closest("[data-slot-block]")) return;
     const column = columnRefs.current[weekday];
     if (!column) return;
@@ -120,61 +158,243 @@ export function WeekTemplateHours({
     saveDraft(live);
   }
 
+  function addRange(weekday: number) {
+    const draftAdd = addByDay[weekday] ?? { start: 9 * 60, end: 17 * 60 };
+    if (draftAdd.end <= draftAdd.start) {
+      toast.error(t("errors.invalid_range"));
+      return;
+    }
+    startTransition(async () => {
+      const result = await addAvailabilityRangeAction({
+        locale,
+        weekday,
+        startMinutes: draftAdd.start,
+        endMinutes: draftAdd.end,
+      });
+      if (result.error) toast.error(t(`errors.${result.error}`));
+    });
+  }
+
+  const toolbar = (
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="space-y-1">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("weekTemplate")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{t("weekTemplateHelp")}</p>
+        <p className="hidden text-sm text-muted-foreground lg:block">
+          {t("weekTemplateDragHelp")}
+        </p>
+        <p className="text-sm text-muted-foreground lg:hidden">
+          {t("weekTemplateTouchHelp")}
+        </p>
+      </div>
+      {canManage ? (
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            disabled={pending}
+            onClick={() => {
+              startTransition(async () => {
+                const result = await applyWeekdayHoursPresetAction(locale);
+                if (result.error) toast.error(t(`errors.${result.error}`));
+                else toast.success(t("presetApplied"));
+              });
+            }}
+          >
+            {t("applyWeekdayPreset")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            disabled={pending || rules.length === 0}
+            onClick={() => {
+              if (!window.confirm(t("clearWeekConfirm"))) return;
+              startTransition(async () => {
+                const result = await clearWeekAvailabilityAction(locale);
+                if (result.error) toast.error(t(`errors.${result.error}`));
+                else toast.success(t("weekCleared"));
+              });
+            }}
+          >
+            {t("clearWeek")}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("weekTemplate")}
-          </h2>
-          <p className="text-sm text-muted-foreground">{t("weekTemplateHelp")}</p>
-          <p className="text-sm text-muted-foreground">{t("weekTemplateDragHelp")}</p>
-        </div>
-        {canManage ? (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={pending}
-              onClick={() => {
-                startTransition(async () => {
-                  const result = await applyWeekdayHoursPresetAction(locale);
-                  if (result.error) toast.error(t(`errors.${result.error}`));
-                  else toast.success(t("presetApplied"));
-                });
-              }}
+      {toolbar}
+
+      {/* Mobile / tablet: one day at a time list editor */}
+      <div className="space-y-3 lg:hidden">
+        {TEMPLATE_WEEKDAYS.map((weekday) => {
+          const dayRules = rulesByDay.get(weekday) ?? [];
+          const add =
+            addByDay[weekday] ?? { start: 9 * 60, end: 17 * 60 };
+          return (
+            <div
+              key={`mobile-${weekday}`}
+              className="rounded-xl border border-border bg-surface p-3"
             >
-              {t("applyWeekdayPreset")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={pending || rules.length === 0}
-              onClick={() => {
-                if (!window.confirm(t("clearWeekConfirm"))) return;
-                startTransition(async () => {
-                  const result = await clearWeekAvailabilityAction(locale);
-                  if (result.error) toast.error(t(`errors.${result.error}`));
-                  else toast.success(t("weekCleared"));
-                });
-              }}
-            >
-              {t("clearWeek")}
-            </Button>
-          </div>
-        ) : null}
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="font-heading text-sm font-semibold text-brand">
+                  {t(`weekdays.${WEEKDAY_KEYS[weekday]}`)}
+                </p>
+                {canManage && dayRules.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={pending}
+                    className="h-9 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      startTransition(async () => {
+                        const result = await clearDayAvailabilityAction(
+                          weekday,
+                          locale,
+                        );
+                        if (result.error) {
+                          toast.error(t(`errors.${result.error}`));
+                        }
+                      });
+                    }}
+                  >
+                    {t("clearDay")}
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    {dayRules.length === 0 ? t("closedDay") : null}
+                  </span>
+                )}
+              </div>
+
+              {dayRules.length === 0 ? (
+                <p className="mb-3 text-sm text-muted-foreground">
+                  {t("closedDay")}
+                </p>
+              ) : (
+                <ul className="mb-3 space-y-2">
+                  {dayRules.map((rule) => {
+                    const start = minutesFromHm(rule.start_time);
+                    const end = minutesFromHm(rule.end_time);
+                    return (
+                      <li
+                        key={rule.id}
+                        className="flex items-center justify-between gap-2 rounded-lg bg-action/10 px-3 py-2"
+                      >
+                        <span className="text-sm font-medium text-brand tabular-nums">
+                          {formatHmLabel(start)}–{formatHmLabel(end)}
+                        </span>
+                        {canManage ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            disabled={pending}
+                            aria-label={t("removeRule")}
+                            onClick={() => {
+                              startTransition(async () => {
+                                const result =
+                                  await deleteAvailabilityRuleAction(
+                                    rule.id,
+                                    locale,
+                                  );
+                                if (result.error) {
+                                  toast.error(t(`errors.${result.error}`));
+                                }
+                              });
+                            }}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {canManage ? (
+                <div className="flex flex-wrap items-end gap-2 border-t border-border pt-3">
+                  <label className="min-w-[5.5rem] flex-1 space-y-1 text-xs text-muted-foreground">
+                    <span>{t("addStart")}</span>
+                    <select
+                      className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm text-brand"
+                      value={add.start}
+                      onChange={(event) =>
+                        setAddByDay((prev) => ({
+                          ...prev,
+                          [weekday]: {
+                            ...add,
+                            start: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    >
+                      {TIME_OPTIONS.slice(0, -1).map((minutes) => (
+                        <option key={minutes} value={minutes}>
+                          {minutesToHm(minutes)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="min-w-[5.5rem] flex-1 space-y-1 text-xs text-muted-foreground">
+                    <span>{t("addEnd")}</span>
+                    <select
+                      className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm text-brand"
+                      value={add.end}
+                      onChange={(event) =>
+                        setAddByDay((prev) => ({
+                          ...prev,
+                          [weekday]: {
+                            ...add,
+                            end: Number(event.target.value),
+                          },
+                        }))
+                      }
+                    >
+                      {TIME_OPTIONS.slice(1).map((minutes) => (
+                        <option key={minutes} value={minutes}>
+                          {minutesToHm(minutes)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-10"
+                    disabled={pending || add.end <= add.start}
+                    onClick={() => addRange(weekday)}
+                  >
+                    {t("addRule")}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-surface select-none">
+      {/* Desktop: drag grid */}
+      <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface select-none lg:block">
         <div
           className="grid min-w-[52rem]"
-          style={{ gridTemplateColumns: `3rem repeat(${TEMPLATE_WEEKDAYS.length}, minmax(0, 1fr))` }}
+          style={{
+            gridTemplateColumns: `3rem repeat(${TEMPLATE_WEEKDAYS.length}, minmax(0, 1fr))`,
+          }}
         >
           <div className="sticky left-0 z-10 border-b border-r border-border bg-surface" />
           {TEMPLATE_WEEKDAYS.map((weekday) => {
-            const dayRules = rules.filter((rule) => rule.weekday === weekday);
+            const dayRules = rulesByDay.get(weekday) ?? [];
             return (
               <div
                 key={`head-${weekday}`}
@@ -186,7 +406,7 @@ export function WeekTemplateHours({
                 {canManage && dayRules.length > 0 ? (
                   <button
                     type="button"
-                    className="mt-0.5 text-[11px] font-medium text-muted-foreground hover:text-destructive"
+                    className="mt-0.5 min-h-8 px-1 text-[11px] font-medium text-muted-foreground hover:text-destructive"
                     disabled={pending}
                     onClick={() => {
                       startTransition(async () => {
@@ -231,7 +451,7 @@ export function WeekTemplateHours({
           </div>
 
           {TEMPLATE_WEEKDAYS.map((weekday) => {
-            const dayRules = rules.filter((rule) => rule.weekday === weekday);
+            const dayRules = rulesByDay.get(weekday) ?? [];
             const live =
               draft?.weekday === weekday ? draftRange(draft) : null;
             return (
@@ -242,7 +462,7 @@ export function WeekTemplateHours({
                 }}
                 className={cn(
                   "relative border-l border-border bg-canvas/40",
-                  canManage && "cursor-crosshair touch-none",
+                  dragEnabled && canManage && "cursor-crosshair touch-none",
                 )}
                 style={{ height: GRID_HEIGHT }}
                 onPointerDown={(event) => onColumnPointerDown(weekday, event)}
@@ -299,7 +519,7 @@ export function WeekTemplateHours({
                         {canManage ? (
                           <Trash2
                             aria-hidden
-                            className="mt-px size-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                            className="mt-px size-3 shrink-0 opacity-100"
                           />
                         ) : null}
                       </span>

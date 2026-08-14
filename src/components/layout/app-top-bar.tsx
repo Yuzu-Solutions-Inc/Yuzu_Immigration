@@ -323,7 +323,7 @@ function AppNotifications() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
-        className="relative inline-flex size-8 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className="relative inline-flex size-10 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
         aria-label={t("notificationsAria", { count: unreadCount })}
       >
         <Bell className="size-4" aria-hidden />
@@ -333,7 +333,10 @@ function AppNotifications() {
           </span>
         ) : null}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0">
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(20rem,calc(100vw-1.5rem))] p-0"
+      >
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
           <p className="text-sm font-semibold text-foreground">
             {t("notificationsTitle")}
@@ -402,7 +405,7 @@ function AppSupportMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="inline-flex size-8 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className="inline-flex size-10 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
         aria-label={t("supportAria")}
       >
         <CircleHelp className="size-4" aria-hidden />
@@ -435,7 +438,7 @@ function AppSettingsLink() {
     <Link
       href="/settings/account"
       aria-label={t("menuAria")}
-      className="inline-flex size-8 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      className="inline-flex size-10 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
     >
       <Settings className="size-4" aria-hidden />
     </Link>
@@ -456,7 +459,7 @@ export function AppTopBar({
         </div>
       </div>
 
-      <div className="flex w-full max-w-[14rem] flex-none justify-center sm:max-w-xs md:max-w-md md:flex-1">
+      <div className="flex min-w-0 max-w-[11rem] flex-1 justify-center sm:max-w-xs md:max-w-md md:flex-1">
         <AppSearch />
       </div>
 

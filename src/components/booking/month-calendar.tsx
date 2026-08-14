@@ -141,11 +141,13 @@ export function MonthCalendar({
                 fillHeight
                   ? cn(
                       "lg:h-full lg:min-h-0 lg:justify-center",
-                      compact ? "min-h-11 py-1 lg:py-0.5" : "min-h-16 py-2 lg:py-1",
+                      compact
+                        ? "min-h-10 py-1 sm:min-h-11 lg:py-0.5"
+                        : "min-h-12 py-1.5 sm:min-h-16 sm:py-2 lg:py-1",
                     )
                   : compact
-                    ? "min-h-11 py-1"
-                    : "min-h-16 py-2",
+                    ? "min-h-10 py-1 sm:min-h-11"
+                    : "min-h-12 py-1.5 sm:min-h-16 sm:py-2",
                 cell.inMonth ? "bg-surface" : "bg-canvas/60 text-muted-foreground",
                 selected
                   ? "border-action bg-action/5 text-brand"
@@ -159,7 +161,7 @@ export function MonthCalendar({
             >
               {isBlocked ? (
                 <Ban
-                  className="absolute top-1.5 right-1.5 size-3 text-warning"
+                  className="absolute top-1 right-1 size-2.5 text-warning sm:top-1.5 sm:right-1.5 sm:size-3"
                   aria-hidden
                 />
               ) : null}
@@ -169,19 +171,19 @@ export function MonthCalendar({
                   compact
                     ? "size-6 text-[13px]"
                     : fillHeight
-                      ? "size-7 lg:size-6 lg:text-[13px]"
-                      : "size-7",
+                      ? "size-6 text-[13px] sm:size-7 sm:text-sm lg:size-6 lg:text-[13px]"
+                      : "size-6 text-[13px] sm:size-7 sm:text-sm",
                   isToday && "bg-action font-semibold text-action-foreground",
                 )}
               >
                 {dayNumber}
               </span>
               {count > 0 ? (
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-action" />
+                <span className="mt-0.5 h-1 w-1 rounded-full bg-action sm:mt-1 sm:h-1.5 sm:w-1.5" />
               ) : hasAvailability ? (
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-success" />
+                <span className="mt-0.5 h-1 w-1 rounded-full bg-success sm:mt-1 sm:h-1.5 sm:w-1.5" />
               ) : isBlocked ? (
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-warning-bg0" />
+                <span className="mt-0.5 h-1 w-1 rounded-full bg-warning sm:mt-1 sm:h-1.5 sm:w-1.5" />
               ) : null}
             </button>
           );

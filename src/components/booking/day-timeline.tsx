@@ -2,6 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -93,12 +94,22 @@ export function DayTimeline({
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [hourPx, setHourPx] = useState(DEFAULT_HOUR_PX);
+  /** Drag-to-block fights touch scrolling; only enable on fine pointers. */
+  const [dragEnabled, setDragEnabled] = useState(false);
   const draftRef = useRef<Draft | null>(null);
   const columnRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const gridHeight = HOURS * hourPx;
   const mergedOpen = mergeMinuteRanges(openRanges);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setDragEnabled(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -147,7 +158,7 @@ export function DayTimeline({
   }
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (!canManage || pending) return;
+    if (!dragEnabled || !canManage || pending) return;
     if ((event.target as HTMLElement).closest("[data-slot-item]")) return;
     const column = columnRef.current;
     if (!column) return;
@@ -190,7 +201,7 @@ export function DayTimeline({
       <p className="shrink-0 text-xs text-muted-foreground">{t("timelineHint")}</p>
       {canManage ? (
         <p className="shrink-0 text-xs text-muted-foreground">
-          {t("timelineDragHelp")}
+          {dragEnabled ? t("timelineDragHelp") : t("timelineTouchHelp")}
         </p>
       ) : null}
 
@@ -243,14 +254,16 @@ export function DayTimeline({
           <div
             ref={columnRef}
             className={cn(
-              "relative bg-canvas/40",
-              canManage && "cursor-crosshair touch-none",
+              "relative bg-canvas/40 touch-pan-y",
+              dragEnabled && canManage && "cursor-crosshair touch-none",
             )}
             style={{ height: gridHeight }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={() => setLiveDraft(null)}
+            onPointerDown={dragEnabled ? onPointerDown : undefined}
+            onPointerMove={dragEnabled ? onPointerMove : undefined}
+            onPointerUp={dragEnabled ? onPointerUp : undefined}
+            onPointerCancel={
+              dragEnabled ? () => setLiveDraft(null) : undefined
+            }
           >
             {Array.from({ length: HOURS }, (_, hour) => (
               <div
@@ -360,7 +373,7 @@ export function DayTimeline({
                   type="button"
                   data-slot-item
                   className={cn(
-                    "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight text-white shadow-sm",
+                    "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight text-action-foreground shadow-sm",
                     selected
                       ? "bg-action-hover ring-2 ring-action ring-offset-1"
                       : "bg-action hover:bg-action-hover",
@@ -371,7 +384,7 @@ export function DayTimeline({
                   }
                 >
                   <p className="truncate font-medium">{row.guest_name}</p>
-                  <p className="truncate text-[10px] text-white/85">
+                  <p className="truncate text-[10px] text-action-foreground/85">
                     {row.service?.title ?? t("unknownService")}
                   </p>
                 </button>

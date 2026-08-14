@@ -200,8 +200,8 @@ export default async function ProjectDetailPage({
             </p>
           ) : null}
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-3">
-          <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex w-full shrink-0 flex-col items-stretch gap-3 sm:w-auto sm:items-end">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <ExportProjectFileButton locale={locale} projectId={project.id} />
             <Link
               href={`/projects/${project.id}/edit`}
@@ -220,7 +220,7 @@ export default async function ProjectDetailPage({
               />
             ) : null}
           </div>
-          <div className="grid grid-cols-[auto_auto_1.75rem] items-center gap-x-2.5 gap-y-1">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
             <ProjectStatusCard
               locale={locale}
               projectId={project.id}

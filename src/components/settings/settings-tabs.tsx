@@ -21,7 +21,7 @@ export function SettingsTabs({ canAdminister }: { canAdminister: boolean }) {
   ] as const;
 
   return (
-    <nav className="flex gap-1 border-b border-border">
+    <nav className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {tabs.map((tab) => {
         const active =
           pathname === tab.href || pathname.startsWith(`${tab.href}/`);
@@ -30,7 +30,7 @@ export function SettingsTabs({ canAdminister }: { canAdminister: boolean }) {
             key={tab.href}
             href={tab.href}
             className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+              "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
               active
                 ? "border-action text-brand"
                 : "border-transparent text-muted-foreground hover:text-brand",

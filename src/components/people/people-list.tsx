@@ -176,7 +176,95 @@ export function PeopleList({
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+      {/* Mobile: stacked filters + cards */}
+      <div className="space-y-3 md:hidden">
+        <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
+          <Input
+            type="search"
+            value={nameQuery}
+            onChange={(e) => setNameQuery(e.target.value)}
+            placeholder={t("filterNamePlaceholder")}
+            aria-label={t("filterName")}
+            className="h-10"
+          />
+          <Input
+            type="search"
+            value={emailQuery}
+            onChange={(e) => setEmailQuery(e.target.value)}
+            placeholder={t("filterEmailPlaceholder")}
+            aria-label={t("filterEmail")}
+            className="h-10"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value as PersonImmigrationStatus | "all",
+              )
+            }
+            aria-label={t("filterStatus")}
+            className={cn(headerControlClassName, "h-10")}
+          >
+            <option value="all">{t("filterAll")}</option>
+            {PERSON_IMMIGRATION_STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {ti(value)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={expiryFilter}
+            onChange={(e) => setExpiryFilter(e.target.value as ExpiryFilter)}
+            aria-label={t("filterExpiry")}
+            className={cn(headerControlClassName, "h-10")}
+          >
+            <option value="all">{t("filterAll")}</option>
+            <option value="expired">{t("filterExpiryExpired")}</option>
+            <option value="expiring_30">{t("filterExpirySoon")}</option>
+            <option value="no_date">{t("filterExpiryNone")}</option>
+          </select>
+        </div>
+
+        {filteredSorted.length === 0 ? (
+          <p className="rounded-xl border border-border bg-surface px-4 py-8 text-center text-[15px] text-muted-foreground">
+            {t("noMatches")}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {filteredSorted.map((person) => {
+              const fullName = `${person.first_name} ${person.last_name}`;
+              return (
+                <li key={person.id}>
+                  <div className="flex items-start gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
+                    <Link
+                      href={`/people/${person.id}`}
+                      className="min-w-0 flex-1 space-y-1"
+                    >
+                      <p className="font-medium text-brand">{fullName}</p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {person.email ?? t("emptyValue")}
+                      </p>
+                      <p className="text-sm text-brand/80">
+                        {ti(person.immigration_status)}
+                        {person.status_expires_at
+                          ? ` · ${formatDisplayDate(person.status_expires_at, locale)}`
+                          : ""}
+                      </p>
+                    </Link>
+                    <DeletePersonButton
+                      locale={locale}
+                      personId={person.id}
+                      fullName={fullName}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface shadow-elevated md:block">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

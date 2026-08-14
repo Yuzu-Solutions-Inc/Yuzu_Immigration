@@ -175,7 +175,50 @@ export default async function AppHomePage({
             {dashboard.upcoming.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("upcoming.empty")}</p>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-border bg-surface">
+              <>
+                <ul className="space-y-2 md:hidden">
+                  {dashboard.upcoming.map((item) => (
+                    <li key={item.id}>
+                      <Link
+                        href={item.href}
+                        className="block space-y-2 rounded-xl border border-border bg-surface p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-medium text-brand">{item.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {tp(`statuses.${item.status}`)}
+                            </p>
+                          </div>
+                          <p
+                            className={cn(
+                              "shrink-0 text-sm font-medium",
+                              timingClass(item.days),
+                            )}
+                          >
+                            {timingLabel(item.days, t)}
+                          </p>
+                        </div>
+                        <div className="flex gap-4">
+                          <ProgressMeter
+                            valueLabel={t("upcoming.docs", {
+                              done: item.docsDone,
+                              total: item.docsTotal,
+                            })}
+                            percent={docsPercent(item.docsDone, item.docsTotal)}
+                          />
+                          <ProgressMeter
+                            valueLabel={t("upcoming.forms", {
+                              percent: item.formPercent,
+                            })}
+                            percent={item.formPercent}
+                          />
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="hidden overflow-hidden rounded-xl border border-border bg-surface md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -234,6 +277,7 @@ export default async function AppHomePage({
                   </TableBody>
                 </Table>
               </div>
+              </>
             )}
           </section>
         </>
