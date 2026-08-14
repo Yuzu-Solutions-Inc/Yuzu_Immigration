@@ -20,21 +20,27 @@ export function HorizontalBarList({
   const max = Math.max(...items.map((item) => item.count), 1);
 
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-1.5">
       {items.map((item) => {
         const width = Math.max((item.count / max) * 100, item.count > 0 ? 4 : 0);
         return (
-          <li key={item.key} className="grid grid-cols-[minmax(0,8.5rem)_1fr_2rem] items-center gap-3">
-            <span className="truncate text-sm text-muted-foreground" title={item.label}>
+          <li
+            key={item.key}
+            className="grid grid-cols-[minmax(0,7rem)_1fr_1.5rem] items-center gap-2"
+          >
+            <span
+              className="truncate text-xs text-muted-foreground"
+              title={item.label}
+            >
               {item.label}
             </span>
-            <div className="h-2 rounded-sm bg-muted">
+            <div className="h-1.5 rounded-sm bg-muted">
               <div
-                className="h-2 rounded-sm bg-brand/80"
+                className="h-1.5 rounded-sm bg-brand/80"
                 style={{ width: `${width}%` }}
               />
             </div>
-            <span className="text-right text-sm tabular-nums text-brand">
+            <span className="text-right text-xs tabular-nums text-brand">
               {item.count}
             </span>
           </li>

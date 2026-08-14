@@ -1,4 +1,18 @@
-import type { ProgramFamily, ProjectStatus } from "@/db/schema";
+import {
+  listProjects,
+  requireOrganizationId,
+  type PersonRow,
+  type ProjectRow,
+} from "@/lib/crm/queries";
+import { isTerminalStatus, PROJECT_STATUSES } from "@/lib/crm/statuses";
+import { addDaysToIsoDate, zonedDateIso } from "@/lib/booking/timezone";
+import type { BookingAppointmentRow } from "@/lib/booking/types";
+import { createClient } from "@/lib/supabase/server";
+import {
+  decryptBookingGuestRow,
+  decryptPersonRow,
+} from "@/lib/security/client-pii";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import {
   daysUntilIso,
   shiftIsoDate,
@@ -9,13 +23,7 @@ import {
   getProjectsProgress,
   type ProjectProgress,
 } from "@/lib/crm/progress";
-import {
-  listProjects,
-  requireOrganizationId,
-  type ProjectRow,
-} from "@/lib/crm/queries";
-import { isTerminalStatus, PROJECT_STATUSES } from "@/lib/crm/statuses";
-import { createClient } from "@/lib/supabase/server";
+import type { ProgramFamily, ProjectStatus } from "@/db/schema";
 
 export type ChartDatum = {
   key: string;
@@ -39,32 +47,79 @@ export type UpcomingSubmission = {
   formPercent: number;
 };
 
+export type DashboardAppointment = {
+  id: string;
+  guestName: string;
+  serviceTitle: string | null;
+  startsAt: string;
+  endsAt: string;
+  status: BookingAppointmentRow["status"];
+};
+
+export type StatusExpiryItem = {
+  id: string;
+  name: string;
+  expiresAt: string;
+  days: number;
+  href: string;
+};
+
+export type BookingModuleSummary = {
+  timezone: string;
+  enabled: boolean;
+  activeServices: number;
+  hasAvailability: boolean;
+  todayCount: number;
+  next7Count: number;
+  needsSetup: boolean;
+};
+
 export type HomeDashboard = {
   hasCaseload: boolean;
   kpis: {
+    openProjects: number;
     dueIn14Days: number;
     overdueSubmissions: number;
     docsToReview: number;
     stuckWaiting: number;
+    peopleCount: number;
+    statusExpiring30: number;
   };
+  booking: BookingModuleSummary;
   projectsByStatus: ChartDatum[];
   peopleByVisa: ChartDatum[];
   submitTrend: SubmitTrendPoint[];
   upcoming: UpcomingSubmission[];
+  appointments: DashboardAppointment[];
+  statusExpiries: StatusExpiryItem[];
 };
 
 const EMPTY: HomeDashboard = {
   hasCaseload: false,
   kpis: {
+    openProjects: 0,
     dueIn14Days: 0,
     overdueSubmissions: 0,
     docsToReview: 0,
     stuckWaiting: 0,
+    peopleCount: 0,
+    statusExpiring30: 0,
+  },
+  booking: {
+    timezone: "America/Toronto",
+    enabled: false,
+    activeServices: 0,
+    hasAvailability: false,
+    todayCount: 0,
+    next7Count: 0,
+    needsSetup: true,
   },
   projectsByStatus: [],
   peopleByVisa: [],
   submitTrend: [],
   upcoming: [],
+  appointments: [],
+  statusExpiries: [],
 };
 
 const TREND_WEEKS_BEFORE = 4;
@@ -86,8 +141,17 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
 
   const supabase = await createClient();
   const now = new Date();
+  const key = await getOrgDataKey(orgId);
 
-  const [projects, peopleCountResult, participantsResult] = await Promise.all([
+  const [
+    projects,
+    peopleCountResult,
+    participantsResult,
+    settingsResult,
+    servicesResult,
+    rulesResult,
+    peopleExpiryResult,
+  ] = await Promise.all([
     listProjects(),
     supabase
       .from("people")
@@ -99,6 +163,28 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       .eq("organization_id", orgId)
       .is("left_at", null)
       .limit(2000),
+    supabase
+      .from("booking_settings")
+      .select("timezone, is_enabled")
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+    supabase
+      .from("booking_services")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId)
+      .eq("is_active", true),
+    supabase
+      .from("booking_availability_rules")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId),
+    supabase
+      .from("people")
+      .select("*")
+      .eq("organization_id", orgId)
+      .not("status_expires_at", "is", null)
+      .neq("immigration_status", "none")
+      .order("status_expires_at", { ascending: true })
+      .limit(8),
   ]);
 
   if (peopleCountResult.error) {
@@ -110,6 +196,31 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       participantsResult.error.message,
     );
   }
+  if (settingsResult.error) {
+    console.error("getHomeDashboard settings:", settingsResult.error.message);
+  }
+  if (servicesResult.error) {
+    console.error("getHomeDashboard services:", servicesResult.error.message);
+  }
+  if (rulesResult.error) {
+    console.error("getHomeDashboard rules:", rulesResult.error.message);
+  }
+  if (peopleExpiryResult.error) {
+    console.error(
+      "getHomeDashboard status expiries:",
+      peopleExpiryResult.error.message,
+    );
+  }
+
+  const timezone =
+    (settingsResult.data?.timezone as string | undefined) ?? "America/Toronto";
+  const bookingEnabled = Boolean(settingsResult.data?.is_enabled);
+  const activeServices = servicesResult.count ?? 0;
+  const hasAvailability = (rulesResult.count ?? 0) > 0;
+  const todayIso = zonedDateIso(now, timezone);
+  const rangeEndIso = addDaysToIsoDate(todayIso, 7);
+  const appointmentsFrom = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+  const appointmentsTo = `${rangeEndIso}T23:59:59.999Z`;
 
   const liveProjects = projects.filter((project) => !project.destroyed_at);
   const openProjects = liveProjects.filter(
@@ -117,7 +228,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
   );
   const openIds = openProjects.map((project) => project.id);
 
-  const [progress, uploadedResult] = await Promise.all([
+  const [progress, uploadedResult, appointmentsResult] = await Promise.all([
     getProjectsProgress(liveProjects.map((project) => project.id)),
     openIds.length > 0
       ? supabase
@@ -127,10 +238,25 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
           .in("project_id", openIds)
           .eq("status", "uploaded")
       : Promise.resolve({ count: 0, error: null }),
+    supabase
+      .from("booking_appointments")
+      .select("*, service:booking_services(title)")
+      .eq("organization_id", orgId)
+      .gte("starts_at", appointmentsFrom)
+      .lt("starts_at", appointmentsTo)
+      .neq("status", "cancelled")
+      .order("starts_at", { ascending: true })
+      .limit(8),
   ]);
 
   if (uploadedResult.error) {
     console.error("getHomeDashboard uploaded:", uploadedResult.error.message);
+  }
+  if (appointmentsResult.error) {
+    console.error(
+      "getHomeDashboard appointments:",
+      appointmentsResult.error.message,
+    );
   }
 
   const projectsByStatus = countBy(
@@ -218,19 +344,80 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       };
     });
 
+  const rawAppointments = (appointmentsResult.data ?? []) as Array<
+    BookingAppointmentRow & { service?: { title: string } | null }
+  >;
+  const appointments: DashboardAppointment[] = rawAppointments.map((row) => {
+    const guest = decryptBookingGuestRow(row, key);
+    return {
+      id: row.id,
+      guestName: guest.guest_name,
+      serviceTitle: row.service?.title ?? null,
+      startsAt: row.starts_at,
+      endsAt: row.ends_at,
+      status: row.status,
+    };
+  });
+
+  let todayCount = 0;
+  let next7Count = 0;
+  for (const appt of appointments) {
+    const day = zonedDateIso(new Date(appt.startsAt), timezone);
+    if (day === todayIso) todayCount += 1;
+    if (day >= todayIso && day <= rangeEndIso) next7Count += 1;
+  }
+
+  const statusExpiries: StatusExpiryItem[] = (
+    (peopleExpiryResult.data ?? []) as PersonRow[]
+  )
+    .map((raw) => {
+      const row = decryptPersonRow(raw, key);
+      if (!row.status_expires_at) return null;
+      const expiresAt = row.status_expires_at.slice(0, 10);
+      return {
+        id: row.id,
+        name: `${row.first_name} ${row.last_name}`.trim(),
+        expiresAt,
+        days: daysUntilIso(expiresAt, now),
+        href: `/people/${row.id}`,
+      };
+    })
+    .filter((row): row is StatusExpiryItem => row != null && row.days <= 60)
+    .slice(0, 5);
+
+  const statusExpiring30 = statusExpiries.filter((row) => row.days <= 30).length;
+  const peopleCount = peopleCountResult.count ?? 0;
+  const needsSetup =
+    !bookingEnabled || activeServices === 0 || !hasAvailability;
+
   return {
-    hasCaseload: liveProjects.length > 0 || (peopleCountResult.count ?? 0) > 0,
+    hasCaseload:
+      liveProjects.length > 0 || peopleCount > 0 || appointments.length > 0,
     kpis: {
+      openProjects: openProjects.length,
       dueIn14Days,
       overdueSubmissions,
       docsToReview: uploadedResult.count ?? 0,
       stuckWaiting: liveProjects.filter(
         (project) => project.status === "stuck" || project.status === "waiting",
       ).length,
+      peopleCount,
+      statusExpiring30,
+    },
+    booking: {
+      timezone,
+      enabled: bookingEnabled,
+      activeServices,
+      hasAvailability,
+      todayCount,
+      next7Count,
+      needsSetup,
     },
     projectsByStatus,
     peopleByVisa,
     submitTrend,
     upcoming,
+    appointments,
+    statusExpiries,
   };
 }

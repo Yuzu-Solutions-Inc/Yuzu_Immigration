@@ -52,7 +52,7 @@ export async function DashboardShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <AppTopBar mobileTrigger={mobileTrigger} />
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-4 sm:px-6 sm:py-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:py-4">
           {children}
         </main>
       </div>
