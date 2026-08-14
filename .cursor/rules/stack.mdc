@@ -14,7 +14,7 @@ alwaysApply: true
 
 ## Visual system
 - Official Yuzu Solutions tokens: Electric Yuzu `#F8C607`, Zest Green `#86C54A`, Soft Kumquat `#FF9F43`, Carbon Slate `#2D3436`, Paper White `#F9F9F9`
-- App aliases: brand → carbon, action/primary → zest (CTA trial), success → zest, highlight → kumquat
+- App aliases: brand → carbon, action → yuzu (CTA), success → zest, highlight → kumquat
 - Fonts: Plus Jakarta Sans (headings), Inter (body)
 - Radius 12px, soft elevation `0 4px 6px -1px rgba(15,18,19,0.06)`
 - No IRCC/MIFI government red/blue motifs or official icons
