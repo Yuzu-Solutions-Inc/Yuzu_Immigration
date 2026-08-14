@@ -132,9 +132,14 @@ export function MonthCalendar({
               disabled={disabled}
               onClick={() => onSelectDate(cell.dateIso)}
               aria-label={
-                isBlocked
-                  ? t("blockedDayAria", { day: dayNumber })
-                  : undefined
+                isBlocked && count > 0
+                  ? t("blockedDayWithBookingsAria", {
+                      day: dayNumber,
+                      count,
+                    })
+                  : isBlocked
+                    ? t("blockedDayAria", { day: dayNumber })
+                    : undefined
               }
               className={cn(
                 "relative flex flex-col items-center rounded-xl border px-1 text-sm transition-colors",
@@ -179,7 +184,10 @@ export function MonthCalendar({
                 {dayNumber}
               </span>
               {count > 0 ? (
-                <span className="mt-0.5 h-1 w-1 rounded-full bg-action sm:mt-1 sm:h-1.5 sm:w-1.5" />
+                <span
+                  className="mt-0.5 h-1 w-1 rounded-full bg-action sm:mt-1 sm:h-1.5 sm:w-1.5"
+                  title={t("dayBookingCount", { count })}
+                />
               ) : hasAvailability ? (
                 <span className="mt-0.5 h-1 w-1 rounded-full bg-success sm:mt-1 sm:h-1.5 sm:w-1.5" />
               ) : isBlocked ? (

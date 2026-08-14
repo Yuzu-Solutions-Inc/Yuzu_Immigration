@@ -47,3 +47,32 @@ export function mergeMinuteRanges(ranges: MinuteRange[]): MinuteRange[] {
   }
   return merged;
 }
+
+/** Remove `cutouts` from `range`, returning the remaining visible segments. */
+export function subtractMinuteRanges(
+  range: MinuteRange,
+  cutouts: MinuteRange[],
+): MinuteRange[] {
+  const start = clampMinutes(Math.min(range.start, range.end));
+  const end = clampMinutes(Math.max(range.start, range.end));
+  if (end <= start) return [];
+
+  let segments: MinuteRange[] = [{ start, end }];
+  for (const cut of mergeMinuteRanges(cutouts)) {
+    const next: MinuteRange[] = [];
+    for (const segment of segments) {
+      if (cut.end <= segment.start || cut.start >= segment.end) {
+        next.push(segment);
+        continue;
+      }
+      if (cut.start > segment.start) {
+        next.push({ start: segment.start, end: cut.start });
+      }
+      if (cut.end < segment.end) {
+        next.push({ start: cut.end, end: segment.end });
+      }
+    }
+    segments = next;
+  }
+  return segments;
+}

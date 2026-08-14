@@ -16,6 +16,7 @@ import {
   formatHmLabel,
   mergeMinuteRanges,
   snapMinutes,
+  subtractMinuteRanges,
   type MinuteRange,
 } from "@/lib/booking/availability";
 import type {
@@ -102,6 +103,17 @@ export function DayTimeline({
 
   const gridHeight = HOURS * hourPx;
   const mergedOpen = mergeMinuteRanges(openRanges);
+
+  const appointmentRanges = appointments.flatMap((row) => {
+    if (row.status === "cancelled") return [];
+    const range = clipToDayMinutes(
+      new Date(row.starts_at),
+      new Date(row.ends_at),
+      dateIso,
+      timeZone,
+    );
+    return range ? [range] : [];
+  });
 
   useEffect(() => {
     const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -310,50 +322,59 @@ export function DayTimeline({
               );
             })}
 
-            {blocked.map((row) => {
+            {blocked.flatMap((row) => {
               const range = clipToDayMinutes(
                 new Date(row.starts_at),
                 new Date(row.ends_at),
                 dateIso,
                 timeZone,
               );
-              if (!range) return null;
-              return (
-                <button
-                  key={row.id}
-                  type="button"
-                  data-slot-item
-                  disabled={!canManage || pending}
-                  aria-label={t("clickToRemoveBlock")}
-                  title={canManage ? t("clickToRemoveBlock") : undefined}
-                  className="group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg px-1.5 py-0.5 text-left text-[11px] leading-tight text-warning-text hover:bg-amber-100 disabled:hover:bg-warning-bg"
-                  style={styleForRange(range.start, range.end, gridHeight)}
-                  onClick={() => {
-                    if (!canManage) return;
-                    startTransition(async () => {
-                      const result = await unblockTimeAction(row.id, locale);
-                      if (result.error) toast.error(t(`errors.${result.error}`));
-                      else toast.success(t("dayUnblocked"));
-                    });
-                  }}
-                >
-                  <span className="flex items-start justify-between gap-1">
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium">
-                        {t("legendBlocked")}
+              if (!range) return [];
+              // Keep existing bookings visible on top of blocked time.
+              return subtractMinuteRanges(range, appointmentRanges).map(
+                (segment) => (
+                  <button
+                    key={`${row.id}-${segment.start}-${segment.end}`}
+                    type="button"
+                    data-slot-item
+                    disabled={!canManage || pending}
+                    aria-label={t("clickToRemoveBlock")}
+                    title={canManage ? t("clickToRemoveBlock") : undefined}
+                    className="group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg/90 px-1.5 py-0.5 text-left text-[11px] leading-tight text-warning-text hover:bg-amber-100 disabled:hover:bg-warning-bg/90"
+                    style={styleForRange(
+                      segment.start,
+                      segment.end,
+                      gridHeight,
+                    )}
+                    onClick={() => {
+                      if (!canManage) return;
+                      startTransition(async () => {
+                        const result = await unblockTimeAction(row.id, locale);
+                        if (result.error)
+                          toast.error(t(`errors.${result.error}`));
+                        else toast.success(t("dayUnblocked"));
+                      });
+                    }}
+                  >
+                    <span className="flex items-start justify-between gap-1">
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">
+                          {t("legendBlocked")}
+                        </span>
+                        <span className="block truncate text-[10px] text-warning-text/80">
+                          {formatHmLabel(segment.start)}–
+                          {formatHmLabel(segment.end)}
+                        </span>
                       </span>
-                      <span className="block truncate text-[10px] text-warning-text/80">
-                        {formatHmLabel(range.start)}–{formatHmLabel(range.end)}
-                      </span>
+                      {canManage ? (
+                        <Trash2
+                          aria-hidden
+                          className="mt-px size-3 shrink-0 text-warning-text opacity-0 transition-opacity group-hover:opacity-100"
+                        />
+                      ) : null}
                     </span>
-                    {canManage ? (
-                      <Trash2
-                        aria-hidden
-                        className="mt-px size-3 shrink-0 text-warning-text opacity-0 transition-opacity group-hover:opacity-100"
-                      />
-                    ) : null}
-                  </span>
-                </button>
+                  </button>
+                ),
               );
             })}
 
