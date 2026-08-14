@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
-import { ProjectFormCompletion } from "@/components/forms/project-form-completion";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import {
   ExportProjectFileButton,
@@ -11,6 +10,7 @@ import {
 } from "@/components/privacy/retention-export";
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
+import { ProjectParticipantsList } from "@/components/projects/project-participants-list";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { ProjectSubmitBeforeCard } from "@/components/projects/project-submit-before-card";
 import { buttonVariants } from "@/components/ui/button";
@@ -87,7 +87,6 @@ export default async function ProjectDetailPage({
     ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
-  const tr = await getTranslations("roles");
   const formLocale = locale === "fr" ? "fr" : "en";
   const principal = participants.find((p) => p.role === "principal");
   const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
@@ -246,49 +245,11 @@ export default async function ProjectDetailPage({
 
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <div className="min-w-0 space-y-6">
-          <section className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="font-heading text-lg font-semibold text-brand">
-                {t("participants")}
-              </h2>
-              <Link
-                href={`/projects/${project.id}/edit`}
-                className="text-sm font-medium text-action hover:underline"
-              >
-                {t("editPeople")}
-              </Link>
-            </div>
-            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-              {participants.map((row) => (
-                <li key={row.id}>
-                  {row.person ? (
-                    <Link
-                      href={`/people/${row.person.id}`}
-                      className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-muted/60"
-                    >
-                      <div>
-                        <p className="font-medium text-brand">
-                          {row.person.first_name} {row.person.last_name}
-                        </p>
-                        {row.person.email ? (
-                          <p className="text-sm text-muted-foreground">
-                            {row.person.email}
-                          </p>
-                        ) : null}
-                      </div>
-                      <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                        {tr(row.role)}
-                      </span>
-                    </Link>
-                  ) : (
-                    <div className="px-5 py-4 text-sm text-muted-foreground">
-                      {tr(row.role)}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
+          <ProjectParticipantsList
+            projectId={project.id}
+            people={questionnairePeople}
+            participants={participants}
+          />
 
           <div id="documents" className="scroll-mt-20">
             <ProjectDocumentsPanel
@@ -315,13 +276,6 @@ export default async function ProjectDetailPage({
             shareCanReveal={share?.canReveal ?? false}
           />
         </div>
-      </div>
-
-      <div id="questionnaire" className="scroll-mt-20">
-        <ProjectFormCompletion
-          projectId={project.id}
-          people={questionnairePeople}
-        />
       </div>
     </div>
   );

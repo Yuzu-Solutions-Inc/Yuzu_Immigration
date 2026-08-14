@@ -17,7 +17,8 @@ import {
 } from "@/components/forms/modular-questionnaire";
 import { ProjectShareLinkCard } from "@/components/forms/project-share-link-card";
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import {
   formTitle,
   isPersonScopedForm,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/ircc/kits";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
 import type { ProgramFamily } from "@/db/schema";
+import { cn } from "@/lib/utils";
 
 const initialState: FormsActionState = {};
 
@@ -146,15 +148,26 @@ export function ProjectFormsPanel({
           <h2 className="font-heading text-lg font-semibold text-brand">
             {t("todoTitle")}
           </h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={genPending || forms.length === 0}
-            onClick={() => handleDownload()}
-          >
-            {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/projects/${projectId}/forms`}
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "bg-action text-white hover:bg-action/90",
+              )}
+            >
+              {t("openQuestionnaire")}
+            </Link>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={genPending || forms.length === 0}
+              onClick={() => handleDownload()}
+            >
+              {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
+            </Button>
+          </div>
         </div>
         <ul className="divide-y divide-border border-t border-border">
           {forms.length === 0 ? (
