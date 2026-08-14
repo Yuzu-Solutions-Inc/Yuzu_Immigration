@@ -1,4 +1,10 @@
-import { pad2 } from "@/lib/booking/timezone";
+import {
+  addDaysToIsoDate,
+  clipToDayMinutes,
+  minutesFromHm,
+  pad2,
+  weekdayFromIsoDate,
+} from "@/lib/booking/timezone";
 
 export type MinuteRange = {
   start: number;
@@ -75,4 +81,93 @@ export function subtractMinuteRanges(
     segments = next;
   }
   return segments;
+}
+
+type OpenCapacityInterval = {
+  starts_at: string;
+  ends_at: string;
+};
+
+/**
+ * Civil dates (today → window) where the host still has residual open hours
+ * after blocked time, Google busy, and buffered bookings are removed.
+ */
+export function listCivilDaysWithOpenCapacity(input: {
+  timeZone: string;
+  todayIso: string;
+  windowDays: number;
+  minNoticeHours: number;
+  bufferMinutes: number;
+  rules: { weekday: number; start_time: string; end_time: string }[];
+  blocked: OpenCapacityInterval[];
+  busy: OpenCapacityInterval[];
+  fullyBlockedDays?: Set<string>;
+  from?: Date;
+}): Set<string> {
+  const openByWeekday = new Map<number, MinuteRange[]>();
+  for (const rule of input.rules) {
+    const list = openByWeekday.get(rule.weekday) ?? [];
+    list.push({
+      start: minutesFromHm(rule.start_time),
+      end: minutesFromHm(rule.end_time),
+    });
+    openByWeekday.set(rule.weekday, list);
+  }
+  for (const [weekday, ranges] of openByWeekday) {
+    openByWeekday.set(weekday, mergeMinuteRanges(ranges));
+  }
+
+  const now = input.from ?? new Date();
+  const earliestMs = now.getTime() + input.minNoticeHours * 3_600_000;
+  const bufferMs = input.bufferMinutes * 60_000;
+  const days = new Set<string>();
+  const windowDays = Math.max(0, input.windowDays);
+
+  for (let i = 0; i < windowDays; i += 1) {
+    const dateIso = addDaysToIsoDate(input.todayIso, i);
+    if (input.fullyBlockedDays?.has(dateIso)) continue;
+
+    const openRanges = openByWeekday.get(weekdayFromIsoDate(dateIso));
+    if (!openRanges?.length) continue;
+
+    const cutouts: MinuteRange[] = [];
+    for (const row of input.blocked) {
+      const clipped = clipToDayMinutes(
+        new Date(row.starts_at),
+        new Date(row.ends_at),
+        dateIso,
+        input.timeZone,
+      );
+      if (clipped) cutouts.push(clipped);
+    }
+    for (const row of input.busy) {
+      const clipped = clipToDayMinutes(
+        new Date(row.starts_at),
+        new Date(new Date(row.ends_at).getTime() + bufferMs),
+        dateIso,
+        input.timeZone,
+      );
+      if (clipped) cutouts.push(clipped);
+    }
+
+    // Cut everything before the earliest bookable instant (now + min notice).
+    const beforeEarliest = clipToDayMinutes(
+      new Date(0),
+      new Date(earliestMs),
+      dateIso,
+      input.timeZone,
+    );
+    if (beforeEarliest) {
+      cutouts.push({ start: 0, end: beforeEarliest.end });
+    }
+
+    const remaining = openRanges.flatMap((range) =>
+      subtractMinuteRanges(range, cutouts),
+    );
+    if (remaining.some((range) => range.end > range.start)) {
+      days.add(dateIso);
+    }
+  }
+
+  return days;
 }

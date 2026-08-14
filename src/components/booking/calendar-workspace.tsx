@@ -18,7 +18,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Link } from "@/i18n/navigation";
-import { mergeMinuteRanges } from "@/lib/booking/availability";
+import { mergeMinuteRanges, listCivilDaysWithOpenCapacity } from "@/lib/booking/availability";
 import type {
   BookingAppointmentRow,
   BookingAvailabilityRuleRow,
@@ -44,6 +44,7 @@ type MobilePane = "month" | "day";
 export function CalendarWorkspace({
   locale,
   canManage,
+  currentUserId,
   settings,
   rules,
   appointments,
@@ -55,6 +56,7 @@ export function CalendarWorkspace({
 }: {
   locale: string;
   canManage: boolean;
+  currentUserId: string;
   settings: BookingSettingsRow | null;
   rules: BookingAvailabilityRuleRow[];
   appointments: BookingAppointmentRow[];
@@ -118,6 +120,47 @@ export function CalendarWorkspace({
     }
     return days;
   }, [blocked, timeZone]);
+
+  const openDays = useMemo(() => {
+    const hostBusy = [
+      ...googleBusy.map((row) => ({
+        starts_at: row.starts_at,
+        ends_at: row.ends_at,
+      })),
+      ...appointments
+        .filter(
+          (row) =>
+            row.host_user_id === currentUserId && row.status !== "cancelled",
+        )
+        .map((row) => ({
+          starts_at: row.starts_at,
+          ends_at: row.ends_at,
+        })),
+    ];
+    return listCivilDaysWithOpenCapacity({
+      timeZone,
+      todayIso,
+      windowDays: settings?.booking_window_days ?? 60,
+      minNoticeHours: settings?.min_notice_hours ?? 0,
+      bufferMinutes: settings?.buffer_minutes ?? 0,
+      rules,
+      blocked,
+      busy: hostBusy,
+      fullyBlockedDays: blockedDays,
+    });
+  }, [
+    appointments,
+    blocked,
+    blockedDays,
+    currentUserId,
+    googleBusy,
+    rules,
+    settings?.booking_window_days,
+    settings?.buffer_minutes,
+    settings?.min_notice_hours,
+    timeZone,
+    todayIso,
+  ]);
 
   const dayAppointments = appointments.filter((row) => {
     return (
@@ -348,6 +391,7 @@ export function CalendarWorkspace({
       onPrevMonth={() => shiftMonth(-1)}
       onNextMonth={() => shiftMonth(1)}
       markers={markers}
+      openDays={openDays}
       blockedDays={blockedDays}
       fillHeight
       compact
@@ -426,6 +470,7 @@ export function CalendarWorkspace({
             onPrevMonth={() => shiftMonth(-1)}
             onNextMonth={() => shiftMonth(1)}
             markers={markers}
+            openDays={openDays}
             blockedDays={blockedDays}
             fillHeight
           />

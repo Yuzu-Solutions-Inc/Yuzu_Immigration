@@ -25,6 +25,7 @@ export function MonthCalendar({
   onNextMonth,
   markers,
   availableDays,
+  openDays,
   blockedDays,
   fillHeight = false,
   compact = false,
@@ -38,7 +39,10 @@ export function MonthCalendar({
   onPrevMonth: () => void;
   onNextMonth: () => void;
   markers?: Record<string, number>;
+  /** When set, days outside the set are disabled (public booking). */
   availableDays?: Set<string>;
+  /** Indicator-only: green dot for days with residual open booking hours. */
+  openDays?: Set<string>;
   blockedDays?: Set<string>;
   /** Stretch day cells so the month grid fills its parent (desktop calendar). */
   fillHeight?: boolean;
@@ -123,6 +127,8 @@ export function MonthCalendar({
           const isToday = cell.dateIso === todayIso;
           const isBlocked = blockedDays?.has(cell.dateIso) ?? false;
           const hasAvailability = availableDays?.has(cell.dateIso) ?? false;
+          const hasOpenHours =
+            hasAvailability || (openDays?.has(cell.dateIso) ?? false);
           const disabled = Boolean(availableDays) && !hasAvailability;
           const dayNumber = Number(cell.dateIso.slice(8, 10));
           return (
@@ -183,30 +189,47 @@ export function MonthCalendar({
               >
                 {dayNumber}
               </span>
-              {count > 0 ? (
-                <span
-                  className="mt-0.5 h-1 w-1 rounded-full bg-action sm:mt-1 sm:h-1.5 sm:w-1.5"
-                  title={t("dayBookingCount", { count })}
-                />
-              ) : hasAvailability ? (
-                <span className="mt-0.5 h-1 w-1 rounded-full bg-success sm:mt-1 sm:h-1.5 sm:w-1.5" />
-              ) : isBlocked ? (
-                <span className="mt-0.5 h-1 w-1 rounded-full bg-warning sm:mt-1 sm:h-1.5 sm:w-1.5" />
+              {count > 0 || hasOpenHours || isBlocked ? (
+                <span className="mt-0.5 flex items-center gap-0.5 sm:mt-1">
+                  {count > 0 ? (
+                    <span
+                      className="h-1 w-1 rounded-full bg-action sm:h-1.5 sm:w-1.5"
+                      title={t("dayBookingCount", { count })}
+                    />
+                  ) : null}
+                  {hasOpenHours ? (
+                    <span
+                      className="h-1 w-1 rounded-full bg-success sm:h-1.5 sm:w-1.5"
+                      title={t("legendOpen")}
+                    />
+                  ) : null}
+                  {isBlocked && count === 0 && !hasOpenHours ? (
+                    <span className="h-1 w-1 rounded-full bg-warning sm:h-1.5 sm:w-1.5" />
+                  ) : null}
+                </span>
               ) : null}
             </button>
           );
         })}
       </div>
-      {blockedDays ? (
+      {blockedDays || openDays ? (
         <div className="flex shrink-0 flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-action" />
             {t("legendBookings")}
           </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ban className="size-3 text-warning" aria-hidden />
-            {t("legendBlocked")}
-          </span>
+          {openDays ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />
+              {t("legendOpen")}
+            </span>
+          ) : null}
+          {blockedDays ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Ban className="size-3 text-warning" aria-hidden />
+              {t("legendBlocked")}
+            </span>
+          ) : null}
         </div>
       ) : null}
     </div>

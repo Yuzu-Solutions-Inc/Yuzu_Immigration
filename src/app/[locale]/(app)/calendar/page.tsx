@@ -6,7 +6,7 @@ import {
   CalendarWorkspace,
 } from "@/components/booking/calendar-workspace";
 import { canCreateRecords } from "@/lib/auth/rbac";
-import { getPrimaryMembership } from "@/lib/auth/session";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
   getBookingSettings,
   listAppointmentsInRange,
@@ -28,7 +28,10 @@ export default async function CalendarPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const membership = await getPrimaryMembership();
+  const [membership, user] = await Promise.all([
+    getPrimaryMembership(),
+    getSessionUser(),
+  ]);
   const canManage = canCreateRecords(membership?.role);
   const [settings, rules, services, formFields] = await Promise.all([
     getBookingSettings(),
@@ -79,6 +82,7 @@ export default async function CalendarPage({
         <CalendarWorkspace
           locale={locale}
           canManage={canManage}
+          currentUserId={user?.id ?? ""}
           settings={settings}
           rules={rules}
           appointments={appointments}
