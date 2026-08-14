@@ -179,7 +179,7 @@ export async function LandingPage() {
           className="lp-mesh pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 80% 60% at 15% 20%, rgba(248,198,7,0.28), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 10%, rgba(134,197,74,0.18), transparent 50%), radial-gradient(ellipse 60% 40% at 70% 80%, rgba(255,159,67,0.14), transparent 55%), linear-gradient(180deg, #1F2426 0%, #0F1213 55%, #1F2426 100%)",
+              "radial-gradient(ellipse 80% 60% at 15% 20%, rgba(134,197,74,0.32), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 10%, rgba(134,197,74,0.18), transparent 50%), radial-gradient(ellipse 60% 40% at 70% 80%, rgba(255,159,67,0.14), transparent 55%), linear-gradient(180deg, #1F2426 0%, #0F1213 55%, #1F2426 100%)",
           }}
         />
         <div
@@ -364,7 +364,7 @@ export async function LandingPage() {
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 70% 80% at 50% 120%, rgba(248,198,7,0.35), transparent 60%)",
+              "radial-gradient(ellipse 70% 80% at 50% 120%, rgba(134,197,74,0.38), transparent 60%)",
           }}
         />
         <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 text-left sm:items-center sm:text-center">

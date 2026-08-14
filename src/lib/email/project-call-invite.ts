@@ -56,7 +56,7 @@ export async function sendProjectCallInviteEmail(input: {
     <p style="margin:0 0 12px;font-size:15px;line-height:1.55;color:#8B9294;">${escapeHtml(t("callInviteGreeting", { name: input.guestName }))}</p>
     <p style="margin:0 0 20px;font-size:15px;line-height:1.55;color:#8B9294;">${escapeHtml(t("callInviteIntro", { org: input.organizationName, host: input.hostName, project: input.projectTitle }))}</p>
     <p style="margin:0 0 24px;">
-      <a href="${bookUrl}" style="display:inline-block;background:#F8C607;color:#0F1213;text-decoration:none;font-weight:600;font-size:15px;padding:12px 18px;border-radius:10px;">${escapeHtml(t("callInviteCta"))}</a>
+      <a href="${bookUrl}" style="display:inline-block;background:#86C54A;color:#0F1213;text-decoration:none;font-weight:600;font-size:15px;padding:12px 18px;border-radius:10px;">${escapeHtml(t("callInviteCta"))}</a>
     </p>
     <p style="margin:0;font-size:13px;line-height:1.5;color:#8B9294;">${escapeHtml(t("callInviteExpiry", { date: expires }))}</p>
     <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#8B9294;word-break:break-all;">${bookUrl}</p>

@@ -131,12 +131,12 @@
   --info-bg: #ebf5fb;
   --info-text: #2471a3;
 
-  /* App aliases → official palette */
+  /* App aliases → official palette (trial: action = Zest Green) */
   --brand: var(--carbon-500);
-  --action: var(--yuzu-500);
+  --action: var(--zest-500);
   --action-foreground: var(--carbon-900);
-  --action-hover: var(--yuzu-700);
-  --action-active: var(--yuzu-900);
+  --action-hover: var(--zest-700);
+  --action-active: var(--zest-900);
   --highlight: var(--kumquat-500);
   --surface: var(--paper-25);
   --shadow-elevated: 0 4px 6px -1px rgba(15, 18, 19, 0.06);
@@ -148,34 +148,34 @@
   --card-foreground: var(--carbon-500);
   --popover: var(--paper-25);
   --popover-foreground: var(--carbon-500);
-  --primary: var(--yuzu-500);
+  --primary: var(--zest-500);
   --primary-foreground: var(--carbon-900);
   --secondary: var(--carbon-50);
   --secondary-foreground: var(--carbon-500);
   --muted: var(--carbon-50);
   --muted-foreground: var(--carbon-300);
-  --accent: var(--yuzu-100);
-  --accent-foreground: var(--yuzu-900);
+  --accent: var(--zest-100);
+  --accent-foreground: var(--zest-900);
   --destructive: var(--error);
   --border: var(--carbon-100);
   --input: var(--carbon-100);
-  --ring: var(--yuzu-700);
+  --ring: var(--zest-700);
   --radius: 0.75rem;
 
-  --chart-1: var(--yuzu-500);
-  --chart-2: var(--zest-500);
+  --chart-1: var(--zest-500);
+  --chart-2: var(--yuzu-500);
   --chart-3: var(--kumquat-500);
   --chart-4: var(--carbon-500);
   --chart-5: var(--carbon-300);
 
   --sidebar: var(--carbon-700);
   --sidebar-foreground: var(--paper-300);
-  --sidebar-primary: var(--yuzu-500);
+  --sidebar-primary: var(--zest-500);
   --sidebar-primary-foreground: var(--carbon-900);
   --sidebar-accent: var(--carbon-500);
   --sidebar-accent-foreground: var(--paper-25);
   --sidebar-border: var(--carbon-500);
-  --sidebar-ring: var(--yuzu-500);
+  --sidebar-ring: var(--zest-500);
 }
 
 @layer base {
@@ -222,7 +222,7 @@
   }
 
   .text-action {
-    color: var(--yuzu-700);
+    color: var(--zest-700);
   }
 
   .bg-action {
