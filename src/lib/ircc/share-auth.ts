@@ -45,24 +45,28 @@ function parseSessionCookie(
   expectedTokenHash: string,
   expectedLinkId: string,
 ): boolean {
-  const dot = value.lastIndexOf(".");
-  if (dot < 1) return false;
-  const body = value.slice(0, dot);
-  const sig = value.slice(dot + 1);
-  const parts = body.split(":");
-  if (parts.length !== 3) return false;
-  const [linkId, tokenHash, expRaw] = parts;
-  const exp = Number(expRaw);
-  if (
-    linkId !== expectedLinkId ||
-    tokenHash !== expectedTokenHash ||
-    !Number.isFinite(exp) ||
-    exp < Date.now()
-  ) {
+  try {
+    const dot = value.lastIndexOf(".");
+    if (dot < 1) return false;
+    const body = value.slice(0, dot);
+    const sig = value.slice(dot + 1);
+    const parts = body.split(":");
+    if (parts.length !== 3) return false;
+    const [linkId, tokenHash, expRaw] = parts;
+    const exp = Number(expRaw);
+    if (
+      linkId !== expectedLinkId ||
+      tokenHash !== expectedTokenHash ||
+      !Number.isFinite(exp) ||
+      exp < Date.now()
+    ) {
+      return false;
+    }
+    const expected = signSessionBody(linkId, tokenHash, exp);
+    return expected === `${body}.${sig}`;
+  } catch {
     return false;
   }
-  const expected = signSessionBody(linkId, tokenHash, exp);
-  return expected === `${body}.${sig}`;
 }
 
 export async function shareLinkPasswordExists(tokenHash: string): Promise<boolean> {

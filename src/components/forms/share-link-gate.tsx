@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
-import { useRouter } from "@/i18n/navigation";
 import type { ShareAccessState } from "@/lib/ircc/share-auth";
 
 export function ShareLinkGate({
@@ -33,7 +32,6 @@ export function ShareLinkGate({
   expiresAt: string;
 }) {
   const t = useTranslations("forms");
-  const router = useRouter();
   const [setupState, setupAction, setupPending] = useActionState(
     setSharePasswordAction,
     shareAuthInitialState,
@@ -71,9 +69,9 @@ export function ShareLinkGate({
       setupState.message === "authenticated" ||
       loginState.message === "authenticated"
     ) {
-      router.refresh();
+      window.location.reload();
     }
-  }, [setupState.message, loginState.message, router]);
+  }, [setupState.message, loginState.message]);
 
   if (forgotState.message === "email_sent") {
     return (

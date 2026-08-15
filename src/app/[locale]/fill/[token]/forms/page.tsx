@@ -15,31 +15,16 @@ export default async function ClientFillFormsPage({
   const { locale, token } = await params;
   setRequestLocale(locale);
 
-  const t = await getTranslations("forms");
-  const td = await getTranslations("documents");
-
   return (
     <ShareFillAccess locale={locale} token={token}>
-      <ClientFillFormsContent
-        locale={locale}
-        token={token}
-        t={t}
-        td={td}
-      />
+      <ClientFillFormsContent token={token} />
     </ShareFillAccess>
   );
 }
 
-async function ClientFillFormsContent({
-  token,
-  t,
-  td,
-}: {
-  locale: string;
-  token: string;
-  t: Awaited<ReturnType<typeof getTranslations>>;
-  td: Awaited<ReturnType<typeof getTranslations>>;
-}) {
+async function ClientFillFormsContent({ token }: { token: string }) {
+  const t = await getTranslations("forms");
+  const td = await getTranslations("documents");
   const ctx = await loadShareContext(token);
 
   if (!ctx) {

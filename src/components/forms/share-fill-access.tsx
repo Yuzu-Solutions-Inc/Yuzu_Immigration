@@ -16,7 +16,14 @@ export async function ShareFillAccess({
 }) {
   setRequestLocale(locale);
   const t = await getTranslations("forms");
-  const gate = await loadShareGateContext(token);
+
+  let gate;
+  try {
+    gate = await loadShareGateContext(token);
+  } catch (err) {
+    console.error("loadShareGateContext:", err);
+    gate = null;
+  }
 
   if (!gate) {
     return (

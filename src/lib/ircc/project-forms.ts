@@ -969,7 +969,7 @@ export async function loadShareContext(
     projectRes.error || formsRes.error || answersRes.error || orgRes.error;
   if (loadError) {
     console.error("loadShareContext:", loadError.message);
-    throw new Error(`share_context_failed: ${loadError.message}`);
+    return null;
   }
 
   if (!projectRes.data) return null;
