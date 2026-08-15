@@ -573,6 +573,15 @@
     "viewStatusHistory": "Ver historial de estados",
     "opened": "Abierto",
     "participants": "Participants",
+    "detailTabs": {
+      "participants": "Participants",
+      "documents": "Documentos",
+      "forms": "Formularios",
+      "share": "Enlace al cliente",
+      "calls": "Llamadas",
+      "payments": "Pagos",
+      "notes": "Notas"
+    },
     "notFound": "Project not found.",
     "statuses": {
       "new": "New",

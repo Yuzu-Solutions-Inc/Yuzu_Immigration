@@ -573,6 +573,15 @@
     "viewStatusHistory": "Voir l’historique des statuts",
     "opened": "Ouvert le",
     "participants": "Participants",
+    "detailTabs": {
+      "participants": "Participants",
+      "documents": "Documents",
+      "forms": "Formulaires",
+      "share": "Lien client",
+      "calls": "Appels",
+      "payments": "Paiements",
+      "notes": "Notes"
+    },
     "notFound": "Projet introuvable.",
     "statuses": {
       "new": "Nouveau",

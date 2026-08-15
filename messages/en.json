@@ -573,6 +573,15 @@
     "viewStatusHistory": "View status history",
     "opened": "Opened",
     "participants": "Participants",
+    "detailTabs": {
+      "participants": "Participants",
+      "documents": "Documents",
+      "forms": "Forms",
+      "share": "Client link",
+      "calls": "Calls",
+      "payments": "Payments",
+      "notes": "Notes"
+    },
     "notFound": "Project not found.",
     "statuses": {
       "new": "New",

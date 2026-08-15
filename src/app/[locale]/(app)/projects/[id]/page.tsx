@@ -13,6 +13,7 @@ import {
 } from "@/components/privacy/retention-export";
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
+import { ProjectDetailTabs } from "@/components/projects/project-detail-tabs";
 import { ProjectNotesSection } from "@/components/projects/project-notes-section";
 import { ProjectParticipantsList } from "@/components/projects/project-participants-list";
 import { ProjectPaymentsCard } from "@/components/projects/project-payments-card";
@@ -36,6 +37,7 @@ import {
   listProjectAssistantUserIds,
   listProjectNotes,
 } from "@/lib/crm/queries";
+import { computeProjectProgressFromDetail } from "@/lib/crm/progress";
 import {
   listProjectCallInvites,
   listProjectMeetingHistory,
@@ -171,6 +173,12 @@ export default async function ProjectDetailPage({
     locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
     { year: "numeric", month: "short", day: "numeric" },
   );
+  const { docsDone, docsTotal, formPercent } = computeProjectProgressFromDetail(
+    documentRequests,
+    forms,
+    store,
+    principal?.person?.id ?? null,
+  );
 
   return (
     <div className="space-y-6">
@@ -201,6 +209,12 @@ export default async function ProjectDetailPage({
             {project.representative?.full_name ||
               project.representative?.email ||
               t("representativeUnassigned")}
+            {" · "}
+            {t("columnDocuments")}{" "}
+            {t("docsProgress", { done: docsDone, total: docsTotal })}
+            {" · "}
+            {t("columnForms")}{" "}
+            {t("formsProgress", { percent: formPercent })}
           </p>
           {project.description ? (
             <p className="max-w-2xl text-sm text-brand/80">
@@ -269,15 +283,16 @@ export default async function ProjectDetailPage({
         />
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="min-w-0 space-y-6">
-          <ProjectParticipantsList
-            projectId={project.id}
-            people={questionnairePeople}
-            participants={participants}
-          />
-
-          <div id="documents" className="scroll-mt-20">
+      <ProjectDetailTabs
+        panels={{
+          participants: (
+            <ProjectParticipantsList
+              projectId={project.id}
+              people={questionnairePeople}
+              participants={participants}
+            />
+          ),
+          documents: (
             <ProjectDocumentsPanel
               locale={locale}
               projectId={project.id}
@@ -288,9 +303,8 @@ export default async function ProjectDetailPage({
                 role: p.role,
               }))}
             />
-          </div>
-
-          <div id="forms" className="scroll-mt-20">
+          ),
+          forms: (
             <ProjectFormsPanel
               locale={formLocale}
               projectId={project.id}
@@ -298,46 +312,51 @@ export default async function ProjectDetailPage({
               forms={todoForms}
               people={questionnairePeople}
             />
-          </div>
-        </div>
-
-        <div className="min-w-0 space-y-6">
-          <ProjectShareLinkCard
-            locale={formLocale}
-            projectId={project.id}
-            activeShareExpiresAt={share?.expires_at ?? null}
-            canReveal={share?.canReveal ?? false}
-          />
-          <ProjectScheduleCallCard
-            locale={locale}
-            projectId={project.id}
-            timezone={bookingSettings?.timezone ?? "America/Toronto"}
-            canSchedule={Boolean(membership)}
-            principalEmail={
-              participants.find((row) => row.role === "principal")?.person
-                ?.email ?? null
-            }
-            meetings={meetings}
-            invites={callInvites}
-          />
-          <ProjectPaymentsCard
-            locale={locale}
-            projectId={project.id}
-            canCreate={canCreateRecords(membership?.role)}
-            squareConnected={Boolean(squareConnection)}
-            payments={projectPayments}
-            people={questionnairePeople.map((p) => ({
-              id: p.id,
-              label: p.displayName,
-            }))}
-          />
-          <ProjectNotesSection
-            locale={locale}
-            projectId={project.id}
-            notes={notes}
-          />
-        </div>
-      </div>
+          ),
+          share: (
+            <ProjectShareLinkCard
+              locale={formLocale}
+              projectId={project.id}
+              activeShareExpiresAt={share?.expires_at ?? null}
+              canReveal={share?.canReveal ?? false}
+            />
+          ),
+          calls: (
+            <ProjectScheduleCallCard
+              locale={locale}
+              projectId={project.id}
+              timezone={bookingSettings?.timezone ?? "America/Toronto"}
+              canSchedule={Boolean(membership)}
+              principalEmail={
+                participants.find((row) => row.role === "principal")?.person
+                  ?.email ?? null
+              }
+              meetings={meetings}
+              invites={callInvites}
+            />
+          ),
+          payments: (
+            <ProjectPaymentsCard
+              locale={locale}
+              projectId={project.id}
+              canCreate={canCreateRecords(membership?.role)}
+              squareConnected={Boolean(squareConnection)}
+              payments={projectPayments}
+              people={questionnairePeople.map((p) => ({
+                id: p.id,
+                label: p.displayName,
+              }))}
+            />
+          ),
+          notes: (
+            <ProjectNotesSection
+              locale={locale}
+              projectId={project.id}
+              notes={notes}
+            />
+          ),
+        }}
+      />
     </div>
   );
 }

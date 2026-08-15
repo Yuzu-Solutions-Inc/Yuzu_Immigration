@@ -17,12 +17,12 @@ export type ProjectProgress = {
 };
 
 type DocRow = { project_id: string; status: string; is_required: boolean };
-type FormRow = {
-  project_id: string;
+type FormProgressRow = {
   form_code: string;
   person_id: string | null;
   is_required: boolean;
 };
+type FormRow = FormProgressRow & { project_id: string };
 type AnswerRow = { project_id: string; answers: unknown };
 type ParticipantRow = {
   project_id: string;
@@ -41,7 +41,7 @@ function isDocSubmitted(status: string) {
 }
 
 function formPercentForProject(
-  forms: FormRow[],
+  forms: FormProgressRow[],
   answers: unknown,
   principalPersonId: string | null,
 ): number {
@@ -201,4 +201,30 @@ async function getProjectsProgressForOrg(
 
 export function emptyProjectProgress(): ProjectProgress {
   return { ...EMPTY };
+}
+
+type DetailDocRow = { status: string; is_required: boolean };
+type DetailFormRow = FormProgressRow;
+
+/** Progress from data already loaded on the project detail page. */
+export function computeProjectProgressFromDetail(
+  documentRequests: DetailDocRow[],
+  forms: DetailFormRow[],
+  answers: unknown,
+  principalPersonId: string | null,
+): ProjectProgress {
+  const requiredDocs = documentRequests.filter((row) => row.is_required);
+  const docsDone = requiredDocs.filter((row) =>
+    isDocSubmitted(row.status),
+  ).length;
+
+  return {
+    docsDone,
+    docsTotal: requiredDocs.length,
+    formPercent: formPercentForProject(
+      forms,
+      answers,
+      principalPersonId,
+    ),
+  };
 }
