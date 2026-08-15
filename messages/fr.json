@@ -332,7 +332,7 @@
     "squareCancelRefundEnabled": "Remboursement à l’annulation",
     "squareCancelRefundEnabledHelp": "Si désactivé, l’annulation d’une réservation payée ne déclenche pas de remboursement Square.",
     "squareCancelFreeDays": "Jours avant le rendez-vous pour une annulation gratuite",
-    "squareCancelFreeDaysHelp": "Les clients qui annulent au moins ce nombre de jours avant le rendez-vous obtiennent un remboursement intégral. 0 = pas de période gratuite distincte.",
+    "squareCancelFreeDaysHelp": "Les clients qui annulent au moins ce nombre de jours avant le rendez-vous obtiennent un remboursement intégral. 0 = remboursement intégral jusqu’au début du rendez-vous.",
     "squareCancelFeeDays": "Jours avant le rendez-vous pour annuler avec frais",
     "squareCancelFeeDaysHelp": "Les clients peuvent annuler avec frais jusqu’à ce nombre de jours avant le rendez-vous. Exemple : 10 jours gratuits et 2 jours avec frais = annulation gratuite jusqu’à 10 jours, puis frais jusqu’à 2 jours.",
     "squareCancelRefundFee": "Frais de remboursement",

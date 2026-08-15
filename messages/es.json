@@ -332,7 +332,7 @@
     "squareCancelRefundEnabled": "Reembolso al cancelar",
     "squareCancelRefundEnabledHelp": "Si está desactivado, cancelar una reserva pagada no genera reembolso por Square.",
     "squareCancelFreeDays": "Días antes de la cita para cancelación gratuita",
-    "squareCancelFreeDaysHelp": "Los clientes que cancelan al menos este número de días antes de la cita reciben un reembolso completo. 0 = sin ventana gratuita separada.",
+    "squareCancelFreeDaysHelp": "Los clientes que cancelan al menos este número de días antes de la cita reciben un reembolso completo. 0 = reembolso completo hasta justo antes de la cita.",
     "squareCancelFeeDays": "Días antes de la cita para cancelar con tarifa",
     "squareCancelFeeDaysHelp": "Los clientes pueden cancelar con tarifa hasta este número de días antes de la cita. Ejemplo: 10 días gratis y 2 con tarifa = cancelación gratuita hasta 10 días antes, luego tarifa hasta 2 días antes.",
     "squareCancelRefundFee": "Tarifa de reembolso",

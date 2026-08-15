@@ -332,7 +332,7 @@
     "squareCancelRefundEnabled": "Refund on cancellation",
     "squareCancelRefundEnabledHelp": "When off, cancelling a paid booking does not refund via Square.",
     "squareCancelFreeDays": "Days before appointment for free cancellation",
-    "squareCancelFreeDaysHelp": "Guests who cancel at least this many days before the appointment receive a full refund. 0 = no separate free window.",
+    "squareCancelFreeDaysHelp": "Guests who cancel at least this many days before the appointment receive a full refund. 0 = fully refunded until right before appointment.",
     "squareCancelFeeDays": "Days before appointment to cancel with a fee",
     "squareCancelFeeDaysHelp": "Guests may cancel with a fee until this many days before the appointment. Example: 10 free days and 2 fee days means free cancellation until 10 days out, then a fee until 2 days out.",
     "squareCancelRefundFee": "Refund fee",
