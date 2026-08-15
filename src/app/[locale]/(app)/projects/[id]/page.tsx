@@ -180,6 +180,7 @@ export default async function ProjectDetailPage({
     project.representative?.full_name ||
     project.representative?.email ||
     t("representativeUnassigned");
+  const modificationBlocked = project.status === "granted";
 
   return (
     <div>
@@ -295,6 +296,7 @@ export default async function ProjectDetailPage({
                   projectId={project.id}
                   activeShareExpiresAt={share?.expires_at ?? null}
                   canReveal={share?.canReveal ?? false}
+                  modificationBlocked={modificationBlocked}
                 />
               }
               participants={
@@ -311,6 +313,7 @@ export default async function ProjectDetailPage({
               locale={locale}
               projectId={project.id}
               requests={documentRequests}
+              modificationBlocked={modificationBlocked}
               people={questionnairePeople.map((p) => ({
                 id: p.id,
                 displayName: p.displayName,
@@ -323,6 +326,7 @@ export default async function ProjectDetailPage({
               locale={formLocale}
               projectId={project.id}
               programFamily={project.program_family}
+              modificationBlocked={modificationBlocked}
               forms={todoForms}
               people={questionnairePeople}
             />

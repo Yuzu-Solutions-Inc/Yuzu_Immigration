@@ -67,6 +67,7 @@ export function ProjectDocumentViewer({
   fetchFile,
   projectId,
   locale,
+  modificationBlocked = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -75,6 +76,7 @@ export function ProjectDocumentViewer({
   fetchFile: (requestId: string) => Promise<FetchResult>;
   projectId: string;
   locale: string;
+  modificationBlocked?: boolean;
 }) {
   const t = useTranslations("documents");
   const router = useRouter();
@@ -93,7 +95,8 @@ export function ProjectDocumentViewer({
 
   const current = items[index] ?? null;
   const canReview =
-    current?.status === "uploaded" || current?.status === "accepted";
+    !modificationBlocked &&
+    (current?.status === "uploaded" || current?.status === "accepted");
 
   const clearPreview = useCallback(() => {
     setPreview((prev) => {

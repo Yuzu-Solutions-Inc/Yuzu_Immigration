@@ -19,7 +19,8 @@ import {
   recordProjectStatusHistory,
   statusChanged,
 } from "@/lib/crm/status-history";
-import { isTerminalStatus } from "@/lib/crm/statuses";
+import { isTerminalStatus, isGrantedStatus } from "@/lib/crm/statuses";
+import { revokeAllShareLinksForProject } from "@/lib/ircc/share-links";
 import { computeRetainUntil } from "@/lib/privacy/retention";
 import { eraseProjectPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
@@ -815,6 +816,13 @@ export async function updateProjectAction(
     return { error: "update_failed" };
   }
 
+  if (
+    isGrantedStatus(status) &&
+    !isGrantedStatus(existingProject.status as string)
+  ) {
+    await revokeAllShareLinksForProject(supabase, projectId, orgId);
+  }
+
   const { toIrccFormLanguage } = await import("@/lib/ircc/form-language");
   const { mergeAccountRepIntoAnswers, PROFILE_REP_SELECT } = await import(
     "@/lib/ircc/account-rep"
@@ -839,7 +847,7 @@ export async function updateProjectAction(
           .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
-  if (answersRow) {
+  if (answersRow && !isGrantedStatus(status)) {
     const store = normalizeAnswersStore(
       decryptAnswersValue(answersRow.answers, await getOrgDataKey(orgId)),
       {
@@ -980,27 +988,28 @@ export async function updateProjectAction(
     }
   }
 
-  try {
-    const { ensureProjectDocumentsSeeded } = await import(
-      "@/lib/documents/service"
-    );
-    await ensureProjectDocumentsSeeded(
-      orgId,
-      projectId,
-      data.programFamily,
-      resolved.people.map((p) => p.id),
-    );
-  } catch (error) {
-    console.error("ensure documents on update:", error);
-  }
+  if (!isGrantedStatus(status)) {
+    try {
+      const { ensureProjectDocumentsSeeded } = await import(
+        "@/lib/documents/service"
+      );
+      await ensureProjectDocumentsSeeded(
+        orgId,
+        projectId,
+        data.programFamily,
+        resolved.people.map((p) => p.id),
+      );
+    } catch (error) {
+      console.error("ensure documents on update:", error);
+    }
 
-  try {
-    const {
-      kitOptionsFromAnswersStore,
-      personKitAssignments,
-      personKitsFromAnswersStore,
-      reconcileProjectKitForms,
-    } = await import("@/lib/ircc/project-forms");
+    try {
+      const {
+        kitOptionsFromAnswersStore,
+        personKitAssignments,
+        personKitsFromAnswersStore,
+        reconcileProjectKitForms,
+      } = await import("@/lib/ircc/project-forms");
     const {
       detectCommonLaw,
       detectMinor,
@@ -1063,6 +1072,7 @@ export async function updateProjectAction(
     }
   } catch (error) {
     console.error("sync person forms after participant update:", error);
+  }
   }
 
   revalidatePath(`/${data.locale}/projects/${projectId}`);
@@ -1155,6 +1165,13 @@ async function applyProjectStatuses(params: {
         statusAt,
         changedBy: user?.id ?? null,
       });
+    }
+
+    if (
+      isGrantedStatus(status) &&
+      !isGrantedStatus(existing.status as string)
+    ) {
+      await revokeAllShareLinksForProject(supabase, projectId, orgId);
     }
 
     updated += 1;

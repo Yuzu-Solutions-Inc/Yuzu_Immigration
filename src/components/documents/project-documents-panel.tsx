@@ -75,13 +75,16 @@ export function ProjectDocumentsPanel({
   projectId,
   requests,
   people,
+  modificationBlocked = false,
 }: {
   locale: string;
   projectId: string;
   requests: DocumentRequestWithFile[];
   people: Array<{ id: string; displayName: string; role: string }>;
+  modificationBlocked?: boolean;
 }) {
   const t = useTranslations("documents");
+  const tp = useTranslations("projects");
   const [addState, addAction, addPending] = useActionState(
     addCustomDocumentRequestAction,
     initial,
@@ -186,6 +189,12 @@ export function ProjectDocumentsPanel({
           ) : null}
         </div>
 
+        {modificationBlocked ? (
+          <p className="border-t border-border px-5 py-3 text-sm text-muted-foreground">
+            {tp("grantedLock")}
+          </p>
+        ) : null}
+
         <ul className="divide-y divide-border border-t border-border">
           {ordered.length === 0 ? (
             <li className="px-5 py-3 text-sm text-muted-foreground">
@@ -235,40 +244,42 @@ export function ProjectDocumentsPanel({
                           onOpenInViewer={() => openViewerAt(row.id)}
                         />
                       ) : null}
-                      <form
-                        action={removeAction}
-                        className="flex shrink-0"
-                        onSubmit={(event) => {
-                          if (
-                            !window.confirm(
-                              t("removeConfirm", {
-                                name: documentLabel(row, t),
-                              }),
-                            )
-                          ) {
-                            event.preventDefault();
-                          }
-                        }}
-                      >
-                        <input type="hidden" name="requestId" value={row.id} />
-                        <input
-                          type="hidden"
-                          name="projectId"
-                          value={projectId}
-                        />
-                        <input type="hidden" name="locale" value={locale} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon-xs"
-                          disabled={removePending}
-                          aria-label={t("remove")}
-                          title={t("remove")}
-                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      {!modificationBlocked ? (
+                        <form
+                          action={removeAction}
+                          className="flex shrink-0"
+                          onSubmit={(event) => {
+                            if (
+                              !window.confirm(
+                                t("removeConfirm", {
+                                  name: documentLabel(row, t),
+                                }),
+                              )
+                            ) {
+                              event.preventDefault();
+                            }
+                          }}
                         >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </form>
+                          <input type="hidden" name="requestId" value={row.id} />
+                          <input
+                            type="hidden"
+                            name="projectId"
+                            value={projectId}
+                          />
+                          <input type="hidden" name="locale" value={locale} />
+                          <Button
+                            type="submit"
+                            variant="ghost"
+                            size="icon-xs"
+                            disabled={removePending}
+                            aria-label={t("remove")}
+                            title={t("remove")}
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </form>
+                      ) : null}
                     </div>
                     <StatusPill label={pill.label} tone={pill.tone} />
                   </div>
@@ -284,6 +295,7 @@ export function ProjectDocumentsPanel({
             })
           )}
 
+          {!modificationBlocked ? (
           <li className="px-5 py-3">
             <form action={addAction} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="projectId" value={projectId} />
@@ -333,18 +345,23 @@ export function ProjectDocumentsPanel({
             ) : null}
             {removeState.error ? (
               <p className="mt-2 text-sm text-destructive" role="alert">
-                {t("errors.removeFailed")}
+                {removeState.error === "granted"
+                  ? t("errors.granted")
+                  : t("errors.removeFailed")}
               </p>
             ) : null}
             {addState.error ? (
               <p className="mt-2 text-sm text-destructive">
-                {t("errors.addFailed")}
+                {addState.error === "granted"
+                  ? t("errors.granted")
+                  : t("errors.addFailed")}
               </p>
             ) : null}
             {addState.message === "added" ? (
               <p className="mt-2 text-sm text-success">{t("added")}</p>
             ) : null}
           </li>
+          ) : null}
         </ul>
       </SurfaceCard>
 
@@ -356,6 +373,7 @@ export function ProjectDocumentsPanel({
         fetchFile={downloadProjectDocumentAction}
         projectId={projectId}
         locale={locale}
+        modificationBlocked={modificationBlocked}
       />
     </>
   );

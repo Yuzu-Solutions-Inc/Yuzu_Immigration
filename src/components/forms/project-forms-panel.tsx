@@ -63,14 +63,17 @@ export function ProjectFormsPanel({
   programFamily,
   forms,
   people,
+  modificationBlocked = false,
 }: {
   locale: "en" | "fr";
   projectId: string;
   programFamily: ProgramFamily | string;
   forms: ProjectFormTodoRow[];
   people: QuestionnairePerson[];
+  modificationBlocked?: boolean;
 }) {
   const t = useTranslations("forms");
+  const tp = useTranslations("projects");
   const tr = useTranslations("roles");
   const [addState, addAction, addPending] = useActionState(
     addFormToProjectAction,
@@ -157,6 +160,11 @@ export function ProjectFormsPanel({
           </Button>
         </div>
       </div>
+      {modificationBlocked ? (
+        <p className="border-t border-border px-5 py-3 text-sm text-muted-foreground">
+          {tp("grantedLock")}
+        </p>
+      ) : null}
       <ul className="divide-y divide-border border-t border-border">
           {forms.length === 0 ? (
             <li className="px-5 py-3 text-sm text-muted-foreground">
@@ -204,6 +212,7 @@ export function ProjectFormsPanel({
                           )}
                         </Button>
                       ) : null}
+                      {!modificationBlocked ? (
                       <form
                         action={removeAction}
                         className="flex shrink-0"
@@ -237,6 +246,7 @@ export function ProjectFormsPanel({
                           <Trash2 className="size-4" />
                         </Button>
                       </form>
+                      ) : null}
                     </div>
                     {ready ? (
                       <StatusPill
@@ -254,6 +264,7 @@ export function ProjectFormsPanel({
               );
             })
           )}
+          {!modificationBlocked ? (
           <li className="px-5 py-3">
             <form action={addAction} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="projectId" value={projectId} />
@@ -302,12 +313,16 @@ export function ProjectFormsPanel({
               <p className="mt-2 text-sm text-destructive">
                 {addState.error === "person_required"
                   ? t("errors.personRequired")
-                  : t("errors.addFailed")}
+                  : addState.error === "granted"
+                    ? t("errors.granted")
+                    : t("errors.addFailed")}
               </p>
             ) : null}
             {removeState.error ? (
               <p className="mt-2 text-sm text-destructive">
-                {t("errors.removeFailed")}
+                {removeState.error === "granted"
+                  ? t("errors.granted")
+                  : t("errors.removeFailed")}
               </p>
             ) : null}
             {genError ? (
@@ -327,6 +342,7 @@ export function ProjectFormsPanel({
               </ul>
             ) : null}
           </li>
+          ) : null}
         </ul>
       </SurfaceCard>
   );
@@ -336,12 +352,15 @@ export function ProjectQuestionnaire({
   locale,
   projectId,
   people,
+  modificationBlocked = false,
 }: {
   locale: "en" | "fr";
   projectId: string;
   people: QuestionnairePerson[];
+  modificationBlocked?: boolean;
 }) {
   const t = useTranslations("forms");
+  const tp = useTranslations("projects");
   const [saveState, saveAction, savePending] = useActionState(
     saveProjectAnswersAction,
     initialState,
@@ -367,16 +386,21 @@ export function ProjectQuestionnaire({
       invalid: t("errors.invalid"),
       unauthorized: t("errors.unauthorized"),
       save_failed: t("errors.saveFailed"),
+      granted: t("errors.granted"),
     }[saveState.error] ??
       t("errors.generic"));
 
   return (
-    <SurfaceCard>
+    <SurfaceCard className="space-y-4">
+      {modificationBlocked ? (
+        <p className="text-sm text-muted-foreground">{tp("grantedLock")}</p>
+      ) : null}
       <ModularQuestionnaire
         people={people}
         onSave={handleSave}
         pending={savePending}
         errorMessage={saveError}
+        readOnly={modificationBlocked}
       />
     </SurfaceCard>
   );

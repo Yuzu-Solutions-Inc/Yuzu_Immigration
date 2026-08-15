@@ -82,6 +82,7 @@ export default async function ProjectFormsPage({
         locale={formLocale}
         projectId={project.id}
         people={people}
+        modificationBlocked={project.status === "granted"}
       />
     </div>
   );

@@ -573,6 +573,8 @@
     "statusHistoryEmpty": "Aucun changement de statut enregistré pour l’instant.",
     "viewStatusHistory": "Voir l’historique des statuts",
     "opened": "Ouvert le",
+    "grantedLock": "Ce dossier est accordé. Les documents et formulaires sont verrouillés tant que le statut n’est pas modifié.",
+    "grantedLockShare": "Les liens client sont révoqués lorsqu’un dossier est accordé. Changez le statut pour créer un nouveau lien.",
     "participants": "Participants",
     "detailTabs": {
       "home": "Accueil",
@@ -601,6 +603,7 @@
       "noteSaveFailed": "Impossible d’enregistrer la note. Réessayez.",
       "notFound": "Projet introuvable.",
       "forbidden": "Vous n’avez pas l’autorisation pour cette action.",
+      "granted": "Ce dossier est accordé. Les documents et formulaires sont verrouillés tant que le statut n’est pas modifié.",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },
@@ -1274,6 +1277,7 @@
       "expired": "Ce lien a expiré. Demandez un nouveau lien à votre consultant.",
       "incomplete": "Complétez chaque personne à 100 % avant de soumettre.",
       "submitFailed": "Impossible de soumettre. Réessayez.",
+      "granted": "Ce dossier est accordé. Les documents et formulaires sont verrouillés tant que le statut n’est pas modifié.",
       "generic": "Une erreur est survenue. Réessayez."
     },
     "groups": {
@@ -1470,6 +1474,7 @@
       "noFiles": "Aucun document téléversé à télécharger pour le moment.",
       "decryptFailed": "Impossible d’ouvrir ce fichier (chiffré avec une ancienne clé). Demandez au client de le téléverser à nouveau.",
       "locked": "Ce document a été approuvé et ne peut plus être modifié.",
+      "granted": "Ce dossier est accordé. Les documents et formulaires sont verrouillés tant que le statut n’est pas modifié.",
       "previewUnsupported": "Ce type de fichier ne peut pas être prévisualisé dans le navigateur. Téléchargez-le pour l’ouvrir.",
       "generic": "Une erreur s'est produite."
     }

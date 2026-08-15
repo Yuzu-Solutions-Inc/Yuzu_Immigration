@@ -31,13 +31,16 @@ export function ProjectShareLinkCard({
   projectId,
   activeShareExpiresAt,
   canReveal,
+  modificationBlocked = false,
 }: {
   locale: "en" | "fr";
   projectId: string;
   activeShareExpiresAt: string | null;
   canReveal: boolean;
+  modificationBlocked?: boolean;
 }) {
   const t = useTranslations("forms");
+  const tp = useTranslations("projects");
   const [shareState, shareAction, sharePending] = useActionState(
     createFormShareLinkAction,
     initialState,
@@ -111,6 +114,7 @@ export function ProjectShareLinkCard({
           expired: t("errors.expired"),
           unrecoverable: t("errors.shareUnrecoverable"),
           share_failed: t("errors.shareFailed"),
+          granted: t("errors.granted"),
         }[
           (shareState.error ||
             revealState.error ||
@@ -154,7 +158,11 @@ export function ProjectShareLinkCard({
           <form action={shareAction}>
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="locale" value={locale} />
-            <Button type="submit" size="sm" disabled={sharePending}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={sharePending || modificationBlocked}
+            >
               {sharePending
                 ? t("sharing")
                 : active
@@ -208,6 +216,10 @@ export function ProjectShareLinkCard({
         <p className="text-xs text-muted-foreground">
           {t("shareShowUnavailable")}
         </p>
+      ) : null}
+
+      {modificationBlocked ? (
+        <p className="text-sm text-muted-foreground">{tp("grantedLockShare")}</p>
       ) : null}
 
       {shareError ? (

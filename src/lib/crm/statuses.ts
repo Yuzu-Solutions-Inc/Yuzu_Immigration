@@ -61,6 +61,12 @@ export function isTerminalStatus(status: ProjectStatusValue) {
   return status === "granted" || status === "rejected";
 }
 
+export function isGrantedStatus(
+  status: ProjectStatusValue | string | null | undefined,
+) {
+  return status === "granted";
+}
+
 export function todayDateInputValue(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

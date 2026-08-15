@@ -757,6 +757,7 @@ export function ModularQuestionnaire({
   onSubmitQuestionnaire,
   submitPending,
   submittedAt,
+  readOnly = false,
 }: {
   people: QuestionnairePerson[];
   onSave: (
@@ -774,6 +775,7 @@ export function ModularQuestionnaire({
   ) => void;
   submitPending?: boolean;
   submittedAt?: string | null;
+  readOnly?: boolean;
 }) {
   const t = useTranslations("forms");
   const th = useTranslations("forms.help");
@@ -1134,7 +1136,8 @@ export function ModularQuestionnaire({
   }
 
   const showPersonTabs = people.length > 1;
-  const busy = Boolean(pending) || busyIntent != null || Boolean(submitPending);
+  const busy =
+    Boolean(pending) || busyIntent != null || Boolean(submitPending);
 
   function handleClientSubmit() {
     if (!activePerson || !onSubmitQuestionnaire || !allPeopleComplete) return;
@@ -1236,7 +1239,14 @@ export function ModularQuestionnaire({
         </p>
       </div>
 
-      <div className="space-y-6">{buildSectionNodes()}</div>
+      <div
+        className={cn(
+          "space-y-6",
+          readOnly && "pointer-events-none opacity-80",
+        )}
+      >
+        {buildSectionNodes()}
+      </div>
 
       {errorMessage ? (
         <p className="text-sm text-destructive" role="alert">
@@ -1265,6 +1275,7 @@ export function ModularQuestionnaire({
         >
           {t("previous")}
         </Button>
+        {readOnly ? null : (
         <div className="flex gap-2">
           <Button
             type="button"
@@ -1323,6 +1334,7 @@ export function ModularQuestionnaire({
             </Button>
           )}
         </div>
+        )}
       </div>
         </div>
       </div>

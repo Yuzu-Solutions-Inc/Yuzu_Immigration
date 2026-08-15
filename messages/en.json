@@ -573,6 +573,8 @@
     "statusHistoryEmpty": "No status changes recorded yet.",
     "viewStatusHistory": "View status history",
     "opened": "Opened",
+    "grantedLock": "This project was granted. Documents and forms are locked until you change the status.",
+    "grantedLockShare": "Share links are revoked when a project is granted. Change the status to create a new client link.",
     "participants": "Participants",
     "detailTabs": {
       "home": "Home",
@@ -601,6 +603,7 @@
       "noteSaveFailed": "Could not save the note. Try again.",
       "notFound": "Project not found.",
       "forbidden": "You do not have permission for this action.",
+      "granted": "This project was granted. Documents and forms are locked until you change the status.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -1274,6 +1277,7 @@
       "expired": "This link has expired. Ask your consultant for a new one.",
       "incomplete": "Finish every person to 100% before submitting.",
       "submitFailed": "Could not submit. Try again.",
+      "granted": "This project was granted. Documents and forms are locked until you change the status.",
       "generic": "Something went wrong. Try again."
     },
     "groups": {
@@ -1470,6 +1474,7 @@
       "noFiles": "No uploaded documents to download yet.",
       "decryptFailed": "This file can’t be opened (it was encrypted with an old key). Ask the client to upload it again.",
       "locked": "This document was approved and can no longer be changed.",
+      "granted": "This project was granted. Documents and forms are locked until you change the status.",
       "previewUnsupported": "This file type can’t be previewed in the browser. Download it to open.",
       "generic": "Something went wrong."
     }

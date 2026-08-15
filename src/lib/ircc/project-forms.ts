@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import { compareParticipantRole } from "@/lib/crm/programs";
+import { isGrantedStatus } from "@/lib/crm/statuses";
 import type { ProgramFamily } from "@/db/schema";
 import {
   detectCommonLaw,
@@ -839,6 +840,16 @@ export async function resolveShareToken(token: string): Promise<{
   if (data.revoked_at) return null;
   if (new Date(data.expires_at as string).getTime() < Date.now()) return null;
 
+  const { data: project, error: projectError } = await admin
+    .from("immigration_projects")
+    .select("status")
+    .eq("id", data.project_id)
+    .maybeSingle();
+
+  if (projectError || !project || isGrantedStatus(project.status as string)) {
+    return null;
+  }
+
   await admin
     .from("form_share_links")
     .update({ last_accessed_at: new Date().toISOString() })
@@ -1004,9 +1015,13 @@ export async function saveShareAnswers(input: {
 
   const { data: project } = await admin
     .from("immigration_projects")
-    .select("form_language, representative_user_id, program_family")
+    .select("form_language, representative_user_id, program_family, status")
     .eq("id", resolved.projectId)
     .maybeSingle();
+
+  if (isGrantedStatus(project?.status as string | undefined)) {
+    throw new Error("granted");
+  }
 
   const repUserId = project?.representative_user_id as string | null;
   const { data: repProfile } = repUserId

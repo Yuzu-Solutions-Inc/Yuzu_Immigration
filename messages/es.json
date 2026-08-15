@@ -573,6 +573,8 @@
     "statusHistoryEmpty": "Aún no hay cambios de estado registrados.",
     "viewStatusHistory": "Ver historial de estados",
     "opened": "Abierto",
+    "grantedLock": "Este expediente fue aprobado. Los documentos y formularios quedan bloqueados hasta cambiar el estado.",
+    "grantedLockShare": "Los enlaces para clientes se revocan cuando un expediente es aprobado. Cambie el estado para crear uno nuevo.",
     "participants": "Participantes",
     "detailTabs": {
       "home": "Inicio",
@@ -601,6 +603,7 @@
       "noteSaveFailed": "No se pudo guardar la nota. Inténtelo de nuevo.",
       "notFound": "Project not found.",
       "forbidden": "No tienes permiso para esta acción.",
+      "granted": "Este expediente fue aprobado. Los documentos y formularios quedan bloqueados hasta cambiar el estado.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -1274,6 +1277,7 @@
       "expired": "Este enlace ha caducado. Pida uno nuevo a su consultor.",
       "incomplete": "Complete cada persona al 100 % antes de enviar.",
       "submitFailed": "No se pudo enviar. Inténtelo de nuevo.",
+      "granted": "Este expediente fue aprobado. Los documentos y formularios quedan bloqueados hasta cambiar el estado.",
       "generic": "Algo salió mal. Inténtelo de nuevo."
     },
     "groups": {
@@ -1470,6 +1474,7 @@
       "noFiles": "Aún no hay documentos subidos para descargar.",
       "decryptFailed": "No se puede abrir este archivo (se cifró con una clave anterior). Pida al cliente que lo suba de nuevo.",
       "locked": "Este documento fue aprobado y ya no se puede modificar.",
+      "granted": "Este expediente fue aprobado. Los documentos y formularios quedan bloqueados hasta cambiar el estado.",
       "previewUnsupported": "Este tipo de archivo no se puede previsualizar en el navegador. Descárguelo para abrirlo.",
       "generic": "Algo salió mal."
     }

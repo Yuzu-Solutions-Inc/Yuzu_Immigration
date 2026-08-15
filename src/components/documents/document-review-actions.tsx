@@ -66,6 +66,7 @@ export function DocumentReviewActions({
       email_failed: t("review.emailFailed"),
       review_failed: t("review.failed"),
       unauthorized: t("errors.generic"),
+      granted: t("errors.granted"),
     }[state.error] ??
       t("errors.generic"));
 

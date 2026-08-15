@@ -7,6 +7,11 @@ import JSZip from "jszip";
 import { getSessionUser } from "@/lib/auth/session";
 import { getProjectParticipants, requireOrganizationId } from "@/lib/crm/queries";
 import {
+  assertProjectModifiable,
+  isProjectModificationBlocked,
+  loadProjectStatusById,
+} from "@/lib/crm/project-lock";
+import {
   CLIENT_DOCUMENTS_BUCKET,
   DOCUMENT_MAX_BYTES,
   guessMimeFromFilename,
@@ -75,8 +80,10 @@ export async function addCustomDocumentRequestAction(
   const orgId = await requireOrganizationId();
   if (!orgId) return { error: "unauthorized" };
 
-  const user = await getSessionUser();
   const supabase = await createClient();
+  if (await assertProjectModifiable(supabase, projectId, orgId)) {
+    return { error: "granted" };
+  }
 
   const { data: participant } = await supabase
     .from("project_participants")
@@ -88,6 +95,8 @@ export async function addCustomDocumentRequestAction(
     .maybeSingle();
 
   if (!participant) return { error: "invalid" };
+
+  const user = await getSessionUser();
 
   const { data: maxSort } = await supabase
     .from("project_document_requests")
@@ -141,6 +150,10 @@ export async function removeDocumentRequestAction(
   if (!orgId) return { error: "unauthorized" };
 
   const supabase = await createClient();
+  if (await assertProjectModifiable(supabase, projectId, orgId)) {
+    return { error: "granted" };
+  }
+
   const { data: row } = await supabase
     .from("project_document_requests")
     .select("id")
@@ -250,6 +263,10 @@ export async function reviewDocumentRequestAction(
   if (!orgId) return { error: "unauthorized" };
 
   const supabase = await createClient();
+  if (await assertProjectModifiable(supabase, projectId, orgId)) {
+    return { error: "granted" };
+  }
+
   const key = await getOrgDataKey(orgId);
   const { data: requestRow, error: requestError } = await supabase
     .from("project_document_requests")
@@ -717,6 +734,11 @@ export async function uploadShareDocumentAction(
 
   if (reqError || !request) {
     return { error: "invalid" };
+  }
+
+  const projectStatus = await loadProjectStatusById(admin, resolved.projectId);
+  if (isProjectModificationBlocked(projectStatus)) {
+    return { error: "granted" };
   }
 
   if (request.status === "accepted") {

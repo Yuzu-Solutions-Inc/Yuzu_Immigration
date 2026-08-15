@@ -33,7 +33,9 @@ import {
   upsertProjectFormAnswers,
 } from "@/lib/ircc/project-forms";
 import { requireOrganizationId } from "@/lib/crm/queries";
+import { assertProjectModifiable } from "@/lib/crm/project-lock";
 import { getSessionUser } from "@/lib/auth/session";
+import { revokeAllShareLinksForProject } from "@/lib/ircc/share-links";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { PII_AAD } from "@/lib/security/client-pii";
 import { encryptField, decryptField } from "@/lib/security/field-crypto";
@@ -55,21 +57,9 @@ function hashToken(token: string) {
   return createHash("sha256").update(token, "utf8").digest("hex");
 }
 
-async function revokeAllShareLinksForProject(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  projectId: string,
-  organizationId: string,
-) {
-  const { error } = await supabase
-    .from("form_share_links")
-    .update({ revoked_at: new Date().toISOString() })
-    .eq("project_id", projectId)
-    .eq("organization_id", organizationId);
-  if (error) {
-    console.error("revoke share links:", error.message);
-    return false;
-  }
-  return true;
+async function guardProjectModifiable(projectId: string, organizationId: string) {
+  const supabase = await createClient();
+  return assertProjectModifiable(supabase, projectId, organizationId);
 }
 
 export async function addFormToProjectAction(
@@ -96,6 +86,10 @@ export async function addFormToProjectAction(
 
   const orgId = await requireOrganizationId();
   if (!orgId) return { error: "unauthorized" };
+
+  if (await guardProjectModifiable(projectId, orgId)) {
+    return { error: "granted" };
+  }
 
   try {
     await addProjectForm({
@@ -129,6 +123,10 @@ export async function removeFormFromProjectAction(
 
   const orgId = await requireOrganizationId();
   if (!orgId) return { error: "unauthorized" };
+
+  if (await guardProjectModifiable(projectId, orgId)) {
+    return { error: "granted" };
+  }
 
   try {
     await removeProjectForm({
@@ -170,6 +168,10 @@ export async function saveProjectAnswersAction(
 
   const orgId = await requireOrganizationId();
   if (!orgId) return { error: "unauthorized" };
+
+  if (await guardProjectModifiable(projectId, orgId)) {
+    return { error: "granted" };
+  }
 
   const supabase = await createClient();
   const people = await listActiveProjectPeople(supabase, projectId);
@@ -289,6 +291,9 @@ export async function saveShareAnswersAction(
     if (error instanceof Error && error.message === "expired") {
       return { error: "expired" };
     }
+    if (error instanceof Error && error.message === "granted") {
+      return { error: "granted" };
+    }
     return { error: "save_failed" };
   }
 
@@ -330,6 +335,7 @@ export async function submitShareQuestionnaireAction(
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "expired") return { error: "expired" };
+      if (error.message === "granted") return { error: "granted" };
       if (error.message === "incomplete") return { error: "incomplete" };
     }
     return { error: "submit_failed" };
@@ -349,6 +355,10 @@ export async function createFormShareLinkAction(
 
   const orgId = await requireOrganizationId();
   if (!orgId) return { error: "unauthorized" };
+
+  if (await guardProjectModifiable(projectId, orgId)) {
+    return { error: "granted" };
+  }
 
   const user = await getSessionUser();
   const supabase = await createClient();
@@ -650,6 +660,10 @@ export async function ensureProjectFormsSeeded(
   programFamily: string,
 ) {
   const supabase = await createClient();
+  if (await assertProjectModifiable(supabase, projectId, organizationId)) {
+    return;
+  }
+
   const people = await listActiveProjectPeople(supabase, projectId);
   const personIds = people.map((p) => p.id);
   const answersRow = await getProjectFormAnswers(projectId);

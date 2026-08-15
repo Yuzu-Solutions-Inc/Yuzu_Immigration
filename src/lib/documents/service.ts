@@ -14,6 +14,7 @@ import {
   encryptFilename,
 } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
+import { assertProjectModifiable } from "@/lib/crm/project-lock";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -127,6 +128,10 @@ export async function ensureProjectDocumentsSeeded(
   personIds?: string[],
 ) {
   const supabase = await createClient();
+  if (await assertProjectModifiable(supabase, projectId, organizationId)) {
+    return;
+  }
+
   let ids = personIds;
   if (!ids) {
     const { data: participants, error } = await supabase
