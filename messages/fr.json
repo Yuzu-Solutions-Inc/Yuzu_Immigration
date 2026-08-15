@@ -574,13 +574,11 @@
     "opened": "Ouvert le",
     "participants": "Participants",
     "detailTabs": {
-      "participants": "Participants",
+      "home": "Accueil",
       "documents": "Documents",
       "forms": "Formulaires",
-      "share": "Lien client",
-      "calls": "Appels",
-      "payments": "Paiements",
-      "notes": "Notes"
+      "communication": "Communication",
+      "payments": "Paiements"
     },
     "notFound": "Projet introuvable.",
     "statuses": {

@@ -7,19 +7,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const TAB_VALUES = [
-  "participants",
+  "home",
   "documents",
   "forms",
-  "share",
-  "calls",
+  "communication",
   "payments",
-  "notes",
 ] as const;
 
 export type ProjectDetailTab = (typeof TAB_VALUES)[number];
 
+const HASH_ALIASES: Record<string, ProjectDetailTab> = {
+  participants: "home",
+  share: "home",
+  calls: "communication",
+  notes: "communication",
+};
+
 function isProjectDetailTab(value: string): value is ProjectDetailTab {
   return (TAB_VALUES as readonly string[]).includes(value);
+}
+
+function resolveTabFromHash(hash: string): ProjectDetailTab | null {
+  if (isProjectDetailTab(hash)) return hash;
+  return HASH_ALIASES[hash] ?? null;
 }
 
 export function ProjectDetailTabs({
@@ -30,20 +40,29 @@ export function ProjectDetailTabs({
   className?: string;
 }) {
   const t = useTranslations("projects.detailTabs");
-  const [tab, setTab] = useState<ProjectDetailTab>("participants");
+  const [tab, setTab] = useState<ProjectDetailTab>("home");
 
   useEffect(() => {
-    const hash = window.location.hash.replace(/^#/, "");
-    if (isProjectDetailTab(hash)) {
-      setTab(hash);
-    }
+    const syncFromHash = () => {
+      const resolved = resolveTabFromHash(
+        window.location.hash.replace(/^#/, ""),
+      );
+      if (resolved) setTab(resolved);
+    };
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
   }, []);
 
   return (
     <Tabs
       value={tab}
       onValueChange={(value) => {
-        if (isProjectDetailTab(value)) setTab(value);
+        if (isProjectDetailTab(value)) {
+          setTab(value);
+          window.location.hash = value;
+        }
       }}
       className={cn("gap-4", className)}
     >

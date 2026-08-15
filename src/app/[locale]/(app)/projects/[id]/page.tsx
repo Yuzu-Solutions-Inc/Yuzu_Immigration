@@ -14,6 +14,7 @@ import {
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
 import { ProjectDetailTabs } from "@/components/projects/project-detail-tabs";
+import { ProjectHomeTab } from "@/components/projects/project-home-tab";
 import { ProjectNotesSection } from "@/components/projects/project-notes-section";
 import { ProjectParticipantsList } from "@/components/projects/project-participants-list";
 import { ProjectPaymentsCard } from "@/components/projects/project-payments-card";
@@ -285,11 +286,26 @@ export default async function ProjectDetailPage({
 
       <ProjectDetailTabs
         panels={{
-          participants: (
-            <ProjectParticipantsList
-              projectId={project.id}
-              people={questionnairePeople}
-              participants={participants}
+          home: (
+            <ProjectHomeTab
+              docsDone={docsDone}
+              docsTotal={docsTotal}
+              formPercent={formPercent}
+              clientLink={
+                <ProjectShareLinkCard
+                  locale={formLocale}
+                  projectId={project.id}
+                  activeShareExpiresAt={share?.expires_at ?? null}
+                  canReveal={share?.canReveal ?? false}
+                />
+              }
+              participants={
+                <ProjectParticipantsList
+                  projectId={project.id}
+                  people={questionnairePeople}
+                  participants={participants}
+                />
+              }
             />
           ),
           documents: (
@@ -313,27 +329,26 @@ export default async function ProjectDetailPage({
               people={questionnairePeople}
             />
           ),
-          share: (
-            <ProjectShareLinkCard
-              locale={formLocale}
-              projectId={project.id}
-              activeShareExpiresAt={share?.expires_at ?? null}
-              canReveal={share?.canReveal ?? false}
-            />
-          ),
-          calls: (
-            <ProjectScheduleCallCard
-              locale={locale}
-              projectId={project.id}
-              timezone={bookingSettings?.timezone ?? "America/Toronto"}
-              canSchedule={Boolean(membership)}
-              principalEmail={
-                participants.find((row) => row.role === "principal")?.person
-                  ?.email ?? null
-              }
-              meetings={meetings}
-              invites={callInvites}
-            />
+          communication: (
+            <>
+              <ProjectScheduleCallCard
+                locale={locale}
+                projectId={project.id}
+                timezone={bookingSettings?.timezone ?? "America/Toronto"}
+                canSchedule={Boolean(membership)}
+                principalEmail={
+                  participants.find((row) => row.role === "principal")?.person
+                    ?.email ?? null
+                }
+                meetings={meetings}
+                invites={callInvites}
+              />
+              <ProjectNotesSection
+                locale={locale}
+                projectId={project.id}
+                notes={notes}
+              />
+            </>
           ),
           payments: (
             <ProjectPaymentsCard
@@ -346,13 +361,6 @@ export default async function ProjectDetailPage({
                 id: p.id,
                 label: p.displayName,
               }))}
-            />
-          ),
-          notes: (
-            <ProjectNotesSection
-              locale={locale}
-              projectId={project.id}
-              notes={notes}
             />
           ),
         }}

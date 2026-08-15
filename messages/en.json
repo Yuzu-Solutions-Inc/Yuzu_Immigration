@@ -574,13 +574,11 @@
     "opened": "Opened",
     "participants": "Participants",
     "detailTabs": {
-      "participants": "Participants",
+      "home": "Home",
       "documents": "Documents",
       "forms": "Forms",
-      "share": "Client link",
-      "calls": "Calls",
-      "payments": "Payments",
-      "notes": "Notes"
+      "communication": "Communication",
+      "payments": "Payments"
     },
     "notFound": "Project not found.",
     "statuses": {
