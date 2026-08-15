@@ -9,7 +9,6 @@ import {
   type SubmitBeforeUpdateState,
 } from "@/app/actions/projects";
 import { StatusPill } from "@/components/ui/status-pill";
-import { submitBeforeTone } from "@/lib/crm/statuses";
 
 const initialState: SubmitBeforeUpdateState = {};
 
@@ -52,7 +51,6 @@ export function ProjectSubmitBeforeCard({
     ? formatSubmitBefore(value, locale)
     : t("submitBeforeEmpty");
   const pillLabel = `${t("submitBefore")} · ${dateLabel}`;
-  const pillTone = submitBeforeTone(value || null);
 
   return (
     <form action={formAction} className="inline-flex flex-col gap-1">
@@ -61,7 +59,7 @@ export function ProjectSubmitBeforeCard({
       <div className="group relative inline-flex max-w-full items-center rounded-full focus-within:ring-3 focus-within:ring-ring/30">
         <StatusPill
           label={pillLabel}
-          tone={pillTone}
+          tone="muted"
           className="max-w-full gap-1.5 pr-7 group-hover:ring-2 group-hover:ring-action/20 group-focus-within:ring-2 group-focus-within:ring-action/20"
         />
         <Pencil

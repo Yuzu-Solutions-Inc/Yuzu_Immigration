@@ -220,11 +220,6 @@ export default async function ProjectDetailPage({
                 currentStatusAt={project.status_at}
                 history={history}
               />
-              <ProjectSubmitBeforeCard
-                locale={locale}
-                projectId={project.id}
-                currentSubmitBefore={project.submit_before}
-              />
               {project.jurisdiction !== "federal" ? (
                 <StatusPill
                   label={t(`jurisdictions.${project.jurisdiction}`)}
@@ -240,17 +235,24 @@ export default async function ProjectDetailPage({
             ) : null}
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <ExportProjectFileButton locale={locale} projectId={project.id} />
-            <Link
-              href={`/projects/${project.id}/edit`}
-              className={cn(
-                buttonVariants({ size: "sm" }),
-                "bg-action text-action-foreground hover:bg-action/90",
-              )}
-            >
-              {t("edit")}
-            </Link>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <ExportProjectFileButton locale={locale} projectId={project.id} />
+              <Link
+                href={`/projects/${project.id}/edit`}
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "bg-action text-action-foreground hover:bg-action/90",
+                )}
+              >
+                {t("edit")}
+              </Link>
+            </div>
+            <ProjectSubmitBeforeCard
+              locale={locale}
+              projectId={project.id}
+              currentSubmitBefore={project.submit_before}
+            />
           </div>
         </div>
 
