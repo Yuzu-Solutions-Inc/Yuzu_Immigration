@@ -696,7 +696,7 @@ export function ProjectForm({
 
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <Label>{t("people")}</Label>
+          <Label>{t("participants")}</Label>
           {composition === "family" ? (
             <button
               type="button"
