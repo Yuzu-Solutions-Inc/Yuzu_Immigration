@@ -90,6 +90,7 @@ export function PublicBookingFlow({
   const [guestPhone, setGuestPhone] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [chosePayLater, setChosePayLater] = useState(false);
 
   const host = payload.hosts.find((row) => row.userId === hostUserId) ?? null;
   const service = payload.services.find((row) => row.id === serviceId) ?? null;
@@ -174,6 +175,90 @@ export function PublicBookingFlow({
       window.location.assign(state.checkoutUrl);
     }
   }, [state.message, state.checkoutUrl]);
+
+  if (state.message === "choose_payment" && state.checkoutUrl && state.startsAt) {
+    if (chosePayLater) {
+      return (
+        <div className="mx-auto max-w-lg space-y-6 px-4 py-12 text-center">
+          <BrandLogo size="sm" href="/" />
+          <h1 className="font-heading text-2xl font-semibold text-brand">
+            {t("payLaterConfirmedTitle")}
+          </h1>
+          <p className="text-[15px] text-muted-foreground">
+            {t("payLaterConfirmedBody", {
+              service: state.serviceTitle ?? "",
+              when: formatDateTimeInZone(
+                new Date(state.startsAt),
+                payload.timezone,
+                locale,
+              ),
+            })}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t("choosePaymentBeforeDate")}
+          </p>
+          <p>
+            <a
+              href={state.checkoutUrl}
+              className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-action-foreground hover:bg-action/90"
+            >
+              {t("payNow")}
+            </a>
+          </p>
+          {state.manageToken ? (
+            <div className="space-y-2 text-sm">
+              <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                <Link
+                  href={`/booking/${state.manageToken}`}
+                  className="font-medium text-action underline-offset-2 hover:underline"
+                >
+                  {t("changeTime")}
+                </Link>
+                <Link
+                  href={`/booking/${state.manageToken}?action=cancel`}
+                  className="font-medium text-muted-foreground underline-offset-2 hover:underline"
+                >
+                  {t("cancelAppointment")}
+                </Link>
+              </p>
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+
+    return (
+      <div className="mx-auto max-w-lg space-y-6 px-4 py-12 text-center">
+        <BrandLogo size="sm" href="/" />
+        <h1 className="font-heading text-2xl font-semibold text-brand">
+          {t("choosePaymentTitle")}
+        </h1>
+        <p className="text-[15px] text-muted-foreground">
+          {t("choosePaymentBody", {
+            service: state.serviceTitle ?? "",
+            when: formatDateTimeInZone(
+              new Date(state.startsAt),
+              payload.timezone,
+              locale,
+            ),
+          })}
+        </p>
+        <p className="text-sm text-muted-foreground">{t("choosePaymentBeforeDate")}</p>
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+          <a
+            href={state.checkoutUrl}
+            className="inline-flex items-center rounded-xl bg-action px-4 py-2 text-sm font-medium text-action-foreground hover:bg-action/90"
+          >
+            {t("payNow")}
+          </a>
+          <Button type="button" variant="outline" onClick={() => setChosePayLater(true)}>
+            {t("payLater")}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("payLaterHint")}</p>
+      </div>
+    );
+  }
 
   if (state.message === "payment_required" && state.checkoutUrl) {
     return (

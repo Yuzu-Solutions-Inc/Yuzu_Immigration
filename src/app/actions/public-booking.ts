@@ -321,7 +321,14 @@ export async function submitPublicBookingAction(
   });
 
   if (requiresPayment) {
+    const allowPayLater = Boolean(service.allow_pay_later);
     try {
+      const hoursUntilStart = Math.max(
+        2,
+        Math.ceil(
+          (Date.parse(parsed.data.startsAt) - Date.now()) / 3_600_000,
+        ),
+      );
       const checkout = await createCheckoutPaymentRequest({
         organizationId: ctx.organizationId,
         source: "booking",
@@ -332,8 +339,64 @@ export async function submitPublicBookingAction(
         appointmentId: appointment.id,
         personId,
         buyerEmail: guestEmail,
-        expiresInHours: 2,
+        expiresInHours: allowPayLater ? hoursUntilStart : 2,
+        expiresAt: allowPayLater ? new Date(parsed.data.startsAt) : null,
       });
+
+      const origin = await getAppBaseUrl();
+      const urls = bookingManageUrls(origin, preferredLocale, manageToken);
+      const payUrl = `${origin.replace(/\/$/, "")}/${preferredLocale}/pay/${checkout.token}`;
+
+      if (allowPayLater) {
+        const { pushAppointmentToGoogleCalendar } = await import(
+          "@/lib/google/calendar"
+        );
+        const google = await pushAppointmentToGoogleCalendar({
+          organizationId: ctx.organizationId,
+          hostUserId: host.userId,
+          appointmentId: appointment.id,
+          title: `${service.title} — ${guestName}`,
+          description: `Booked via Yuzu Immigration (payment pending)\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
+          startsAt: parsed.data.startsAt,
+          endsAt: parsed.data.endsAt,
+        });
+        const meetJoinUrl = google?.meetJoinUrl ?? null;
+
+        after(async () => {
+          const { sendBookingConfirmationEmail } = await import(
+            "@/lib/email/booking-confirmation"
+          );
+          await sendBookingConfirmationEmail({
+            locale: preferredLocale,
+            to: guestEmail,
+            guestName,
+            organizationName: ctx.organizationName,
+            hostName: host.name,
+            serviceTitle: service.title,
+            startsAt: parsed.data.startsAt,
+            timezone: ctx.settings.timezone,
+            meetJoinUrl,
+            manageUrl: urls.manageUrl,
+            cancelUrl: urls.cancelUrl,
+            payUrl,
+            variant: "pending_payment",
+          });
+        });
+
+        return {
+          message: "choose_payment",
+          appointmentId: appointment.id,
+          startsAt: parsed.data.startsAt,
+          endsAt: parsed.data.endsAt,
+          serviceTitle: service.title,
+          hostName: host.name,
+          meetJoinUrl: meetJoinUrl ?? undefined,
+          manageToken,
+          checkoutUrl: checkout.checkoutUrl,
+          paymentToken: checkout.token,
+        };
+      }
+
       return {
         message: "payment_required",
         appointmentId: appointment.id,

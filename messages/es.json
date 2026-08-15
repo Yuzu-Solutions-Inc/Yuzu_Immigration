@@ -240,7 +240,8 @@
     "switchOrg": "Cambiar de organización",
     "switchOrgAria": "Cambiar de organización",
     "collapse": "Contraer el menú",
-    "expand": "Expandir el menú"
+    "expand": "Expandir el menú",
+    "bookings": "Reservas"
   },
   "topBar": {
     "breadcrumbsAria": "Ruta de navegación",
@@ -279,7 +280,8 @@
     "supportHelp": "Necesito ayuda",
     "supportHelpSubject": "Necesito ayuda",
     "supportForm": "Agregar o actualizar formulario de inmigración",
-    "supportFormSubject": "Agregar o actualizar formulario de inmigración"
+    "supportFormSubject": "Agregar o actualizar formulario de inmigración",
+    "crumbBookings": "Reservas"
   },
   "locale": {
     "label": "Idioma"
@@ -1846,7 +1848,12 @@
       "invalid_options": "Añada al menos una opción de lista.",
       "duplicate_key": "Ese nombre de variable ya se usa en este formulario.",
       "too_many_fields": "Este formulario ya tiene el número máximo de preguntas extra."
-    }
+    },
+    "allowPayLater": "Permitir pagar después",
+    "allowPayLaterHelp": "Si está activado, el cliente puede reservar ahora y pagar antes de la cita. Si no, el pago es obligatorio para confirmar.",
+    "paymentReminders": "Recordatorios de pago (días antes)",
+    "paymentRemindersPlaceholder": "7, 3, 1",
+    "paymentRemindersHelp": "Hasta 3 plazos (0–90 días). Los clientes sin pagar reciben un recordatorio esos días antes de la cita."
   },
   "booking": {
     "title": "Reservar una cita",
@@ -1912,7 +1919,15 @@
       "rate_limited": "Demasiados intentos de reserva. Inténtelo más tarde.",
       "too_many_bookings": "Este correo ya tiene el número máximo de citas próximas. Cambie o cancele una primero.",
       "cooldown": "Acabamos de enviar los enlaces. Inténtelo de nuevo en unos minutos."
-    }
+    },
+    "choosePaymentTitle": "Casi reservado",
+    "choosePaymentBody": "{service} el {when}. Elija cómo pagar.",
+    "choosePaymentBeforeDate": "El pago debe completarse antes de la fecha de la cita.",
+    "payNow": "Pagar ahora",
+    "payLater": "Pagar después",
+    "payLaterHint": "Enviaremos un enlace de pago. Puede pagar antes de la cita.",
+    "payLaterConfirmedTitle": "Reservado — pago pendiente",
+    "payLaterConfirmedBody": "{service} el {when} está reservado. Pague antes de la cita."
   },
   "bookingEmail": {
     "subject": "Cita confirmada — {service}",
@@ -1947,7 +1962,18 @@
     "callInviteGreeting": "Hola {name},",
     "callInviteIntro": "{org} le invita a reservar una llamada de 30 minutos con {host} sobre {project}. Elija un horario — sin formulario.",
     "callInviteCta": "Elegir horario",
-    "callInviteExpiry": "Este enlace sirve para una sola reunión y caduca el {date}."
+    "callInviteExpiry": "Este enlace sirve para una sola reunión y caduca el {date}.",
+    "pendingPaymentSubject": "Cita reservada — pago pendiente — {service}",
+    "pendingPaymentHeading": "Reservado — pago pendiente",
+    "pendingPaymentIntro": "Esto reserva su cita con {org}. Aún debe pagar.",
+    "pendingPaymentBeforeDate": "Complete el pago antes de la fecha de la cita.",
+    "payNow": "Pagar ahora",
+    "paymentReceivedSubject": "Pago recibido — {service}",
+    "paymentReceivedHeading": "Pago recibido",
+    "paymentReceivedIntro": "Gracias. Su pago por la cita con {org} está completo.",
+    "paymentReminderSubject": "Recordatorio de pago — {service}",
+    "paymentReminderHeading": "Recordatorio de pago",
+    "paymentReminderIntro": "Recordatorio de {org}: aún debe pagar su próxima cita ({days, plural, =0 {hoy} one {en # día} other {en # días}})."
   },
   "projectCall": {
     "title": "Programar una llamada",
@@ -2073,6 +2099,33 @@
       "already_cancelled": "Esta cita ya está cancelada.",
       "too_late": "Esta cita ya no se puede cambiar.",
       "save_failed": "No se pudo guardar. Inténtelo de nuevo."
+    }
+  },
+  "bookings": {
+    "title": "Reservas",
+    "subtitle": "Citas próximas y pasadas con estado de pago.",
+    "empty": "Aún no hay reservas.",
+    "colWhen": "Cuándo",
+    "colGuest": "Cliente",
+    "colService": "Servicio",
+    "colHost": "Consultor",
+    "colStatus": "Estado",
+    "colPayment": "Pago",
+    "openPayLink": "Abrir enlace de pago",
+    "statuses": {
+      "confirmed": "Confirmada",
+      "pending_payment": "Pago pendiente",
+      "cancelled": "Cancelada",
+      "completed": "Completada",
+      "no_show": "No presentado"
+    },
+    "payment": {
+      "none": "Sin cargo",
+      "pending": "Sin pagar",
+      "paid": "Pagado",
+      "failed": "Fallido",
+      "cancelled": "Cancelado",
+      "expired": "Caducado"
     }
   }
 }

@@ -24,6 +24,8 @@ export type BookingServiceRow = {
   price_cents: number;
   currency: string;
   is_active: boolean;
+  allow_pay_later: boolean;
+  payment_reminder_days: number[];
   sort_order: number;
   form_id: string | null;
   created_at: string;

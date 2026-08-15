@@ -240,7 +240,8 @@
     "switchOrg": "Changer d’organisation",
     "switchOrgAria": "Changer d’organisation",
     "collapse": "Réduire le menu",
-    "expand": "Développer le menu"
+    "expand": "Développer le menu",
+    "bookings": "Réservations"
   },
   "topBar": {
     "breadcrumbsAria": "Fil d’Ariane",
@@ -279,7 +280,8 @@
     "supportHelp": "J’ai besoin d’aide",
     "supportHelpSubject": "J’ai besoin d’aide",
     "supportForm": "Ajouter ou mettre à jour un formulaire d’immigration",
-    "supportFormSubject": "Ajouter ou mettre à jour un formulaire d’immigration"
+    "supportFormSubject": "Ajouter ou mettre à jour un formulaire d’immigration",
+    "crumbBookings": "Réservations"
   },
   "locale": {
     "label": "Langue"
@@ -1846,7 +1848,12 @@
       "invalid_options": "Ajoutez au moins un choix dans la liste.",
       "duplicate_key": "Ce nom de variable est déjà utilisé sur ce formulaire.",
       "too_many_fields": "Ce formulaire a déjà le nombre maximal de questions supplémentaires."
-    }
+    },
+    "allowPayLater": "Autoriser le paiement plus tard",
+    "allowPayLaterHelp": "Si activé, le client peut réserver maintenant et payer avant le rendez-vous. Sinon, le paiement est requis pour confirmer.",
+    "paymentReminders": "Rappels de paiement (jours avant)",
+    "paymentRemindersPlaceholder": "7, 3, 1",
+    "paymentRemindersHelp": "Jusqu’à 3 délais (0–90 jours). Les clients non payés reçoivent un rappel ces jours-là avant le rendez-vous."
   },
   "booking": {
     "title": "Prendre rendez-vous",
@@ -1912,7 +1919,15 @@
       "rate_limited": "Trop de tentatives de réservation. Réessayez plus tard.",
       "too_many_bookings": "Cette adresse a déjà le nombre maximal de rendez-vous à venir. Modifiez ou annulez-en un d’abord.",
       "cooldown": "Des liens viennent d’être envoyés. Réessayez dans quelques minutes."
-    }
+    },
+    "choosePaymentTitle": "Presque réservé",
+    "choosePaymentBody": "{service} le {when}. Choisissez comment payer.",
+    "choosePaymentBeforeDate": "Le paiement doit être effectué avant la date du rendez-vous.",
+    "payNow": "Payer maintenant",
+    "payLater": "Payer plus tard",
+    "payLaterHint": "Nous enverrons un lien de paiement. Vous pouvez payer avant le rendez-vous.",
+    "payLaterConfirmedTitle": "Réservé — paiement en attente",
+    "payLaterConfirmedBody": "{service} le {when} est réservé. Veuillez payer avant le rendez-vous."
   },
   "bookingEmail": {
     "subject": "Rendez-vous confirmé — {service}",
@@ -1947,7 +1962,18 @@
     "callInviteGreeting": "Bonjour {name},",
     "callInviteIntro": "{org} vous invite à réserver un appel de 30 minutes avec {host} concernant {project}. Choisissez un horaire — aucun formulaire à remplir.",
     "callInviteCta": "Choisir un horaire",
-    "callInviteExpiry": "Ce lien permet une seule réservation et expire le {date}."
+    "callInviteExpiry": "Ce lien permet une seule réservation et expire le {date}.",
+    "pendingPaymentSubject": "Rendez-vous réservé — paiement dû — {service}",
+    "pendingPaymentHeading": "Réservé — paiement en attente",
+    "pendingPaymentIntro": "Ceci réserve votre rendez-vous avec {org}. Le paiement est encore requis.",
+    "pendingPaymentBeforeDate": "Veuillez payer avant la date du rendez-vous.",
+    "payNow": "Payer maintenant",
+    "paymentReceivedSubject": "Paiement reçu — {service}",
+    "paymentReceivedHeading": "Paiement reçu",
+    "paymentReceivedIntro": "Merci. Votre paiement pour le rendez-vous avec {org} est terminé.",
+    "paymentReminderSubject": "Rappel de paiement — {service}",
+    "paymentReminderHeading": "Rappel de paiement",
+    "paymentReminderIntro": "Rappel de {org} : le paiement de votre prochain rendez-vous est encore dû ({days, plural, =0 {aujourd’hui} one {dans # jour} other {dans # jours}})."
   },
   "projectCall": {
     "title": "Planifier un appel",
@@ -2073,6 +2099,33 @@
       "already_cancelled": "Ce rendez-vous est déjà annulé.",
       "too_late": "Ce rendez-vous ne peut plus être modifié.",
       "save_failed": "Impossible d’enregistrer. Réessayez."
+    }
+  },
+  "bookings": {
+    "title": "Réservations",
+    "subtitle": "Rendez-vous à venir et passés avec statut de paiement.",
+    "empty": "Aucune réservation pour le moment.",
+    "colWhen": "Quand",
+    "colGuest": "Client",
+    "colService": "Service",
+    "colHost": "Consultant",
+    "colStatus": "Statut",
+    "colPayment": "Paiement",
+    "openPayLink": "Ouvrir le lien de paiement",
+    "statuses": {
+      "confirmed": "Confirmé",
+      "pending_payment": "Paiement en attente",
+      "cancelled": "Annulé",
+      "completed": "Terminé",
+      "no_show": "Absent"
+    },
+    "payment": {
+      "none": "Sans frais",
+      "pending": "Impayé",
+      "paid": "Payé",
+      "failed": "Échoué",
+      "cancelled": "Annulé",
+      "expired": "Expiré"
     }
   }
 }

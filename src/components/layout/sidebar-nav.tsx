@@ -5,6 +5,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   FolderKanban,
   Home,
   LogOut,
@@ -44,6 +45,7 @@ const navItems = [
   { href: "/projects", key: "projects" as const, icon: FolderKanban },
   { href: "/people", key: "people" as const, icon: Users },
   { href: "/calendar", key: "calendar" as const, icon: CalendarDays },
+  { href: "/bookings", key: "bookings" as const, icon: ClipboardList },
   { href: "/services", key: "services" as const, icon: Briefcase },
 ] as const;
 

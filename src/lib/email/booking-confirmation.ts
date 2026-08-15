@@ -88,7 +88,8 @@ export async function sendBookingConfirmationEmail(input: {
   meetJoinUrl?: string | null;
   manageUrl?: string | null;
   cancelUrl?: string | null;
-  variant?: "confirmed" | "updated";
+  payUrl?: string | null;
+  variant?: "confirmed" | "updated" | "pending_payment";
 }) {
   const locale = toAppLocale(input.locale);
   const t = translator(locale);
@@ -101,23 +102,35 @@ export async function sendBookingConfirmationEmail(input: {
     input.meetJoinUrl?.startsWith("https://") ? input.meetJoinUrl : null;
   const manageUrl = safeLink(input.manageUrl);
   const cancelUrl = safeLink(input.cancelUrl);
+  const payUrl = safeLink(input.payUrl);
   const updated = input.variant === "updated";
+  const pendingPayment = input.variant === "pending_payment";
 
   const subject = updated
     ? t("updatedSubject", { service: input.serviceTitle })
-    : t("subject", { service: input.serviceTitle });
-  const heading = updated ? t("updatedHeading") : t("heading");
+    : pendingPayment
+      ? t("pendingPaymentSubject", { service: input.serviceTitle })
+      : t("subject", { service: input.serviceTitle });
+  const heading = updated
+    ? t("updatedHeading")
+    : pendingPayment
+      ? t("pendingPaymentHeading")
+      : t("heading");
   const intro = updated
     ? t("updatedIntro", { org: input.organizationName })
-    : t("intro", { org: input.organizationName });
+    : pendingPayment
+      ? t("pendingPaymentIntro", { org: input.organizationName })
+      : t("intro", { org: input.organizationName });
   const textLines = [
     t("greeting", { name: input.guestName }),
     heading,
     intro,
+    pendingPayment ? t("pendingPaymentBeforeDate") : null,
     `${t("when")}: ${when} (${input.timezone})`,
     `${t("consultant")}: ${input.hostName}`,
     `${t("service")}: ${input.serviceTitle}`,
     meet ? `${t("joinMeet")}: ${meet}` : null,
+    payUrl ? `${t("payNow")}: ${payUrl}` : null,
     manageUrl || cancelUrl ? t("manageIntro") : null,
     manageUrl ? `${t("changeTime")}: ${manageUrl}` : null,
     cancelUrl ? `${t("cancelAppointment")}: ${cancelUrl}` : null,
@@ -126,6 +139,10 @@ export async function sendBookingConfirmationEmail(input: {
 
   const meetHtml = meet
     ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(meet)}" style="display:inline-block;background:${email.ctaBg};color:${email.ctaText};text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("joinMeet"))}</a></p>`
+    : "";
+  const payHtml = payUrl
+    ? `<p style="margin:16px 0 0;font-size:15px;color:${email.textMuted};">${escapeHtml(t("pendingPaymentBeforeDate"))}</p>
+      <p style="margin:16px 0 0;"><a href="${escapeHtml(payUrl)}" style="display:inline-block;background:${email.ctaBg};color:${email.ctaText};text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("payNow"))}</a></p>`
     : "";
 
   const html = `<!doctype html>
@@ -137,6 +154,7 @@ export async function sendBookingConfirmationEmail(input: {
       <p style="margin:0 0 8px;font-size:15px;color:${email.text};">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
       <p style="margin:0 0 20px;font-size:15px;color:${email.textMuted};">${escapeHtml(intro)}</p>
       ${detailsTable(t, when, input.timezone, input.hostName, input.serviceTitle)}
+      ${payHtml}
       ${meetHtml}
       ${manageLinksHtml(t, manageUrl, cancelUrl)}
       <p style="margin:28px 0 0;font-size:13px;color:${email.textMuted};">${escapeHtml(t("footer"))}</p>
@@ -155,6 +173,134 @@ export async function sendBookingConfirmationEmail(input: {
     });
   } catch (error) {
     console.error("booking confirmation email:", error);
+  }
+}
+
+export async function sendBookingPaymentReceivedEmail(input: {
+  locale: string;
+  to: string;
+  guestName: string;
+  organizationName: string;
+  hostName: string;
+  serviceTitle: string;
+  startsAt: string;
+  timezone: string;
+  manageUrl?: string | null;
+}) {
+  const locale = toAppLocale(input.locale);
+  const t = translator(locale);
+  const when = formatDateTimeInZone(
+    new Date(input.startsAt),
+    input.timezone,
+    locale,
+  );
+  const manageUrl = safeLink(input.manageUrl);
+  const subject = t("paymentReceivedSubject", { service: input.serviceTitle });
+  const textLines = [
+    t("greeting", { name: input.guestName }),
+    t("paymentReceivedHeading"),
+    t("paymentReceivedIntro", { org: input.organizationName }),
+    `${t("when")}: ${when} (${input.timezone})`,
+    `${t("consultant")}: ${input.hostName}`,
+    `${t("service")}: ${input.serviceTitle}`,
+    manageUrl ? `${t("changeTime")}: ${manageUrl}` : null,
+    t("footer"),
+  ].filter((line): line is string => Boolean(line));
+
+  const html = `<!doctype html>
+<html lang="${locale}">
+  <body style="margin:0;padding:24px;background:${email.bodyBg};color:${email.text};font-family:Inter,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:${email.cardBg};border:1px solid ${email.border};border-radius:12px;padding:28px 24px;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${email.textMuted};">${escapeHtml(input.organizationName)}</p>
+      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:${email.heading};">${escapeHtml(t("paymentReceivedHeading"))}</h1>
+      <p style="margin:0 0 8px;font-size:15px;color:${email.text};">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
+      <p style="margin:0 0 20px;font-size:15px;color:${email.textMuted};">${escapeHtml(t("paymentReceivedIntro", { org: input.organizationName }))}</p>
+      ${detailsTable(t, when, input.timezone, input.hostName, input.serviceTitle)}
+      ${manageUrl ? `<p style="margin:24px 0 0;"><a href="${escapeHtml(manageUrl)}" style="color:${email.link};font-weight:600;text-decoration:none;">${escapeHtml(t("changeTime"))}</a></p>` : ""}
+      <p style="margin:28px 0 0;font-size:13px;color:${email.textMuted};">${escapeHtml(t("footer"))}</p>
+    </div>
+  </body>
+</html>`;
+
+  try {
+    await sendResendEmail({
+      to: input.to,
+      subject,
+      html,
+      text: textLines.join("\n"),
+      organizationName: input.organizationName,
+      locale: input.locale,
+    });
+  } catch (error) {
+    console.error("booking payment received email:", error);
+  }
+}
+
+export async function sendBookingPaymentReminderEmail(input: {
+  locale: string;
+  to: string;
+  guestName: string;
+  organizationName: string;
+  hostName: string;
+  serviceTitle: string;
+  startsAt: string;
+  timezone: string;
+  payUrl: string;
+  daysBefore: number;
+}) {
+  const locale = toAppLocale(input.locale);
+  const t = translator(locale);
+  const when = formatDateTimeInZone(
+    new Date(input.startsAt),
+    input.timezone,
+    locale,
+  );
+  const payUrl = safeLink(input.payUrl);
+  if (!payUrl) return;
+
+  const subject = t("paymentReminderSubject", { service: input.serviceTitle });
+  const textLines = [
+    t("greeting", { name: input.guestName }),
+    t("paymentReminderHeading"),
+    t("paymentReminderIntro", {
+      org: input.organizationName,
+      days: input.daysBefore,
+    }),
+    t("pendingPaymentBeforeDate"),
+    `${t("when")}: ${when} (${input.timezone})`,
+    `${t("consultant")}: ${input.hostName}`,
+    `${t("service")}: ${input.serviceTitle}`,
+    `${t("payNow")}: ${payUrl}`,
+    t("footer"),
+  ];
+
+  const html = `<!doctype html>
+<html lang="${locale}">
+  <body style="margin:0;padding:24px;background:${email.bodyBg};color:${email.text};font-family:Inter,Helvetica,Arial,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:${email.cardBg};border:1px solid ${email.border};border-radius:12px;padding:28px 24px;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:${email.textMuted};">${escapeHtml(input.organizationName)}</p>
+      <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:${email.heading};">${escapeHtml(t("paymentReminderHeading"))}</h1>
+      <p style="margin:0 0 8px;font-size:15px;color:${email.text};">${escapeHtml(t("greeting", { name: input.guestName }))}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:${email.textMuted};">${escapeHtml(t("paymentReminderIntro", { org: input.organizationName, days: input.daysBefore }))}</p>
+      <p style="margin:0 0 20px;font-size:15px;color:${email.textMuted};">${escapeHtml(t("pendingPaymentBeforeDate"))}</p>
+      ${detailsTable(t, when, input.timezone, input.hostName, input.serviceTitle)}
+      <p style="margin:24px 0 0;"><a href="${escapeHtml(payUrl)}" style="display:inline-block;background:${email.ctaBg};color:${email.ctaText};text-decoration:none;padding:12px 18px;border-radius:12px;font-weight:600;">${escapeHtml(t("payNow"))}</a></p>
+      <p style="margin:28px 0 0;font-size:13px;color:${email.textMuted};">${escapeHtml(t("footer"))}</p>
+    </div>
+  </body>
+</html>`;
+
+  try {
+    await sendResendEmail({
+      to: input.to,
+      subject,
+      html,
+      text: textLines.join("\n"),
+      organizationName: input.organizationName,
+      locale: input.locale,
+    });
+  } catch (error) {
+    console.error("booking payment reminder email:", error);
   }
 }
 

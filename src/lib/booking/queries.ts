@@ -867,7 +867,7 @@ export async function listFutureGuestAppointmentsByEmail(input: {
       "id, starts_at, guest_name, guest_email, service_id, host_user_id, meet_join_url, status",
     )
     .eq("organization_id", input.organizationId)
-    .eq("status", "confirmed")
+    .in("status", ["confirmed", "pending_payment"])
     .gt("starts_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
     .limit(200);

@@ -711,6 +711,11 @@ export const bookingServices = pgTable("booking_services", {
   priceCents: integer("price_cents").notNull().default(0),
   currency: text("currency").notNull().default("CAD"),
   isActive: boolean("is_active").notNull().default(true),
+  allowPayLater: boolean("allow_pay_later").notNull().default(false),
+  paymentReminderDays: integer("payment_reminder_days")
+    .array()
+    .notNull()
+    .default([]),
   sortOrder: integer("sort_order").notNull().default(0),
   formId: uuid("form_id").references(() => bookingForms.id, {
     onDelete: "set null",
@@ -1044,6 +1049,34 @@ export const paymentRequests = pgTable(
   (table) => [
     uniqueIndex("payment_requests_square_order_uidx").on(table.squareOrderId),
     uniqueIndex("payment_requests_appointment_uidx").on(table.appointmentId),
+  ],
+);
+
+export const bookingPaymentReminderSends = pgTable(
+  "booking_payment_reminder_sends",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    appointmentId: uuid("appointment_id")
+      .notNull()
+      .references(() => bookingAppointments.id, { onDelete: "cascade" }),
+    paymentRequestId: uuid("payment_request_id")
+      .notNull()
+      .references(() => paymentRequests.id, { onDelete: "cascade" }),
+    daysBefore: integer("days_before").notNull(),
+    appointmentStartsAt: timestamp("appointment_starts_at", {
+      withTimezone: true,
+    }).notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("booking_payment_reminder_sends_once_uidx").on(
+      table.appointmentId,
+      table.daysBefore,
+      table.appointmentStartsAt,
+    ),
   ],
 );
 

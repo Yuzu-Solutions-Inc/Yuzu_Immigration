@@ -34,6 +34,7 @@ const CRUMB_KEYS = {
   projects: "crumbProjects",
   people: "crumbPeople",
   calendar: "crumbCalendar",
+  bookings: "crumbBookings",
   services: "crumbServices",
   settings: "crumbSettings",
   account: "crumbAccount",

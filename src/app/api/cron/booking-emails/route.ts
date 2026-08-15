@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { processDueBookingAutomations } from "@/lib/email/booking-automations";
+import { processDuePaymentReminders } from "@/lib/email/payment-reminders";
 
 function cronAuthorized(request: Request) {
   const secret = process.env.CRON_SECRET?.trim();
@@ -21,10 +22,15 @@ async function run(request: Request) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   try {
+    const reminders = await processDuePaymentReminders();
     const result = await processDueBookingAutomations();
     const { pruneBookingAbuseEvents } = await import("@/lib/booking/abuse");
     await pruneBookingAbuseEvents();
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({
+      ok: true,
+      automations: result,
+      paymentReminders: reminders,
+    });
   } catch (error) {
     console.error("booking automation cron:", error);
     return NextResponse.json({ ok: false }, { status: 500 });

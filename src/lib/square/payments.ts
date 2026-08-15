@@ -48,6 +48,8 @@ export async function createCheckoutPaymentRequest(input: {
   createdBy?: string | null;
   buyerEmail?: string | null;
   expiresInHours?: number;
+  /** Absolute expiry (wins over expiresInHours when set). */
+  expiresAt?: Date | null;
 }): Promise<{ payment: PaymentRequestRow; token: string; checkoutUrl: string }> {
   const connection = await getOrgSquareConnection(input.organizationId);
   if (!connection) throw new Error("square_not_connected");
@@ -58,8 +60,9 @@ export async function createCheckoutPaymentRequest(input: {
   const redirectUrl = `${origin.replace(/\/$/, "")}/${input.locale}/pay/${token}`;
 
   const admin = createServiceClient();
-  const expiresAt = new Date(
-    Date.now() + (input.expiresInHours ?? 72) * 3_600_000,
+  const expiresAt = (
+    input.expiresAt ??
+    new Date(Date.now() + (input.expiresInHours ?? 72) * 3_600_000)
   ).toISOString();
 
   const { data: payment, error } = await admin
@@ -229,7 +232,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     .eq("id", payment.appointment_id)
     .eq("status", "pending_payment")
     .select(
-      "id, organization_id, host_user_id, service_id, starts_at, ends_at, guest_name, guest_email, guest_phone, guest_preferred_locale, manage_token_encrypted",
+      "id, organization_id, host_user_id, service_id, starts_at, ends_at, guest_name, guest_email, guest_phone, guest_preferred_locale, manage_token_encrypted, google_event_id, meet_join_url",
     )
     .maybeSingle();
 
@@ -237,6 +240,13 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     if (error) console.error("confirm appointment:", error.message);
     return;
   }
+
+  const alreadyOnCalendar = Boolean(appointment.google_event_id);
+  const existingMeet =
+    typeof appointment.meet_join_url === "string" &&
+    appointment.meet_join_url.startsWith("https://")
+      ? appointment.meet_join_url
+      : null;
 
   const [{ data: service }, { data: host }, { data: org }, { data: settings }] =
     await Promise.all([
@@ -283,18 +293,22 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     (appointment.guest_preferred_locale as string | null) || "en"
   ) as "en" | "fr" | "es";
 
-  const { pushAppointmentToGoogleCalendar } = await import(
-    "@/lib/google/calendar"
-  );
-  const google = await pushAppointmentToGoogleCalendar({
-    organizationId: appointment.organization_id as string,
-    hostUserId: appointment.host_user_id as string,
-    appointmentId: appointment.id as string,
-    title: `${serviceTitle} — ${guest.guest_name}`,
-    description: `Booked via Yuzu Immigration\n${guest.guest_name}\n${guest.guest_email}\n${guest.guest_phone ?? ""}`,
-    startsAt: appointment.starts_at as string,
-    endsAt: appointment.ends_at as string,
-  });
+  let meetJoinUrl = existingMeet;
+  if (!alreadyOnCalendar) {
+    const { pushAppointmentToGoogleCalendar } = await import(
+      "@/lib/google/calendar"
+    );
+    const google = await pushAppointmentToGoogleCalendar({
+      organizationId: appointment.organization_id as string,
+      hostUserId: appointment.host_user_id as string,
+      appointmentId: appointment.id as string,
+      title: `${serviceTitle} — ${guest.guest_name}`,
+      description: `Booked via Yuzu Immigration\n${guest.guest_name}\n${guest.guest_email}\n${guest.guest_phone ?? ""}`,
+      startsAt: appointment.starts_at as string,
+      endsAt: appointment.ends_at as string,
+    });
+    meetJoinUrl = google?.meetJoinUrl ?? null;
+  }
 
   const origin = await getAppBaseUrl();
   let manageUrl = `${origin}/${preferredLocale}/book`;
@@ -312,22 +326,37 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
   }
 
   after(async () => {
-    const { sendBookingConfirmationEmail } = await import(
-      "@/lib/email/booking-confirmation"
-    );
-    await sendBookingConfirmationEmail({
-      locale: preferredLocale,
-      to: guest.guest_email,
-      guestName: guest.guest_name,
-      organizationName,
-      hostName,
-      serviceTitle,
-      startsAt: appointment.starts_at as string,
-      timezone,
-      meetJoinUrl: google?.meetJoinUrl ?? null,
-      manageUrl,
-      cancelUrl,
-    });
+    const {
+      sendBookingConfirmationEmail,
+      sendBookingPaymentReceivedEmail,
+    } = await import("@/lib/email/booking-confirmation");
+    if (alreadyOnCalendar) {
+      await sendBookingPaymentReceivedEmail({
+        locale: preferredLocale,
+        to: guest.guest_email,
+        guestName: guest.guest_name,
+        organizationName,
+        hostName,
+        serviceTitle,
+        startsAt: appointment.starts_at as string,
+        timezone,
+        manageUrl,
+      });
+    } else {
+      await sendBookingConfirmationEmail({
+        locale: preferredLocale,
+        to: guest.guest_email,
+        guestName: guest.guest_name,
+        organizationName,
+        hostName,
+        serviceTitle,
+        startsAt: appointment.starts_at as string,
+        timezone,
+        meetJoinUrl,
+        manageUrl,
+        cancelUrl,
+      });
+    }
   });
 }
 

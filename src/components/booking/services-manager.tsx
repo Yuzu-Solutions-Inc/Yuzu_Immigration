@@ -112,6 +112,30 @@ function ServiceFormFields({
         />
         {t("active")}
       </label>
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="allowPayLater"
+          defaultChecked={service?.allow_pay_later ?? false}
+          className="mt-0.5 size-4 rounded border-input"
+        />
+        <span>
+          <span className="font-medium text-brand">{t("allowPayLater")}</span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {t("allowPayLaterHelp")}
+          </span>
+        </span>
+      </label>
+      <div className="space-y-2">
+        <Label htmlFor="paymentReminderDays">{t("paymentReminders")}</Label>
+        <Input
+          id="paymentReminderDays"
+          name="paymentReminderDays"
+          placeholder={t("paymentRemindersPlaceholder")}
+          defaultValue={(service?.payment_reminder_days ?? []).join(", ")}
+        />
+        <p className="text-xs text-muted-foreground">{t("paymentRemindersHelp")}</p>
+      </div>
     </>
   );
 }
