@@ -92,7 +92,8 @@ export function ProjectDocumentViewer({
   }, [activeRequestId, items]);
 
   const current = items[index] ?? null;
-  const canReview = current?.status === "uploaded";
+  const canReview =
+    current?.status === "uploaded" || current?.status === "accepted";
 
   const clearPreview = useCallback(() => {
     setPreview((prev) => {
@@ -297,7 +298,7 @@ export function ProjectDocumentViewer({
               requestId={current.requestId}
               projectId={projectId}
               locale={locale}
-              canReview
+              status={current.status}
               onReviewed={() => router.refresh()}
             />
           ) : null}

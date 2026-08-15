@@ -20,6 +20,7 @@ import {
   triggerBrowserDownload,
   type DocumentFilePayload,
 } from "@/lib/documents/browser-file";
+import type { DocumentRequestStatus } from "@/db/schema";
 
 type FetchResult =
   | { ok: true; base64: string; filename: string; contentType: string }
@@ -41,7 +42,7 @@ export function DocumentFileActions({
   review?: {
     projectId: string;
     locale: string;
-    canReview: boolean;
+    status: DocumentRequestStatus;
   };
   onOpenInViewer?: () => void;
 }) {
@@ -187,13 +188,13 @@ export function DocumentFileActions({
             </div>
           ) : null}
           <div className="flex flex-wrap items-center gap-2">
-            {review?.canReview && preview ? (
+            {review && preview ? (
               <DocumentReviewActions
                 layout="dialog"
                 requestId={requestId}
                 projectId={review.projectId}
                 locale={review.locale}
-                canReview
+                status={review.status}
                 onReviewed={closePreview}
               />
             ) : null}

@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import type { DocumentRequestStatus } from "@/db/schema";
 
 const initial: DocumentsActionState = {};
 
@@ -24,14 +25,14 @@ export function DocumentReviewActions({
   requestId,
   projectId,
   locale,
-  canReview,
+  status,
   onReviewed,
   layout = "inline",
 }: {
   requestId: string;
   projectId: string;
   locale: string;
-  canReview: boolean;
+  status: DocumentRequestStatus;
   onReviewed?: () => void;
   layout?: "inline" | "dialog";
 }) {
@@ -51,7 +52,10 @@ export function DocumentReviewActions({
     }
   }, [state.message, onReviewed]);
 
-  if (!canReview) return null;
+  const canApprove = status === "uploaded";
+  const canDeny = status === "uploaded" || status === "accepted";
+
+  if (!canApprove && !canDeny) return null;
 
   const error =
     state.error &&
@@ -79,23 +83,27 @@ export function DocumentReviewActions({
           <input type="hidden" name="projectId" value={projectId} />
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="decision" value="approve" />
-          <Button type="submit" size="sm" variant="outline" disabled={pending}>
-            {t("review.approve")}
-          </Button>
+          {canApprove ? (
+            <Button type="submit" size="sm" variant="outline" disabled={pending}>
+              {t("review.approve")}
+            </Button>
+          ) : null}
         </form>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={pending}
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={() => {
-            setComment("");
-            setDenyOpen(true);
-          }}
-        >
-          {t("review.deny")}
-        </Button>
+        {canDeny ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={pending}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => {
+              setComment("");
+              setDenyOpen(true);
+            }}
+          >
+            {t("review.deny")}
+          </Button>
+        ) : null}
       </div>
 
       <Dialog open={denyOpen} onOpenChange={setDenyOpen}>

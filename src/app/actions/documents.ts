@@ -273,7 +273,17 @@ export async function reviewDocumentRequestAction(
     key,
   );
 
-  if (request.status !== "uploaded") return { error: "not_reviewable" };
+  if (decision === "approve" && request.status !== "uploaded") {
+    return { error: "not_reviewable" };
+  }
+
+  if (
+    decision === "deny" &&
+    request.status !== "uploaded" &&
+    request.status !== "accepted"
+  ) {
+    return { error: "not_reviewable" };
+  }
 
   const { data: file } = await supabase
     .from("project_document_files")
