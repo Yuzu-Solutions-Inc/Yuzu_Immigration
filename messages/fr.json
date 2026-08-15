@@ -1525,7 +1525,7 @@
     "bufferHelp": "Laisser un intervalle après chaque rendez-vous.",
     "weekTemplate": "Semaine type",
     "weekTemplateHelp": "Ces heures sont les vôtres. Vos collègues ont leur propre calendrier : deux consultants peuvent accepter un rendez-vous au même moment.",
-    "weekTemplateDragHelp": "Cliquez-glissez sur un jour pour ouvrir ces heures. Cliquez un bloc coloré pour le retirer. Les jours vont de 00:00 à 24:00.",
+    "weekTemplateDragHelp": "Cliquez-glissez sur un jour pour ouvrir ces heures. Cliquez un bloc coloré pour le retirer. La grille s’ouvre sur 09:00–17:00 ; faites défiler pour les heures tôt ou tard.",
     "weekTemplateTouchHelp": "Ajoutez des heures d’ouverture pour chaque jour avec les heures de début et de fin. Retirez un créneau avec l’icône poubelle.",
     "addStart": "Début",
     "addEnd": "Fin",

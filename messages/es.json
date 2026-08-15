@@ -1525,7 +1525,7 @@
     "bufferHelp": "Dejar un intervalo después de cada cita.",
     "weekTemplate": "Semana tipo",
     "weekTemplateHelp": "Estos horarios son suyos. Sus compañeros tienen su propio calendario: dos consultores pueden aceptar citas a la misma hora.",
-    "weekTemplateDragHelp": "Haga clic y arrastre en un día para abrir esas horas. Haga clic en un bloque de color para quitarlo. Los días van de 00:00 a 24:00.",
+    "weekTemplateDragHelp": "Haga clic y arrastre en un día para abrir esas horas. Haga clic en un bloque de color para quitarlo. La cuadrícula abre en 09:00–17:00; desplácese para horas tempranas o tardías.",
     "weekTemplateTouchHelp": "Añada horario abierto por día con hora de inicio y fin. Quite un tramo con el icono de papelera.",
     "addStart": "Inicio",
     "addEnd": "Fin",

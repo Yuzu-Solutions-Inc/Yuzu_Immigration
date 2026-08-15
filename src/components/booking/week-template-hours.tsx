@@ -1,7 +1,14 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -24,10 +31,13 @@ import { cn } from "@/lib/utils";
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const TEMPLATE_WEEKDAYS = [1, 2, 3, 4, 5, 6, 0] as const;
 const HOURS = 24;
-const HOUR_PX = 32;
-const GRID_HEIGHT = HOURS * HOUR_PX;
+const DEFAULT_HOUR_PX = 48;
+const MIN_HOUR_PX = 36;
 const SNAP = 30;
 const DAY_MINUTES = HOURS * 60;
+/** Visible window: 09:00–17:00 (8 hours). Full day remains scrollable. */
+const FOCUS_START_HOUR = 9;
+const FOCUS_HOURS = 8;
 
 const TIME_OPTIONS = Array.from({ length: (DAY_MINUTES / SNAP) + 1 }, (_, i) =>
   i * SNAP,
@@ -72,11 +82,16 @@ export function WeekTemplateHours({
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [dragEnabled, setDragEnabled] = useState(false);
+  const [hourPx, setHourPx] = useState(DEFAULT_HOUR_PX);
   const [addByDay, setAddByDay] = useState<
     Record<number, { start: number; end: number }>
   >({});
   const draftRef = useRef<Draft | null>(null);
   const columnRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  const gridHeight = HOURS * hourPx;
+  const gridTemplateColumns = `3rem repeat(${TEMPLATE_WEEKDAYS.length}, minmax(0, 1fr))`;
 
   useEffect(() => {
     const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -85,6 +100,32 @@ export function WeekTemplateHours({
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const syncHourPx = () => {
+      const available = el.clientHeight;
+      if (available <= 0) return;
+      const next = Math.max(
+        MIN_HOUR_PX,
+        Math.round(available / FOCUS_HOURS),
+      );
+      setHourPx((prev) => (prev === next ? prev : next));
+    };
+
+    syncHourPx();
+    const observer = new ResizeObserver(syncHourPx);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = FOCUS_START_HOUR * hourPx;
+  }, [hourPx]);
 
   const rulesByDay = useMemo(() => {
     const map = new Map<number, BookingAvailabilityRuleRow[]>();
@@ -384,126 +425,33 @@ export function WeekTemplateHours({
         })}
       </div>
 
-      {/* Desktop: drag grid */}
+      {/* Desktop: drag grid zoomed to 09:00–17:00, scrollable full day */}
       <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface select-none lg:block">
-        <div
-          className="grid min-w-[52rem]"
-          style={{
-            gridTemplateColumns: `3rem repeat(${TEMPLATE_WEEKDAYS.length}, minmax(0, 1fr))`,
-          }}
-        >
-          <div className="sticky left-0 z-10 border-b border-r border-border bg-surface" />
-          {TEMPLATE_WEEKDAYS.map((weekday) => {
-            const dayRules = rulesByDay.get(weekday) ?? [];
-            return (
-              <div
-                key={`head-${weekday}`}
-                className="border-b border-border px-2 py-2 text-center"
-              >
-                <p className="font-heading text-sm font-semibold text-brand">
-                  {t(`weekdaysShort.${WEEKDAY_KEYS[weekday]}`)}
-                </p>
-                {canManage && dayRules.length > 0 ? (
-                  <button
-                    type="button"
-                    className="mt-0.5 min-h-8 px-1 text-[11px] font-medium text-muted-foreground hover:text-destructive"
-                    disabled={pending}
-                    onClick={() => {
-                      startTransition(async () => {
-                        const result = await clearDayAvailabilityAction(
-                          weekday,
-                          locale,
-                        );
-                        if (result.error) {
-                          toast.error(t(`errors.${result.error}`));
-                        }
-                      });
-                    }}
-                  >
-                    {t("clearDay")}
-                  </button>
-                ) : (
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {dayRules.length === 0 ? t("closedDay") : "\u00a0"}
+        <div className="min-w-[52rem]">
+          <div
+            className="grid border-b border-border bg-surface"
+            style={{ gridTemplateColumns }}
+          >
+            <div className="sticky left-0 z-10 border-r border-border bg-surface" />
+            {TEMPLATE_WEEKDAYS.map((weekday) => {
+              const dayRules = rulesByDay.get(weekday) ?? [];
+              return (
+                <div
+                  key={`head-${weekday}`}
+                  className="px-2 py-2 text-center"
+                >
+                  <p className="font-heading text-sm font-semibold text-brand">
+                    {t(`weekdaysShort.${WEEKDAY_KEYS[weekday]}`)}
                   </p>
-                )}
-              </div>
-            );
-          })}
-
-          <div className="relative border-r border-border bg-canvas/80">
-            {Array.from({ length: HOURS }, (_, hour) => (
-              <div
-                key={hour}
-                className="absolute right-1 text-[10px] tabular-nums text-muted-foreground"
-                style={{ top: hour * HOUR_PX + 2 }}
-              >
-                {formatHmLabel(hour * 60)}
-              </div>
-            ))}
-            <div
-              className="absolute right-1 text-[10px] tabular-nums text-muted-foreground"
-              style={{ top: GRID_HEIGHT - 10 }}
-            >
-              24:00
-            </div>
-            <div style={{ height: GRID_HEIGHT }} />
-          </div>
-
-          {TEMPLATE_WEEKDAYS.map((weekday) => {
-            const dayRules = rulesByDay.get(weekday) ?? [];
-            const live =
-              draft?.weekday === weekday ? draftRange(draft) : null;
-            return (
-              <div
-                key={`col-${weekday}`}
-                ref={(node) => {
-                  columnRefs.current[weekday] = node;
-                }}
-                className={cn(
-                  "relative border-l border-border bg-canvas/40",
-                  dragEnabled && canManage && "cursor-crosshair touch-none",
-                )}
-                style={{ height: GRID_HEIGHT }}
-                onPointerDown={(event) => onColumnPointerDown(weekday, event)}
-                onPointerMove={(event) => onColumnPointerMove(weekday, event)}
-                onPointerUp={() => onColumnPointerUp(weekday)}
-                onPointerCancel={() => setLiveDraft(null)}
-              >
-                {Array.from({ length: HOURS }, (_, hour) => (
-                  <div
-                    key={hour}
-                    className="pointer-events-none absolute inset-x-0 border-t border-border/70"
-                    style={{ top: hour * HOUR_PX, height: HOUR_PX }}
-                  >
-                    <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-border/50" />
-                  </div>
-                ))}
-
-                {dayRules.map((rule) => {
-                  const start = minutesFromHm(rule.start_time);
-                  const end = minutesFromHm(rule.end_time);
-                  return (
+                  {canManage && dayRules.length > 0 ? (
                     <button
-                      key={rule.id}
                       type="button"
-                      data-slot-block
-                      disabled={!canManage || pending}
-                      aria-label={t("removeRule")}
-                      title={canManage ? t("clickToRemoveSlot") : undefined}
-                      className="group absolute inset-x-1 overflow-hidden rounded-md bg-action px-1.5 py-1 text-left text-[11px] font-medium leading-tight text-action-foreground shadow-sm hover:bg-action-hover"
-                      style={{
-                        top: (start / DAY_MINUTES) * GRID_HEIGHT,
-                        height: Math.max(
-                          16,
-                          ((end - start) / DAY_MINUTES) * GRID_HEIGHT,
-                        ),
-                      }}
+                      className="mt-0.5 min-h-8 px-1 text-[11px] font-medium text-muted-foreground hover:text-destructive"
+                      disabled={pending}
                       onClick={() => {
-                        if (!canManage) return;
                         startTransition(async () => {
-                          const result = await deleteAvailabilityRuleAction(
-                            rule.id,
+                          const result = await clearDayAvailabilityAction(
+                            weekday,
                             locale,
                           );
                           if (result.error) {
@@ -512,38 +460,153 @@ export function WeekTemplateHours({
                         });
                       }}
                     >
-                      <span className="flex items-start justify-between gap-1">
-                        <span className="min-w-0 truncate">
-                          {formatHmLabel(start)}–{formatHmLabel(end)}
-                        </span>
-                        {canManage ? (
-                          <Trash2
-                            aria-hidden
-                            className="mt-px size-3 shrink-0 opacity-100"
-                          />
-                        ) : null}
-                      </span>
+                      {t("clearDay")}
                     </button>
-                  );
-                })}
+                  ) : (
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      {dayRules.length === 0 ? t("closedDay") : "\u00a0"}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
-                {live ? (
+          <div
+            ref={scrollRef}
+            className="h-[min(32rem,60vh)] overflow-y-auto"
+          >
+            <div className="grid" style={{ gridTemplateColumns }}>
+              <div className="relative sticky left-0 z-10 border-r border-border bg-canvas/80">
+                {Array.from({ length: HOURS }, (_, hour) => (
                   <div
-                    className="pointer-events-none absolute inset-x-1 rounded-md border-2 border-dashed border-action bg-action/20 px-1.5 py-1 text-[11px] font-medium text-action"
-                    style={{
-                      top: (live.start / DAY_MINUTES) * GRID_HEIGHT,
-                      height: Math.max(
-                        16,
-                        ((live.end - live.start) / DAY_MINUTES) * GRID_HEIGHT,
-                      ),
-                    }}
+                    key={hour}
+                    className="absolute right-1 text-[10px] tabular-nums text-muted-foreground"
+                    style={{ top: hour * hourPx + 2 }}
                   >
-                    {formatHmLabel(live.start)}–{formatHmLabel(live.end)}
+                    {formatHmLabel(hour * 60)}
                   </div>
-                ) : null}
+                ))}
+                <div
+                  className="absolute right-1 text-[10px] tabular-nums text-muted-foreground"
+                  style={{ top: gridHeight - 10 }}
+                >
+                  24:00
+                </div>
+                <div style={{ height: gridHeight }} />
               </div>
-            );
-          })}
+
+              {TEMPLATE_WEEKDAYS.map((weekday) => {
+                const dayRules = rulesByDay.get(weekday) ?? [];
+                const live =
+                  draft?.weekday === weekday ? draftRange(draft) : null;
+                return (
+                  <div
+                    key={`col-${weekday}`}
+                    ref={(node) => {
+                      columnRefs.current[weekday] = node;
+                    }}
+                    className={cn(
+                      "relative border-l border-border bg-canvas/40 touch-pan-y",
+                      dragEnabled && canManage && "cursor-crosshair touch-none",
+                    )}
+                    style={{ height: gridHeight }}
+                    onPointerDown={
+                      dragEnabled
+                        ? (event) => onColumnPointerDown(weekday, event)
+                        : undefined
+                    }
+                    onPointerMove={
+                      dragEnabled
+                        ? (event) => onColumnPointerMove(weekday, event)
+                        : undefined
+                    }
+                    onPointerUp={
+                      dragEnabled
+                        ? () => onColumnPointerUp(weekday)
+                        : undefined
+                    }
+                    onPointerCancel={
+                      dragEnabled ? () => setLiveDraft(null) : undefined
+                    }
+                  >
+                    {Array.from({ length: HOURS }, (_, hour) => (
+                      <div
+                        key={hour}
+                        className="pointer-events-none absolute inset-x-0 border-t border-border/70"
+                        style={{ top: hour * hourPx, height: hourPx }}
+                      >
+                        <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-border/50" />
+                      </div>
+                    ))}
+
+                    {dayRules.map((rule) => {
+                      const start = minutesFromHm(rule.start_time);
+                      const end = minutesFromHm(rule.end_time);
+                      return (
+                        <button
+                          key={rule.id}
+                          type="button"
+                          data-slot-block
+                          disabled={!canManage || pending}
+                          aria-label={t("removeRule")}
+                          title={canManage ? t("clickToRemoveSlot") : undefined}
+                          className="group absolute inset-x-1 overflow-hidden rounded-md bg-action px-1.5 py-1 text-left text-[11px] font-medium leading-tight text-action-foreground shadow-sm hover:bg-action-hover"
+                          style={{
+                            top: (start / DAY_MINUTES) * gridHeight,
+                            height: Math.max(
+                              16,
+                              ((end - start) / DAY_MINUTES) * gridHeight,
+                            ),
+                          }}
+                          onClick={() => {
+                            if (!canManage) return;
+                            startTransition(async () => {
+                              const result = await deleteAvailabilityRuleAction(
+                                rule.id,
+                                locale,
+                              );
+                              if (result.error) {
+                                toast.error(t(`errors.${result.error}`));
+                              }
+                            });
+                          }}
+                        >
+                          <span className="flex items-start justify-between gap-1">
+                            <span className="min-w-0 truncate">
+                              {formatHmLabel(start)}–{formatHmLabel(end)}
+                            </span>
+                            {canManage ? (
+                              <Trash2
+                                aria-hidden
+                                className="mt-px size-3 shrink-0 opacity-100"
+                              />
+                            ) : null}
+                          </span>
+                        </button>
+                      );
+                    })}
+
+                    {live ? (
+                      <div
+                        className="pointer-events-none absolute inset-x-1 rounded-md border-2 border-dashed border-action bg-action/20 px-1.5 py-1 text-[11px] font-medium text-action"
+                        style={{
+                          top: (live.start / DAY_MINUTES) * gridHeight,
+                          height: Math.max(
+                            16,
+                            ((live.end - live.start) / DAY_MINUTES) *
+                              gridHeight,
+                          ),
+                        }}
+                      >
+                        {formatHmLabel(live.start)}–{formatHmLabel(live.end)}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </section>

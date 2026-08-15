@@ -21,10 +21,12 @@ export function GoogleCalendarSettings({
   locale,
   configured,
   connection,
+  compact = false,
 }: {
   locale: string;
   configured: boolean;
   connection: GoogleCalendarConnectionPublic | null;
+  compact?: boolean;
 }) {
   const t = useTranslations("calendar");
   const connected = Boolean(connection?.is_enabled);
@@ -32,7 +34,11 @@ export function GoogleCalendarSettings({
 
   return (
     <IntegrationPanel
-      logo={<GoogleCalendarLogo className="size-9" />}
+      compact={compact}
+      headingLevel={compact ? 3 : 2}
+      logo={
+        <GoogleCalendarLogo className={compact ? "size-7" : "size-9"} />
+      }
       title={t("googleTitle")}
       description={t("googleHelp")}
       connected={connected}

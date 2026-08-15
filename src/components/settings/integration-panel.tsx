@@ -11,6 +11,7 @@ export function IntegrationPanel({
   statusConnectedLabel,
   statusDisconnectedLabel,
   headingLevel = 2,
+  compact = false,
   children,
   actions,
   className,
@@ -22,6 +23,7 @@ export function IntegrationPanel({
   statusConnectedLabel: string;
   statusDisconnectedLabel: string;
   headingLevel?: 2 | 3;
+  compact?: boolean;
   children?: ReactNode;
   actions?: ReactNode;
   className?: string;
@@ -29,17 +31,22 @@ export function IntegrationPanel({
   const HeadingTag = headingLevel === 3 ? "h3" : "h2";
 
   return (
-    <section className={cn("space-y-4", className)}>
+    <section className={cn(compact ? "space-y-3" : "space-y-4", className)}>
       <div className="flex flex-wrap items-start gap-3">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-surface p-1 shadow-sm">
+        <div
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-xl border border-border bg-surface shadow-sm",
+            compact ? "size-10 p-1" : "size-12 p-1",
+          )}
+        >
           {logo}
         </div>
-        <div className="min-w-0 flex-1 space-y-1">
+        <div className="min-w-0 flex-1 space-y-0.5">
           <div className="flex flex-wrap items-center gap-2">
             <HeadingTag
               className={cn(
                 "font-heading font-semibold text-brand",
-                headingLevel === 3 ? "text-base" : "text-lg",
+                compact || headingLevel === 3 ? "text-base" : "text-lg",
               )}
             >
               {title}
@@ -54,7 +61,14 @@ export function IntegrationPanel({
               {connected ? statusConnectedLabel : statusDisconnectedLabel}
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p
+            className={cn(
+              "text-muted-foreground",
+              compact ? "text-xs" : "text-sm",
+            )}
+          >
+            {description}
+          </p>
         </div>
       </div>
 
