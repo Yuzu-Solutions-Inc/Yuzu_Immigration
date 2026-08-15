@@ -197,7 +197,19 @@ export default async function ProjectDetailPage({
               <h1 className="font-heading text-2xl font-semibold tracking-tight text-brand sm:text-3xl">
                 {project.title}
               </h1>
-              <p className="text-base font-medium text-brand/85">{programLabel}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-base font-medium text-brand/85">{programLabel}</p>
+                <StatusPill
+                  label={t(
+                    `formLanguages.${project.form_language === "fr" ? "fr" : "en"}`,
+                  )}
+                  tone="muted"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {t("opened")} {opened}
+                </span>
+                <StatusPill label={representativeLabel} tone="muted" />
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -224,28 +236,7 @@ export default async function ProjectDetailPage({
                   tone="muted"
                 />
               ) : null}
-              <StatusPill
-                label={t(
-                  `formLanguages.${project.form_language === "fr" ? "fr" : "en"}`,
-                )}
-                tone="muted"
-              />
             </div>
-
-            <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-              <div>
-                <dt className="inline font-medium text-brand/60">{t("opened")}</dt>
-                <dd className="ml-1 inline text-muted-foreground">{opened}</dd>
-              </div>
-              <div>
-                <dt className="inline font-medium text-brand/60">
-                  {t("representative")}
-                </dt>
-                <dd className="ml-1 inline text-muted-foreground">
-                  {representativeLabel}
-                </dd>
-              </div>
-            </dl>
 
             {project.description ? (
               <p className="max-w-2xl text-sm leading-relaxed text-brand/75">
