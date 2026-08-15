@@ -1,7 +1,7 @@
 import { compareParticipantRole } from "@/lib/crm/programs";
-import { hashShareToken } from "@/lib/ircc/share-token";
+import { generateShareToken, hashShareToken } from "@/lib/ircc/share-token";
 
-export { generateShareToken, hashShareToken } from "@/lib/ircc/share-token";
+export { generateShareToken, hashShareToken };
 import { isGrantedStatus } from "@/lib/crm/statuses";
 import type { ProgramFamily } from "@/db/schema";
 import {

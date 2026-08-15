@@ -1,20 +1,40 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
   forgotSharePasswordAction,
-  loginSharePasswordAction,
-  setSharePasswordAction,
+  loginSharePasswordFormAction,
+  setSharePasswordFormAction,
   shareAuthInitialState,
-  type ShareAuthActionState,
 } from "@/app/actions/share-auth";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import type { ShareAccessState } from "@/lib/ircc/share-auth";
+
+const SHARE_ERROR_KEYS = [
+  "invalid",
+  "mismatch",
+  "weak_password",
+  "wrong_password",
+  "rate_limited",
+  "expired",
+  "no_email",
+  "email_not_configured",
+  "send_failed",
+  "already_set",
+  "auth_required",
+  "server_config",
+] as const;
+
+type ShareErrorKey = (typeof SHARE_ERROR_KEYS)[number];
+
+function isShareErrorKey(value: string): value is ShareErrorKey {
+  return (SHARE_ERROR_KEYS as readonly string[]).includes(value);
+}
 
 export function ShareLinkGate({
   token,
@@ -23,6 +43,7 @@ export function ShareLinkGate({
   organizationName,
   projectTitle,
   expiresAt,
+  initialError,
 }: {
   token: string;
   locale: string;
@@ -30,24 +51,19 @@ export function ShareLinkGate({
   organizationName: string;
   projectTitle: string;
   expiresAt: string;
+  initialError?: string;
 }) {
   const t = useTranslations("forms");
-  const [setupState, setupAction, setupPending] = useActionState(
-    setSharePasswordAction,
-    shareAuthInitialState,
-  );
-  const [loginState, loginAction, loginPending] = useActionState(
-    loginSharePasswordAction,
-    shareAuthInitialState,
-  );
   const [forgotState, forgotAction, forgotPending] = useActionState(
     forgotSharePasswordAction,
     shareAuthInitialState,
   );
 
-  const activeState: ShareAuthActionState =
-    mode === "needs_password_setup" ? setupState : loginState;
-  const errorKey = activeState.error ?? forgotState.error;
+  const errorKey =
+    (initialError && isShareErrorKey(initialError) ? initialError : null) ??
+    forgotState.error ??
+    null;
+
   const errorMessage = errorKey
     ? {
         invalid: t("shareAuth.errors.invalid"),
@@ -64,15 +80,6 @@ export function ShareLinkGate({
         server_config: t("shareAuth.errors.serverConfig"),
       }[errorKey] ?? t("errors.generic")
     : null;
-
-  useEffect(() => {
-    if (
-      setupState.message === "authenticated" ||
-      loginState.message === "authenticated"
-    ) {
-      window.location.reload();
-    }
-  }, [setupState.message, loginState.message]);
 
   if (forgotState.message === "email_sent") {
     return (
@@ -121,7 +128,7 @@ export function ShareLinkGate({
                 {t("shareAuth.passwordRules")}
               </p>
             </div>
-            <form action={setupAction} className="space-y-4">
+            <form action={setSharePasswordFormAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="locale" value={locale} />
               <div className="space-y-2">
@@ -148,11 +155,8 @@ export function ShareLinkGate({
                   hideLabel={t("shareAuth.hidePassword")}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={setupPending}>
-                {setupPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : null}
-                {setupPending ? t("shareAuth.settingUp") : t("shareAuth.setupCta")}
+              <Button type="submit" className="w-full">
+                {t("shareAuth.setupCta")}
               </Button>
             </form>
           </>
@@ -166,7 +170,7 @@ export function ShareLinkGate({
                 {t("shareAuth.loginBody")}
               </p>
             </div>
-            <form action={loginAction} className="space-y-4">
+            <form action={loginSharePasswordFormAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="locale" value={locale} />
               <div className="space-y-2">
@@ -182,11 +186,8 @@ export function ShareLinkGate({
                   hideLabel={t("shareAuth.hidePassword")}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loginPending}>
-                {loginPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : null}
-                {loginPending ? t("shareAuth.loggingIn") : t("shareAuth.loginCta")}
+              <Button type="submit" className="w-full">
+                {t("shareAuth.loginCta")}
               </Button>
             </form>
             <div className="border-t border-border pt-4 space-y-3">

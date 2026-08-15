@@ -7,10 +7,13 @@ import { loadShareFillGate } from "@/lib/ircc/share-fill-gate";
 
 export default async function ClientFillFormsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; token: string }>;
+  searchParams: Promise<{ shareError?: string }>;
 }) {
   const { locale, token } = await params;
+  const { shareError } = await searchParams;
   setRequestLocale(locale);
 
   const gate = await loadShareFillGate(token);
@@ -24,6 +27,7 @@ export default async function ClientFillFormsPage({
         organizationName={gate.organizationName}
         projectTitle={gate.projectTitle}
         expiresAt={gate.expiresAt}
+        initialError={shareError}
       />
     );
   }

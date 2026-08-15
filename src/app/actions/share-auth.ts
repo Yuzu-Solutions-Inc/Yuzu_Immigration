@@ -1,14 +1,12 @@
 "use server";
 
 import { createHmac } from "node:crypto";
-import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { getRequestClientIp } from "@/lib/booking/abuse";
 import { sendShareLinkResetEmail } from "@/lib/email/share-link-reset";
 import { loadShareFillGate } from "@/lib/ircc/share-fill-gate";
-import {
-  listActiveProjectPeople,
-} from "@/lib/ircc/project-forms";
+import { listActiveProjectPeople } from "@/lib/ircc/project-forms";
 import {
   assertShareAuthenticated,
   checkShareForgotRateLimit,
@@ -47,24 +45,29 @@ async function getIpHash() {
   return ip ? hashIp(ip) : null;
 }
 
-export async function setSharePasswordAction(
-  _prev: ShareAuthActionState,
-  formData: FormData,
-): Promise<ShareAuthActionState> {
+function redirectShareAuthError(locale: string, token: string, error: string) {
+  redirect(
+    `/${locale}/fill/${token}?shareError=${encodeURIComponent(error)}`,
+  );
+}
+
+export async function setSharePasswordFormAction(formData: FormData) {
   const token = String(formData.get("token") || "");
   const password = String(formData.get("password") || "");
   const confirm = String(formData.get("confirm") || "");
   const locale = String(formData.get("locale") || "en");
 
-  if (!token) return { error: "invalid" };
-  if (password !== confirm) return { error: "mismatch" };
+  if (!token) redirectShareAuthError(locale, "invalid", "invalid");
+  if (password !== confirm) redirectShareAuthError(locale, token, "mismatch");
 
   const parsed = parseShareLinkPassword(password);
-  if (!parsed.success) return { error: "weak_password" };
+  if (!parsed.success) redirectShareAuthError(locale, token, "weak_password");
 
   const gate = await loadShareFillGate(token);
-  if (!gate) return { error: "expired" };
-  if (gate.access !== "needs_password_setup") return { error: "invalid" };
+  if (!gate) redirectShareAuthError(locale, token, "expired");
+  if (gate.access !== "needs_password_setup") {
+    redirectShareAuthError(locale, token, "invalid");
+  }
 
   const resolved = toResolvedShareLink(
     {
@@ -77,16 +80,21 @@ export async function setSharePasswordAction(
   );
 
   const result = await setShareLinkPassword(resolved.tokenHash, password);
-  if (result === "invalid_password") return { error: "weak_password" };
-  if (result === "already_set") return { error: "already_set" };
-  if (result !== "ok") return { error: "expired" };
+  if (result === "invalid_password") {
+    redirectShareAuthError(locale, token, "weak_password");
+  }
+  if (result === "already_set") {
+    redirectShareAuthError(locale, token, "already_set");
+  }
+  if (result !== "ok") redirectShareAuthError(locale, token, "expired");
 
   try {
     await setShareSessionCookie(resolved);
   } catch (err) {
     console.error("setShareSessionCookie:", err);
-    return { error: "server_config" };
+    redirectShareAuthError(locale, token, "server_config");
   }
+
   await recordAuditEvent({
     organizationId: gate.organizationId,
     actorKind: "share_link",
@@ -96,23 +104,21 @@ export async function setSharePasswordAction(
     metadata: { shareLinkId: gate.linkId },
   });
 
-  revalidatePath(`/${locale}/fill/${token}`);
-  return { message: "authenticated" };
+  redirect(`/${locale}/fill/${token}`);
 }
 
-export async function loginSharePasswordAction(
-  _prev: ShareAuthActionState,
-  formData: FormData,
-): Promise<ShareAuthActionState> {
+export async function loginSharePasswordFormAction(formData: FormData) {
   const token = String(formData.get("token") || "");
   const password = String(formData.get("password") || "");
   const locale = String(formData.get("locale") || "en");
 
-  if (!token || !password) return { error: "invalid" };
+  if (!token || !password) redirectShareAuthError(locale, token || "invalid", "invalid");
 
   const gate = await loadShareFillGate(token);
-  if (!gate) return { error: "expired" };
-  if (gate.access !== "needs_password_login") return { error: "invalid" };
+  if (!gate) redirectShareAuthError(locale, token, "expired");
+  if (gate.access !== "needs_password_login") {
+    redirectShareAuthError(locale, token, "invalid");
+  }
 
   const resolved = toResolvedShareLink(
     {
@@ -125,21 +131,22 @@ export async function loginSharePasswordAction(
   );
 
   if (await checkShareVerifyRateLimit(resolved) === "rate_limited") {
-    return { error: "rate_limited" };
+    redirectShareAuthError(locale, token, "rate_limited");
   }
 
   const ok = await verifyShareLinkPassword(resolved.tokenHash, password);
   if (!ok) {
     await recordShareVerifyFailure(resolved);
-    return { error: "wrong_password" };
+    redirectShareAuthError(locale, token, "wrong_password");
   }
 
   try {
     await setShareSessionCookie(resolved);
   } catch (err) {
     console.error("setShareSessionCookie:", err);
-    return { error: "server_config" };
+    redirectShareAuthError(locale, token, "server_config");
   }
+
   await recordAuditEvent({
     organizationId: gate.organizationId,
     actorKind: "share_link",
@@ -149,8 +156,7 @@ export async function loginSharePasswordAction(
     metadata: { shareLinkId: gate.linkId },
   });
 
-  revalidatePath(`/${locale}/fill/${token}`);
-  return { message: "authenticated" };
+  redirect(`/${locale}/fill/${token}`);
 }
 
 export async function forgotSharePasswordAction(
