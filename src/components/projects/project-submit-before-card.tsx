@@ -48,23 +48,24 @@ export function ProjectSubmitBeforeCard({
       }[state.error] ?? t("errors.generic")
     : null;
 
-  const pillLabel = value
+  const dateLabel = value
     ? formatSubmitBefore(value, locale)
     : t("submitBeforeEmpty");
+  const pillLabel = `${t("submitBefore")} · ${dateLabel}`;
   const pillTone = submitBeforeTone(value || null);
 
   return (
     <form action={formAction} className="inline-flex flex-col gap-1">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="projectId" value={projectId} />
-      <div className="group relative inline-flex items-center rounded-full focus-within:ring-3 focus-within:ring-ring/30">
+      <div className="group relative inline-flex max-w-full items-center rounded-full focus-within:ring-3 focus-within:ring-ring/30">
         <StatusPill
           label={pillLabel}
           tone={pillTone}
-          className="gap-1.5 pr-7 group-hover:ring-2 group-hover:ring-action/20 group-focus-within:ring-2 group-focus-within:ring-action/20"
+          className="max-w-full gap-1.5 pr-7 group-hover:ring-2 group-hover:ring-action/20 group-focus-within:ring-2 group-focus-within:ring-action/20"
         />
         <Pencil
-          className="pointer-events-none absolute right-2.5 size-3 shrink-0 text-current opacity-0 transition-opacity group-hover:opacity-70 group-focus-within:opacity-70"
+          className="pointer-events-none absolute right-2.5 size-3 shrink-0 text-current opacity-50 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
           aria-hidden
         />
         <input

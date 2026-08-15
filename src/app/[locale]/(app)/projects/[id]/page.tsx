@@ -220,16 +220,11 @@ export default async function ProjectDetailPage({
                 currentStatusAt={project.status_at}
                 history={history}
               />
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
-                  {t("submitBefore")}
-                </span>
-                <ProjectSubmitBeforeCard
-                  locale={locale}
-                  projectId={project.id}
-                  currentSubmitBefore={project.submit_before}
-                />
-              </div>
+              <ProjectSubmitBeforeCard
+                locale={locale}
+                projectId={project.id}
+                currentSubmitBefore={project.submit_before}
+              />
               {project.jurisdiction !== "federal" ? (
                 <StatusPill
                   label={t(`jurisdictions.${project.jurisdiction}`)}
