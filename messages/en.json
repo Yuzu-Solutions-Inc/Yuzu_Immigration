@@ -866,7 +866,8 @@
         "emailNotConfigured": "Email could not be sent. Contact your consultant for a new link.",
         "sendFailed": "Could not send a new link. Try again or contact your consultant.",
         "alreadySet": "A password is already set for this link.",
-        "authRequired": "Enter your password to continue."
+        "authRequired": "Enter your password to continue.",
+        "serverConfig": "Server configuration error. Contact your consultant."
       }
     },
     "sharing": "Creating…",

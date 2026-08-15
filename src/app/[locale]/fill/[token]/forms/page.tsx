@@ -1,11 +1,9 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 
-import { ClientFillForm } from "@/components/forms/client-fill-form";
-import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
-import { ShareFillAccess } from "@/components/forms/share-fill-access";
-import { ClientPrivacyNotice } from "@/components/legal/client-privacy-notice";
-import { Link } from "@/i18n/navigation";
-import { loadShareContext } from "@/lib/ircc/project-forms";
+import { ShareFillForms } from "@/components/forms/share-fill-forms";
+import { ShareFillExpired } from "@/components/forms/share-fill-expired";
+import { ShareLinkGate } from "@/components/forms/share-link-gate";
+import { loadShareFillGate } from "@/lib/ircc/share-fill-gate";
 
 export default async function ClientFillFormsPage({
   params,
@@ -15,57 +13,20 @@ export default async function ClientFillFormsPage({
   const { locale, token } = await params;
   setRequestLocale(locale);
 
-  return (
-    <ShareFillAccess locale={locale} token={token}>
-      <ClientFillFormsContent token={token} />
-    </ShareFillAccess>
-  );
-}
-
-async function ClientFillFormsContent({ token }: { token: string }) {
-  const t = await getTranslations("forms");
-  const td = await getTranslations("documents");
-  const ctx = await loadShareContext(token);
-
-  if (!ctx) {
+  const gate = await loadShareFillGate(token);
+  if (!gate) return <ShareFillExpired />;
+  if (gate.access !== "authenticated") {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <h1 className="font-heading text-2xl font-semibold text-brand">
-          {t("linkExpiredTitle")}
-        </h1>
-        <p className="mt-2 text-[15px] text-muted-foreground">
-          {t("linkExpiredBody")}
-        </p>
-      </div>
+      <ShareLinkGate
+        token={token}
+        locale={locale}
+        mode={gate.access}
+        organizationName={gate.organizationName}
+        projectTitle={gate.projectTitle}
+        expiresAt={gate.expiresAt}
+      />
     );
   }
 
-  const people: QuestionnairePerson[] = ctx.people.map((person) => ({
-    id: person.id,
-    displayName: `${person.firstName} ${person.lastName}`.trim(),
-    role: person.role,
-    formCodes: person.formCodes,
-    answers: person.answers,
-  }));
-
-  return (
-    <div className="space-y-4">
-      <div className="mx-auto max-w-6xl space-y-4 px-4 pt-6">
-        <Link
-          href={`/fill/${token}`}
-          className="text-sm font-medium text-action hover:underline"
-        >
-          ← {td("backToLanding")}
-        </Link>
-        <ClientPrivacyNotice token={token} />
-      </div>
-      <ClientFillForm
-        token={token}
-        people={people}
-        projectTitle={String(ctx.project.title)}
-        expiresAt={ctx.expiresAt}
-        initialSubmittedAt={ctx.questionnaireSubmittedAt}
-      />
-    </div>
-  );
+  return <ShareFillForms token={token} />;
 }

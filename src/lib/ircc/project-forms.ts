@@ -1,6 +1,7 @@
-import { createHash, randomBytes } from "node:crypto";
-
 import { compareParticipantRole } from "@/lib/crm/programs";
+import { hashShareToken } from "@/lib/ircc/share-token";
+
+export { generateShareToken, hashShareToken } from "@/lib/ircc/share-token";
 import { isGrantedStatus } from "@/lib/crm/statuses";
 import type { ProgramFamily } from "@/db/schema";
 import {
@@ -119,14 +120,6 @@ export type ProjectPersonBrief = {
   email: string | null;
   role: string;
 };
-
-export function hashShareToken(token: string): string {
-  return createHash("sha256").update(token, "utf8").digest("hex");
-}
-
-export function generateShareToken(): string {
-  return randomBytes(32).toString("base64url");
-}
 
 type DbClient = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -880,65 +873,71 @@ function injectPersonContact(
 }
 
 export async function loadShareGateContext(token: string) {
-  const resolved = await resolveShareToken(token);
-  if (!resolved) return null;
+  try {
+    const resolved = await resolveShareToken(token);
+    if (!resolved) return null;
 
-  const { getShareAccessState, toResolvedShareLink } = await import(
-    "@/lib/ircc/share-auth"
-  );
-  const full = toResolvedShareLink(resolved, token);
-  const access = await getShareAccessState(full);
+    const { getShareAccessState, toResolvedShareLink } = await import(
+      "@/lib/ircc/share-auth"
+    );
+    const full = toResolvedShareLink(resolved, token);
+    const access = await getShareAccessState(full);
 
-  const admin = createServiceClient();
-  const [projectRes, orgRes] = await Promise.all([
-    admin
-      .from("immigration_projects")
-      .select("title, organization_id")
-      .eq("id", resolved.projectId)
-      .maybeSingle(),
-    admin
-      .from("organizations")
-      .select("name")
-      .eq("id", resolved.organizationId)
-      .maybeSingle(),
-  ]);
+    const admin = createServiceClient();
+    const [projectRes, orgRes] = await Promise.all([
+      admin
+        .from("immigration_projects")
+        .select("title, organization_id")
+        .eq("id", resolved.projectId)
+        .maybeSingle(),
+      admin
+        .from("organizations")
+        .select("name")
+        .eq("id", resolved.organizationId)
+        .maybeSingle(),
+    ]);
 
-  if (!projectRes.data) return null;
+    if (!projectRes.data) return null;
 
-  const key = await getOrgDataKey(resolved.organizationId);
-  const project = decryptProjectRow(
-    projectRes.data as { title: string; organization_id: string },
-    key,
-  );
+    const key = await getOrgDataKey(resolved.organizationId);
+    const project = decryptProjectRow(
+      projectRes.data as { title: string; organization_id: string },
+      key,
+    );
 
-  return {
-    organizationId: resolved.organizationId,
-    projectId: resolved.projectId,
-    linkId: resolved.linkId,
-    expiresAt: resolved.expiresAt,
-    access,
-    projectTitle: project.title,
-    organizationName: String(orgRes.data?.name ?? ""),
-  };
+    return {
+      organizationId: resolved.organizationId,
+      projectId: resolved.projectId,
+      linkId: resolved.linkId,
+      expiresAt: resolved.expiresAt,
+      access,
+      projectTitle: project.title,
+      organizationName: String(orgRes.data?.name ?? ""),
+    };
+  } catch (err) {
+    console.error("loadShareGateContext:", err);
+    return null;
+  }
 }
 
 export async function loadShareContext(
   token: string,
   options?: { skipPasswordGate?: boolean },
 ) {
-  const resolved = await resolveShareToken(token);
-  if (!resolved) return null;
+  try {
+    const resolved = await resolveShareToken(token);
+    if (!resolved) return null;
 
-  if (!options?.skipPasswordGate) {
-    const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
-    try {
-      await assertShareAuthenticated(token);
-    } catch {
-      return null;
+    if (!options?.skipPasswordGate) {
+      const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
+      try {
+        await assertShareAuthenticated(token);
+      } catch {
+        return null;
+      }
     }
-  }
 
-  const admin = createServiceClient();
+    const admin = createServiceClient();
   const [projectRes, formsRes, answersRes, orgRes, people] = await Promise.all([
     admin
       .from("immigration_projects")
@@ -1051,6 +1050,10 @@ export async function loadShareContext(
       (answersRes.data?.questionnaire_submitted_at as string | null) ?? null,
     organization: orgRes.data,
   };
+  } catch (err) {
+    console.error("loadShareContext unexpected:", err);
+    return null;
+  }
 }
 
 export async function saveShareAnswers(input: {

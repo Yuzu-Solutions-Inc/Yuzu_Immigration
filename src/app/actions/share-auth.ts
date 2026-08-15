@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 
 import { getRequestClientIp } from "@/lib/booking/abuse";
 import { sendShareLinkResetEmail } from "@/lib/email/share-link-reset";
+import { loadShareFillGate } from "@/lib/ircc/share-fill-gate";
 import {
   listActiveProjectPeople,
-  loadShareGateContext,
 } from "@/lib/ircc/project-forms";
 import {
   assertShareAuthenticated,
@@ -62,7 +62,7 @@ export async function setSharePasswordAction(
   const parsed = parseShareLinkPassword(password);
   if (!parsed.success) return { error: "weak_password" };
 
-  const gate = await loadShareGateContext(token);
+  const gate = await loadShareFillGate(token);
   if (!gate) return { error: "expired" };
   if (gate.access !== "needs_password_setup") return { error: "invalid" };
 
@@ -81,7 +81,12 @@ export async function setSharePasswordAction(
   if (result === "already_set") return { error: "already_set" };
   if (result !== "ok") return { error: "expired" };
 
-  await setShareSessionCookie(resolved);
+  try {
+    await setShareSessionCookie(resolved);
+  } catch (err) {
+    console.error("setShareSessionCookie:", err);
+    return { error: "server_config" };
+  }
   await recordAuditEvent({
     organizationId: gate.organizationId,
     actorKind: "share_link",
@@ -105,7 +110,7 @@ export async function loginSharePasswordAction(
 
   if (!token || !password) return { error: "invalid" };
 
-  const gate = await loadShareGateContext(token);
+  const gate = await loadShareFillGate(token);
   if (!gate) return { error: "expired" };
   if (gate.access !== "needs_password_login") return { error: "invalid" };
 
@@ -129,7 +134,12 @@ export async function loginSharePasswordAction(
     return { error: "wrong_password" };
   }
 
-  await setShareSessionCookie(resolved);
+  try {
+    await setShareSessionCookie(resolved);
+  } catch (err) {
+    console.error("setShareSessionCookie:", err);
+    return { error: "server_config" };
+  }
   await recordAuditEvent({
     organizationId: gate.organizationId,
     actorKind: "share_link",
@@ -152,7 +162,7 @@ export async function forgotSharePasswordAction(
 
   if (!token) return { error: "invalid" };
 
-  const gate = await loadShareGateContext(token);
+  const gate = await loadShareFillGate(token);
   if (!gate) return { error: "expired" };
 
   const resolved = toResolvedShareLink(

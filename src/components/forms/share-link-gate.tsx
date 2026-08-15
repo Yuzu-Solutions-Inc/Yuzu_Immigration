@@ -61,6 +61,7 @@ export function ShareLinkGate({
         send_failed: t("shareAuth.errors.sendFailed"),
         already_set: t("shareAuth.errors.alreadySet"),
         auth_required: t("shareAuth.errors.authRequired"),
+        server_config: t("shareAuth.errors.serverConfig"),
       }[errorKey] ?? t("errors.generic")
     : null;
 

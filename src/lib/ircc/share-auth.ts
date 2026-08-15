@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { cookies } from "next/headers";
 
 import { getRequestClientIp } from "@/lib/booking/abuse";
-import { hashShareToken } from "@/lib/ircc/project-forms";
+import { hashShareToken } from "@/lib/ircc/share-token";
 import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 

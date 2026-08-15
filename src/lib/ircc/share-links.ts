@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getAppBaseUrl } from "@/lib/app-url";
+import { hashShareToken } from "@/lib/ircc/share-token";
 import {
-  hashShareToken,
   SHARE_LINK_TTL_DAYS,
 } from "@/lib/ircc/project-forms";
 import { PII_AAD } from "@/lib/security/client-pii";

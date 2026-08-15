@@ -866,7 +866,8 @@
         "emailNotConfigured": "Le courriel n’a pas pu être envoyé. Contactez votre consultant pour un nouveau lien.",
         "sendFailed": "Impossible d’envoyer un nouveau lien. Réessayez ou contactez votre consultant.",
         "alreadySet": "Un mot de passe est déjà défini pour ce lien.",
-        "authRequired": "Entrez votre mot de passe pour continuer."
+        "authRequired": "Entrez votre mot de passe pour continuer.",
+        "serverConfig": "Erreur de configuration du serveur. Contactez votre consultant."
       }
     },
     "sharing": "Création…",
