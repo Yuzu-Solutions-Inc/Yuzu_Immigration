@@ -155,7 +155,20 @@ export type ManageBookingPayload = {
   status: BookingAppointmentStatus;
   meetJoinUrl: string | null;
   canManage: boolean;
+  canCancel: boolean;
+  cancelBlockedReason: "too_late" | "cancel_window" | null;
   host: PublicHostCalendar | null;
+  paymentStatus: string | null;
+  paymentAmountCents: number | null;
+  paymentCurrency: string | null;
+  cancelPolicy: {
+    minDaysBefore: number;
+    refundEnabled: boolean;
+    feeType: "none" | "fixed" | "percent";
+    feeCents: number;
+    feePercent: number;
+    hasFee: boolean;
+  } | null;
 };
 
 export type BookingGoogleBusyRow = {

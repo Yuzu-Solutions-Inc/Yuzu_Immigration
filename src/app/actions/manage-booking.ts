@@ -189,6 +189,14 @@ export async function cancelPublicBookingAction(
   const blocked = manageError(ctx.status, ctx.startsAt);
   if (blocked) return blocked;
 
+  const minDays = ctx.cancelPolicy?.minDaysBefore ?? 0;
+  const { isWithinGuestCancelWindow } = await import(
+    "@/lib/square/cancel-policy"
+  );
+  if (!isWithinGuestCancelWindow(ctx.startsAt, minDays)) {
+    return { error: "cancel_window" };
+  }
+
   const admin = createServiceClient();
   const { error } = await admin
     .from("booking_appointments")

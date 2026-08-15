@@ -45,7 +45,9 @@ export default async function OrganizationSettingsPage({
     listPendingInvitations(),
     supabase
       .from("square_connections")
-      .select("business_name, merchant_id, currency, is_enabled")
+      .select(
+        "business_name, merchant_id, currency, is_enabled, cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent",
+      )
       .eq("organization_id", membership.organization.id)
       .maybeSingle(),
   ]);

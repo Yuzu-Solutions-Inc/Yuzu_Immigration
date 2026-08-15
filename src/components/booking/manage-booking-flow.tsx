@@ -8,6 +8,7 @@ import {
   reschedulePublicBookingAction,
   type ManageBookingState,
 } from "@/app/actions/manage-booking";
+import { CancelPolicyNotice } from "@/components/booking/cancel-policy-notice";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { PrivacyLink } from "@/components/legal/privacy-link";
@@ -261,7 +262,32 @@ export function ManageBookingFlow({
           {t("cancelTitle")}
         </h2>
         <p className="text-sm text-muted-foreground">{t("cancelBody")}</p>
-        {confirmCancel ? (
+        {payload.cancelPolicy &&
+        (payload.paymentStatus === "paid" ||
+          payload.cancelPolicy.minDaysBefore > 0 ||
+          !payload.cancelPolicy.refundEnabled ||
+          payload.cancelPolicy.hasFee) ? (
+          <CancelPolicyNotice
+            namespace="bookingManage"
+            policy={payload.cancelPolicy}
+            locale={locale}
+            currency={payload.paymentCurrency}
+            paidAmountCents={
+              payload.paymentStatus === "paid"
+                ? payload.paymentAmountCents
+                : null
+            }
+          />
+        ) : null}
+        {!payload.canCancel ? (
+          <p className="text-sm text-muted-foreground">
+            {payload.cancelBlockedReason === "cancel_window"
+              ? t("cancelPolicyMinDays", {
+                  days: payload.cancelPolicy?.minDaysBefore ?? 0,
+                })
+              : t("errors.too_late")}
+          </p>
+        ) : confirmCancel ? (
           <form action={cancelAction} className="space-y-3">
             <input type="hidden" name="token" value={payload.token} />
             <input type="hidden" name="locale" value={locale} />

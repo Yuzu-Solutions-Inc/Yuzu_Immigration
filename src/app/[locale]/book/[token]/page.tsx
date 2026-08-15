@@ -45,6 +45,7 @@ export default async function PublicBookPage({
         services: ctx.services,
         formFields: ctx.formFields,
         hosts: ctx.hosts,
+        cancelPolicy: ctx.cancelPolicy,
       }}
     />
   );

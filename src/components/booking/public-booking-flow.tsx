@@ -10,6 +10,7 @@ import {
   type ManageLinksState,
   type PublicBookingState,
 } from "@/app/actions/public-booking";
+import { CancelPolicyNotice } from "@/components/booking/cancel-policy-notice";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { PrivacyLink } from "@/components/legal/privacy-link";
@@ -25,6 +26,7 @@ import type {
   BookingServiceRow,
   PublicHostCalendar,
 } from "@/lib/booking/types";
+import type { CancelPolicyDisplay } from "@/lib/square/cancel-policy";
 import {
   APP_LOCALES,
   LOCALE_LABELS,
@@ -48,6 +50,7 @@ export type PublicBookingPayload = {
   services: BookingServiceRow[];
   formFields: BookingServiceFormFieldRow[];
   hosts: PublicHostCalendar[];
+  cancelPolicy: CancelPolicyDisplay | null;
 };
 
 const initialState: PublicBookingState = {};
@@ -777,6 +780,14 @@ export function PublicBookingFlow({
                     .
                   </span>
                 </label>
+                {service.price_cents > 0 && payload.cancelPolicy ? (
+                  <CancelPolicyNotice
+                    policy={payload.cancelPolicy}
+                    locale={locale}
+                    currency={service.currency}
+                    paidAmountCents={service.price_cents}
+                  />
+                ) : null}
                 {atBookingCap ? null : (
                   <Button
                     type="submit"

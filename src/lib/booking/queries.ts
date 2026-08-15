@@ -14,6 +14,12 @@ import { decryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import {
+  isWithinGuestCancelWindow,
+  normalizeSquareCancelRefundPolicy,
+  toCancelPolicyDisplay,
+  type CancelPolicyDisplay,
+} from "@/lib/square/cancel-policy";
 import type {
   BookingAppointmentRow,
   BookingAvailabilityRuleRow,
@@ -58,6 +64,7 @@ export type PublicBookingContext = {
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   hosts: PublicHostCalendar[];
+  cancelPolicy: CancelPolicyDisplay | null;
 };
 
 export type ManageBookingContext = {
@@ -79,6 +86,10 @@ export type ManageBookingContext = {
   meetJoinUrl: string | null;
   googleEventId: string | null;
   host: PublicHostCalendar | null;
+  paymentStatus: string | null;
+  paymentAmountCents: number | null;
+  paymentCurrency: string | null;
+  cancelPolicy: CancelPolicyDisplay | null;
 };
 
 function sameBusyRange(
@@ -493,7 +504,7 @@ export async function loadPublicBookingContext(
     .maybeSingle();
   if (!org) return null;
 
-  const [servicesRes, fieldsRes, hosts] = await Promise.all([
+  const [servicesRes, fieldsRes, hosts, squareRes] = await Promise.all([
     admin
       .from("booking_services")
       .select("*")
@@ -511,6 +522,14 @@ export async function loadPublicBookingContext(
       organizationId: row.organization_id,
       bookingWindowDays: row.booking_window_days,
     }),
+    admin
+      .from("square_connections")
+      .select(
+        "cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
+      )
+      .eq("organization_id", row.organization_id)
+      .eq("is_enabled", true)
+      .maybeSingle(),
   ]);
 
   return {
@@ -520,6 +539,11 @@ export async function loadPublicBookingContext(
     services: (servicesRes.data ?? []) as BookingServiceRow[],
     formFields: (fieldsRes.data ?? []) as BookingFormFieldRow[],
     hosts,
+    cancelPolicy: squareRes.data
+      ? toCancelPolicyDisplay(
+          normalizeSquareCancelRefundPolicy(squareRes.data),
+        )
+      : null,
   };
 }
 
@@ -542,7 +566,7 @@ export async function loadManageBookingContext(
   const dek = await getOrgDataKey(row.organization_id);
   const guest = decryptBookingGuestRow(row, dek);
 
-  const [{ data: org }, { data: settings }, { data: service }, { data: profile }] =
+  const [{ data: org }, { data: settings }, { data: service }, { data: profile }, { data: payment }, { data: square }] =
     await Promise.all([
       admin
         .from("organizations")
@@ -564,10 +588,27 @@ export async function loadManageBookingContext(
         .select("id, full_name, email")
         .eq("id", row.host_user_id)
         .maybeSingle(),
+      admin
+        .from("payment_requests")
+        .select("status, amount_cents, currency")
+        .eq("appointment_id", row.id)
+        .eq("source", "booking")
+        .maybeSingle(),
+      admin
+        .from("square_connections")
+        .select(
+          "cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
+        )
+        .eq("organization_id", row.organization_id)
+        .eq("is_enabled", true)
+        .maybeSingle(),
     ]);
   if (!org || !settings || !service) return null;
 
   const settingsRow = settings as BookingSettingsRow;
+  const cancelPolicy = square
+    ? toCancelPolicyDisplay(normalizeSquareCancelRefundPolicy(square))
+    : null;
   const canManage =
     row.status === "confirmed" && Date.parse(row.starts_at) > Date.now();
   const hosts = canManage
@@ -607,6 +648,11 @@ export async function loadManageBookingContext(
     meetJoinUrl: row.meet_join_url,
     googleEventId: row.google_event_id,
     host,
+    paymentStatus: (payment?.status as string | null) ?? null,
+    paymentAmountCents:
+      typeof payment?.amount_cents === "number" ? payment.amount_cents : null,
+    paymentCurrency: (payment?.currency as string | null) ?? null,
+    cancelPolicy,
   };
 }
 
@@ -699,6 +745,10 @@ export async function loadStaffAppointmentContext(
     meetJoinUrl: row.meet_join_url,
     googleEventId: row.google_event_id,
     host,
+    paymentStatus: null,
+    paymentAmountCents: null,
+    paymentCurrency: null,
+    cancelPolicy: null,
   };
 }
 
@@ -717,6 +767,14 @@ export function toManageBookingPayload(
   token: string,
   ctx: ManageBookingContext,
 ): ManageBookingPayload {
+  const future =
+    ctx.status === "confirmed" && Date.parse(ctx.startsAt) > Date.now();
+  const minDays = ctx.cancelPolicy?.minDaysBefore ?? 0;
+  const withinCancelWindow = isWithinGuestCancelWindow(ctx.startsAt, minDays);
+  let cancelBlockedReason: ManageBookingPayload["cancelBlockedReason"] = null;
+  if (!future) cancelBlockedReason = "too_late";
+  else if (!withinCancelWindow) cancelBlockedReason = "cancel_window";
+
   return {
     token,
     organizationName: ctx.organizationName,
@@ -732,9 +790,14 @@ export function toManageBookingPayload(
     endsAt: ctx.endsAt,
     status: ctx.status,
     meetJoinUrl: ctx.meetJoinUrl,
-    canManage:
-      ctx.status === "confirmed" && Date.parse(ctx.startsAt) > Date.now(),
+    canManage: future,
+    canCancel: future && withinCancelWindow,
+    cancelBlockedReason,
     host: ctx.host,
+    paymentStatus: ctx.paymentStatus,
+    paymentAmountCents: ctx.paymentAmountCents,
+    paymentCurrency: ctx.paymentCurrency,
+    cancelPolicy: ctx.cancelPolicy,
   };
 }
 
