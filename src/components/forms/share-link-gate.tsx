@@ -69,12 +69,12 @@ export function ShareLinkGate({
     setSetupPending(true);
     const formData = new FormData(event.currentTarget);
     const result = await setSharePasswordFormAction(formData);
-    if ("ok" in result && result.ok) {
-      window.location.href = `/${locale}/fill/${token}`;
+    if ("error" in result) {
+      setAuthError(result.error);
+      setSetupPending(false);
       return;
     }
-    setAuthError(result.error ?? "invalid");
-    setSetupPending(false);
+    window.location.href = `/${locale}/fill/${token}`;
   }
 
   async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
@@ -83,12 +83,12 @@ export function ShareLinkGate({
     setLoginPending(true);
     const formData = new FormData(event.currentTarget);
     const result = await loginSharePasswordFormAction(formData);
-    if ("ok" in result && result.ok) {
-      window.location.href = `/${locale}/fill/${token}`;
+    if ("error" in result) {
+      setAuthError(result.error);
+      setLoginPending(false);
       return;
     }
-    setAuthError(result.error ?? "invalid");
-    setLoginPending(false);
+    window.location.href = `/${locale}/fill/${token}`;
   }
 
   if (forgotState.message === "email_sent") {
