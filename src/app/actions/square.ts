@@ -108,13 +108,22 @@ export async function saveSquareCancelPolicyAction(
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
+  const enabledRaw = String(formData.get("cancelRefundEnabled") || "");
+  const cancelRefundEnabled =
+    enabledRaw === "on" || enabledRaw === "true" || enabledRaw === "1";
+
+  const feeEnabledRaw = String(formData.get("cancelRefundFeeEnabled") || "");
+  const feeTierEnabled =
+    cancelRefundEnabled &&
+    (feeEnabledRaw === "on" || feeEnabledRaw === "true" || feeEnabledRaw === "1");
+
   const feeUnitRaw = String(formData.get("cancelRefundFeeType") || "fixed");
   const feeUnit = feeUnitRaw === "percent" ? "percent" : "fixed";
   const feeAmount = Number.parseFloat(
     String(formData.get("cancelRefundFeeAmount") || "0"),
   );
   const parsedAmount = Number.isFinite(feeAmount) ? Math.max(0, feeAmount) : 0;
-  const hasFee = parsedAmount > 0;
+  const hasFee = feeTierEnabled && parsedAmount > 0;
   const feeType = hasFee ? feeUnit : "none";
   const feeCents =
     feeType === "fixed" ? Math.round(parsedAmount * 100) : 0;
@@ -137,13 +146,9 @@ export async function saveSquareCancelPolicyAction(
     ),
   );
 
-  if (hasFee && freeDays > 0 && feeDays > freeDays) {
+  if (feeTierEnabled && freeDays <= feeDays) {
     return { error: "invalid_policy" };
   }
-
-  const enabledRaw = String(formData.get("cancelRefundEnabled") || "");
-  const cancelRefundEnabled =
-    enabledRaw === "on" || enabledRaw === "true" || enabledRaw === "1";
 
   const locale = String(formData.get("locale") || "en");
   const admin = createServiceClient();
@@ -161,15 +166,22 @@ export async function saveSquareCancelPolicyAction(
 
   const { error } = await admin
     .from("square_connections")
-    .update({
-      cancel_refund_enabled: cancelRefundEnabled,
-      cancel_free_days_before: freeDays,
-      cancel_min_days_before: hasFee ? feeDays : 0,
-      cancel_refund_fee_type: feeType,
-      cancel_refund_fee_cents: feeType === "fixed" ? feeCents : 0,
-      cancel_refund_fee_percent: feeType === "percent" ? feePercent : 0,
-      updated_at: new Date().toISOString(),
-    })
+    .update(
+      cancelRefundEnabled
+        ? {
+            cancel_refund_enabled: true,
+            cancel_free_days_before: freeDays,
+            cancel_min_days_before: hasFee ? feeDays : 0,
+            cancel_refund_fee_type: feeType,
+            cancel_refund_fee_cents: feeType === "fixed" ? feeCents : 0,
+            cancel_refund_fee_percent: feeType === "percent" ? feePercent : 0,
+            updated_at: new Date().toISOString(),
+          }
+        : {
+            cancel_refund_enabled: false,
+            updated_at: new Date().toISOString(),
+          },
+    )
     .eq("id", existing.id);
   if (error) {
     console.error("saveSquareCancelPolicy:", error.message);

@@ -50,6 +50,22 @@ export function SquareSettings({
   const [refundEnabled, setRefundEnabled] = useState(
     connection?.cancel_refund_enabled !== false,
   );
+  const [feeEnabled, setFeeEnabled] = useState(() => {
+    const feeType = connection?.cancel_refund_fee_type;
+    if (feeType === "percent") {
+      return (connection?.cancel_refund_fee_percent ?? 0) > 0;
+    }
+    if (feeType === "fixed") {
+      return (connection?.cancel_refund_fee_cents ?? 0) > 0;
+    }
+    return (connection?.cancel_min_days_before ?? 0) > 0;
+  });
+  const [freeDays, setFreeDays] = useState(
+    String(connection?.cancel_free_days_before ?? 0),
+  );
+  const [feeDays, setFeeDays] = useState(
+    String(connection?.cancel_min_days_before ?? 0),
+  );
   const [feeUnit, setFeeUnit] = useState<"fixed" | "percent">(() =>
     connection?.cancel_refund_fee_type === "percent" ? "percent" : "fixed",
   );
@@ -59,9 +75,17 @@ export function SquareSettings({
     }
     return centsToPriceInput(connection?.cancel_refund_fee_cents ?? 0);
   });
-  const hasFee = Number.parseFloat(feeAmount) > 0;
   const [saveState, saveAction, savePending] = useActionState(
     async (_prev: SquareActionState, formData: FormData) => {
+      if (refundEnabled && feeEnabled) {
+        const free = Math.trunc(Number.parseFloat(freeDays) || 0);
+        const fee = Math.trunc(Number.parseFloat(feeDays) || 0);
+        if (free <= fee) {
+          toast.error(t("squareErrors.invalid_policy"));
+          return { error: "invalid_policy" };
+        }
+      }
+
       const result = await saveSquareCancelPolicyAction(formData);
       if (result.error) {
         toast.error(
@@ -141,6 +165,11 @@ export function SquareSettings({
               name="cancelRefundEnabled"
               value={refundEnabled ? "on" : "off"}
             />
+            <input
+              type="hidden"
+              name="cancelRefundFeeEnabled"
+              value={feeEnabled ? "on" : "off"}
+            />
             <div>
               <h3 className="text-sm font-semibold text-brand">
                 {t("squareCancelPolicyTitle")}
@@ -150,9 +179,9 @@ export function SquareSettings({
               </p>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
               <div className="min-w-0 space-y-0.5">
-                <Label htmlFor="cancelRefundEnabled" className="text-sm">
+                <Label htmlFor="cancelRefundEnabled" className="text-sm font-medium">
                   {t("squareCancelRefundEnabled")}
                 </Label>
                 <p className="text-xs text-muted-foreground">
@@ -163,86 +192,113 @@ export function SquareSettings({
                 id="cancelRefundEnabled"
                 checked={refundEnabled}
                 onCheckedChange={setRefundEnabled}
-                size="sm"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="cancelFreeDaysBefore" className="text-xs">
-                {t("squareCancelFreeDays")}
-              </Label>
-              <Input
-                id="cancelFreeDaysBefore"
-                name="cancelFreeDaysBefore"
-                type="number"
-                min={0}
-                max={365}
-                step={1}
-                defaultValue={connection?.cancel_free_days_before ?? 0}
-                className="max-w-[8rem]"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("squareCancelFreeDaysHelp")}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cancelRefundFeeAmount" className="text-xs">
-                {t("squareCancelRefundFee")}
-              </Label>
-              <div className="flex max-w-[14rem] items-stretch">
-                <Input
-                  id="cancelRefundFeeAmount"
-                  name="cancelRefundFeeAmount"
-                  type="number"
-                  min={0}
-                  max={feeUnit === "percent" ? 100 : undefined}
-                  step={feeUnit === "percent" ? 1 : "0.01"}
-                  disabled={!refundEnabled}
-                  value={feeAmount}
-                  onChange={(event) => setFeeAmount(event.target.value)}
-                  className="rounded-r-none"
-                />
-                <select
-                  name="cancelRefundFeeType"
-                  value={feeUnit}
-                  onChange={(event) =>
-                    setFeeUnit(event.target.value as "fixed" | "percent")
-                  }
-                  disabled={!refundEnabled}
-                  aria-label={t("squareCancelRefundFee")}
-                  className="h-10 shrink-0 rounded-r-xl border border-l-0 border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-50"
-                >
-                  <option value="fixed">$</option>
-                  <option value="percent">%</option>
-                </select>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t("squareCancelRefundFeeHelp")}
-              </p>
-
-              {hasFee ? (
+            {refundEnabled ? (
+              <div className="space-y-4 border-t border-border pt-4">
                 <div className="space-y-1">
-                  <Label htmlFor="cancelFeeDaysBefore" className="text-xs">
-                    {t("squareCancelFeeDays")}
+                  <Label htmlFor="cancelFreeDaysBefore" className="text-sm">
+                    {t("squareCancelFreeDays")}
                   </Label>
                   <Input
-                    id="cancelFeeDaysBefore"
-                    name="cancelFeeDaysBefore"
+                    id="cancelFreeDaysBefore"
+                    name="cancelFreeDaysBefore"
                     type="number"
                     min={0}
                     max={365}
                     step={1}
-                    disabled={!refundEnabled}
-                    defaultValue={connection?.cancel_min_days_before ?? 0}
+                    value={freeDays}
+                    onChange={(event) => setFreeDays(event.target.value)}
                     className="max-w-[8rem]"
                   />
                   <p className="text-xs text-muted-foreground">
-                    {t("squareCancelFeeDaysHelp")}
+                    {t("squareCancelFreeDaysHelp")}
                   </p>
                 </div>
-              ) : null}
-            </div>
+
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+                  <div className="min-w-0 space-y-0.5">
+                    <Label
+                      htmlFor="cancelRefundFeeEnabled"
+                      className="text-sm font-medium"
+                    >
+                      {t("squareCancelRefundFeeEnabled")}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t("squareCancelRefundFeeEnabledHelp")}
+                    </p>
+                  </div>
+                  <Switch
+                    id="cancelRefundFeeEnabled"
+                    checked={feeEnabled}
+                    onCheckedChange={setFeeEnabled}
+                  />
+                </div>
+
+                {feeEnabled ? (
+                  <div className="space-y-4 rounded-lg border border-border bg-canvas/40 p-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cancelRefundFeeAmount" className="text-sm">
+                        {t("squareCancelRefundFee")}
+                      </Label>
+                      <div className="flex max-w-[14rem] items-stretch">
+                        <Input
+                          id="cancelRefundFeeAmount"
+                          name="cancelRefundFeeAmount"
+                          type="number"
+                          min={0}
+                          max={feeUnit === "percent" ? 100 : undefined}
+                          step={feeUnit === "percent" ? 1 : "0.01"}
+                          value={feeAmount}
+                          onChange={(event) => setFeeAmount(event.target.value)}
+                          className="rounded-r-none"
+                        />
+                        <select
+                          name="cancelRefundFeeType"
+                          value={feeUnit}
+                          onChange={(event) =>
+                            setFeeUnit(event.target.value as "fixed" | "percent")
+                          }
+                          aria-label={t("squareCancelRefundFee")}
+                          className="h-10 shrink-0 rounded-r-xl border border-l-0 border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                        >
+                          <option value="fixed">$</option>
+                          <option value="percent">%</option>
+                        </select>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("squareCancelRefundFeeHelp")}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="cancelFeeDaysBefore" className="text-sm">
+                        {t("squareCancelFeeDays")}
+                      </Label>
+                      <Input
+                        id="cancelFeeDaysBefore"
+                        name="cancelFeeDaysBefore"
+                        type="number"
+                        min={0}
+                        max={
+                          Math.trunc(Number.parseFloat(freeDays) || 0) > 0
+                            ? Math.trunc(Number.parseFloat(freeDays) || 0) - 1
+                            : 365
+                        }
+                        step={1}
+                        value={feeDays}
+                        onChange={(event) => setFeeDays(event.target.value)}
+                        className="max-w-[8rem]"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("squareCancelFeeDaysHelp")}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             {saveState.error ? (
               <p className="text-sm text-destructive">
