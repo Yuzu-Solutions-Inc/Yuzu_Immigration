@@ -14,8 +14,9 @@ import { decryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import {
-  isWithinGuestCancelWindow,
+  resolveCancelRefundTier,
   normalizeSquareCancelRefundPolicy,
   toCancelPolicyDisplay,
   type CancelPolicyDisplay,
@@ -525,7 +526,7 @@ export async function loadPublicBookingContext(
     admin
       .from("square_connections")
       .select(
-        "cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
+        "cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
       )
       .eq("organization_id", row.organization_id)
       .eq("is_enabled", true)
@@ -580,7 +581,7 @@ export async function loadManageBookingContext(
         .maybeSingle(),
       admin
         .from("booking_services")
-        .select("id, title, duration_minutes")
+        .select("id, title, translations, duration_minutes")
         .eq("id", row.service_id)
         .maybeSingle(),
       admin
@@ -597,7 +598,7 @@ export async function loadManageBookingContext(
       admin
         .from("square_connections")
         .select(
-          "cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
+          "cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
         )
         .eq("organization_id", row.organization_id)
         .eq("is_enabled", true)
@@ -641,7 +642,7 @@ export async function loadManageBookingContext(
     hostUserId: row.host_user_id,
     hostName,
     serviceId: row.service_id,
-    serviceTitle: service.title as string,
+    serviceTitle: serviceTitle(service, row.guest_preferred_locale),
     durationMinutes: service.duration_minutes as number,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
@@ -695,7 +696,7 @@ export async function loadStaffAppointmentContext(
         .maybeSingle(),
       supabase
         .from("booking_services")
-        .select("id, title, duration_minutes")
+        .select("id, title, translations, duration_minutes")
         .eq("id", row.service_id)
         .maybeSingle(),
       supabase
@@ -738,7 +739,7 @@ export async function loadStaffAppointmentContext(
     hostUserId: row.host_user_id,
     hostName,
     serviceId: row.service_id,
-    serviceTitle: service.title as string,
+    serviceTitle: serviceTitle(service, row.guest_preferred_locale, org.default_locale as string | null),
     durationMinutes: service.duration_minutes as number,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
@@ -769,8 +770,20 @@ export function toManageBookingPayload(
 ): ManageBookingPayload {
   const future =
     ctx.status === "confirmed" && Date.parse(ctx.startsAt) > Date.now();
-  const minDays = ctx.cancelPolicy?.minDaysBefore ?? 0;
-  const withinCancelWindow = isWithinGuestCancelWindow(ctx.startsAt, minDays);
+  const cancelTier = ctx.cancelPolicy
+    ? resolveCancelRefundTier(
+        normalizeSquareCancelRefundPolicy({
+          cancel_refund_enabled: ctx.cancelPolicy.refundEnabled,
+          cancel_free_days_before: ctx.cancelPolicy.freeDaysBefore,
+          cancel_min_days_before: ctx.cancelPolicy.feeDaysBefore,
+          cancel_refund_fee_type: ctx.cancelPolicy.feeType,
+          cancel_refund_fee_cents: ctx.cancelPolicy.feeCents,
+          cancel_refund_fee_percent: ctx.cancelPolicy.feePercent,
+        }),
+        ctx.startsAt,
+      )
+    : "free";
+  const withinCancelWindow = cancelTier !== "blocked";
   let cancelBlockedReason: ManageBookingPayload["cancelBlockedReason"] = null;
   if (!future) cancelBlockedReason = "too_late";
   else if (!withinCancelWindow) cancelBlockedReason = "cancel_window";
@@ -920,6 +933,7 @@ export type FutureGuestAppointmentMatch = {
 export async function listFutureGuestAppointmentsByEmail(input: {
   organizationId: string;
   email: string;
+  locale?: string | null;
 }): Promise<FutureGuestAppointmentMatch[]> {
   const admin = createServiceClient();
   const key = await getOrgDataKey(input.organizationId);
@@ -972,11 +986,14 @@ export async function listFutureGuestAppointmentsByEmail(input: {
   const serviceIds = [...new Set(matched.map((row) => row.serviceId))];
   const hostIds = [...new Set(matched.map((row) => row.hostUserId))];
   const [{ data: services }, { data: profiles }] = await Promise.all([
-    admin.from("booking_services").select("id, title").in("id", serviceIds),
+    admin.from("booking_services").select("id, title, translations").in("id", serviceIds),
     admin.from("profiles").select("id, full_name, email").in("id", hostIds),
   ]);
-  const serviceTitle = new Map(
-    (services ?? []).map((row) => [row.id as string, row.title as string]),
+  const serviceTitleById = new Map(
+    (services ?? []).map((row) => [
+      row.id as string,
+      serviceTitle(row, input.locale),
+    ]),
   );
   const hostName = new Map(
     (profiles ?? []).map((row) => [
@@ -992,7 +1009,7 @@ export async function listFutureGuestAppointmentsByEmail(input: {
     startsAt: row.startsAt,
     guestName: row.guestName,
     guestEmail: row.guestEmail,
-    serviceTitle: serviceTitle.get(row.serviceId) ?? "Service",
+    serviceTitle: serviceTitleById.get(row.serviceId) ?? "Service",
     hostName: hostName.get(row.hostUserId) ?? row.hostUserId,
     meetJoinUrl: row.meetJoinUrl,
   }));
@@ -1066,6 +1083,11 @@ export async function ensureProjectCallService(
       organization_id: organizationId,
       title: "Consultation call",
       description: "30-minute call",
+      translations: {
+        en: { title: "Consultation call", description: "30-minute call" },
+        fr: { title: "Appel de consultation", description: "Appel de 30 minutes" },
+        es: { title: "Llamada de consulta", description: "Llamada de 30 minutos" },
+      },
       duration_minutes: PROJECT_CALL_DURATION_MINUTES,
       price_cents: 0,
       currency: "CAD",
@@ -1190,6 +1212,7 @@ export async function loadProjectCallInviteContext(
 
 export async function listProjectMeetingHistory(
   projectId: string,
+  locale?: string | null,
 ): Promise<ProjectMeetingHistoryItem[]> {
   const orgId = await requireOrganizationId();
   if (!orgId) return [];
@@ -1218,7 +1241,7 @@ export async function listProjectMeetingHistory(
   const serviceIds = [...new Set(rows.map((row) => row.service_id))];
   const [{ data: profiles }, { data: services }] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email").in("id", hostIds),
-    supabase.from("booking_services").select("id, title").in("id", serviceIds),
+    supabase.from("booking_services").select("id, title, translations").in("id", serviceIds),
   ]);
   const hostName = new Map(
     (profiles ?? []).map((row) => [
@@ -1228,8 +1251,11 @@ export async function listProjectMeetingHistory(
         row.id,
     ]),
   );
-  const serviceTitle = new Map(
-    (services ?? []).map((row) => [row.id as string, row.title as string]),
+  const serviceTitleById = new Map(
+    (services ?? []).map((row) => [
+      row.id as string,
+      serviceTitle(row, locale),
+    ]),
   );
 
   return rows.map((row) => {
@@ -1240,7 +1266,7 @@ export async function listProjectMeetingHistory(
       endsAt: row.ends_at,
       status: row.status,
       hostName: hostName.get(row.host_user_id) ?? row.host_user_id,
-      serviceTitle: serviceTitle.get(row.service_id) ?? "Call",
+      serviceTitle: serviceTitleById.get(row.service_id) ?? "Call",
       meetJoinUrl: row.meet_join_url,
       guestName: guest.guest_name,
     };

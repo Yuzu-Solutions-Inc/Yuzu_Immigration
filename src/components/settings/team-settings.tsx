@@ -111,14 +111,7 @@ export function TeamSettings({
     teamSuccessMessage(revokeState.message, t);
 
   return (
-    <section className="space-y-6 border-t border-border pt-6">
-      <div>
-        <h3 className="font-heading text-base font-semibold text-brand">
-          {t("team")}
-        </h3>
-        <p className="text-sm text-muted-foreground">{t("teamHelp")}</p>
-      </div>
-
+    <section className="space-y-6">
       <form action={inviteAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]">
         <input type="hidden" name="locale" value={locale} />
         <div className="space-y-2">

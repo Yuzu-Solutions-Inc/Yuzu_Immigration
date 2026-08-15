@@ -705,6 +705,7 @@ export async function cancelAppointmentAction(
   const settlement = await settlePaymentOnBookingCancel({
     organizationId: orgId,
     appointmentId,
+    startsAt: ctx.startsAt,
     reason: "Appointment cancelled by firm",
   });
   if (settlement.outcome === "failed") {

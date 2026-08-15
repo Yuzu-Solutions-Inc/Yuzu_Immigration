@@ -264,7 +264,8 @@ export function ManageBookingFlow({
         <p className="text-sm text-muted-foreground">{t("cancelBody")}</p>
         {payload.cancelPolicy &&
         (payload.paymentStatus === "paid" ||
-          payload.cancelPolicy.minDaysBefore > 0 ||
+          payload.cancelPolicy.freeDaysBefore > 0 ||
+          payload.cancelPolicy.feeDaysBefore > 0 ||
           !payload.cancelPolicy.refundEnabled ||
           payload.cancelPolicy.hasFee) ? (
           <CancelPolicyNotice
@@ -272,6 +273,7 @@ export function ManageBookingFlow({
             policy={payload.cancelPolicy}
             locale={locale}
             currency={payload.paymentCurrency}
+            startsAt={payload.startsAt}
             paidAmountCents={
               payload.paymentStatus === "paid"
                 ? payload.paymentAmountCents
@@ -282,9 +284,13 @@ export function ManageBookingFlow({
         {!payload.canCancel ? (
           <p className="text-sm text-muted-foreground">
             {payload.cancelBlockedReason === "cancel_window"
-              ? t("cancelPolicyMinDays", {
-                  days: payload.cancelPolicy?.minDaysBefore ?? 0,
-                })
+              ? (payload.cancelPolicy?.feeDaysBefore ?? 0) > 0
+                ? t("cancelPolicyNoCancelWithin", {
+                    days: payload.cancelPolicy?.feeDaysBefore ?? 0,
+                  })
+                : t("cancelPolicyFreeDays", {
+                    days: payload.cancelPolicy?.freeDaysBefore ?? 0,
+                  })
               : t("errors.too_late")}
           </p>
         ) : confirmCancel ? (

@@ -7,6 +7,7 @@ import {
 import { isTerminalStatus, PROJECT_STATUSES } from "@/lib/crm/statuses";
 import { addDaysToIsoDate, zonedDateIso } from "@/lib/booking/timezone";
 import type { BookingAppointmentRow } from "@/lib/booking/types";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import { createClient } from "@/lib/supabase/server";
 import {
   decryptBookingGuestRow,
@@ -135,7 +136,9 @@ function countBy<T extends string>(values: T[], order: readonly T[]): ChartDatum
     .filter((row) => row.count > 0);
 }
 
-export async function getHomeDashboard(): Promise<HomeDashboard> {
+export async function getHomeDashboard(
+  locale?: string | null,
+): Promise<HomeDashboard> {
   const orgId = await requireOrganizationId();
   if (!orgId) return EMPTY;
 
@@ -240,7 +243,7 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
       : Promise.resolve({ count: 0, error: null }),
     supabase
       .from("booking_appointments")
-      .select("*, service:booking_services(title)")
+      .select("*, service:booking_services(title, translations)")
       .eq("organization_id", orgId)
       .gte("starts_at", appointmentsFrom)
       .lt("starts_at", appointmentsTo)
@@ -345,14 +348,18 @@ export async function getHomeDashboard(): Promise<HomeDashboard> {
     });
 
   const rawAppointments = (appointmentsResult.data ?? []) as Array<
-    BookingAppointmentRow & { service?: { title: string } | null }
+    BookingAppointmentRow & {
+      service?: { title: string; translations?: unknown } | null;
+    }
   >;
   const appointments: DashboardAppointment[] = rawAppointments.map((row) => {
     const guest = decryptBookingGuestRow(row, key);
     return {
       id: row.id,
       guestName: guest.guest_name,
-      serviceTitle: row.service?.title ?? null,
+      serviceTitle: row.service
+        ? serviceTitle(row.service, locale)
+        : null,
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       status: row.status,

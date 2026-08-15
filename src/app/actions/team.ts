@@ -130,7 +130,7 @@ export async function inviteOrgMemberAction(
     metadata: { email, role: parsed.data.role, authInvited: !authError },
   });
 
-  revalidatePath(`/${locale}/settings/organization`);
+  revalidatePath(`/${locale}/settings/team`);
   return {
     message: authError ? "invite_link" : "invited",
     inviteUrl,
@@ -171,7 +171,7 @@ export async function revokeOrgInvitationAction(
     return { error: "invite_failed" };
   }
 
-  revalidatePath(`/${parsed.data.locale}/settings/organization`);
+  revalidatePath(`/${parsed.data.locale}/settings/team`);
   return { message: "revoked" };
 }
 
@@ -241,7 +241,7 @@ export async function updateOrgMemberRoleAction(
     metadata: { role: parsed.data.role },
   });
 
-  revalidatePath(`/${parsed.data.locale}/settings/organization`);
+  revalidatePath(`/${parsed.data.locale}/settings/team`);
   return { message: "role_updated" };
 }
 
@@ -310,7 +310,7 @@ export async function removeOrgMemberAction(
     resourceId: parsed.data.memberId,
   });
 
-  revalidatePath(`/${parsed.data.locale}/settings/organization`);
+  revalidatePath(`/${parsed.data.locale}/settings/team`);
   return { message: "removed" };
 }
 

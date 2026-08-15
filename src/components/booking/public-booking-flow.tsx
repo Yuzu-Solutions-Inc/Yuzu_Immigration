@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@/i18n/navigation";
 import { formatPriceCents, generateServiceSlots } from "@/lib/booking/slots";
+import { serviceCopy } from "@/lib/booking/service-i18n";
 import { formFieldInputName, isReservedBookingFieldKey } from "@/lib/booking/form-fields";
 import type {
   BookingServiceFormFieldRow,
@@ -97,6 +98,7 @@ export function PublicBookingFlow({
 
   const host = payload.hosts.find((row) => row.userId === hostUserId) ?? null;
   const service = payload.services.find((row) => row.id === serviceId) ?? null;
+  const serviceLabel = service ? serviceCopy(service, locale).title : "";
   const slots = useMemo(() => {
     if (!service || !host) return [];
     return generateServiceSlots({
@@ -450,6 +452,7 @@ export function PublicBookingFlow({
           <div className="flex gap-2 overflow-x-auto pb-0.5">
             {payload.services.map((row) => {
               const selected = row.id === serviceId;
+              const copy = serviceCopy(row, locale);
               return (
                 <button
                   key={row.id}
@@ -465,7 +468,12 @@ export function PublicBookingFlow({
                       : "border-border bg-surface hover:border-action/40",
                   )}
                 >
-                  <p className="text-sm font-semibold text-brand">{row.title}</p>
+                  <p className="text-sm font-semibold text-brand">{copy.title}</p>
+                  {copy.description ? (
+                    <p className="mt-0.5 max-w-[16rem] text-xs text-muted-foreground">
+                      {copy.description}
+                    </p>
+                  ) : null}
                   <p className="text-xs text-muted-foreground">
                     {t("durationMinutes", { minutes: row.duration_minutes })}
                     {" · "}
@@ -566,7 +574,7 @@ export function PublicBookingFlow({
             {state.error === "slot_taken"
               ? t("errors.slot_taken")
               : selectedWhen && service
-                ? `${service.title} · ${selectedWhen}`
+                ? `${serviceLabel} · ${selectedWhen}`
                 : t("selectTimeHint")}
           </p>
           <Button
@@ -607,7 +615,7 @@ export function PublicBookingFlow({
             {selectedWhen && service ? (
               <p className="truncate text-sm text-muted-foreground">
                 {host ? `${host.name} · ` : null}
-                {service.title} · {selectedWhen}
+                {serviceLabel} · {selectedWhen}
               </p>
             ) : null}
           </div>

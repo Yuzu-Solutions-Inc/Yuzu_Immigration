@@ -5,7 +5,11 @@ import { z } from "zod";
 
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import {
+  parseServiceTranslations,
+} from "@/lib/booking/service-i18n";
 import { parsePriceToCents } from "@/lib/booking/slots";
+import { toAppLocale } from "@/lib/i18n/locales";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,8 +22,7 @@ const localeSchema = z.enum(["en", "fr", "es"]);
 
 const serviceFieldsSchema = z.object({
   locale: localeSchema,
-  title: z.string().trim().min(1).max(120),
-  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  translations: z.string(),
   durationMinutes: z.coerce.number().int().min(5).max(480),
   price: z.string(),
   isActive: z.enum(["on", "true", "false"]).optional(),
@@ -58,14 +61,21 @@ async function requireManager() {
 function parseServiceForm(formData: FormData) {
   return {
     locale: formData.get("locale") || "en",
-    title: String(formData.get("title") || ""),
-    description: String(formData.get("description") || ""),
+    translations: String(formData.get("translations") || "{}"),
     durationMinutes: formData.get("durationMinutes"),
     price: String(formData.get("price") || "0"),
     isActive: formData.get("isActive") ? "on" : "false",
     allowPayLater: formData.get("allowPayLater") ? "on" : "false",
     paymentReminderDays: String(formData.get("paymentReminderDays") || ""),
   };
+}
+
+function parseTranslationsJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
 }
 
 export async function createServiceAction(
@@ -82,6 +92,12 @@ export async function createServiceAction(
   const gate = await requireManager();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
+  const orgDefault = toAppLocale(gate.membership.organization.defaultLocale);
+  const translations = parseServiceTranslations(
+    parseTranslationsJson(parsed.data.translations),
+  );
+  const canonical = translations[orgDefault];
+  if (!canonical?.title) return { error: "invalid" };
   const user = await getSessionUser();
   const supabase = await createClient();
 
@@ -89,8 +105,9 @@ export async function createServiceAction(
     .from("booking_services")
     .insert({
       organization_id: orgId,
-      title: parsed.data.title,
-      description: parsed.data.description || null,
+      title: canonical.title,
+      description: canonical.description || null,
+      translations,
       duration_minutes: parsed.data.durationMinutes,
       price_cents: priceCents,
       is_active: parsed.data.isActive === "on",
@@ -138,14 +155,21 @@ export async function updateServiceAction(
   const gate = await requireManager();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
+  const orgDefault = toAppLocale(gate.membership.organization.defaultLocale);
+  const translations = parseServiceTranslations(
+    parseTranslationsJson(parsed.data.translations),
+  );
+  const canonical = translations[orgDefault];
+  if (!canonical?.title) return { error: "invalid" };
   const user = await getSessionUser();
   const supabase = await createClient();
 
   const { error } = await supabase
     .from("booking_services")
     .update({
-      title: parsed.data.title,
-      description: parsed.data.description || null,
+      title: canonical.title,
+      description: canonical.description || null,
+      translations,
       duration_minutes: parsed.data.durationMinutes,
       price_cents: priceCents,
       is_active: parsed.data.isActive === "on",

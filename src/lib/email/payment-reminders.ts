@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { isAutomationDue } from "@/lib/email/automation-template";
 import { sendBookingPaymentReminderEmail } from "@/lib/email/booking-confirmation";
 import { decryptPaymentToken } from "@/lib/square/payments";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 
 const DEFAULT_TZ = "America/Toronto";
 
@@ -16,7 +17,7 @@ export async function processDuePaymentReminders(now = new Date()) {
   const admin = createServiceClient();
   const { data: services, error: servicesError } = await admin
     .from("booking_services")
-    .select("id, title, payment_reminder_days, organization_id");
+    .select("id, title, translations, payment_reminder_days, organization_id");
   if (servicesError) {
     console.error("payment reminders services:", servicesError.message);
     return { processed: 0, sent: 0 };
@@ -162,7 +163,7 @@ export async function processDuePaymentReminders(now = new Date()) {
           orgName.get(appointment.organization_id as string) ?? "Firm",
         hostName:
           hostById.get(appointment.host_user_id as string) ?? "Consultant",
-        serviceTitle: (service.title as string) || "Consultation",
+        serviceTitle: serviceTitle(service, locale) || "Consultation",
         startsAt: appointment.starts_at as string,
         timezone: timeZone,
         payUrl,

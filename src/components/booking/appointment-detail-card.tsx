@@ -24,6 +24,7 @@ import {
   formatTimeInZone,
   zonedCivilToUtc,
 } from "@/lib/booking/timezone";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import { cn } from "@/lib/utils";
 
 export function AppointmentDetailCard({
@@ -130,7 +131,9 @@ export function AppointmentDetailCard({
               {row.guest_name}
             </p>
             <p className="truncate text-sm text-muted-foreground">
-              {row.service?.title ?? t("unknownService")}
+              {row.service
+                ? serviceTitle(row.service, locale)
+                : t("unknownService")}
               {row.service
                 ? ` · ${formatPriceCents(row.service.price_cents, locale, row.service.currency)}`
                 : null}

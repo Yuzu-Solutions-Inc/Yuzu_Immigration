@@ -16,7 +16,7 @@ export default async function AppHomePage({
   const [user, membership, dashboard] = await Promise.all([
     getSessionUser(),
     getPrimaryMembership(),
-    getHomeDashboard(),
+    getHomeDashboard(locale),
   ]);
   const canCreate = canCreateRecords(membership?.role);
 

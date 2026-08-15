@@ -112,7 +112,7 @@ export default async function ProjectDetailPage({
     canShare ? listOrgMembers() : Promise.resolve([]),
     canShare ? listProjectAssistantUserIds(id) : Promise.resolve([]),
     listProjectNotes(id),
-    listProjectMeetingHistory(id),
+    listProjectMeetingHistory(id, locale),
     listProjectCallInvites(id),
     (async () => {
       const supabase = await createClient();

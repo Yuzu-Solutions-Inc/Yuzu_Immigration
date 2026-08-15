@@ -34,49 +34,148 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  parseServiceTranslations,
+  serviceCopy,
+  type ServiceLocaleCopy,
+} from "@/lib/booking/service-i18n";
 import type {
   BookingFormFieldRow,
   BookingFormRow,
   BookingServiceRow,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
-import type { AppLocale } from "@/lib/i18n/locales";
+import {
+  APP_LOCALES,
+  LOCALE_LABELS,
+  type AppLocale,
+} from "@/lib/i18n/locales";
 import { centsToPriceInput, formatPriceCents } from "@/lib/booking/slots";
 
 const initialState: ServiceActionState = {};
 
+const EMPTY_COPY: ServiceLocaleCopy = { title: "", description: "" };
+
+function emptyCopies(): Record<AppLocale, ServiceLocaleCopy> {
+  return {
+    en: { ...EMPTY_COPY },
+    fr: { ...EMPTY_COPY },
+    es: { ...EMPTY_COPY },
+  };
+}
+
+function initialCopies(
+  service: BookingServiceRow | undefined,
+  orgDefaultLocale: AppLocale,
+) {
+  const copies = emptyCopies();
+  if (!service) return copies;
+  const translations = parseServiceTranslations(service.translations);
+  let any = false;
+  for (const code of APP_LOCALES) {
+    if (translations[code]?.title) {
+      copies[code] = {
+        title: translations[code]!.title,
+        description: translations[code]!.description,
+      };
+      any = true;
+    }
+  }
+  if (!any) {
+    copies[orgDefaultLocale] = {
+      title: service.title,
+      description: service.description ?? "",
+    };
+  } else if (!copies[orgDefaultLocale].title && service.title) {
+    copies[orgDefaultLocale] = {
+      title: service.title,
+      description: service.description ?? "",
+    };
+  }
+  return copies;
+}
+
 function ServiceFormFields({
   locale,
+  orgDefaultLocale,
   service,
 }: {
   locale: string;
+  orgDefaultLocale: AppLocale;
   service?: BookingServiceRow;
 }) {
   const t = useTranslations("services");
+  const [copies, setCopies] = useState(() =>
+    initialCopies(service, orgDefaultLocale),
+  );
+
   return (
     <>
       <input type="hidden" name="locale" value={locale} />
       {service ? <input type="hidden" name="serviceId" value={service.id} /> : null}
+      <input type="hidden" name="translations" value={JSON.stringify(copies)} />
+
       <div className="space-y-2">
-        <Label htmlFor="title">{t("titleLabel")}</Label>
-        <Input
-          id="title"
-          name="title"
-          required
-          maxLength={120}
-          defaultValue={service?.title}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="description">{t("description")}</Label>
-        <Textarea
-          id="description"
-          name="description"
-          rows={3}
-          maxLength={2000}
-          defaultValue={service?.description ?? ""}
-        />
+        <p className="text-sm font-medium">{t("copyLabel")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("copyHelp", { language: LOCALE_LABELS[orgDefaultLocale] })}
+        </p>
+        <Tabs defaultValue={orgDefaultLocale}>
+          <TabsList variant="line" className="w-full">
+            {APP_LOCALES.map((code) => (
+              <TabsTrigger key={code} value={code}>
+                {LOCALE_LABELS[code]}
+                {code === orgDefaultLocale ? (
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {t("automationDefaultLang")}
+                  </span>
+                ) : null}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {APP_LOCALES.map((code) => (
+            <TabsContent key={code} value={code} keepMounted className="space-y-3 pt-3">
+              <div className="space-y-2">
+                <Label htmlFor={`title-${code}`}>
+                  {t("titleLabel")}
+                  {code === orgDefaultLocale ? " *" : ""}
+                </Label>
+                <Input
+                  id={`title-${code}`}
+                  required={code === orgDefaultLocale}
+                  maxLength={120}
+                  value={copies[code].title}
+                  onChange={(event) =>
+                    setCopies((prev) => ({
+                      ...prev,
+                      [code]: { ...prev[code], title: event.target.value },
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`description-${code}`}>{t("description")}</Label>
+                <Textarea
+                  id={`description-${code}`}
+                  rows={3}
+                  maxLength={2000}
+                  value={copies[code].description}
+                  onChange={(event) =>
+                    setCopies((prev) => ({
+                      ...prev,
+                      [code]: {
+                        ...prev[code],
+                        description: event.target.value,
+                      },
+                    }))
+                  }
+                />
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
@@ -255,13 +354,15 @@ export function ServicesManager({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {services.map((service) => (
+              {services.map((service) => {
+                const copy = serviceCopy(service, locale, orgDefaultLocale);
+                return (
                 <TableRow key={service.id}>
                   <TableCell>
-                    <p className="font-medium text-brand">{service.title}</p>
-                    {service.description ? (
+                    <p className="font-medium text-brand">{copy.title}</p>
+                    {copy.description ? (
                       <p className="max-w-md truncate text-xs text-muted-foreground">
-                        {service.description}
+                        {copy.description}
                       </p>
                     ) : null}
                   </TableCell>
@@ -328,20 +429,25 @@ export function ServicesManager({
                     </TableCell>
                   ) : null}
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </SurfaceCard>
       )}
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md" showCloseButton>
+        <DialogContent className="sm:max-w-lg" showCloseButton>
           <DialogHeader>
             <DialogTitle>{t("createTitle")}</DialogTitle>
             <DialogDescription>{t("createSubtitle")}</DialogDescription>
           </DialogHeader>
           <form action={createAction} className="space-y-4">
-            <ServiceFormFields locale={locale} />
+            <ServiceFormFields
+              key={createOpen ? "open" : "closed"}
+              locale={locale}
+              orgDefaultLocale={orgDefaultLocale}
+            />
             <DialogFooter>
               <Button type="submit" disabled={createPending}>
                 {createPending ? t("saving") : t("create")}
@@ -357,14 +463,19 @@ export function ServicesManager({
           if (!open) setEditing(null);
         }}
       >
-        <DialogContent className="sm:max-w-md" showCloseButton>
+        <DialogContent className="sm:max-w-lg" showCloseButton>
           <DialogHeader>
             <DialogTitle>{t("editTitle")}</DialogTitle>
             <DialogDescription>{t("editSubtitle")}</DialogDescription>
           </DialogHeader>
           {editing ? (
             <form action={updateAction} className="space-y-4">
-              <ServiceFormFields locale={locale} service={editing} />
+              <ServiceFormFields
+                key={editing.id}
+                locale={locale}
+                orgDefaultLocale={orgDefaultLocale}
+                service={editing}
+              />
               <DialogFooter>
                 <Button type="submit" disabled={updatePending}>
                   {updatePending ? t("saving") : t("save")}

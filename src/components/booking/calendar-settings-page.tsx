@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -11,10 +12,12 @@ import {
 import { GoogleCalendarSettings } from "@/components/booking/google-calendar-settings";
 import { WeekTemplateHours } from "@/components/booking/week-template-hours";
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Link } from "@/i18n/navigation";
+import { cn } from "@/lib/utils";
 import type {
   BookingAvailabilityRuleRow,
   BookingSettingsRow,
@@ -56,15 +59,25 @@ export function CalendarSettingsPage({
 
   return (
     <div className="space-y-6">
-      <SurfaceCard className="space-y-3 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-heading text-base font-semibold text-brand">
-            {t("bookingOptions")}
-          </h2>
-          <div className="flex items-center gap-2">
+      <div className="space-y-3">
+        <Link
+          href="/calendar"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "-ml-2 w-fit gap-1 text-muted-foreground",
+          )}
+        >
+          <ChevronLeft className="size-4" />
+          {t("backToCalendar")}
+        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="font-heading text-2xl font-semibold text-brand">
+            {t("settingsTitle")}
+          </h1>
+          <div className="flex items-center gap-3">
             <Label
               htmlFor="acceptBookings"
-              className="text-xs font-medium text-brand"
+              className="text-base font-semibold text-brand"
             >
               {t("bookingEnabled")}
             </Label>
@@ -75,10 +88,15 @@ export function CalendarSettingsPage({
               checked={acceptBookings}
               disabled={!canManage}
               onCheckedChange={setAcceptBookings}
-              size="sm"
             />
           </div>
         </div>
+      </div>
+
+      <SurfaceCard className="space-y-3 p-4 sm:p-5">
+        <h2 className="font-heading text-base font-semibold text-brand">
+          {t("bookingOptions")}
+        </h2>
 
         <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
           <form

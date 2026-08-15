@@ -7,6 +7,7 @@ import { decryptBookingGuestRow } from "@/lib/security/client-pii";
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 
 import {
   computeCancelRefundAmounts,
@@ -260,7 +261,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     await Promise.all([
       admin
         .from("booking_services")
-        .select("title")
+        .select("title, translations")
         .eq("id", appointment.service_id)
         .maybeSingle(),
       admin
@@ -294,12 +295,13 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     (host?.full_name as string | null)?.trim() ||
     (host?.email as string | null) ||
     "Consultant";
-  const serviceTitle = (service?.title as string | null) || "Consultation";
-  const organizationName = (org?.name as string | null) || "Firm";
-  const timezone = (settings?.timezone as string | null) || "America/Toronto";
   const preferredLocale = (
     (appointment.guest_preferred_locale as string | null) || "en"
   ) as "en" | "fr" | "es";
+  const resolvedServiceTitle =
+    serviceTitle(service, preferredLocale) || "Consultation";
+  const organizationName = (org?.name as string | null) || "Firm";
+  const timezone = (settings?.timezone as string | null) || "America/Toronto";
 
   let meetJoinUrl = existingMeet;
   if (!alreadyOnCalendar) {
@@ -310,7 +312,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
       organizationId: appointment.organization_id as string,
       hostUserId: appointment.host_user_id as string,
       appointmentId: appointment.id as string,
-      title: `${serviceTitle} — ${guest.guest_name}`,
+      title: `${resolvedServiceTitle} — ${guest.guest_name}`,
       description: `Booked via Yuzu Immigration\n${guest.guest_name}\n${guest.guest_email}\n${guest.guest_phone ?? ""}`,
       startsAt: appointment.starts_at as string,
       endsAt: appointment.ends_at as string,
@@ -345,7 +347,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
         guestName: guest.guest_name,
         organizationName,
         hostName,
-        serviceTitle,
+        serviceTitle: resolvedServiceTitle,
         startsAt: appointment.starts_at as string,
         timezone,
         manageUrl,
@@ -357,7 +359,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
         guestName: guest.guest_name,
         organizationName,
         hostName,
-        serviceTitle,
+        serviceTitle: resolvedServiceTitle,
         startsAt: appointment.starts_at as string,
         timezone,
         meetJoinUrl,
@@ -403,6 +405,7 @@ export function decryptPaymentToken(encrypted: string | null | undefined) {
 export async function settlePaymentOnBookingCancel(input: {
   organizationId: string;
   appointmentId: string;
+  startsAt?: string;
   reason?: string;
 }): Promise<{
   outcome:
@@ -468,6 +471,7 @@ export async function settlePaymentOnBookingCancel(input: {
     const { refundCents } = computeCancelRefundAmounts(
       payment.amount_cents,
       policy,
+      input.startsAt,
     );
 
     if (!policy.cancelRefundEnabled || refundCents <= 0) {

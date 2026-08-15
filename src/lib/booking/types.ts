@@ -1,4 +1,5 @@
 import type { BookingAppointmentStatus, BookingFormFieldType } from "@/db/schema";
+import type { ServiceTranslations } from "@/lib/booking/service-i18n";
 
 export type BookingSettingsRow = {
   id: string;
@@ -20,6 +21,7 @@ export type BookingServiceRow = {
   organization_id: string;
   title: string;
   description: string | null;
+  translations?: ServiceTranslations | null;
   duration_minutes: number;
   price_cents: number;
   currency: string;
@@ -162,12 +164,14 @@ export type ManageBookingPayload = {
   paymentAmountCents: number | null;
   paymentCurrency: string | null;
   cancelPolicy: {
-    minDaysBefore: number;
+    freeDaysBefore: number;
+    feeDaysBefore: number;
     refundEnabled: boolean;
     feeType: "none" | "fixed" | "percent";
     feeCents: number;
     feePercent: number;
     hasFee: boolean;
+    hasFeeTier: boolean;
   } | null;
 };
 

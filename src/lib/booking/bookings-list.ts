@@ -3,6 +3,7 @@ import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { decryptPaymentToken } from "@/lib/square/payments";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 
 export type BookingListItem = {
   id: string;
@@ -31,7 +32,7 @@ export async function listOrgBookingsWithPayment(
   const { data, error } = await supabase
     .from("booking_appointments")
     .select(
-      "id, person_id, starts_at, ends_at, status, guest_name, guest_email, host_user_id, service_id, service:booking_services(title)",
+      "id, person_id, starts_at, ends_at, status, guest_name, guest_email, host_user_id, service_id, service:booking_services(title, translations)",
     )
     .eq("organization_id", organizationId)
     .order("starts_at", { ascending: false })
@@ -86,12 +87,11 @@ export async function listOrgBookingsWithPayment(
       dek,
     );
     const service = row.service as
-      | { title?: string }
-      | { title?: string }[]
+      | { title?: string; translations?: unknown }
+      | { title?: string; translations?: unknown }[]
       | null;
-    const serviceTitle = Array.isArray(service)
-      ? (service[0]?.title ?? "Service")
-      : (service?.title ?? "Service");
+    const serviceRow = Array.isArray(service) ? service[0] : service;
+    const resolvedTitle = serviceTitle(serviceRow, locale);
     const payment = paymentByAppointment.get(row.id as string);
     const token = payment
       ? decryptPaymentToken(payment.token_encrypted as string | null)
@@ -111,7 +111,7 @@ export async function listOrgBookingsWithPayment(
       status: row.status as string,
       guestName: guest.guest_name,
       guestEmail: guest.guest_email,
-      serviceTitle,
+      serviceTitle: resolvedTitle,
       hostName: hostName.get(row.host_user_id as string) ?? "—",
       paymentStatus: (payment?.status as string | null) ?? null,
       paymentAmountCents: (payment?.amount_cents as number | null) ?? null,

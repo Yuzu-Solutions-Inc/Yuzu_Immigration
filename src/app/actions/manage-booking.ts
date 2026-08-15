@@ -189,11 +189,22 @@ export async function cancelPublicBookingAction(
   const blocked = manageError(ctx.status, ctx.startsAt);
   if (blocked) return blocked;
 
-  const minDays = ctx.cancelPolicy?.minDaysBefore ?? 0;
-  const { isWithinGuestCancelWindow } = await import(
-    "@/lib/square/cancel-policy"
-  );
-  if (!isWithinGuestCancelWindow(ctx.startsAt, minDays)) {
+  const { resolveCancelRefundTier, normalizeSquareCancelRefundPolicy } =
+    await import("@/lib/square/cancel-policy");
+  const tier = ctx.cancelPolicy
+    ? resolveCancelRefundTier(
+        normalizeSquareCancelRefundPolicy({
+          cancel_refund_enabled: ctx.cancelPolicy.refundEnabled,
+          cancel_free_days_before: ctx.cancelPolicy.freeDaysBefore,
+          cancel_min_days_before: ctx.cancelPolicy.feeDaysBefore,
+          cancel_refund_fee_type: ctx.cancelPolicy.feeType,
+          cancel_refund_fee_cents: ctx.cancelPolicy.feeCents,
+          cancel_refund_fee_percent: ctx.cancelPolicy.feePercent,
+        }),
+        ctx.startsAt,
+      )
+    : "free";
+  if (tier === "blocked") {
     return { error: "cancel_window" };
   }
 
@@ -220,6 +231,7 @@ export async function cancelPublicBookingAction(
   const settlement = await settlePaymentOnBookingCancel({
     organizationId: ctx.organizationId,
     appointmentId: ctx.appointmentId,
+    startsAt: ctx.startsAt,
     reason: "Appointment cancelled by guest",
   });
   if (settlement.outcome === "failed") {

@@ -8,9 +8,19 @@ import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
+import { resolveCountryLic } from "@/lib/ircc/codes/resolve-lic";
 import { slugifyOrganizationName } from "@/lib/org/slug";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
+
+function normalizeRepCountry(value: string): string {
+  const raw = value.trim() || "Canada";
+  try {
+    return resolveCountryLic(raw);
+  } catch {
+    return raw;
+  }
+}
 
 export type SettingsActionState = {
   error?: string;
@@ -74,7 +84,7 @@ export async function updateAccountSettingsAction(
     repStreetName: empty("repStreetName"),
     repCity: empty("repCity"),
     repProvince: empty("repProvince"),
-    repCountry: empty("repCountry") || "Canada",
+    repCountry: normalizeRepCountry(empty("repCountry")),
     repPostalCode: empty("repPostalCode"),
   });
 

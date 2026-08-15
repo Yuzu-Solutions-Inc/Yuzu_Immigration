@@ -4,12 +4,18 @@ import { useTranslations } from "next-intl";
 
 import { formatPriceCents } from "@/lib/booking/slots";
 import type { CancelPolicyDisplay } from "@/lib/square/cancel-policy";
+import {
+  computeCancelRefundAmounts,
+  normalizeSquareCancelRefundPolicy,
+  resolveCancelRefundTier,
+} from "@/lib/square/cancel-policy";
 
 export function CancelPolicyNotice({
   policy,
   locale,
   currency,
   paidAmountCents,
+  startsAt,
   namespace = "booking",
   className,
 }: {
@@ -18,6 +24,8 @@ export function CancelPolicyNotice({
   currency?: string | null;
   /** When set (e.g. manage cancel), show estimated refund after fee. */
   paidAmountCents?: number | null;
+  /** Appointment start — refines refund estimate to the current cancel tier. */
+  startsAt?: string | null;
   namespace?: "booking" | "bookingManage";
   className?: string;
 }) {
@@ -27,9 +35,28 @@ export function CancelPolicyNotice({
   const currencyCode = (currency || "CAD").toUpperCase();
   const lines: string[] = [];
 
-  if (policy.minDaysBefore > 0) {
+  if (policy.hasFeeTier) {
     lines.push(
-      t("cancelPolicyMinDays", { days: policy.minDaysBefore }),
+      t("cancelPolicyFreeDays", { days: policy.freeDaysBefore }),
+    );
+    lines.push(
+      t("cancelPolicyFeeDays", {
+        freeDays: policy.freeDaysBefore,
+        feeDays: policy.feeDaysBefore,
+      }),
+    );
+    if (policy.feeDaysBefore > 0) {
+      lines.push(
+        t("cancelPolicyNoCancelWithin", { days: policy.feeDaysBefore }),
+      );
+    }
+  } else if (policy.freeDaysBefore > 0) {
+    lines.push(
+      t("cancelPolicyFreeDays", { days: policy.freeDaysBefore }),
+    );
+  } else if (policy.feeDaysBefore > 0) {
+    lines.push(
+      t("cancelPolicyMinDays", { days: policy.feeDaysBefore }),
     );
   }
 
@@ -47,7 +74,7 @@ export function CancelPolicyNotice({
         t("cancelPolicyFeePercent", { percent: policy.feePercent }),
       );
     }
-  } else {
+  } else if (lines.length === 0 || policy.freeDaysBefore === 0) {
     lines.push(t("cancelPolicyFullRefund"));
   }
 
@@ -56,19 +83,32 @@ export function CancelPolicyNotice({
     typeof paidAmountCents === "number" &&
     paidAmountCents > 0
   ) {
-    let feeCents = 0;
-    if (policy.feeType === "fixed") feeCents = policy.feeCents;
-    else if (policy.feeType === "percent") {
-      feeCents = Math.round((paidAmountCents * policy.feePercent) / 100);
-    }
-    feeCents = Math.max(0, Math.min(paidAmountCents, feeCents));
-    const refundCents = Math.max(0, paidAmountCents - feeCents);
-    lines.push(
-      t("cancelPolicyRefundEstimate", {
-        refund: formatPriceCents(refundCents, locale, currencyCode),
-        paid: formatPriceCents(paidAmountCents, locale, currencyCode),
-      }),
+    const normalized = normalizeSquareCancelRefundPolicy({
+      cancel_refund_enabled: policy.refundEnabled,
+      cancel_free_days_before: policy.freeDaysBefore,
+      cancel_min_days_before: policy.feeDaysBefore,
+      cancel_refund_fee_type: policy.feeType,
+      cancel_refund_fee_cents: policy.feeCents,
+      cancel_refund_fee_percent: policy.feePercent,
+    });
+    const tier = startsAt
+      ? resolveCancelRefundTier(normalized, startsAt)
+      : policy.hasFee
+        ? "fee"
+        : "free";
+    const { refundCents } = computeCancelRefundAmounts(
+      paidAmountCents,
+      normalized,
+      startsAt ?? undefined,
     );
+    if (tier !== "blocked") {
+      lines.push(
+        t("cancelPolicyRefundEstimate", {
+          refund: formatPriceCents(refundCents, locale, currencyCode),
+          paid: formatPriceCents(paidAmountCents, locale, currencyCode),
+        }),
+      );
+    }
   }
 
   if (lines.length === 0) return null;

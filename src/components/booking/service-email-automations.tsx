@@ -36,6 +36,7 @@ import type {
   BookingServiceRow,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import {
   AUTOMATION_VARIABLES,
   CONSULTANT_EMAIL_TOKEN,
@@ -315,7 +316,9 @@ function AutomationForm({
                   }}
                   className="size-4 rounded border-input"
                 />
-                <span className="min-w-0 truncate">{service.title}</span>
+                <span className="min-w-0 truncate">
+                  {serviceTitle(service, locale, orgDefaultLocale)}
+                </span>
               </label>
             );
           })}
@@ -573,8 +576,14 @@ export function ServiceEmailAutomationsButton({
   const [editing, setEditing] = useState<ServiceEmailAutomationRow | null>(null);
   const [creating, setCreating] = useState(false);
   const serviceTitleById = useMemo(
-    () => new Map(services.map((service) => [service.id, service.title])),
-    [services],
+    () =>
+      new Map(
+        services.map((service) => [
+          service.id,
+          serviceTitle(service, locale, orgDefaultLocale),
+        ]),
+      ),
+    [locale, orgDefaultLocale, services],
   );
 
   function closeForm() {

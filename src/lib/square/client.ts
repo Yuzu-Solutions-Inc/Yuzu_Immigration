@@ -25,6 +25,7 @@ export type SquareConnectionRow = {
   business_name: string | null;
   is_enabled: boolean;
   cancel_refund_enabled: boolean;
+  cancel_free_days_before: number;
   cancel_min_days_before: number;
   cancel_refund_fee_type: string;
   cancel_refund_fee_cents: number;
@@ -32,7 +33,7 @@ export type SquareConnectionRow = {
 };
 
 const SQUARE_CONNECTION_SELECT =
-  "id, organization_id, connected_by, merchant_id, location_id, currency, business_name, is_enabled, cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent";
+  "id, organization_id, connected_by, merchant_id, location_id, currency, business_name, is_enabled, cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent";
 
 const SQUARE_VERSION = "2025-01-23";
 

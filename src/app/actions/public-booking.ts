@@ -14,6 +14,7 @@ import {
   recordBookingAbuseEvent,
 } from "@/lib/booking/abuse";
 import { bookingManageUrls } from "@/lib/booking/manage-url";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import { parseBookingFormAnswers, isReservedBookingFieldKey } from "@/lib/booking/form-fields";
 import {
   findPersonByEmail,
@@ -185,10 +186,12 @@ export async function submitPublicBookingAction(
     parsed.data.guestLastName,
   );
   const preferredLocale = parsed.data.guestPreferredLocale;
+  const localizedTitle = serviceTitle(service, preferredLocale);
 
   const existing = await listFutureGuestAppointmentsByEmail({
     organizationId: ctx.organizationId,
     email: guestEmail,
+    locale: preferredLocale,
   });
   if (existing.length >= MAX_FUTURE_BOOKINGS_PER_EMAIL) {
     return {
@@ -334,7 +337,7 @@ export async function submitPublicBookingAction(
         source: "booking",
         amountCents: service.price_cents,
         currency: service.currency || "CAD",
-        description: `${service.title} — ${ctx.organizationName}`,
+        description: `${localizedTitle} — ${ctx.organizationName}`,
         locale: preferredLocale,
         appointmentId: appointment.id,
         personId,
@@ -355,7 +358,7 @@ export async function submitPublicBookingAction(
           organizationId: ctx.organizationId,
           hostUserId: host.userId,
           appointmentId: appointment.id,
-          title: `${service.title} — ${guestName}`,
+          title: `${localizedTitle} — ${guestName}`,
           description: `Booked via Yuzu Immigration (payment pending)\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
           startsAt: parsed.data.startsAt,
           endsAt: parsed.data.endsAt,
@@ -372,7 +375,7 @@ export async function submitPublicBookingAction(
             guestName,
             organizationName: ctx.organizationName,
             hostName: host.name,
-            serviceTitle: service.title,
+            serviceTitle: localizedTitle,
             startsAt: parsed.data.startsAt,
             timezone: ctx.settings.timezone,
             meetJoinUrl,
@@ -388,7 +391,7 @@ export async function submitPublicBookingAction(
           appointmentId: appointment.id,
           startsAt: parsed.data.startsAt,
           endsAt: parsed.data.endsAt,
-          serviceTitle: service.title,
+          serviceTitle: localizedTitle,
           hostName: host.name,
           meetJoinUrl: meetJoinUrl ?? undefined,
           manageToken,
@@ -402,7 +405,7 @@ export async function submitPublicBookingAction(
         appointmentId: appointment.id,
         startsAt: parsed.data.startsAt,
         endsAt: parsed.data.endsAt,
-        serviceTitle: service.title,
+        serviceTitle: localizedTitle,
         hostName: host.name,
         manageToken,
         checkoutUrl: checkout.checkoutUrl,
@@ -432,7 +435,7 @@ export async function submitPublicBookingAction(
     organizationId: ctx.organizationId,
     hostUserId: host.userId,
     appointmentId: appointment.id,
-    title: `${service.title} — ${guestName}`,
+    title: `${localizedTitle} — ${guestName}`,
     description: `Booked via Yuzu Immigration\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
@@ -449,7 +452,7 @@ export async function submitPublicBookingAction(
       guestName,
       organizationName: ctx.organizationName,
       hostName: host.name,
-      serviceTitle: service.title,
+      serviceTitle: localizedTitle,
       startsAt: parsed.data.startsAt,
       timezone: ctx.settings.timezone,
       meetJoinUrl,
@@ -463,7 +466,7 @@ export async function submitPublicBookingAction(
     appointmentId: appointment.id,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
-    serviceTitle: service.title,
+    serviceTitle: localizedTitle,
     hostName: host.name,
     meetJoinUrl: meetJoinUrl ?? undefined,
     manageToken,
@@ -503,6 +506,7 @@ export async function sendPublicBookingManageLinksAction(
   const existing = await listFutureGuestAppointmentsByEmail({
     organizationId: ctx.organizationId,
     email: guestEmail,
+    locale: parsed.data.locale,
   });
   if (existing.length === 0) {
     return { message: "links_sent" };

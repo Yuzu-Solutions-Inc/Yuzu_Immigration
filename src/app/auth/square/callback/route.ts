@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const locale = state?.locale ?? "en";
   const fail = (reason: string) =>
     NextResponse.redirect(
-      `${origin}/${locale}/settings/organization?square=${encodeURIComponent(reason)}`,
+      `${origin}/${locale}/settings/payments?square=${encodeURIComponent(reason)}`,
     );
 
   if (errorParam || !code || !state) {
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.redirect(
-      `${origin}/${locale}/settings/organization?square=connected`,
+      `${origin}/${locale}/settings/payments?square=connected`,
     );
   } catch (error) {
     console.error("square oauth callback:", error);

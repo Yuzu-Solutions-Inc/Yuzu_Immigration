@@ -12,6 +12,7 @@ import {
   PROJECT_CALL_INVITE_TTL_DAYS,
 } from "@/lib/booking/queries";
 import { isSlotStillOpen } from "@/lib/booking/slots";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { requireOrganizationId, type PersonRow } from "@/lib/crm/queries";
@@ -355,6 +356,7 @@ export async function submitProjectCallBookingAction(
 
   const origin = await getAppBaseUrl();
   const preferredLocale = toAppLocale(ctx.guestPreferredLocale);
+  const localizedTitle = serviceTitle(ctx.service, preferredLocale);
   const urls = bookingManageUrls(origin, preferredLocale, manageToken);
 
   const { pushAppointmentToGoogleCalendar } = await import(
@@ -364,7 +366,7 @@ export async function submitProjectCallBookingAction(
     organizationId: ctx.organizationId,
     hostUserId: ctx.host.userId,
     appointmentId: appointment.id,
-    title: `${ctx.service.title} — ${guestName}`,
+    title: `${localizedTitle} — ${guestName}`,
     description: `Project call via Yuzu Immigration\n${guestName}\n${ctx.guestEmail}\nProject: ${ctx.projectTitle}`,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
@@ -381,7 +383,7 @@ export async function submitProjectCallBookingAction(
       guestName,
       organizationName: ctx.organizationName,
       hostName: ctx.host.name,
-      serviceTitle: ctx.service.title,
+      serviceTitle: localizedTitle,
       startsAt: parsed.data.startsAt,
       timezone: ctx.settings.timezone,
       meetJoinUrl,
@@ -395,7 +397,7 @@ export async function submitProjectCallBookingAction(
     appointmentId: appointment.id,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
-    serviceTitle: ctx.service.title,
+    serviceTitle: localizedTitle,
     hostName: ctx.host.name,
     meetJoinUrl: meetJoinUrl ?? undefined,
     manageToken,

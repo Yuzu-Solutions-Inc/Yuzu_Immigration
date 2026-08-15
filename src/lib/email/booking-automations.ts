@@ -13,6 +13,7 @@ import {
   resolveRecipientAddresses,
 } from "@/lib/email/automation-template";
 import { extraAutomationVariables } from "@/lib/booking/form-fields";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import type {
   BookingAppointmentRow,
   BookingServiceRow,
@@ -107,7 +108,7 @@ export async function processDueBookingAutomations(now = new Date()) {
         .in("organization_id", orgIds),
       admin
         .from("booking_services")
-        .select("id, title, duration_minutes")
+        .select("id, title, translations, duration_minutes")
         .in("id", serviceIds),
       admin
         .from("profiles")
@@ -137,7 +138,10 @@ export async function processDueBookingAutomations(now = new Date()) {
   const serviceById = new Map(
     (servicesRes.data ?? []).map((row) => [
       row.id as string,
-      row as Pick<BookingServiceRow, "id" | "title" | "duration_minutes">,
+      row as Pick<
+        BookingServiceRow,
+        "id" | "title" | "duration_minutes" | "translations"
+      >,
     ]),
   );
   const profileById = new Map(
@@ -223,7 +227,7 @@ export async function processDueBookingAutomations(now = new Date()) {
         timeZone,
         customerName: guest.guest_name,
         customerEmail: guest.guest_email,
-        serviceName: service.title,
+        serviceName: serviceTitle(service, preferredLocale, defaultLocale),
         consultantName: host?.name ?? appointment.host_user_id,
         consultantEmail: host?.email ?? "",
         organizationName:

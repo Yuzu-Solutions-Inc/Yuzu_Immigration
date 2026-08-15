@@ -20,8 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { centsToPriceInput } from "@/lib/booking/slots";
-import type { CancelRefundFeeType } from "@/lib/square/cancel-policy";
-
 const initialSaveState: SquareActionState = {};
 
 export type SquareSettingsConnection = {
@@ -30,6 +28,7 @@ export type SquareSettingsConnection = {
   currency: string;
   is_enabled: boolean;
   cancel_refund_enabled: boolean;
+  cancel_free_days_before: number;
   cancel_min_days_before: number;
   cancel_refund_fee_type: string;
   cancel_refund_fee_cents: number;
@@ -51,10 +50,16 @@ export function SquareSettings({
   const [refundEnabled, setRefundEnabled] = useState(
     connection?.cancel_refund_enabled !== false,
   );
-  const [feeType, setFeeType] = useState<CancelRefundFeeType>(() => {
-    const raw = connection?.cancel_refund_fee_type;
-    return raw === "fixed" || raw === "percent" ? raw : "none";
+  const [feeUnit, setFeeUnit] = useState<"fixed" | "percent">(() =>
+    connection?.cancel_refund_fee_type === "percent" ? "percent" : "fixed",
+  );
+  const [feeAmount, setFeeAmount] = useState(() => {
+    if (connection?.cancel_refund_fee_type === "percent") {
+      return String(connection.cancel_refund_fee_percent ?? 0);
+    }
+    return centsToPriceInput(connection?.cancel_refund_fee_cents ?? 0);
   });
+  const hasFee = Number.parseFloat(feeAmount) > 0;
   const [saveState, saveAction, savePending] = useActionState(
     async (_prev: SquareActionState, formData: FormData) => {
       const result = await saveSquareCancelPolicyAction(formData);
@@ -163,84 +168,78 @@ export function SquareSettings({
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="cancelMinDaysBefore" className="text-xs">
-                {t("squareCancelMinDays")}
+              <Label htmlFor="cancelFreeDaysBefore" className="text-xs">
+                {t("squareCancelFreeDays")}
               </Label>
               <Input
-                id="cancelMinDaysBefore"
-                name="cancelMinDaysBefore"
+                id="cancelFreeDaysBefore"
+                name="cancelFreeDaysBefore"
                 type="number"
                 min={0}
                 max={365}
                 step={1}
-                defaultValue={connection?.cancel_min_days_before ?? 0}
+                defaultValue={connection?.cancel_free_days_before ?? 0}
                 className="max-w-[8rem]"
               />
               <p className="text-xs text-muted-foreground">
-                {t("squareCancelMinDaysHelp")}
+                {t("squareCancelFreeDaysHelp")}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cancelRefundFeeType" className="text-xs">
+              <Label htmlFor="cancelRefundFeeAmount" className="text-xs">
                 {t("squareCancelRefundFee")}
               </Label>
-              <select
-                id="cancelRefundFeeType"
-                name="cancelRefundFeeType"
-                value={feeType}
-                onChange={(event) =>
-                  setFeeType(event.target.value as CancelRefundFeeType)
-                }
-                disabled={!refundEnabled}
-                className="h-10 w-full max-w-xs rounded-xl border border-input bg-surface px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-50"
-              >
-                <option value="none">{t("squareFeeNone")}</option>
-                <option value="fixed">{t("squareFeeFixed")}</option>
-                <option value="percent">{t("squareFeePercent")}</option>
-              </select>
+              <div className="flex max-w-[14rem] items-stretch">
+                <Input
+                  id="cancelRefundFeeAmount"
+                  name="cancelRefundFeeAmount"
+                  type="number"
+                  min={0}
+                  max={feeUnit === "percent" ? 100 : undefined}
+                  step={feeUnit === "percent" ? 1 : "0.01"}
+                  disabled={!refundEnabled}
+                  value={feeAmount}
+                  onChange={(event) => setFeeAmount(event.target.value)}
+                  className="rounded-r-none"
+                />
+                <select
+                  name="cancelRefundFeeType"
+                  value={feeUnit}
+                  onChange={(event) =>
+                    setFeeUnit(event.target.value as "fixed" | "percent")
+                  }
+                  disabled={!refundEnabled}
+                  aria-label={t("squareCancelRefundFee")}
+                  className="h-10 shrink-0 rounded-r-xl border border-l-0 border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-50"
+                >
+                  <option value="fixed">$</option>
+                  <option value="percent">%</option>
+                </select>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {t("squareCancelRefundFeeHelp")}
               </p>
 
-              {feeType === "fixed" ? (
+              {hasFee ? (
                 <div className="space-y-1">
-                  <Label htmlFor="cancelRefundFeeDollars" className="text-xs">
-                    {t("squareFeeFixedAmount", {
-                      currency: connection?.currency ?? "CAD",
-                    })}
+                  <Label htmlFor="cancelFeeDaysBefore" className="text-xs">
+                    {t("squareCancelFeeDays")}
                   </Label>
                   <Input
-                    id="cancelRefundFeeDollars"
-                    name="cancelRefundFeeDollars"
+                    id="cancelFeeDaysBefore"
+                    name="cancelFeeDaysBefore"
                     type="number"
                     min={0}
-                    step="0.01"
-                    disabled={!refundEnabled}
-                    defaultValue={centsToPriceInput(
-                      connection?.cancel_refund_fee_cents ?? 0,
-                    )}
-                    className="max-w-[8rem]"
-                  />
-                </div>
-              ) : null}
-
-              {feeType === "percent" ? (
-                <div className="space-y-1">
-                  <Label htmlFor="cancelRefundFeePercent" className="text-xs">
-                    {t("squareFeePercentAmount")}
-                  </Label>
-                  <Input
-                    id="cancelRefundFeePercent"
-                    name="cancelRefundFeePercent"
-                    type="number"
-                    min={0}
-                    max={100}
+                    max={365}
                     step={1}
                     disabled={!refundEnabled}
-                    defaultValue={connection?.cancel_refund_fee_percent ?? 0}
+                    defaultValue={connection?.cancel_min_days_before ?? 0}
                     className="max-w-[8rem]"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {t("squareCancelFeeDaysHelp")}
+                  </p>
                 </div>
               ) : null}
             </div>

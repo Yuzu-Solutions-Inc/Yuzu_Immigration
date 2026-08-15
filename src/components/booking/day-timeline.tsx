@@ -25,6 +25,7 @@ import type {
   BookingGoogleBusyRow,
 } from "@/lib/booking/types";
 import { clipToDayMinutes, zonedDateIso, zonedParts } from "@/lib/booking/timezone";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import { cn } from "@/lib/utils";
 
 const HOURS = 24;
@@ -476,7 +477,9 @@ export function DayTimeline({
               const density = blockDensity(height);
               const when = timeRangeLabel(range.start, range.end);
               const service =
-                row.service?.title ?? t("unknownService");
+                row.service
+                  ? serviceTitle(row.service, locale)
+                  : t("unknownService");
               const title = `${when} · ${row.guest_name} · ${service}`;
               return (
                 <button

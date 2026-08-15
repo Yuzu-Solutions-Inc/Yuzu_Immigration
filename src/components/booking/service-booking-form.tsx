@@ -36,6 +36,7 @@ import type {
   BookingFormRow,
   BookingServiceRow,
 } from "@/lib/booking/types";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 
 const initialState: FormFieldActionState = {};
 
@@ -82,10 +83,12 @@ function draftsFromFields(fields: BookingFormFieldRow[]): DraftField[] {
 }
 
 function ServiceCheckboxes({
+  locale,
   services,
   selected,
   onChange,
 }: {
+  locale: string;
   services: BookingServiceRow[];
   selected: string[];
   onChange: (next: string[]) => void;
@@ -115,7 +118,9 @@ function ServiceCheckboxes({
                 }}
                 className="size-4 rounded border-input"
               />
-              <span className="min-w-0 truncate">{service.title}</span>
+              <span className="min-w-0 truncate">
+                {serviceTitle(service, locale)}
+              </span>
             </label>
           );
         })}
@@ -234,6 +239,7 @@ function FormEditor({
       </div>
 
       <ServiceCheckboxes
+        locale={locale}
         services={services}
         selected={serviceIds}
         onChange={setServiceIds}
@@ -555,7 +561,7 @@ export function ServiceBookingFormButton({
                                 {assigned.length === 0
                                   ? t("noneAssigned")
                                   : assigned
-                                      .map((service) => service.title)
+                                      .map((service) => serviceTitle(service, locale))
                                       .join(", ")}
                                 {" · "}
                                 {t("formFieldCount", {

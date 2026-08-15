@@ -43,7 +43,7 @@ export async function startSquareConnectAction(formData: FormData) {
   const locale = String(formData.get("locale") || "en");
   const fail = (reason: string): never => {
     redirect(
-      `/${locale}/settings/organization?square=${encodeURIComponent(reason)}`,
+      `/${locale}/settings/payments?square=${encodeURIComponent(reason)}`,
     );
   };
   const gate = await requireAdmin();
@@ -97,7 +97,7 @@ export async function disconnectSquareAction(
     }
   }
 
-  revalidatePath(`/${locale}/settings/organization`);
+  revalidatePath(`/${locale}/settings/payments`);
   return { message: "disconnected" };
 }
 
@@ -108,30 +108,38 @@ export async function saveSquareCancelPolicyAction(
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
-  const feeTypeRaw = String(formData.get("cancelRefundFeeType") || "none");
-  const feeType =
-    feeTypeRaw === "fixed" || feeTypeRaw === "percent" ? feeTypeRaw : "none";
-
-  const feeDollars = Number.parseFloat(
-    String(formData.get("cancelRefundFeeDollars") || "0"),
+  const feeUnitRaw = String(formData.get("cancelRefundFeeType") || "fixed");
+  const feeUnit = feeUnitRaw === "percent" ? "percent" : "fixed";
+  const feeAmount = Number.parseFloat(
+    String(formData.get("cancelRefundFeeAmount") || "0"),
   );
-  const feeCents = Number.isFinite(feeDollars)
-    ? Math.max(0, Math.round(feeDollars * 100))
-    : 0;
-  const feePercent = Math.max(
-    0,
-    Math.min(
-      100,
-      Math.trunc(Number(formData.get("cancelRefundFeePercent") || 0)),
-    ),
-  );
-  const minDays = Math.max(
+  const parsedAmount = Number.isFinite(feeAmount) ? Math.max(0, feeAmount) : 0;
+  const hasFee = parsedAmount > 0;
+  const feeType = hasFee ? feeUnit : "none";
+  const feeCents =
+    feeType === "fixed" ? Math.round(parsedAmount * 100) : 0;
+  const feePercent =
+    feeType === "percent"
+      ? Math.max(0, Math.min(100, Math.trunc(parsedAmount)))
+      : 0;
+  const freeDays = Math.max(
     0,
     Math.min(
       365,
-      Math.trunc(Number(formData.get("cancelMinDaysBefore") || 0)),
+      Math.trunc(Number(formData.get("cancelFreeDaysBefore") || 0)),
     ),
   );
+  const feeDays = Math.max(
+    0,
+    Math.min(
+      365,
+      Math.trunc(Number(formData.get("cancelFeeDaysBefore") || 0)),
+    ),
+  );
+
+  if (hasFee && freeDays > 0 && feeDays > freeDays) {
+    return { error: "invalid_policy" };
+  }
 
   const enabledRaw = String(formData.get("cancelRefundEnabled") || "");
   const cancelRefundEnabled =
@@ -155,7 +163,8 @@ export async function saveSquareCancelPolicyAction(
     .from("square_connections")
     .update({
       cancel_refund_enabled: cancelRefundEnabled,
-      cancel_min_days_before: minDays,
+      cancel_free_days_before: freeDays,
+      cancel_min_days_before: hasFee ? feeDays : 0,
       cancel_refund_fee_type: feeType,
       cancel_refund_fee_cents: feeType === "fixed" ? feeCents : 0,
       cancel_refund_fee_percent: feeType === "percent" ? feePercent : 0,
@@ -167,7 +176,7 @@ export async function saveSquareCancelPolicyAction(
     return { error: "save_failed" };
   }
 
-  revalidatePath(`/${locale}/settings/organization`);
+  revalidatePath(`/${locale}/settings/payments`);
   return { message: "saved" };
 }
 
@@ -176,7 +185,7 @@ export async function getSquareConnectionPublic(organizationId: string) {
   const { data } = await admin
     .from("square_connections")
     .select(
-      "id, business_name, merchant_id, currency, is_enabled, created_at, cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent",
+      "id, business_name, merchant_id, currency, is_enabled, created_at, cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent",
     )
     .eq("organization_id", organizationId)
     .maybeSingle();

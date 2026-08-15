@@ -13,6 +13,7 @@ import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { decryptPaymentToken } from "@/lib/square/payments";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import { zonedDateIso } from "@/lib/booking/timezone";
 
 export type BookingReminderActionState = {
@@ -104,7 +105,7 @@ export async function sendBookingPaymentReminderAction(
         .maybeSingle(),
       supabase
         .from("booking_services")
-        .select("title")
+        .select("title, translations")
         .eq("id", appointment.service_id)
         .maybeSingle(),
       supabase
@@ -141,7 +142,7 @@ export async function sendBookingPaymentReminderAction(
     guestName: guest.guest_name,
     organizationName: (org?.name as string | null) || "Firm",
     hostName,
-    serviceTitle: (service?.title as string | null) || "Consultation",
+    serviceTitle: serviceTitle(service, emailLocale) || "Consultation",
     startsAt: appointment.starts_at as string,
     timezone,
     payUrl,
