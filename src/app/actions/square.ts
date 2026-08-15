@@ -70,9 +70,7 @@ export async function disconnectSquareAction(
 
   const { data: connection } = await admin
     .from("square_connections")
-    .select(
-      "id, organization_id, connected_by, merchant_id, location_id, currency, business_name, is_enabled",
-    )
+    .select("id")
     .eq("organization_id", orgId)
     .maybeSingle();
 
@@ -103,11 +101,83 @@ export async function disconnectSquareAction(
   return { message: "disconnected" };
 }
 
+export async function saveSquareCancelPolicyAction(
+  formData: FormData,
+): Promise<SquareActionState> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+
+  const feeTypeRaw = String(formData.get("cancelRefundFeeType") || "none");
+  const feeType =
+    feeTypeRaw === "fixed" || feeTypeRaw === "percent" ? feeTypeRaw : "none";
+
+  const feeDollars = Number.parseFloat(
+    String(formData.get("cancelRefundFeeDollars") || "0"),
+  );
+  const feeCents = Number.isFinite(feeDollars)
+    ? Math.max(0, Math.round(feeDollars * 100))
+    : 0;
+  const feePercent = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.trunc(Number(formData.get("cancelRefundFeePercent") || 0)),
+    ),
+  );
+  const minDays = Math.max(
+    0,
+    Math.min(
+      365,
+      Math.trunc(Number(formData.get("cancelMinDaysBefore") || 0)),
+    ),
+  );
+
+  const enabledRaw = String(formData.get("cancelRefundEnabled") || "");
+  const cancelRefundEnabled =
+    enabledRaw === "on" || enabledRaw === "true" || enabledRaw === "1";
+
+  const locale = String(formData.get("locale") || "en");
+  const admin = createServiceClient();
+  const { data: existing, error: loadError } = await admin
+    .from("square_connections")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("is_enabled", true)
+    .maybeSingle();
+  if (loadError) {
+    console.error("saveSquareCancelPolicy load:", loadError.message);
+    return { error: "save_failed" };
+  }
+  if (!existing) return { error: "not_connected" };
+
+  const { error } = await admin
+    .from("square_connections")
+    .update({
+      cancel_refund_enabled: cancelRefundEnabled,
+      cancel_min_days_before: minDays,
+      cancel_refund_fee_type: feeType,
+      cancel_refund_fee_cents: feeType === "fixed" ? feeCents : 0,
+      cancel_refund_fee_percent: feeType === "percent" ? feePercent : 0,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", existing.id);
+  if (error) {
+    console.error("saveSquareCancelPolicy:", error.message);
+    return { error: "save_failed" };
+  }
+
+  revalidatePath(`/${locale}/settings/organization`);
+  return { message: "saved" };
+}
+
 export async function getSquareConnectionPublic(organizationId: string) {
   const admin = createServiceClient();
   const { data } = await admin
     .from("square_connections")
-    .select("id, business_name, merchant_id, currency, is_enabled, created_at")
+    .select(
+      "id, business_name, merchant_id, currency, is_enabled, created_at, cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent",
+    )
     .eq("organization_id", organizationId)
     .maybeSingle();
   return data;
