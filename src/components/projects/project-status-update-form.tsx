@@ -19,9 +19,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { StatusPill } from "@/components/ui/status-pill";
 import type { ProjectStatus } from "@/db/schema";
 import type { ProjectStatusHistoryRow } from "@/lib/crm/queries";
-import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
+import {
+  PROJECT_STATUSES,
+  projectStatusTone,
+  todayDateInputValue,
+} from "@/lib/crm/statuses";
 
 const initialState: StatusUpdateState = {};
 
@@ -79,26 +84,25 @@ export function ProjectStatusCard({
 
   return (
     <>
-      <div className="col-span-3 grid grid-cols-subgrid items-center">
-        <span className="justify-self-end text-sm text-muted-foreground">
-          {t("status")}
-        </span>
+      <div className="inline-flex items-center gap-1.5">
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="group inline-flex min-w-0 items-center gap-1.5 justify-self-start rounded-md text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="group inline-flex min-w-0 items-center gap-1.5 rounded-full text-left transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
           aria-label={t("editStatusAria")}
         >
-          <span className="font-medium text-brand underline decoration-dotted decoration-border underline-offset-4 group-hover:text-action group-hover:decoration-action">
-            {t(`statuses.${currentStatus}`)}
-          </span>
-          <span className="text-muted-foreground">
+          <StatusPill
+            label={t(`statuses.${currentStatus}`)}
+            tone={projectStatusTone(currentStatus)}
+            className="group-hover:ring-2 group-hover:ring-action/20"
+          />
+          <span className="hidden text-xs text-muted-foreground sm:inline">
             {t("statusSince", {
               date: formatStatusDate(currentStatusAt, locale),
             })}
           </span>
           <Pencil
-            className="size-3 shrink-0 text-muted-foreground group-hover:text-action"
+            className="size-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
             aria-hidden
           />
         </button>
@@ -106,7 +110,7 @@ export function ProjectStatusCard({
           type="button"
           variant="ghost"
           size="icon-xs"
-          className="justify-self-end text-muted-foreground"
+          className="text-muted-foreground"
           onClick={() => setHistoryOpen(true)}
           aria-label={t("viewStatusHistory")}
           title={t("viewStatusHistory")}

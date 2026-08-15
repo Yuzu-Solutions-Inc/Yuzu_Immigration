@@ -8,7 +8,8 @@ import {
   updateProjectSubmitBeforeAction,
   type SubmitBeforeUpdateState,
 } from "@/app/actions/projects";
-import { cn } from "@/lib/utils";
+import { StatusPill } from "@/components/ui/status-pill";
+import { submitBeforeTone } from "@/lib/crm/statuses";
 
 const initialState: SubmitBeforeUpdateState = {};
 
@@ -47,32 +48,25 @@ export function ProjectSubmitBeforeCard({
       }[state.error] ?? t("errors.generic")
     : null;
 
+  const pillLabel = value
+    ? formatSubmitBefore(value, locale)
+    : t("submitBeforeEmpty");
+  const pillTone = submitBeforeTone(value || null);
+
   return (
-    <form
-      action={formAction}
-      className="col-span-3 grid grid-cols-subgrid items-center gap-y-1"
-    >
+    <form action={formAction} className="inline-flex flex-col gap-1">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="projectId" value={projectId} />
-      <label
-        htmlFor="submit-before-card"
-        className="justify-self-end text-sm text-muted-foreground"
-      >
-        {t("submitBefore")}
-      </label>
-      <div className="group relative justify-self-start rounded-md focus-within:ring-3 focus-within:ring-ring/30">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 text-sm underline decoration-dotted decoration-border underline-offset-4 group-hover:text-action group-hover:decoration-action group-focus-within:text-action group-focus-within:decoration-action",
-            value ? "font-medium text-brand" : "text-muted-foreground",
-          )}
-        >
-          {value ? formatSubmitBefore(value, locale) : t("submitBeforeEmpty")}
-          <Pencil
-            className="size-3 shrink-0 text-muted-foreground group-hover:text-action"
-            aria-hidden
-          />
-        </span>
+      <div className="group relative inline-flex items-center rounded-full focus-within:ring-3 focus-within:ring-ring/30">
+        <StatusPill
+          label={pillLabel}
+          tone={pillTone}
+          className="gap-1.5 pr-7 group-hover:ring-2 group-hover:ring-action/20 group-focus-within:ring-2 group-focus-within:ring-action/20"
+        />
+        <Pencil
+          className="pointer-events-none absolute right-2.5 size-3 shrink-0 text-current opacity-0 transition-opacity group-hover:opacity-70 group-focus-within:opacity-70"
+          aria-hidden
+        />
         <input
           id="submit-before-card"
           type="date"
@@ -80,6 +74,7 @@ export function ProjectSubmitBeforeCard({
           value={value}
           disabled={pending}
           aria-label={t("editSubmitBeforeAria")}
+          title={t("submitBefore")}
           onChange={(event) => {
             const next = event.target.value;
             setValue(next);
@@ -89,9 +84,8 @@ export function ProjectSubmitBeforeCard({
           className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
         />
       </div>
-      <span aria-hidden className="size-7" />
       {errorMessage ? (
-        <p className="col-span-3 text-right text-xs text-destructive" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {errorMessage}
         </p>
       ) : null}

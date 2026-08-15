@@ -21,6 +21,7 @@ import { ProjectScheduleCallCard } from "@/components/projects/project-schedule-
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { ProjectSubmitBeforeCard } from "@/components/projects/project-submit-before-card";
 import { buttonVariants } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Link } from "@/i18n/navigation";
 import {
   canAdministerOrg,
@@ -173,44 +174,87 @@ export default async function ProjectDetailPage({
     principal?.person?.id ?? null,
   );
 
+  const programLabel =
+    project.organization_program_name || tprog(project.program_family);
+  const representativeLabel =
+    project.representative?.full_name ||
+    project.representative?.email ||
+    t("representativeUnassigned");
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <Link
-            href="/projects"
-            className="text-sm font-medium text-action hover:underline"
-          >
-            ← {t("back")}
-          </Link>
-          <h1 className="font-heading text-2xl font-semibold text-brand">
-            {project.title}
-          </h1>
-          <p className="text-[15px] text-muted-foreground">
-            {project.organization_program_name ||
-              tprog(project.program_family)}
-            {project.jurisdiction !== "federal"
-              ? ` · ${t(`jurisdictions.${project.jurisdiction}`)}`
-              : ""}{" "}
-            ·{" "}
-            {t(`formLanguages.${project.form_language === "fr" ? "fr" : "en"}`)}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t("opened")} {opened}
-            {" · "}
-            {t("representative")}{" "}
-            {project.representative?.full_name ||
-              project.representative?.email ||
-              t("representativeUnassigned")}
-          </p>
-          {project.description ? (
-            <p className="max-w-2xl text-sm text-brand/80">
-              {project.description}
-            </p>
-          ) : null}
-        </div>
-        <div className="flex w-full shrink-0 flex-col items-stretch gap-3 sm:w-auto sm:items-end">
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+    <div>
+      <header className="space-y-5 pb-6">
+        <Link
+          href="/projects"
+          className="inline-flex text-sm font-medium text-action hover:underline"
+        >
+          ← {t("back")}
+        </Link>
+
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 space-y-4">
+            <div className="space-y-1.5">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight text-brand sm:text-3xl">
+                {project.title}
+              </h1>
+              <p className="text-base font-medium text-brand/85">{programLabel}</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <ProjectStatusCard
+                locale={locale}
+                projectId={project.id}
+                currentStatus={project.status}
+                currentStatusAt={project.status_at}
+                history={history}
+              />
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t("submitBefore")}
+                </span>
+                <ProjectSubmitBeforeCard
+                  locale={locale}
+                  projectId={project.id}
+                  currentSubmitBefore={project.submit_before}
+                />
+              </div>
+              {project.jurisdiction !== "federal" ? (
+                <StatusPill
+                  label={t(`jurisdictions.${project.jurisdiction}`)}
+                  tone="muted"
+                />
+              ) : null}
+              <StatusPill
+                label={t(
+                  `formLanguages.${project.form_language === "fr" ? "fr" : "en"}`,
+                )}
+                tone="muted"
+              />
+            </div>
+
+            <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+              <div>
+                <dt className="inline font-medium text-brand/60">{t("opened")}</dt>
+                <dd className="ml-1 inline text-muted-foreground">{opened}</dd>
+              </div>
+              <div>
+                <dt className="inline font-medium text-brand/60">
+                  {t("representative")}
+                </dt>
+                <dd className="ml-1 inline text-muted-foreground">
+                  {representativeLabel}
+                </dd>
+              </div>
+            </dl>
+
+            {project.description ? (
+              <p className="max-w-2xl text-sm leading-relaxed text-brand/75">
+                {project.description}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <ExportProjectFileButton locale={locale} projectId={project.id} />
             <Link
               href={`/projects/${project.id}/edit`}
@@ -222,48 +266,35 @@ export default async function ProjectDetailPage({
               {t("edit")}
             </Link>
           </div>
-          <div className="grid w-full grid-cols-[auto_auto_1.75rem] items-center gap-x-2.5 gap-y-1 sm:w-auto">
-            <ProjectStatusCard
-              locale={locale}
-              projectId={project.id}
-              currentStatus={project.status}
-              currentStatusAt={project.status_at}
-              history={history}
-            />
-            <ProjectSubmitBeforeCard
-              locale={locale}
-              projectId={project.id}
-              currentSubmitBefore={project.submit_before}
-            />
-          </div>
         </div>
-      </div>
 
-      <ProjectRetentionPanel
-        locale={appLocale}
-        projectId={project.id}
-        closedAt={project.closed_at}
-        retainUntil={project.retain_until}
-        destroyedAt={project.destroyed_at}
-        canAdminister={canAdministerOrg(membership?.role)}
-      />
-
-      {canShare ? (
-        <ProjectAssistantShare
-          locale={locale}
+        <ProjectRetentionPanel
+          locale={appLocale}
           projectId={project.id}
-          assistants={members
-            .filter((m) => m.role === "assistant")
-            .map((m) => ({
-              user_id: m.user_id,
-              full_name: m.profile.full_name,
-              email: m.profile.email,
-            }))}
-          selectedUserIds={assistantIds}
+          closedAt={project.closed_at}
+          retainUntil={project.retain_until}
+          destroyedAt={project.destroyed_at}
+          canAdminister={canAdministerOrg(membership?.role)}
         />
-      ) : null}
 
-      <ProjectDetailTabs
+        {canShare ? (
+          <ProjectAssistantShare
+            locale={locale}
+            projectId={project.id}
+            assistants={members
+              .filter((m) => m.role === "assistant")
+              .map((m) => ({
+                user_id: m.user_id,
+                full_name: m.profile.full_name,
+                email: m.profile.email,
+              }))}
+            selectedUserIds={assistantIds}
+          />
+        ) : null}
+      </header>
+
+      <section className="border-t border-border pt-6">
+        <ProjectDetailTabs
         panels={{
           home: (
             <ProjectHomeTab
@@ -343,7 +374,8 @@ export default async function ProjectDetailPage({
             />
           ),
         }}
-      />
+        />
+      </section>
     </div>
   );
 }
