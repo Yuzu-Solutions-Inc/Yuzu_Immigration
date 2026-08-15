@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -12,6 +12,10 @@ import {
   type DocumentsActionState,
 } from "@/app/actions/documents";
 import { DocumentFileActions } from "@/components/documents/document-file-actions";
+import {
+  ProjectDocumentViewer,
+  type ProjectDocumentViewerItem,
+} from "@/components/documents/project-document-viewer";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +24,7 @@ import {
 } from "@/components/ui/status-pill";
 import { triggerBrowserDownload } from "@/lib/documents/browser-file";
 import type { DocumentRequestWithFile } from "@/lib/documents/service";
+import { sortDocumentsForViewer } from "@/lib/documents/viewer-order";
 
 const initial: DocumentsActionState = {};
 
@@ -49,6 +54,22 @@ function documentPill(
   return { label: t("pills.waiting"), tone: "warning" };
 }
 
+function viewerSubtitle(
+  row: DocumentRequestWithFile,
+  peopleById: Map<string, { displayName: string }>,
+  showPerson: boolean,
+  t: ReturnType<typeof useTranslations<"documents">>,
+) {
+  const person = peopleById.get(row.person_id);
+  if (row.request_scope === "project") {
+    return t("scopeProject");
+  }
+  if (showPerson && person) {
+    return person.displayName;
+  }
+  return undefined;
+}
+
 export function ProjectDocumentsPanel({
   locale,
   projectId,
@@ -72,6 +93,8 @@ export function ProjectDocumentsPanel({
   const [personId, setPersonId] = useState(people[0]?.id ?? "");
   const [downloadingAll, startDownloadAll] = useTransition();
   const [downloadAllError, setDownloadAllError] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerStartIndex, setViewerStartIndex] = useState(0);
 
   const peopleById = useMemo(
     () => new Map(people.map((person) => [person.id, person])),
@@ -88,8 +111,37 @@ export function ProjectDocumentsPanel({
     });
   }, [people, requests]);
 
+  const viewerRows = useMemo(
+    () => sortDocumentsForViewer(requests, people.map((person) => person.id)),
+    [people, requests],
+  );
+
+  const viewerItems = useMemo<ProjectDocumentViewerItem[]>(() => {
+    const showPerson = people.length > 1;
+    return viewerRows.map((row) => ({
+      requestId: row.id,
+      filename: row.file!.original_filename,
+      title: documentLabel(row, t),
+      subtitle: viewerSubtitle(row, peopleById, showPerson, t),
+      status: row.status,
+    }));
+  }, [people.length, peopleById, t, viewerRows]);
+
+  const viewerIndexByRequestId = useMemo(
+    () => new Map(viewerItems.map((item, index) => [item.requestId, index])),
+    [viewerItems],
+  );
+
   const showPerson = people.length > 1;
-  const uploadedCount = ordered.filter((row) => row.file).length;
+  const uploadedCount = viewerRows.length;
+
+  function openViewerAt(requestId?: string) {
+    const index = requestId
+      ? (viewerIndexByRequestId.get(requestId) ?? 0)
+      : 0;
+    setViewerStartIndex(index);
+    setViewerOpen(true);
+  }
 
   function handleDownloadAll() {
     setDownloadAllError(null);
@@ -104,189 +156,207 @@ export function ProjectDocumentsPanel({
   }
 
   return (
-    <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("title")}
-        </h2>
-        {uploadedCount > 0 ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={downloadingAll}
-            onClick={handleDownloadAll}
-          >
-            {downloadingAll ? t("downloading") : t("downloadAll")}
-          </Button>
-        ) : null}
-      </div>
+    <>
+      <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {t("title")}
+          </h2>
+          {uploadedCount > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => openViewerAt()}
+              >
+                <Eye className="size-4" />
+                <span className="ml-1.5">{t("viewAll")}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={downloadingAll}
+                onClick={handleDownloadAll}
+              >
+                {downloadingAll ? t("downloading") : t("downloadAll")}
+              </Button>
+            </div>
+          ) : null}
+        </div>
 
-      <ul className="divide-y divide-border border-t border-border">
-        {ordered.length === 0 ? (
-          <li className="px-5 py-3 text-sm text-muted-foreground">
-            {t("emptyPerson")}
-          </li>
-        ) : (
-          ordered.map((row) => {
-            const person = peopleById.get(row.person_id);
-            const pill = documentPill(row, t);
-            const title = [
-              documentLabel(row, t),
-              row.request_scope === "project"
-                ? t("scopeProject")
-                : showPerson && person
-                  ? person.displayName
-                  : null,
-              row.consultant_note,
-            ]
+        <ul className="divide-y divide-border border-t border-border">
+          {ordered.length === 0 ? (
+            <li className="px-5 py-3 text-sm text-muted-foreground">
+              {t("emptyPerson")}
+            </li>
+          ) : (
+            ordered.map((row) => {
+              const person = peopleById.get(row.person_id);
+              const pill = documentPill(row, t);
+              const title = [
+                documentLabel(row, t),
+                row.request_scope === "project"
+                  ? t("scopeProject")
+                  : showPerson && person
+                    ? person.displayName
+                    : null,
+                row.consultant_note,
+              ]
               .filter(Boolean)
-              .join(" · ");
-            const canReview = row.status === "uploaded" && Boolean(row.file);
+                .join(" · ");
 
             return (
-              <li key={row.id} className="group space-y-2 px-5 py-3">
-                <div className="flex items-center gap-2">
-                  <p
-                    className="min-w-0 flex-1 truncate text-sm font-medium text-brand"
-                    title={title}
-                  >
-                    {documentLabel(row, t)}
-                    {row.request_scope === "project" ? (
-                      <span className="font-normal text-muted-foreground">
-                        {` · ${t("scopeProject")}`}
-                      </span>
-                    ) : showPerson && person ? (
-                      <span className="font-normal text-muted-foreground">
-                        {` · ${person.displayName}`}
-                      </span>
-                    ) : null}
-                  </p>
-                  <div className="flex shrink-0 items-center gap-1.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
-                    {row.file ? (
-                      <DocumentFileActions
-                        compact
-                        requestId={row.id}
-                        filename={row.file.original_filename}
-                        fetchFile={downloadProjectDocumentAction}
-                        review={
-                          canReview
-                            ? { projectId, locale, canReview: true }
-                            : undefined
-                        }
-                      />
-                    ) : null}
-                    <form
-                      action={removeAction}
-                      className="flex shrink-0"
-                      onSubmit={(event) => {
-                        if (
-                          !window.confirm(
-                            t("removeConfirm", {
-                              name: documentLabel(row, t),
-                            }),
-                          )
-                        ) {
-                          event.preventDefault();
-                        }
-                      }}
+                <li key={row.id} className="group space-y-2 px-5 py-3">
+                  <div className="flex items-center gap-2">
+                    <p
+                      className="min-w-0 flex-1 truncate text-sm font-medium text-brand"
+                      title={title}
                     >
-                      <input type="hidden" name="requestId" value={row.id} />
-                      <input
-                        type="hidden"
-                        name="projectId"
-                        value={projectId}
-                      />
-                      <input type="hidden" name="locale" value={locale} />
-                      <Button
-                        type="submit"
-                        variant="ghost"
-                        size="icon-xs"
-                        disabled={removePending}
-                        aria-label={t("remove")}
-                        title={t("remove")}
-                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      {documentLabel(row, t)}
+                      {row.request_scope === "project" ? (
+                        <span className="font-normal text-muted-foreground">
+                          {` · ${t("scopeProject")}`}
+                        </span>
+                      ) : showPerson && person ? (
+                        <span className="font-normal text-muted-foreground">
+                          {` · ${person.displayName}`}
+                        </span>
+                      ) : null}
+                    </p>
+                    <div className="flex shrink-0 items-center gap-1.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
+                      {row.file ? (
+                        <DocumentFileActions
+                          compact
+                          requestId={row.id}
+                          filename={row.file.original_filename}
+                          fetchFile={downloadProjectDocumentAction}
+                          onOpenInViewer={() => openViewerAt(row.id)}
+                        />
+                      ) : null}
+                      <form
+                        action={removeAction}
+                        className="flex shrink-0"
+                        onSubmit={(event) => {
+                          if (
+                            !window.confirm(
+                              t("removeConfirm", {
+                                name: documentLabel(row, t),
+                              }),
+                            )
+                          ) {
+                            event.preventDefault();
+                          }
+                        }}
                       >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </form>
+                        <input type="hidden" name="requestId" value={row.id} />
+                        <input
+                          type="hidden"
+                          name="projectId"
+                          value={projectId}
+                        />
+                        <input type="hidden" name="locale" value={locale} />
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="icon-xs"
+                          disabled={removePending}
+                          aria-label={t("remove")}
+                          title={t("remove")}
+                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </form>
+                    </div>
+                    <StatusPill label={pill.label} tone={pill.tone} />
                   </div>
-                  <StatusPill label={pill.label} tone={pill.tone} />
-                </div>
-                {row.status === "rejected" && row.rejection_comment ? (
-                  <p className="text-sm text-destructive">
-                    {t("review.rejectionNote", {
-                      comment: row.rejection_comment,
-                    })}
-                  </p>
-                ) : null}
-              </li>
-            );
-          })
-        )}
+                  {row.status === "rejected" && row.rejection_comment ? (
+                    <p className="text-sm text-destructive">
+                      {t("review.rejectionNote", {
+                        comment: row.rejection_comment,
+                      })}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            })
+          )}
 
-        <li className="px-5 py-3">
-          <form action={addAction} className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="projectId" value={projectId} />
-            <input type="hidden" name="locale" value={locale} />
-            {showPerson ? (
-              <select
-                name="personId"
-                value={personId}
-                onChange={(e) => setPersonId(e.target.value)}
-                aria-label={t("assignPerson")}
-                className="h-10 min-w-[140px] rounded-xl border border-input bg-surface px-3 text-sm"
-              >
-                {people.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.displayName}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input type="hidden" name="personId" value={personId} />
-            )}
-            <input
-              name="label"
-              required
-              maxLength={120}
-              aria-label={t("label")}
-              placeholder={t("labelPlaceholder")}
-              className="h-10 min-w-[180px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
-            />
-            <input
-              name="consultantNote"
-              maxLength={240}
-              aria-label={t("note")}
-              placeholder={t("notePlaceholder")}
-              className="h-10 min-w-[160px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
-            />
-            <Button type="submit" disabled={addPending || !personId}>
-              {addPending ? t("adding") : t("add")}
-            </Button>
-          </form>
-          {downloadAllError ? (
-            <p className="mt-2 text-sm text-destructive" role="alert">
-              {downloadAllError === "no_files"
-                ? t("errors.noFiles")
-                : t("errors.downloadFailed")}
-            </p>
-          ) : null}
-          {removeState.error ? (
-            <p className="mt-2 text-sm text-destructive" role="alert">
-              {t("errors.removeFailed")}
-            </p>
-          ) : null}
-          {addState.error ? (
-            <p className="mt-2 text-sm text-destructive">
-              {t("errors.addFailed")}
-            </p>
-          ) : null}
-          {addState.message === "added" ? (
-            <p className="mt-2 text-sm text-success">{t("added")}</p>
-          ) : null}
-        </li>
-      </ul>
-    </SurfaceCard>
+          <li className="px-5 py-3">
+            <form action={addAction} className="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="projectId" value={projectId} />
+              <input type="hidden" name="locale" value={locale} />
+              {showPerson ? (
+                <select
+                  name="personId"
+                  value={personId}
+                  onChange={(e) => setPersonId(e.target.value)}
+                  aria-label={t("assignPerson")}
+                  className="h-10 min-w-[140px] rounded-xl border border-input bg-surface px-3 text-sm"
+                >
+                  {people.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.displayName}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input type="hidden" name="personId" value={personId} />
+              )}
+              <input
+                name="label"
+                required
+                maxLength={120}
+                aria-label={t("label")}
+                placeholder={t("labelPlaceholder")}
+                className="h-10 min-w-[180px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
+              />
+              <input
+                name="consultantNote"
+                maxLength={240}
+                aria-label={t("note")}
+                placeholder={t("notePlaceholder")}
+                className="h-10 min-w-[160px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
+              />
+              <Button type="submit" disabled={addPending || !personId}>
+                {addPending ? t("adding") : t("add")}
+              </Button>
+            </form>
+            {downloadAllError ? (
+              <p className="mt-2 text-sm text-destructive" role="alert">
+                {downloadAllError === "no_files"
+                  ? t("errors.noFiles")
+                  : t("errors.downloadFailed")}
+              </p>
+            ) : null}
+            {removeState.error ? (
+              <p className="mt-2 text-sm text-destructive" role="alert">
+                {t("errors.removeFailed")}
+              </p>
+            ) : null}
+            {addState.error ? (
+              <p className="mt-2 text-sm text-destructive">
+                {t("errors.addFailed")}
+              </p>
+            ) : null}
+            {addState.message === "added" ? (
+              <p className="mt-2 text-sm text-success">{t("added")}</p>
+            ) : null}
+          </li>
+        </ul>
+      </SurfaceCard>
+
+      <ProjectDocumentViewer
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        items={viewerItems}
+        startIndex={viewerStartIndex}
+        fetchFile={downloadProjectDocumentAction}
+        projectId={projectId}
+        locale={locale}
+      />
+    </>
   );
 }

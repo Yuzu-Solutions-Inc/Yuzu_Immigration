@@ -31,6 +31,7 @@ export function DocumentFileActions({
   fetchFile,
   compact = false,
   review,
+  onOpenInViewer,
 }: {
   requestId: string;
   filename: string;
@@ -42,6 +43,7 @@ export function DocumentFileActions({
     locale: string;
     canReview: boolean;
   };
+  onOpenInViewer?: () => void;
 }) {
   const t = useTranslations("documents");
   const [pending, startTransition] = useTransition();
@@ -106,7 +108,13 @@ export function DocumentFileActions({
           variant={compact ? "ghost" : "outline"}
           size={compact ? "icon-xs" : "sm"}
           disabled={loading}
-          onClick={() => run("preview")}
+          onClick={() => {
+            if (onOpenInViewer) {
+              onOpenInViewer();
+              return;
+            }
+            run("preview");
+          }}
           aria-label={t("preview")}
           title={t("preview")}
         >
@@ -145,7 +153,7 @@ export function DocumentFileActions({
       ) : null}
 
       <Dialog
-        open={Boolean(preview)}
+        open={Boolean(preview) && !onOpenInViewer}
         onOpenChange={(open) => {
           if (!open) closePreview();
         }}
