@@ -66,21 +66,23 @@ export function ProjectDetailTabs({
       }}
       className={cn("gap-6", className)}
     >
-      <TabsList className="h-auto w-fit max-w-full justify-start gap-1 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {TAB_VALUES.map((value) => (
-          <TabsTrigger
-            key={value}
-            value={value}
-            className={cn(
-              "h-8 !flex-none shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors",
-              "hover:text-brand",
-              "data-active:bg-action/10 data-active:text-action data-active:font-semibold data-active:shadow-none",
-            )}
-          >
-            {t(value)}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <div className="-mx-1 overflow-x-auto px-1 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsList className="group-data-horizontal/tabs:h-auto h-auto w-max max-w-none justify-start gap-1 p-1">
+          {TAB_VALUES.map((value) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              className={cn(
+                "!h-auto min-h-8 !flex-none shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors",
+                "hover:text-brand",
+                "data-active:bg-action/10 data-active:text-action data-active:font-semibold data-active:shadow-none",
+              )}
+            >
+              {t(value)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
 
       {TAB_VALUES.map((value) => (
         <TabsContent key={value} value={value} className="min-w-0">
