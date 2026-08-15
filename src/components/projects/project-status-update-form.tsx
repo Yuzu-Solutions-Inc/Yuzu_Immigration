@@ -82,27 +82,26 @@ export function ProjectStatusCard({
       }[state.error] ?? t("errors.generic")
     : null;
 
+  const pillLabel = `${t("status")} · ${t(`statuses.${currentStatus}`)} · ${t("statusSince", {
+    date: formatStatusDate(currentStatusAt, locale),
+  })}`;
+
   return (
     <>
       <div className="inline-flex items-center gap-1.5">
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="group inline-flex min-w-0 items-center gap-1.5 rounded-full text-left transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="group relative inline-flex max-w-full items-center rounded-full text-left transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
           aria-label={t("editStatusAria")}
         >
           <StatusPill
-            label={t(`statuses.${currentStatus}`)}
+            label={pillLabel}
             tone={projectStatusTone(currentStatus)}
-            className="group-hover:ring-2 group-hover:ring-action/20"
+            className="max-w-full gap-1.5 pr-7 group-hover:ring-2 group-hover:ring-action/20 group-focus-visible:ring-2 group-focus-visible:ring-action/20"
           />
-          <span className="hidden text-xs text-muted-foreground sm:inline">
-            {t("statusSince", {
-              date: formatStatusDate(currentStatusAt, locale),
-            })}
-          </span>
           <Pencil
-            className="size-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+            className="pointer-events-none absolute right-2.5 size-3 shrink-0 text-current opacity-50 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
             aria-hidden
           />
         </button>
