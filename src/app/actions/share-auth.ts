@@ -37,25 +37,6 @@ export type SharePasswordActionResult =
 
 const initialState: ShareAuthActionState = {};
 
-const SHARE_ERROR_KEYS = [
-  "invalid",
-  "mismatch",
-  "weak_password",
-  "wrong_password",
-  "rate_limited",
-  "expired",
-  "no_email",
-  "email_not_configured",
-  "send_failed",
-  "already_set",
-  "auth_required",
-  "server_config",
-] as const;
-
-function isShareErrorKey(value: string): boolean {
-  return (SHARE_ERROR_KEYS as readonly string[]).includes(value);
-}
-
 function hashIp(ip: string) {
   return createHmac("sha256", requireAppEncryptionKey())
     .update(`share-ip:${ip}`)
@@ -276,4 +257,4 @@ export async function assertShareTokenForAction(token: string) {
   return assertShareAuthenticated(token);
 }
 
-export { initialState as shareAuthInitialState, isShareErrorKey };
+export { initialState as shareAuthInitialState };

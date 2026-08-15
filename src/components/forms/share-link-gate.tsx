@@ -6,11 +6,11 @@ import { useTranslations } from "next-intl";
 
 import {
   forgotSharePasswordAction,
-  isShareErrorKey,
   loginSharePasswordFormAction,
   setSharePasswordFormAction,
   shareAuthInitialState,
 } from "@/app/actions/share-auth";
+import { isShareErrorKey } from "@/lib/ircc/share-error-keys";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
