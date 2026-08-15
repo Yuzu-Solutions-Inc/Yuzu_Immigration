@@ -793,7 +793,6 @@ export async function updateProjectAction(
         {
           title,
           description: data.description || null,
-          notes: data.notes || null,
         },
         await getOrgDataKey(orgId),
       ),

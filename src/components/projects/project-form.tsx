@@ -78,7 +78,7 @@ export type ProjectFormInitial = {
   projectId: string;
   title: string;
   description: string;
-  notes: string;
+  notes?: string;
   status: ProjectStatus;
   statusAt: string;
   submitBefore: string;
@@ -380,7 +380,7 @@ export function ProjectForm({
       />
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="description" value={description} />
-      <input type="hidden" name="notes" value={notes} />
+      {!isEdit ? <input type="hidden" name="notes" value={notes} /> : null}
       <input
         type="hidden"
         name="participants"
@@ -514,19 +514,21 @@ export function ProjectForm({
         <p className="text-xs text-muted-foreground">{t("descriptionHelp")}</p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">{t("notes")}</Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder={t("notesPlaceholder")}
-          maxLength={10000}
-          rows={4}
-          className="rounded-xl"
-        />
-        <p className="text-xs text-muted-foreground">{t("notesHelp")}</p>
-      </div>
+      {!isEdit ? (
+        <div className="space-y-2">
+          <Label htmlFor="notes">{t("notes")}</Label>
+          <Textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={t("notesPlaceholder")}
+            maxLength={10000}
+            rows={4}
+            className="rounded-xl"
+          />
+          <p className="text-xs text-muted-foreground">{t("notesHelp")}</p>
+        </div>
+      ) : null}
 
       <div className="space-y-2">
         <Label>{t("composition")}</Label>
