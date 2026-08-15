@@ -228,7 +228,7 @@ export default async function ProjectDetailPage({
               />
             ) : null}
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+          <div className="grid w-full grid-cols-[auto_auto_1.75rem] items-center gap-x-2.5 gap-y-1 sm:w-auto">
             <ProjectStatusCard
               locale={locale}
               projectId={project.id}
