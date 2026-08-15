@@ -16,21 +16,26 @@ export default async function ClientFillLandingPage({
   const { shareError } = await searchParams;
   setRequestLocale(locale);
 
-  const gate = await loadShareFillGate(token);
-  if (!gate) return <ShareFillExpired />;
-  if (gate.access !== "authenticated") {
-    return (
-      <ShareLinkGate
-        token={token}
-        locale={locale}
-        mode={gate.access}
-        organizationName={gate.organizationName}
-        projectTitle={gate.projectTitle}
-        expiresAt={gate.expiresAt}
-        initialError={shareError}
-      />
-    );
-  }
+  try {
+    const gate = await loadShareFillGate(token);
+    if (!gate) return <ShareFillExpired />;
+    if (gate.access !== "authenticated") {
+      return (
+        <ShareLinkGate
+          token={token}
+          locale={locale}
+          mode={gate.access}
+          organizationName={gate.organizationName}
+          projectTitle={gate.projectTitle}
+          expiresAt={gate.expiresAt}
+          initialError={shareError}
+        />
+      );
+    }
 
-  return <ShareFillLanding token={token} />;
+    return <ShareFillLanding token={token} />;
+  } catch (err) {
+    console.error("ClientFillLandingPage:", err);
+    return <ShareFillExpired />;
+  }
 }

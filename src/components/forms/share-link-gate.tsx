@@ -76,7 +76,7 @@ export function ShareLinkGate({
       setupState.message === "authenticated" ||
       loginState.message === "authenticated"
     ) {
-      window.location.assign(`/${locale}/fill/${token}`);
+      window.location.replace(`/${locale}/fill/${token}`);
     }
   }, [setupState.message, loginState.message, locale, token]);
 
