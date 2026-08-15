@@ -325,6 +325,8 @@
     "squareCurrency": "Settlement currency: {currency}",
     "squareConnectedFlash": "Square connected.",
     "squareDisconnected": "Square disconnected",
+    "statusConnected": "Connected",
+    "statusNotConnected": "Not connected",
     "squareErrors": {
       "unauthorized": "Sign in to continue.",
       "forbidden": "Only organization admins can manage Square.",
@@ -1549,6 +1551,8 @@
     "googleLastSynced": "Last synced {when}",
     "googleNotConnected": "Not connected. Connect your Google account to sync your calendar both ways.",
     "googleNotConfigured": "Add GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET to the server environment, enable the Google Calendar API, and set the OAuth redirect URI to /auth/google-calendar/callback.",
+    "statusConnected": "Connected",
+    "statusNotConnected": "Not connected",
     "joinMeet": "Join Google Meet",
     "googleBusyTitle": "Busy on Google",
     "googleBusyLabel": "Google Calendar",
@@ -1986,6 +1990,14 @@
     "colStatus": "Status",
     "colPayment": "Payment",
     "openPayLink": "Open payment link",
+    "colActions": "Actions",
+    "modify": "Modify",
+    "cancel": "Cancel",
+    "cancelConfirm": "Cancel this appointment? The guest will be notified.",
+    "cancelled": "Appointment cancelled",
+    "modified": "Appointment updated",
+    "sendReminder": "Send reminder",
+    "reminderSent": "Payment reminder sent",
     "statuses": {
       "confirmed": "Confirmed",
       "pending_payment": "Pending payment",
@@ -2000,6 +2012,16 @@
       "failed": "Failed",
       "cancelled": "Cancelled",
       "expired": "Expired"
+    },
+    "errors": {
+      "invalid": "Could not update this booking.",
+      "unauthorized": "Sign in to continue.",
+      "forbidden": "You do not have permission.",
+      "not_found": "Booking not found.",
+      "not_unpaid": "This booking is already paid or does not need payment.",
+      "no_payment": "No payment link is available.",
+      "save_failed": "Could not save changes.",
+      "slot_taken": "That time is no longer available."
     }
   },
   "projectCall": {

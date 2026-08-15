@@ -325,6 +325,8 @@
     "squareCurrency": "Moneda de liquidación: {currency}",
     "squareConnectedFlash": "Square conectado.",
     "squareDisconnected": "Square desconectado",
+    "statusConnected": "Conectado",
+    "statusNotConnected": "No conectado",
     "squareErrors": {
       "unauthorized": "Inicie sesión para continuar.",
       "forbidden": "Solo los administradores pueden gestionar Square.",
@@ -1549,6 +1551,8 @@
     "googleLastSynced": "Última sincronización {when}",
     "googleNotConnected": "No conectado. Conecte su cuenta de Google para sincronizar su calendario en ambos sentidos.",
     "googleNotConfigured": "Añada GOOGLE_CALENDAR_CLIENT_ID y GOOGLE_CALENDAR_CLIENT_SECRET al entorno del servidor, active la API de Google Calendar y configure la URI de redirección OAuth /auth/google-calendar/callback.",
+    "statusConnected": "Conectado",
+    "statusNotConnected": "No conectado",
     "joinMeet": "Unirse a Google Meet",
     "googleBusyTitle": "Ocupado en Google",
     "googleBusyLabel": "Google Calendar",
@@ -2126,6 +2130,24 @@
       "failed": "Fallido",
       "cancelled": "Cancelado",
       "expired": "Caducado"
+    },
+    "colActions": "Acciones",
+    "modify": "Modificar",
+    "cancel": "Cancelar",
+    "cancelConfirm": "¿Cancelar esta cita? Se avisará al cliente.",
+    "cancelled": "Cita cancelada",
+    "modified": "Cita actualizada",
+    "sendReminder": "Enviar recordatorio",
+    "reminderSent": "Recordatorio de pago enviado",
+    "errors": {
+      "invalid": "No se pudo actualizar esta reserva.",
+      "unauthorized": "Inicie sesión para continuar.",
+      "forbidden": "No tiene permiso.",
+      "not_found": "Reserva no encontrada.",
+      "not_unpaid": "Esta reserva ya está pagada o no requiere pago.",
+      "no_payment": "No hay enlace de pago disponible.",
+      "save_failed": "No se pudieron guardar los cambios.",
+      "slot_taken": "Ese horario ya no está disponible."
     }
   }
 }

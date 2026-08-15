@@ -55,15 +55,27 @@ function draftRange(draft: Draft) {
   return { start, end };
 }
 
-function styleForRange(
-  start: number,
-  end: number,
-  gridHeight: number,
-) {
+function blockHeightPx(start: number, end: number, gridHeight: number) {
+  return Math.max(18, ((end - start) / DAY_MINUTES) * gridHeight);
+}
+
+function styleForRange(start: number, end: number, gridHeight: number) {
   return {
     top: (start / DAY_MINUTES) * gridHeight,
-    height: Math.max(18, ((end - start) / DAY_MINUTES) * gridHeight),
+    height: blockHeightPx(start, end, gridHeight),
   };
+}
+
+/** How much text fits in a day-grid block without clipping. */
+function blockDensity(heightPx: number): "xs" | "sm" | "md" | "lg" {
+  if (heightPx < 26) return "xs";
+  if (heightPx < 40) return "sm";
+  if (heightPx < 56) return "md";
+  return "lg";
+}
+
+function timeRangeLabel(start: number, end: number) {
+  return `${formatHmLabel(start)}–${formatHmLabel(end)}`;
 }
 
 export function DayTimeline({
@@ -304,20 +316,53 @@ export function DayTimeline({
                 timeZone,
               );
               if (!range) return null;
+              const height = blockHeightPx(
+                range.start,
+                range.end,
+                gridHeight,
+              );
+              const density = blockDensity(height);
+              const summary =
+                row.summary?.trim() || t("googleEventUntitled");
+              const when = timeRangeLabel(range.start, range.end);
               return (
                 <div
                   key={row.id}
                   data-slot-item
-                  className="absolute inset-x-1 z-[1] overflow-hidden rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-left text-[11px] leading-tight text-slate-700"
+                  className={cn(
+                    "absolute inset-x-1 z-[1] overflow-hidden rounded-md border border-slate-200 bg-slate-100 px-1.5 text-left text-[11px] leading-tight text-slate-700",
+                    density === "xs" || density === "sm"
+                      ? "flex items-center py-0"
+                      : "py-0.5",
+                  )}
                   style={styleForRange(range.start, range.end, gridHeight)}
-                  title={row.summary ?? t("googleEventUntitled")}
+                  title={`${when} · ${summary}`}
                 >
-                  <p className="truncate font-medium">
-                    {row.summary?.trim() || t("googleEventUntitled")}
-                  </p>
-                  <p className="truncate text-[10px] text-slate-500">
-                    {t("googleBusyLabel")}
-                  </p>
+                  {density === "xs" ? (
+                    <p className="truncate font-medium tabular-nums">
+                      {formatHmLabel(range.start)} {summary}
+                    </p>
+                  ) : density === "sm" ? (
+                    <p className="truncate font-medium">
+                      <span className="tabular-nums">{when}</span>
+                      <span className="text-slate-500"> · </span>
+                      {summary}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="truncate font-medium tabular-nums">
+                        {when}
+                      </p>
+                      <p className="truncate text-[10px] text-slate-500">
+                        {summary}
+                      </p>
+                      {density === "lg" ? (
+                        <p className="truncate text-[10px] text-slate-500">
+                          {t("googleBusyLabel")}
+                        </p>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -332,49 +377,84 @@ export function DayTimeline({
               if (!range) return [];
               // Keep existing bookings visible on top of blocked time.
               return subtractMinuteRanges(range, appointmentRanges).map(
-                (segment) => (
-                  <button
-                    key={`${row.id}-${segment.start}-${segment.end}`}
-                    type="button"
-                    data-slot-item
-                    disabled={!canManage || pending}
-                    aria-label={t("clickToRemoveBlock")}
-                    title={canManage ? t("clickToRemoveBlock") : undefined}
-                    className="group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg/90 px-1.5 py-0.5 text-left text-[11px] leading-tight text-warning-text hover:bg-amber-100 disabled:hover:bg-warning-bg/90"
-                    style={styleForRange(
-                      segment.start,
-                      segment.end,
-                      gridHeight,
-                    )}
-                    onClick={() => {
-                      if (!canManage) return;
-                      startTransition(async () => {
-                        const result = await unblockTimeAction(row.id, locale);
-                        if (result.error)
-                          toast.error(t(`errors.${result.error}`));
-                        else toast.success(t("dayUnblocked"));
-                      });
-                    }}
-                  >
-                    <span className="flex items-start justify-between gap-1">
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium">
-                          {t("legendBlocked")}
+                (segment) => {
+                  const height = blockHeightPx(
+                    segment.start,
+                    segment.end,
+                    gridHeight,
+                  );
+                  const density = blockDensity(height);
+                  const when = timeRangeLabel(segment.start, segment.end);
+                  const label = t("legendBlocked");
+                  return (
+                    <button
+                      key={`${row.id}-${segment.start}-${segment.end}`}
+                      type="button"
+                      data-slot-item
+                      disabled={!canManage || pending}
+                      aria-label={t("clickToRemoveBlock")}
+                      title={
+                        canManage
+                          ? `${when} · ${label} — ${t("clickToRemoveBlock")}`
+                          : `${when} · ${label}`
+                      }
+                      className={cn(
+                        "group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg/90 px-1.5 text-left text-[11px] leading-tight text-warning-text hover:bg-amber-100 disabled:hover:bg-warning-bg/90",
+                        density === "xs" || density === "sm"
+                          ? "flex items-center py-0"
+                          : "py-0.5",
+                      )}
+                      style={styleForRange(
+                        segment.start,
+                        segment.end,
+                        gridHeight,
+                      )}
+                      onClick={() => {
+                        if (!canManage) return;
+                        startTransition(async () => {
+                          const result = await unblockTimeAction(
+                            row.id,
+                            locale,
+                          );
+                          if (result.error)
+                            toast.error(t(`errors.${result.error}`));
+                          else toast.success(t("dayUnblocked"));
+                        });
+                      }}
+                    >
+                      <span className="flex w-full min-w-0 items-center justify-between gap-1">
+                        <span className="min-w-0">
+                          {density === "xs" ? (
+                            <span className="block truncate font-medium tabular-nums">
+                              {formatHmLabel(segment.start)} {label}
+                            </span>
+                          ) : density === "sm" ? (
+                            <span className="block truncate font-medium">
+                              <span className="tabular-nums">{when}</span>
+                              <span className="text-warning-text/70"> · </span>
+                              {label}
+                            </span>
+                          ) : (
+                            <>
+                              <span className="block truncate font-medium">
+                                {label}
+                              </span>
+                              <span className="block truncate text-[10px] tabular-nums text-warning-text/80">
+                                {when}
+                              </span>
+                            </>
+                          )}
                         </span>
-                        <span className="block truncate text-[10px] text-warning-text/80">
-                          {formatHmLabel(segment.start)}–
-                          {formatHmLabel(segment.end)}
-                        </span>
+                        {canManage && density !== "xs" ? (
+                          <Trash2
+                            aria-hidden
+                            className="size-3 shrink-0 text-warning-text opacity-0 transition-opacity group-hover:opacity-100"
+                          />
+                        ) : null}
                       </span>
-                      {canManage ? (
-                        <Trash2
-                          aria-hidden
-                          className="mt-px size-3 shrink-0 text-warning-text opacity-0 transition-opacity group-hover:opacity-100"
-                        />
-                      ) : null}
-                    </span>
-                  </button>
-                ),
+                    </button>
+                  );
+                },
               );
             })}
 
@@ -388,13 +468,27 @@ export function DayTimeline({
               );
               if (!range) return null;
               const selected = selectedAppointmentId === row.id;
+              const height = blockHeightPx(
+                range.start,
+                range.end,
+                gridHeight,
+              );
+              const density = blockDensity(height);
+              const when = timeRangeLabel(range.start, range.end);
+              const service =
+                row.service?.title ?? t("unknownService");
+              const title = `${when} · ${row.guest_name} · ${service}`;
               return (
                 <button
                   key={row.id}
                   type="button"
                   data-slot-item
+                  title={title}
                   className={cn(
-                    "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight text-action-foreground shadow-sm",
+                    "absolute inset-x-1 z-[3] overflow-hidden rounded-md px-1.5 text-left text-[11px] leading-tight text-action-foreground shadow-sm",
+                    density === "xs" || density === "sm"
+                      ? "flex items-center py-0"
+                      : "py-0.5",
                     selected
                       ? "bg-action-hover ring-2 ring-action ring-offset-1"
                       : "bg-action hover:bg-action-hover",
@@ -404,20 +498,53 @@ export function DayTimeline({
                     onSelectAppointment(selected ? null : row.id)
                   }
                 >
-                  <p className="truncate font-medium">{row.guest_name}</p>
-                  <p className="truncate text-[10px] text-action-foreground/85">
-                    {row.service?.title ?? t("unknownService")}
-                  </p>
+                  {density === "xs" ? (
+                    <p className="truncate font-medium">
+                      <span className="tabular-nums">
+                        {formatHmLabel(range.start)}
+                      </span>{" "}
+                      {row.guest_name}
+                    </p>
+                  ) : density === "sm" ? (
+                    <p className="truncate font-medium">
+                      <span className="tabular-nums">{when}</span>
+                      <span className="text-action-foreground/70"> · </span>
+                      {row.guest_name}
+                    </p>
+                  ) : density === "md" ? (
+                    <>
+                      <p className="truncate font-medium tabular-nums">
+                        {when}
+                      </p>
+                      <p className="truncate text-[10px] text-action-foreground/90">
+                        {row.guest_name}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="truncate font-medium tabular-nums">
+                        {when}
+                      </p>
+                      <p className="truncate text-[10px] text-action-foreground/90">
+                        {row.guest_name}
+                      </p>
+                      <p className="truncate text-[10px] text-action-foreground/75">
+                        {service}
+                      </p>
+                    </>
+                  )}
                 </button>
               );
             })}
 
             {live ? (
               <div
-                className="pointer-events-none absolute inset-x-1 z-[4] rounded-md border-2 border-dashed border-warning bg-warning/25 px-1.5 py-0.5 text-[11px] font-medium text-warning-text"
+                className="pointer-events-none absolute inset-x-1 z-[4] flex items-center rounded-md border-2 border-dashed border-warning bg-warning/25 px-1.5 py-0 text-[11px] font-medium text-warning-text"
                 style={styleForRange(live.start, live.end, gridHeight)}
               >
-                {formatHmLabel(live.start)}–{formatHmLabel(live.end)}
+                <span className="truncate tabular-nums">
+                  {timeRangeLabel(live.start, live.end)}
+                </span>
               </div>
             ) : null}
 

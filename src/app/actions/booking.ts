@@ -678,7 +678,9 @@ export async function cancelAppointmentAction(
   );
   const ctx = await loadStaffAppointmentContext(appointmentId);
   if (!ctx || ctx.organizationId !== orgId) return { error: "invalid" };
-  if (ctx.status !== "confirmed") return { error: "invalid" };
+  if (ctx.status !== "confirmed" && ctx.status !== "pending_payment") {
+    return { error: "invalid" };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -691,7 +693,7 @@ export async function cancelAppointmentAction(
     })
     .eq("id", appointmentId)
     .eq("organization_id", orgId)
-    .eq("status", "confirmed");
+    .in("status", ["confirmed", "pending_payment"]);
   if (error) {
     console.error("cancelAppointment:", error.message);
     return { error: "save_failed" };
@@ -765,7 +767,10 @@ export async function listAppointmentRescheduleSlotsAction(
   if (!ctx || ctx.organizationId !== gate.membership.organization.id) {
     return { error: "invalid" };
   }
-  if (ctx.status !== "confirmed" || !ctx.host) {
+  if (ctx.status !== "confirmed" && ctx.status !== "pending_payment") {
+    return { error: "invalid", slots: [], timezone: ctx.settings.timezone };
+  }
+  if (!ctx.host) {
     return { error: "invalid", slots: [], timezone: ctx.settings.timezone };
   }
 
@@ -820,7 +825,12 @@ export async function rescheduleAppointmentAction(input: {
 
   const ctx = await loadStaffAppointmentContext(parsed.data.appointmentId);
   if (!ctx || ctx.organizationId !== orgId) return { error: "invalid" };
-  if (ctx.status !== "confirmed" || !ctx.host) return { error: "invalid" };
+  if (
+    (ctx.status !== "confirmed" && ctx.status !== "pending_payment") ||
+    !ctx.host
+  ) {
+    return { error: "invalid" };
+  }
 
   const expectedEnd = new Date(
     new Date(parsed.data.startsAt).getTime() + ctx.durationMinutes * 60_000,
@@ -860,7 +870,7 @@ export async function rescheduleAppointmentAction(input: {
     })
     .eq("id", parsed.data.appointmentId)
     .eq("organization_id", orgId)
-    .eq("status", "confirmed");
+    .in("status", ["confirmed", "pending_payment"]);
   if (error) {
     if (error.code === "23P01" || error.message.includes("no_overlap")) {
       return { error: "slot_taken" };

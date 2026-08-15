@@ -6,6 +6,7 @@ import { decryptPaymentToken } from "@/lib/square/payments";
 
 export type BookingListItem = {
   id: string;
+  personId: string | null;
   startsAt: string;
   endsAt: string;
   status: string;
@@ -30,7 +31,7 @@ export async function listOrgBookingsWithPayment(
   const { data, error } = await supabase
     .from("booking_appointments")
     .select(
-      "id, starts_at, ends_at, status, guest_name, guest_email, host_user_id, service_id, service:booking_services(title)",
+      "id, person_id, starts_at, ends_at, status, guest_name, guest_email, host_user_id, service_id, service:booking_services(title)",
     )
     .eq("organization_id", organizationId)
     .order("starts_at", { ascending: false })
@@ -84,7 +85,10 @@ export async function listOrgBookingsWithPayment(
       },
       dek,
     );
-    const service = row.service as { title?: string } | { title?: string }[] | null;
+    const service = row.service as
+      | { title?: string }
+      | { title?: string }[]
+      | null;
     const serviceTitle = Array.isArray(service)
       ? (service[0]?.title ?? "Service")
       : (service?.title ?? "Service");
@@ -101,6 +105,7 @@ export async function listOrgBookingsWithPayment(
 
     return {
       id: row.id as string,
+      personId: (row.person_id as string | null) ?? null,
       startsAt: row.starts_at as string,
       endsAt: row.ends_at as string,
       status: row.status as string,

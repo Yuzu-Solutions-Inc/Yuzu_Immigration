@@ -54,44 +54,49 @@ export default async function OrganizationSettingsPage({
   const squareFlash = query.square;
 
   return (
-    <SurfaceCard className="space-y-4 sm:p-6">
-      <div>
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("organization")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t("organizationHelp")}</p>
-      </div>
-      {squareFlash === "connected" ? (
-        <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
-          {t("squareConnectedFlash")}
-        </p>
-      ) : null}
-      {squareFlash && squareFlash !== "connected" ? (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {t(`squareErrors.${squareFlash}`, {
-            defaultValue: t("squareErrors.save_failed"),
-          })}
-        </p>
-      ) : null}
-      <OrganizationSettingsForm
-        locale={locale}
-        initialValues={{
-          name: org.name ?? "",
-          slug: org.slug ?? "",
-          defaultLocale: toAppLocale(org.default_locale),
-        }}
-      />
-      <SquareSettings
-        locale={locale}
-        configured={squareConfigured()}
-        connection={squareRes.data}
-      />
-      <TeamSettings
-        locale={locale}
-        currentUserId={user?.id ?? ""}
-        members={members}
-        invitations={invitations}
-      />
-    </SurfaceCard>
+    <div className="space-y-6">
+      <SurfaceCard className="space-y-4 sm:p-6">
+        <div>
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {t("organization")}
+          </h2>
+          <p className="text-sm text-muted-foreground">{t("organizationHelp")}</p>
+        </div>
+        <OrganizationSettingsForm
+          locale={locale}
+          initialValues={{
+            name: org.name ?? "",
+            slug: org.slug ?? "",
+            defaultLocale: toAppLocale(org.default_locale),
+          }}
+        />
+        <TeamSettings
+          locale={locale}
+          currentUserId={user?.id ?? ""}
+          members={members}
+          invitations={invitations}
+        />
+      </SurfaceCard>
+
+      <SurfaceCard className="space-y-4 sm:p-6">
+        {squareFlash === "connected" ? (
+          <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
+            {t("squareConnectedFlash")}
+          </p>
+        ) : null}
+        {squareFlash && squareFlash !== "connected" ? (
+          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {t(`squareErrors.${squareFlash}`, {
+              defaultValue: t("squareErrors.save_failed"),
+            })}
+          </p>
+        ) : null}
+        <SquareSettings
+          locale={locale}
+          configured={squareConfigured()}
+          connection={squareRes.data}
+        />
+      </SurfaceCard>
+    </div>
   );
 }
