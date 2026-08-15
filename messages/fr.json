@@ -839,7 +839,9 @@
     "shareAuth": {
       "setupTitle": "Créez votre mot de passe",
       "setupBody": "Définissez un mot de passe pour protéger ce lien. Vous en aurez besoin à chaque retour.",
-      "passwordRules": "Au moins 8 caractères avec une majuscule, un chiffre et un symbole.",
+      "passwordRules": "Au moins 8 caractères, incluant au moins une majuscule, au moins un chiffre et au moins un symbole.",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
       "password": "Mot de passe",
       "confirm": "Confirmer le mot de passe",
       "setupCta": "Enregistrer le mot de passe",
@@ -857,7 +859,7 @@
       "errors": {
         "invalid": "Ce lien n’est pas valide. Contactez votre consultant.",
         "mismatch": "Les mots de passe ne correspondent pas.",
-        "weakPassword": "Utilisez au moins 8 caractères avec une majuscule, un chiffre et un symbole.",
+        "weakPassword": "Utilisez au moins 8 caractères, incluant au moins une majuscule, au moins un chiffre et au moins un symbole.",
         "wrongPassword": "Mot de passe incorrect. Réessayez.",
         "rateLimited": "Trop de tentatives. Attendez quelques minutes et réessayez.",
         "noEmail": "Aucune adresse courriel pour le demandeur principal. Contactez votre consultant.",

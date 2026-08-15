@@ -2,7 +2,6 @@
 
 import { createHmac } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import { getRequestClientIp } from "@/lib/booking/abuse";
 import { sendShareLinkResetEmail } from "@/lib/email/share-link-reset";
@@ -93,7 +92,7 @@ export async function setSharePasswordAction(
   });
 
   revalidatePath(`/${locale}/fill/${token}`);
-  redirect(`/${locale}/fill/${token}`);
+  return { message: "authenticated" };
 }
 
 export async function loginSharePasswordAction(
@@ -141,7 +140,7 @@ export async function loginSharePasswordAction(
   });
 
   revalidatePath(`/${locale}/fill/${token}`);
-  redirect(`/${locale}/fill/${token}`);
+  return { message: "authenticated" };
 }
 
 export async function forgotSharePasswordAction(

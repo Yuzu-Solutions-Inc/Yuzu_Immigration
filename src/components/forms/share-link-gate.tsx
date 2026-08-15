@@ -3,7 +3,6 @@
 import { useActionState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
 import {
   forgotSharePasswordAction,
@@ -13,8 +12,9 @@ import {
   type ShareAuthActionState,
 } from "@/app/actions/share-auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { useRouter } from "@/i18n/navigation";
 import type { ShareAccessState } from "@/lib/ircc/share-auth";
 
 export function ShareLinkGate({
@@ -33,6 +33,7 @@ export function ShareLinkGate({
   expiresAt: string;
 }) {
   const t = useTranslations("forms");
+  const router = useRouter();
   const [setupState, setupAction, setupPending] = useActionState(
     setSharePasswordAction,
     shareAuthInitialState,
@@ -66,10 +67,13 @@ export function ShareLinkGate({
     : null;
 
   useEffect(() => {
-    if (forgotState.message === "email_sent") {
-      toast.success(t("shareAuth.forgotSuccess"));
+    if (
+      setupState.message === "authenticated" ||
+      loginState.message === "authenticated"
+    ) {
+      router.refresh();
     }
-  }, [forgotState.message, t]);
+  }, [setupState.message, loginState.message, router]);
 
   if (forgotState.message === "email_sent") {
     return (
@@ -123,24 +127,26 @@ export function ShareLinkGate({
               <input type="hidden" name="locale" value={locale} />
               <div className="space-y-2">
                 <Label htmlFor="share-password">{t("shareAuth.password")}</Label>
-                <Input
+                <PasswordInput
                   id="share-password"
                   name="password"
-                  type="password"
                   autoComplete="new-password"
                   required
                   minLength={8}
+                  showLabel={t("shareAuth.showPassword")}
+                  hideLabel={t("shareAuth.hidePassword")}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="share-confirm">{t("shareAuth.confirm")}</Label>
-                <Input
+                <PasswordInput
                   id="share-confirm"
                   name="confirm"
-                  type="password"
                   autoComplete="new-password"
                   required
                   minLength={8}
+                  showLabel={t("shareAuth.showPassword")}
+                  hideLabel={t("shareAuth.hidePassword")}
                 />
               </div>
               <Button type="submit" className="w-full" disabled={setupPending}>
@@ -168,12 +174,13 @@ export function ShareLinkGate({
                 <Label htmlFor="share-login-password">
                   {t("shareAuth.password")}
                 </Label>
-                <Input
+                <PasswordInput
                   id="share-login-password"
                   name="password"
-                  type="password"
                   autoComplete="current-password"
                   required
+                  showLabel={t("shareAuth.showPassword")}
+                  hideLabel={t("shareAuth.hidePassword")}
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loginPending}>

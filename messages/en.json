@@ -839,7 +839,9 @@
     "shareAuth": {
       "setupTitle": "Create your password",
       "setupBody": "Set a password to protect this link. You will need it each time you return.",
-      "passwordRules": "At least 8 characters with one uppercase letter, one number, and one symbol.",
+      "passwordRules": "At least 8 characters, including at least one uppercase letter, at least one number, and at least one symbol.",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "password": "Password",
       "confirm": "Confirm password",
       "setupCta": "Save password",
@@ -857,7 +859,7 @@
       "errors": {
         "invalid": "This link is not valid. Ask your consultant for help.",
         "mismatch": "Passwords do not match.",
-        "weakPassword": "Use at least 8 characters with one uppercase letter, one number, and one symbol.",
+        "weakPassword": "Use at least 8 characters, including at least one uppercase letter, at least one number, and at least one symbol.",
         "wrongPassword": "Incorrect password. Try again.",
         "rateLimited": "Too many attempts. Wait a few minutes and try again.",
         "noEmail": "No email is on file for the principal applicant. Contact your consultant.",
