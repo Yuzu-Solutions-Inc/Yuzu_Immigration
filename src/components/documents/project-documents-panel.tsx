@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Circle, CircleCheck, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -12,8 +12,13 @@ import {
   type DocumentsActionState,
 } from "@/app/actions/documents";
 import { DocumentFileActions } from "@/components/documents/document-file-actions";
+import { DocumentReviewActions } from "@/components/documents/document-review-actions";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
+import {
+  StatusPill,
+  type StatusPillTone,
+} from "@/components/ui/status-pill";
 import { triggerBrowserDownload } from "@/lib/documents/browser-file";
 import type { DocumentRequestWithFile } from "@/lib/documents/service";
 
@@ -27,6 +32,22 @@ function documentLabel(
     return row.custom_label ?? t("customFallback");
   }
   return t(`keys.${row.doc_key}`);
+}
+
+function documentPill(
+  row: DocumentRequestWithFile,
+  t: ReturnType<typeof useTranslations<"documents">>,
+): { label: string; tone: StatusPillTone } {
+  if (row.status === "accepted") {
+    return { label: t("pills.completed"), tone: "success" };
+  }
+  if (row.status === "uploaded") {
+    return { label: t("pills.submitted"), tone: "action" };
+  }
+  if (row.status === "rejected") {
+    return { label: t("pills.denied"), tone: "destructive" };
+  }
+  return { label: t("pills.waiting"), tone: "warning" };
 }
 
 export function ProjectDocumentsPanel({
@@ -110,7 +131,7 @@ export function ProjectDocumentsPanel({
         ) : (
           ordered.map((row) => {
             const person = peopleById.get(row.person_id);
-            const submitted = Boolean(row.file);
+            const pill = documentPill(row, t);
             const title = [
               documentLabel(row, t),
               row.request_scope === "project"
@@ -122,8 +143,10 @@ export function ProjectDocumentsPanel({
             ]
               .filter(Boolean)
               .join(" · ");
+            const canReview = row.status === "uploaded" && Boolean(row.file);
+
             return (
-              <li key={row.id} className="group px-5 py-3">
+              <li key={row.id} className="group space-y-2 px-5 py-3">
                 <div className="flex items-center gap-2">
                   <p
                     className="min-w-0 flex-1 truncate text-sm font-medium text-brand"
@@ -140,62 +163,65 @@ export function ProjectDocumentsPanel({
                       </span>
                     ) : null}
                   </p>
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
-                      {row.file ? (
-                        <DocumentFileActions
-                          compact
-                          requestId={row.id}
-                          filename={row.file.original_filename}
-                          fetchFile={downloadProjectDocumentAction}
-                        />
-                      ) : null}
-                      <form
-                        action={removeAction}
-                        className="flex shrink-0"
-                        onSubmit={(event) => {
-                          if (
-                            !window.confirm(
-                              t("removeConfirm", {
-                                name: documentLabel(row, t),
-                              }),
-                            )
-                          ) {
-                            event.preventDefault();
-                          }
-                        }}
+                  <div className="flex shrink-0 items-center gap-1.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
+                    {row.file ? (
+                      <DocumentFileActions
+                        compact
+                        requestId={row.id}
+                        filename={row.file.original_filename}
+                        fetchFile={downloadProjectDocumentAction}
+                      />
+                    ) : null}
+                    <form
+                      action={removeAction}
+                      className="flex shrink-0"
+                      onSubmit={(event) => {
+                        if (
+                          !window.confirm(
+                            t("removeConfirm", {
+                              name: documentLabel(row, t),
+                            }),
+                          )
+                        ) {
+                          event.preventDefault();
+                        }
+                      }}
+                    >
+                      <input type="hidden" name="requestId" value={row.id} />
+                      <input
+                        type="hidden"
+                        name="projectId"
+                        value={projectId}
+                      />
+                      <input type="hidden" name="locale" value={locale} />
+                      <Button
+                        type="submit"
+                        variant="ghost"
+                        size="icon-xs"
+                        disabled={removePending}
+                        aria-label={t("remove")}
+                        title={t("remove")}
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <input type="hidden" name="requestId" value={row.id} />
-                        <input
-                          type="hidden"
-                          name="projectId"
-                          value={projectId}
-                        />
-                        <input type="hidden" name="locale" value={locale} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon-xs"
-                          disabled={removePending}
-                          aria-label={t("remove")}
-                          title={t("remove")}
-                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </form>
-                    </div>
-                    {submitted ? (
-                      <CircleCheck
-                        className="size-4 shrink-0 text-success"
-                        aria-label={t("statusUploaded")}
-                      />
-                    ) : (
-                      <Circle
-                        className="size-4 shrink-0 text-gray-300"
-                        aria-label={t("statusMissing")}
-                      />
-                    )}
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </form>
+                  </div>
+                  <DocumentReviewActions
+                    requestId={row.id}
+                    projectId={projectId}
+                    locale={locale}
+                    canReview={canReview}
+                  />
+                  <StatusPill label={pill.label} tone={pill.tone} />
                 </div>
+                {row.status === "rejected" && row.rejection_comment ? (
+                  <p className="text-sm text-destructive">
+                    {t("review.rejectionNote", {
+                      comment: row.rejection_comment,
+                    })}
+                  </p>
+                ) : null}
               </li>
             );
           })

@@ -812,6 +812,10 @@
       "ready": "Prêt",
       "generated": "Généré"
     },
+    "pills": {
+      "inProgress": "En cours",
+      "completed": "Complété"
+    },
     "shareTitle": "Lien client",
     "shareHelp": "Lien sécurisé pour déposer des documents et remplir le questionnaire. Expire après 30 jours. Réponses et fichiers restent si le lien meurt — générez-en un nouveau en tout temps.",
     "shareActive": "Un lien est actif jusqu’au {date}.",
@@ -1423,6 +1427,29 @@
       "accepted": "Accepté",
       "rejected": "Refusé"
     },
+    "pills": {
+      "waiting": "En attente",
+      "submitted": "Soumis",
+      "completed": "Complété",
+      "denied": "Refusé"
+    },
+    "review": {
+      "approve": "Approuver",
+      "deny": "Refuser",
+      "denyTitle": "Refuser le document",
+      "denyHelp": "Indiquez au client ce qu’il faut corriger. Il recevra un courriel avec votre commentaire et un lien pour téléverser à nouveau.",
+      "commentLabel": "Commentaire au client",
+      "commentPlaceholder": "Qu’est-ce qui doit changer avant d’accepter ce fichier ?",
+      "commentRequired": "Ajoutez un commentaire pour le client.",
+      "confirmDeny": "Refuser et aviser le client",
+      "denying": "Envoi…",
+      "cancel": "Annuler",
+      "failed": "Impossible de mettre à jour le statut du document.",
+      "emailFailed": "Le document a été refusé, mais le courriel n’a pas pu être envoyé.",
+      "notReviewable": "Ce document n’est pas prêt pour la révision.",
+      "rejectionNote": "Refusé : {comment}",
+      "clientDenied": "Veuillez téléverser à nouveau"
+    },
     "errors": {
       "invalid": "Vérifiez le formulaire et réessayez.",
       "expired": "Ce lien a expiré. Demandez un nouveau lien à votre consultant.",
@@ -1975,6 +2002,15 @@
     "payLaterHint": "Nous enverrons un lien de paiement. Vous pouvez payer avant le rendez-vous.",
     "payLaterConfirmedTitle": "Réservé — paiement en attente",
     "payLaterConfirmedBody": "{service} le {when} est réservé. Veuillez payer avant le rendez-vous."
+  },
+  "documentEmail": {
+    "rejectionSubject": "{org} : veuillez téléverser à nouveau {document}",
+    "rejectionHeading": "Document à corriger",
+    "rejectionGreeting": "Bonjour {name},",
+    "rejectionIntro": "Votre consultant a révisé un document pour {project} ({document}) et a besoin d’un nouveau fichier.",
+    "rejectionAction": "Utilisez votre lien client sécurisé pour téléverser le fichier corrigé.",
+    "rejectionCta": "Ouvrir le lien client",
+    "rejectionNoLink": "Demandez un nouveau lien sécurisé à votre consultant pour téléverser le fichier à nouveau."
   },
   "bookingEmail": {
     "subject": "Rendez-vous confirmé — {service}",

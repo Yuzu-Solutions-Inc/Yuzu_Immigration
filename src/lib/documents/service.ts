@@ -29,6 +29,7 @@ export type DocumentRequestRow = {
   sort_order: number;
   status: DocumentRequestStatus;
   consultant_note: string | null;
+  rejection_comment: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -332,6 +333,7 @@ export async function storeEncryptedDocument(input: {
     .from("project_document_requests")
     .update({
       status: "uploaded",
+      rejection_comment: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.requestId);

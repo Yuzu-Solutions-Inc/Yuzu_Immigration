@@ -29,6 +29,7 @@ export const PII_AAD = {
     originalFilename: "project_document_files.original_filename",
     customLabel: "project_document_requests.custom_label",
     consultantNote: "project_document_requests.consultant_note",
+    rejectionComment: "project_document_requests.rejection_comment",
   },
   destruction: {
     clientName: "file_destruction_register.client_name",
@@ -67,6 +68,7 @@ type ProjectPii = {
 type DocumentRequestPii = {
   custom_label?: string | null;
   consultant_note?: string | null;
+  rejection_comment?: string | null;
 };
 
 type DocumentFilePii = {
@@ -231,6 +233,7 @@ export function encryptDocumentRequestWrite(
   input: {
     custom_label?: string | null;
     consultant_note?: string | null;
+    rejection_comment?: string | null;
   },
   key: Buffer,
 ) {
@@ -249,6 +252,15 @@ export function encryptDocumentRequestWrite(
           consultant_note: encryptOptionalField(
             input.consultant_note,
             PII_AAD.documents.consultantNote,
+            key,
+          ),
+        }
+      : {}),
+    ...(input.rejection_comment !== undefined
+      ? {
+          rejection_comment: encryptOptionalField(
+            input.rejection_comment,
+            PII_AAD.documents.rejectionComment,
             key,
           ),
         }
@@ -272,6 +284,11 @@ export function decryptDocumentRequestRow<T extends DocumentRequestPii>(
       PII_AAD.documents.consultantNote,
       key,
     ) as T["consultant_note"],
+    rejection_comment: decryptFieldMaybe(
+      row.rejection_comment,
+      PII_AAD.documents.rejectionComment,
+      key,
+    ) as T["rejection_comment"],
   };
 }
 

@@ -482,6 +482,7 @@ export const projectDocumentRequests = pgTable("project_document_requests", {
   sortOrder: integer("sort_order").notNull().default(0),
   status: documentRequestStatusEnum("status").notNull().default("requested"),
   consultantNote: text("consultant_note"),
+  rejectionComment: text("rejection_comment"),
   createdBy: uuid("created_by").references(() => profiles.id, {
     onDelete: "set null",
   }),

@@ -7,6 +7,7 @@ import JSZip from "jszip";
 import { getSessionUser } from "@/lib/auth/session";
 import { getProjectParticipants, requireOrganizationId } from "@/lib/crm/queries";
 import {
+  CLIENT_DOCUMENTS_BUCKET,
   DOCUMENT_MAX_BYTES,
   guessMimeFromFilename,
   isAllowedDocumentMime,
@@ -19,10 +20,18 @@ import {
   listShareDocumentRequests,
   storeEncryptedDocument,
 } from "@/lib/documents/service";
+import {
+  personDisplayName,
+  resolveProjectShareUrl,
+} from "@/lib/documents/share-url";
+import { sendDocumentRejectionEmail } from "@/lib/email/document-rejection";
 import { resolveShareToken } from "@/lib/ircc/project-forms";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
+  decryptDocumentRequestRow,
   decryptFilename,
+  decryptPersonRow,
+  decryptProjectRow,
   encryptDocumentRequestWrite,
 } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
@@ -177,6 +186,209 @@ export async function removeDocumentRequestAction(
 
   revalidatePath(`/${locale}/projects/${projectId}`);
   return { message: "removed" };
+}
+
+function documentLabelFromRow(row: {
+  doc_key: string;
+  custom_label: string | null;
+}) {
+  if (row.doc_key === "custom") {
+    return row.custom_label?.trim() || "Document";
+  }
+  return row.doc_key;
+}
+
+async function deleteDocumentFileForRequest(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  requestId: string,
+) {
+  const { data: file } = await supabase
+    .from("project_document_files")
+    .select("id, storage_path")
+    .eq("request_id", requestId)
+    .maybeSingle();
+
+  if (!file?.storage_path) return;
+
+  try {
+    await createServiceClient()
+      .storage.from(CLIENT_DOCUMENTS_BUCKET)
+      .remove([file.storage_path as string]);
+  } catch (err) {
+    console.error("deleteDocumentFileForRequest storage:", err);
+  }
+
+  await supabase
+    .from("project_document_files")
+    .delete()
+    .eq("id", file.id as string);
+}
+
+export async function reviewDocumentRequestAction(
+  _prev: DocumentsActionState,
+  formData: FormData,
+): Promise<DocumentsActionState> {
+  const requestId = String(formData.get("requestId") || "");
+  const projectId = String(formData.get("projectId") || "");
+  const locale = String(formData.get("locale") || "en");
+  const decision = String(formData.get("decision") || "");
+  const comment = String(formData.get("comment") || "").trim();
+
+  if (
+    !uuid.safeParse(requestId).success ||
+    !uuid.safeParse(projectId).success ||
+    (decision !== "approve" && decision !== "deny")
+  ) {
+    return { error: "invalid" };
+  }
+
+  if (decision === "deny" && comment.length < 1) {
+    return { error: "comment_required" };
+  }
+
+  const orgId = await requireOrganizationId();
+  if (!orgId) return { error: "unauthorized" };
+
+  const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
+  const { data: requestRow, error: requestError } = await supabase
+    .from("project_document_requests")
+    .select("*")
+    .eq("id", requestId)
+    .eq("project_id", projectId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
+  if (requestError || !requestRow) return { error: "invalid" };
+
+  const request = decryptDocumentRequestRow(
+    requestRow as {
+      doc_key: string;
+      custom_label: string | null;
+      consultant_note: string | null;
+      rejection_comment: string | null;
+      status: string;
+      person_id: string;
+    },
+    key,
+  );
+
+  if (request.status !== "uploaded") return { error: "not_reviewable" };
+
+  const { data: file } = await supabase
+    .from("project_document_files")
+    .select("id")
+    .eq("request_id", requestId)
+    .maybeSingle();
+
+  if (!file) return { error: "not_reviewable" };
+
+  const user = await getSessionUser();
+  const documentName = documentLabelFromRow({
+    doc_key: request.doc_key,
+    custom_label: request.custom_label,
+  });
+
+  if (decision === "approve") {
+    const { error } = await supabase
+      .from("project_document_requests")
+      .update({
+        status: "accepted",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", requestId)
+      .eq("organization_id", orgId);
+
+    if (error) {
+      console.error("reviewDocumentRequest approve:", error.message);
+      return { error: "review_failed" };
+    }
+  } else {
+    await deleteDocumentFileForRequest(supabase, requestId);
+
+    const { error } = await supabase
+      .from("project_document_requests")
+      .update({
+        status: "rejected",
+        ...encryptDocumentRequestWrite({ rejection_comment: comment }, key),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", requestId)
+      .eq("organization_id", orgId);
+
+    if (error) {
+      console.error("reviewDocumentRequest deny:", error.message);
+      return { error: "review_failed" };
+    }
+
+    const [{ data: person }, { data: project }, { data: organization }] =
+      await Promise.all([
+        supabase
+          .from("people")
+          .select("first_name, last_name, email, preferred_locale")
+          .eq("id", requestRow.person_id as string)
+          .eq("organization_id", orgId)
+          .maybeSingle(),
+        supabase
+          .from("immigration_projects")
+          .select("title")
+          .eq("id", projectId)
+          .eq("organization_id", orgId)
+          .maybeSingle(),
+        supabase
+          .from("organizations")
+          .select("name")
+          .eq("id", orgId)
+          .maybeSingle(),
+      ]);
+
+    const decryptedPerson = person
+      ? decryptPersonRow(person, key)
+      : null;
+    const decryptedProject = project
+      ? decryptProjectRow(project, key)
+      : null;
+    const recipientEmail = decryptedPerson?.email?.trim();
+
+    if (recipientEmail) {
+      const shareUrl = await resolveProjectShareUrl(orgId, projectId, locale);
+      const emailResult = await sendDocumentRejectionEmail({
+        locale: decryptedPerson?.preferred_locale || locale,
+        to: recipientEmail,
+        clientName: personDisplayName(decryptedPerson ?? {}),
+        organizationName: organization?.name || "Your consultant",
+        projectTitle: decryptedProject?.title || "Your file",
+        documentName,
+        comment,
+        shareUrl,
+      });
+
+      if (!emailResult.sent) {
+        console.error("reviewDocumentRequest email:", emailResult.reason);
+        return { error: "email_failed" };
+      }
+    }
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user?.id,
+    actorKind: "staff",
+    action:
+      decision === "approve"
+        ? "document.approve"
+        : "document.reject",
+    resourceType: "project_document_request",
+    resourceId: requestId,
+    metadata: {
+      projectId,
+      personId: request.person_id,
+      decision,
+    },
+  });
+
+  revalidatePath(`/${locale}/projects/${projectId}`);
+  return { message: "reviewed" };
 }
 
 export async function downloadProjectDocumentAction(

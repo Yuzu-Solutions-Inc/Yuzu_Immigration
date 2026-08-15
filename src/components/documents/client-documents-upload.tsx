@@ -158,6 +158,7 @@ export function ClientDocumentsUpload({
                 const isUploading = pending && activeRequestId === row.id;
                 const justUploaded = successRequestId === row.id;
                 const hasUploaded = Boolean(row.file);
+                const isRejected = row.status === "rejected";
 
                 return (
                   <li key={row.id} className="space-y-3 px-4 py-4">
@@ -173,6 +174,16 @@ export function ClientDocumentsUpload({
                       {row.consultant_note ? (
                         <p className="text-sm text-muted-foreground">
                           {row.consultant_note}
+                        </p>
+                      ) : null}
+
+                      {isRejected && row.rejection_comment ? (
+                        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                          <span className="font-semibold">
+                            {t("review.clientDenied")}
+                          </span>
+                          {": "}
+                          {row.rejection_comment}
                         </p>
                       ) : null}
 

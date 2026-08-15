@@ -210,12 +210,6 @@ export default async function ProjectDetailPage({
             {project.representative?.full_name ||
               project.representative?.email ||
               t("representativeUnassigned")}
-            {" · "}
-            {t("columnDocuments")}{" "}
-            {t("docsProgress", { done: docsDone, total: docsTotal })}
-            {" · "}
-            {t("columnForms")}{" "}
-            {t("formsProgress", { percent: formPercent })}
           </p>
           {project.description ? (
             <p className="max-w-2xl text-sm text-brand/80">

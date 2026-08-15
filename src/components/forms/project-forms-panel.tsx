@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Circle, CircleCheck, Download, Loader2, Trash2 } from "lucide-react";
+import { Download, Loader2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/components/forms/modular-questionnaire";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Link } from "@/i18n/navigation";
 import {
   formTitle,
@@ -238,14 +239,14 @@ export function ProjectFormsPanel({
                       </form>
                     </div>
                     {ready ? (
-                      <CircleCheck
-                        className="size-4 shrink-0 text-success"
-                        aria-label={t("statuses.ready")}
+                      <StatusPill
+                        label={t("pills.completed")}
+                        tone="success"
                       />
                     ) : (
-                      <Circle
-                        className="size-4 shrink-0 text-gray-300"
-                        aria-label={t("statuses.todo")}
+                      <StatusPill
+                        label={t("pills.inProgress")}
+                        tone="action"
                       />
                     )}
                   </div>

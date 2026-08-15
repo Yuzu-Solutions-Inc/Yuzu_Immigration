@@ -812,6 +812,10 @@
       "ready": "Ready",
       "generated": "Generated"
     },
+    "pills": {
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
     "shareTitle": "Client link",
     "shareHelp": "Secure link for the client to upload documents and fill the questionnaire. Expires in 30 days. Answers and uploads stay if the link dies — generate a new one anytime.",
     "shareActive": "A link is active until {date}.",
@@ -1423,6 +1427,29 @@
       "accepted": "Accepted",
       "rejected": "Rejected"
     },
+    "pills": {
+      "waiting": "Waiting",
+      "submitted": "Submitted",
+      "completed": "Completed",
+      "denied": "Denied"
+    },
+    "review": {
+      "approve": "Approve",
+      "deny": "Deny",
+      "denyTitle": "Deny document",
+      "denyHelp": "Tell the client what to fix. They will receive an email with your comment and a link to upload again.",
+      "commentLabel": "Comment to client",
+      "commentPlaceholder": "What needs to change before you can accept this file?",
+      "commentRequired": "Add a comment for the client.",
+      "confirmDeny": "Deny and notify client",
+      "denying": "Sending…",
+      "cancel": "Cancel",
+      "failed": "Could not update the document status.",
+      "emailFailed": "The document was denied but the email could not be sent.",
+      "notReviewable": "This document is not ready for review.",
+      "rejectionNote": "Denied: {comment}",
+      "clientDenied": "Please upload again"
+    },
     "errors": {
       "invalid": "Check the form and try again.",
       "expired": "This link has expired. Ask your consultant for a new one.",
@@ -1975,6 +2002,15 @@
       "too_many_bookings": "This email already has the maximum number of upcoming appointments. Change or cancel one first.",
       "cooldown": "Links were just sent. Try again in a few minutes."
     }
+  },
+  "documentEmail": {
+    "rejectionSubject": "{org}: please re-upload {document}",
+    "rejectionHeading": "Document needs changes",
+    "rejectionGreeting": "Hi {name},",
+    "rejectionIntro": "Your consultant reviewed a document for {project} ({document}) and needs a new upload.",
+    "rejectionAction": "Use your secure client link to upload the corrected file.",
+    "rejectionCta": "Open client link",
+    "rejectionNoLink": "Ask your consultant for a new secure link to upload the file again."
   },
   "bookingEmail": {
     "subject": "Appointment confirmed — {service}",

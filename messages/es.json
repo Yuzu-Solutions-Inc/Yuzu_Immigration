@@ -812,6 +812,10 @@
       "ready": "Ready",
       "generated": "Generated"
     },
+    "pills": {
+      "inProgress": "En progreso",
+      "completed": "Completado"
+    },
     "shareTitle": "Enlace del cliente",
     "shareHelp": "Enlace seguro para que el cliente suba documentos y complete el cuestionario. Caduca en 30 días. Las respuestas y archivos se conservan si el enlace muere — genere uno nuevo en cualquier momento.",
     "shareActive": "A link is active until {date}.",
@@ -1423,6 +1427,29 @@
       "accepted": "Aceptado",
       "rejected": "Rechazado"
     },
+    "pills": {
+      "waiting": "En espera",
+      "submitted": "Enviado",
+      "completed": "Completado",
+      "denied": "Rechazado"
+    },
+    "review": {
+      "approve": "Aprobar",
+      "deny": "Rechazar",
+      "denyTitle": "Rechazar documento",
+      "denyHelp": "Indique al cliente qué debe corregir. Recibirá un correo con su comentario y un enlace para volver a subir el archivo.",
+      "commentLabel": "Comentario al cliente",
+      "commentPlaceholder": "¿Qué debe cambiar antes de aceptar este archivo?",
+      "commentRequired": "Añada un comentario para el cliente.",
+      "confirmDeny": "Rechazar y notificar al cliente",
+      "denying": "Enviando…",
+      "cancel": "Cancelar",
+      "failed": "No se pudo actualizar el estado del documento.",
+      "emailFailed": "El documento fue rechazado, pero no se pudo enviar el correo.",
+      "notReviewable": "Este documento no está listo para revisión.",
+      "rejectionNote": "Rechazado: {comment}",
+      "clientDenied": "Suba el archivo de nuevo"
+    },
     "errors": {
       "invalid": "Revise el formulario e inténtelo de nuevo.",
       "expired": "Este enlace ha caducado. Pida uno nuevo a su consultor.",
@@ -1975,6 +2002,15 @@
     "payLaterHint": "Enviaremos un enlace de pago. Puede pagar antes de la cita.",
     "payLaterConfirmedTitle": "Reservado — pago pendiente",
     "payLaterConfirmedBody": "{service} el {when} está reservado. Pague antes de la cita."
+  },
+  "documentEmail": {
+    "rejectionSubject": "{org}: vuelva a subir {document}",
+    "rejectionHeading": "El documento necesita cambios",
+    "rejectionGreeting": "Hola {name},",
+    "rejectionIntro": "Su consultor revisó un documento de {project} ({document}) y necesita una nueva subida.",
+    "rejectionAction": "Use su enlace seguro del cliente para subir el archivo corregido.",
+    "rejectionCta": "Abrir enlace del cliente",
+    "rejectionNoLink": "Pida a su consultor un nuevo enlace seguro para subir el archivo de nuevo."
   },
   "bookingEmail": {
     "subject": "Cita confirmada — {service}",

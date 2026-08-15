@@ -64,7 +64,7 @@ export function ProjectDetailTabs({
           window.location.hash = value;
         }
       }}
-      className={cn("gap-4", className)}
+      className={cn("gap-3", className)}
     >
       <TabsList
         variant="line"
@@ -74,7 +74,12 @@ export function ProjectDetailTabs({
           <TabsTrigger
             key={value}
             value={value}
-            className="shrink-0 rounded-none px-3 py-2.5 after:bottom-0"
+            className={cn(
+              "shrink-0 rounded-none border-b-2 border-transparent px-2 py-2 text-sm font-medium text-muted-foreground transition-colors",
+              "hover:text-brand",
+              "data-active:border-action data-active:bg-action/5 data-active:font-semibold data-active:text-brand",
+              "after:hidden",
+            )}
           >
             {t(value)}
           </TabsTrigger>
@@ -82,8 +87,8 @@ export function ProjectDetailTabs({
       </TabsList>
 
       {TAB_VALUES.map((value) => (
-        <TabsContent key={value} value={value} className="min-w-0 space-y-6">
-          {panels[value]}
+        <TabsContent key={value} value={value} className="min-w-0">
+          <div className="mx-auto w-full max-w-3xl space-y-6">{panels[value]}</div>
         </TabsContent>
       ))}
     </Tabs>
