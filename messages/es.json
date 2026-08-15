@@ -1405,6 +1405,7 @@
     "clearSelection": "Borrar",
     "statusMissing": "Aún no subido",
     "statusUploaded": "Subido",
+    "statusApproved": "Aprobado por su consultor",
     "statusSelected": "Seleccionado — aún no subido",
     "justUploaded": "Guardado ahora",
     "clientEyebrow": "Enlace seguro del cliente",
@@ -1462,6 +1463,7 @@
       "downloadFailed": "No se pudo descargar el archivo.",
       "noFiles": "Aún no hay documentos subidos para descargar.",
       "decryptFailed": "No se puede abrir este archivo (se cifró con una clave anterior). Pida al cliente que lo suba de nuevo.",
+      "locked": "Este documento fue aprobado y ya no se puede modificar.",
       "previewUnsupported": "Este tipo de archivo no se puede previsualizar en el navegador. Descárguelo para abrirlo.",
       "generic": "Algo salió mal."
     }

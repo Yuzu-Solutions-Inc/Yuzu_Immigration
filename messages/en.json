@@ -1405,6 +1405,7 @@
     "clearSelection": "Clear",
     "statusMissing": "Not uploaded yet",
     "statusUploaded": "Uploaded",
+    "statusApproved": "Approved by your consultant",
     "statusSelected": "Selected — not uploaded yet",
     "justUploaded": "Just saved",
     "clientEyebrow": "Secure client link",
@@ -1462,6 +1463,7 @@
       "downloadFailed": "Could not download the file.",
       "noFiles": "No uploaded documents to download yet.",
       "decryptFailed": "This file can’t be opened (it was encrypted with an old key). Ask the client to upload it again.",
+      "locked": "This document was approved and can no longer be changed.",
       "previewUnsupported": "This file type can’t be previewed in the browser. Download it to open.",
       "generic": "Something went wrong."
     }

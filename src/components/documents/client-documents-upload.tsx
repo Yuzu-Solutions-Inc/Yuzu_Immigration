@@ -135,6 +135,7 @@ export function ClientDocumentsUpload({
       file_type: t("errors.fileType"),
       upload_failed: t("errors.uploadFailed"),
       server_config: t("errors.serverConfig"),
+      locked: t("errors.locked"),
     }[state.error] ??
       t("errors.generic"));
 
@@ -159,6 +160,8 @@ export function ClientDocumentsUpload({
                 const justUploaded = successRequestId === row.id;
                 const hasUploaded = Boolean(row.file);
                 const isRejected = row.status === "rejected";
+                const isApproved = row.status === "accepted";
+                const canModify = !isApproved;
 
                 return (
                   <li key={row.id} className="space-y-3 px-4 py-4">
@@ -191,7 +194,9 @@ export function ClientDocumentsUpload({
                         <div className="space-y-2">
                           <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
                             <span className="font-semibold">
-                              {t("statusUploaded")}
+                              {isApproved
+                                ? t("statusApproved")
+                                : t("statusUploaded")}
                             </span>
                             {": "}
                             {row.file!.original_filename}
@@ -236,43 +241,45 @@ export function ClientDocumentsUpload({
                       ) : null}
                     </div>
 
-                    <form
-                      action={(fd) => onSubmit(row.id, fd)}
-                      className="flex flex-wrap items-center gap-2"
-                    >
-                      <label className="inline-flex cursor-pointer items-center rounded-lg bg-muted px-3 py-2 text-sm font-medium text-brand hover:bg-muted/80">
-                        {hasUploaded ? t("chooseReplacement") : t("chooseFile")}
-                        <input
-                          type="file"
-                          accept={accept}
-                          className="sr-only"
-                          onChange={(e) => {
-                            onFileChange(row.id, e.target.files);
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
+                    {canModify ? (
+                      <form
+                        action={(fd) => onSubmit(row.id, fd)}
+                        className="flex flex-wrap items-center gap-2"
+                      >
+                        <label className="inline-flex cursor-pointer items-center rounded-lg bg-muted px-3 py-2 text-sm font-medium text-brand hover:bg-muted/80">
+                          {hasUploaded ? t("chooseReplacement") : t("chooseFile")}
+                          <input
+                            type="file"
+                            accept={accept}
+                            className="sr-only"
+                            onChange={(e) => {
+                              onFileChange(row.id, e.target.files);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
 
-                      {selected ? (
-                        <>
-                          <Button type="submit" disabled={isUploading}>
-                            {isUploading
-                              ? t("uploading")
-                              : hasUploaded
-                                ? t("replace")
-                                : t("upload")}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={isUploading}
-                            onClick={() => clearSelection(row.id)}
-                          >
-                            {t("clearSelection")}
-                          </Button>
-                        </>
-                      ) : null}
-                    </form>
+                        {selected ? (
+                          <>
+                            <Button type="submit" disabled={isUploading}>
+                              {isUploading
+                                ? t("uploading")
+                                : hasUploaded
+                                  ? t("replace")
+                                  : t("upload")}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={isUploading}
+                              onClick={() => clearSelection(row.id)}
+                            >
+                              {t("clearSelection")}
+                            </Button>
+                          </>
+                        ) : null}
+                      </form>
+                    ) : null}
                   </li>
                 );
               })}

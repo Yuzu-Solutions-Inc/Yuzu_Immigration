@@ -25,11 +25,15 @@ export function DocumentReviewActions({
   projectId,
   locale,
   canReview,
+  onReviewed,
+  layout = "inline",
 }: {
   requestId: string;
   projectId: string;
   locale: string;
   canReview: boolean;
+  onReviewed?: () => void;
+  layout?: "inline" | "dialog";
 }) {
   const t = useTranslations("documents");
   const [denyOpen, setDenyOpen] = useState(false);
@@ -43,8 +47,9 @@ export function DocumentReviewActions({
     if (state.message === "reviewed") {
       setDenyOpen(false);
       setComment("");
+      onReviewed?.();
     }
-  }, [state.message]);
+  }, [state.message, onReviewed]);
 
   if (!canReview) return null;
 
@@ -62,7 +67,13 @@ export function DocumentReviewActions({
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div
+        className={
+          layout === "dialog"
+            ? "flex flex-wrap items-center justify-end gap-2"
+            : "flex shrink-0 items-center gap-1.5"
+        }
+      >
         <form action={action} className="contents">
           <input type="hidden" name="requestId" value={requestId} />
           <input type="hidden" name="projectId" value={projectId} />

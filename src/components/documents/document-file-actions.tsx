@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Download, Eye, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { DocumentReviewActions } from "@/components/documents/document-review-actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -29,12 +30,18 @@ export function DocumentFileActions({
   filename,
   fetchFile,
   compact = false,
+  review,
 }: {
   requestId: string;
   filename: string;
   fetchFile: (requestId: string) => Promise<FetchResult>;
   /** Icon-only buttons for denser staff lists */
   compact?: boolean;
+  review?: {
+    projectId: string;
+    locale: string;
+    canReview: boolean;
+  };
 }) {
   const t = useTranslations("documents");
   const [pending, startTransition] = useTransition();
@@ -171,20 +178,32 @@ export function DocumentFileActions({
               )}
             </div>
           ) : null}
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                if (preview) triggerBrowserDownload(preview);
-              }}
-            >
-              <Download className="size-4" />
-              <span className="ml-1.5">{t("download")}</span>
-            </Button>
-            <Button type="button" onClick={closePreview}>
-              {t("closePreview")}
-            </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {review?.canReview && preview ? (
+              <DocumentReviewActions
+                layout="dialog"
+                requestId={requestId}
+                projectId={review.projectId}
+                locale={review.locale}
+                canReview
+                onReviewed={closePreview}
+              />
+            ) : null}
+            <div className="ml-auto flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (preview) triggerBrowserDownload(preview);
+                }}
+              >
+                <Download className="size-4" />
+                <span className="ml-1.5">{t("download")}</span>
+              </Button>
+              <Button type="button" onClick={closePreview}>
+                {t("closePreview")}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

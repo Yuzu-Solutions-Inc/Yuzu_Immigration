@@ -709,6 +709,10 @@ export async function uploadShareDocumentAction(
     return { error: "invalid" };
   }
 
+  if (request.status === "accepted") {
+    return { error: "locked" };
+  }
+
   const plaintext = Buffer.from(await blob.arrayBuffer());
   if (plaintext.length > DOCUMENT_MAX_BYTES) {
     return { error: "file_too_large" };

@@ -1405,6 +1405,7 @@
     "clearSelection": "Effacer",
     "statusMissing": "Pas encore téléversé",
     "statusUploaded": "Téléversé",
+    "statusApproved": "Approuvé par votre consultant",
     "statusSelected": "Sélectionné — pas encore téléversé",
     "justUploaded": "Enregistré à l'instant",
     "clientEyebrow": "Lien client sécurisé",
@@ -1462,6 +1463,7 @@
       "downloadFailed": "Impossible de télécharger le fichier.",
       "noFiles": "Aucun document téléversé à télécharger pour le moment.",
       "decryptFailed": "Impossible d’ouvrir ce fichier (chiffré avec une ancienne clé). Demandez au client de le téléverser à nouveau.",
+      "locked": "Ce document a été approuvé et ne peut plus être modifié.",
       "previewUnsupported": "Ce type de fichier ne peut pas être prévisualisé dans le navigateur. Téléchargez-le pour l’ouvrir.",
       "generic": "Une erreur s'est produite."
     }

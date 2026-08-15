@@ -12,7 +12,6 @@ import {
   type DocumentsActionState,
 } from "@/app/actions/documents";
 import { DocumentFileActions } from "@/components/documents/document-file-actions";
-import { DocumentReviewActions } from "@/components/documents/document-review-actions";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
 import {
@@ -170,6 +169,11 @@ export function ProjectDocumentsPanel({
                         requestId={row.id}
                         filename={row.file.original_filename}
                         fetchFile={downloadProjectDocumentAction}
+                        review={
+                          canReview
+                            ? { projectId, locale, canReview: true }
+                            : undefined
+                        }
                       />
                     ) : null}
                     <form
@@ -207,12 +211,6 @@ export function ProjectDocumentsPanel({
                       </Button>
                     </form>
                   </div>
-                  <DocumentReviewActions
-                    requestId={row.id}
-                    projectId={projectId}
-                    locale={locale}
-                    canReview={canReview}
-                  />
                   <StatusPill label={pill.label} tone={pill.tone} />
                 </div>
                 {row.status === "rejected" && row.rejection_comment ? (
