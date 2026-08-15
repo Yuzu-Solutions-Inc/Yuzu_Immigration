@@ -64,21 +64,17 @@ export function ProjectDetailTabs({
           window.location.hash = value;
         }
       }}
-      className={cn("gap-3", className)}
+      className={cn("gap-6", className)}
     >
-      <TabsList
-        variant="line"
-        className="h-auto w-full justify-start gap-0 overflow-x-auto rounded-none border-b border-border bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
+      <TabsList className="h-auto w-fit max-w-full justify-start gap-1 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TAB_VALUES.map((value) => (
           <TabsTrigger
             key={value}
             value={value}
             className={cn(
-              "shrink-0 rounded-none border-b-2 border-transparent px-2 py-2 text-sm font-medium text-muted-foreground transition-colors",
+              "h-8 !flex-none shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors",
               "hover:text-brand",
-              "data-active:border-action data-active:bg-action/5 data-active:font-semibold data-active:text-brand",
-              "after:hidden",
+              "data-active:bg-action/10 data-active:text-action data-active:font-semibold data-active:shadow-none",
             )}
           >
             {t(value)}
