@@ -14,6 +14,7 @@ export type ProjectProgress = {
   docsDone: number;
   docsTotal: number;
   formPercent: number;
+  docsToReview: number;
 };
 
 type DocRow = { project_id: string; status: string; is_required: boolean };
@@ -34,6 +35,7 @@ const EMPTY: ProjectProgress = {
   docsDone: 0,
   docsTotal: 0,
   formPercent: 0,
+  docsToReview: 0,
 };
 
 function isDocSubmitted(status: string) {
@@ -156,11 +158,19 @@ async function getProjectsProgressForOrg(
     );
   }
 
-  const docsByProject = new Map<string, { done: number; total: number }>();
+  const docsByProject = new Map<
+    string,
+    { done: number; total: number; toReview: number }
+  >();
   for (const row of (docsResult.data ?? []) as DocRow[]) {
-    const current = docsByProject.get(row.project_id) ?? { done: 0, total: 0 };
+    const current = docsByProject.get(row.project_id) ?? {
+      done: 0,
+      total: 0,
+      toReview: 0,
+    };
     current.total += 1;
     if (isDocSubmitted(row.status)) current.done += 1;
+    if (row.status === "uploaded") current.toReview += 1;
     docsByProject.set(row.project_id, current);
   }
 
@@ -188,6 +198,7 @@ async function getProjectsProgressForOrg(
     progress.set(projectId, {
       docsDone: docs?.done ?? 0,
       docsTotal: docs?.total ?? 0,
+      docsToReview: docs?.toReview ?? 0,
       formPercent: formPercentForProject(
         formsByProject.get(projectId) ?? [],
         answersByProject.get(projectId) ?? {},
@@ -217,10 +228,14 @@ export function computeProjectProgressFromDetail(
   const docsDone = requiredDocs.filter((row) =>
     isDocSubmitted(row.status),
   ).length;
+  const docsToReview = requiredDocs.filter(
+    (row) => row.status === "uploaded",
+  ).length;
 
   return {
     docsDone,
     docsTotal: requiredDocs.length,
+    docsToReview,
     formPercent: formPercentForProject(
       forms,
       answers,

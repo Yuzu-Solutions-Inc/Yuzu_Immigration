@@ -6,6 +6,7 @@ import {
   ArrowUpDown,
   ClipboardList,
   FileText,
+  ScanEye,
   type LucideIcon,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -134,7 +135,24 @@ const EMPTY_PROGRESS: ProjectProgress = {
   docsDone: 0,
   docsTotal: 0,
   formPercent: 0,
+  docsToReview: 0,
 };
+
+function DocsToReviewIcon({ count }: { count: number }) {
+  const t = useTranslations("projects");
+  if (count <= 0) return null;
+
+  const label = t("docsToReviewIcon", { count });
+  return (
+    <span
+      title={label}
+      aria-label={label}
+      className="inline-flex shrink-0 items-center rounded-md bg-action/10 p-1 text-action"
+    >
+      <ScanEye className="size-3.5" aria-hidden />
+    </span>
+  );
+}
 
 export function ProjectsTable({
   projects,
@@ -444,9 +462,12 @@ export function ProjectsTable({
                     className="block space-y-2 rounded-xl border border-border bg-surface p-3 shadow-elevated"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="min-w-0 font-medium text-brand">
-                        {project.title}
-                      </p>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <p className="min-w-0 font-medium text-brand">
+                          {project.title}
+                        </p>
+                        <DocsToReviewIcon count={progress.docsToReview} />
+                      </div>
                       <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-brand">
                         {t(`statuses.${project.status}`)}
                       </span>
@@ -688,12 +709,15 @@ export function ProjectsTable({
                       />
                     </TableCell>
                     <TableCell className="max-w-[18rem] whitespace-normal">
-                      <Link
-                        href={`/projects/${project.id}`}
-                        className="font-medium text-brand hover:underline"
-                      >
-                        {project.title}
-                      </Link>
+                      <div className="flex items-start gap-1.5">
+                        <Link
+                          href={`/projects/${project.id}`}
+                          className="font-medium text-brand hover:underline"
+                        >
+                          {project.title}
+                        </Link>
+                        <DocsToReviewIcon count={progress.docsToReview} />
+                      </div>
                       {project.jurisdiction !== "federal" ? (
                         <p className="text-xs text-muted-foreground">
                           {t(`jurisdictions.${project.jurisdiction}`)}

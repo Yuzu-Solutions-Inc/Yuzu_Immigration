@@ -333,6 +333,7 @@ export async function getHomeDashboard(
         docsDone: 0,
         docsTotal: 0,
         formPercent: 0,
+        docsToReview: 0,
       };
       return {
         id: project.id,

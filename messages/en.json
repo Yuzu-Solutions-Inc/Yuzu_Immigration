@@ -449,6 +449,7 @@
     "columnForms": "Forms",
     "docsProgress": "{done}/{total}",
     "formsProgress": "{percent}%",
+    "docsToReviewIcon": "{count, plural, one {# document to review} other {# documents to review}}",
     "filterName": "Project name",
     "filterNamePlaceholder": "Search by name…",
     "filterProgram": "Visa type",
