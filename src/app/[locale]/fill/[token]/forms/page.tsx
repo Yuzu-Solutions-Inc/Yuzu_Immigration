@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ClientFillForm } from "@/components/forms/client-fill-form";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
+import { ShareFillAccess } from "@/components/forms/share-fill-access";
 import { ClientPrivacyNotice } from "@/components/legal/client-privacy-notice";
 import { Link } from "@/i18n/navigation";
 import { loadShareContext } from "@/lib/ircc/project-forms";
@@ -16,6 +17,29 @@ export default async function ClientFillFormsPage({
 
   const t = await getTranslations("forms");
   const td = await getTranslations("documents");
+
+  return (
+    <ShareFillAccess locale={locale} token={token}>
+      <ClientFillFormsContent
+        locale={locale}
+        token={token}
+        t={t}
+        td={td}
+      />
+    </ShareFillAccess>
+  );
+}
+
+async function ClientFillFormsContent({
+  token,
+  t,
+  td,
+}: {
+  locale: string;
+  token: string;
+  t: Awaited<ReturnType<typeof getTranslations>>;
+  td: Awaited<ReturnType<typeof getTranslations>>;
+}) {
   const ctx = await loadShareContext(token);
 
   if (!ctx) {

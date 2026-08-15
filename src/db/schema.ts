@@ -1137,6 +1137,33 @@ export const staffNotifications = pgTable("staff_notifications", {
 
 const privateSchema = pgSchema("private");
 
+export const shareLinkAuthEvents = pgTable("share_link_auth_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  kind: text("kind").notNull(),
+  ipHash: text("ip_hash"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** bcrypt hashes — never exposed to anon/authenticated Data API. */
+export const formShareLinkSecrets = privateSchema.table(
+  "form_share_link_secrets",
+  {
+    shareLinkId: uuid("share_link_id")
+      .primaryKey()
+      .references(() => formShareLinks.id, { onDelete: "cascade" }),
+    passwordHash: text("password_hash").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+);
+
 /** bcrypt hashes — never exposed to anon/authenticated Data API. */
 export const customerPortalSecrets = privateSchema.table(
   "customer_portal_secrets",

@@ -30,7 +30,24 @@ import {
   resolveProjectShareUrl,
 } from "@/lib/documents/share-url";
 import { sendDocumentRejectionEmail } from "@/lib/email/document-rejection";
-import { resolveShareToken } from "@/lib/ircc/project-forms";
+import { assertShareAuthenticated } from "@/lib/ircc/share-auth";
+
+async function resolveShareForDocuments(token: string) {
+  try {
+    const full = await assertShareAuthenticated(token);
+    return {
+      organizationId: full.organizationId,
+      projectId: full.projectId,
+      linkId: full.linkId,
+      expiresAt: full.expiresAt,
+    };
+  } catch (err) {
+    if (err instanceof Error && err.message === "auth_required") {
+      return { error: "auth_required" as const };
+    }
+    return null;
+  }
+}
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
   decryptDocumentRequestRow,
@@ -626,8 +643,11 @@ export async function downloadShareDocumentAction(
     return { ok: false, error: "invalid" };
   }
 
-  const resolved = await resolveShareToken(token);
+  const resolved = await resolveShareForDocuments(token);
   if (!resolved) return { ok: false, error: "expired" };
+  if ("error" in resolved) {
+    return { ok: false, error: resolved.error ?? "expired" };
+  }
 
   const admin = createServiceClient();
   const { data: file, error } = await admin
@@ -713,8 +733,9 @@ export async function uploadShareDocumentAction(
     return { error: "file_type" };
   }
 
-  const resolved = await resolveShareToken(token);
+  const resolved = await resolveShareForDocuments(token);
   if (!resolved) return { error: "expired" };
+  if ("error" in resolved) return { error: resolved.error };
 
   let admin;
   try {
@@ -798,8 +819,8 @@ export async function uploadShareDocumentAction(
 }
 
 export async function loadShareDocumentsAction(token: string) {
-  const resolved = await resolveShareToken(token);
-  if (!resolved) return null;
+  const resolved = await resolveShareForDocuments(token);
+  if (!resolved || "error" in resolved) return null;
   const admin = createServiceClient();
   const requests = await listShareDocumentRequests(admin, resolved.projectId);
   return {

@@ -821,7 +821,7 @@
       "completed": "Completed"
     },
     "shareTitle": "Client link",
-    "shareHelp": "Secure link for the client to upload documents and fill the questionnaire. Expires in 30 days. Answers and uploads stay if the link dies — generate a new one anytime.",
+    "shareHelp": "Secure link for the client to upload documents and fill the questionnaire. Expires in 30 days. On first visit the client sets a password. Answers and uploads stay if the link is replaced.",
     "shareActive": "A link is active until {date}.",
     "shareActiveShort": "Until {date}",
     "shareInactive": "No active link",
@@ -836,6 +836,37 @@
     "revokeShareLink": "Revoke",
     "shareRevoking": "Revoking…",
     "shareRevoked": "Link revoked",
+    "shareAuth": {
+      "setupTitle": "Create your password",
+      "setupBody": "Set a password to protect this link. You will need it each time you return.",
+      "passwordRules": "At least 8 characters with one uppercase letter, one number, and one symbol.",
+      "password": "Password",
+      "confirm": "Confirm password",
+      "setupCta": "Save password",
+      "settingUp": "Saving…",
+      "loginTitle": "Enter your password",
+      "loginBody": "This file is protected. Enter the password you created for this link.",
+      "loginCta": "Continue",
+      "loggingIn": "Checking…",
+      "forgotBody": "Forgot your password? We will revoke this link and email a new one to the principal applicant’s email on file. Your forms and documents will not be lost.",
+      "forgotCta": "Email me a new link",
+      "forgotSending": "Sending…",
+      "forgotSuccess": "New link sent by email.",
+      "forgotSuccessTitle": "Check your email",
+      "forgotSuccessBody": "We sent a new secure link to the email on file for the principal applicant. Open that link to set a new password. Your answers and uploads are still saved.",
+      "errors": {
+        "invalid": "This link is not valid. Ask your consultant for help.",
+        "mismatch": "Passwords do not match.",
+        "weakPassword": "Use at least 8 characters with one uppercase letter, one number, and one symbol.",
+        "wrongPassword": "Incorrect password. Try again.",
+        "rateLimited": "Too many attempts. Wait a few minutes and try again.",
+        "noEmail": "No email is on file for the principal applicant. Contact your consultant.",
+        "emailNotConfigured": "Email could not be sent. Contact your consultant for a new link.",
+        "sendFailed": "Could not send a new link. Try again or contact your consultant.",
+        "alreadySet": "A password is already set for this link.",
+        "authRequired": "Enter your password to continue."
+      }
+    },
     "sharing": "Creating…",
     "generateTitle": "Generate IRCC PDFs",
     "generateHelp": "Fills certified government forms from answers asked once.",
@@ -1275,6 +1306,7 @@
       "copyFailed": "Could not copy. Select the link and copy it manually.",
       "generateFailed": "Could not generate PDFs. Complete more answers and try again.",
       "expired": "This link has expired. Ask your consultant for a new one.",
+      "auth_required": "Enter your password to continue.",
       "incomplete": "Finish every person to 100% before submitting.",
       "submitFailed": "Could not submit. Try again.",
       "granted": "This project was granted. Documents and forms are locked until you change the status.",
@@ -2015,6 +2047,14 @@
       "too_many_bookings": "This email already has the maximum number of upcoming appointments. Change or cancel one first.",
       "cooldown": "Links were just sent. Try again in a few minutes."
     }
+  },
+  "shareLinkEmail": {
+    "resetSubject": "{org}: your new secure client link",
+    "resetHeading": "New secure link",
+    "resetGreeting": "Hi {name},",
+    "resetIntro": "Here is a new link to access your file for {project}. You will set a new password the first time you open it.",
+    "resetCta": "Open secure link",
+    "resetExpiry": "This link works until {date}."
   },
   "documentEmail": {
     "rejectionSubject": "{org}: please re-upload {document}",

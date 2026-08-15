@@ -44,6 +44,7 @@ export function ClientDocumentsUpload({
   requests: DocumentRequestWithFile[];
 }) {
   const t = useTranslations("documents");
+  const tf = useTranslations("forms");
   const [state, action, pending] = useActionState(
     uploadShareDocumentAction,
     initial,
@@ -131,6 +132,7 @@ export function ClientDocumentsUpload({
     ({
       invalid: t("errors.invalid"),
       expired: t("errors.expired"),
+      auth_required: tf("shareAuth.errors.authRequired"),
       file_too_large: t("errors.fileTooLarge", { maxMb }),
       file_type: t("errors.fileType"),
       upload_failed: t("errors.uploadFailed"),

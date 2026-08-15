@@ -91,6 +91,7 @@ export function ClientFillForm({
     ({
       invalid: t("errors.invalid"),
       expired: t("errors.expired"),
+      auth_required: t("shareAuth.errors.authRequired"),
       save_failed: t("errors.saveFailed"),
       incomplete: t("errors.incomplete"),
       submit_failed: t("errors.submitFailed"),

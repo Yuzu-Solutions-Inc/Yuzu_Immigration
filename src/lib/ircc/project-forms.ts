@@ -879,9 +879,64 @@ function injectPersonContact(
   return next;
 }
 
-export async function loadShareContext(token: string) {
+export async function loadShareGateContext(token: string) {
   const resolved = await resolveShareToken(token);
   if (!resolved) return null;
+
+  const { getShareAccessState, toResolvedShareLink } = await import(
+    "@/lib/ircc/share-auth"
+  );
+  const full = toResolvedShareLink(resolved, token);
+  const access = await getShareAccessState(full);
+
+  const admin = createServiceClient();
+  const [projectRes, orgRes] = await Promise.all([
+    admin
+      .from("immigration_projects")
+      .select("title, organization_id")
+      .eq("id", resolved.projectId)
+      .maybeSingle(),
+    admin
+      .from("organizations")
+      .select("name")
+      .eq("id", resolved.organizationId)
+      .maybeSingle(),
+  ]);
+
+  if (!projectRes.data) return null;
+
+  const key = await getOrgDataKey(resolved.organizationId);
+  const project = decryptProjectRow(
+    projectRes.data as { title: string; organization_id: string },
+    key,
+  );
+
+  return {
+    organizationId: resolved.organizationId,
+    projectId: resolved.projectId,
+    linkId: resolved.linkId,
+    expiresAt: resolved.expiresAt,
+    access,
+    projectTitle: project.title,
+    organizationName: String(orgRes.data?.name ?? ""),
+  };
+}
+
+export async function loadShareContext(
+  token: string,
+  options?: { skipPasswordGate?: boolean },
+) {
+  const resolved = await resolveShareToken(token);
+  if (!resolved) return null;
+
+  if (!options?.skipPasswordGate) {
+    const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
+    try {
+      await assertShareAuthenticated(token);
+    } catch {
+      return null;
+    }
+  }
 
   const admin = createServiceClient();
   const [projectRes, formsRes, answersRes, orgRes, people] = await Promise.all([
@@ -1004,8 +1059,14 @@ export async function saveShareAnswers(input: {
   answers: Record<string, unknown>;
   currentSection?: string | null;
 }) {
-  const resolved = await resolveShareToken(input.token);
-  if (!resolved) {
+  const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
+  let resolved;
+  try {
+    resolved = await assertShareAuthenticated(input.token);
+  } catch (err) {
+    if (err instanceof Error && err.message === "auth_required") {
+      throw new Error("auth_required");
+    }
     throw new Error("expired");
   }
   const admin = createServiceClient();

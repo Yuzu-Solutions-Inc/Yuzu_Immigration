@@ -2016,6 +2016,14 @@
     "payLaterConfirmedTitle": "Reservado — pago pendiente",
     "payLaterConfirmedBody": "{service} el {when} está reservado. Pague antes de la cita."
   },
+  "shareLinkEmail": {
+    "resetSubject": "{org}: your new secure client link",
+    "resetHeading": "New secure link",
+    "resetGreeting": "Hi {name},",
+    "resetIntro": "Here is a new link to access your file for {project}. You will set a new password the first time you open it.",
+    "resetCta": "Open secure link",
+    "resetExpiry": "This link works until {date}."
+  },
   "documentEmail": {
     "rejectionSubject": "{org}: vuelva a subir {document}",
     "rejectionHeading": "El documento necesita cambios",

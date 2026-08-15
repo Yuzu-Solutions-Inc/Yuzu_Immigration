@@ -1,6 +1,5 @@
 "use server";
 
-import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -18,7 +17,6 @@ import {
 } from "@/lib/ircc/account-rep";
 import {
   PROJECT_SCOPED_ANSWER_KEYS,
-  SHARE_LINK_TTL_DAYS,
   addProjectForm,
   removeProjectForm,
   getProjectFormAnswers,
@@ -35,7 +33,7 @@ import {
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { assertProjectModifiable } from "@/lib/crm/project-lock";
 import { getSessionUser } from "@/lib/auth/session";
-import { revokeAllShareLinksForProject } from "@/lib/ircc/share-links";
+import { revokeAllShareLinksForProject, createShareLinkForProject } from "@/lib/ircc/share-links";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { PII_AAD } from "@/lib/security/client-pii";
 import { encryptField, decryptField } from "@/lib/security/field-crypto";
@@ -52,10 +50,6 @@ export type FormsActionState = {
   warnings?: string[];
   submittedAt?: string;
 };
-
-function hashToken(token: string) {
-  return createHash("sha256").update(token, "utf8").digest("hex");
-}
 
 async function guardProjectModifiable(projectId: string, organizationId: string) {
   const supabase = await createClient();
@@ -291,6 +285,9 @@ export async function saveShareAnswersAction(
     if (error instanceof Error && error.message === "expired") {
       return { error: "expired" };
     }
+    if (error instanceof Error && error.message === "auth_required") {
+      return { error: "auth_required" };
+    }
     if (error instanceof Error && error.message === "granted") {
       return { error: "granted" };
     }
@@ -335,6 +332,7 @@ export async function submitShareQuestionnaireAction(
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "expired") return { error: "expired" };
+      if (error.message === "auth_required") return { error: "auth_required" };
       if (error.message === "granted") return { error: "granted" };
       if (error.message === "incomplete") return { error: "incomplete" };
     }
@@ -370,29 +368,13 @@ export async function createFormShareLinkAction(
   );
   if (!revoked) return { error: "share_failed" };
 
-  const token = randomBytes(32).toString("base64url");
-  const expiresAt = new Date(
-    Date.now() + SHARE_LINK_TTL_DAYS * 24 * 60 * 60 * 1000,
-  ).toISOString();
-  const tokenEncrypted = encryptField(
-    token,
-    PII_AAD.shareLinks.token,
-    await getOrgDataKey(orgId),
-  );
-
-  const { error } = await supabase.from("form_share_links").insert({
-    organization_id: orgId,
-    project_id: projectId,
-    token_hash: hashToken(token),
-    token_encrypted: tokenEncrypted,
-    expires_at: expiresAt,
-    created_by: user?.id ?? null,
+  const created = await createShareLinkForProject(supabase, {
+    organizationId: orgId,
+    projectId,
+    locale,
+    createdBy: user?.id ?? null,
   });
-
-  if (error) {
-    console.error("create share link:", error.message);
-    return { error: "share_failed" };
-  }
+  if (!created) return { error: "share_failed" };
 
   await recordAuditEvent({
     organizationId: orgId,
@@ -401,14 +383,15 @@ export async function createFormShareLinkAction(
     action: "share_link.create",
     resourceType: "immigration_project",
     resourceId: projectId,
-    metadata: { expiresAt },
+    metadata: { expiresAt: created.expiresAt },
   });
 
-  const base = await getAppBaseUrl();
-  const shareUrl = `${base}/${locale}/fill/${token}`;
-
   revalidatePath(`/${locale}/projects/${projectId}`);
-  return { message: "shared", shareUrl, expiresAt };
+  return {
+    message: "shared",
+    shareUrl: created.shareUrl,
+    expiresAt: created.expiresAt,
+  };
 }
 
 export async function revealFormShareLinkAction(
@@ -695,7 +678,7 @@ export async function ensureProjectFormsSeeded(
 
 export async function adminLoadShareProject(token: string) {
   const { loadShareContext } = await import("@/lib/ircc/project-forms");
-  return loadShareContext(token);
+  return loadShareContext(token, { skipPasswordGate: true });
 }
 
 /** Used when staff want service-role download after generate — unused for now. */
