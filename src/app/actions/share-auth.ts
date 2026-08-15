@@ -5,7 +5,10 @@ import { createHmac } from "node:crypto";
 import { getRequestClientIp } from "@/lib/booking/abuse";
 import { sendShareLinkResetEmail } from "@/lib/email/share-link-reset";
 import { loadShareFillGate } from "@/lib/ircc/share-fill-gate";
-import { listActiveProjectPeople } from "@/lib/ircc/project-forms";
+import {
+  listActiveProjectPeople,
+  resolveShareToken,
+} from "@/lib/ircc/project-forms";
 import {
   assertShareAuthenticated,
   checkShareForgotRateLimit,
@@ -14,6 +17,7 @@ import {
   recordShareVerifyFailure,
   setShareLinkPassword,
   setShareSessionCookie,
+  shareLinkPasswordExists,
   toResolvedShareLink,
   verifyShareLinkPassword,
 } from "@/lib/ircc/share-auth";
@@ -31,10 +35,6 @@ export type ShareAuthActionState = {
   message?: string;
 };
 
-export type SharePasswordActionResult =
-  | { ok: true }
-  | { error: string };
-
 const initialState: ShareAuthActionState = {};
 
 function hashIp(ip: string) {
@@ -48,9 +48,26 @@ async function getIpHash() {
   return ip ? hashIp(ip) : null;
 }
 
-export async function setSharePasswordFormAction(
+function auditShareAuthEvent(input: {
+  organizationId: string;
+  projectId: string;
+  action: string;
+  shareLinkId: string;
+}) {
+  void recordAuditEvent({
+    organizationId: input.organizationId,
+    actorKind: "share_link",
+    action: input.action,
+    resourceType: "immigration_project",
+    resourceId: input.projectId,
+    metadata: { shareLinkId: input.shareLinkId },
+  }).catch((err) => console.error("share auth audit:", err));
+}
+
+export async function setSharePasswordAction(
+  _prev: ShareAuthActionState,
   formData: FormData,
-): Promise<SharePasswordActionResult> {
+): Promise<ShareAuthActionState> {
   try {
     const token = String(formData.get("token") || "");
     const password = String(formData.get("password") || "");
@@ -62,108 +79,85 @@ export async function setSharePasswordFormAction(
     const parsed = parseShareLinkPassword(password);
     if (!parsed.success) return { error: "weak_password" };
 
-    const gate = await loadShareFillGate(token);
-    if (!gate) return { error: "expired" };
-    if (gate.access !== "needs_password_setup") return { error: "invalid" };
+    const resolved = await resolveShareToken(token);
+    if (!resolved) return { error: "expired" };
 
-    const resolved = toResolvedShareLink(
-      {
-        organizationId: gate.organizationId,
-        projectId: gate.projectId,
-        linkId: gate.linkId,
-        expiresAt: gate.expiresAt,
-      },
-      token,
-    );
+    const full = toResolvedShareLink(resolved, token);
+    if (await shareLinkPasswordExists(full.tokenHash)) {
+      return { error: "already_set" };
+    }
 
-    const result = await setShareLinkPassword(resolved.tokenHash, password);
+    const result = await setShareLinkPassword(full.tokenHash, password);
     if (result === "invalid_password") return { error: "weak_password" };
     if (result === "already_set") return { error: "already_set" };
     if (result !== "ok") return { error: "expired" };
 
     try {
-      await setShareSessionCookie(resolved);
+      await setShareSessionCookie(full);
     } catch (err) {
       console.error("setShareSessionCookie:", err);
       return { error: "server_config" };
     }
 
-    try {
-      await recordAuditEvent({
-        organizationId: gate.organizationId,
-        actorKind: "share_link",
-        action: "share_link.password_set",
-        resourceType: "immigration_project",
-        resourceId: gate.projectId,
-        metadata: { shareLinkId: gate.linkId },
-      });
-    } catch (err) {
-      console.error("setSharePassword audit:", err);
-    }
+    auditShareAuthEvent({
+      organizationId: resolved.organizationId,
+      projectId: resolved.projectId,
+      action: "share_link.password_set",
+      shareLinkId: resolved.linkId,
+    });
 
-    return { ok: true };
+    return { message: "authenticated" };
   } catch (err) {
-    console.error("setSharePasswordFormAction:", err);
+    console.error("setSharePasswordAction:", err);
     return { error: "server_config" };
   }
 }
 
-export async function loginSharePasswordFormAction(
+export async function loginSharePasswordAction(
+  _prev: ShareAuthActionState,
   formData: FormData,
-): Promise<SharePasswordActionResult> {
+): Promise<ShareAuthActionState> {
   try {
     const token = String(formData.get("token") || "");
     const password = String(formData.get("password") || "");
 
     if (!token || !password) return { error: "invalid" };
 
-    const gate = await loadShareFillGate(token);
-    if (!gate) return { error: "expired" };
-    if (gate.access !== "needs_password_login") return { error: "invalid" };
+    const resolved = await resolveShareToken(token);
+    if (!resolved) return { error: "expired" };
 
-    const resolved = toResolvedShareLink(
-      {
-        organizationId: gate.organizationId,
-        projectId: gate.projectId,
-        linkId: gate.linkId,
-        expiresAt: gate.expiresAt,
-      },
-      token,
-    );
+    const full = toResolvedShareLink(resolved, token);
+    if (!(await shareLinkPasswordExists(full.tokenHash))) {
+      return { error: "invalid" };
+    }
 
-    if (await checkShareVerifyRateLimit(resolved) === "rate_limited") {
+    if (await checkShareVerifyRateLimit(full) === "rate_limited") {
       return { error: "rate_limited" };
     }
 
-    const ok = await verifyShareLinkPassword(resolved.tokenHash, password);
+    const ok = await verifyShareLinkPassword(full.tokenHash, password);
     if (!ok) {
-      await recordShareVerifyFailure(resolved);
+      await recordShareVerifyFailure(full);
       return { error: "wrong_password" };
     }
 
     try {
-      await setShareSessionCookie(resolved);
+      await setShareSessionCookie(full);
     } catch (err) {
       console.error("setShareSessionCookie:", err);
       return { error: "server_config" };
     }
 
-    try {
-      await recordAuditEvent({
-        organizationId: gate.organizationId,
-        actorKind: "share_link",
-        action: "share_link.password_login",
-        resourceType: "immigration_project",
-        resourceId: gate.projectId,
-        metadata: { shareLinkId: gate.linkId },
-      });
-    } catch (err) {
-      console.error("loginSharePassword audit:", err);
-    }
+    auditShareAuthEvent({
+      organizationId: resolved.organizationId,
+      projectId: resolved.projectId,
+      action: "share_link.password_login",
+      shareLinkId: resolved.linkId,
+    });
 
-    return { ok: true };
+    return { message: "authenticated" };
   } catch (err) {
-    console.error("loginSharePasswordFormAction:", err);
+    console.error("loginSharePasswordAction:", err);
     return { error: "server_config" };
   }
 }
@@ -235,16 +229,11 @@ export async function forgotSharePasswordAction(
   }
 
   await recordShareForgotPassword(resolved);
-  await recordAuditEvent({
+  auditShareAuthEvent({
     organizationId: gate.organizationId,
-    actorKind: "share_link",
+    projectId: gate.projectId,
     action: "share_link.password_forgot",
-    resourceType: "immigration_project",
-    resourceId: gate.projectId,
-    metadata: {
-      oldShareLinkId: gate.linkId,
-      newShareLinkId: created.linkId,
-    },
+    shareLinkId: gate.linkId,
   });
 
   const { clearShareSessionCookie } = await import("@/lib/ircc/share-auth");

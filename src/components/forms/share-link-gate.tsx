@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useState, type FormEvent } from "react";
+import { useActionState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
   forgotSharePasswordAction,
-  loginSharePasswordFormAction,
-  setSharePasswordFormAction,
+  loginSharePasswordAction,
+  setSharePasswordAction,
   shareAuthInitialState,
 } from "@/app/actions/share-auth";
 import { isShareErrorKey } from "@/lib/ircc/share-error-keys";
@@ -34,17 +34,25 @@ export function ShareLinkGate({
   initialError?: string;
 }) {
   const t = useTranslations("forms");
-  const [setupPending, setSetupPending] = useState(false);
-  const [loginPending, setLoginPending] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(
-    initialError && isShareErrorKey(initialError) ? initialError : null,
+  const [setupState, setupAction, setupPending] = useActionState(
+    setSharePasswordAction,
+    shareAuthInitialState,
+  );
+  const [loginState, loginAction, loginPending] = useActionState(
+    loginSharePasswordAction,
+    shareAuthInitialState,
   );
   const [forgotState, forgotAction, forgotPending] = useActionState(
     forgotSharePasswordAction,
     shareAuthInitialState,
   );
 
-  const errorKey = authError ?? forgotState.error ?? null;
+  const activeState =
+    mode === "needs_password_setup" ? setupState : loginState;
+  const errorKey =
+    activeState.error ??
+    forgotState.error ??
+    (initialError && isShareErrorKey(initialError) ? initialError : null);
 
   const errorMessage = errorKey
     ? {
@@ -63,33 +71,14 @@ export function ShareLinkGate({
       }[errorKey] ?? t("errors.generic")
     : null;
 
-  async function handleSetupSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthError(null);
-    setSetupPending(true);
-    const formData = new FormData(event.currentTarget);
-    const result = await setSharePasswordFormAction(formData);
-    if ("error" in result) {
-      setAuthError(result.error);
-      setSetupPending(false);
-      return;
+  useEffect(() => {
+    if (
+      setupState.message === "authenticated" ||
+      loginState.message === "authenticated"
+    ) {
+      window.location.assign(`/${locale}/fill/${token}`);
     }
-    window.location.href = `/${locale}/fill/${token}`;
-  }
-
-  async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthError(null);
-    setLoginPending(true);
-    const formData = new FormData(event.currentTarget);
-    const result = await loginSharePasswordFormAction(formData);
-    if ("error" in result) {
-      setAuthError(result.error);
-      setLoginPending(false);
-      return;
-    }
-    window.location.href = `/${locale}/fill/${token}`;
-  }
+  }, [setupState.message, loginState.message, locale, token]);
 
   if (forgotState.message === "email_sent") {
     return (
@@ -138,7 +127,7 @@ export function ShareLinkGate({
                 {t("shareAuth.passwordRules")}
               </p>
             </div>
-            <form onSubmit={handleSetupSubmit} className="space-y-4">
+            <form action={setupAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="locale" value={locale} />
               <div className="space-y-2">
@@ -183,7 +172,7 @@ export function ShareLinkGate({
                 {t("shareAuth.loginBody")}
               </p>
             </div>
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <form action={loginAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="locale" value={locale} />
               <div className="space-y-2">
