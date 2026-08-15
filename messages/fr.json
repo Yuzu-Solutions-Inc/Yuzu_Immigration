@@ -2047,7 +2047,8 @@
       "paid": "Payé",
       "failed": "Échoué",
       "cancelled": "Annulé",
-      "expired": "Expiré"
+      "expired": "Expiré",
+      "refunded": "Remboursé"
     },
     "errors": {
       "invalid": "Vérifiez le montant et la description.",
@@ -2129,7 +2130,8 @@
       "paid": "Payé",
       "failed": "Échoué",
       "cancelled": "Annulé",
-      "expired": "Expiré"
+      "expired": "Expiré",
+      "refunded": "Remboursé"
     },
     "colActions": "Actions",
     "modify": "Modifier",

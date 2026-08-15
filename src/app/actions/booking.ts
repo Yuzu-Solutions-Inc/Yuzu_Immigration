@@ -699,6 +699,18 @@ export async function cancelAppointmentAction(
     return { error: "save_failed" };
   }
 
+  const { settlePaymentOnBookingCancel } = await import(
+    "@/lib/square/payments"
+  );
+  const settlement = await settlePaymentOnBookingCancel({
+    organizationId: orgId,
+    appointmentId,
+    reason: "Appointment cancelled by firm",
+  });
+  if (settlement.outcome === "failed") {
+    console.error("cancelAppointment payment settlement failed", appointmentId);
+  }
+
   const { toAppLocale } = await import("@/lib/i18n/locales");
   const emailLocale = toAppLocale(ctx.guestPreferredLocale || parsedLocale.data);
   const bookingUrl = await resolvePublicBookingUrl(ctx.settings, emailLocale);
@@ -740,6 +752,9 @@ export async function cancelAppointmentAction(
     action: "booking.appointment.cancel",
     resourceType: "booking_appointment",
     resourceId: appointmentId,
+    metadata: {
+      paymentSettlement: settlement.outcome,
+    },
   });
 
   revalidateBooking(parsedLocale.data);

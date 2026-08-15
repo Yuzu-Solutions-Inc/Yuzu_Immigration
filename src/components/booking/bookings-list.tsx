@@ -55,6 +55,7 @@ function paymentLabel(
   if (status === "failed") return t("payment.failed");
   if (status === "cancelled") return t("payment.cancelled");
   if (status === "expired") return t("payment.expired");
+  if (status === "refunded") return t("payment.refunded");
   return status;
 }
 

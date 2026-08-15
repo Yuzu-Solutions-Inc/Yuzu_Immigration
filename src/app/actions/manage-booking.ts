@@ -206,6 +206,21 @@ export async function cancelPublicBookingAction(
     return { error: "save_failed" };
   }
 
+  const { settlePaymentOnBookingCancel } = await import(
+    "@/lib/square/payments"
+  );
+  const settlement = await settlePaymentOnBookingCancel({
+    organizationId: ctx.organizationId,
+    appointmentId: ctx.appointmentId,
+    reason: "Appointment cancelled by guest",
+  });
+  if (settlement.outcome === "failed") {
+    console.error(
+      "public booking cancel payment settlement failed",
+      ctx.appointmentId,
+    );
+  }
+
   after(async () => {
     const { deleteAppointmentGoogleEvent } = await import(
       "@/lib/google/calendar"
@@ -240,6 +255,9 @@ export async function cancelPublicBookingAction(
     action: "booking.appointment.cancel",
     resourceType: "booking_appointment",
     resourceId: ctx.appointmentId,
+    metadata: {
+      paymentSettlement: settlement.outcome,
+    },
   });
 
   return { message: "cancelled" };

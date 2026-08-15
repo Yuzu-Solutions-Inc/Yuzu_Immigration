@@ -24,7 +24,15 @@ export type SquareConnectionRow = {
   currency: string;
   business_name: string | null;
   is_enabled: boolean;
+  cancel_refund_enabled: boolean;
+  cancel_min_days_before: number;
+  cancel_refund_fee_type: string;
+  cancel_refund_fee_cents: number;
+  cancel_refund_fee_percent: number;
 };
+
+const SQUARE_CONNECTION_SELECT =
+  "id, organization_id, connected_by, merchant_id, location_id, currency, business_name, is_enabled, cancel_refund_enabled, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent";
 
 const SQUARE_VERSION = "2025-01-23";
 
@@ -34,9 +42,7 @@ export async function getOrgSquareConnection(
   const admin = createServiceClient();
   const { data, error } = await admin
     .from("square_connections")
-    .select(
-      "id, organization_id, connected_by, merchant_id, location_id, currency, business_name, is_enabled",
-    )
+    .select(SQUARE_CONNECTION_SELECT)
     .eq("organization_id", organizationId)
     .eq("is_enabled", true)
     .maybeSingle();
@@ -211,6 +217,88 @@ export async function createSquarePaymentLink(
     paymentLinkId: link.id,
     orderId: link.order_id ?? null,
     checkoutUrl: link.url,
+  };
+}
+
+export async function findSquarePaymentIdByOrderId(input: {
+  connection: SquareConnectionRow;
+  orderId: string;
+}): Promise<string | null> {
+  const accessToken = await getValidSquareAccessToken(input.connection);
+  if (!accessToken) throw new Error("square_token_unavailable");
+
+  const result = await squareFetch(
+    accessToken,
+    `/v2/orders/${encodeURIComponent(input.orderId)}`,
+  );
+  if (!result.ok) {
+    console.error("findSquarePaymentIdByOrderId:", result.status, result.json);
+    throw new Error("square_payment_lookup_failed");
+  }
+
+  const data = result.json as {
+    order?: {
+      tenders?: Array<{ id?: string; payment_id?: string }>;
+    };
+  };
+  const tenders = data.order?.tenders ?? [];
+  const withPayment = tenders.find((row) => row.payment_id);
+  if (withPayment?.payment_id) return withPayment.payment_id;
+  // Older/checkout tenders sometimes only expose tender id (= payment id).
+  return tenders.find((row) => row.id)?.id ?? null;
+}
+
+export type RefundSquarePaymentInput = {
+  connection: SquareConnectionRow;
+  paymentId: string;
+  amountCents: number;
+  currency: string;
+  reason?: string;
+  /** Max 45 chars for Square idempotency. */
+  idempotencyKey: string;
+};
+
+export type RefundSquarePaymentResult = {
+  refundId: string;
+  status: string | null;
+};
+
+export async function refundSquarePayment(
+  input: RefundSquarePaymentInput,
+): Promise<RefundSquarePaymentResult> {
+  const accessToken = await getValidSquareAccessToken(input.connection);
+  if (!accessToken) throw new Error("square_token_unavailable");
+
+  const body = {
+    idempotency_key: input.idempotencyKey.slice(0, 45),
+    payment_id: input.paymentId,
+    amount_money: {
+      amount: input.amountCents,
+      currency: input.currency.toUpperCase(),
+    },
+    reason: (input.reason ?? "Booking cancelled").slice(0, 192),
+  };
+
+  const result = await squareFetch(accessToken, "/v2/refunds", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  if (!result.ok) {
+    console.error("refundSquarePayment:", result.status, result.json);
+    throw new Error("square_refund_failed");
+  }
+
+  const data = result.json as {
+    refund?: { id?: string; status?: string };
+  };
+  const refund = data.refund;
+  if (!refund?.id) {
+    throw new Error("square_refund_invalid");
+  }
+
+  return {
+    refundId: refund.id,
+    status: refund.status ?? null,
   };
 }
 

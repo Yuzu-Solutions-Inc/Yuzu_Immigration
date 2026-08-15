@@ -9,8 +9,14 @@ import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 import {
+  computeCancelRefundAmounts,
+  normalizeSquareCancelRefundPolicy,
+} from "./cancel-policy";
+import {
   createSquarePaymentLink,
+  findSquarePaymentIdByOrderId,
   getOrgSquareConnection,
+  refundSquarePayment,
 } from "./client";
 
 const PAYMENT_TOKEN_AAD = "payment_requests.token_encrypted";
@@ -30,7 +36,9 @@ export type PaymentRequestRow = {
   checkout_url: string | null;
   square_order_id: string | null;
   square_payment_id: string | null;
+  square_refund_id: string | null;
   paid_at: string | null;
+  refunded_at: string | null;
   created_at: string;
 };
 
@@ -384,5 +392,138 @@ export function decryptPaymentToken(encrypted: string | null | undefined) {
     return decryptField(encrypted, PAYMENT_TOKEN_AAD);
   } catch {
     return null;
+  }
+}
+
+/**
+ * On booking cancel: Square refund if paid and policy allows (minus fee),
+ * otherwise mark pending checkout cancelled. Failures are logged; callers
+ * should still treat the appointment as cancelled.
+ */
+export async function settlePaymentOnBookingCancel(input: {
+  organizationId: string;
+  appointmentId: string;
+  reason?: string;
+}): Promise<{
+  outcome:
+    | "refunded"
+    | "cancelled"
+    | "none"
+    | "skipped"
+    | "failed";
+}> {
+  const admin = createServiceClient();
+  const { data, error } = await admin
+    .from("payment_requests")
+    .select(
+      "id, organization_id, source, status, amount_cents, currency, description, project_id, person_id, appointment_id, checkout_url, square_order_id, square_payment_id, square_refund_id, paid_at, refunded_at, created_at",
+    )
+    .eq("appointment_id", input.appointmentId)
+    .eq("organization_id", input.organizationId)
+    .eq("source", "booking")
+    .maybeSingle();
+
+  if (error) {
+    console.error("settlePaymentOnBookingCancel load:", error.message);
+    return { outcome: "failed" };
+  }
+  if (!data) return { outcome: "none" };
+
+  const payment = data as PaymentRequestRow;
+  if (payment.status === "refunded" || payment.status === "cancelled") {
+    return {
+      outcome: payment.status === "refunded" ? "refunded" : "cancelled",
+    };
+  }
+
+  if (payment.status === "pending") {
+    const now = new Date().toISOString();
+    const { error: cancelError } = await admin
+      .from("payment_requests")
+      .update({
+        status: "cancelled",
+        updated_at: now,
+      })
+      .eq("id", payment.id)
+      .eq("status", "pending");
+    if (cancelError) {
+      console.error(
+        "settlePaymentOnBookingCancel cancel pending:",
+        cancelError.message,
+      );
+      return { outcome: "failed" };
+    }
+    return { outcome: "cancelled" };
+  }
+
+  if (payment.status !== "paid") {
+    return { outcome: "none" };
+  }
+
+  try {
+    const connection = await getOrgSquareConnection(input.organizationId);
+    if (!connection) throw new Error("square_not_connected");
+
+    const policy = normalizeSquareCancelRefundPolicy(connection);
+    const { refundCents } = computeCancelRefundAmounts(
+      payment.amount_cents,
+      policy,
+    );
+
+    if (!policy.cancelRefundEnabled || refundCents <= 0) {
+      return { outcome: "skipped" };
+    }
+
+    let squarePaymentId = payment.square_payment_id;
+    if (!squarePaymentId && payment.square_order_id) {
+      squarePaymentId = await findSquarePaymentIdByOrderId({
+        connection,
+        orderId: payment.square_order_id,
+      });
+      if (squarePaymentId) {
+        await admin
+          .from("payment_requests")
+          .update({
+            square_payment_id: squarePaymentId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", payment.id);
+      }
+    }
+    if (!squarePaymentId) throw new Error("square_payment_id_missing");
+
+    const refund = await refundSquarePayment({
+      connection,
+      paymentId: squarePaymentId,
+      amountCents: refundCents,
+      currency: payment.currency,
+      reason: input.reason ?? "Booking cancelled",
+      idempotencyKey: `refund-${payment.id}`,
+    });
+
+    const now = new Date().toISOString();
+    const { error: refundUpdateError } = await admin
+      .from("payment_requests")
+      .update({
+        status: "refunded",
+        square_refund_id: refund.refundId,
+        refunded_at: now,
+        updated_at: now,
+      })
+      .eq("id", payment.id)
+      .eq("status", "paid");
+
+    if (refundUpdateError) {
+      console.error(
+        "settlePaymentOnBookingCancel mark refunded:",
+        refundUpdateError.message,
+      );
+      return { outcome: "failed" };
+    }
+
+    return { outcome: "refunded" };
+  } catch (err) {
+    console.error("settlePaymentOnBookingCancel refund:", err);
+    return { outcome: "failed" };
   }
 }

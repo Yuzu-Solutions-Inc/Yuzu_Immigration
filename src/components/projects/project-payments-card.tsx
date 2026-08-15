@@ -171,7 +171,9 @@ export function ProjectPaymentsCard({
                           ? t("statuses.cancelled")
                           : payment.status === "expired"
                             ? t("statuses.expired")
-                            : payment.status}
+                            : payment.status === "refunded"
+                              ? t("statuses.refunded")
+                              : payment.status}
                   {" · "}
                   {new Date(payment.createdAt).toLocaleString(locale)}
                 </p>

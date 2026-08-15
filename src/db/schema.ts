@@ -628,6 +628,7 @@ export const paymentStatusEnum = pgEnum("payment_status", [
   "failed",
   "cancelled",
   "expired",
+  "refunded",
 ]);
 
 export const paymentSourceEnum = pgEnum("payment_source", [
@@ -997,6 +998,11 @@ export const squareConnections = pgTable("square_connections", {
   currency: text("currency").notNull().default("CAD"),
   businessName: text("business_name"),
   isEnabled: boolean("is_enabled").notNull().default(true),
+  cancelRefundEnabled: boolean("cancel_refund_enabled").notNull().default(true),
+  cancelMinDaysBefore: integer("cancel_min_days_before").notNull().default(0),
+  cancelRefundFeeType: text("cancel_refund_fee_type").notNull().default("none"),
+  cancelRefundFeeCents: integer("cancel_refund_fee_cents").notNull().default(0),
+  cancelRefundFeePercent: integer("cancel_refund_fee_percent").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -1036,8 +1042,10 @@ export const paymentRequests = pgTable(
     squarePaymentLinkId: text("square_payment_link_id"),
     squareOrderId: text("square_order_id"),
     squarePaymentId: text("square_payment_id"),
+    squareRefundId: text("square_refund_id"),
     checkoutUrl: text("checkout_url"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    refundedAt: timestamp("refunded_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

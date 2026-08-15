@@ -2011,7 +2011,8 @@
       "paid": "Paid",
       "failed": "Failed",
       "cancelled": "Cancelled",
-      "expired": "Expired"
+      "expired": "Expired",
+      "refunded": "Refunded"
     },
     "errors": {
       "invalid": "Could not update this booking.",
@@ -2092,7 +2093,8 @@
       "paid": "Paid",
       "failed": "Failed",
       "cancelled": "Cancelled",
-      "expired": "Expired"
+      "expired": "Expired",
+      "refunded": "Refunded"
     },
     "errors": {
       "invalid": "Check the amount and description.",
