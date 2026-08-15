@@ -18,11 +18,13 @@ export function DeleteProjectButton({
   projectId,
   title,
   className,
+  variant = "icon",
 }: {
   locale: string;
   projectId: string;
   title: string;
   className?: string;
+  variant?: "icon" | "button";
 }) {
   const t = useTranslations("projects");
   const [state, formAction, pending] = useActionState(
@@ -51,17 +53,29 @@ export function DeleteProjectButton({
     >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="projectId" value={projectId} />
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon-sm"
-        disabled={pending}
-        aria-label={pending ? t("deleting") : t("deleteAria", { title })}
-        title={t("delete")}
-        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-      >
-        <Trash2 className="size-4" />
-      </Button>
+      {variant === "button" ? (
+        <Button
+          type="submit"
+          variant="outline"
+          size="sm"
+          disabled={pending}
+          className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          {pending ? t("deleting") : t("delete")}
+        </Button>
+      ) : (
+        <Button
+          type="submit"
+          variant="ghost"
+          size="icon-sm"
+          disabled={pending}
+          aria-label={pending ? t("deleting") : t("deleteAria", { title })}
+          title={t("delete")}
+          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      )}
       {errorMessage ? (
         <p className="max-w-[12rem] text-right text-xs text-destructive">
           {errorMessage}

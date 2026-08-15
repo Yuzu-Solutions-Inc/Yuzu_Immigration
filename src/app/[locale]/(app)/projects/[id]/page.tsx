@@ -11,7 +11,6 @@ import {
   ExportProjectFileButton,
   ProjectRetentionPanel,
 } from "@/components/privacy/retention-export";
-import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
 import { ProjectDetailTabs } from "@/components/projects/project-detail-tabs";
 import { ProjectHomeTab } from "@/components/projects/project-home-tab";
@@ -26,10 +25,9 @@ import { Link } from "@/i18n/navigation";
 import {
   canAdministerOrg,
   canCreateRecords,
-  canDeleteRecord,
   canShareProjects,
 } from "@/lib/auth/rbac";
-import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { getPrimaryMembership } from "@/lib/auth/session";
 import {
   getProject,
   getProjectParticipants,
@@ -71,13 +69,7 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   const membership = await getPrimaryMembership();
-  const user = await getSessionUser();
   const canShare = canShareProjects(membership?.role);
-  const canDelete = canDeleteRecord({
-    role: membership?.role,
-    createdBy: project.created_by,
-    actorUserId: user?.id,
-  });
 
   await ensureProjectFormsSeeded(
     project.organization_id,
@@ -229,13 +221,6 @@ export default async function ProjectDetailPage({
             >
               {t("edit")}
             </Link>
-            {canDelete ? (
-              <DeleteProjectButton
-                locale={locale}
-                projectId={project.id}
-                title={project.title}
-              />
-            ) : null}
           </div>
           <div className="grid w-full grid-cols-[auto_auto_1.75rem] items-center gap-x-2.5 gap-y-1 sm:w-auto">
             <ProjectStatusCard

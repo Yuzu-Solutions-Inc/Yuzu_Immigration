@@ -2,9 +2,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectForm } from "@/components/projects/project-form";
 import { Link } from "@/i18n/navigation";
-import { canCreateRecords } from "@/lib/auth/rbac";
+import { canCreateRecords, canDeleteRecord } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { inferCompositionFromRoles } from "@/lib/crm/programs";
 import {
@@ -39,8 +40,17 @@ export default async function EditProjectPage({
   const project = await getProject(id);
   if (!project) notFound();
 
-  const [participants, people, members, user, membership, t, answersRow, forms, organizationPrograms] =
-    await Promise.all([
+  const [
+    participants,
+    people,
+    members,
+    user,
+    membership,
+    t,
+    answersRow,
+    forms,
+    organizationPrograms,
+  ] = await Promise.all([
       getProjectParticipants(id),
       listPeople(),
       listOrgMembers(),
@@ -51,6 +61,12 @@ export default async function EditProjectPage({
       listProjectForms(id),
       listOrganizationPrograms(),
     ]);
+
+  const canDelete = canDeleteRecord({
+    role: membership?.role,
+    createdBy: project.created_by,
+    actorUserId: user?.id,
+  });
 
   const principal = participants.find((row) => row.role === "principal");
   const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
@@ -109,17 +125,31 @@ export default async function EditProjectPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="space-y-1">
+      <div className="space-y-3">
         <Link
           href={`/projects/${project.id}`}
           className="text-sm font-medium text-action hover:underline"
         >
           ← {t("backToProject")}
         </Link>
-        <h1 className="font-heading text-2xl font-semibold text-brand">
-          {t("editTitle")}
-        </h1>
-        <p className="text-[15px] text-muted-foreground">{t("editSubtitle")}</p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="font-heading text-2xl font-semibold text-brand">
+              {t("editTitle")}
+            </h1>
+            <p className="text-[15px] text-muted-foreground">
+              {t("editSubtitle")}
+            </p>
+          </div>
+          {canDelete ? (
+            <DeleteProjectButton
+              locale={locale}
+              projectId={project.id}
+              title={project.title}
+              variant="button"
+            />
+          ) : null}
+        </div>
       </div>
 
       <SurfaceCard>
