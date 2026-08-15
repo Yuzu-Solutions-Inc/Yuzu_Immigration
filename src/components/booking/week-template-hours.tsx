@@ -217,19 +217,10 @@ export function WeekTemplateHours({
   }
 
   const toolbar = (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="space-y-1">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("weekTemplate")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t("weekTemplateHelp")}</p>
-        <p className="hidden text-sm text-muted-foreground lg:block">
-          {t("weekTemplateDragHelp")}
-        </p>
-        <p className="text-sm text-muted-foreground lg:hidden">
-          {t("weekTemplateTouchHelp")}
-        </p>
-      </div>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="font-heading text-lg font-semibold text-brand">
+        {t("weekTemplate")}
+      </h2>
       {canManage ? (
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button

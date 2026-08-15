@@ -40,7 +40,7 @@ export function GoogleCalendarSettings({
         <GoogleCalendarLogo className={compact ? "size-7" : "size-9"} />
       }
       title={t("googleTitle")}
-      description={t("googleHelp")}
+      description={compact ? undefined : t("googleHelp")}
       connected={connected}
       statusConnectedLabel={t("statusConnected")}
       statusDisconnectedLabel={t("statusNotConnected")}
@@ -111,8 +111,6 @@ export function GoogleCalendarSettings({
               : null
           }
         />
-      ) : configured ? (
-        <p className="text-sm text-muted-foreground">{t("googleNotConnected")}</p>
       ) : null}
     </IntegrationPanel>
   );

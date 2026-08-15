@@ -18,7 +18,7 @@ export function IntegrationPanel({
 }: {
   logo: ReactNode;
   title: string;
-  description: string;
+  description?: string;
   connected: boolean;
   statusConnectedLabel: string;
   statusDisconnectedLabel: string;
@@ -31,12 +31,12 @@ export function IntegrationPanel({
   const HeadingTag = headingLevel === 3 ? "h3" : "h2";
 
   return (
-    <section className={cn(compact ? "space-y-3" : "space-y-4", className)}>
-      <div className="flex flex-wrap items-start gap-3">
+    <section className={cn(compact ? "space-y-2.5" : "space-y-4", className)}>
+      <div className="flex flex-wrap items-start gap-2.5">
         <div
           className={cn(
             "flex shrink-0 items-center justify-center rounded-xl border border-border bg-surface shadow-sm",
-            compact ? "size-10 p-1" : "size-12 p-1",
+            compact ? "size-9 p-0.5" : "size-12 p-1",
           )}
         >
           {logo}
@@ -46,7 +46,7 @@ export function IntegrationPanel({
             <HeadingTag
               className={cn(
                 "font-heading font-semibold text-brand",
-                compact || headingLevel === 3 ? "text-base" : "text-lg",
+                compact || headingLevel === 3 ? "text-sm" : "text-lg",
               )}
             >
               {title}
@@ -61,14 +61,16 @@ export function IntegrationPanel({
               {connected ? statusConnectedLabel : statusDisconnectedLabel}
             </Badge>
           </div>
-          <p
-            className={cn(
-              "text-muted-foreground",
-              compact ? "text-xs" : "text-sm",
-            )}
-          >
-            {description}
-          </p>
+          {description ? (
+            <p
+              className={cn(
+                "text-muted-foreground",
+                compact ? "text-xs" : "text-sm",
+              )}
+            >
+              {description}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -85,19 +87,24 @@ export function IntegrationAccountCard({
   label,
   primary,
   secondary,
+  className,
 }: {
   label: string;
   primary: string;
   secondary?: string | null;
+  className?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-canvas px-4 py-3">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+    <div
+      className={cn(
+        "rounded-xl border border-border bg-canvas px-3 py-2.5",
+        className,
+      )}
+    >
+      <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </p>
-      <p className="mt-1 truncate text-[15px] font-medium text-brand">
-        {primary}
-      </p>
+      <p className="mt-0.5 truncate text-sm font-medium text-brand">{primary}</p>
       {secondary ? (
         <p className="mt-0.5 text-xs text-muted-foreground">{secondary}</p>
       ) : null}

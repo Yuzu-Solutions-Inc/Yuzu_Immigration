@@ -52,9 +52,6 @@ export default async function CalendarSettingsRoute({
           <h1 className="font-heading text-2xl font-semibold text-brand">
             {t("settingsTitle")}
           </h1>
-          <p className="text-[15px] text-muted-foreground">
-            {t("settingsSubtitle")}
-          </p>
         </div>
       </div>
       <CalendarSettingsPage
