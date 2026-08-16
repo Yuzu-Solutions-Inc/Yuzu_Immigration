@@ -6,6 +6,7 @@ import {
   CircleCheck,
   GripVertical,
   Loader2,
+  Save,
   X,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -1262,6 +1263,7 @@ export function ModularQuestionnaire({
   }
 
   const showPersonTabs = people.length > 1;
+  const saveBusy = busyIntent === "save";
   const busy =
     Boolean(pending) || busyIntent != null || Boolean(submitPending);
 
@@ -1404,16 +1406,16 @@ export function ModularQuestionnaire({
             type="button"
             variant="outline"
             disabled={busy}
+            aria-busy={saveBusy}
+            className={cn(saveBusy && "animate-save-pulse disabled:opacity-100")}
             onClick={() => requestSave("save")}
           >
-            {busyIntent === "save" ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                {t("saving")}
-              </>
+            {saveBusy ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
             ) : (
-              t("save")
+              <Save className="size-4" aria-hidden />
             )}
+            {t("save")}
           </Button>
           {sectionIndex < sections.length - 1 ? (
             <Button
