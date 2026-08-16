@@ -35,6 +35,35 @@ export function requireRotateEncryptionKey(): Buffer {
   );
 }
 
+export function optionalRotateEncryptionKey(): Buffer | null {
+  const hex = process.env.DOCUMENT_ENCRYPTION_KEY_ROTATE?.trim();
+  if (!hex) return null;
+  return parseAppEncryptionKey(hex, "encryption_key_rotate");
+}
+
+/**
+ * Wrap keys the live app may need while `DOCUMENT_ENCRYPTION_KEY_ROTATE` is set.
+ * Current key first, then the incoming rotate key. Org DEKs / client data are
+ * not decrypted with these keys — only `organizations.wrapped_dek`.
+ */
+export function appWrapKeysForUnwrap(): Buffer[] {
+  const keys: Buffer[] = [requireAppEncryptionKey()];
+  const rotate = optionalRotateEncryptionKey();
+  if (rotate && !rotate.equals(keys[0])) {
+    keys.push(rotate);
+  }
+  return keys;
+}
+
+/**
+ * Key used to wrap newly created org DEKs.
+ * While `DOCUMENT_ENCRYPTION_KEY_ROTATE` is set, new wraps land on that key so
+ * the rotation window does not keep writing the outgoing wrap key.
+ */
+export function activeAppWrapKey(): Buffer {
+  return optionalRotateEncryptionKey() ?? requireAppEncryptionKey();
+}
+
 export function hasAppEncryptionKey(): boolean {
   try {
     requireAppEncryptionKey();

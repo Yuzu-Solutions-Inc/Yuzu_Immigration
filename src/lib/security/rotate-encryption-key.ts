@@ -5,6 +5,7 @@ export type RotateEncryptionResult = {
   dryRun: boolean;
   orgsRewrapped: number;
   orgsAlreadyNew: number;
+  orgsMissingDek: number;
 };
 
 /**
@@ -31,10 +32,14 @@ export async function rotateAppEncryptionKey(input: {
 
   let orgsRewrapped = 0;
   let orgsAlreadyNew = 0;
+  let orgsMissingDek = 0;
   for (const org of orgRows ?? []) {
     const orgId = org.id as string;
     const wrapped = org.wrapped_dek as string | null;
-    if (!wrapped) continue;
+    if (!wrapped) {
+      orgsMissingDek += 1;
+      continue;
+    }
 
     let dek: Buffer;
     try {
@@ -54,5 +59,20 @@ export async function rotateAppEncryptionKey(input: {
     if (error) throw new Error(`org wrap update: ${error.message}`);
   }
 
-  return { dryRun, orgsRewrapped, orgsAlreadyNew };
+  if (!dryRun) {
+    const { data: verifyRows, error: verifyError } = await admin
+      .from("organizations")
+      .select("id, wrapped_dek")
+      .not("wrapped_dek", "is", null);
+    if (verifyError) throw new Error(`verify: ${verifyError.message}`);
+    for (const org of verifyRows ?? []) {
+      unwrapOrgDataKey(
+        org.wrapped_dek as string,
+        org.id as string,
+        newKey,
+      );
+    }
+  }
+
+  return { dryRun, orgsRewrapped, orgsAlreadyNew, orgsMissingDek };
 }

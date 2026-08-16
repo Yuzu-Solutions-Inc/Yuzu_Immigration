@@ -20,6 +20,8 @@ const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
   /** 64 hex chars — wrap key for per-org DEKs (client data uses the org key). */
   DOCUMENT_ENCRYPTION_KEY: optionalSecret,
+  /** Incoming wrap key while rotating DOCUMENT_ENCRYPTION_KEY. */
+  DOCUMENT_ENCRYPTION_KEY_ROTATE: optionalSecret,
   DATABASE_URL: optionalSecret,
   DIRECT_DATABASE_URL: optionalSecret,
 });
@@ -34,6 +36,7 @@ function readEnv(): ServerEnv {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     DOCUMENT_ENCRYPTION_KEY: process.env.DOCUMENT_ENCRYPTION_KEY,
+    DOCUMENT_ENCRYPTION_KEY_ROTATE: process.env.DOCUMENT_ENCRYPTION_KEY_ROTATE,
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
   });
