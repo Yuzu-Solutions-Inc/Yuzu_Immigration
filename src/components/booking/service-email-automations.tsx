@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tabs,
@@ -30,7 +31,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 import type {
   BookingFormFieldRow,
   BookingServiceRow,
@@ -185,6 +185,10 @@ function AutomationForm({
     extraEmailsFrom(automation?.recipients ?? []),
   );
   const [extraDraft, setExtraDraft] = useState("");
+  const [isEnabled, setIsEnabled] = useState(automation?.is_enabled ?? true);
+  const [includeDoNotReply, setIncludeDoNotReply] = useState(
+    automation?.include_do_not_reply ?? true,
+  );
   const action = automation
     ? updateServiceAutomationAction
     : createServiceAutomationAction;
@@ -267,7 +271,7 @@ function AutomationForm({
     copies[orgDefaultLocale].body.trim().length > 0;
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="min-w-0 space-y-5">
       <input type="hidden" name="locale" value={locale} />
       {automation ? (
         <input type="hidden" name="automationId" value={automation.id} />
@@ -278,6 +282,12 @@ function AutomationForm({
         type="hidden"
         name="translations"
         value={JSON.stringify(copies)}
+      />
+      <input type="hidden" name="isEnabled" value={isEnabled ? "on" : ""} />
+      <input
+        type="hidden"
+        name="includeDoNotReply"
+        value={includeDoNotReply ? "on" : ""}
       />
 
       <div className="space-y-2">
@@ -292,15 +302,22 @@ function AutomationForm({
         />
       </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">{t("automationServices")}</p>
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <div>
+          <h3 className="text-sm font-semibold text-brand">
+            {t("automationServices")}
+          </h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("automationAssignHelp")}
+          </p>
+        </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {services.map((service) => {
             const checked = serviceIds.includes(service.id);
             return (
               <label
                 key={service.id}
-                className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm"
+                className="flex min-w-0 items-start gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm"
               >
                 <input
                   type="checkbox"
@@ -314,24 +331,51 @@ function AutomationForm({
                       );
                     }
                   }}
-                  className="size-4 rounded border-input"
+                  className="mt-0.5 size-4 shrink-0 rounded border-input"
                 />
-                <span className="min-w-0 truncate">
+                <span className="min-w-0 truncate font-medium">
                   {serviceTitle(service, locale, orgDefaultLocale)}
                 </span>
               </label>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">{t("automationCopy")}</p>
-        <p className="text-xs text-muted-foreground">
-          {t("automationCopyHelp", {
-            language: LOCALE_LABELS[orgDefaultLocale],
-          })}
-        </p>
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <h3 className="text-sm font-semibold text-brand">
+          {t("automationScheduleSection")}
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="min-w-0 space-y-2">
+            <Label htmlFor="daysBefore">{t("automationDaysBefore")}</Label>
+            <Input
+              id="daysBefore"
+              name="daysBefore"
+              type="number"
+              min={0}
+              max={90}
+              defaultValue={automation?.days_before ?? 1}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("automationDaysHint")}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <div>
+          <h3 className="text-sm font-semibold text-brand">
+            {t("automationCopy")}
+          </h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("automationCopyHelp", {
+              language: LOCALE_LABELS[orgDefaultLocale],
+            })}
+          </p>
+        </div>
         <Tabs
           defaultValue={orgDefaultLocale}
           onValueChange={(value) => {
@@ -409,74 +453,72 @@ function AutomationForm({
             </TabsContent>
           ))}
         </Tabs>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-sm font-medium">{t("automationVariables")}</p>
-        <div className="flex flex-wrap gap-1.5">
-          {AUTOMATION_VARIABLES.map((name) => (
-            <button
-              key={name}
-              type="button"
-              className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
-              onClick={() => insertVariable(name)}
-            >
-              {t(`variables.${name}`)}
-            </button>
-          ))}
-          {extraVariables.map((field) => (
-            <button
-              key={field.id}
-              type="button"
-              className="rounded-full border border-action/30 bg-action/5 px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
-              onClick={() => insertVariable(field.field_key)}
-            >
-              {field.label}
-            </button>
-          ))}
+        <div className="space-y-2 border-t border-border/80 pt-3">
+          <p className="text-xs font-medium text-muted-foreground">
+            {t("automationVariables")}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {AUTOMATION_VARIABLES.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
+                onClick={() => insertVariable(name)}
+              >
+                {t(`variables.${name}`)}
+              </button>
+            ))}
+            {extraVariables.map((field) => (
+              <button
+                key={field.id}
+                type="button"
+                className="rounded-full border border-action/30 bg-action/5 px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
+                onClick={() => insertVariable(field.field_key)}
+              >
+                {field.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="space-y-2">
-        <Label htmlFor="daysBefore">{t("automationDaysBefore")}</Label>
-        <Input
-          id="daysBefore"
-          name="daysBefore"
-          type="number"
-          min={0}
-          max={90}
-          defaultValue={automation?.days_before ?? 1}
-          required
-        />
-        <p className="text-xs text-muted-foreground">{t("automationDaysHint")}</p>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-sm font-medium">{t("automationRecipients")}</p>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={includeCustomer}
-            onChange={(event) => setIncludeCustomer(event.target.checked)}
-            className="size-4 rounded border-input"
-          />
-          {t("recipientCustomer")}
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={includeConsultant}
-            onChange={(event) => setIncludeConsultant(event.target.checked)}
-            className="size-4 rounded border-input"
-          />
-          {t("recipientConsultant")}
-        </label>
-        <div className="flex gap-2">
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <h3 className="text-sm font-semibold text-brand">
+          {t("automationRecipients")}
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <Label htmlFor="recipient-customer" className="text-sm font-medium">
+              {t("recipientCustomer")}
+            </Label>
+            <Switch
+              id="recipient-customer"
+              checked={includeCustomer}
+              onCheckedChange={setIncludeCustomer}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <Label
+              htmlFor="recipient-consultant"
+              className="text-sm font-medium"
+            >
+              {t("recipientConsultant")}
+            </Label>
+            <Switch
+              id="recipient-consultant"
+              checked={includeConsultant}
+              onCheckedChange={setIncludeConsultant}
+            />
+          </div>
+        </div>
+        <div className="flex min-w-0 gap-2">
           <Input
+            id="recipient-extra"
             type="email"
             value={extraDraft}
             onChange={(event) => setExtraDraft(event.target.value)}
             placeholder={t("recipientExtraPlaceholder")}
+            className="min-w-0"
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
@@ -489,52 +531,66 @@ function AutomationForm({
           </Button>
         </div>
         {extraEmails.length > 0 ? (
-          <ul className="space-y-1">
+          <ul className="flex flex-wrap gap-1.5">
             {extraEmails.map((email) => (
               <li
                 key={email}
-                className="flex items-center justify-between rounded-lg border border-border px-3 py-1.5 text-sm"
+                className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-surface py-1 pr-1 pl-2.5 text-xs text-brand"
               >
-                <span>{email}</span>
+                <span className="truncate">{email}</span>
                 <button
                   type="button"
-                  className="text-muted-foreground hover:text-destructive"
+                  className="rounded-full p-1 text-muted-foreground hover:bg-canvas hover:text-destructive"
+                  aria-label={t("recipientRemove")}
                   onClick={() =>
                     setExtraEmails((prev) => prev.filter((item) => item !== email))
                   }
                 >
-                  {t("recipientRemove")}
+                  <Trash2 className="size-3" />
                 </button>
               </li>
             ))}
           </ul>
         ) : null}
-      </div>
+      </section>
 
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="includeDoNotReply"
-          defaultChecked={automation?.include_do_not_reply ?? true}
-          className="mt-0.5 size-4 rounded border-input"
-        />
-        <span>
-          <span className="block">{t("automationDoNotReply")}</span>
-          <span className="block text-xs text-muted-foreground">
-            {t("automationDoNotReplyHelp")}
-          </span>
-        </span>
-      </label>
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="isEnabled"
-          defaultChecked={automation?.is_enabled ?? true}
-          className="size-4 rounded border-input"
-        />
-        {t("automationEnabled")}
-      </label>
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <h3 className="text-sm font-semibold text-brand">
+          {t("automationOptionsSection")}
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <div className="min-w-0 space-y-0.5">
+              <Label htmlFor="automation-do-not-reply" className="text-sm font-medium">
+                {t("automationDoNotReply")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("automationDoNotReplyHelp")}
+              </p>
+            </div>
+            <Switch
+              id="automation-do-not-reply"
+              checked={includeDoNotReply}
+              onCheckedChange={setIncludeDoNotReply}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <div className="min-w-0 space-y-0.5">
+              <Label htmlFor="automation-enabled" className="text-sm font-medium">
+                {t("automationEnabled")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("automationEnabledHelp")}
+              </p>
+            </div>
+            <Switch
+              id="automation-enabled"
+              checked={isEnabled}
+              onCheckedChange={setIsEnabled}
+            />
+          </div>
+        </div>
+      </section>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
@@ -633,7 +689,7 @@ export function ServiceEmailAutomationsButton({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="min-h-0 overflow-y-auto pr-1">
+          <div className="min-h-0 overflow-x-hidden overflow-y-auto pr-1">
             {creating || editing ? (
               <AutomationForm
                 locale={locale}
@@ -658,14 +714,14 @@ export function ServiceEmailAutomationsButton({
                       return (
                         <li
                           key={automation.id}
-                          className="rounded-xl border border-border bg-surface p-3"
+                          className="rounded-xl border border-border px-3 py-2"
                         >
-                          <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="font-medium text-brand">
+                              <p className="text-sm font-medium text-brand">
                                 {automation.title}
                               </p>
-                              <p className="mt-1 text-xs text-muted-foreground">
+                              <p className="text-xs text-muted-foreground">
                                 {names.length === 0
                                   ? t("noneAssigned")
                                   : names.join(", ")}
@@ -677,88 +733,67 @@ export function ServiceEmailAutomationsButton({
                               </p>
                             </div>
                             {canManage ? (
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked={automation.is_enabled}
-                                aria-label={
-                                  automation.is_enabled
-                                    ? t("automationActive")
-                                    : t("automationPaused")
-                                }
-                                className={cn(
-                                  "relative h-6 w-11 shrink-0 rounded-full transition-colors",
-                                  automation.is_enabled
-                                    ? "bg-success"
-                                    : "bg-muted",
-                                )}
-                                onClick={async () => {
-                                  const result =
-                                    await toggleServiceAutomationAction(
-                                      automation.id,
-                                      locale,
-                                      !automation.is_enabled,
-                                    );
-                                  if (result.error) {
-                                    toast.error(t(`errors.${result.error}`));
-                                  }
-                                }}
-                              >
-                                <span
-                                  className={cn(
-                                    "absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform",
+                              <div className="flex shrink-0 items-center gap-1">
+                                <Switch
+                                  checked={automation.is_enabled}
+                                  aria-label={
                                     automation.is_enabled
-                                      ? "translate-x-5"
-                                      : "translate-x-0.5",
-                                  )}
+                                      ? t("automationActive")
+                                      : t("automationPaused")
+                                  }
+                                  onCheckedChange={async (checked) => {
+                                    const result =
+                                      await toggleServiceAutomationAction(
+                                        automation.id,
+                                        locale,
+                                        checked,
+                                      );
+                                    if (result.error) {
+                                      toast.error(t(`errors.${result.error}`));
+                                    }
+                                  }}
                                 />
-                              </button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditing(automation)}
+                                >
+                                  <Pencil className="size-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (
+                                      !window.confirm(t("automationDeleteConfirm"))
+                                    ) {
+                                      return;
+                                    }
+                                    const result =
+                                      await deleteServiceAutomationAction(
+                                        automation.id,
+                                        locale,
+                                      );
+                                    if (result.error) {
+                                      toast.error(t(`errors.${result.error}`));
+                                    } else {
+                                      toast.success(t("automationDeleted"));
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              </div>
                             ) : (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="shrink-0 text-xs text-muted-foreground">
                                 {automation.is_enabled
                                   ? t("automationActive")
                                   : t("automationPaused")}
                               </span>
                             )}
                           </div>
-                          {canManage ? (
-                            <div className="mt-2 flex gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEditing(automation)}
-                              >
-                                <Pencil className="size-4" />
-                                {t("edit")}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                onClick={async () => {
-                                  if (
-                                    !window.confirm(t("automationDeleteConfirm"))
-                                  ) {
-                                    return;
-                                  }
-                                  const result =
-                                    await deleteServiceAutomationAction(
-                                      automation.id,
-                                      locale,
-                                    );
-                                  if (result.error) {
-                                    toast.error(t(`errors.${result.error}`));
-                                  } else {
-                                    toast.success(t("automationDeleted"));
-                                  }
-                                }}
-                              >
-                                <Trash2 className="size-4" />
-                                {t("delete")}
-                              </Button>
-                            </div>
-                          ) : null}
                         </li>
                       );
                     })}
