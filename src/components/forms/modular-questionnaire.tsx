@@ -898,15 +898,14 @@ export function ModularQuestionnaire({
   submitPending?: boolean;
   submittedAt?: string | null;
   readOnly?: boolean;
-  /** IRCC answer option labels — project form language on client links. */
+  /** IRCC answer option labels — project form language, independent of app UI locale. */
   answerLocale?: "en" | "fr";
 }) {
   const t = useTranslations("forms");
   const th = useTranslations("forms.help");
   const tr = useTranslations("roles");
   const uiLocale = useLocale();
-  const optionsLocale =
-    mode === "client" && answerLocale ? answerLocale : uiLocale;
+  const optionsLocale = answerLocale ?? uiLocale;
 
   const [activePersonId, setActivePersonId] = useState(
     () => people[0]?.id ?? "",

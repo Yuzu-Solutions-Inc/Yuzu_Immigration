@@ -30,6 +30,7 @@ import {
   isCustomProgram,
   isFederalPermitProgram,
 } from "@/lib/ircc/kits";
+import type { ProjectFormLanguage } from "@/lib/ircc/form-language";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
 import type { ProgramFamily } from "@/db/schema";
 import { cn } from "@/lib/utils";
@@ -352,11 +353,13 @@ export function ProjectQuestionnaire({
   locale,
   projectId,
   people,
+  formLanguage,
   modificationBlocked = false,
 }: {
   locale: "en" | "fr";
   projectId: string;
   people: QuestionnairePerson[];
+  formLanguage: ProjectFormLanguage;
   modificationBlocked?: boolean;
 }) {
   const t = useTranslations("forms");
@@ -390,16 +393,27 @@ export function ProjectQuestionnaire({
     }[saveState.error] ??
       t("errors.generic"));
 
+  const answerLanguageLabel = tp(
+    `formLanguages.${formLanguage === "fr" ? "fr" : "en"}`,
+  );
+
   return (
     <SurfaceCard className="space-y-4">
       {modificationBlocked ? (
         <p className="text-sm text-muted-foreground">{tp("grantedLock")}</p>
       ) : null}
+      <div
+        className="rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
+        role="note"
+      >
+        {t("clientAnswerLanguage", { language: answerLanguageLabel })}
+      </div>
       <ModularQuestionnaire
         people={people}
         onSave={handleSave}
         pending={savePending}
         errorMessage={saveError}
+        answerLocale={formLanguage}
         readOnly={modificationBlocked}
       />
     </SurfaceCard>

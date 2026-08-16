@@ -14,6 +14,7 @@ import {
   listProjectForms,
 } from "@/lib/ircc/project-forms";
 import { buildQuestionnairePeople } from "@/lib/ircc/questionnaire-people";
+import { toProjectFormLanguage } from "@/lib/ircc/form-language";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ProjectFormsPage({
@@ -82,6 +83,7 @@ export default async function ProjectFormsPage({
         locale={formLocale}
         projectId={project.id}
         people={people}
+        formLanguage={toProjectFormLanguage(project.form_language)}
         modificationBlocked={project.status === "granted"}
       />
     </div>
