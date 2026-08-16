@@ -6,6 +6,17 @@ import { revalidatePath } from "next/cache";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
+  applyIntegrationIntent,
+  calendarSettingsHref,
+  clearCalendarProvider,
+  clearMeetingProvider,
+  getStaffBookingIntegrations,
+  parseIntegrationIntent,
+  vendorStillNeeded,
+  type IntegrationIntent,
+} from "@/lib/booking/integrations";
+import { applyCalendarProviderWatches } from "@/lib/calendar/staff-watches";
+import {
   getUserGoogleConnection,
   startGoogleWatch,
   stopGoogleWatch,
@@ -34,10 +45,18 @@ async function requireMember() {
   return { ok: true as const, membership, user };
 }
 
+function revalidateCalendar(locale: string) {
+  revalidatePath(`/${locale}/calendar`);
+  revalidatePath(`/${locale}/settings/calendar`);
+}
+
 export async function startGoogleCalendarConnectAction(formData: FormData) {
   const locale = String(formData.get("locale") || "en");
+  const intent = parseIntegrationIntent(formData.get("intent"));
   const fail = (reason: string): never => {
-    redirect(`/${locale}/calendar/settings?google=${encodeURIComponent(reason)}`);
+    redirect(
+      `${calendarSettingsHref(locale, { google: reason })}`,
+    );
   };
   const gate = await requireMember();
   if (!gate.ok) return fail(gate.error);
@@ -49,8 +68,86 @@ export async function startGoogleCalendarConnectAction(formData: FormData) {
     userId: gate.user.id,
     locale,
     origin,
+    intent,
   });
   redirect(googleAuthUrl({ origin, state }));
+}
+
+export async function useGoogleCalendarAction(
+  locale: string,
+): Promise<GoogleCalendarActionState> {
+  return selectGoogleRole(locale, "calendar");
+}
+
+export async function useGoogleMeetAction(
+  locale: string,
+): Promise<GoogleCalendarActionState> {
+  return selectGoogleRole(locale, "meetings");
+}
+
+async function selectGoogleRole(
+  locale: string,
+  intent: IntegrationIntent,
+): Promise<GoogleCalendarActionState> {
+  const gate = await requireMember();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+  const connection = await getUserGoogleConnection(orgId, gate.user.id);
+  if (!connection) return { error: "not_connected" };
+  try {
+    await applyIntegrationIntent({
+      organizationId: orgId,
+      userId: gate.user.id,
+      vendor: "google",
+      intent,
+    });
+    await applyCalendarProviderWatches(orgId, gate.user.id);
+  } catch (error) {
+    console.error("select google role:", error);
+    return { error: "save_failed" };
+  }
+  revalidateCalendar(locale);
+  return { message: intent === "calendar" ? "using_calendar" : "using_meetings" };
+}
+
+export async function stopUsingGoogleCalendarAction(
+  locale: string,
+): Promise<GoogleCalendarActionState> {
+  return stopGoogleRole(locale, "calendar");
+}
+
+export async function stopUsingGoogleMeetAction(
+  locale: string,
+): Promise<GoogleCalendarActionState> {
+  return stopGoogleRole(locale, "meetings");
+}
+
+async function stopGoogleRole(
+  locale: string,
+  intent: IntegrationIntent,
+): Promise<GoogleCalendarActionState> {
+  const gate = await requireMember();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+  try {
+    if (intent === "calendar") {
+      await clearCalendarProvider(orgId, gate.user.id);
+    } else {
+      await clearMeetingProvider(orgId, gate.user.id);
+    }
+    await applyCalendarProviderWatches(orgId, gate.user.id);
+    const integrations = await getStaffBookingIntegrations(orgId, gate.user.id);
+    if (!vendorStillNeeded(integrations, "google")) {
+      await deleteGoogleConnection(orgId, gate.user.id);
+    }
+  } catch (error) {
+    console.error("stop google role:", error);
+    return { error: "save_failed" };
+  }
+  revalidateCalendar(locale);
+  return {
+    message: intent === "calendar" ? "stopped_calendar" : "stopped_meetings",
+  };
 }
 
 export async function disconnectGoogleCalendarAction(
@@ -59,8 +156,27 @@ export async function disconnectGoogleCalendarAction(
   const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
+  const integrations = await getStaffBookingIntegrations(orgId, gate.user.id);
+  try {
+    if (integrations?.calendar_provider === "google") {
+      await clearCalendarProvider(orgId, gate.user.id);
+    }
+    if (integrations?.meeting_provider === "google_meet") {
+      await clearMeetingProvider(orgId, gate.user.id);
+    }
+    await applyCalendarProviderWatches(orgId, gate.user.id);
+    await deleteGoogleConnection(orgId, gate.user.id);
+  } catch (error) {
+    console.error("disconnect google:", error);
+    return { error: "save_failed" };
+  }
+  revalidateCalendar(locale);
+  return { message: "disconnected" };
+}
+
+async function deleteGoogleConnection(orgId: string, userId: string) {
   const admin = createServiceClient();
-  const connection = await getUserGoogleConnection(orgId, gate.user.id);
+  const connection = await getUserGoogleConnection(orgId, userId);
   if (connection) {
     await stopGoogleWatch(connection);
   }
@@ -68,14 +184,11 @@ export async function disconnectGoogleCalendarAction(
     .from("google_calendar_connections")
     .delete()
     .eq("organization_id", orgId)
-    .eq("user_id", gate.user.id);
+    .eq("user_id", userId);
   if (error) {
     console.error("disconnect google:", error.message);
-    return { error: "save_failed" };
+    throw new Error("save_failed");
   }
-  revalidatePath(`/${locale}/calendar`);
-  revalidatePath(`/${locale}/calendar/settings`);
-  return { message: "disconnected" };
 }
 
 export async function syncGoogleCalendarNowAction(
@@ -100,8 +213,7 @@ export async function syncGoogleCalendarNowAction(
     console.error("sync google now:", error);
     return { error: "sync_failed" };
   }
-  revalidatePath(`/${locale}/calendar`);
-  revalidatePath(`/${locale}/calendar/settings`);
+  revalidateCalendar(locale);
   return { message: "synced" };
 }
 

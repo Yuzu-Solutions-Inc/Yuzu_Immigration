@@ -300,7 +300,7 @@ export async function HomeDashboardView({
                   {t("bookingSetup.services")}
                 </Link>
                 <Link
-                  href="/calendar/settings"
+                  href="/settings/calendar"
                   className="font-medium underline-offset-2 hover:underline"
                 >
                   {t("bookingSetup.hours")}

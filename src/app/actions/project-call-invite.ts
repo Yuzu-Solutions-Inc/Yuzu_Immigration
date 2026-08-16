@@ -361,10 +361,10 @@ export async function submitProjectCallBookingAction(
   const localizedTitle = serviceTitle(ctx.service, preferredLocale);
   const urls = bookingManageUrls(origin, preferredLocale, manageToken);
 
-  const { pushAppointmentToGoogleCalendar } = await import(
-    "@/lib/google/calendar"
+  const { pushAppointmentToHostCalendars } = await import(
+    "@/lib/calendar/host-calendar"
   );
-  const google = await pushAppointmentToGoogleCalendar({
+  const calendar = await pushAppointmentToHostCalendars({
     organizationId: ctx.organizationId,
     hostUserId: ctx.host.userId,
     appointmentId: appointment.id,
@@ -373,7 +373,7 @@ export async function submitProjectCallBookingAction(
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
   });
-  const meetJoinUrl = google?.meetJoinUrl ?? null;
+  const meetJoinUrl = calendar.meetJoinUrl;
 
   after(async () => {
     const { sendBookingConfirmationEmail } = await import(

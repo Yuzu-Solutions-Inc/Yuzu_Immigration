@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ProjectCallBookingFlow } from "@/components/booking/project-call-booking-flow";
 import { loadProjectCallInviteContext } from "@/lib/booking/queries";
-import { refreshGoogleBusyIfStale } from "@/lib/google/calendar";
+import { refreshHostCalendarsIfStale } from "@/lib/calendar/host-calendar";
 
 export default async function ProjectCallBookPage({
   params,
@@ -16,7 +16,7 @@ export default async function ProjectCallBookPage({
   const ctx = await loadProjectCallInviteContext(token);
 
   if (ctx) {
-    after(() => refreshGoogleBusyIfStale(ctx.organizationId));
+    after(() => refreshHostCalendarsIfStale(ctx.organizationId));
   }
 
   if (!ctx) {

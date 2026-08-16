@@ -133,7 +133,9 @@ export type BookingAppointmentRow = {
   host_user_id: string;
   project_id: string | null;
   google_event_id: string | null;
+  microsoft_event_id: string | null;
   meet_join_url: string | null;
+  conference_id?: string | null;
   manage_token_hash: string | null;
   form_answers: Record<string, string> | null;
   created_at: string;
@@ -190,4 +192,27 @@ export type GoogleCalendarConnectionPublic = {
   google_email: string | null;
   last_synced_at: string | null;
   is_enabled: boolean;
+};
+
+export type MicrosoftCalendarConnectionPublic = {
+  user_id: string;
+  microsoft_email: string | null;
+  last_synced_at: string | null;
+  is_enabled: boolean;
+};
+
+export type ZoomConnectionPublic = {
+  user_id: string;
+  zoom_email: string | null;
+  is_enabled: boolean;
+};
+
+export type BookingMicrosoftBusyRow = {
+  id: string;
+  organization_id: string;
+  connection_id: string;
+  microsoft_event_id: string;
+  starts_at: string;
+  ends_at: string;
+  summary: string | null;
 };

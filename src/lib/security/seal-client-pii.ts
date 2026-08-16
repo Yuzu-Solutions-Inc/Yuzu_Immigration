@@ -6,6 +6,12 @@ import {
   updateGoogleCalendarSecrets,
   upsertGoogleCalendarSecrets,
 } from "@/lib/google/secrets";
+import { MICROSOFT_CALENDAR_AAD } from "@/lib/microsoft/oauth";
+import {
+  getMicrosoftCalendarSecrets,
+  updateMicrosoftCalendarSecrets,
+  upsertMicrosoftCalendarSecrets,
+} from "@/lib/microsoft/secrets";
 import { hasAppEncryptionKey, requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import {
   decryptBookingGuestRow,
@@ -26,6 +32,8 @@ import { SQUARE_AAD } from "@/lib/square/oauth";
 import { MANAGE_TOKEN_AAD, PAYMENT_TOKEN_AAD } from "@/lib/square/payments";
 import { getSquareSecrets, upsertSquareSecrets } from "@/lib/square/secrets";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { ZOOM_AAD } from "@/lib/zoom/oauth";
+import { getZoomSecrets, upsertZoomSecrets } from "@/lib/zoom/secrets";
 
 const PAGE = 200;
 
@@ -44,6 +52,8 @@ export type SealClientPiiResult = {
   paymentTokens: number;
   squareSecrets: number;
   googleSecrets: number;
+  microsoftSecrets: number;
+  zoomSecrets: number;
   bookingSettings: number;
   shareLinks: number;
   bookingInvites: number;
@@ -638,6 +648,89 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
     googleSecrets += 1;
   }
 
+  const { data: microsoftRows, error: microsoftError } = await admin
+    .from("microsoft_calendar_connections")
+    .select("id, organization_id");
+  if (microsoftError) {
+    throw new Error(
+      `microsoft_calendar_connections: ${microsoftError.message}`,
+    );
+  }
+  let microsoftSecrets = 0;
+  for (const row of microsoftRows ?? []) {
+    const connectionId = row.id as string;
+    const key = await orgKey(row.organization_id as string);
+    const secrets = await getMicrosoftCalendarSecrets(connectionId);
+    if (!secrets) continue;
+    const refresh = rekeyString(
+      secrets.refresh_token_encrypted,
+      MICROSOFT_CALENDAR_AAD.refreshToken,
+      key,
+    );
+    const access = rekeyString(
+      secrets.access_token_encrypted,
+      MICROSOFT_CALENDAR_AAD.accessToken,
+      key,
+    );
+    const channel = rekeyString(
+      secrets.channel_token_encrypted,
+      MICROSOFT_CALENDAR_AAD.channelToken,
+      key,
+    );
+    if (refresh === undefined && access === undefined && channel === undefined) {
+      continue;
+    }
+    await upsertMicrosoftCalendarSecrets({
+      connectionId,
+      refreshTokenEncrypted: refresh ?? secrets.refresh_token_encrypted,
+      accessTokenEncrypted: access ?? secrets.access_token_encrypted,
+      accessTokenExpiresAt: secrets.access_token_expires_at
+        ? new Date(secrets.access_token_expires_at)
+        : null,
+      syncToken: secrets.sync_token,
+    });
+    if (channel !== undefined) {
+      await updateMicrosoftCalendarSecrets(connectionId, {
+        channelTokenEncrypted: channel,
+      });
+    }
+    microsoftSecrets += 1;
+  }
+
+  const { data: zoomRows, error: zoomError } = await admin
+    .from("zoom_connections")
+    .select("id, organization_id");
+  if (zoomError) {
+    throw new Error(`zoom_connections: ${zoomError.message}`);
+  }
+  let zoomSecrets = 0;
+  for (const row of zoomRows ?? []) {
+    const connectionId = row.id as string;
+    const key = await orgKey(row.organization_id as string);
+    const secrets = await getZoomSecrets(connectionId);
+    if (!secrets) continue;
+    const refresh = rekeyString(
+      secrets.refresh_token_encrypted,
+      ZOOM_AAD.refreshToken,
+      key,
+    );
+    const access = rekeyString(
+      secrets.access_token_encrypted,
+      ZOOM_AAD.accessToken,
+      key,
+    );
+    if (refresh === undefined && access === undefined) continue;
+    await upsertZoomSecrets({
+      connectionId,
+      refreshTokenEncrypted: refresh ?? secrets.refresh_token_encrypted,
+      accessTokenEncrypted: access ?? secrets.access_token_encrypted,
+      accessTokenExpiresAt: secrets.access_token_expires_at
+        ? new Date(secrets.access_token_expires_at)
+        : null,
+    });
+    zoomSecrets += 1;
+  }
+
   const bookingSettings = await forEachPage(
     async (from, to) => {
       const { data, error } = await admin
@@ -742,6 +835,8 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
     paymentTokens,
     squareSecrets,
     googleSecrets,
+    microsoftSecrets,
+    zoomSecrets,
     bookingSettings,
     shareLinks,
     bookingInvites,

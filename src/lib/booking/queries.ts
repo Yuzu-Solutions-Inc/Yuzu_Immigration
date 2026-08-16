@@ -15,6 +15,11 @@ import { decryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import {
+  getStaffBookingIntegrations,
+  isActiveCalendarVendor,
+  mapOrgCalendarProviders,
+} from "@/lib/booking/integrations";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import {
   resolveCancelRefundTier,
@@ -27,12 +32,15 @@ import type {
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
+  BookingMicrosoftBusyRow,
   BookingFormRow,
   BookingFormFieldRow,
   BookingServiceRow,
   BookingServiceFormFieldRow,
   BookingSettingsRow,
   GoogleCalendarConnectionPublic,
+  MicrosoftCalendarConnectionPublic,
+  ZoomConnectionPublic,
   ManageBookingPayload,
   PublicHostCalendar,
   ServiceEmailAutomationRow,
@@ -42,18 +50,24 @@ import {
   queryGoogleFreeBusy,
 } from "@/lib/google/calendar";
 import { getGoogleCalendarSecrets } from "@/lib/google/secrets";
+import { queryMicrosoftFreeBusy } from "@/lib/microsoft/calendar";
+import { getMicrosoftCalendarSecrets } from "@/lib/microsoft/secrets";
+import { getZoomSecrets } from "@/lib/zoom/secrets";
 
 export type {
   BookingAppointmentRow,
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
+  BookingMicrosoftBusyRow,
   BookingFormRow,
   BookingFormFieldRow,
   BookingServiceRow,
   BookingSettingsRow,
   BookingServiceFormFieldRow,
   GoogleCalendarConnectionPublic,
+  MicrosoftCalendarConnectionPublic,
+  ZoomConnectionPublic,
   ManageBookingPayload,
   PublicHostCalendar,
   ServiceEmailAutomationRow,
@@ -87,6 +101,8 @@ export type ManageBookingContext = {
   endsAt: string;
   meetJoinUrl: string | null;
   googleEventId: string | null;
+  microsoftEventId: string | null;
+  conferenceId: string | null;
   host: PublicHostCalendar | null;
   paymentStatus: string | null;
   paymentAmountCents: number | null;
@@ -116,7 +132,8 @@ async function loadHostCalendars(input: {
     now.getTime() + (input.bookingWindowDays + 1) * 86_400_000,
   );
 
-  const [rulesRes, blockedRes, busyRes, connectionsRes] = await Promise.all([
+  const [rulesRes, blockedRes, busyRes, connectionsRes, microsoftRes, calendarProviders] =
+    await Promise.all([
     admin
       .from("booking_availability_rules")
       .select("*")
@@ -140,6 +157,12 @@ async function loadHostCalendars(input: {
       .select("id, user_id, calendar_id, is_enabled")
       .eq("organization_id", input.organizationId)
       .eq("is_enabled", true),
+    admin
+      .from("microsoft_calendar_connections")
+      .select("id, user_id, microsoft_email, is_enabled")
+      .eq("organization_id", input.organizationId)
+      .eq("is_enabled", true),
+    mapOrgCalendarProviders(input.organizationId),
   ]);
 
   const rules = (rulesRes.data ?? []) as BookingAvailabilityRuleRow[];
@@ -172,26 +195,65 @@ async function loadHostCalendars(input: {
     ]),
   );
 
-  const connections = (connectionsRes.data ?? []) as {
+  const connections = ((connectionsRes.data ?? []) as {
     id: string;
     user_id: string;
     calendar_id: string;
     is_enabled: boolean;
-  }[];
+  }[]).filter((connection) =>
+    isActiveCalendarVendor(connection.user_id, "google", calendarProviders),
+  );
+  const microsoftConnections = ((microsoftRes.data ?? []) as {
+    id: string;
+    user_id: string;
+    microsoft_email: string | null;
+    is_enabled: boolean;
+  }[]).filter((connection) =>
+    isActiveCalendarVendor(connection.user_id, "microsoft", calendarProviders),
+  );
   const connectionByUser = new Map(
     connections.map((connection) => [connection.user_id, connection]),
   );
+  const microsoftByUser = new Map(
+    microsoftConnections.map((connection) => [connection.user_id, connection]),
+  );
   const connectionIds = connections.map((connection) => connection.id);
-  const { data: googleBusyRows } =
-    connectionIds.length > 0
-      ? await admin
-          .from("booking_google_busy")
-          .select("connection_id, starts_at, ends_at")
-          .eq("organization_id", input.organizationId)
-          .in("connection_id", connectionIds)
-          .lt("starts_at", windowEnd.toISOString())
-          .gt("ends_at", now.toISOString())
-      : { data: [] as { connection_id: string; starts_at: string; ends_at: string }[] };
+  const microsoftConnectionIds = microsoftConnections.map(
+    (connection) => connection.id,
+  );
+  const [{ data: googleBusyRows }, { data: microsoftBusyRows }] =
+    await Promise.all([
+      connectionIds.length > 0
+        ? admin
+            .from("booking_google_busy")
+            .select("connection_id, starts_at, ends_at")
+            .eq("organization_id", input.organizationId)
+            .in("connection_id", connectionIds)
+            .lt("starts_at", windowEnd.toISOString())
+            .gt("ends_at", now.toISOString())
+        : Promise.resolve({
+            data: [] as {
+              connection_id: string;
+              starts_at: string;
+              ends_at: string;
+            }[],
+          }),
+      microsoftConnectionIds.length > 0
+        ? admin
+            .from("booking_microsoft_busy")
+            .select("connection_id, starts_at, ends_at")
+            .eq("organization_id", input.organizationId)
+            .in("connection_id", microsoftConnectionIds)
+            .lt("starts_at", windowEnd.toISOString())
+            .gt("ends_at", now.toISOString())
+        : Promise.resolve({
+            data: [] as {
+              connection_id: string;
+              starts_at: string;
+              ends_at: string;
+            }[],
+          }),
+    ]);
 
   const googleBusyByConnection = new Map<
     string,
@@ -210,29 +272,66 @@ async function loadHostCalendars(input: {
     googleBusyByConnection.set(busy.connection_id, list);
   }
 
+  const microsoftBusyByConnection = new Map<
+    string,
+    { starts_at: string; ends_at: string }[]
+  >();
+  for (const busy of microsoftBusyRows ?? []) {
+    const interval = { starts_at: busy.starts_at, ends_at: busy.ends_at };
+    if (
+      input.excludeBusyRange &&
+      sameBusyRange(interval, input.excludeBusyRange)
+    ) {
+      continue;
+    }
+    const list = microsoftBusyByConnection.get(busy.connection_id) ?? [];
+    list.push(interval);
+    microsoftBusyByConnection.set(busy.connection_id, list);
+  }
+
   const liveBusyByUser = new Map<string, { starts_at: string; ends_at: string }[]>();
+  function addLiveBusy(
+    hostId: string,
+    live: { starts_at: string; ends_at: string }[],
+  ) {
+    const filtered = input.excludeBusyRange
+      ? live.filter(
+          (interval) => !sameBusyRange(interval, input.excludeBusyRange!),
+        )
+      : live;
+    const existing = liveBusyByUser.get(hostId) ?? [];
+    liveBusyByUser.set(hostId, [...existing, ...filtered]);
+  }
   await Promise.all(
     hostIds.map(async (hostId) => {
       const connection = connectionByUser.get(hostId);
-      if (!connection) return;
-      try {
-        const live = await queryGoogleFreeBusy({
-          connectionId: connection.id,
-          calendarId: connection.calendar_id,
-          timeMin: now.toISOString(),
-          timeMax: windowEnd.toISOString(),
-        });
-        liveBusyByUser.set(
-          hostId,
-          input.excludeBusyRange
-            ? live.filter(
-                (interval) => !sameBusyRange(interval, input.excludeBusyRange!),
-              )
-            : live,
-        );
-      } catch (error) {
-        console.error("public booking google freeBusy:", error);
-      }
+      const microsoft = microsoftByUser.get(hostId);
+      await Promise.all([
+        connection
+          ? queryGoogleFreeBusy({
+              connectionId: connection.id,
+              calendarId: connection.calendar_id,
+              timeMin: now.toISOString(),
+              timeMax: windowEnd.toISOString(),
+            })
+              .then((live) => addLiveBusy(hostId, live))
+              .catch((error) => {
+                console.error("public booking google freeBusy:", error);
+              })
+          : Promise.resolve(),
+        microsoft
+          ? queryMicrosoftFreeBusy({
+              connectionId: microsoft.id,
+              email: microsoft.microsoft_email,
+              timeMin: now.toISOString(),
+              timeMax: windowEnd.toISOString(),
+            })
+              .then((live) => addLiveBusy(hostId, live))
+              .catch((error) => {
+                console.error("public booking microsoft freeBusy:", error);
+              })
+          : Promise.resolve(),
+      ]);
     }),
   );
 
@@ -246,8 +345,12 @@ async function loadHostCalendars(input: {
 
   return hostIds.map((hostId) => {
     const connection = connectionByUser.get(hostId);
+    const microsoft = microsoftByUser.get(hostId);
     const googleBusy = connection
       ? (googleBusyByConnection.get(connection.id) ?? [])
+      : [];
+    const microsoftBusy = microsoft
+      ? (microsoftBusyByConnection.get(microsoft.id) ?? [])
       : [];
     return {
       userId: hostId,
@@ -277,6 +380,7 @@ async function loadHostCalendars(input: {
             ends_at: item.ends_at,
           })),
         ...googleBusy,
+        ...microsoftBusy,
         ...(liveBusyByUser.get(hostId) ?? []),
       ],
     };
@@ -650,6 +754,8 @@ export async function loadManageBookingContext(
     endsAt: row.ends_at,
     meetJoinUrl: row.meet_join_url,
     googleEventId: row.google_event_id,
+    microsoftEventId: row.microsoft_event_id,
+    conferenceId: row.conference_id ?? null,
     host,
     paymentStatus: (payment?.status as string | null) ?? null,
     paymentAmountCents:
@@ -747,6 +853,8 @@ export async function loadStaffAppointmentContext(
     endsAt: row.ends_at,
     meetJoinUrl: row.meet_join_url,
     googleEventId: row.google_event_id,
+    microsoftEventId: row.microsoft_event_id,
+    conferenceId: row.conference_id ?? null,
     host,
     paymentStatus: null,
     paymentAmountCents: null,
@@ -848,6 +956,8 @@ export async function listGoogleBusy(
   const orgId = await orgIdOrNull();
   const user = await getSessionUser();
   if (!orgId || !user) return [];
+  const integrations = await getStaffBookingIntegrations(orgId, user.id);
+  if (integrations && integrations.calendar_provider !== "google") return [];
   const supabase = await createClient();
   const { data: connection } = await supabase
     .from("google_calendar_connections")
@@ -893,6 +1003,89 @@ export async function getMyGoogleCalendarConnection(): Promise<GoogleCalendarCon
     user_id: data.user_id as string,
     google_email: data.google_email as string | null,
     last_synced_at: data.last_synced_at as string | null,
+    is_enabled: data.is_enabled as boolean,
+  };
+}
+
+export async function listMicrosoftBusy(
+  fromIso: string,
+  toIso: string,
+): Promise<BookingMicrosoftBusyRow[]> {
+  const orgId = await orgIdOrNull();
+  const user = await getSessionUser();
+  if (!orgId || !user) return [];
+  const integrations = await getStaffBookingIntegrations(orgId, user.id);
+  if (integrations && integrations.calendar_provider !== "microsoft") return [];
+  const supabase = await createClient();
+  const { data: connection } = await supabase
+    .from("microsoft_calendar_connections")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!connection) return [];
+  const { data, error } = await supabase
+    .from("booking_microsoft_busy")
+    .select("*")
+    .eq("organization_id", orgId)
+    .eq("connection_id", connection.id)
+    .lt("starts_at", toIso)
+    .gt("ends_at", fromIso)
+    .order("starts_at", { ascending: true });
+  if (error) {
+    console.error("listMicrosoftBusy:", error.message);
+    return [];
+  }
+  return (data ?? []) as BookingMicrosoftBusyRow[];
+}
+
+export async function getMyMicrosoftCalendarConnection(): Promise<MicrosoftCalendarConnectionPublic | null> {
+  const orgId = await orgIdOrNull();
+  const user = await getSessionUser();
+  if (!orgId || !user) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("microsoft_calendar_connections")
+    .select("id, user_id, microsoft_email, last_synced_at, is_enabled")
+    .eq("organization_id", orgId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error) {
+    console.error("getMyMicrosoftCalendarConnection:", error.message);
+    return null;
+  }
+  if (!data?.is_enabled) return null;
+  const secrets = await getMicrosoftCalendarSecrets(data.id as string);
+  if (!secrets) return null;
+  return {
+    user_id: data.user_id as string,
+    microsoft_email: data.microsoft_email as string | null,
+    last_synced_at: data.last_synced_at as string | null,
+    is_enabled: data.is_enabled as boolean,
+  };
+}
+
+export async function getMyZoomConnection(): Promise<ZoomConnectionPublic | null> {
+  const orgId = await orgIdOrNull();
+  const user = await getSessionUser();
+  if (!orgId || !user) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("zoom_connections")
+    .select("id, user_id, zoom_email, is_enabled")
+    .eq("organization_id", orgId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error) {
+    console.error("getMyZoomConnection:", error.message);
+    return null;
+  }
+  if (!data?.is_enabled) return null;
+  const secrets = await getZoomSecrets(data.id as string);
+  if (!secrets) return null;
+  return {
+    user_id: data.user_id as string,
+    zoom_email: data.zoom_email as string | null,
     is_enabled: data.is_enabled as boolean,
   };
 }

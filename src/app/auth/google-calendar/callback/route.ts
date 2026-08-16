@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { getAppBaseUrl } from "@/lib/app-url";
 import {
-  startGoogleWatch,
-  syncGoogleBusy,
-  type GoogleCalendarConnectionRow,
-} from "@/lib/google/calendar";
+  applyIntegrationIntent,
+  calendarSettingsHref,
+  parseIntegrationIntent,
+} from "@/lib/booking/integrations";
+import { applyCalendarProviderWatches } from "@/lib/calendar/staff-watches";
 import {
   decodeGoogleOAuthState,
   exchangeGoogleCode,
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   const locale = state?.locale ?? "en";
   const fail = (reason: string) =>
     NextResponse.redirect(
-      `${origin}/${locale}/calendar/settings?google=${encodeURIComponent(reason)}`,
+      `${origin}${calendarSettingsHref(locale, { google: reason })}`,
     );
 
   if (errorParam || !code || !state) {
@@ -130,28 +130,13 @@ export async function GET(request: Request) {
       return fail("save_failed");
     }
 
-    const { data: connection } = await admin
-      .from("google_calendar_connections")
-      .select("*")
-      .eq("id", connectionId)
-      .single();
-
-    if (connection) {
-      const row = connection as GoogleCalendarConnectionRow;
-      try {
-        await syncGoogleBusy(row);
-      } catch (error) {
-        console.error("google initial sync:", error);
-      }
-      const appUrl = await getAppBaseUrl();
-      if (appUrl.startsWith("https://")) {
-        try {
-          await startGoogleWatch(row, `${appUrl}/api/calendar/google/webhook`);
-        } catch (error) {
-          console.error("google initial watch:", error);
-        }
-      }
-    }
+    await applyIntegrationIntent({
+      organizationId: state.organizationId,
+      userId: user.id,
+      vendor: "google",
+      intent: parseIntegrationIntent(state.intent),
+    });
+    await applyCalendarProviderWatches(state.organizationId, user.id);
 
     await admin
       .from("booking_settings")
@@ -162,7 +147,9 @@ export async function GET(request: Request) {
       .eq("organization_id", state.organizationId)
       .is("default_host_user_id", null);
 
-    return NextResponse.redirect(`${origin}/${locale}/calendar/settings?google=connected`);
+    return NextResponse.redirect(
+      `${origin}${calendarSettingsHref(locale, { google: "connected" })}`,
+    );
   } catch (error) {
     console.error("google calendar callback:", error);
     return fail("callback_failed");

@@ -44,7 +44,11 @@ Canadian immigration consultant CRM by Yuzu Solutions.
 Enable Google under Supabase Dashboard → Authentication → Providers.
 Add redirect URL: `http://localhost:3000/auth/callback` (and production URL later).
 
-Staff Google **sign-in** is separate from **Calendar sync**. To sync bookings with Google Calendar and attach a Google Meet link to each booking, create a Google Cloud OAuth client, enable the Calendar API, set `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET`, and add redirect URI `{APP_URL}/auth/google-calendar/callback`. Each staff member connects their own Google Calendar in Calendar settings. Push notifications require HTTPS (they will not arrive on localhost).
+Staff Google **sign-in** is separate from **Calendar sync**. Each staff member connects one calendar (Google **or** Outlook) and one meeting tool (Google Meet, Teams, **or** Zoom) independently under **Settings → Calendar**. Calendar events block public slots; the meeting tool supplies the join link.
+
+- Google Calendar / Meet: Google Cloud OAuth client, Calendar API + Meet API, `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/google-calendar/callback`. Push notifications require HTTPS (they will not arrive on localhost).
+- Outlook / Teams: Entra ID app with `Calendars.ReadWrite` and `OnlineMeetings.ReadWrite`, `MICROSOFT_CALENDAR_CLIENT_ID` / `MICROSOFT_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/microsoft-calendar/callback`.
+- Zoom: Zoom Marketplace General app with meeting write/update/delete and user read scopes, `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`, redirect `{APP_URL}/auth/zoom/callback`.
 
 Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` (a verified domain, e.g. `Yuzu Immigration <bookings@yourdomain.com>`).
 

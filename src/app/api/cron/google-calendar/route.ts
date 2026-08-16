@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { refreshAllGoogleCalendars } from "@/lib/google/calendar";
+import { refreshAllMicrosoftCalendars } from "@/lib/microsoft/calendar";
 
 function cronAuthorized(request: Request) {
   const secret = process.env.CRON_SECRET?.trim();
@@ -21,10 +22,13 @@ async function run(request: Request) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   try {
-    const result = await refreshAllGoogleCalendars();
-    return NextResponse.json({ ok: true, ...result });
+    const [google, microsoft] = await Promise.all([
+      refreshAllGoogleCalendars(),
+      refreshAllMicrosoftCalendars(),
+    ]);
+    return NextResponse.json({ ok: true, google, microsoft });
   } catch (error) {
-    console.error("google calendar cron:", error);
+    console.error("calendar cron:", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

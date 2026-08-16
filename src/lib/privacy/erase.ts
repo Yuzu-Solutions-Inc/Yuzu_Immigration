@@ -164,22 +164,24 @@ async function erasePersonBookings(
 ): Promise<number> {
   const { data: rows } = await admin
     .from("booking_appointments")
-    .select("id, host_user_id, google_event_id")
+    .select("id, host_user_id, google_event_id, microsoft_event_id, conference_id")
     .eq("organization_id", organizationId)
     .eq("person_id", personId);
 
   const appointments = rows ?? [];
   if (appointments.length === 0) return 0;
 
-  const { deleteAppointmentGoogleEvent } = await import(
-    "@/lib/google/calendar"
+  const { deleteAppointmentHostCalendarEvents } = await import(
+    "@/lib/calendar/host-calendar"
   );
   for (const row of appointments) {
-    if (row.google_event_id && row.host_user_id) {
-      await deleteAppointmentGoogleEvent({
+    if (row.host_user_id && (row.google_event_id || row.microsoft_event_id)) {
+      await deleteAppointmentHostCalendarEvents({
         organizationId,
         hostUserId: row.host_user_id as string,
-        googleEventId: row.google_event_id as string,
+        googleEventId: (row.google_event_id as string | null) ?? null,
+        microsoftEventId: (row.microsoft_event_id as string | null) ?? null,
+        conferenceId: (row.conference_id as string | null) ?? null,
       });
     }
   }

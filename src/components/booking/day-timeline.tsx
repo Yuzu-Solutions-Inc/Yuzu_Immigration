@@ -23,6 +23,7 @@ import type {
   BookingAppointmentRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
+  BookingMicrosoftBusyRow,
 } from "@/lib/booking/types";
 import { clipToDayMinutes, zonedDateIso, zonedParts } from "@/lib/booking/timezone";
 import { serviceTitle } from "@/lib/booking/service-i18n";
@@ -87,6 +88,7 @@ export function DayTimeline({
   appointments,
   blocked,
   googleBusy,
+  microsoftBusy,
   openRanges,
   selectedAppointmentId,
   onSelectAppointment,
@@ -99,6 +101,7 @@ export function DayTimeline({
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
   googleBusy: BookingGoogleBusyRow[];
+  microsoftBusy: BookingMicrosoftBusyRow[];
   openRanges: MinuteRange[];
   selectedAppointmentId: string | null;
   onSelectAppointment: (id: string | null) => void;
@@ -245,7 +248,7 @@ export function DayTimeline({
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2.5 rounded-sm bg-slate-300" />
-          {t("legendGoogle")}
+          {t("legendExternal")}
         </span>
       </div>
 
@@ -309,7 +312,21 @@ export function DayTimeline({
               />
             ))}
 
-            {googleBusy.map((row) => {
+            {(
+              [
+                ...googleBusy.map((row) => ({
+                  ...row,
+                  source: "google" as const,
+                })),
+                ...microsoftBusy.map((row) => ({
+                  id: row.id,
+                  starts_at: row.starts_at,
+                  ends_at: row.ends_at,
+                  summary: row.summary,
+                  source: "outlook" as const,
+                })),
+              ] as const
+            ).map((row) => {
               const range = clipToDayMinutes(
                 new Date(row.starts_at),
                 new Date(row.ends_at),
@@ -328,7 +345,7 @@ export function DayTimeline({
               const when = timeRangeLabel(range.start, range.end);
               return (
                 <div
-                  key={row.id}
+                  key={`${row.source}-${row.id}`}
                   data-slot-item
                   className={cn(
                     "absolute inset-x-1 z-[1] overflow-hidden rounded-md border border-slate-200 bg-slate-100 px-1.5 text-left text-[11px] leading-tight text-slate-700",
@@ -359,7 +376,9 @@ export function DayTimeline({
                       </p>
                       {density === "lg" ? (
                         <p className="truncate text-[10px] text-slate-500">
-                          {t("googleBusyLabel")}
+                          {row.source === "outlook"
+                            ? t("microsoftBusyLabel")
+                            : t("googleBusyLabel")}
                         </p>
                       ) : null}
                     </>

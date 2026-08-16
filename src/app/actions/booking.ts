@@ -60,7 +60,7 @@ async function requireMember() {
 
 function revalidateBooking(locale: string) {
   revalidatePath(`/${locale}/calendar`);
-  revalidatePath(`/${locale}/calendar/settings`);
+  revalidatePath(`/${locale}/settings/calendar`);
 }
 
 function mintTokenPayload(orgId: string, dek: Buffer) {
@@ -717,20 +717,20 @@ export async function cancelAppointmentAction(
   const bookingUrl = await resolvePublicBookingUrl(ctx.settings, emailLocale);
 
   after(async () => {
-    const { deleteAppointmentGoogleEvent } = await import(
-      "@/lib/google/calendar"
+    const { deleteAppointmentHostCalendarEvents } = await import(
+      "@/lib/calendar/host-calendar"
     );
     const { sendBookingCancelledEmail } = await import(
       "@/lib/email/booking-confirmation"
     );
     await Promise.all([
-      ctx.googleEventId
-        ? deleteAppointmentGoogleEvent({
-            organizationId: orgId,
-            hostUserId: ctx.hostUserId,
-            googleEventId: ctx.googleEventId,
-          })
-        : Promise.resolve(),
+      deleteAppointmentHostCalendarEvents({
+        organizationId: orgId,
+        hostUserId: ctx.hostUserId,
+        googleEventId: ctx.googleEventId,
+        microsoftEventId: ctx.microsoftEventId,
+        conferenceId: ctx.conferenceId,
+      }),
       sendBookingCancelledEmail({
         locale: emailLocale,
         to: ctx.guestEmail,
@@ -898,24 +898,26 @@ export async function rescheduleAppointmentAction(input: {
   const emailLocale = toAppLocale(ctx.guestPreferredLocale || parsed.data.locale);
 
   after(async () => {
-    const { updateAppointmentGoogleEvent } = await import(
-      "@/lib/google/calendar"
+    const { updateAppointmentHostCalendarEvents } = await import(
+      "@/lib/calendar/host-calendar"
     );
     const { sendBookingConfirmationEmail } = await import(
       "@/lib/email/booking-confirmation"
     );
-    const google = await updateAppointmentGoogleEvent({
+    const calendar = await updateAppointmentHostCalendarEvents({
       organizationId: orgId,
       hostUserId: ctx.hostUserId,
       appointmentId: ctx.appointmentId,
       googleEventId: ctx.googleEventId,
+      microsoftEventId: ctx.microsoftEventId,
+      conferenceId: ctx.conferenceId,
       title: `${ctx.serviceTitle} — ${ctx.guestName}`,
       description: `Booked via Yuzu Immigration\n${ctx.guestName}\n${ctx.guestEmail}`,
       startsAt: parsed.data.startsAt,
       endsAt: parsed.data.endsAt,
       location: ctx.meetJoinUrl ?? undefined,
     });
-    const meetJoinUrl = google?.meetJoinUrl ?? ctx.meetJoinUrl;
+    const meetJoinUrl = calendar.meetJoinUrl ?? ctx.meetJoinUrl;
     await sendBookingConfirmationEmail({
       locale: emailLocale,
       to: ctx.guestEmail,

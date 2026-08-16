@@ -881,7 +881,9 @@ export const bookingAppointments = pgTable("booking_appointments", {
     onDelete: "set null",
   }),
   googleEventId: text("google_event_id"),
+  microsoftEventId: text("microsoft_event_id"),
   meetJoinUrl: text("meet_join_url"),
+  conferenceId: text("conference_id"),
   manageTokenHash: text("manage_token_hash"),
   manageTokenEncrypted: text("manage_token_encrypted"),
   formAnswers: jsonb("form_answers"),
@@ -1110,6 +1112,79 @@ export const bookingPaymentReminderSends = pgTable(
   ],
 );
 
+/** One Microsoft 365 / Outlook Calendar connection per staff user. */
+export const microsoftCalendarConnections = pgTable(
+  "microsoft_calendar_connections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    microsoftEmail: text("microsoft_email"),
+    calendarId: text("calendar_id").notNull().default("calendar"),
+    channelId: text("channel_id"),
+    channelExpiration: timestamp("channel_expiration", { withTimezone: true }),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.organizationId, table.userId)],
+);
+
+/** One Zoom connection per staff user for meeting join links. */
+export const zoomConnections = pgTable(
+  "zoom_connections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    zoomEmail: text("zoom_email"),
+    zoomUserId: text("zoom_user_id"),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.organizationId, table.userId)],
+);
+
+/** Which calendar and meeting vendor each staff member uses for bookings. */
+export const staffBookingIntegrations = pgTable(
+  "staff_booking_integrations",
+  {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    calendarProvider: text("calendar_provider"),
+    meetingProvider: text("meeting_provider"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.organizationId, table.userId)],
+);
+
 /** External Google events mirrored as busy intervals (not our bookings). */
 export const bookingGoogleBusy = pgTable("booking_google_busy", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -1120,6 +1195,27 @@ export const bookingGoogleBusy = pgTable("booking_google_busy", {
     .notNull()
     .references(() => googleCalendarConnections.id, { onDelete: "cascade" }),
   googleEventId: text("google_event_id").notNull(),
+  summary: text("summary"),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** External Outlook events mirrored as busy intervals (not our bookings). */
+export const bookingMicrosoftBusy = pgTable("booking_microsoft_busy", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  connectionId: uuid("connection_id")
+    .notNull()
+    .references(() => microsoftCalendarConnections.id, { onDelete: "cascade" }),
+  microsoftEventId: text("microsoft_event_id").notNull(),
   summary: text("summary"),
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
@@ -1230,6 +1326,26 @@ export const googleCalendarSecrets = privateSchema.table(
   },
 );
 
+/** Microsoft OAuth + subscription tokens — service_role only. */
+export const microsoftCalendarSecrets = privateSchema.table(
+  "microsoft_calendar_secrets",
+  {
+    connectionId: uuid("connection_id")
+      .primaryKey()
+      .references(() => microsoftCalendarConnections.id, { onDelete: "cascade" }),
+    refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+    accessTokenEncrypted: text("access_token_encrypted"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", {
+      withTimezone: true,
+    }),
+    syncToken: text("sync_token"),
+    channelTokenEncrypted: text("channel_token_encrypted"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+);
+
 /** Square OAuth tokens — service_role only. */
 export const squareSecrets = privateSchema.table("square_secrets", {
   connectionId: uuid("connection_id")
@@ -1237,6 +1353,21 @@ export const squareSecrets = privateSchema.table("square_secrets", {
     .references(() => squareConnections.id, { onDelete: "cascade" }),
   accessTokenEncrypted: text("access_token_encrypted").notNull(),
   refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", {
+    withTimezone: true,
+  }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Zoom OAuth tokens — service_role only. */
+export const zoomSecrets = privateSchema.table("zoom_secrets", {
+  connectionId: uuid("connection_id")
+    .primaryKey()
+    .references(() => zoomConnections.id, { onDelete: "cascade" }),
+  refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+  accessTokenEncrypted: text("access_token_encrypted"),
   accessTokenExpiresAt: timestamp("access_token_expires_at", {
     withTimezone: true,
   }),

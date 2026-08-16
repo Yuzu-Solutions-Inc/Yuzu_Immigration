@@ -24,6 +24,7 @@ import type {
   BookingAvailabilityRuleRow,
   BookingBlockedTimeRow,
   BookingGoogleBusyRow,
+  BookingMicrosoftBusyRow,
   BookingServiceFormFieldRow,
   BookingSettingsRow,
 } from "@/lib/booking/types";
@@ -50,6 +51,7 @@ export function CalendarWorkspace({
   appointments,
   blocked,
   googleBusy,
+  microsoftBusy,
   formFields,
   hostNames,
   fillViewport = true,
@@ -62,6 +64,7 @@ export function CalendarWorkspace({
   appointments: BookingAppointmentRow[];
   blocked: BookingBlockedTimeRow[];
   googleBusy: BookingGoogleBusyRow[];
+  microsoftBusy: BookingMicrosoftBusyRow[];
   formFields: BookingServiceFormFieldRow[];
   hostNames: Record<string, string>;
   /** Pin the workspace to one viewport (minus chrome). */
@@ -127,6 +130,10 @@ export function CalendarWorkspace({
         starts_at: row.starts_at,
         ends_at: row.ends_at,
       })),
+      ...microsoftBusy.map((row) => ({
+        starts_at: row.starts_at,
+        ends_at: row.ends_at,
+      })),
       ...appointments
         .filter(
           (row) =>
@@ -154,6 +161,7 @@ export function CalendarWorkspace({
     blockedDays,
     currentUserId,
     googleBusy,
+    microsoftBusy,
     rules,
     settings?.booking_window_days,
     settings?.buffer_minutes,
@@ -185,6 +193,16 @@ export function CalendarWorkspace({
   });
 
   const dayGoogleBusy = googleBusy.filter((row) => {
+    return (
+      clipToDayMinutes(
+        new Date(row.starts_at),
+        new Date(row.ends_at),
+        selectedDateIso,
+        timeZone,
+      ) !== null
+    );
+  });
+  const dayMicrosoftBusy = microsoftBusy.filter((row) => {
     return (
       clipToDayMinutes(
         new Date(row.starts_at),
@@ -337,6 +355,7 @@ export function CalendarWorkspace({
         appointments={dayAppointments}
         blocked={dayBlocks}
         googleBusy={dayGoogleBusy}
+        microsoftBusy={dayMicrosoftBusy}
         openRanges={openRanges}
         selectedAppointmentId={selectedAppointmentId}
         onSelectAppointment={setSelectedAppointmentId}
@@ -419,7 +438,7 @@ export function CalendarWorkspace({
         <div className="flex flex-wrap items-center gap-2">
           <CopyBookingLinkButton locale={locale} />
           <Link
-            href="/calendar/settings"
+            href="/settings/calendar"
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <Settings2 className="size-4" />
@@ -508,7 +527,7 @@ export function CalendarEmptyHint({
           </Link>
         ) : (
           <Link
-            href="/calendar/settings"
+            href="/settings/calendar"
             className="text-sm font-medium text-action hover:underline"
           >
             {t("settings")}

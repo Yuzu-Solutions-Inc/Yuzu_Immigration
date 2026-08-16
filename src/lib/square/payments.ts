@@ -242,7 +242,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     .eq("id", payment.appointment_id)
     .eq("status", "pending_payment")
     .select(
-      "id, organization_id, host_user_id, service_id, starts_at, ends_at, guest_name, guest_email, guest_phone, guest_preferred_locale, manage_token_encrypted, google_event_id, meet_join_url",
+      "id, organization_id, host_user_id, service_id, starts_at, ends_at, guest_name, guest_email, guest_phone, guest_preferred_locale, manage_token_encrypted, google_event_id, microsoft_event_id, meet_join_url",
     )
     .maybeSingle();
 
@@ -251,7 +251,9 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     return;
   }
 
-  const alreadyOnCalendar = Boolean(appointment.google_event_id);
+  const alreadyOnCalendar = Boolean(
+    appointment.google_event_id || appointment.microsoft_event_id,
+  );
   const existingMeet =
     typeof appointment.meet_join_url === "string" &&
     appointment.meet_join_url.startsWith("https://")
@@ -306,10 +308,10 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
 
   let meetJoinUrl = existingMeet;
   if (!alreadyOnCalendar) {
-    const { pushAppointmentToGoogleCalendar } = await import(
-      "@/lib/google/calendar"
+    const { pushAppointmentToHostCalendars } = await import(
+      "@/lib/calendar/host-calendar"
     );
-    const google = await pushAppointmentToGoogleCalendar({
+    const calendar = await pushAppointmentToHostCalendars({
       organizationId: appointment.organization_id as string,
       hostUserId: appointment.host_user_id as string,
       appointmentId: appointment.id as string,
@@ -318,7 +320,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
       startsAt: appointment.starts_at as string,
       endsAt: appointment.ends_at as string,
     });
-    meetJoinUrl = google?.meetJoinUrl ?? null;
+    meetJoinUrl = calendar.meetJoinUrl;
   }
 
   const origin = await getAppBaseUrl();

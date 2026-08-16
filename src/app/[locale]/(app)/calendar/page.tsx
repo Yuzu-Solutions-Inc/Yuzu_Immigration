@@ -14,11 +14,12 @@ import {
   listBlockedTimes,
   listBookingServices,
   listGoogleBusy,
+  listMicrosoftBusy,
   listServiceFormFields,
 } from "@/lib/booking/queries";
 import { listOrgMembers } from "@/lib/crm/queries";
 import { addDaysToIsoDate, zonedDateIso } from "@/lib/booking/timezone";
-import { refreshGoogleBusyIfStale } from "@/lib/google/calendar";
+import { refreshHostCalendarsIfStale } from "@/lib/calendar/host-calendar";
 
 export default async function CalendarPage({
   params,
@@ -44,10 +45,12 @@ export default async function CalendarPage({
   const todayIso = zonedDateIso(new Date(), timeZone);
   const fromIso = `${addDaysToIsoDate(todayIso, -60)}T00:00:00.000Z`;
   const toIso = `${addDaysToIsoDate(todayIso, 150)}T00:00:00.000Z`;
-  const [appointments, blocked, googleBusy, members] = await Promise.all([
+  const [appointments, blocked, googleBusy, microsoftBusy, members] =
+    await Promise.all([
     listAppointmentsInRange(fromIso, toIso),
     listBlockedTimes(fromIso, toIso),
     listGoogleBusy(fromIso, toIso),
+    listMicrosoftBusy(fromIso, toIso),
     listOrgMembers(),
   ]);
 
@@ -60,7 +63,7 @@ export default async function CalendarPage({
 
   const orgId = membership?.organization.id;
   if (orgId) {
-    after(() => refreshGoogleBusyIfStale(orgId));
+    after(() => refreshHostCalendarsIfStale(orgId));
   }
 
   const showSetupHint = rules.length === 0 || services.length === 0;
@@ -88,6 +91,7 @@ export default async function CalendarPage({
           appointments={appointments}
           blocked={blocked}
           googleBusy={googleBusy}
+          microsoftBusy={microsoftBusy}
           formFields={formFields}
           hostNames={hostNames}
           fillViewport={!showSetupHint}

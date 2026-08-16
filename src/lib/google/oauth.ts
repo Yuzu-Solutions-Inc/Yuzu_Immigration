@@ -5,6 +5,7 @@ import { decryptField, encryptField } from "@/lib/security/field-crypto";
 export const GOOGLE_CALENDAR_SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/calendar.freebusy",
+  "https://www.googleapis.com/auth/meetings.space.created",
   "openid",
   "email",
 ].join(" ");
@@ -124,6 +125,7 @@ export type GoogleOAuthState = {
   locale: string;
   nonce: string;
   origin: string;
+  intent: "calendar" | "meetings";
 };
 
 export function encodeGoogleOAuthState(
@@ -132,6 +134,7 @@ export function encodeGoogleOAuthState(
   const payload: GoogleOAuthState = {
     ...input,
     nonce: randomBytes(12).toString("base64url"),
+    intent: input.intent === "meetings" ? "meetings" : "calendar",
   };
   return encryptField(JSON.stringify(payload), GOOGLE_CALENDAR_AAD.oauthState);
 }
@@ -142,7 +145,10 @@ export function decodeGoogleOAuthState(state: string): GoogleOAuthState | null {
       decryptField(state, GOOGLE_CALENDAR_AAD.oauthState),
     ) as GoogleOAuthState;
     if (!parsed.organizationId || !parsed.userId || !parsed.locale) return null;
-    return parsed;
+    return {
+      ...parsed,
+      intent: parsed.intent === "meetings" ? "meetings" : "calendar",
+    };
   } catch {
     return null;
   }

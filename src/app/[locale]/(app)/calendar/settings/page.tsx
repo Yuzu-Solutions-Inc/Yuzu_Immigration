@@ -1,45 +1,18 @@
-import { setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 
-import { CalendarSettingsPage } from "@/components/booking/calendar-settings-page";
-import { GoogleCallbackToast } from "@/components/booking/google-callback-toast";
-import { canCreateRecords } from "@/lib/auth/rbac";
-import { getPrimaryMembership } from "@/lib/auth/session";
-import {
-  getBookingSettings,
-  getMyGoogleCalendarConnection,
-  listAvailabilityRules,
-} from "@/lib/booking/queries";
-import { googleCalendarConfigured } from "@/lib/google/oauth";
-
-export default async function CalendarSettingsRoute({
+export default async function LegacyCalendarSettingsRoute({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ google?: string }>;
+  searchParams: Promise<{ google?: string; microsoft?: string; zoom?: string }>;
 }) {
   const { locale } = await params;
-  const { google: googleStatus } = await searchParams;
-  setRequestLocale(locale);
-
-  const membership = await getPrimaryMembership();
-  const [settings, rules, googleConnection] = await Promise.all([
-    getBookingSettings(),
-    listAvailabilityRules(),
-    getMyGoogleCalendarConnection(),
-  ]);
-
-  return (
-    <div className="space-y-6">
-      <GoogleCallbackToast status={googleStatus} />
-      <CalendarSettingsPage
-        locale={locale}
-        canManage={canCreateRecords(membership?.role)}
-        settings={settings}
-        rules={rules}
-        googleConfigured={googleCalendarConfigured()}
-        googleConnection={googleConnection}
-      />
-    </div>
-  );
+  const query = await searchParams;
+  const qs = new URLSearchParams();
+  if (query.google) qs.set("google", query.google);
+  if (query.microsoft) qs.set("microsoft", query.microsoft);
+  if (query.zoom) qs.set("zoom", query.zoom);
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  redirect(`/${locale}/settings/calendar${suffix}`);
 }

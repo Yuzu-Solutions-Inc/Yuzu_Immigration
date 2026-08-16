@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PublicBookingFlow } from "@/components/booking/public-booking-flow";
 import { loadPublicBookingContext } from "@/lib/booking/queries";
-import { refreshGoogleBusyIfStale } from "@/lib/google/calendar";
+import { refreshHostCalendarsIfStale } from "@/lib/calendar/host-calendar";
 
 export default async function PublicBookPage({
   params,
@@ -16,7 +16,7 @@ export default async function PublicBookPage({
   const ctx = await loadPublicBookingContext(token);
 
   if (ctx) {
-    after(() => refreshGoogleBusyIfStale(ctx.organizationId));
+    after(() => refreshHostCalendarsIfStale(ctx.organizationId));
   }
 
   if (!ctx) {

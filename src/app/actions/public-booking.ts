@@ -369,10 +369,10 @@ export async function submitPublicBookingAction(
       const payUrl = `${origin.replace(/\/$/, "")}/${preferredLocale}/pay/${checkout.token}`;
 
       if (allowPayLater) {
-        const { pushAppointmentToGoogleCalendar } = await import(
-          "@/lib/google/calendar"
+        const { pushAppointmentToHostCalendars } = await import(
+          "@/lib/calendar/host-calendar"
         );
-        const google = await pushAppointmentToGoogleCalendar({
+        const calendar = await pushAppointmentToHostCalendars({
           organizationId: ctx.organizationId,
           hostUserId: host.userId,
           appointmentId: appointment.id,
@@ -381,7 +381,7 @@ export async function submitPublicBookingAction(
           startsAt: parsed.data.startsAt,
           endsAt: parsed.data.endsAt,
         });
-        const meetJoinUrl = google?.meetJoinUrl ?? null;
+        const meetJoinUrl = calendar.meetJoinUrl;
 
         after(async () => {
           const { sendBookingConfirmationEmail } = await import(
@@ -446,10 +446,10 @@ export async function submitPublicBookingAction(
   const origin = await getAppBaseUrl();
   const urls = bookingManageUrls(origin, preferredLocale, manageToken);
 
-  const { pushAppointmentToGoogleCalendar } = await import(
-    "@/lib/google/calendar"
+  const { pushAppointmentToHostCalendars } = await import(
+    "@/lib/calendar/host-calendar"
   );
-  const google = await pushAppointmentToGoogleCalendar({
+  const calendar = await pushAppointmentToHostCalendars({
     organizationId: ctx.organizationId,
     hostUserId: host.userId,
     appointmentId: appointment.id,
@@ -458,7 +458,7 @@ export async function submitPublicBookingAction(
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
   });
-  const meetJoinUrl = google?.meetJoinUrl ?? null;
+  const meetJoinUrl = calendar.meetJoinUrl;
 
   after(async () => {
     const { sendBookingConfirmationEmail } = await import(
