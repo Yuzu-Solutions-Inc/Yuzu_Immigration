@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useActionState, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -280,6 +281,7 @@ export function ServicesManager({
   formFields: BookingFormFieldRow[];
 }) {
   const t = useTranslations("services");
+  const router = useRouter();
   const formById = new Map(forms.map((form) => [form.id, form]));
   const reminderCountByService = new Map<string, number>();
   for (const automation of automations) {
@@ -642,7 +644,7 @@ export function ServicesManager({
                   </TableCell>
                   {canManage ? (
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end">
                         <Button
                           type="button"
                           variant="outline"
@@ -651,28 +653,6 @@ export function ServicesManager({
                         >
                           <Pencil className="size-4" />
                           {t("edit")}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={async () => {
-                            if (!window.confirm(t("deleteConfirm"))) return;
-                            const result = await deleteServiceAction(
-                              service.id,
-                              locale,
-                            );
-                            if (result.error) {
-                              toast.error(t(`errors.${result.error}`));
-                            } else if (result.message === "archived") {
-                              toast.success(t("archived"));
-                            } else {
-                              toast.success(t("deleted"));
-                            }
-                          }}
-                        >
-                          <Trash2 className="size-4" />
-                          {t("delete")}
                         </Button>
                       </div>
                     </TableCell>
@@ -735,8 +715,39 @@ export function ServicesManager({
       >
         <DialogContent className="sm:max-w-lg" showCloseButton>
           <DialogHeader>
-            <DialogTitle>{t("editTitle")}</DialogTitle>
-            <DialogDescription>{t("editSubtitle")}</DialogDescription>
+            <div className="flex items-start gap-3 pr-8">
+              <div className="min-w-0 flex-1 space-y-2">
+                <DialogTitle>{t("editTitle")}</DialogTitle>
+                <DialogDescription>{t("editSubtitle")}</DialogDescription>
+              </div>
+              {canManage && editing ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={t("delete")}
+                  title={t("delete")}
+                  onClick={async () => {
+                    if (!window.confirm(t("deleteConfirm"))) return;
+                    const result = await deleteServiceAction(editing.id, locale);
+                    if (result.error) {
+                      toast.error(t(`errors.${result.error}`));
+                      return;
+                    }
+                    if (result.message === "archived") {
+                      toast.success(t("archived"));
+                    } else {
+                      toast.success(t("deleted"));
+                    }
+                    setEditing(null);
+                    router.refresh();
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              ) : null}
+            </div>
           </DialogHeader>
           {editing ? (
             <form action={updateAction} className="space-y-4">

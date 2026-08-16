@@ -6,6 +6,7 @@ import {
   ArrowUpDown,
   CalendarClock,
   Mail,
+  Trash2,
   X,
 } from "lucide-react";
 import { useDeferredValue, useMemo, useState, useTransition } from "react";
@@ -642,18 +643,21 @@ export function BookingsList({
                           <Button
                             type="button"
                             variant="outline"
-                            size="sm"
+                            size="icon-sm"
                             disabled={pending || slotsPending}
                             onClick={() => openReschedule(booking.id)}
+                            aria-label={t("modify")}
+                            title={t("modify")}
                           >
-                            <CalendarClock className="size-3.5" />
-                            {t("modify")}
+                            <CalendarClock className="size-4" />
                           </Button>
                           <Button
                             type="button"
                             variant="destructive"
-                            size="sm"
+                            size="icon-sm"
                             disabled={pending}
+                            aria-label={t("cancel")}
+                            title={t("cancel")}
                             onClick={() => {
                               if (!window.confirm(t("cancelConfirm"))) return;
                               startTransition(async () => {
@@ -670,7 +674,7 @@ export function BookingsList({
                               });
                             }}
                           >
-                            {t("cancel")}
+                            <Trash2 className="size-4" />
                           </Button>
                           {unpaid ? (
                             <Button
