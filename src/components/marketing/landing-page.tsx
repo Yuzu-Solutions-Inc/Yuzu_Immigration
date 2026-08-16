@@ -11,11 +11,13 @@ import {
   ShieldCheck,
   Users,
   UsersRound,
-  Video,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { GoogleCalendarLogo } from "@/components/brand/google-calendar-logo";
+import { GoogleMeetLogo } from "@/components/brand/google-meet-logo";
+import { SquareLogo } from "@/components/brand/square-logo";
 import { LegalLinks } from "@/components/legal/legal-links";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
@@ -65,10 +67,10 @@ const FEATURE_ICONS = {
 
 const INTEGRATION_KEYS = ["calendar", "meet", "square"] as const;
 
-const INTEGRATION_ICONS = {
-  calendar: CalendarDays,
-  meet: Video,
-  square: CreditCard,
+const INTEGRATION_LOGOS = {
+  calendar: GoogleCalendarLogo,
+  meet: GoogleMeetLogo,
+  square: SquareLogo,
 } as const;
 
 const HOW_KEYS = ["one", "two", "three", "four"] as const;
@@ -315,15 +317,13 @@ export async function LandingPage() {
           </div>
           <ul className="mt-12 grid gap-10 sm:grid-cols-3">
             {INTEGRATION_KEYS.map((key) => {
-              const Icon = INTEGRATION_ICONS[key];
+              const Logo = INTEGRATION_LOGOS[key];
               return (
                 <li key={key} className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <Icon
-                      className="size-5 text-action"
-                      strokeWidth={1.75}
-                      aria-hidden
-                    />
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-surface p-1 shadow-sm">
+                      <Logo className="size-9" />
+                    </div>
                     <h3 className="font-heading text-base font-semibold text-brand">
                       {t(`integrations.${key}.title`)}
                     </h3>
