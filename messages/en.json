@@ -100,6 +100,7 @@
     "orEmail": "or use email",
     "email": "Email",
     "password": "Password",
+    "confirmPassword": "Confirm password",
     "fullName": "Full name",
     "signIn": "Sign in",
     "createAccount": "Create account",
@@ -112,6 +113,7 @@
     "signOut": "Sign out",
     "errors": {
       "invalid": "Enter a valid email and a password with at least 8 characters.",
+      "passwordMismatch": "Passwords do not match.",
       "signIn": "Could not sign in. Check your email and password.",
       "signUp": "Could not create the account. Try a different email.",
       "generic": "Something went wrong. Try again."
@@ -375,6 +377,20 @@
     "securityColResource": "Resource",
     "email": "Email",
     "emailHelp": "Managed by your sign-in provider.",
+    "passwordChangeTitle": "Password",
+    "passwordChangeHelp": "Update your sign-in password. Your current password is required.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordChangeCta": "Update password",
+    "passwordChangeSaving": "Updating…",
+    "passwordChanged": "Password updated.",
+    "passwordErrors": {
+      "invalid": "Enter your current password and a new password with at least 8 characters.",
+      "mismatch": "New passwords do not match.",
+      "wrongPassword": "Current password is incorrect.",
+      "updateFailed": "Could not update your password. Try again."
+    },
     "fullName": "Full name",
     "preferredLocale": "Preferred language",
     "preferredLocaleHelp": "Used as your default app language when available.",

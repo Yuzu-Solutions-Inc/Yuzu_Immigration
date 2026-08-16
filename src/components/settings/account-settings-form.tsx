@@ -7,6 +7,7 @@ import {
   updateAccountSettingsAction,
   type SettingsActionState,
 } from "@/app/actions/settings";
+import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { CertifiedSearchSelect } from "@/components/forms/certified-search-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,11 +95,13 @@ export function AccountSettingsForm({
   locale,
   email,
   fullName,
+  canChangePassword = false,
   representative,
 }: {
   locale: AppLocale;
   email: string;
   fullName: string;
+  canChangePassword?: boolean;
   representative: AccountRepValues;
 }) {
   const t = useTranslations("settings");
@@ -143,6 +146,8 @@ export function AccountSettingsForm({
           <Input id="email" value={email} disabled readOnly />
           <p className="text-xs text-muted-foreground">{t("emailHelp")}</p>
         </div>
+
+        {canChangePassword ? <ChangePasswordForm locale={locale} /> : null}
 
         <div className="space-y-2">
           <Label htmlFor="fullName">{t("fullName")}</Label>

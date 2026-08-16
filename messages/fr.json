@@ -100,6 +100,7 @@
     "orEmail": "ou utiliser l’e-mail",
     "email": "E-mail",
     "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
     "fullName": "Nom complet",
     "signIn": "Se connecter",
     "createAccount": "Créer un compte",
@@ -112,6 +113,7 @@
     "signOut": "Se déconnecter",
     "errors": {
       "invalid": "Entrez un e-mail valide et un mot de passe d’au moins 8 caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
       "signIn": "Connexion impossible. Vérifiez l’e-mail et le mot de passe.",
       "signUp": "Impossible de créer le compte. Essayez un autre e-mail.",
       "generic": "Une erreur est survenue. Réessayez."
@@ -373,6 +375,20 @@
     "securityColResource": "Ressource",
     "email": "Courriel",
     "emailHelp": "Géré par votre fournisseur de connexion.",
+    "passwordChangeTitle": "Mot de passe",
+    "passwordChangeHelp": "Modifiez votre mot de passe de connexion. Votre mot de passe actuel est requis.",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "passwordChangeCta": "Mettre à jour le mot de passe",
+    "passwordChangeSaving": "Mise à jour…",
+    "passwordChanged": "Mot de passe mis à jour.",
+    "passwordErrors": {
+      "invalid": "Entrez votre mot de passe actuel et un nouveau mot de passe d’au moins 8 caractères.",
+      "mismatch": "Les nouveaux mots de passe ne correspondent pas.",
+      "wrongPassword": "Le mot de passe actuel est incorrect.",
+      "updateFailed": "Impossible de mettre à jour le mot de passe. Réessayez."
+    },
     "fullName": "Nom complet",
     "preferredLocale": "Langue préférée",
     "preferredLocaleHelp": "Langue par défaut de l’application lorsque disponible.",

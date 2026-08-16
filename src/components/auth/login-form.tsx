@@ -32,6 +32,7 @@ export function LoginForm({
   const errorMessage = state.error
     ? {
         invalid_credentials: t("errors.invalid"),
+        password_mismatch: t("errors.passwordMismatch"),
         sign_in_failed: t("errors.signIn"),
         sign_up_failed: t("errors.signUp"),
       }[state.error] ?? t("errors.generic")
@@ -88,6 +89,21 @@ export function LoginForm({
             className="h-10"
           />
         </div>
+
+        {mode === "signup" ? (
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+              className="h-10"
+            />
+          </div>
+        ) : null}
 
         {errorMessage ? (
           <p className="text-sm text-destructive" role="alert">

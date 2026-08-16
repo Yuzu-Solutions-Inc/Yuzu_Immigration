@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AccountSettingsForm } from "@/components/settings/account-settings-form";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { hasEmailPasswordAuth } from "@/lib/auth/providers";
 import { getSessionUser } from "@/lib/auth/session";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
@@ -42,6 +43,7 @@ export default async function AccountSettingsPage({
         locale={locale}
         email={profile?.email || user.email || ""}
         fullName={profile?.full_name || ""}
+        canChangePassword={hasEmailPasswordAuth(user)}
         representative={{
           repFamilyName: profile?.rep_family_name ?? "",
           repGivenName: profile?.rep_given_name ?? "",

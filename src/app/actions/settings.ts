@@ -196,3 +196,72 @@ export async function updateOrganizationSettingsAction(
   }
   return { success: true };
 }
+
+const changePasswordSchema = z
+  .object({
+    locale: localeEnum,
+    currentPassword: z.string().min(1).max(128),
+    newPassword: z.string().min(8).max(128),
+    confirmPassword: z.string().min(8).max(128),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "password_mismatch",
+    path: ["confirmPassword"],
+  });
+
+export async function changePasswordAction(
+  _prev: SettingsActionState,
+  formData: FormData,
+): Promise<SettingsActionState> {
+  const parsed = changePasswordSchema.safeParse({
+    locale: formData.get("locale") || "en",
+    currentPassword: String(formData.get("currentPassword") ?? ""),
+    newPassword: String(formData.get("newPassword") ?? ""),
+    confirmPassword: String(formData.get("confirmPassword") ?? ""),
+  });
+
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    if (issue?.message === "password_mismatch") {
+      return { error: "password_mismatch" };
+    }
+    return { error: "invalid" };
+  }
+
+  const user = await getSessionUser();
+  if (!user?.email) {
+    redirect(`/${parsed.data.locale}/login`);
+  }
+
+  const supabase = await createClient();
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword,
+  });
+
+  if (verifyError) {
+    return { error: "wrong_password" };
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: parsed.data.newPassword,
+  });
+
+  if (updateError) {
+    console.error("change password:", updateError.message);
+    return { error: "password_update_failed" };
+  }
+
+  const membership = await getPrimaryMembership();
+  await recordAuditEvent({
+    organizationId: membership?.organization.id,
+    actorUserId: user.id,
+    actorKind: "staff",
+    action: "account.password_change",
+    resourceType: "profile",
+    resourceId: user.id,
+  });
+
+  revalidatePath(`/${parsed.data.locale}/settings/account`);
+  return { success: true };
+}

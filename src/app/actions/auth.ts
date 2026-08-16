@@ -16,6 +16,15 @@ const credentialsSchema = z.object({
   locale: z.enum(["en", "fr", "es"]).default("en"),
 });
 
+const signUpSchema = credentialsSchema
+  .extend({
+    confirmPassword: z.string().min(8).max(128),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "password_mismatch",
+    path: ["confirmPassword"],
+  });
+
 export type AuthActionState = {
   error?: string;
   success?: string;
@@ -65,14 +74,19 @@ export async function signUpWithPassword(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const parsed = credentialsSchema.safeParse({
+  const parsed = signUpSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
     fullName: formData.get("fullName") || undefined,
     locale: formData.get("locale") || "en",
   });
 
   if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    if (issue?.message === "password_mismatch") {
+      return { error: "password_mismatch" };
+    }
     return { error: "invalid_credentials" };
   }
 
