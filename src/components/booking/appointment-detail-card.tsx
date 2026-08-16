@@ -24,6 +24,7 @@ import {
   formatTimeInZone,
   zonedCivilToUtc,
 } from "@/lib/booking/timezone";
+import { formatCompositeAnswer, isCompositeFieldType } from "@/lib/booking/composite-fields";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import { cn } from "@/lib/utils";
 
@@ -219,7 +220,9 @@ export function AppointmentDetailCard({
                       ? value === "true"
                         ? t("formYes")
                         : t("formNo")
-                      : value;
+                      : field && isCompositeFieldType(field.field_type)
+                        ? formatCompositeAnswer(field.field_type, value)
+                        : value;
                   return (
                     <p key={key}>
                       <span className="font-medium text-brand/80">

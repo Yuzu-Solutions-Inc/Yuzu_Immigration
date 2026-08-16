@@ -1,6 +1,15 @@
 import { AUTOMATION_VARIABLES } from "@/lib/email/automation-template";
 import type { BookingFormFieldType } from "@/db/schema";
 import type { BookingFormFieldRow } from "@/lib/booking/types";
+import {
+  flattenCompositeAnswer,
+  inferCompositeFieldType,
+  isCompositeFieldType,
+  parseAddressFromForm,
+  parsePassportFromForm,
+  parsePhoneContactFromForm,
+  validateCompositeAnswer,
+} from "@/lib/booking/composite-fields";
 
 export const BOOKING_FORM_FIELD_TYPES = [
   "text",
@@ -11,6 +20,9 @@ export const BOOKING_FORM_FIELD_TYPES = [
   "date",
   "select",
   "checkbox",
+  "address",
+  "phone_contact",
+  "passport",
 ] as const satisfies readonly BookingFormFieldType[];
 
 export const MAX_BOOKING_FORM_FIELDS = 20;
@@ -54,44 +66,26 @@ export type BookingFormPreset = {
 
 export const BOOKING_FORM_PRESETS: BookingFormPreset[] = [
   {
-    id: "address_parts",
+    id: "address",
     labelKey: "formPresetAddress",
     fields: [
       {
-        fieldKey: "street_line",
-        labelKey: "formFieldStreet",
-        fieldType: "text",
+        fieldKey: "mailing_address",
+        labelKey: "formFieldAddress",
+        fieldType: "address",
         required: true,
       },
+    ],
+  },
+  {
+    id: "phone_contact",
+    labelKey: "formPresetPhone",
+    fields: [
       {
-        fieldKey: "unit_number",
-        labelKey: "formFieldUnit",
-        fieldType: "text",
+        fieldKey: "contact_phone",
+        labelKey: "formFieldPhoneContact",
+        fieldType: "phone_contact",
         required: false,
-      },
-      {
-        fieldKey: "city",
-        labelKey: "formFieldCity",
-        fieldType: "text",
-        required: true,
-      },
-      {
-        fieldKey: "province",
-        labelKey: "formFieldProvince",
-        fieldType: "text",
-        required: true,
-      },
-      {
-        fieldKey: "postal_code",
-        labelKey: "formFieldPostalCode",
-        fieldType: "text",
-        required: true,
-      },
-      {
-        fieldKey: "country",
-        labelKey: "formFieldCountry",
-        fieldType: "text",
-        required: true,
       },
     ],
   },
@@ -133,19 +127,7 @@ export const BOOKING_FORM_PRESETS: BookingFormPreset[] = [
     ],
   },
   {
-    id: "passport_number",
-    labelKey: "formPresetPassport",
-    fields: [
-      {
-        fieldKey: "passport_number",
-        labelKey: "formFieldPassport",
-        fieldType: "text",
-        required: false,
-      },
-    ],
-  },
-  {
-    id: "uci_number",
+    id: "immigration_status",
     labelKey: "formPresetUci",
     fields: [
       {
@@ -253,6 +235,32 @@ export function parseBookingFormAnswers(
 ): { ok: true; answers: Record<string, string> } | { ok: false } {
   const answers: Record<string, string> = {};
   for (const field of fields) {
+    if (isCompositeFieldType(field.field_type)) {
+      let json = "";
+      switch (field.field_type) {
+        case "address":
+          json = JSON.stringify(parseAddressFromForm(formData, field.field_key));
+          break;
+        case "phone_contact":
+          json = JSON.stringify(
+            parsePhoneContactFromForm(formData, field.field_key),
+          );
+          break;
+        case "passport":
+          json = JSON.stringify(parsePassportFromForm(formData, field.field_key));
+          break;
+      }
+      if (
+        !validateCompositeAnswer(field.field_type, json, field.required)
+      ) {
+        return { ok: false };
+      }
+      const parsed = JSON.parse(json) as Record<string, string>;
+      const hasValue = Object.values(parsed).some((value) => value.length > 0);
+      if (hasValue) answers[field.field_key] = json;
+      continue;
+    }
+
     const raw = String(formData.get(formFieldInputName(field.field_key)) ?? "");
     if (field.field_type === "checkbox") {
       const checked = raw === "on" || raw === "true";
@@ -306,6 +314,14 @@ export function extraAutomationVariables(
   for (const [key, value] of Object.entries(answers)) {
     if (!FORM_FIELD_KEY_RE.test(key) || isReservedBookingFieldKey(key)) continue;
     if (typeof value !== "string") continue;
+    const composite = inferCompositeFieldType(value);
+    if (composite) {
+      const flat = flattenCompositeAnswer(key, composite, value);
+      for (const [flatKey, flatValue] of Object.entries(flat)) {
+        extra[flatKey] = flatValue.slice(0, 2000);
+      }
+      continue;
+    }
     extra[key] = value.slice(0, 2000);
   }
   return extra;

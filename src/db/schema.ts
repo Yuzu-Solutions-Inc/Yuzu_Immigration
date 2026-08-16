@@ -646,6 +646,9 @@ export const bookingFormFieldTypeEnum = pgEnum("booking_form_field_type", [
   "date",
   "select",
   "checkbox",
+  "address",
+  "phone_contact",
+  "passport",
 ]);
 
 /** Per-org public booking page (hashed token + encrypted plaintext for recopy). */

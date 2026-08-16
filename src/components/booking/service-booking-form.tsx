@@ -30,6 +30,7 @@ import {
   slugFromFieldLabel,
   type BookingFormPreset,
 } from "@/lib/booking/form-fields";
+import { isCompositeFieldType } from "@/lib/booking/composite-fields";
 import type { BookingFormFieldType } from "@/db/schema";
 import type {
   BookingFormFieldRow,
@@ -45,7 +46,6 @@ const BUILTIN_QUESTIONS = [
   { key: "last_name", labelKey: "formBuiltinLastName" },
   { key: "email", labelKey: "formBuiltinEmail" },
   { key: "phone", labelKey: "formBuiltinPhone" },
-  { key: "address", labelKey: "formBuiltinAddress" },
   { key: "preferred_language", labelKey: "formBuiltinLanguage" },
 ] as const;
 
@@ -85,15 +85,23 @@ function draftsFromFields(fields: BookingFormFieldRow[]): DraftField[] {
 function ServiceCheckboxes({
   locale,
   services,
+  forms,
+  currentFormId,
   selected,
   onChange,
 }: {
   locale: string;
   services: BookingServiceRow[];
+  forms: BookingFormRow[];
+  currentFormId?: string;
   selected: string[];
   onChange: (next: string[]) => void;
 }) {
   const t = useTranslations("services");
+  const formTitleById = useMemo(
+    () => new Map(forms.map((form) => [form.id, form.title])),
+    [forms],
+  );
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium">{t("formAssignServices")}</p>
@@ -101,24 +109,45 @@ function ServiceCheckboxes({
       <div className="grid gap-2 sm:grid-cols-2">
         {services.map((service) => {
           const checked = selected.includes(service.id);
+          const otherFormId =
+            service.form_id && service.form_id !== currentFormId
+              ? service.form_id
+              : null;
+          const otherFormTitle = otherFormId
+            ? formTitleById.get(otherFormId)
+            : null;
           return (
             <label
               key={service.id}
-              className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm"
+              className="flex min-w-0 items-start gap-2 rounded-xl border border-border px-3 py-2 text-sm"
             >
               <input
                 type="checkbox"
                 checked={checked}
                 onChange={(event) => {
                   if (event.target.checked) {
+                    if (otherFormId) {
+                      const serviceName = serviceTitle(service, locale);
+                      const formName = otherFormTitle ?? t("formUnknown");
+                      if (
+                        !window.confirm(
+                          t("formAssignConflictConfirm", {
+                            service: serviceName,
+                            form: formName,
+                          }),
+                        )
+                      ) {
+                        return;
+                      }
+                    }
                     onChange([...selected, service.id]);
                   } else {
                     onChange(selected.filter((id) => id !== service.id));
                   }
                 }}
-                className="size-4 rounded border-input"
+                className="mt-0.5 size-4 shrink-0 rounded border-input"
               />
-              <span className="min-w-0 truncate">
+              <span className="min-w-0 truncate font-medium">
                 {serviceTitle(service, locale)}
               </span>
             </label>
@@ -132,12 +161,14 @@ function ServiceCheckboxes({
 function FormEditor({
   locale,
   services,
+  forms,
   form,
   fields,
   onCancel,
 }: {
   locale: string;
   services: BookingServiceRow[];
+  forms: BookingFormRow[];
   form?: BookingFormRow;
   fields: BookingFormFieldRow[];
   onCancel: () => void;
@@ -220,7 +251,27 @@ function FormEditor({
   }));
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form
+      action={formAction}
+      className="min-w-0 space-y-5"
+      onSubmit={(event) => {
+        const moving = serviceIds.filter((serviceId) => {
+          const service = services.find((row) => row.id === serviceId);
+          return service?.form_id && service.form_id !== form?.id;
+        });
+        if (moving.length > 0) {
+          const names = moving
+            .map((id) => {
+              const service = services.find((row) => row.id === id);
+              return service ? serviceTitle(service, locale) : id;
+            })
+            .join(", ");
+          if (!window.confirm(t("formAssignSaveConfirm", { services: names }))) {
+            event.preventDefault();
+          }
+        }
+      }}
+    >
       <input type="hidden" name="locale" value={locale} />
       {form ? <input type="hidden" name="formId" value={form.id} /> : null}
       <input type="hidden" name="serviceIds" value={JSON.stringify(serviceIds)} />
@@ -241,6 +292,8 @@ function FormEditor({
       <ServiceCheckboxes
         locale={locale}
         services={services}
+        forms={forms}
+        currentFormId={form?.id}
         selected={serviceIds}
         onChange={setServiceIds}
       />
@@ -288,10 +341,10 @@ function FormEditor({
             {drafts.map((field) => (
               <li
                 key={field.clientId}
-                className="space-y-3 rounded-xl border border-border p-3"
+                className="min-w-0 space-y-3 rounded-xl border border-border p-3"
               >
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-2">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>{t("formFieldLabel")}</Label>
                     <Input
                       value={field.label}
@@ -308,29 +361,42 @@ function FormEditor({
                       }}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>{t("formFieldType")}</Label>
-                    <select
-                      value={field.fieldType}
-                      disabled={field.persisted}
-                      onChange={(event) =>
-                        updateDraft(field.clientId, {
-                          fieldType: event.target
-                            .value as BookingFormFieldType,
-                        })
-                      }
-                      className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm disabled:opacity-60"
-                    >
-                      {BOOKING_FORM_FIELD_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {t(`formFieldTypes.${type}`)}
-                        </option>
-                      ))}
-                    </select>
+                    {isCompositeFieldType(field.fieldType) ? (
+                      <p className="flex h-10 items-center rounded-xl border border-border/80 bg-canvas px-3 text-sm text-muted-foreground">
+                        {t(`formFieldTypes.${field.fieldType}`)}
+                      </p>
+                    ) : (
+                      <select
+                        value={field.fieldType}
+                        disabled={field.persisted}
+                        onChange={(event) =>
+                          updateDraft(field.clientId, {
+                            fieldType: event.target
+                              .value as BookingFormFieldType,
+                          })
+                        }
+                        className="h-10 w-full min-w-0 rounded-xl border border-input bg-surface px-3 text-sm disabled:opacity-60"
+                      >
+                        {BOOKING_FORM_FIELD_TYPES.filter(
+                          (type) => !isCompositeFieldType(type),
+                        ).map((type) => (
+                          <option key={type} value={type}>
+                            {t(`formFieldTypes.${type}`)}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {isCompositeFieldType(field.fieldType) ? (
+                      <p className="text-xs text-muted-foreground">
+                        {t(`formCompositeHint.${field.fieldType}`)}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-2">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>{t("formFieldKey")}</Label>
                     <Input
                       value={field.fieldKey}
@@ -343,13 +409,13 @@ function FormEditor({
                         })
                       }
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="break-all text-xs text-muted-foreground">
                       {t("formFieldKeyHelp", {
                         token: `{{${field.fieldKey || "variable"}}}`,
                       })}
                     </p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label>{t("formFieldHelp")}</Label>
                     <Input
                       value={field.helpText}
@@ -524,11 +590,12 @@ export function ServiceBookingFormButton({
                 : t("formsSubtitle")}
             </DialogDescription>
           </DialogHeader>
-          <div className="min-h-0 overflow-y-auto pr-1">
+          <div className="min-h-0 overflow-x-hidden overflow-y-auto pr-1">
             {creating || editing ? (
               <FormEditor
                 locale={locale}
                 services={services}
+                forms={forms}
                 form={editing ?? undefined}
                 fields={
                   editing ? (fieldsByForm.get(editing.id) ?? []) : []

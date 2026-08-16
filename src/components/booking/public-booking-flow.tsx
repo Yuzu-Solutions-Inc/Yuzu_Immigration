@@ -11,6 +11,7 @@ import {
   type PublicBookingState,
 } from "@/app/actions/public-booking";
 import { CancelPolicyNotice } from "@/components/booking/cancel-policy-notice";
+import { BookingCompositeField } from "@/components/booking/booking-composite-field";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { PrivacyLink } from "@/components/legal/privacy-link";
@@ -22,6 +23,7 @@ import { Link } from "@/i18n/navigation";
 import { formatPriceCents, generateServiceSlots } from "@/lib/booking/slots";
 import { serviceCopy } from "@/lib/booking/service-i18n";
 import { formFieldInputName, isReservedBookingFieldKey } from "@/lib/booking/form-fields";
+import { isCompositeFieldType } from "@/lib/booking/composite-fields";
 import type {
   BookingServiceFormFieldRow,
   BookingServiceRow,
@@ -92,7 +94,6 @@ export function PublicBookingFlow({
   const [guestPreferredLocale, setGuestPreferredLocale] = useState(locale);
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
-  const [guestAddress, setGuestAddress] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [chosePayLater, setChosePayLater] = useState(false);
 
@@ -751,19 +752,8 @@ export function PublicBookingFlow({
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="guestAddress">{t("address")}</Label>
-                  <Input
-                    id="guestAddress"
-                    name="guestAddress"
-                    required
-                    autoComplete="street-address"
-                    value={guestAddress}
-                    onChange={(event) => setGuestAddress(event.target.value)}
-                  />
-                </div>
                 {serviceFields.map((field) => (
-                  <PublicCustomField key={field.id} field={field} />
+                  <PublicCustomField key={field.id} field={field} locale={locale} />
                 ))}
                 <label className="flex items-start gap-2 text-sm leading-relaxed">
                   <input
@@ -818,7 +808,17 @@ export function PublicBookingFlow({
   );
 }
 
-function PublicCustomField({ field }: { field: BookingServiceFormFieldRow }) {
+function PublicCustomField({
+  field,
+  locale,
+}: {
+  field: BookingServiceFormFieldRow;
+  locale: string;
+}) {
+  if (isCompositeFieldType(field.field_type)) {
+    return <BookingCompositeField field={field} locale={locale} />;
+  }
+
   const name = formFieldInputName(field.field_key);
   const label = (
     <Label htmlFor={name}>

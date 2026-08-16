@@ -66,7 +66,7 @@ const bookSchema = z.object({
   guestPreferredLocale: z.enum(["en", "fr", "es"]),
   guestEmail: z.string().trim().email().max(160),
   guestPhone: z.string().trim().min(6).max(40),
-  guestAddress: z.string().trim().min(3).max(300),
+  guestAddress: z.string().trim().max(300).optional().default(""),
   privacyAccepted: z.literal("on"),
   confirmAnother: z.enum(["on"]).optional(),
 });
