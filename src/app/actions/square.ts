@@ -20,6 +20,7 @@ import {
   squareConfigured,
   SQUARE_AAD,
 } from "@/lib/square/oauth";
+import { DEFAULT_SQUARE_CANCEL_REFUND_POLICY } from "@/lib/square/cancel-policy";
 import { getSquareSecrets } from "@/lib/square/secrets";
 
 export type SquareActionState = {
@@ -247,7 +248,20 @@ export async function persistSquareConnection(input: {
   } else {
     const inserted = await admin
       .from("square_connections")
-      .insert(row)
+      .insert({
+        ...row,
+        cancel_refund_enabled: DEFAULT_SQUARE_CANCEL_REFUND_POLICY.cancelRefundEnabled,
+        cancel_free_days_before:
+          DEFAULT_SQUARE_CANCEL_REFUND_POLICY.cancelFreeDaysBefore,
+        cancel_min_days_before:
+          DEFAULT_SQUARE_CANCEL_REFUND_POLICY.cancelFeeDaysBefore,
+        cancel_refund_fee_type:
+          DEFAULT_SQUARE_CANCEL_REFUND_POLICY.cancelRefundFeeType,
+        cancel_refund_fee_cents:
+          DEFAULT_SQUARE_CANCEL_REFUND_POLICY.cancelRefundFeeCents,
+        cancel_refund_fee_percent:
+          DEFAULT_SQUARE_CANCEL_REFUND_POLICY.cancelRefundFeePercent,
+      })
       .select("id")
       .single();
     if (inserted.error || !inserted.data) {

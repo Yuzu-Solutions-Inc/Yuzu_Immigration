@@ -16,11 +16,11 @@ export type SquareCancelRefundPolicy = {
 
 export const DEFAULT_SQUARE_CANCEL_REFUND_POLICY: SquareCancelRefundPolicy = {
   cancelRefundEnabled: true,
-  cancelFreeDaysBefore: 0,
-  cancelFeeDaysBefore: 0,
-  cancelRefundFeeType: "none",
+  cancelFreeDaysBefore: 10,
+  cancelFeeDaysBefore: 2,
+  cancelRefundFeeType: "percent",
   cancelRefundFeeCents: 0,
-  cancelRefundFeePercent: 0,
+  cancelRefundFeePercent: 10,
 };
 
 export function parseCancelRefundFeeType(value: unknown): CancelRefundFeeType {
@@ -127,7 +127,10 @@ export function isWithinGuestCancelWindow(
 ): boolean {
   const pseudo: SquareCancelRefundPolicy = {
     ...DEFAULT_SQUARE_CANCEL_REFUND_POLICY,
+    cancelFreeDaysBefore: 0,
     cancelFeeDaysBefore: minDaysBefore,
+    cancelRefundFeeType: "none",
+    cancelRefundFeePercent: 0,
   };
   return resolveCancelRefundTier(pseudo, startsAt, nowMs) !== "blocked";
 }

@@ -22,7 +22,10 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import { centsToPriceInput } from "@/lib/booking/slots";
+import { DEFAULT_SQUARE_CANCEL_REFUND_POLICY } from "@/lib/square/cancel-policy";
+
 const initialSaveState: SquareActionState = {};
+const defaultPolicy = DEFAULT_SQUARE_CANCEL_REFUND_POLICY;
 
 export type SquareSettingsConnection = {
   business_name: string | null;
@@ -53,29 +56,53 @@ export function SquareSettings({
     connection?.cancel_refund_enabled !== false,
   );
   const [feeEnabled, setFeeEnabled] = useState(() => {
-    const feeType = connection?.cancel_refund_fee_type;
+    const feeType =
+      connection?.cancel_refund_fee_type ?? defaultPolicy.cancelRefundFeeType;
     if (feeType === "percent") {
-      return (connection?.cancel_refund_fee_percent ?? 0) > 0;
+      return (
+        (connection?.cancel_refund_fee_percent ??
+          defaultPolicy.cancelRefundFeePercent) > 0
+      );
     }
     if (feeType === "fixed") {
-      return (connection?.cancel_refund_fee_cents ?? 0) > 0;
+      return (
+        (connection?.cancel_refund_fee_cents ??
+          defaultPolicy.cancelRefundFeeCents) > 0
+      );
     }
-    return (connection?.cancel_min_days_before ?? 0) > 0;
+    return (
+      (connection?.cancel_min_days_before ?? defaultPolicy.cancelFeeDaysBefore) >
+      0
+    );
   });
   const [freeDays, setFreeDays] = useState(
-    String(connection?.cancel_free_days_before ?? 0),
+    String(
+      connection?.cancel_free_days_before ?? defaultPolicy.cancelFreeDaysBefore,
+    ),
   );
   const [feeDays, setFeeDays] = useState(
-    String(connection?.cancel_min_days_before ?? 0),
+    String(
+      connection?.cancel_min_days_before ?? defaultPolicy.cancelFeeDaysBefore,
+    ),
   );
   const [feeUnit, setFeeUnit] = useState<"fixed" | "percent">(() =>
-    connection?.cancel_refund_fee_type === "percent" ? "percent" : "fixed",
+    (connection?.cancel_refund_fee_type ?? defaultPolicy.cancelRefundFeeType) ===
+    "percent"
+      ? "percent"
+      : "fixed",
   );
   const [feeAmount, setFeeAmount] = useState(() => {
-    if (connection?.cancel_refund_fee_type === "percent") {
-      return String(connection.cancel_refund_fee_percent ?? 0);
+    const feeType =
+      connection?.cancel_refund_fee_type ?? defaultPolicy.cancelRefundFeeType;
+    if (feeType === "percent") {
+      return String(
+        connection?.cancel_refund_fee_percent ??
+          defaultPolicy.cancelRefundFeePercent,
+      );
     }
-    return centsToPriceInput(connection?.cancel_refund_fee_cents ?? 0);
+    return centsToPriceInput(
+      connection?.cancel_refund_fee_cents ?? defaultPolicy.cancelRefundFeeCents,
+    );
   });
   const [saveState, saveAction, savePending] = useActionState(
     async (_prev: SquareActionState, formData: FormData) => {

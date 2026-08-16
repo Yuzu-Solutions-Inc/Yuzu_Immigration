@@ -1004,11 +1004,11 @@ export const squareConnections = pgTable("square_connections", {
   businessName: text("business_name"),
   isEnabled: boolean("is_enabled").notNull().default(true),
   cancelRefundEnabled: boolean("cancel_refund_enabled").notNull().default(true),
-  cancelFreeDaysBefore: integer("cancel_free_days_before").notNull().default(0),
-  cancelMinDaysBefore: integer("cancel_min_days_before").notNull().default(0),
-  cancelRefundFeeType: text("cancel_refund_fee_type").notNull().default("none"),
+  cancelFreeDaysBefore: integer("cancel_free_days_before").notNull().default(10),
+  cancelMinDaysBefore: integer("cancel_min_days_before").notNull().default(2),
+  cancelRefundFeeType: text("cancel_refund_fee_type").notNull().default("percent"),
   cancelRefundFeeCents: integer("cancel_refund_fee_cents").notNull().default(0),
-  cancelRefundFeePercent: integer("cancel_refund_fee_percent").notNull().default(0),
+  cancelRefundFeePercent: integer("cancel_refund_fee_percent").notNull().default(10),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
