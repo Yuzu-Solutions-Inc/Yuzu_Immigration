@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { parseDayOffsets } from "@/lib/booking/day-offsets";
 import type { AutomationTranslations } from "@/lib/booking/types";
 import {
   hasAutomationCopy,
@@ -26,7 +27,7 @@ const fieldsSchema = z.object({
   locale: localeSchema,
   title: z.string().trim().min(1).max(80),
   translations: z.string(),
-  daysBefore: z.coerce.number().int().min(0).max(90),
+  daysBefore: z.string(),
   recipients: z.string(),
   serviceIds: z.array(z.string().uuid()).min(1).max(50),
   isEnabled: z.enum(["on", "true", "false"]).optional(),
@@ -57,7 +58,7 @@ function parseForm(formData: FormData) {
     locale: formData.get("locale") || "en",
     title: String(formData.get("title") || ""),
     translations: String(formData.get("translations") || "{}"),
-    daysBefore: formData.get("daysBefore"),
+    daysBefore: String(formData.get("daysBefore") || ""),
     recipients: String(formData.get("recipients") || "[]"),
     serviceIds: parseServiceIds(String(formData.get("serviceIds") || "[]")),
     isEnabled: formData.get("isEnabled") ? "on" : "false",
@@ -172,6 +173,8 @@ export async function createServiceAutomationAction(
 ): Promise<AutomationActionState> {
   const parsed = fieldsSchema.safeParse(parseForm(formData));
   if (!parsed.success) return { error: "invalid" };
+  const daysBefore = parseDayOffsets(parsed.data.daysBefore);
+  if (!daysBefore || daysBefore.length === 0) return { error: "invalid" };
   const recipients = parseRecipientsJson(parsed.data.recipients);
   if (!recipients) return { error: "invalid_recipients" };
 
@@ -192,7 +195,7 @@ export async function createServiceAutomationAction(
       subject: copy.subject,
       body: copy.body,
       translations: copy.translations,
-      days_before: parsed.data.daysBefore,
+      days_before: daysBefore,
       recipients,
       is_enabled: parsed.data.isEnabled === "on",
       include_do_not_reply: parsed.data.includeDoNotReply === "on",
@@ -236,6 +239,8 @@ export async function updateServiceAutomationAction(
       automationId: String(formData.get("automationId") || ""),
     });
   if (!parsed.success) return { error: "invalid" };
+  const daysBefore = parseDayOffsets(parsed.data.daysBefore);
+  if (!daysBefore || daysBefore.length === 0) return { error: "invalid" };
   const recipients = parseRecipientsJson(parsed.data.recipients);
   if (!recipients) return { error: "invalid_recipients" };
 
@@ -255,7 +260,7 @@ export async function updateServiceAutomationAction(
       subject: copy.subject,
       body: copy.body,
       translations: copy.translations,
-      days_before: parsed.data.daysBefore,
+      days_before: daysBefore,
       recipients,
       is_enabled: parsed.data.isEnabled === "on",
       include_do_not_reply: parsed.data.includeDoNotReply === "on",

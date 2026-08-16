@@ -785,7 +785,7 @@ export const bookingServiceEmailAutomations = pgTable(
     title: text("title").notNull(),
     subject: text("subject").notNull(),
     body: text("body").notNull(),
-    daysBefore: integer("days_before").notNull().default(1),
+    daysBefore: integer("days_before").array().notNull().default([1]),
     recipients: text("recipients").array().notNull(),
     isEnabled: boolean("is_enabled").notNull().default(true),
     includeDoNotReply: boolean("include_do_not_reply").notNull().default(true),
@@ -933,6 +933,7 @@ export const bookingAutomationSends = pgTable(
     appointmentId: uuid("appointment_id")
       .notNull()
       .references(() => bookingAppointments.id, { onDelete: "cascade" }),
+    daysBefore: integer("days_before").notNull(),
     appointmentStartsAt: timestamp("appointment_starts_at", {
       withTimezone: true,
     }).notNull(),
@@ -942,6 +943,7 @@ export const bookingAutomationSends = pgTable(
     uniqueIndex("booking_automation_sends_once_uidx").on(
       table.automationId,
       table.appointmentId,
+      table.daysBefore,
       table.appointmentStartsAt,
     ),
   ],

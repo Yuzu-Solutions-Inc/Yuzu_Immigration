@@ -159,6 +159,8 @@
     "welcome": "Bon retour, {name}",
     "welcomeFallback": "Bon retour",
     "dashboardSubtitle": "Agissez sur les dossiers, rendez-vous et statuts clients au même endroit.",
+    "actionSummary": "{count, plural, one {# élément vous attend} other {# éléments vous attendent}}{bookings, plural, =0 {} one { · # rendez-vous aujourd’hui} other { · # rendez-vous aujourd’hui}}",
+    "actionSummaryClear": "Rien en attente{bookings, plural, =0 {} one { · # rendez-vous aujourd’hui} other { · # rendez-vous aujourd’hui}}",
     "orgLabel": "Organisation",
     "roleLabel": "Rôle",
     "newProject": "Ajouter un projet",
@@ -184,7 +186,23 @@
       "todayBookings": "Rendez-vous aujourd’hui",
       "weekBookings": "{count, plural, one {# cette semaine} other {# cette semaine}}",
       "statusExpiring": "Statuts qui expirent",
+      "statusExpiringHint": "30 prochains jours",
+      "unpaid": "Impayés",
+      "unpaidHint": "Réservations et factures",
       "peopleCount": "{count, plural, one {# client au dossier} other {# clients au dossier}}"
+    },
+    "attention": {
+      "title": "À traiter",
+      "empty": "Rien n’attend sur les dossiers ouverts.",
+      "docsCount": "{count, plural, one {# doc} other {# docs}}",
+      "kinds": {
+        "overdue": "En retard",
+        "docs_review": "Réviser",
+        "questionnaire": "Formulaires prêts",
+        "unpaid": "Impayé",
+        "stuck": "Bloqué",
+        "due_soon": "Bientôt dû"
+      }
     },
     "bookingSetup": {
       "banner": "La réservation publique n’est pas encore complètement configurée.",
@@ -192,9 +210,10 @@
       "hours": "Définir les heures"
     },
     "appointments": {
-      "title": "Prochains rendez-vous",
+      "title": "Cette semaine",
       "viewCalendar": "Calendrier",
       "empty": "Aucun rendez-vous dans les 7 prochains jours.",
+      "emptyToday": "Aucun rendez-vous aujourd’hui.",
       "unknownService": "Consultation"
     },
     "expiries": {
@@ -203,6 +222,9 @@
       "empty": "Aucune expiration de statut dans les 60 prochains jours."
     },
     "charts": {
+      "pipeline": "Dossiers ouverts",
+      "pipelineEmpty": "Aucun dossier ouvert à afficher.",
+      "pipelineTotal": "ouverts",
       "projectsByStatus": "Par statut",
       "projectsByStatusEmpty": "Aucun projet à afficher.",
       "peopleByVisa": "Par visa",
@@ -1979,7 +2001,8 @@
     "automationBody": "Message",
     "automationVariables": "Insérer une variable",
     "automationDaysBefore": "Jours avant le rendez-vous",
-    "automationDaysHint": "0 envoie le jour du rendez-vous, avant l’heure de début.",
+    "automationDaysPlaceholder": "7, 3, 1",
+    "automationDaysHint": "Jusqu’à 3 délais (0–90 jours), séparés par des virgules. 0 envoie le jour du rendez-vous, avant l’heure de début.",
     "automationRecipients": "Destinataires",
     "recipientCustomer": "Courriel du client",
     "recipientConsultant": "Courriel du consultant",
@@ -1998,7 +2021,7 @@
     "automationDeleteConfirm": "Supprimer ce rappel ?",
     "automationPaused": "En pause",
     "automationActive": "Actif",
-    "automationSummary": "{days, plural, =0 {Le jour du rendez-vous} one {1 jour avant} other {{days} jours avant}} · {count, plural, one {# destinataire} other {# destinataires}}",
+    "automationSummary": "{days} jours avant · {count, plural, one {# destinataire} other {# destinataires}}",
     "variables": {
       "customer_name": "Nom du client",
       "customer_email": "Courriel du client",

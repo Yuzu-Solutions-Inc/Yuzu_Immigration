@@ -159,6 +159,8 @@
     "welcome": "Welcome back, {name}",
     "welcomeFallback": "Welcome back",
     "dashboardSubtitle": "Act on files, bookings, and client status from one place.",
+    "actionSummary": "{count, plural, one {# item needs you} other {# items need you}}{bookings, plural, =0 {} one { · # booking today} other { · # bookings today}}",
+    "actionSummaryClear": "Nothing waiting{bookings, plural, =0 {} one { · # booking today} other { · # bookings today}}",
     "orgLabel": "Organization",
     "roleLabel": "Role",
     "newProject": "Add project",
@@ -184,7 +186,23 @@
       "todayBookings": "Bookings today",
       "weekBookings": "{count, plural, one {# this week} other {# this week}}",
       "statusExpiring": "Status expiring",
+      "statusExpiringHint": "Next 30 days",
+      "unpaid": "Unpaid",
+      "unpaidHint": "Bookings and invoices",
       "peopleCount": "{count, plural, one {# client on file} other {# clients on file}}"
+    },
+    "attention": {
+      "title": "Needs you",
+      "empty": "Nothing waiting on open files.",
+      "docsCount": "{count, plural, one {# doc} other {# docs}}",
+      "kinds": {
+        "overdue": "Overdue",
+        "docs_review": "Review",
+        "questionnaire": "Forms ready",
+        "unpaid": "Unpaid",
+        "stuck": "Stuck",
+        "due_soon": "Due soon"
+      }
     },
     "bookingSetup": {
       "banner": "Public booking is not fully set up yet.",
@@ -192,9 +210,10 @@
       "hours": "Set open hours"
     },
     "appointments": {
-      "title": "Upcoming bookings",
+      "title": "This week",
       "viewCalendar": "Calendar",
       "empty": "No bookings in the next 7 days.",
+      "emptyToday": "No bookings today.",
       "unknownService": "Consultation"
     },
     "expiries": {
@@ -203,6 +222,9 @@
       "empty": "No status expiries in the next 60 days."
     },
     "charts": {
+      "pipeline": "Open files",
+      "pipelineEmpty": "No open files to chart.",
+      "pipelineTotal": "open",
       "projectsByStatus": "By status",
       "projectsByStatusEmpty": "No projects to chart yet.",
       "peopleByVisa": "By visa",
@@ -1984,7 +2006,8 @@
     "automationBody": "Message",
     "automationVariables": "Insert a variable",
     "automationDaysBefore": "Days before the appointment",
-    "automationDaysHint": "0 sends on the day of the appointment, before it starts.",
+    "automationDaysPlaceholder": "7, 3, 1",
+    "automationDaysHint": "Up to 3 offsets (0–90 days), separated by commas. 0 sends on the day of the appointment, before it starts.",
     "automationRecipients": "Recipients",
     "recipientCustomer": "Customer email",
     "recipientConsultant": "Consultant email",
@@ -2003,7 +2026,7 @@
     "automationDeleteConfirm": "Delete this reminder?",
     "automationPaused": "Paused",
     "automationActive": "Active",
-    "automationSummary": "{days, plural, =0 {On the day of the appointment} one {1 day before} other {{days} days before}} · {count, plural, one {# recipient} other {# recipients}}",
+    "automationSummary": "{days} days before · {count, plural, one {# recipient} other {# recipients}}",
     "variables": {
       "customer_name": "Customer name",
       "customer_email": "Customer email",

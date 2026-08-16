@@ -1,3 +1,4 @@
+import { normalizeDayOffsets } from "@/lib/booking/day-offsets";
 import { generateServiceSlots } from "@/lib/booking/slots";
 import { hashBookingToken } from "@/lib/booking/token";
 import { addDaysToIsoDate, zonedCivilToUtc } from "@/lib/booking/timezone";
@@ -352,6 +353,7 @@ export async function listServiceEmailAutomations(): Promise<
   return ((data ?? []) as Omit<ServiceEmailAutomationRow, "service_ids">[]).map(
     (row) => ({
       ...row,
+      days_before: normalizeDayOffsets(row.days_before),
       translations: parseAutomationTranslations(row.translations),
       service_ids: serviceIdsByAutomation.get(row.id) ?? [],
     }),

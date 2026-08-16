@@ -75,7 +75,7 @@ export type ServiceEmailAutomationRow = {
   title: string;
   subject: string;
   body: string;
-  days_before: number;
+  days_before: number[];
   recipients: string[];
   is_enabled: boolean;
   include_do_not_reply: boolean;

@@ -149,6 +149,7 @@ function AutomationForm({
   services,
   formFields,
   automation,
+  isEnabled,
   onCancel,
 }: {
   locale: string;
@@ -156,6 +157,7 @@ function AutomationForm({
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   automation?: ServiceEmailAutomationRow;
+  isEnabled: boolean;
   onCancel: () => void;
 }) {
   const t = useTranslations("services");
@@ -186,7 +188,6 @@ function AutomationForm({
     extraEmailsFrom(automation?.recipients ?? []),
   );
   const [extraDraft, setExtraDraft] = useState("");
-  const [isEnabled, setIsEnabled] = useState(automation?.is_enabled ?? true);
   const [includeDoNotReply, setIncludeDoNotReply] = useState(
     automation?.include_do_not_reply ?? true,
   );
@@ -356,10 +357,8 @@ function AutomationForm({
           <Input
             id="daysBefore"
             name="daysBefore"
-            type="number"
-            min={0}
-            max={90}
-            defaultValue={automation?.days_before ?? 1}
+            placeholder={t("automationDaysPlaceholder")}
+            defaultValue={(automation?.days_before ?? [1]).join(", ")}
             required
           />
           <FieldHint>{t("automationDaysHint")}</FieldHint>
@@ -579,21 +578,6 @@ function AutomationForm({
               onCheckedChange={setIncludeDoNotReply}
             />
           </div>
-          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
-            <div className="min-w-0 space-y-0.5">
-              <Label htmlFor="automation-enabled" className="text-sm font-medium">
-                {t("automationEnabled")}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                {t("automationEnabledHelp")}
-              </p>
-            </div>
-            <Switch
-              id="automation-enabled"
-              checked={isEnabled}
-              onCheckedChange={setIsEnabled}
-            />
-          </div>
         </div>
       </section>
 
@@ -636,6 +620,7 @@ export function ServiceEmailAutomationsButton({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceEmailAutomationRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [formEnabled, setFormEnabled] = useState(true);
   const serviceTitleById = useMemo(
     () =>
       new Map(
@@ -650,6 +635,7 @@ export function ServiceEmailAutomationsButton({
   function closeForm() {
     setCreating(false);
     setEditing(null);
+    setFormEnabled(true);
   }
 
   return (
@@ -680,18 +666,38 @@ export function ServiceEmailAutomationsButton({
           showCloseButton
         >
           <DialogHeader>
-            <DialogTitle>
-              {creating || editing
-                ? editing
-                  ? t("editAutomationTitle")
-                  : t("newAutomationTitle")
-                : t("automationsTitle")}
-            </DialogTitle>
-            <DialogDescription>
-              {creating || editing
-                ? t("automationFormSubtitle")
-                : t("automationsListSubtitle")}
-            </DialogDescription>
+            <div className="flex items-start justify-between gap-4 pr-8">
+              <div className="min-w-0 space-y-2">
+                <DialogTitle>
+                  {creating || editing
+                    ? editing
+                      ? t("editAutomationTitle")
+                      : t("newAutomationTitle")
+                    : t("automationsTitle")}
+                </DialogTitle>
+                <DialogDescription>
+                  {creating || editing
+                    ? t("automationFormSubtitle")
+                    : t("automationsListSubtitle")}
+                </DialogDescription>
+              </div>
+              {creating || editing ? (
+                <div className="flex shrink-0 items-center gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5">
+                  <Label
+                    htmlFor="automation-enabled-header"
+                    className="text-sm font-semibold text-brand"
+                  >
+                    {t("automationActive")}
+                  </Label>
+                  <Switch
+                    id="automation-enabled-header"
+                    checked={formEnabled}
+                    onCheckedChange={setFormEnabled}
+                    className="h-7 w-12 shrink-0 data-[size=default]:h-7 data-[size=default]:w-12 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-checked:translate-x-5"
+                  />
+                </div>
+              ) : null}
+            </div>
           </DialogHeader>
 
           <div className="min-h-0 overflow-x-hidden overflow-y-auto pr-1">
@@ -702,6 +708,7 @@ export function ServiceEmailAutomationsButton({
                 services={services}
                 formFields={formFields}
                 automation={editing ?? undefined}
+                isEnabled={formEnabled}
                 onCancel={closeForm}
               />
             ) : (
@@ -732,7 +739,8 @@ export function ServiceEmailAutomationsButton({
                                   : names.join(", ")}
                                 {" · "}
                                 {t("automationSummary", {
-                                  days: automation.days_before,
+                                  days:
+                                    automation.days_before.join(", ") || "—",
                                   count: automation.recipients.length,
                                 })}
                               </p>
@@ -762,7 +770,10 @@ export function ServiceEmailAutomationsButton({
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setEditing(automation)}
+                                  onClick={() => {
+                                    setFormEnabled(automation.is_enabled);
+                                    setEditing(automation);
+                                  }}
                                 >
                                   <Pencil className="size-4" />
                                 </Button>
@@ -811,6 +822,7 @@ export function ServiceEmailAutomationsButton({
                     disabled={services.length === 0}
                     onClick={() => {
                       setEditing(null);
+                      setFormEnabled(true);
                       setCreating(true);
                     }}
                   >

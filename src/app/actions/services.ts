@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { parseDayOffsets } from "@/lib/booking/day-offsets";
 import {
   parseServiceTranslations,
 } from "@/lib/booking/service-i18n";
@@ -29,25 +30,6 @@ const serviceFieldsSchema = z.object({
   allowPayLater: z.enum(["on", "true", "false"]).optional(),
   paymentReminderDays: z.string().optional(),
 });
-
-function parseReminderDays(raw: string | undefined): number[] | null {
-  if (!raw || !raw.trim()) return [];
-  const parts = raw
-    .split(/[,\s]+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (parts.length > 3) return null;
-  const days: number[] = [];
-  const seen = new Set<number>();
-  for (const part of parts) {
-    const value = Number.parseInt(part, 10);
-    if (!Number.isFinite(value) || value < 0 || value > 90) return null;
-    if (seen.has(value)) continue;
-    seen.add(value);
-    days.push(value);
-  }
-  return days.sort((a, b) => b - a);
-}
 
 async function requireManager() {
   const membership = await getPrimaryMembership();
@@ -86,7 +68,7 @@ export async function createServiceAction(
   if (!parsed.success) return { error: "invalid" };
   const priceCents = parsePriceToCents(parsed.data.price);
   if (priceCents == null) return { error: "invalid" };
-  const reminderDays = parseReminderDays(parsed.data.paymentReminderDays);
+  const reminderDays = parseDayOffsets(parsed.data.paymentReminderDays);
   if (reminderDays == null) return { error: "invalid" };
 
   const gate = await requireManager();
@@ -149,7 +131,7 @@ export async function updateServiceAction(
   if (!parsed.success) return { error: "invalid" };
   const priceCents = parsePriceToCents(parsed.data.price);
   if (priceCents == null) return { error: "invalid" };
-  const reminderDays = parseReminderDays(parsed.data.paymentReminderDays);
+  const reminderDays = parseDayOffsets(parsed.data.paymentReminderDays);
   if (reminderDays == null) return { error: "invalid" };
 
   const gate = await requireManager();

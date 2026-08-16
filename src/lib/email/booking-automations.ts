@@ -12,6 +12,7 @@ import {
   renderAutomationPlain,
   resolveRecipientAddresses,
 } from "@/lib/email/automation-template";
+import { normalizeDayOffsets } from "@/lib/booking/day-offsets";
 import { extraAutomationVariables } from "@/lib/booking/form-fields";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import type {
@@ -76,7 +77,10 @@ export async function processDueBookingAutomations(now = new Date()) {
   ];
   if (serviceIds.length === 0) return { processed: 0, sent: 0 };
 
-  const maxDays = Math.max(0, ...enabled.map((row) => row.days_before));
+  const maxDays = Math.max(
+    0,
+    ...enabled.flatMap((row) => normalizeDayOffsets(row.days_before)),
+  );
   const windowEnd = new Date(now.getTime() + (maxDays + 1) * 86_400_000);
 
   const { data: appointments, error: appointmentError } = await admin
@@ -116,7 +120,7 @@ export async function processDueBookingAutomations(now = new Date()) {
         .in("id", hostIds),
       admin
         .from("booking_automation_sends")
-        .select("automation_id, appointment_id, appointment_starts_at")
+        .select("automation_id, appointment_id, days_before, appointment_starts_at")
         .in("appointment_id", appointmentIds),
     ]);
 
@@ -159,7 +163,7 @@ export async function processDueBookingAutomations(now = new Date()) {
   const sentKeys = new Set(
     (sendsRes.data ?? []).map(
       (row) =>
-        `${row.automation_id}:${row.appointment_id}:${row.appointment_starts_at}`,
+        `${row.automation_id}:${row.appointment_id}:${row.days_before}:${row.appointment_starts_at}`,
     ),
   );
 
@@ -199,102 +203,124 @@ export async function processDueBookingAutomations(now = new Date()) {
       orgDefaultLocale.get(appointment.organization_id) ?? "en";
 
     for (const automation of matching) {
-      processed += 1;
-      if (
-        !isAutomationDue({
-          startsAt,
-          daysBefore: automation.days_before,
-          now,
-          timeZone,
-        })
-      ) {
-        continue;
-      }
-      const sendKey = `${automation.id}:${appointment.id}:${appointment.starts_at}`;
-      if (sentKeys.has(sendKey)) continue;
+      const offsets = normalizeDayOffsets(automation.days_before);
+      if (offsets.length === 0) continue;
 
-      const { copy, locale: emailLocale } = pickAutomationCopy({
-        translations: parseAutomationTranslations(automation.translations),
-        fallback: {
-          subject: automation.subject,
-          body: automation.body,
-        },
-        preferredLocale,
-        orgDefaultLocale: defaultLocale,
-      });
-      const vars = automationVariablesFor({
-        locale: emailLocale,
-        timeZone,
-        customerName: guest.guest_name,
-        customerEmail: guest.guest_email,
-        serviceName: serviceTitle(service, preferredLocale, defaultLocale),
-        consultantName: host?.name ?? appointment.host_user_id,
-        consultantEmail: host?.email ?? "",
-        organizationName:
-          orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
-        startsAt,
-        durationMinutes: service.duration_minutes,
-        meetJoinUrl: appointment.meet_join_url,
-        extra: answers,
-      });
-      const addresses = resolveRecipientAddresses(
-        automation.recipients ?? [],
-        vars,
-      );
-      if (addresses.length === 0) continue;
+      let prepared:
+        | {
+            subject: string;
+            text: string;
+            html: string;
+            emailLocale: string;
+            addresses: string[];
+          }
+        | null = null;
 
-      const { error: claimError } = await admin
-        .from("booking_automation_sends")
-        .insert({
-          organization_id: appointment.organization_id,
-          automation_id: automation.id,
-          appointment_id: appointment.id,
-          appointment_starts_at: appointment.starts_at,
-        });
-      if (claimError) {
-        if (claimError.code !== "23505") {
-          console.error("booking automation claim:", claimError.message);
+      for (const daysBefore of offsets) {
+        processed += 1;
+        if (
+          !isAutomationDue({
+            startsAt,
+            daysBefore,
+            now,
+            timeZone,
+          })
+        ) {
+          continue;
         }
-        continue;
-      }
-      sentKeys.add(sendKey);
+        const sendKey = `${automation.id}:${appointment.id}:${daysBefore}:${appointment.starts_at}`;
+        if (sentKeys.has(sendKey)) continue;
 
-      const subject = renderAutomationPlain(copy.subject, vars);
-      const text = renderAutomationPlain(copy.body, vars);
-      const html = `<!doctype html>
+        if (!prepared) {
+          const { copy, locale: emailLocale } = pickAutomationCopy({
+            translations: parseAutomationTranslations(automation.translations),
+            fallback: {
+              subject: automation.subject,
+              body: automation.body,
+            },
+            preferredLocale,
+            orgDefaultLocale: defaultLocale,
+          });
+          const vars = automationVariablesFor({
+            locale: emailLocale,
+            timeZone,
+            customerName: guest.guest_name,
+            customerEmail: guest.guest_email,
+            serviceName: serviceTitle(service, preferredLocale, defaultLocale),
+            consultantName: host?.name ?? appointment.host_user_id,
+            consultantEmail: host?.email ?? "",
+            organizationName:
+              orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
+            startsAt,
+            durationMinutes: service.duration_minutes,
+            meetJoinUrl: appointment.meet_join_url,
+            extra: answers,
+          });
+          const addresses = resolveRecipientAddresses(
+            automation.recipients ?? [],
+            vars,
+          );
+          if (addresses.length === 0) break;
+          prepared = {
+            subject: renderAutomationPlain(copy.subject, vars),
+            text: renderAutomationPlain(copy.body, vars),
+            html: `<!doctype html>
 <html lang="${emailLocale}">
   <body style="margin:0;padding:24px;background:${email.bodyBg};color:${email.text};font-family:Inter,Helvetica,Arial,sans-serif;">
     <div style="max-width:560px;margin:0 auto;background:${email.cardBg};border:1px solid ${email.border};border-radius:12px;padding:28px 24px;font-size:15px;line-height:1.5;">
       ${renderAutomationHtml(copy.body, vars)}
     </div>
   </body>
-</html>`;
+</html>`,
+            emailLocale,
+            addresses,
+          };
+        }
 
-      let allSent = true;
-      for (const to of addresses) {
-        const result = await sendResendEmail({
-          to,
-          subject,
-          html,
-          text,
-          organizationName:
-            orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
-          locale: emailLocale,
-          includeDoNotReply: automation.include_do_not_reply !== false,
-        });
-        if (!result.sent) allSent = false;
-      }
-      if (!allSent) {
-        await admin
+        const { error: claimError } = await admin
           .from("booking_automation_sends")
-          .delete()
-          .eq("automation_id", automation.id)
-          .eq("appointment_id", appointment.id)
-          .eq("appointment_starts_at", appointment.starts_at);
-        sentKeys.delete(sendKey);
-        continue;
+          .insert({
+            organization_id: appointment.organization_id,
+            automation_id: automation.id,
+            appointment_id: appointment.id,
+            days_before: daysBefore,
+            appointment_starts_at: appointment.starts_at,
+          });
+        if (claimError) {
+          if (claimError.code !== "23505") {
+            console.error("booking automation claim:", claimError.message);
+          }
+          continue;
+        }
+        sentKeys.add(sendKey);
+
+        let allSent = true;
+        for (const to of prepared.addresses) {
+          const result = await sendResendEmail({
+            to,
+            subject: prepared.subject,
+            html: prepared.html,
+            text: prepared.text,
+            organizationName:
+              orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
+            locale: prepared.emailLocale,
+            includeDoNotReply: automation.include_do_not_reply !== false,
+          });
+          if (!result.sent) allSent = false;
+        }
+        if (!allSent) {
+          await admin
+            .from("booking_automation_sends")
+            .delete()
+            .eq("automation_id", automation.id)
+            .eq("appointment_id", appointment.id)
+            .eq("days_before", daysBefore)
+            .eq("appointment_starts_at", appointment.starts_at);
+          sentKeys.delete(sendKey);
+          continue;
+        }
+        sent += 1;
       }
-      sent += 1;
     }
   }
 

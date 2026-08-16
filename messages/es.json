@@ -159,6 +159,8 @@
     "welcome": "Bienvenido de nuevo, {name}",
     "welcomeFallback": "Bienvenido de nuevo",
     "dashboardSubtitle": "Actúe sobre expedientes, citas y estatus de clientes en un solo lugar.",
+    "actionSummary": "{count, plural, one {# asunto le espera} other {# asuntos le esperan}}{bookings, plural, =0 {} one { · # cita hoy} other { · # citas hoy}}",
+    "actionSummaryClear": "Nada pendiente{bookings, plural, =0 {} one { · # cita hoy} other { · # citas hoy}}",
     "orgLabel": "Organización",
     "roleLabel": "Rol",
     "newProject": "Añadir proyecto",
@@ -184,7 +186,23 @@
       "todayBookings": "Citas de hoy",
       "weekBookings": "{count, plural, one {# esta semana} other {# esta semana}}",
       "statusExpiring": "Estatus por vencer",
+      "statusExpiringHint": "Próximos 30 días",
+      "unpaid": "Impagos",
+      "unpaidHint": "Reservas y facturas",
       "peopleCount": "{count, plural, one {# cliente en expediente} other {# clientes en expediente}}"
+    },
+    "attention": {
+      "title": "Requiere acción",
+      "empty": "Nada pendiente en expedientes abiertos.",
+      "docsCount": "{count, plural, one {# doc} other {# docs}}",
+      "kinds": {
+        "overdue": "Vencido",
+        "docs_review": "Revisar",
+        "questionnaire": "Formularios listos",
+        "unpaid": "Impago",
+        "stuck": "Atascado",
+        "due_soon": "Próximo"
+      }
     },
     "bookingSetup": {
       "banner": "La reserva pública aún no está completamente configurada.",
@@ -192,9 +210,10 @@
       "hours": "Definir horarios"
     },
     "appointments": {
-      "title": "Próximas citas",
+      "title": "Esta semana",
       "viewCalendar": "Calendario",
       "empty": "No hay citas en los próximos 7 días.",
+      "emptyToday": "No hay citas hoy.",
       "unknownService": "Consulta"
     },
     "expiries": {
@@ -203,6 +222,9 @@
       "empty": "No hay vencimientos de estatus en los próximos 60 días."
     },
     "charts": {
+      "pipeline": "Expedientes abiertos",
+      "pipelineEmpty": "No hay expedientes abiertos para graficar.",
+      "pipelineTotal": "abiertos",
       "projectsByStatus": "Por estado",
       "projectsByStatusEmpty": "Aún no hay proyectos para graficar.",
       "peopleByVisa": "Por visa",
@@ -1978,7 +2000,8 @@
     "automationBody": "Mensaje",
     "automationVariables": "Insertar una variable",
     "automationDaysBefore": "Días antes de la cita",
-    "automationDaysHint": "0 envía el día de la cita, antes de la hora de inicio.",
+    "automationDaysPlaceholder": "7, 3, 1",
+    "automationDaysHint": "Hasta 3 plazos (0–90 días), separados por comas. 0 envía el día de la cita, antes de la hora de inicio.",
     "automationRecipients": "Destinatarios",
     "recipientCustomer": "Correo del cliente",
     "recipientConsultant": "Correo del consultor",
@@ -1997,7 +2020,7 @@
     "automationDeleteConfirm": "¿Eliminar este recordatorio?",
     "automationPaused": "En pausa",
     "automationActive": "Activo",
-    "automationSummary": "{days, plural, =0 {El día de la cita} one {1 día antes} other {{days} días antes}} · {count, plural, one {# destinatario} other {# destinatarios}}",
+    "automationSummary": "{days} días antes · {count, plural, one {# destinatario} other {# destinatarios}}",
     "variables": {
       "customer_name": "Nombre del cliente",
       "customer_email": "Correo del cliente",
