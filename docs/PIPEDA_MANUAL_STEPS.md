@@ -41,7 +41,7 @@ This file lists **everything that still requires a human** (dashboard clicks, le
 
 ### Documents to finalize with counsel
 - [ ] Review public Privacy Policy at `/[locale]/privacy` (copy lives in `messages/*/legal`)
-- [ ] Replace placeholder contact `privacy@yuzusolutions.ca` with the real monitored inbox (code + DNS + mailbox)
+- [ ] Confirm `privacy@yuzu.solutions` is a monitored inbox (code + DNS + mailbox)
 - [ ] Finalize and execute **Firm Data Processing Addendum**  
   Template: [`docs/templates/firm-data-processing-addendum.md`](templates/firm-data-processing-addendum.md)
 - [ ] Publish a short **security / subprocessors** page or PDF for firm due diligence (Supabase, Vercel, email provider, etc.)

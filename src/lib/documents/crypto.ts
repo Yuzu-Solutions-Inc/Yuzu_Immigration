@@ -11,7 +11,9 @@ const VERSION = 1;
  */
 export function encryptDocument(plaintext: Buffer, orgKey: Buffer): Buffer {
   const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALG, orgKey, iv);
+  const cipher = createCipheriv(ALG, orgKey, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const authTag = cipher.getAuthTag();
   return Buffer.concat([Buffer.from([VERSION]), iv, authTag, ciphertext]);
@@ -31,7 +33,9 @@ export function decryptDocument(payload: Buffer, orgKey: Buffer): Buffer {
     1 + IV_LENGTH + AUTH_TAG_LENGTH,
   );
   const ciphertext = payload.subarray(1 + IV_LENGTH + AUTH_TAG_LENGTH);
-  const decipher = createDecipheriv(ALG, orgKey, iv);
+  const decipher = createDecipheriv(ALG, orgKey, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
   decipher.setAuthTag(authTag);
   try {
     return Buffer.concat([decipher.update(ciphertext), decipher.final()]);

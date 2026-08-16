@@ -36,7 +36,9 @@ export function encryptField(
   key?: Buffer,
 ): string {
   const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALG, key ?? requireAppEncryptionKey(), iv);
+  const cipher = createCipheriv(ALG, key ?? requireAppEncryptionKey(), iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
   cipher.setAAD(Buffer.from(aad, "utf8"));
   const ciphertext = Buffer.concat([
     cipher.update(plaintext, "utf8"),
@@ -65,6 +67,7 @@ export function decryptField(
     ALG,
     key ?? requireAppEncryptionKey(),
     iv,
+    { authTagLength: AUTH_TAG_LENGTH },
   );
   decipher.setAAD(Buffer.from(aad, "utf8"));
   decipher.setAuthTag(authTag);
