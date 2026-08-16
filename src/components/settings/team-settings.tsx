@@ -11,8 +11,9 @@ import {
   type TeamActionState,
 } from "@/app/actions/team";
 import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel, FieldSuccess } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { ORG_ROLES } from "@/lib/auth/rbac";
 import type { AppLocale } from "@/lib/i18n/locales";
@@ -114,8 +115,10 @@ export function TeamSettings({
     <section className="space-y-6">
       <form action={inviteAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]">
         <input type="hidden" name="locale" value={locale} />
-        <div className="space-y-2">
-          <Label htmlFor="inviteEmail">{t("inviteEmail")}</Label>
+        <Field>
+          <FieldLabel htmlFor="inviteEmail" required>
+            {t("inviteEmail")}
+          </FieldLabel>
           <Input
             id="inviteEmail"
             name="email"
@@ -123,22 +126,21 @@ export function TeamSettings({
             required
             autoComplete="email"
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="inviteRole">{t("inviteRole")}</Label>
-          <select
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="inviteRole">{t("inviteRole")}</FieldLabel>
+          <NativeSelect
             id="inviteRole"
             name="role"
             defaultValue="consultant"
-            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
             {ORG_ROLES.map((role) => (
               <option key={role} value={role}>
                 {tRoles(role)}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </Field>
         <div className="flex items-end">
           <Button type="submit" disabled={invitePending}>
             {invitePending ? t("inviteSending") : t("inviteSend")}
@@ -165,16 +167,8 @@ export function TeamSettings({
         </div>
       ) : null}
 
-      {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {success ? (
-        <p className="text-sm text-success" role="status">
-          {success}
-        </p>
-      ) : null}
+      {error ? <FieldError>{error}</FieldError> : null}
+      {success ? <FieldSuccess>{success}</FieldSuccess> : null}
 
       <div className="space-y-3">
         <h4 className="text-sm font-semibold text-brand">{t("members")}</h4>
@@ -200,20 +194,21 @@ export function TeamSettings({
                   <form action={memberAction}>
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="memberId" value={member.id} />
-                    <select
+                    <NativeSelect
                       name="role"
+                      density="compact"
                       defaultValue={member.role}
                       disabled={memberPending}
                       onChange={(event) => event.currentTarget.form?.requestSubmit()}
                       aria-label={t("changeRole")}
-                      className="h-9 rounded-xl border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                      className="w-auto"
                     >
                       {ORG_ROLES.map((role) => (
                         <option key={role} value={role}>
                           {tRoles(role)}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </form>
                   {isSelf ? null : (
                     <form

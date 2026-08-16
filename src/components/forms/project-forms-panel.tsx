@@ -17,6 +17,7 @@ import {
 } from "@/components/forms/modular-questionnaire";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Link } from "@/i18n/navigation";
 import {
@@ -270,12 +271,12 @@ export function ProjectFormsPanel({
             <form action={addAction} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="projectId" value={projectId} />
               <input type="hidden" name="locale" value={locale} />
-              <select
+              <NativeSelect
                 name="formCode"
                 value={formCode}
                 onChange={(e) => setFormCode(e.target.value as FormCode)}
                 aria-label={t("addForm")}
-                className="h-10 min-w-[140px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
+                className="min-w-[140px] flex-1"
               >
                 {addOptions.map((code) => (
                   <option key={code} value={code}>
@@ -285,21 +286,21 @@ export function ProjectFormsPanel({
                       : ` · ${t("scopeProject")}`}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
               {personScoped && people.length > 1 ? (
-                <select
+                <NativeSelect
                   name="personId"
                   value={personId}
                   onChange={(e) => setPersonId(e.target.value)}
                   aria-label={t("assignPerson")}
-                  className="h-10 min-w-[160px] rounded-xl border border-input bg-surface px-3 text-sm"
+                  className="min-w-[160px]"
                 >
                   {people.map((person) => (
                     <option key={person.id} value={person.id}>
                       {person.displayName} · {tr(person.role as never)}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               ) : personScoped ? (
                 <input type="hidden" name="personId" value={personId} />
               ) : null}

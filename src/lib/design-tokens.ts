@@ -73,6 +73,145 @@ export const semantic = {
   sidebarAccent: primitives.graphite[700],
 } as const;
 
+export const space = {
+  1: "0.25rem",
+  2: "0.5rem",
+  3: "0.75rem",
+  4: "1rem",
+  5: "1.25rem",
+  6: "1.5rem",
+  8: "2rem",
+  10: "2.5rem",
+  12: "3rem",
+} as const;
+
+export const type = {
+  size: {
+    "2xs": "0.6875rem",
+    xs: "0.75rem",
+    sm: "0.875rem",
+    md: "0.9375rem",
+    base: "1rem",
+    lg: "1.125rem",
+    xl: "1.25rem",
+    "2xl": "1.5rem",
+  },
+  leading: {
+    tight: 1.25,
+    snug: 1.4,
+    normal: 1.6,
+  },
+  weight: {
+    medium: 500,
+    semibold: 600,
+    heading: 650,
+  },
+} as const;
+
+export const motion = {
+  duration: {
+    fast: "100ms",
+    normal: "150ms",
+    slow: "250ms",
+  },
+  ease: "cubic-bezier(0.2, 0, 0, 1)",
+} as const;
+
+export const elevation = {
+  xs: "0 1px 2px rgba(0, 0, 0, 0.04)",
+  sm: "0 1px 3px rgba(0, 0, 0, 0.06)",
+  elevated: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+  md: "0 4px 8px -2px rgba(0, 0, 0, 0.08)",
+  lg: "0 10px 20px -8px rgba(0, 0, 0, 0.12)",
+} as const;
+
+export const zIndex = {
+  sticky: 30,
+  dropdown: 50,
+  modal: 50,
+  toast: 60,
+  tooltip: 70,
+} as const;
+
+/** Visual densities used by every form control. */
+export const fieldDensity = {
+  default: {
+    height: "2.5rem",
+    radius: "0.75rem",
+    padX: space[3],
+    fontSize: type.size.md,
+    labelSize: type.size.sm,
+    gap: space[2],
+  },
+  compact: {
+    height: "2.25rem",
+    radius: "0.5rem",
+    padX: space[2],
+    fontSize: type.size.sm,
+    labelSize: type.size["2xs"],
+    gap: space[1],
+  },
+  dense: {
+    height: "2rem",
+    radius: "0.5rem",
+    padX: space[2],
+    fontSize: type.size.sm,
+    labelSize: type.size.xs,
+    gap: space[1],
+  },
+} as const;
+
+export type FieldDensity = keyof typeof fieldDensity;
+
+/**
+ * Field types the product repeats. Primitive types share one control chrome;
+ * composite types are organisms built from primitive fields.
+ */
+export const fieldTypes = {
+  primitive: [
+    "text",
+    "email",
+    "tel",
+    "password",
+    "number",
+    "date",
+    "month",
+    "search",
+    "textarea",
+    "select",
+    "checkbox",
+    "yesno",
+    "switch",
+  ],
+  composite: ["address", "phone_contact", "passport"],
+} as const;
+
+export type PrimitiveFieldType = (typeof fieldTypes.primitive)[number];
+export type CompositeFieldType = (typeof fieldTypes.composite)[number];
+export type FieldType = PrimitiveFieldType | CompositeFieldType;
+
+export const fieldTypeMeta: Record<
+  FieldType,
+  { control: "input" | "textarea" | "select" | "checkbox" | "switch" | "group"; width?: string }
+> = {
+  text: { control: "input" },
+  email: { control: "input" },
+  tel: { control: "input" },
+  password: { control: "input" },
+  number: { control: "input", width: "8rem" },
+  date: { control: "input", width: "12rem" },
+  month: { control: "input", width: "12rem" },
+  search: { control: "input" },
+  textarea: { control: "textarea" },
+  select: { control: "select" },
+  checkbox: { control: "checkbox" },
+  yesno: { control: "select" },
+  switch: { control: "switch" },
+  address: { control: "group" },
+  phone_contact: { control: "group" },
+  passport: { control: "group" },
+};
+
 /** Inline email styles mapped to semantic tokens. */
 export const email = {
   bodyBg: semantic.canvas,

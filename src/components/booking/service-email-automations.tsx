@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -290,8 +291,10 @@ function AutomationForm({
         value={includeDoNotReply ? "on" : ""}
       />
 
-      <div className="space-y-2">
-        <Label htmlFor="automation-title">{t("automationTitle")}</Label>
+      <Field>
+        <FieldLabel htmlFor="automation-title" required>
+          {t("automationTitle")}
+        </FieldLabel>
         <Input
           id="automation-title"
           name="title"
@@ -300,7 +303,7 @@ function AutomationForm({
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
-      </div>
+      </Field>
 
       <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
         <div>
@@ -346,23 +349,21 @@ function AutomationForm({
         <h3 className="text-sm font-semibold text-brand">
           {t("automationScheduleSection")}
         </h3>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="min-w-0 space-y-2">
-            <Label htmlFor="daysBefore">{t("automationDaysBefore")}</Label>
-            <Input
-              id="daysBefore"
-              name="daysBefore"
-              type="number"
-              min={0}
-              max={90}
-              defaultValue={automation?.days_before ?? 1}
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              {t("automationDaysHint")}
-            </p>
-          </div>
-        </div>
+        <Field className="max-w-sm">
+          <FieldLabel htmlFor="daysBefore" required>
+            {t("automationDaysBefore")}
+          </FieldLabel>
+          <Input
+            id="daysBefore"
+            name="daysBefore"
+            type="number"
+            min={0}
+            max={90}
+            defaultValue={automation?.days_before ?? 1}
+            required
+          />
+          <FieldHint>{t("automationDaysHint")}</FieldHint>
+        </Field>
       </section>
 
       <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
@@ -401,11 +402,13 @@ function AutomationForm({
               keepMounted
               className="space-y-3 pt-3"
             >
-              <div className="space-y-2">
-                <Label htmlFor={`automation-subject-${code}`}>
+              <Field>
+                <FieldLabel
+                  htmlFor={`automation-subject-${code}`}
+                  required={code === orgDefaultLocale}
+                >
                   {t("automationSubject")}
-                  {code === orgDefaultLocale ? " *" : ""}
-                </Label>
+                </FieldLabel>
                 <Input
                   ref={(el) => {
                     subjectRefs.current[code] = el;
@@ -424,12 +427,14 @@ function AutomationForm({
                     lastLocale.current = code;
                   }}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`automation-body-${code}`}>
+              </Field>
+              <Field>
+                <FieldLabel
+                  htmlFor={`automation-body-${code}`}
+                  required={code === orgDefaultLocale}
+                >
                   {t("automationBody")}
-                  {code === orgDefaultLocale ? " *" : ""}
-                </Label>
+                </FieldLabel>
                 <Textarea
                   ref={(el) => {
                     bodyRefs.current[code] = el;
@@ -449,7 +454,7 @@ function AutomationForm({
                     lastLocale.current = code;
                   }}
                 />
-              </div>
+              </Field>
             </TabsContent>
           ))}
         </Tabs>

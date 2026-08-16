@@ -9,8 +9,16 @@ import {
   type ProjectActionState,
 } from "@/app/actions/projects";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGrid,
+  FieldHint,
+  FieldLabel,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   ParticipantRole,
@@ -349,7 +357,7 @@ export function ProjectForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <FormStack action={formAction} gap="loose">
       <input type="hidden" name="locale" value={locale} />
       {initial ? (
         <input type="hidden" name="projectId" value={initial.projectId} />
@@ -388,36 +396,35 @@ export function ProjectForm({
       />
 
       {isEdit ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="title">{t("titleLabel")}</Label>
+        <FieldGrid>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="title">{t("titleLabel")}</FieldLabel>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("titlePlaceholder")}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="status">{t("status")}</Label>
-            <select
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="status">{t("status")}</FieldLabel>
+            <NativeSelect
               id="status"
               value={status}
               onChange={(e) => {
                 setStatus(e.target.value as ProjectStatus);
                 setStatusAt(todayDateInputValue());
               }}
-              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             >
               {PROJECT_STATUSES.map((value) => (
                 <option key={value} value={value}>
                   {t(`statuses.${value}`)}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="statusAt">{t("statusAt")}</Label>
+            </NativeSelect>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="statusAt">{t("statusAt")}</FieldLabel>
             <Input
               id="statusAt"
               type="date"
@@ -425,26 +432,23 @@ export function ProjectForm({
               onChange={(e) => setStatusAt(e.target.value)}
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="submitBefore">{t("submitBefore")}</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="submitBefore">{t("submitBefore")}</FieldLabel>
             <Input
               id="submitBefore"
               type="date"
               value={submitBefore}
               onChange={(e) => setSubmitBefore(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              {t("submitBeforeHelp")}
-            </p>
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="representative">{t("representative")}</Label>
-            <select
+            <FieldHint>{t("submitBeforeHelp")}</FieldHint>
+          </Field>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="representative">{t("representative")}</FieldLabel>
+            <NativeSelect
               id="representative"
               value={representativeUserId}
               onChange={(e) => setRepresentativeUserId(e.target.value)}
-              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               required={members.length > 0}
             >
               {members.length === 0 ? (
@@ -456,31 +460,28 @@ export function ProjectForm({
                   </option>
                 ))
               )}
-            </select>
-            <p className="text-xs text-muted-foreground">
-              {t("representativeHelp")}
-            </p>
-          </div>
-        </div>
+            </NativeSelect>
+            <FieldHint>{t("representativeHelp")}</FieldHint>
+          </Field>
+        </FieldGrid>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="submitBefore">{t("submitBefore")}</Label>
+        <FieldGrid>
+          <Field>
+            <FieldLabel htmlFor="submitBefore">{t("submitBefore")}</FieldLabel>
             <Input
               id="submitBefore"
               type="date"
               value={submitBefore}
               onChange={(e) => setSubmitBefore(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">{t("submitBeforeHelp")}</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="representative">{t("representative")}</Label>
-            <select
+            <FieldHint>{t("submitBeforeHelp")}</FieldHint>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="representative">{t("representative")}</FieldLabel>
+            <NativeSelect
               id="representative"
               value={representativeUserId}
               onChange={(e) => setRepresentativeUserId(e.target.value)}
-              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               required={members.length > 0}
             >
               {members.length === 0 ? (
@@ -492,16 +493,14 @@ export function ProjectForm({
                   </option>
                 ))
               )}
-            </select>
-            <p className="text-xs text-muted-foreground">
-              {t("representativeHelp")}
-            </p>
-          </div>
-        </div>
+            </NativeSelect>
+            <FieldHint>{t("representativeHelp")}</FieldHint>
+          </Field>
+        </FieldGrid>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="description">{t("description")}</Label>
+      <Field>
+        <FieldLabel htmlFor="description">{t("description")}</FieldLabel>
         <Textarea
           id="description"
           value={description}
@@ -509,14 +508,13 @@ export function ProjectForm({
           placeholder={t("descriptionPlaceholder")}
           maxLength={500}
           rows={2}
-          className="rounded-xl"
         />
-        <p className="text-xs text-muted-foreground">{t("descriptionHelp")}</p>
-      </div>
+        <FieldHint>{t("descriptionHelp")}</FieldHint>
+      </Field>
 
       {!isEdit ? (
-        <div className="space-y-2">
-          <Label htmlFor="notes">{t("notes")}</Label>
+        <Field>
+          <FieldLabel htmlFor="notes">{t("notes")}</FieldLabel>
           <Textarea
             id="notes"
             value={notes}
@@ -524,14 +522,13 @@ export function ProjectForm({
             placeholder={t("notesPlaceholder")}
             maxLength={10000}
             rows={4}
-            className="rounded-xl"
           />
-          <p className="text-xs text-muted-foreground">{t("notesHelp")}</p>
-        </div>
+          <FieldHint>{t("notesHelp")}</FieldHint>
+        </Field>
       ) : null}
 
-      <div className="space-y-2">
-        <Label>{t("composition")}</Label>
+      <Field>
+        <FieldLabel>{t("composition")}</FieldLabel>
         <div className="grid grid-cols-3 gap-2">
           {(["individual", "couple", "family"] as const).map((value) => {
             const allowed = selectedOrgProgram
@@ -554,16 +551,15 @@ export function ProjectForm({
             );
           })}
         </div>
-      </div>
+      </Field>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="programFamily">{t("program")}</Label>
-          <select
+      <FieldGrid>
+        <Field>
+          <FieldLabel htmlFor="programFamily">{t("program")}</FieldLabel>
+          <NativeSelect
             id="programFamily"
             value={programSelectValue}
             onChange={(e) => handleProgramSelectChange(e.target.value)}
-            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
             <optgroup label={to("builtinGroup")}>
               {(SELECTABLE_PROGRAM_FAMILIES.includes(programFamily) ||
@@ -588,29 +584,24 @@ export function ProjectForm({
                 ))}
               </optgroup>
             ) : null}
-          </select>
-          {customFile ? (
-            <p className="text-xs text-muted-foreground">{t("customHelp")}</p>
-          ) : null}
-          {selectedOrgProgram ? (
-            <p className="text-xs text-muted-foreground">{to("templateHelp")}</p>
-          ) : null}
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="formLanguage">{t("formLanguage")}</Label>
-          <select
+          </NativeSelect>
+          {customFile ? <FieldHint>{t("customHelp")}</FieldHint> : null}
+          {selectedOrgProgram ? <FieldHint>{to("templateHelp")}</FieldHint> : null}
+        </Field>
+        <Field className="sm:col-span-2">
+          <FieldLabel htmlFor="formLanguage">{t("formLanguage")}</FieldLabel>
+          <NativeSelect
             id="formLanguage"
             value={formLanguage}
             onChange={(e) =>
               setFormLanguage(e.target.value === "fr" ? "fr" : "en")
             }
-            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
             <option value="en">{t("formLanguages.en")}</option>
             <option value="fr">{t("formLanguages.fr")}</option>
-          </select>
-          <p className="text-xs text-muted-foreground">{t("formLanguageHelp")}</p>
-        </div>
+          </NativeSelect>
+          <FieldHint>{t("formLanguageHelp")}</FieldHint>
+        </Field>
         {isFederalPermitProgram(programFamily) ||
         customFile ||
         selectedOrgProgram ? (
@@ -619,11 +610,11 @@ export function ProjectForm({
             (selectedOrgProgram &&
               selectedOrgProgram.allows_inside_canada &&
               selectedOrgProgram.allows_outside_canada) ? (
-              <div className="space-y-2">
-                <Label htmlFor="applicationLocation">
+              <Field>
+                <FieldLabel htmlFor="applicationLocation">
                   {t("applicationLocation")}
-                </Label>
-                <select
+                </FieldLabel>
+                <NativeSelect
                   id="applicationLocation"
                   value={applicationLocation}
                   onChange={(e) =>
@@ -631,7 +622,6 @@ export function ProjectForm({
                       e.target.value === "inside" ? "inside" : "outside",
                     )
                   }
-                  className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                 >
                   {(selectedOrgProgram
                     ? [
@@ -650,55 +640,47 @@ export function ProjectForm({
                         : t("locationInside")}
                     </option>
                   ))}
-                </select>
-                <p className="text-xs text-muted-foreground">
-                  {t("applicationLocationHelp")}
-                </p>
-              </div>
+                </NativeSelect>
+                <FieldHint>{t("applicationLocationHelp")}</FieldHint>
+              </Field>
             ) : null}
             {!selectedOrgProgram ? (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="isCommonLaw">{t("isCommonLaw")}</Label>
-                  <select
+                <Field>
+                  <FieldLabel htmlFor="isCommonLaw">{t("isCommonLaw")}</FieldLabel>
+                  <NativeSelect
                     id="isCommonLaw"
                     value={isCommonLaw ? "Y" : "N"}
                     onChange={(e) => setIsCommonLaw(e.target.value === "Y")}
-                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     <option value="N">{t("commonLawNo")}</option>
                     <option value="Y">{t("commonLawYes")}</option>
-                  </select>
-                  <p className="text-xs text-muted-foreground">
-                    {t("isCommonLawHelp")}
-                  </p>
-                </div>
+                  </NativeSelect>
+                  <FieldHint>{t("isCommonLawHelp")}</FieldHint>
+                </Field>
                 {isStudyPermitProgram(programFamily) ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="needsCustodian">{t("isMinor")}</Label>
-                    <select
+                  <Field>
+                    <FieldLabel htmlFor="needsCustodian">{t("isMinor")}</FieldLabel>
+                    <NativeSelect
                       id="needsCustodian"
                       value={needsCustodian ? "Y" : "N"}
                       onChange={(e) => setNeedsCustodian(e.target.value === "Y")}
-                      className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                     >
                       <option value="N">{t("commonLawNo")}</option>
                       <option value="Y">{t("commonLawYes")}</option>
-                    </select>
-                    <p className="text-xs text-muted-foreground">
-                      {t("isMinorHelp")}
-                    </p>
-                  </div>
+                    </NativeSelect>
+                    <FieldHint>{t("isMinorHelp")}</FieldHint>
+                  </Field>
                 ) : null}
               </>
             ) : null}
           </>
         ) : null}
-      </div>
+      </FieldGrid>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <Label>{t("participants")}</Label>
+          <FieldLabel>{t("participants")}</FieldLabel>
           {composition === "family" ? (
             <button
               type="button"
@@ -768,7 +750,7 @@ export function ProjectForm({
             </div>
 
             {slot.mode === "existing" ? (
-              <select
+              <NativeSelect
                 value={slot.personId}
                 onChange={(e) => {
                   const person = people.find((p) => p.id === e.target.value);
@@ -779,7 +761,6 @@ export function ProjectForm({
                     email: person?.email ?? "",
                   });
                 }}
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px]"
                 required
               >
                 <option value="" disabled={Boolean(slot.personId)}>
@@ -791,11 +772,11 @@ export function ProjectForm({
                     {person.email ? ` · ${person.email}` : ""}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>{t("firstName")}</Label>
+              <FieldGrid>
+                <Field>
+                  <FieldLabel required>{t("firstName")}</FieldLabel>
                   <Input
                     value={slot.firstName}
                     onChange={(e) =>
@@ -803,9 +784,9 @@ export function ProjectForm({
                     }
                     required
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{t("lastName")}</Label>
+                </Field>
+                <Field>
+                  <FieldLabel required>{t("lastName")}</FieldLabel>
                   <Input
                     value={slot.lastName}
                     onChange={(e) =>
@@ -813,9 +794,9 @@ export function ProjectForm({
                     }
                     required
                   />
-                </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label>{t("emailOptional")}</Label>
+                </Field>
+                <Field className="sm:col-span-2">
+                  <FieldLabel>{t("emailOptional")}</FieldLabel>
                   <Input
                     type="email"
                     value={slot.email}
@@ -823,12 +804,12 @@ export function ProjectForm({
                       updateSlot(index, { email: e.target.value })
                     }
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`immigrationStatus-${index}`}>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`immigrationStatus-${index}`}>
                     {t("immigrationStatus")}
-                  </Label>
-                  <select
+                  </FieldLabel>
+                  <NativeSelect
                     id={`immigrationStatus-${index}`}
                     value={slot.immigrationStatus}
                     onChange={(e) => {
@@ -841,19 +822,18 @@ export function ProjectForm({
                           : "",
                       });
                     }}
-                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     {PERSON_IMMIGRATION_STATUSES.map((value) => (
                       <option key={value} value={value}>
                         {ti(value)}
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`statusExpiresAt-${index}`}>
+                  </NativeSelect>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`statusExpiresAt-${index}`}>
                     {t("statusExpiresAt")}
-                  </Label>
+                  </FieldLabel>
                   <Input
                     id={`statusExpiresAt-${index}`}
                     type="date"
@@ -862,18 +842,17 @@ export function ProjectForm({
                     onChange={(e) =>
                       updateSlot(index, { statusExpiresAt: e.target.value })
                     }
-                    className="disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
                   />
-                </div>
-              </div>
+                </Field>
+              </FieldGrid>
             )}
             {customFile ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`personProgram-${index}`}>
+              <FieldGrid>
+                <Field>
+                  <FieldLabel htmlFor={`personProgram-${index}`}>
                     {t("personProgram")}
-                  </Label>
-                  <select
+                  </FieldLabel>
+                  <NativeSelect
                     id={`personProgram-${index}`}
                     value={slot.programFamily}
                     onChange={(e) => {
@@ -886,20 +865,19 @@ export function ProjectForm({
                           next === "study_permit" ? slot.needsCustodian : false,
                       });
                     }}
-                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     {PERMIT_PROGRAM_FAMILIES.map((family) => (
                       <option key={family} value={family}>
                         {tp(family)}
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`personLocation-${index}`}>
+                  </NativeSelect>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`personLocation-${index}`}>
                     {t("applicationLocation")}
-                  </Label>
-                  <select
+                  </FieldLabel>
+                  <NativeSelect
                     id={`personLocation-${index}`}
                     value={slot.applicationLocation}
                     onChange={(e) =>
@@ -908,16 +886,17 @@ export function ProjectForm({
                           e.target.value === "inside" ? "inside" : "outside",
                       })
                     }
-                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                   >
                     <option value="outside">{t("locationOutside")}</option>
                     <option value="inside">{t("locationInside")}</option>
-                  </select>
-                </div>
+                  </NativeSelect>
+                </Field>
                 {slot.programFamily === "study_permit" ? (
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor={`personMinor-${index}`}>{t("isMinor")}</Label>
-                    <select
+                  <Field className="sm:col-span-2">
+                    <FieldLabel htmlFor={`personMinor-${index}`}>
+                      {t("isMinor")}
+                    </FieldLabel>
+                    <NativeSelect
                       id={`personMinor-${index}`}
                       value={slot.needsCustodian ? "Y" : "N"}
                       onChange={(e) =>
@@ -925,27 +904,20 @@ export function ProjectForm({
                           needsCustodian: e.target.value === "Y",
                         })
                       }
-                      className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                     >
                       <option value="N">{t("commonLawNo")}</option>
                       <option value="Y">{t("commonLawYes")}</option>
-                    </select>
-                    <p className="text-xs text-muted-foreground">
-                      {t("isMinorHelp")}
-                    </p>
-                  </div>
+                    </NativeSelect>
+                    <FieldHint>{t("isMinorHelp")}</FieldHint>
+                  </Field>
                 ) : null}
-              </div>
+              </FieldGrid>
             ) : null}
           </div>
         ))}
       </div>
 
-      {errorMessage ? (
-        <p className="text-sm text-destructive" role="alert">
-          {errorMessage}
-        </p>
-      ) : null}
+      {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
 
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending
@@ -956,7 +928,7 @@ export function ProjectForm({
             ? t("save")
             : t("create")}
       </Button>
-    </form>
+    </FormStack>
   );
 }
 

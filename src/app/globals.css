@@ -84,6 +84,10 @@
   --color-amber-700: var(--amber-700);
   --color-amber-900: var(--amber-900);
   --shadow-elevated: var(--shadow-elevated);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -91,6 +95,27 @@
   --radius-2xl: calc(var(--radius) * 1.35);
   --radius-3xl: calc(var(--radius) * 1.6);
   --radius-4xl: calc(var(--radius) * 1.9);
+  --radius-field: var(--field-radius);
+  --radius-field-compact: var(--field-radius-compact);
+  --text-2xs: 0.6875rem;
+  --text-md: 0.9375rem;
+  --text-field: var(--field-font-size);
+  --text-field-compact: var(--field-font-size-compact);
+  --spacing-form: var(--form-gap);
+  --spacing-form-tight: var(--form-gap-tight);
+  --spacing-form-loose: var(--form-gap-loose);
+  --spacing-field: var(--field-gap);
+  --spacing-field-compact: var(--field-gap-compact);
+  --height-field: var(--field-height);
+  --height-field-compact: var(--field-height-compact);
+  --height-field-dense: var(--field-height-dense);
+  --min-height-field-compact: var(--field-height-compact);
+  --min-height-field-dense: var(--field-height-dense);
+  --width-field-phone-code: var(--field-width-phone-code);
+  --width-field-postal: var(--field-width-postal);
+  --width-field-date: var(--field-width-date);
+  --width-field-number: var(--field-width-number);
+  --width-field-filter: var(--field-width-filter);
 }
 
 @layer base {

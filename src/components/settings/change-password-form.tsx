@@ -8,8 +8,14 @@ import {
   type SettingsActionState,
 } from "@/app/actions/settings";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldSuccess,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { AppLocale } from "@/lib/i18n/locales";
 
 const initial: SettingsActionState = {};
@@ -29,7 +35,11 @@ export function ChangePasswordForm({ locale }: { locale: AppLocale }) {
       t("errors.generic"));
 
   return (
-    <form action={action} className="space-y-4 rounded-lg border border-border bg-canvas/40 p-4">
+    <FormStack
+      action={action}
+      gap="tight"
+      className="rounded-lg border border-border bg-canvas/40 p-4"
+    >
       <input type="hidden" name="locale" value={locale} />
 
       <div className="space-y-1">
@@ -39,20 +49,23 @@ export function ChangePasswordForm({ locale }: { locale: AppLocale }) {
         <p className="text-sm text-muted-foreground">{t("passwordChangeHelp")}</p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="currentPassword">{t("currentPassword")}</Label>
+      <Field>
+        <FieldLabel htmlFor="currentPassword" required>
+          {t("currentPassword")}
+        </FieldLabel>
         <Input
           id="currentPassword"
           name="currentPassword"
           type="password"
           autoComplete="current-password"
           required
-          className="h-10"
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <Label htmlFor="newPassword">{t("newPassword")}</Label>
+      <Field>
+        <FieldLabel htmlFor="newPassword" required>
+          {t("newPassword")}
+        </FieldLabel>
         <Input
           id="newPassword"
           name="newPassword"
@@ -60,12 +73,13 @@ export function ChangePasswordForm({ locale }: { locale: AppLocale }) {
           autoComplete="new-password"
           minLength={8}
           required
-          className="h-10"
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmNewPassword">{t("confirmPassword")}</Label>
+      <Field>
+        <FieldLabel htmlFor="confirmNewPassword" required>
+          {t("confirmPassword")}
+        </FieldLabel>
         <Input
           id="confirmNewPassword"
           name="confirmPassword"
@@ -73,24 +87,17 @@ export function ChangePasswordForm({ locale }: { locale: AppLocale }) {
           autoComplete="new-password"
           minLength={8}
           required
-          className="h-10"
         />
-      </div>
+      </Field>
 
-      {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FieldError>{error}</FieldError> : null}
       {state.success ? (
-        <p className="text-sm text-success" role="status">
-          {t("passwordChanged")}
-        </p>
+        <FieldSuccess>{t("passwordChanged")}</FieldSuccess>
       ) : null}
 
       <Button type="submit" variant="secondary" disabled={pending}>
         {pending ? t("passwordChangeSaving") : t("passwordChangeCta")}
       </Button>
-    </form>
+    </FormStack>
   );
 }

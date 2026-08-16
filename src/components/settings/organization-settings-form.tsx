@@ -8,8 +8,17 @@ import {
   type SettingsActionState,
 } from "@/app/actions/settings";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGrid,
+  FieldHint,
+  FieldLabel,
+  FieldSuccess,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   APP_LOCALES,
   LOCALE_LABELS,
@@ -48,16 +57,18 @@ export function OrganizationSettingsForm({
       t("errors.generic"));
 
   return (
-    <form action={action} className="space-y-6">
+    <FormStack action={action} gap="loose">
       <input type="hidden" name="locale" value={locale} />
 
       <section className="space-y-4">
         <h3 className="font-heading text-base font-semibold text-brand">
           {t("orgBasics")}
         </h3>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="name">{t("orgName")}</Label>
+        <FieldGrid>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="name" required>
+              {t("orgName")}
+            </FieldLabel>
             <Input
               id="name"
               name="name"
@@ -65,9 +76,11 @@ export function OrganizationSettingsForm({
               required
               maxLength={120}
             />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="slug">{t("orgSlug")}</Label>
+          </Field>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="slug" required>
+              {t("orgSlug")}
+            </FieldLabel>
             <Input
               id="slug"
               name="slug"
@@ -75,43 +88,32 @@ export function OrganizationSettingsForm({
               required
               maxLength={48}
             />
-            <p className="text-xs text-muted-foreground">{t("orgSlugHelp")}</p>
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="defaultLocale">{t("orgDefaultLocale")}</Label>
-            <select
+            <FieldHint>{t("orgSlugHelp")}</FieldHint>
+          </Field>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="defaultLocale">{t("orgDefaultLocale")}</FieldLabel>
+            <NativeSelect
               id="defaultLocale"
               name="defaultLocale"
               defaultValue={initialValues.defaultLocale}
-              className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px]"
             >
               {APP_LOCALES.map((code) => (
                 <option key={code} value={code}>
                   {LOCALE_LABELS[code]}
                 </option>
               ))}
-            </select>
-            <p className="text-xs text-muted-foreground">
-              {t("orgDefaultLocaleHelp")}
-            </p>
-          </div>
-        </div>
+            </NativeSelect>
+            <FieldHint>{t("orgDefaultLocaleHelp")}</FieldHint>
+          </Field>
+        </FieldGrid>
       </section>
 
-      {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {state.success ? (
-        <p className="text-sm text-success" role="status">
-          {t("saved")}
-        </p>
-      ) : null}
+      {error ? <FieldError>{error}</FieldError> : null}
+      {state.success ? <FieldSuccess>{t("saved")}</FieldSuccess> : null}
 
       <Button type="submit" disabled={pending}>
         {pending ? t("saving") : t("save")}
       </Button>
-    </form>
+    </FormStack>
   );
 }

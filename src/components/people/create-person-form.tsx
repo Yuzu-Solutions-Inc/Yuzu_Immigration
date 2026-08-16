@@ -8,8 +8,16 @@ import {
   type CreatePersonState,
 } from "@/app/actions/people";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGrid,
+  FieldHint,
+  FieldLabel,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { PersonImmigrationStatus } from "@/db/schema";
 import {
   PERSON_IMMIGRATION_STATUSES,
@@ -41,7 +49,7 @@ export function CreatePersonForm({ locale }: { locale: AppLocale }) {
     : null;
 
   return (
-    <form action={formAction} className="space-y-5">
+    <FormStack action={formAction}>
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="immigrationStatus" value={immigrationStatus} />
       <input
@@ -50,39 +58,44 @@ export function CreatePersonForm({ locale }: { locale: AppLocale }) {
         value={expiryEnabled ? statusExpiresAt : ""}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">{t("firstName")}</Label>
+      <FieldGrid>
+        <Field>
+          <FieldLabel htmlFor="firstName" required>
+            {t("firstName")}
+          </FieldLabel>
           <Input id="firstName" name="firstName" required autoFocus />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="lastName">{t("lastName")}</Label>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="lastName" required>
+            {t("lastName")}
+          </FieldLabel>
           <Input id="lastName" name="lastName" required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">{t("emailOptional")}</Label>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="email">{t("emailOptional")}</FieldLabel>
           <Input id="email" name="email" type="email" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">{t("phoneOptional")}</Label>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="phone">{t("phoneOptional")}</FieldLabel>
           <Input id="phone" name="phone" type="tel" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="preferredLocale">{t("preferredLocale")}</Label>
-          <select
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="preferredLocale">{t("preferredLocale")}</FieldLabel>
+          <NativeSelect
             id="preferredLocale"
             name="preferredLocale"
             defaultValue={locale}
-            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
             <option value="en">{t("locales.en")}</option>
             <option value="fr">{t("locales.fr")}</option>
             <option value="es">{t("locales.es")}</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="immigrationStatus">{t("immigrationStatus")}</Label>
-          <select
+          </NativeSelect>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="immigrationStatus">
+            {t("immigrationStatus")}
+          </FieldLabel>
+          <NativeSelect
             id="immigrationStatus"
             value={immigrationStatus}
             onChange={(e) => {
@@ -92,40 +105,32 @@ export function CreatePersonForm({ locale }: { locale: AppLocale }) {
                 setStatusExpiresAt("");
               }
             }}
-            className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
           >
             {PERSON_IMMIGRATION_STATUSES.map((value) => (
               <option key={value} value={value}>
                 {ti(value)}
               </option>
             ))}
-          </select>
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="statusExpiresAt">{t("statusExpiresAt")}</Label>
+          </NativeSelect>
+        </Field>
+        <Field className="sm:col-span-2">
+          <FieldLabel htmlFor="statusExpiresAt">{t("statusExpiresAt")}</FieldLabel>
           <Input
             id="statusExpiresAt"
             type="date"
             value={statusExpiresAt}
             disabled={!expiryEnabled}
             onChange={(e) => setStatusExpiresAt(e.target.value)}
-            className="disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
           />
-          <p className="text-xs text-muted-foreground">
-            {t("statusExpiresAtHelp")}
-          </p>
-        </div>
-      </div>
+          <FieldHint>{t("statusExpiresAtHelp")}</FieldHint>
+        </Field>
+      </FieldGrid>
 
-      {errorMessage ? (
-        <p className="text-sm text-destructive" role="alert">
-          {errorMessage}
-        </p>
-      ) : null}
+      {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
 
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? t("creating") : t("create")}
       </Button>
-    </form>
+    </FormStack>
   );
 }

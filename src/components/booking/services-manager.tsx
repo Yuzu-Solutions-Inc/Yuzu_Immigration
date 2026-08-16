@@ -41,7 +41,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldGrid, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -86,9 +88,6 @@ type SortKey =
   | "created_at"
   | "is_active";
 type SortDir = "asc" | "desc";
-
-const headerControlClassName =
-  "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
 const EMPTY_COPY: ServiceLocaleCopy = { title: "", description: "" };
 
@@ -195,11 +194,13 @@ function ServiceFormFields({
                 keepMounted
                 className="space-y-3 pt-3"
               >
-                <div className="space-y-2">
-                  <Label htmlFor={`title-${code}`}>
+                <Field>
+                  <FieldLabel
+                    htmlFor={`title-${code}`}
+                    required={code === orgDefaultLocale}
+                  >
                     {t("titleLabel")}
-                    {code === orgDefaultLocale ? " *" : ""}
-                  </Label>
+                  </FieldLabel>
                   <Input
                     id={`title-${code}`}
                     required={code === orgDefaultLocale}
@@ -212,11 +213,11 @@ function ServiceFormFields({
                       }))
                     }
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`description-${code}`}>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`description-${code}`}>
                     {t("description")}
-                  </Label>
+                  </FieldLabel>
                   <Textarea
                     id={`description-${code}`}
                     rows={3}
@@ -232,7 +233,7 @@ function ServiceFormFields({
                       }))
                     }
                   />
-                </div>
+                </Field>
               </TabsContent>
             ))}
           </Tabs>
@@ -242,9 +243,11 @@ function ServiceFormFields({
           <h3 className="text-sm font-semibold text-brand">
             {t("serviceDetailsSection")}
           </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="durationMinutes">{t("duration")}</Label>
+          <FieldGrid>
+            <Field>
+              <FieldLabel htmlFor="durationMinutes" required>
+                {t("duration")}
+              </FieldLabel>
               <Input
                 id="durationMinutes"
                 name="durationMinutes"
@@ -255,9 +258,11 @@ function ServiceFormFields({
                 defaultValue={service?.duration_minutes ?? 30}
                 required
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">{t("price")}</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="price" required>
+                {t("price")}
+              </FieldLabel>
               <Input
                 id="price"
                 name="price"
@@ -265,8 +270,8 @@ function ServiceFormFields({
                 defaultValue={centsToPriceInput(service?.price_cents ?? 0)}
                 required
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGrid>
         </section>
 
         <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
@@ -311,18 +316,18 @@ function ServiceFormFields({
             </div>
           </div>
           {allowPayLater ? (
-            <div className="space-y-2 border-t border-border pt-3">
-              <Label htmlFor="paymentReminderDays">{t("paymentReminders")}</Label>
+            <Field className="border-t border-border pt-3">
+              <FieldLabel htmlFor="paymentReminderDays">
+                {t("paymentReminders")}
+              </FieldLabel>
               <Input
                 id="paymentReminderDays"
                 name="paymentReminderDays"
                 placeholder={t("paymentRemindersPlaceholder")}
                 defaultValue={(service?.payment_reminder_days ?? []).join(", ")}
               />
-              <p className="text-xs text-muted-foreground">
-                {t("paymentRemindersHelp")}
-              </p>
-            </div>
+              <FieldHint>{t("paymentRemindersHelp")}</FieldHint>
+            </Field>
           ) : null}
         </section>
       </div>
@@ -664,38 +669,34 @@ export function ServicesManager({
               onChange={(e) => setTitleQuery(e.target.value)}
               placeholder={t("filterTitlePlaceholder")}
               aria-label={t("filterTitle")}
-              className="h-10"
             />
-            <select
+            <NativeSelect
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value as ActiveFilter)}
               aria-label={t("filterActive")}
-              className={cn(headerControlClassName, "h-10")}
-            >
+              >
               <option value="all">{t("filterAll")}</option>
               <option value="active">{t("active")}</option>
               <option value="inactive">{t("inactive")}</option>
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               value={formFilter}
               onChange={(e) => setFormFilter(e.target.value as FormFilter)}
               aria-label={t("filterForm")}
-              className={cn(headerControlClassName, "h-10")}
-            >
+              >
               <option value="all">{t("filterAll")}</option>
               <option value="has_form">{t("filterFormAssigned")}</option>
               <option value="no_form">{t("filterFormNone")}</option>
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               value={priceFilter}
               onChange={(e) => setPriceFilter(e.target.value as PriceFilter)}
               aria-label={t("filterPrice")}
-              className={cn(headerControlClassName, "h-10")}
-            >
+              >
               <option value="all">{t("filterAll")}</option>
               <option value="free">{t("filterPriceFree")}</option>
               <option value="paid">{t("filterPricePaid")}</option>
-            </select>
+            </NativeSelect>
           </div>
 
           <ListTableCard>
@@ -717,7 +718,7 @@ export function ServicesManager({
                         onChange={(e) => setTitleQuery(e.target.value)}
                         placeholder={t("filterTitlePlaceholder")}
                         aria-label={t("filterTitle")}
-                        className={headerControlClassName}
+                        density="dense"
                       />
                     </div>
                   </TableHead>
@@ -727,35 +728,35 @@ export function ServicesManager({
                   <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="price" label={t("price")} />
-                      <select
+                      <NativeSelect
                         value={priceFilter}
                         onChange={(e) =>
                           setPriceFilter(e.target.value as PriceFilter)
                         }
                         aria-label={t("filterPrice")}
-                        className={headerControlClassName}
+                        density="dense"
                       >
                         <option value="all">{t("filterAll")}</option>
                         <option value="free">{t("filterPriceFree")}</option>
                         <option value="paid">{t("filterPricePaid")}</option>
-                      </select>
+                      </NativeSelect>
                     </div>
                   </TableHead>
                   <TableHead className={cn("min-w-[9rem]", listTableHeadClassName)}>
                     <div className="flex flex-col gap-1.5">
                       <span className="font-medium">{t("columnForm")}</span>
-                      <select
+                      <NativeSelect
                         value={formFilter}
                         onChange={(e) =>
                           setFormFilter(e.target.value as FormFilter)
                         }
                         aria-label={t("filterForm")}
-                        className={headerControlClassName}
+                        density="dense"
                       >
                         <option value="all">{t("filterAll")}</option>
                         <option value="has_form">{t("filterFormAssigned")}</option>
                         <option value="no_form">{t("filterFormNone")}</option>
-                      </select>
+                      </NativeSelect>
                     </div>
                   </TableHead>
                   <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
@@ -770,18 +771,18 @@ export function ServicesManager({
                   >
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="is_active" label={t("active")} />
-                      <select
+                      <NativeSelect
                         value={activeFilter}
                         onChange={(e) =>
                           setActiveFilter(e.target.value as ActiveFilter)
                         }
                         aria-label={t("filterActive")}
-                        className={headerControlClassName}
+                        density="dense"
                       >
                         <option value="all">{t("filterAll")}</option>
                         <option value="active">{t("active")}</option>
                         <option value="inactive">{t("inactive")}</option>
-                      </select>
+                      </NativeSelect>
                     </div>
                   </TableHead>
                   {canManage ? (

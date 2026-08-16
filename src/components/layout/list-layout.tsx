@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { fieldControlClassName } from "@/lib/field-styles";
 import { cn } from "@/lib/utils";
+
+export const listFilterControlClassName = fieldControlClassName({
+  density: "dense",
+});
 
 export const listStackClassName = "min-w-0 space-y-3";
 

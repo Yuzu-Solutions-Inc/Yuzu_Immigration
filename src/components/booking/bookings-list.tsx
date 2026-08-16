@@ -41,6 +41,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -91,9 +92,6 @@ type SortKey =
   | "status"
   | "payment";
 type SortDir = "asc" | "desc";
-
-const headerControlClassName =
-  "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
 function statusLabel(
   t: ReturnType<typeof useTranslations<"bookings">>,
@@ -374,68 +372,62 @@ export function BookingsList({
           onChange={(e) => setGuestQuery(e.target.value)}
           placeholder={t("filterGuestPlaceholder")}
           aria-label={t("filterGuest")}
-          className="h-10"
         />
-        <select
+        <NativeSelect
           value={timeFilter}
           onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
           aria-label={t("filterTime")}
-          className={cn(headerControlClassName, "h-10")}
-        >
+          >
           <option value="all">{t("filterAll")}</option>
           <option value="upcoming">{t("filterTimeUpcoming")}</option>
           <option value="past">{t("filterTimePast")}</option>
           <option value="today">{t("filterTimeToday")}</option>
-        </select>
-        <select
+        </NativeSelect>
+        <NativeSelect
           value={serviceFilter}
           onChange={(e) => setServiceFilter(e.target.value)}
           aria-label={t("filterService")}
-          className={cn(headerControlClassName, "h-10")}
-        >
+          >
           <option value="all">{t("filterAll")}</option>
           {serviceOptions.map((service) => (
             <option key={service.id} value={service.id}>
               {service.title}
             </option>
           ))}
-        </select>
-        <select
+        </NativeSelect>
+        <NativeSelect
           value={hostFilter}
           onChange={(e) => setHostFilter(e.target.value)}
           aria-label={t("filterHost")}
-          className={cn(headerControlClassName, "h-10")}
-        >
+          >
           <option value="all">{t("filterAll")}</option>
           {hostOptions.map((host) => (
             <option key={host.id} value={host.id}>
               {host.name}
             </option>
           ))}
-        </select>
-        <select
+        </NativeSelect>
+        <NativeSelect
           value={statusFilter}
           onChange={(e) =>
             setStatusFilter(e.target.value as BookingStatus | "all")
           }
           aria-label={t("filterStatus")}
-          className={cn(headerControlClassName, "h-10")}
-        >
+          >
           <option value="all">{t("filterAll")}</option>
           {BOOKING_STATUSES.map((status) => (
             <option key={status} value={status}>
               {statusLabel(t, status)}
             </option>
           ))}
-        </select>
-        <select
+        </NativeSelect>
+        <NativeSelect
           value={paymentFilter}
           onChange={(e) =>
             setPaymentFilter(e.target.value as PaymentStatusFilter)
           }
           aria-label={t("filterPayment")}
-          className={cn(headerControlClassName, "h-10")}
-        >
+          >
           <option value="all">{t("filterAll")}</option>
           <option value="none">{t("payment.none")}</option>
           {PAYMENT_STATUSES.map((status) => (
@@ -443,7 +435,7 @@ export function BookingsList({
               {paymentLabel(t, status)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <ListTableCard>
@@ -459,17 +451,17 @@ export function BookingsList({
               >
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="starts_at" label={t("colWhen")} />
-                  <select
+                  <NativeSelect
                     value={timeFilter}
                     onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
                     aria-label={t("filterTime")}
-                    className={headerControlClassName}
+                    density="dense"
                   >
                     <option value="all">{t("filterAll")}</option>
                     <option value="upcoming">{t("filterTimeUpcoming")}</option>
                     <option value="past">{t("filterTimePast")}</option>
                     <option value="today">{t("filterTimeToday")}</option>
-                  </select>
+                  </NativeSelect>
                 </div>
               </TableHead>
               <TableHead className={cn("w-[20%]", listTableHeadClassName)}>
@@ -481,18 +473,18 @@ export function BookingsList({
                     onChange={(e) => setGuestQuery(e.target.value)}
                     placeholder={t("filterGuestPlaceholder")}
                     aria-label={t("filterGuest")}
-                    className={headerControlClassName}
+                    density="dense"
                   />
                 </div>
               </TableHead>
               <TableHead className={cn("w-[14%]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="service" label={t("colService")} />
-                  <select
+                  <NativeSelect
                     value={serviceFilter}
                     onChange={(e) => setServiceFilter(e.target.value)}
                     aria-label={t("filterService")}
-                    className={headerControlClassName}
+                    density="dense"
                   >
                     <option value="all">{t("filterAll")}</option>
                     {serviceOptions.map((service) => (
@@ -500,17 +492,17 @@ export function BookingsList({
                         {service.title}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
               </TableHead>
               <TableHead className={cn("w-[13%]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="host" label={t("colHost")} />
-                  <select
+                  <NativeSelect
                     value={hostFilter}
                     onChange={(e) => setHostFilter(e.target.value)}
                     aria-label={t("filterHost")}
-                    className={headerControlClassName}
+                    density="dense"
                   >
                     <option value="all">{t("filterAll")}</option>
                     {hostOptions.map((host) => (
@@ -518,19 +510,19 @@ export function BookingsList({
                         {host.name}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
               </TableHead>
               <TableHead className={cn("w-[10%]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="status" label={t("colStatus")} />
-                  <select
+                  <NativeSelect
                     value={statusFilter}
                     onChange={(e) =>
                       setStatusFilter(e.target.value as BookingStatus | "all")
                     }
                     aria-label={t("filterStatus")}
-                    className={headerControlClassName}
+                    density="dense"
                   >
                     <option value="all">{t("filterAll")}</option>
                     {BOOKING_STATUSES.map((status) => (
@@ -538,7 +530,7 @@ export function BookingsList({
                         {statusLabel(t, status)}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
               </TableHead>
               <TableHead
@@ -550,13 +542,13 @@ export function BookingsList({
               >
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="payment" label={t("colPayment")} />
-                  <select
+                  <NativeSelect
                     value={paymentFilter}
                     onChange={(e) =>
                       setPaymentFilter(e.target.value as PaymentStatusFilter)
                     }
                     aria-label={t("filterPayment")}
-                    className={headerControlClassName}
+                    density="dense"
                   >
                     <option value="all">{t("filterAll")}</option>
                     <option value="none">{t("payment.none")}</option>
@@ -565,7 +557,7 @@ export function BookingsList({
                         {paymentLabel(t, status)}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
               </TableHead>
               {canManage ? (

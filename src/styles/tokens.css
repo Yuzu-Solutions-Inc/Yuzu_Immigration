@@ -102,4 +102,94 @@
   --sidebar-accent-foreground: var(--graphite-50);
   --sidebar-border: var(--graphite-700);
   --sidebar-ring: var(--action);
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ── Typography ── */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --leading-tight: 1.25;
+  --leading-snug: 1.4;
+  --leading-normal: 1.6;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-heading: 650;
+  --tracking-tight: -0.025em;
+  --tracking-label: 0.04em;
+
+  /* ── Motion ── */
+  --duration-fast: 100ms;
+  --duration-normal: 150ms;
+  --duration-slow: 250ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── Elevation ── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 20px -8px rgba(0, 0, 0, 0.12);
+
+  /* ── Z-index ── */
+  --z-sticky: 30;
+  --z-dropdown: 50;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+
+  /* ── Form layout ── */
+  --form-gap-tight: var(--space-4);
+  --form-gap: var(--space-5);
+  --form-gap-loose: var(--space-6);
+  --field-gap: var(--space-2);
+  --field-gap-compact: var(--space-1);
+  --field-grid-gap: var(--space-4);
+
+  /* ── Field control (shared by input, select, textarea, search) ── */
+  --field-height: 2.5rem;
+  --field-height-compact: 2.25rem;
+  --field-height-dense: 2rem;
+  --field-radius: var(--radius);
+  --field-radius-compact: calc(var(--radius) * 0.67);
+  --field-pad-x: var(--space-3);
+  --field-pad-x-compact: var(--space-2);
+  --field-pad-y: var(--space-2);
+  --field-font-size: var(--text-md);
+  --field-font-size-compact: var(--text-sm);
+  --field-bg: var(--surface);
+  --field-fg: var(--foreground);
+  --field-border: var(--input);
+  --field-placeholder: var(--muted-foreground);
+  --field-ring-width: 3px;
+  --field-ring: color-mix(in srgb, var(--ring) 30%, transparent);
+  --field-ring-error: color-mix(in srgb, var(--error) 20%, transparent);
+  --field-disabled-bg: var(--muted);
+  --field-label-size: var(--text-sm);
+  --field-label-compact-size: var(--text-2xs);
+  --field-help-size: var(--text-xs);
+  --field-error-size: var(--text-sm);
+  --field-checkbox-size: 1rem;
+  --field-textarea-min-h: 4rem;
+  --field-textarea-min-h-compact: 2.25rem;
+
+  /* ── Field type widths (layout hints, not visual variants) ── */
+  --field-width-phone-code: 5.25rem;
+  --field-width-postal: 8rem;
+  --field-width-date: 12rem;
+  --field-width-number: 8rem;
+  --field-width-filter: 8.5rem;
 }

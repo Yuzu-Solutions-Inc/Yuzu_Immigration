@@ -12,8 +12,8 @@ import {
 import { shareAuthInitialState } from "@/app/actions/share-auth-state";
 import { isShareErrorKey } from "@/lib/ircc/share-error-keys";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Link } from "@/i18n/navigation";
 import type { ShareAccessState } from "@/lib/ircc/share-auth";
@@ -138,8 +138,10 @@ export function ShareLinkGate({
             <form action={setupAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="locale" value={locale} />
-              <div className="space-y-2">
-                <Label htmlFor="share-password">{t("shareAuth.password")}</Label>
+              <Field>
+                <FieldLabel htmlFor="share-password" required>
+                  {t("shareAuth.password")}
+                </FieldLabel>
                 <PasswordInput
                   id="share-password"
                   name="password"
@@ -149,9 +151,11 @@ export function ShareLinkGate({
                   showLabel={t("shareAuth.showPassword")}
                   hideLabel={t("shareAuth.hidePassword")}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="share-confirm">{t("shareAuth.confirm")}</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="share-confirm" required>
+                  {t("shareAuth.confirm")}
+                </FieldLabel>
                 <PasswordInput
                   id="share-confirm"
                   name="confirm"
@@ -161,7 +165,7 @@ export function ShareLinkGate({
                   showLabel={t("shareAuth.showPassword")}
                   hideLabel={t("shareAuth.hidePassword")}
                 />
-              </div>
+              </Field>
               <label className="flex items-start gap-2 text-sm leading-relaxed">
                 <input
                   type="checkbox"
@@ -210,10 +214,10 @@ export function ShareLinkGate({
             <form action={loginAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="locale" value={locale} />
-              <div className="space-y-2">
-                <Label htmlFor="share-login-password">
+              <Field>
+                <FieldLabel htmlFor="share-login-password" required>
                   {t("shareAuth.password")}
-                </Label>
+                </FieldLabel>
                 <PasswordInput
                   id="share-login-password"
                   name="password"
@@ -222,7 +226,7 @@ export function ShareLinkGate({
                   showLabel={t("shareAuth.showPassword")}
                   hideLabel={t("shareAuth.hidePassword")}
                 />
-              </div>
+              </Field>
               <Button type="submit" className="w-full" disabled={loginPending}>
                 {loginPending ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -255,11 +259,7 @@ export function ShareLinkGate({
           </>
         )}
 
-        {errorMessage ? (
-          <p className="text-sm text-destructive" role="alert">
-            {errorMessage}
-          </p>
-        ) : null}
+        {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
       </div>
     </div>
   );

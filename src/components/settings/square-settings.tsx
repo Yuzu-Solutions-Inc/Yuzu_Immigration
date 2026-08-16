@@ -16,8 +16,10 @@ import {
   IntegrationPanel,
 } from "@/components/settings/integration-panel";
 import { Button } from "@/components/ui/button";
+import { Field, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import { centsToPriceInput } from "@/lib/booking/slots";
 const initialSaveState: SquareActionState = {};
@@ -197,10 +199,10 @@ export function SquareSettings({
 
             {refundEnabled ? (
               <div className="space-y-4 border-t border-border pt-4">
-                <div className="space-y-1">
-                  <Label htmlFor="cancelFreeDaysBefore" className="text-sm">
+                <Field>
+                  <FieldLabel htmlFor="cancelFreeDaysBefore">
                     {t("squareCancelFreeDays")}
-                  </Label>
+                  </FieldLabel>
                   <Input
                     id="cancelFreeDaysBefore"
                     name="cancelFreeDaysBefore"
@@ -212,10 +214,8 @@ export function SquareSettings({
                     onChange={(event) => setFreeDays(event.target.value)}
                     className="max-w-[8rem]"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {t("squareCancelFreeDaysHelp")}
-                  </p>
-                </div>
+                  <FieldHint>{t("squareCancelFreeDaysHelp")}</FieldHint>
+                </Field>
 
                 <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
                   <div className="min-w-0 space-y-0.5">
@@ -238,10 +238,10 @@ export function SquareSettings({
 
                 {feeEnabled ? (
                   <div className="space-y-4 rounded-lg border border-border bg-canvas/40 p-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cancelRefundFeeAmount" className="text-sm">
+                    <Field>
+                      <FieldLabel htmlFor="cancelRefundFeeAmount">
                         {t("squareCancelRefundFee")}
-                      </Label>
+                      </FieldLabel>
                       <div className="flex max-w-[14rem] items-stretch">
                         <Input
                           id="cancelRefundFeeAmount"
@@ -254,28 +254,26 @@ export function SquareSettings({
                           onChange={(event) => setFeeAmount(event.target.value)}
                           className="rounded-r-none"
                         />
-                        <select
+                        <NativeSelect
                           name="cancelRefundFeeType"
                           value={feeUnit}
                           onChange={(event) =>
                             setFeeUnit(event.target.value as "fixed" | "percent")
                           }
                           aria-label={t("squareCancelRefundFee")}
-                          className="h-10 shrink-0 rounded-r-xl border border-l-0 border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                          className="w-auto shrink-0 rounded-l-none rounded-r-xl border-l-0 px-2"
                         >
                           <option value="fixed">$</option>
                           <option value="percent">%</option>
-                        </select>
+                        </NativeSelect>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t("squareCancelRefundFeeHelp")}
-                      </p>
-                    </div>
+                      <FieldHint>{t("squareCancelRefundFeeHelp")}</FieldHint>
+                    </Field>
 
-                    <div className="space-y-1">
-                      <Label htmlFor="cancelFeeDaysBefore" className="text-sm">
+                    <Field>
+                      <FieldLabel htmlFor="cancelFeeDaysBefore">
                         {t("squareCancelFeeDays")}
-                      </Label>
+                      </FieldLabel>
                       <Input
                         id="cancelFeeDaysBefore"
                         name="cancelFeeDaysBefore"
@@ -291,10 +289,8 @@ export function SquareSettings({
                         onChange={(event) => setFeeDays(event.target.value)}
                         className="max-w-[8rem]"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        {t("squareCancelFeeDaysHelp")}
-                      </p>
-                    </div>
+                      <FieldHint>{t("squareCancelFeeDaysHelp")}</FieldHint>
+                    </Field>
                   </div>
                 ) : null}
               </div>

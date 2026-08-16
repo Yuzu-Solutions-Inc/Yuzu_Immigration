@@ -9,8 +9,14 @@ import {
 } from "@/app/actions/org";
 import { slugifyOrganizationName } from "@/lib/org/slug";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldHint,
+  FieldLabel,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 const initialState: CreateOrgState = {};
 
@@ -36,12 +42,14 @@ export function CreateOrganizationForm({ locale }: { locale: "en" | "fr" }) {
     : null;
 
   return (
-    <form action={formAction} className="space-y-5">
+    <FormStack action={formAction}>
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="slug" value={effectiveSlug} />
 
-      <div className="space-y-2">
-        <Label htmlFor="name">{t("orgName")}</Label>
+      <Field>
+        <FieldLabel htmlFor="name" required>
+          {t("orgName")}
+        </FieldLabel>
         <Input
           id="name"
           name="name"
@@ -49,13 +57,12 @@ export function CreateOrganizationForm({ locale }: { locale: "en" | "fr" }) {
           onChange={(event) => setName(event.target.value)}
           required
           minLength={2}
-          className="h-10"
           placeholder={t("orgNamePlaceholder")}
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <Label htmlFor="slug">{t("orgSlug")}</Label>
+      <Field>
+        <FieldLabel htmlFor="slug">{t("orgSlug")}</FieldLabel>
         <Input
           id="slug"
           value={effectiveSlug}
@@ -63,21 +70,17 @@ export function CreateOrganizationForm({ locale }: { locale: "en" | "fr" }) {
             setSlugTouched(true);
             setSlug(slugifyOrganizationName(event.target.value));
           }}
-          className="h-10 font-mono text-sm"
+          className="font-mono text-sm"
           placeholder="my-firm"
         />
-        <p className="text-xs text-muted-foreground">{t("orgSlugHelp")}</p>
-      </div>
+        <FieldHint>{t("orgSlugHelp")}</FieldHint>
+      </Field>
 
-      {errorMessage ? (
-        <p className="text-sm text-destructive" role="alert">
-          {errorMessage}
-        </p>
-      ) : null}
+      {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
 
       <Button type="submit" size="lg" className="w-full" disabled={pending || !effectiveSlug}>
         {pending ? t("creating") : t("create")}
       </Button>
-    </form>
+    </FormStack>
   );
 }

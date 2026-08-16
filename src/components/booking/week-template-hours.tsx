@@ -20,6 +20,7 @@ import {
   deleteAvailabilityRuleAction,
 } from "@/app/actions/booking";
 import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   formatHmLabel,
   snapMinutes,
@@ -358,8 +359,9 @@ export function WeekTemplateHours({
                 <div className="flex flex-wrap items-end gap-2 border-t border-border pt-3">
                   <label className="min-w-[5.5rem] flex-1 space-y-1 text-xs text-muted-foreground">
                     <span>{t("addStart")}</span>
-                    <select
-                      className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm text-brand"
+                    <NativeSelect
+                      density="compact"
+                      className="text-brand"
                       value={add.start}
                       onChange={(event) =>
                         setAddByDay((prev) => ({
@@ -376,12 +378,13 @@ export function WeekTemplateHours({
                           {minutesToHm(minutes)}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                   <label className="min-w-[5.5rem] flex-1 space-y-1 text-xs text-muted-foreground">
                     <span>{t("addEnd")}</span>
-                    <select
-                      className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm text-brand"
+                    <NativeSelect
+                      density="compact"
+                      className="text-brand"
                       value={add.end}
                       onChange={(event) =>
                         setAddByDay((prev) => ({
@@ -398,7 +401,7 @@ export function WeekTemplateHours({
                           {minutesToHm(minutes)}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                   <Button
                     type="button"

@@ -19,8 +19,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldGrid, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   BOOKING_FORM_FIELD_TYPES,
@@ -277,8 +278,10 @@ function FormEditor({
       <input type="hidden" name="serviceIds" value={JSON.stringify(serviceIds)} />
       <input type="hidden" name="fields" value={JSON.stringify(payload)} />
 
-      <div className="space-y-2">
-        <Label htmlFor="booking-form-title">{t("formTitle")}</Label>
+      <Field>
+        <FieldLabel htmlFor="booking-form-title" required>
+          {t("formTitle")}
+        </FieldLabel>
         <Input
           id="booking-form-title"
           name="title"
@@ -287,7 +290,7 @@ function FormEditor({
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
-      </div>
+      </Field>
 
       <ServiceCheckboxes
         locale={locale}
@@ -343,9 +346,9 @@ function FormEditor({
                 key={field.clientId}
                 className="min-w-0 space-y-3 rounded-xl border border-border p-3"
               >
-                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-                  <div className="min-w-0 space-y-2">
-                    <Label>{t("formFieldLabel")}</Label>
+                <FieldGrid>
+                  <Field>
+                    <FieldLabel required>{t("formFieldLabel")}</FieldLabel>
                     <Input
                       value={field.label}
                       maxLength={80}
@@ -360,15 +363,15 @@ function FormEditor({
                         });
                       }}
                     />
-                  </div>
-                  <div className="min-w-0 space-y-2">
-                    <Label>{t("formFieldType")}</Label>
+                  </Field>
+                  <Field>
+                    <FieldLabel>{t("formFieldType")}</FieldLabel>
                     {isCompositeFieldType(field.fieldType) ? (
                       <p className="flex h-10 items-center rounded-xl border border-border/80 bg-canvas px-3 text-sm text-muted-foreground">
                         {t(`formFieldTypes.${field.fieldType}`)}
                       </p>
                     ) : (
-                      <select
+                      <NativeSelect
                         value={field.fieldType}
                         disabled={field.persisted}
                         onChange={(event) =>
@@ -377,7 +380,6 @@ function FormEditor({
                               .value as BookingFormFieldType,
                           })
                         }
-                        className="h-10 w-full min-w-0 rounded-xl border border-input bg-surface px-3 text-sm disabled:opacity-60"
                       >
                         {BOOKING_FORM_FIELD_TYPES.filter(
                           (type) => !isCompositeFieldType(type),
@@ -386,18 +388,18 @@ function FormEditor({
                             {t(`formFieldTypes.${type}`)}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     )}
                     {isCompositeFieldType(field.fieldType) ? (
-                      <p className="text-xs text-muted-foreground">
+                      <FieldHint>
                         {t(`formCompositeHint.${field.fieldType}`)}
-                      </p>
+                      </FieldHint>
                     ) : null}
-                  </div>
-                </div>
-                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-                  <div className="min-w-0 space-y-2">
-                    <Label>{t("formFieldKey")}</Label>
+                  </Field>
+                </FieldGrid>
+                <FieldGrid>
+                  <Field>
+                    <FieldLabel>{t("formFieldKey")}</FieldLabel>
                     <Input
                       value={field.fieldKey}
                       maxLength={40}
@@ -409,14 +411,14 @@ function FormEditor({
                         })
                       }
                     />
-                    <p className="break-all text-xs text-muted-foreground">
+                    <FieldHint className="break-all">
                       {t("formFieldKeyHelp", {
                         token: `{{${field.fieldKey || "variable"}}}`,
                       })}
-                    </p>
-                  </div>
-                  <div className="min-w-0 space-y-2">
-                    <Label>{t("formFieldHelp")}</Label>
+                    </FieldHint>
+                  </Field>
+                  <Field>
+                    <FieldLabel>{t("formFieldHelp")}</FieldLabel>
                     <Input
                       value={field.helpText}
                       maxLength={300}
@@ -426,11 +428,11 @@ function FormEditor({
                         })
                       }
                     />
-                  </div>
-                </div>
+                  </Field>
+                </FieldGrid>
                 {field.fieldType === "select" ? (
-                  <div className="space-y-2">
-                    <Label>{t("formFieldOptions")}</Label>
+                  <Field>
+                    <FieldLabel required>{t("formFieldOptions")}</FieldLabel>
                     <Textarea
                       rows={3}
                       required
@@ -441,10 +443,8 @@ function FormEditor({
                         })
                       }
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {t("formFieldOptionsHelp")}
-                    </p>
-                  </div>
+                    <FieldHint>{t("formFieldOptionsHelp")}</FieldHint>
+                  </Field>
                 ) : null}
                 <div className="flex items-center justify-between gap-2">
                   <label className="flex items-center gap-2 text-sm">

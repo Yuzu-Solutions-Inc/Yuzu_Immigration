@@ -17,8 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldError, FieldHint, FieldLabel, FormStack } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { StatusPill } from "@/components/ui/status-pill";
 import type { ProjectStatus } from "@/db/schema";
 import type { ProjectStatusHistoryRow } from "@/lib/crm/queries";
@@ -125,32 +126,33 @@ export function ProjectStatusCard({
             <DialogDescription>{t("updateStatusHint")}</DialogDescription>
           </DialogHeader>
 
-          <form action={formAction} className="space-y-4">
+          <FormStack action={formAction} gap="tight">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="status" value={status} />
             <input type="hidden" name="statusAt" value={statusAt} />
 
-            <div className="space-y-2">
-              <Label htmlFor="status-modal">{t("status")}</Label>
-              <select
+            <Field>
+              <FieldLabel htmlFor="status-modal">{t("status")}</FieldLabel>
+              <NativeSelect
                 id="status-modal"
                 value={status}
                 onChange={(e) =>
                   onStatusChange(e.target.value as ProjectStatus)
                 }
-                className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               >
                 {PROJECT_STATUSES.map((value) => (
                   <option key={value} value={value}>
                     {t(`statuses.${value}`)}
                   </option>
                 ))}
-              </select>
-            </div>
+              </NativeSelect>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="statusAt-modal">{t("statusAt")}</Label>
+            <Field>
+              <FieldLabel htmlFor="statusAt-modal" required>
+                {t("statusAt")}
+              </FieldLabel>
               <Input
                 id="statusAt-modal"
                 type="date"
@@ -158,14 +160,10 @@ export function ProjectStatusCard({
                 onChange={(e) => setStatusAt(e.target.value)}
                 required
               />
-              <p className="text-xs text-muted-foreground">{t("statusAtHelp")}</p>
-            </div>
+              <FieldHint>{t("statusAtHelp")}</FieldHint>
+            </Field>
 
-            {errorMessage ? (
-              <p className="text-sm text-destructive" role="alert">
-                {errorMessage}
-              </p>
-            ) : null}
+            {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
 
             <DialogFooter className="px-0! mx-0! mb-0! border-0 bg-transparent p-0!">
               <Button
@@ -180,7 +178,7 @@ export function ProjectStatusCard({
                 {pending ? t("savingStatus") : t("updateStatus")}
               </Button>
             </DialogFooter>
-          </form>
+          </FormStack>
         </DialogContent>
       </Dialog>
 

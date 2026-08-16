@@ -10,8 +10,15 @@ import {
 } from "@/app/actions/project-payment";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGrid,
+  FieldLabel,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { formatPriceCents } from "@/lib/booking/slots";
 
 export type ProjectPaymentListItem = {
@@ -80,12 +87,14 @@ export function ProjectPaymentsCard({
       {!squareConnected ? (
         <p className="text-sm text-muted-foreground">{t("connectSquareFirst")}</p>
       ) : canCreate ? (
-        <form action={action} className="space-y-3">
+        <FormStack action={action} gap="tight">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="projectId" value={projectId} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="payment-amount">{t("amount")}</Label>
+          <FieldGrid>
+            <Field>
+              <FieldLabel htmlFor="payment-amount" required>
+                {t("amount")}
+              </FieldLabel>
               <Input
                 id="payment-amount"
                 name="amount"
@@ -93,13 +102,13 @@ export function ProjectPaymentsCard({
                 placeholder="150.00"
                 required
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="payment-person">{t("person")}</Label>
-              <select
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="payment-person">{t("person")}</FieldLabel>
+              <NativeSelect
                 id="payment-person"
                 name="personId"
-                className="flex h-9 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                density="compact"
                 defaultValue=""
               >
                 <option value="">{t("personNone")}</option>
@@ -108,11 +117,13 @@ export function ProjectPaymentsCard({
                     {person.label}
                   </option>
                 ))}
-              </select>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="payment-description">{t("description")}</Label>
+              </NativeSelect>
+            </Field>
+          </FieldGrid>
+          <Field>
+            <FieldLabel htmlFor="payment-description" required>
+              {t("description")}
+            </FieldLabel>
             <Input
               id="payment-description"
               name="description"
@@ -120,12 +131,8 @@ export function ProjectPaymentsCard({
               required
               maxLength={200}
             />
-          </div>
-          {errorMessage ? (
-            <p className="text-sm text-destructive" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
+          </Field>
+          {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
           {state.payUrl ? (
             <p className="break-all rounded-lg bg-canvas px-3 py-2 text-xs text-muted-foreground">
               {t("linkCopied")} {state.payUrl}
@@ -134,7 +141,7 @@ export function ProjectPaymentsCard({
           <Button type="submit" size="sm" disabled={pending}>
             {pending ? t("creating") : t("create")}
           </Button>
-        </form>
+        </FormStack>
       ) : null}
 
       <div className="space-y-2">

@@ -1,0 +1,53 @@
+---
+description: Atomic design system — tokens, fields, and UI composition for every change
+alwaysApply: true
+---
+
+# Design system (required)
+
+Every UI, form, email, and visual change must reuse this system. Do not invent parallel chrome.
+
+## Sources of truth
+- Tokens: `src/styles/tokens.css` + `src/lib/design-tokens.ts` (keep in sync; emails use the TS file)
+- Field chrome: `src/lib/field-styles.ts` — never copy `h-10 w-full rounded-xl border border-input…`
+- Atoms: `src/components/ui` (`Input`, `Textarea`, `NativeSelect`, `Button`, `Label`, `Switch`)
+- Molecules: `Field`, `FieldLabel`, `FieldHint`, `FieldError`, `FieldSuccess`, `FieldGrid`, `FieldGroup`, `FormStack`, `FieldControl`
+- List filters: `listFilterControlClassName` from `src/components/layout/list-layout.tsx`
+
+## Color and type
+- Prefer semantic utilities: `bg-action`, `text-brand`, `bg-canvas`, `bg-surface`, `text-muted-foreground`
+- Do not hardcode hex or government IRCC/MIFI red/blue motifs
+- Fonts: Plus Jakarta Sans (headings), Inter (body); radius 12px; elevation `--shadow-elevated`
+
+## Forms (mandatory)
+- Wrap labeled controls in `Field` + `FieldLabel`. Use `FieldHint` / `FieldError` / `FieldSuccess` instead of ad-hoc `<p className="text-xs text-muted-foreground">`
+- Use `NativeSelect` — never a raw product `<select>`
+- Use `FormStack` for form roots; `FieldGrid` for 2–3 column rows
+- Densities: `default` (CRM/auth/settings/public), `compact` (address/phone/passport/IMM), `dense` (table filters)
+- Composites (`address`, `phone_contact`, `passport`): existing `FieldGroup` organisms, compact fields
+- Switch rows may keep `Label` beside `Switch`. Checkboxes in a group stay native `<label>` + input
+- `FieldLabel required` for the asterisk — do not concatenate `" *"`
+
+```tsx
+// ❌ BAD
+<div className="space-y-2">
+  <Label>Title</Label>
+  <select className="h-10 w-full rounded-xl border border-input …" />
+</div>
+
+// ✅ GOOD
+<Field>
+  <FieldLabel htmlFor="title" required>Title</FieldLabel>
+  <Input id="title" />
+</Field>
+<Field>
+  <FieldLabel htmlFor="status">Status</FieldLabel>
+  <NativeSelect id="status">…</NativeSelect>
+</Field>
+```
+
+## Extending the system
+- New visual need → add a token or atom first, then use it. Do not one-off a second input/select style
+- New field type → update `fieldTypes` / `fieldTypeMeta` and `field-styles.ts`
+- New list filter → `listFilterControlClassName` + `density="dense"` in tables, `default` on mobile
+- Restore point: git tag `pre-atomic-design-system` (`bdf59a3`)

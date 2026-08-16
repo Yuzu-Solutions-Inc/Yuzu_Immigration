@@ -10,8 +10,13 @@ import {
   type PrivacyActionState,
 } from "@/app/actions/privacy";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldSuccess,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { AppLocale } from "@/lib/i18n/locales";
 import { isEligibleForDestruction } from "@/lib/privacy/retention";
 
@@ -103,8 +108,10 @@ export function ProjectRetentionPanel({
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="projectId" value={projectId} />
           <p className="text-sm text-muted-foreground">{t("destroyHelp")}</p>
-          <div className="space-y-2">
-            <Label htmlFor="confirmation">{t("destroyConfirmLabel")}</Label>
+          <Field>
+            <FieldLabel htmlFor="confirmation" required>
+              {t("destroyConfirmLabel")}
+            </FieldLabel>
             <Input
               id="confirmation"
               name="confirmation"
@@ -112,18 +119,14 @@ export function ProjectRetentionPanel({
               autoComplete="off"
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="note">{t("destroyNote")}</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="note">{t("destroyNote")}</FieldLabel>
             <Input id="note" name="note" maxLength={500} />
-          </div>
-          {error ? (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
+          </Field>
+          {error ? <FieldError>{error}</FieldError> : null}
           {state.message === "destroyed" ? (
-            <p className="text-sm text-success">{t("destroySuccess")}</p>
+            <FieldSuccess>{t("destroySuccess")}</FieldSuccess>
           ) : null}
           <Button type="submit" variant="destructive" disabled={pending}>
             {pending ? t("destroying") : t("destroy")}

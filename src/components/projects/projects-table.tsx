@@ -32,6 +32,7 @@ import {
 } from "@/components/layout/list-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -84,12 +85,6 @@ function compareNullableDates(a: string | null, b: string | null) {
   if (!b) return -1;
   return a.localeCompare(b);
 }
-
-const selectClassName =
-  "h-8 w-full min-w-[8.5rem] rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
-
-const headerControlClassName =
-  "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
 function SortButton({
   column,
@@ -332,38 +327,35 @@ export function ProjectsTable({
             onChange={(e) => setNameQuery(e.target.value)}
             placeholder={t("filterNamePlaceholder")}
             aria-label={t("filterName")}
-            className="h-10"
           />
-          <select
+          <NativeSelect
             value={programFilter}
             onChange={(e) =>
               setProgramFilter(e.target.value as ProgramFamily | "all")
             }
             aria-label={t("filterProgram")}
-            className={cn(headerControlClassName, "h-10")}
-          >
+            >
             <option value="all">{t("filterAll")}</option>
             {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
               <option key={value} value={value}>
                 {tprog(value)}
               </option>
             ))}
-          </select>
-          <select
+          </NativeSelect>
+          <NativeSelect
             value={statusFilter}
             onChange={(e) =>
               setStatusFilter(e.target.value as ProjectStatus | "all")
             }
             aria-label={t("filterStatus")}
-            className={cn(headerControlClassName, "h-10")}
-          >
+            >
             <option value="all">{t("filterAll")}</option>
             {PROJECT_STATUSES.map((value) => (
               <option key={value} value={value}>
                 {t(`statuses.${value}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
 
         {filteredSorted.length === 0 ? (
@@ -512,18 +504,18 @@ export function ProjectsTable({
                   onChange={(e) => setNameQuery(e.target.value)}
                   placeholder={t("filterNamePlaceholder")}
                   aria-label={t("filterName")}
-                  className={headerControlClassName}
+                  density="dense"
                 />
               </TableHead>
               <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
-                <select
+                <NativeSelect
                   id="projects-filter-program"
                   value={programFilter}
                   onChange={(e) =>
                     setProgramFilter(e.target.value as ProgramFamily | "all")
                   }
                   aria-label={t("filterProgram")}
-                  className={headerControlClassName}
+                  density="dense"
                 >
                   <option value="all">{t("filterAll")}</option>
                   {SELECTABLE_PROGRAM_FAMILIES.map((value) => (
@@ -531,17 +523,17 @@ export function ProjectsTable({
                       {tprog(value)}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </TableHead>
               <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
-                <select
+                <NativeSelect
                   id="projects-filter-status"
                   value={statusFilter}
                   onChange={(e) =>
                     setStatusFilter(e.target.value as ProjectStatus | "all")
                   }
                   aria-label={t("filterStatus")}
-                  className={headerControlClassName}
+                  density="dense"
                 >
                   <option value="all">{t("filterAll")}</option>
                   {PROJECT_STATUSES.map((value) => (
@@ -549,10 +541,10 @@ export function ProjectsTable({
                       {t(`statuses.${value}`)}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </TableHead>
               <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
-                <select
+                <NativeSelect
                   id="projects-filter-rep"
                   value={representativeFilter}
                   onChange={(e) =>
@@ -561,7 +553,7 @@ export function ProjectsTable({
                     )
                   }
                   aria-label={t("filterRepresentative")}
-                  className={headerControlClassName}
+                  density="dense"
                 >
                   <option value="all">{t("filterAll")}</option>
                   <option value="unassigned">
@@ -572,7 +564,7 @@ export function ProjectsTable({
                       {staffLabel(member) || member.user_id}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </TableHead>
               <TableHead className="h-auto pb-2.5 pt-0" />
               <TableHead className="h-auto pb-2.5 pt-0" />
@@ -624,7 +616,7 @@ export function ProjectsTable({
                         tprog(project.program_family)}
                     </TableCell>
                     <TableCell>
-                      <select
+                      <NativeSelect
                         value={project.status}
                         disabled={isPending}
                         onChange={(e) =>
@@ -633,15 +625,16 @@ export function ProjectsTable({
                             e.target.value as ProjectStatus,
                           )
                         }
-                        className={selectClassName}
+                        density="dense"
+                        className="min-w-[8.5rem]"
                         aria-label={t("editStatusAria")}
-                      >
+                        >
                         {PROJECT_STATUSES.map((value) => (
                           <option key={value} value={value}>
                             {t(`statuses.${value}`)}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </TableCell>
                     <TableCell className="whitespace-normal text-muted-foreground">
                       {project.representative?.full_name ||

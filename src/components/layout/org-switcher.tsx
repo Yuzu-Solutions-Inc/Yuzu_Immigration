@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 
 import { switchOrganizationAction } from "@/app/actions/org";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +81,8 @@ export function OrgSwitcher({
             {label}
           </span>
         ) : null}
-        <select
+        <NativeSelect
+          density="compact"
           name="organizationId"
           defaultValue={active.id}
           aria-label={t("switchOrgAria")}
@@ -89,13 +91,11 @@ export function OrgSwitcher({
             event.currentTarget.form?.requestSubmit();
           }}
           className={cn(
-            "h-9 w-full min-w-0 truncate rounded-xl border px-2.5 text-sm font-medium outline-none focus-visible:ring-3",
+            "min-w-0 truncate font-medium",
             variant === "sidebar" &&
-              "h-9 rounded-lg border-sidebar-border bg-sidebar-accent px-3 text-sm text-sidebar-foreground focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/30",
-            variant === "header" &&
-              "border-border bg-surface text-brand focus-visible:border-ring focus-visible:ring-ring/30",
-            collapsed &&
-              "absolute inset-0 cursor-pointer opacity-0",
+              "border-sidebar-border bg-sidebar-accent text-sidebar-foreground focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/30",
+            variant === "header" && "text-brand",
+            collapsed && "absolute inset-0 cursor-pointer opacity-0",
           )}
         >
           {sorted.map((org) => (
@@ -103,7 +103,7 @@ export function OrgSwitcher({
               {org.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
     </form>
   );

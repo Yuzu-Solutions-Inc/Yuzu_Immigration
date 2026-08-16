@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { fieldControlClassName } from "@/lib/field-styles";
 import { cn } from "@/lib/utils";
 
 export type CertifiedOption = { value: string; label: string };
@@ -153,10 +154,8 @@ export function CertifiedSearchSelect({
             setOpen(false);
           }}
           className={cn(
-            "w-full min-w-0 border border-input bg-surface pr-8 text-brand outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30",
-            compact
-              ? "h-9 rounded-lg px-2 py-0 text-sm"
-              : "h-10 rounded-xl px-3 text-[15px] focus-visible:ring-3",
+            fieldControlClassName({ density: compact ? "compact" : "default" }),
+            "pr-8 text-brand",
           )}
         />
         <ChevronDown

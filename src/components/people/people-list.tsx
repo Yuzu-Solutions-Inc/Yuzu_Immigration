@@ -19,6 +19,7 @@ import {
 } from "@/components/layout/list-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -52,9 +53,6 @@ function expiryClass(isoDate: string | null) {
   if (days <= 7) return "text-warning-text";
   return "text-muted-foreground";
 }
-
-const headerControlClassName =
-  "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
 export function PeopleList({
   locale,
@@ -196,7 +194,6 @@ export function PeopleList({
             onChange={(e) => setNameQuery(e.target.value)}
             placeholder={t("filterNamePlaceholder")}
             aria-label={t("filterName")}
-            className="h-10"
           />
           <Input
             type="search"
@@ -204,9 +201,8 @@ export function PeopleList({
             onChange={(e) => setEmailQuery(e.target.value)}
             placeholder={t("filterEmailPlaceholder")}
             aria-label={t("filterEmail")}
-            className="h-10"
           />
-          <select
+          <NativeSelect
             value={statusFilter}
             onChange={(e) =>
               setStatusFilter(
@@ -214,7 +210,6 @@ export function PeopleList({
               )
             }
             aria-label={t("filterStatus")}
-            className={cn(headerControlClassName, "h-10")}
           >
             <option value="all">{t("filterAll")}</option>
             {PERSON_IMMIGRATION_STATUSES.map((value) => (
@@ -222,18 +217,17 @@ export function PeopleList({
                 {ti(value)}
               </option>
             ))}
-          </select>
-          <select
+          </NativeSelect>
+          <NativeSelect
             value={expiryFilter}
             onChange={(e) => setExpiryFilter(e.target.value as ExpiryFilter)}
             aria-label={t("filterExpiry")}
-            className={cn(headerControlClassName, "h-10")}
           >
             <option value="all">{t("filterAll")}</option>
             <option value="expired">{t("filterExpiryExpired")}</option>
             <option value="expiring_30">{t("filterExpirySoon")}</option>
             <option value="no_date">{t("filterExpiryNone")}</option>
-          </select>
+          </NativeSelect>
         </div>
 
         {filteredSorted.length === 0 ? (
@@ -295,7 +289,7 @@ export function PeopleList({
                     onChange={(e) => setNameQuery(e.target.value)}
                     placeholder={t("filterNamePlaceholder")}
                     aria-label={t("filterName")}
-                    className={headerControlClassName}
+                    density="dense"
                   />
                 </div>
               </TableHead>
@@ -309,7 +303,7 @@ export function PeopleList({
                     onChange={(e) => setEmailQuery(e.target.value)}
                     placeholder={t("filterEmailPlaceholder")}
                     aria-label={t("filterEmail")}
-                    className={headerControlClassName}
+                    density="dense"
                   />
                 </div>
               </TableHead>
@@ -319,8 +313,9 @@ export function PeopleList({
                     column="immigration_status"
                     label={t("columnStatus")}
                   />
-                  <select
+                  <NativeSelect
                     id="people-filter-status"
+                    density="dense"
                     value={statusFilter}
                     onChange={(e) =>
                       setStatusFilter(
@@ -328,7 +323,6 @@ export function PeopleList({
                       )
                     }
                     aria-label={t("filterStatus")}
-                    className={headerControlClassName}
                   >
                     <option value="all">{t("filterAll")}</option>
                     {PERSON_IMMIGRATION_STATUSES.map((value) => (
@@ -336,7 +330,7 @@ export function PeopleList({
                         {ti(value)}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
               </TableHead>
               <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
@@ -345,20 +339,20 @@ export function PeopleList({
                     column="status_expires_at"
                     label={t("columnExpires")}
                   />
-                  <select
+                  <NativeSelect
                     id="people-filter-expiry"
+                    density="dense"
                     value={expiryFilter}
                     onChange={(e) =>
                       setExpiryFilter(e.target.value as ExpiryFilter)
                     }
                     aria-label={t("filterExpiry")}
-                    className={headerControlClassName}
                   >
                     <option value="all">{t("filterAll")}</option>
                     <option value="expired">{t("filterExpiryExpired")}</option>
                     <option value="expiring_30">{t("filterExpirySoon")}</option>
                     <option value="no_date">{t("filterExpiryNone")}</option>
-                  </select>
+                  </NativeSelect>
                 </div>
               </TableHead>
               <TableHead

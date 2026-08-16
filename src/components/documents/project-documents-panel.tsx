@@ -18,6 +18,7 @@ import {
 } from "@/components/documents/project-document-viewer";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   StatusPill,
   type StatusPillTone,
@@ -301,19 +302,19 @@ export function ProjectDocumentsPanel({
               <input type="hidden" name="projectId" value={projectId} />
               <input type="hidden" name="locale" value={locale} />
               {showPerson ? (
-                <select
+                <NativeSelect
                   name="personId"
                   value={personId}
                   onChange={(e) => setPersonId(e.target.value)}
                   aria-label={t("assignPerson")}
-                  className="h-10 min-w-[140px] rounded-xl border border-input bg-surface px-3 text-sm"
+                  className="min-w-[140px]"
                 >
                   {people.map((person) => (
                     <option key={person.id} value={person.id}>
                       {person.displayName}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               ) : (
                 <input type="hidden" name="personId" value={personId} />
               )}

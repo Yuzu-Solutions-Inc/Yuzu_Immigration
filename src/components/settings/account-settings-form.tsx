@@ -10,8 +10,17 @@ import {
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { CertifiedSearchSelect } from "@/components/forms/certified-search-select";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGrid,
+  FieldGroup,
+  FieldHint,
+  FieldLabel,
+  FieldSuccess,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { resolveCountryLic } from "@/lib/ircc/codes/resolve-lic";
 import {
   QUESTIONNAIRE_LOVS,
@@ -19,12 +28,7 @@ import {
   orderedFieldOptions,
 } from "@/lib/ircc/fields";
 import type { AppLocale } from "@/lib/i18n/locales";
-import { cn } from "@/lib/utils";
-
 const initial: SettingsActionState = {};
-
-const compactControlClass =
-  "h-9 w-full min-w-0 rounded-lg border border-input bg-surface px-2 py-0 text-sm md:text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30";
 
 function countryLic(value: string): string {
   const raw = value.trim() || "Canada";
@@ -55,23 +59,20 @@ function CompactField({
   className?: string;
 }) {
   return (
-    <div className={cn("min-w-0 space-y-1", className)}>
-      <Label
-        htmlFor={id}
-        className="block text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-      >
+    <Field density="compact" className={className}>
+      <FieldLabel htmlFor={id} density="compact">
         {label}
-      </Label>
+      </FieldLabel>
       <Input
         id={id}
         name={name}
         type={type}
+        density="compact"
         defaultValue={defaultValue}
         maxLength={maxLength}
         placeholder={placeholder}
-        className={compactControlClass}
       />
-    </div>
+    </Field>
   );
 }
 
@@ -136,21 +137,23 @@ export function AccountSettingsForm({
       t("errors.generic"));
 
   return (
-    <form action={action} className="space-y-6">
+    <FormStack action={action} gap="loose">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="repCountry" value={repCountry} />
 
       <section className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">{t("email")}</Label>
+        <Field>
+          <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
           <Input id="email" value={email} disabled readOnly />
-          <p className="text-xs text-muted-foreground">{t("emailHelp")}</p>
-        </div>
+          <FieldHint>{t("emailHelp")}</FieldHint>
+        </Field>
 
         {canChangePassword ? <ChangePasswordForm locale={locale} /> : null}
 
-        <div className="space-y-2">
-          <Label htmlFor="fullName">{t("fullName")}</Label>
+        <Field>
+          <FieldLabel htmlFor="fullName" required>
+            {t("fullName")}
+          </FieldLabel>
           <Input
             id="fullName"
             name="fullName"
@@ -158,7 +161,7 @@ export function AccountSettingsForm({
             required
             maxLength={120}
           />
-        </div>
+        </Field>
       </section>
 
       <section className="space-y-4">
@@ -169,161 +172,140 @@ export function AccountSettingsForm({
           <p className="text-sm text-muted-foreground">{t("repHelp")}</p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="repFamilyName">{t("repFamilyName")}</Label>
+        <FieldGrid>
+          <Field>
+            <FieldLabel htmlFor="repFamilyName">{t("repFamilyName")}</FieldLabel>
             <Input
               id="repFamilyName"
               name="repFamilyName"
               defaultValue={representative.repFamilyName}
               maxLength={80}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="repGivenName">{t("repGivenName")}</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="repGivenName">{t("repGivenName")}</FieldLabel>
             <Input
               id="repGivenName"
               name="repGivenName"
               defaultValue={representative.repGivenName}
               maxLength={80}
             />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="repOrganization">{t("repOrganization")}</Label>
+          </Field>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="repOrganization">{t("repOrganization")}</FieldLabel>
             <Input
               id="repOrganization"
               name="repOrganization"
               defaultValue={representative.repOrganization}
               maxLength={120}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="repMembershipId">{t("repMembershipId")}</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="repMembershipId">{t("repMembershipId")}</FieldLabel>
             <Input
               id="repMembershipId"
               name="repMembershipId"
               defaultValue={representative.repMembershipId}
               maxLength={40}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="repEmail">{t("repEmail")}</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="repEmail">{t("repEmail")}</FieldLabel>
             <Input
               id="repEmail"
               name="repEmail"
               type="email"
               defaultValue={representative.repEmail}
             />
-          </div>
-        </div>
+          </Field>
+        </FieldGrid>
 
-        <div className="space-y-2">
-          <h4 className="font-heading text-sm font-semibold text-brand">
-            {tf("groups.phone")}
-          </h4>
-          <div className="flex min-w-0 gap-2">
+        <FieldGroup title={tf("groups.phone")} variant="inline">
+          <CompactField
+            id="repPhoneCountryCode"
+            name="repPhoneCountryCode"
+            label={tf("fields.phoneCode")}
+            defaultValue={representative.repPhoneCountryCode}
+            type="tel"
+            maxLength={6}
+            placeholder="+"
+            className="w-[5.25rem] shrink-0"
+          />
+          <CompactField
+            id="repPhone"
+            name="repPhone"
+            label={tf("fields.phoneNumber")}
+            defaultValue={representative.repPhone}
+            type="tel"
+            maxLength={40}
+            className="min-w-0 flex-1"
+          />
+        </FieldGroup>
+
+        <FieldGroup title={tf("groups.mailingAddress")} variant="boxed">
+          <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
             <CompactField
-              id="repPhoneCountryCode"
-              name="repPhoneCountryCode"
-              label={tf("fields.phoneCode")}
-              defaultValue={representative.repPhoneCountryCode}
-              type="tel"
-              maxLength={6}
-              placeholder="+"
-              className="w-[5.25rem] shrink-0"
+              id="repStreetNum"
+              name="repStreetNum"
+              label={tf("fields.streetNum")}
+              defaultValue={representative.repStreetNum}
+              maxLength={20}
             />
             <CompactField
-              id="repPhone"
-              name="repPhone"
-              label={tf("fields.phoneNumber")}
-              defaultValue={representative.repPhone}
-              type="tel"
+              id="repStreetName"
+              name="repStreetName"
+              label={tf("fields.streetName")}
+              defaultValue={representative.repStreetName}
+              maxLength={80}
+              className="sm:col-span-2"
+            />
+            <CompactField
+              id="repCity"
+              name="repCity"
+              label={tf("tables.columns.colCity")}
+              defaultValue={representative.repCity}
+              maxLength={80}
+            />
+            <CompactField
+              id="repProvince"
+              name="repProvince"
+              label={tf("tables.columns.colProvince")}
+              defaultValue={representative.repProvince}
               maxLength={40}
-              className="min-w-0 flex-1"
+            />
+            <Field density="compact">
+              <FieldLabel htmlFor="repCountrySelect" density="compact">
+                {tf("tables.columns.colCountry")}
+              </FieldLabel>
+              <CertifiedSearchSelect
+                id="repCountrySelect"
+                value={repCountry}
+                onChange={setRepCountry}
+                options={countryOptions}
+                placeholder={tf("selectPlaceholder")}
+                compact
+                label={tf("tables.columns.colCountry")}
+                noMatchLabel={tf("noCertifiedMatch")}
+                refineLabel={tf("refineCertifiedSearch")}
+              />
+            </Field>
+            <CompactField
+              id="repPostalCode"
+              name="repPostalCode"
+              label={tf("fields.postalCode")}
+              defaultValue={representative.repPostalCode}
+              maxLength={20}
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <h4 className="font-heading text-sm font-semibold text-brand">
-            {tf("groups.mailingAddress")}
-          </h4>
-          <div className="rounded-xl border border-border bg-surface px-3 py-3">
-            <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
-              <CompactField
-                id="repStreetNum"
-                name="repStreetNum"
-                label={tf("fields.streetNum")}
-                defaultValue={representative.repStreetNum}
-                maxLength={20}
-              />
-              <CompactField
-                id="repStreetName"
-                name="repStreetName"
-                label={tf("fields.streetName")}
-                defaultValue={representative.repStreetName}
-                maxLength={80}
-                className="sm:col-span-2"
-              />
-              <CompactField
-                id="repCity"
-                name="repCity"
-                label={tf("tables.columns.colCity")}
-                defaultValue={representative.repCity}
-                maxLength={80}
-              />
-              <CompactField
-                id="repProvince"
-                name="repProvince"
-                label={tf("tables.columns.colProvince")}
-                defaultValue={representative.repProvince}
-                maxLength={40}
-              />
-              <div className="min-w-0 space-y-1">
-                <Label
-                  htmlFor="repCountrySelect"
-                  className="block text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-                >
-                  {tf("tables.columns.colCountry")}
-                </Label>
-                <CertifiedSearchSelect
-                  id="repCountrySelect"
-                  value={repCountry}
-                  onChange={setRepCountry}
-                  options={countryOptions}
-                  placeholder={tf("selectPlaceholder")}
-                  compact
-                  label={tf("tables.columns.colCountry")}
-                  noMatchLabel={tf("noCertifiedMatch")}
-                  refineLabel={tf("refineCertifiedSearch")}
-                />
-              </div>
-              <CompactField
-                id="repPostalCode"
-                name="repPostalCode"
-                label={tf("fields.postalCode")}
-                defaultValue={representative.repPostalCode}
-                maxLength={20}
-              />
-            </div>
-          </div>
-        </div>
+        </FieldGroup>
       </section>
 
-      {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {state.success ? (
-        <p className="text-sm text-success" role="status">
-          {t("saved")}
-        </p>
-      ) : null}
+      {error ? <FieldError>{error}</FieldError> : null}
+      {state.success ? <FieldSuccess>{t("saved")}</FieldSuccess> : null}
 
       <Button type="submit" disabled={pending}>
         {pending ? t("saving") : t("save")}
       </Button>
-    </form>
+    </FormStack>
   );
 }

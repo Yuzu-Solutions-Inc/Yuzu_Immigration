@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { FieldControl } from "@/components/forms/field-control";
+import { FieldGroup } from "@/components/ui/field";
 import {
   canonicalFieldsByKeys,
   contactFieldGridSpan,
@@ -13,7 +14,6 @@ import {
   PHONE_CONTACT_FIELD_KEYS,
 } from "@/lib/forms/contact-fields";
 import type { CanonicalField } from "@/lib/ircc/fields";
-import { cn } from "@/lib/utils";
 
 export type ContactFieldBinding = {
   idPrefix: string;
@@ -73,27 +73,13 @@ export function MailingAddressFieldGroup({
   const fields = canonicalFieldsByKeys(MAILING_ADDRESS_FIELD_KEYS);
 
   return (
-    <div className="space-y-2">
-      {title ? (
-        <h4 className="font-heading text-sm font-semibold text-brand">
-          {title}
-          {binding.required ? (
-            <span className="text-destructive" aria-hidden>
-              {" "}
-              *
-            </span>
-          ) : null}
-        </h4>
-      ) : null}
-      {help ? <p className="text-xs text-muted-foreground">{help}</p> : null}
-      <div className="rounded-xl border border-border bg-surface px-3 py-3">
-        <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
-          {fields.map((field) =>
-            renderField(field, binding, t, th, contactFieldGridSpan(field.key)),
-          )}
-        </div>
+    <FieldGroup title={title} hint={help} required={binding.required} variant="boxed">
+      <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
+        {fields.map((field) =>
+          renderField(field, binding, t, th, contactFieldGridSpan(field.key)),
+        )}
       </div>
-    </div>
+    </FieldGroup>
   );
 }
 
@@ -111,25 +97,11 @@ export function PhoneInlineFieldGroup({
   const fields = canonicalFieldsByKeys(PHONE_CONTACT_FIELD_KEYS);
 
   return (
-    <div className="space-y-2">
-      {title ? (
-        <h4 className="font-heading text-sm font-semibold text-brand">
-          {title}
-          {binding.required ? (
-            <span className="text-destructive" aria-hidden>
-              {" "}
-              *
-            </span>
-          ) : null}
-        </h4>
-      ) : null}
-      {help ? <p className="text-xs text-muted-foreground">{help}</p> : null}
-      <div className={cn("flex min-w-0 gap-2")}>
-        {fields.map((field) =>
-          renderField(field, binding, t, th, contactFieldInlineClass(field.key)),
-        )}
-      </div>
-    </div>
+    <FieldGroup title={title} hint={help} required={binding.required} variant="inline">
+      {fields.map((field) =>
+        renderField(field, binding, t, th, contactFieldInlineClass(field.key)),
+      )}
+    </FieldGroup>
   );
 }
 
@@ -147,24 +119,10 @@ export function PassportFieldGroup({
   const fields = canonicalFieldsByKeys(PASSPORT_FIELD_KEYS);
 
   return (
-    <div className="space-y-2">
-      {title ? (
-        <h4 className="font-heading text-sm font-semibold text-brand">
-          {title}
-          {binding.required ? (
-            <span className="text-destructive" aria-hidden>
-              {" "}
-              *
-            </span>
-          ) : null}
-        </h4>
-      ) : null}
-      {help ? <p className="text-xs text-muted-foreground">{help}</p> : null}
-      <div className="rounded-xl border border-border bg-surface px-3 py-3">
-        <div className="grid min-w-0 grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2">
-          {fields.map((field) => renderField(field, binding, t, th))}
-        </div>
+    <FieldGroup title={title} hint={help} required={binding.required} variant="boxed">
+      <div className="grid min-w-0 grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2">
+        {fields.map((field) => renderField(field, binding, t, th))}
       </div>
-    </div>
+    </FieldGroup>
   );
 }

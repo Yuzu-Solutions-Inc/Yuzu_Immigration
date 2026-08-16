@@ -13,8 +13,10 @@ import { GoogleCalendarSettings } from "@/components/booking/google-calendar-set
 import { WeekTemplateHours } from "@/components/booking/week-template-hours";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -106,72 +108,72 @@ export function CalendarSettingsPage({
           >
             <input type="hidden" name="locale" value={locale} />
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <Label htmlFor="timezone" className="text-xs">
+              <Field density="dense">
+                <FieldLabel htmlFor="timezone" density="dense">
                   {t("timezone")}
-                </Label>
-                <select
+                </FieldLabel>
+                <NativeSelect
                   id="timezone"
                   name="timezone"
+                  density="dense"
                   defaultValue={settings?.timezone ?? "America/Toronto"}
                   disabled={!canManage}
-                  className="h-8 w-full rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                 >
                   {BOOKING_TIMEZONES.map((zone) => (
                     <option key={zone} value={zone}>
                       {zone}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="bookingWindowDays" className="text-xs">
+                </NativeSelect>
+              </Field>
+              <Field density="dense">
+                <FieldLabel htmlFor="bookingWindowDays" density="dense">
                   {t("windowDays")}
-                </Label>
+                </FieldLabel>
                 <Input
                   id="bookingWindowDays"
                   name="bookingWindowDays"
+                  density="dense"
                   type="number"
                   min={1}
                   max={90}
                   defaultValue={settings?.booking_window_days ?? 14}
                   disabled={!canManage}
                   required
-                  className="h-8"
                 />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="minNoticeHours" className="text-xs">
+              </Field>
+              <Field density="dense">
+                <FieldLabel htmlFor="minNoticeHours" density="dense">
                   {t("minNotice")}
-                </Label>
+                </FieldLabel>
                 <Input
                   id="minNoticeHours"
                   name="minNoticeHours"
+                  density="dense"
                   type="number"
                   min={0}
                   max={168}
                   defaultValue={settings?.min_notice_hours ?? 24}
                   disabled={!canManage}
                   required
-                  className="h-8"
                 />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="bufferMinutes" className="text-xs">
+              </Field>
+              <Field density="dense">
+                <FieldLabel htmlFor="bufferMinutes" density="dense">
                   {t("buffer")}
-                </Label>
+                </FieldLabel>
                 <Input
                   id="bufferMinutes"
                   name="bufferMinutes"
+                  density="dense"
                   type="number"
                   min={0}
                   max={120}
                   defaultValue={settings?.buffer_minutes ?? 0}
                   disabled={!canManage}
                   required
-                  className="h-8"
                 />
-              </div>
+              </Field>
             </div>
             {canManage ? (
               <Button type="submit" size="sm" disabled={savePending}>

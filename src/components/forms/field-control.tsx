@@ -3,9 +3,11 @@
 import { useTranslations } from "next-intl";
 
 import { CertifiedSearchSelect } from "@/components/forms/certified-search-select";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import { fieldControlClassName } from "@/lib/field-styles";
 import {
   fieldOptionLabel,
   orderedFieldOptions,
@@ -31,11 +33,12 @@ function HelpTip({ text }: { text: string }) {
   );
 }
 
-export const compactControlClass =
-  "h-9 w-full min-w-0 rounded-lg border border-input bg-surface px-2 py-0 text-sm md:text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30";
+export const compactControlClass = fieldControlClassName({ density: "compact" });
 
-export const defaultSelectClass =
-  "h-10 w-full rounded-xl border border-input bg-surface px-3 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30";
+export const defaultSelectClass = fieldControlClassName({
+  density: "default",
+  control: "select",
+});
 
 export function FieldControl({
   id,
@@ -70,7 +73,7 @@ export function FieldControl({
   name?: string;
 }) {
   const native = Boolean(name);
-  const selectClass = compact ? compactControlClass : defaultSelectClass;
+  const density = compact ? "compact" : "default";
   const selectOptions = options
     ? orderedFieldOptions(options, optionsLocale, t)
     : [];
@@ -95,15 +98,15 @@ export function FieldControl({
         refineLabel={t("refineCertifiedSearch")}
       />
     ) : type === "select" ? (
-      <select
+      <NativeSelect
         id={id}
         name={name}
+        density={density}
         value={native ? undefined : value}
         defaultValue={native ? "" : undefined}
         onChange={native ? undefined : (e) => onChange?.(e.target.value)}
         required={required}
         aria-label={compact ? label : undefined}
-        className={selectClass}
       >
         <option value="" disabled={!native && Boolean(value)}>
           {placeholder ?? t("selectPlaceholder")}
@@ -113,16 +116,16 @@ export function FieldControl({
             {fieldOptionLabel(opt, optionsLocale, t)}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     ) : type === "yesno" ? (
-      <select
+      <NativeSelect
         id={id}
         name={name}
+        density={density}
         value={native ? undefined : value}
         defaultValue={native ? "" : undefined}
         onChange={native ? undefined : (e) => onChange?.(e.target.value)}
         aria-label={compact ? label : undefined}
-        className={selectClass}
       >
         <option value="" disabled={!native && Boolean(value)}>
           {placeholder ?? t("selectPlaceholder")}
@@ -133,7 +136,7 @@ export function FieldControl({
         <option value="N">
           {optionsLocale.startsWith("fr") ? "Non" : t("options.no")}
         </option>
-      </select>
+      </NativeSelect>
     ) : type === "checkbox" ? (
       <label className="flex h-9 items-center justify-center gap-2 text-sm text-brand">
         <input
@@ -148,7 +151,7 @@ export function FieldControl({
               : (e) => onChange?.(e.target.checked ? "Y" : "N")
           }
           aria-label={compact ? label : undefined}
-          className="size-4 rounded border-input"
+          className={fieldControlClassName({ control: "checkbox" })}
         />
         {compact ? null : t("options.yes")}
       </label>
@@ -156,6 +159,7 @@ export function FieldControl({
       <Textarea
         id={id}
         name={name}
+        density={density}
         value={native ? undefined : value}
         defaultValue={native ? "" : undefined}
         maxLength={maxLength}
@@ -164,12 +168,12 @@ export function FieldControl({
         rows={compact ? 2 : 3}
         aria-label={compact ? label : undefined}
         placeholder={placeholder}
-        className={compact ? "min-h-9 rounded-lg px-2 py-1.5 text-sm" : "rounded-xl"}
       />
     ) : (
       <Input
         id={id}
         name={name}
+        density={density}
         type={
           type === "email"
             ? "email"
@@ -188,41 +192,16 @@ export function FieldControl({
         required={required}
         aria-label={compact ? label : undefined}
         placeholder={placeholder}
-        className={compact ? compactControlClass : undefined}
       />
     );
 
-  if (compact) {
-    return (
-      <div className="min-w-0 space-y-1">
-        <Label
-          htmlFor={id}
-          className="block text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
-        >
-          {label}
-          {required ? (
-            <span className="text-destructive" aria-hidden>
-              *
-            </span>
-          ) : null}
-        </Label>
-        {control}
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="inline-flex items-center">
+    <Field density={density}>
+      <FieldLabel htmlFor={id} density={density} required={required}>
         {label}
-        {required ? (
-          <span className="text-destructive" aria-hidden>
-            *
-          </span>
-        ) : null}
-        {help ? <HelpTip text={help} /> : null}
-      </Label>
+        {!compact && help ? <HelpTip text={help} /> : null}
+      </FieldLabel>
       {control}
-    </div>
+    </Field>
   );
 }

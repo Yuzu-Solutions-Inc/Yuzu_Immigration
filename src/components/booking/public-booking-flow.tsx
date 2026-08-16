@@ -16,8 +16,9 @@ import { MonthCalendar } from "@/components/booking/month-calendar";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { PrivacyLink } from "@/components/legal/privacy-link";
 import { Button } from "@/components/ui/button";
+import { Field, FieldGrid, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@/i18n/navigation";
 import { formatPriceCents, generateServiceSlots } from "@/lib/booking/slots";
@@ -681,9 +682,11 @@ export function PublicBookingFlow({
                   warningEmail.trim().toLowerCase() ? (
                   <input type="hidden" name="confirmAnother" value="on" />
                 ) : null}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="guestFirstName">{t("firstName")}</Label>
+                <FieldGrid>
+                  <Field>
+                    <FieldLabel htmlFor="guestFirstName" required>
+                      {t("firstName")}
+                    </FieldLabel>
                     <Input
                       id="guestFirstName"
                       name="guestFirstName"
@@ -692,9 +695,11 @@ export function PublicBookingFlow({
                       value={guestFirstName}
                       onChange={(event) => setGuestFirstName(event.target.value)}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="guestLastName">{t("lastName")}</Label>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="guestLastName" required>
+                      {t("lastName")}
+                    </FieldLabel>
                     <Input
                       id="guestLastName"
                       name="guestLastName"
@@ -703,13 +708,13 @@ export function PublicBookingFlow({
                       value={guestLastName}
                       onChange={(event) => setGuestLastName(event.target.value)}
                     />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="guestPreferredLocale">
+                  </Field>
+                </FieldGrid>
+                <Field>
+                  <FieldLabel htmlFor="guestPreferredLocale" required>
                     {t("preferredLanguage")}
-                  </Label>
-                  <select
+                  </FieldLabel>
+                  <NativeSelect
                     id="guestPreferredLocale"
                     name="guestPreferredLocale"
                     required
@@ -717,18 +722,19 @@ export function PublicBookingFlow({
                     onChange={(event) =>
                       setGuestPreferredLocale(event.target.value)
                     }
-                    className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
                   >
                     {APP_LOCALES.map((code) => (
                       <option key={code} value={code}>
                         {LOCALE_LABELS[code]}
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="guestEmail">{t("email")}</Label>
+                  </NativeSelect>
+                </Field>
+                <FieldGrid>
+                  <Field>
+                    <FieldLabel htmlFor="guestEmail" required>
+                      {t("email")}
+                    </FieldLabel>
                     <Input
                       id="guestEmail"
                       name="guestEmail"
@@ -738,9 +744,11 @@ export function PublicBookingFlow({
                       value={guestEmail}
                       onChange={(event) => setGuestEmail(event.target.value)}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="guestPhone">{t("phone")}</Label>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="guestPhone" required>
+                      {t("phone")}
+                    </FieldLabel>
                     <Input
                       id="guestPhone"
                       name="guestPhone"
@@ -750,8 +758,8 @@ export function PublicBookingFlow({
                       value={guestPhone}
                       onChange={(event) => setGuestPhone(event.target.value)}
                     />
-                  </div>
-                </div>
+                  </Field>
+                </FieldGrid>
                 {serviceFields.map((field) => (
                   <PublicCustomField key={field.id} field={field} locale={locale} />
                 ))}
@@ -820,14 +828,8 @@ function PublicCustomField({
   }
 
   const name = formFieldInputName(field.field_key);
-  const label = (
-    <Label htmlFor={name}>
-      {field.label}
-      {field.required ? " *" : ""}
-    </Label>
-  );
-  const help = field.help_text ? (
-    <p className="text-xs text-muted-foreground">{field.help_text}</p>
+  const hint = field.help_text ? (
+    <FieldHint>{field.help_text}</FieldHint>
   ) : null;
 
   if (field.field_type === "checkbox") {
@@ -844,7 +846,7 @@ function PublicCustomField({
         <span>
           {field.label}
           {field.required ? " *" : ""}
-          {help}
+          {hint}
         </span>
       </label>
     );
@@ -852,8 +854,10 @@ function PublicCustomField({
 
   if (field.field_type === "textarea") {
     return (
-      <div className="space-y-2">
-        {label}
+      <Field>
+        <FieldLabel htmlFor={name} required={field.required}>
+          {field.label}
+        </FieldLabel>
         <Textarea
           id={name}
           name={name}
@@ -861,20 +865,21 @@ function PublicCustomField({
           required={field.required}
           maxLength={2000}
         />
-        {help}
-      </div>
+        {hint}
+      </Field>
     );
   }
 
   if (field.field_type === "select") {
     return (
-      <div className="space-y-2">
-        {label}
-        <select
+      <Field>
+        <FieldLabel htmlFor={name} required={field.required}>
+          {field.label}
+        </FieldLabel>
+        <NativeSelect
           id={name}
           name={name}
           required={field.required}
-          className="h-10 w-full rounded-xl border border-input bg-surface px-3 text-sm"
           defaultValue=""
         >
           <option value="" disabled>
@@ -885,9 +890,9 @@ function PublicCustomField({
               {option}
             </option>
           ))}
-        </select>
-        {help}
-      </div>
+        </NativeSelect>
+        {hint}
+      </Field>
     );
   }
 
@@ -903,8 +908,10 @@ function PublicCustomField({
             : "text";
 
   return (
-    <div className="space-y-2">
-      {label}
+    <Field>
+      <FieldLabel htmlFor={name} required={field.required}>
+        {field.label}
+      </FieldLabel>
       <Input
         id={name}
         name={name}
@@ -912,7 +919,7 @@ function PublicCustomField({
         required={field.required}
         maxLength={field.field_type === "text" ? 300 : undefined}
       />
-      {help}
-    </div>
+      {hint}
+    </Field>
   );
 }

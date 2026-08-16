@@ -11,8 +11,9 @@ import {
   type OrgProgramActionState,
 } from "@/app/actions/org-programs";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Field, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -211,8 +212,10 @@ export function OrganizationProgramForm({
         <input type="hidden" name="allowsOutsideCanada" value="on" />
       ) : null}
 
-      <div className="space-y-2">
-        <Label htmlFor="orgProgramName">{t("name")}</Label>
+      <Field>
+        <FieldLabel htmlFor="orgProgramName" required>
+          {t("name")}
+        </FieldLabel>
         <Input
           id="orgProgramName"
           name="name"
@@ -220,14 +223,13 @@ export function OrganizationProgramForm({
           onChange={(e) => setName(e.target.value)}
           maxLength={120}
           required
-          className="rounded-xl"
           placeholder={t("namePlaceholder")}
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <Label>{t("composition")}</Label>
-        <p className="text-xs text-muted-foreground">{t("compositionHelp")}</p>
+      <Field>
+        <FieldLabel>{t("composition")}</FieldLabel>
+        <FieldHint>{t("compositionHelp")}</FieldHint>
         <div className="flex flex-wrap gap-3">
           {(
             [
@@ -250,11 +252,11 @@ export function OrganizationProgramForm({
             </label>
           ))}
         </div>
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <Label>{t("location")}</Label>
-        <p className="text-xs text-muted-foreground">{t("locationHelp")}</p>
+      <Field>
+        <FieldLabel>{t("location")}</FieldLabel>
+        <FieldHint>{t("locationHelp")}</FieldHint>
         <div className="flex flex-wrap gap-3">
           <label className="flex items-center gap-2 text-sm text-brand">
             <input
@@ -275,11 +277,11 @@ export function OrganizationProgramForm({
             {t("insideCanada")}
           </label>
         </div>
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <Label>{t("forms")}</Label>
-        <p className="text-xs text-muted-foreground">{t("formsHelp")}</p>
+      <Field>
+        <FieldLabel>{t("forms")}</FieldLabel>
+        <FieldHint>{t("formsHelp")}</FieldHint>
         <div className="max-h-72 space-y-1 overflow-y-auto rounded-xl border border-border bg-canvas p-4">
           {PROPOSED_ORG_PROGRAM_FORM_CODES.map((code) => (
             <label
@@ -301,13 +303,13 @@ export function OrganizationProgramForm({
             </label>
           ))}
         </div>
-      </div>
+      </Field>
 
       <div className="space-y-3">
-        <div>
-          <Label>{t("documents")}</Label>
-          <p className="text-xs text-muted-foreground">{t("documentsHelp")}</p>
-        </div>
+        <Field>
+          <FieldLabel>{t("documents")}</FieldLabel>
+          <FieldHint>{t("documentsHelp")}</FieldHint>
+        </Field>
 
         <div className="space-y-2 rounded-xl border border-border bg-canvas p-4">
           <p className="text-xs font-medium text-muted-foreground">
@@ -330,7 +332,9 @@ export function OrganizationProgramForm({
                   {t(`docKeys.${docKey}`)}
                 </label>
                 {existing ? (
-                  <select
+                  <NativeSelect
+                    density="dense"
+                    className="w-auto text-xs"
                     value={existing.scope}
                     onChange={(e) =>
                       updateDocScope(
@@ -338,11 +342,10 @@ export function OrganizationProgramForm({
                         e.target.value === "project" ? "project" : "person",
                       )
                     }
-                    className="h-8 rounded-lg border border-input bg-surface px-2 text-xs"
                   >
                     <option value="person">{t("scopePerson")}</option>
                     <option value="project">{t("scopeProject")}</option>
-                  </select>
+                  </NativeSelect>
                 ) : null}
               </div>
             );
@@ -363,7 +366,9 @@ export function OrganizationProgramForm({
                 <span className="min-w-0 flex-1 font-medium text-brand">
                   {doc.customLabel}
                 </span>
-                <select
+                <NativeSelect
+                  density="dense"
+                  className="w-auto text-xs"
                   value={doc.scope}
                   onChange={(e) =>
                     updateDocScope(
@@ -371,11 +376,10 @@ export function OrganizationProgramForm({
                       e.target.value === "project" ? "project" : "person",
                     )
                   }
-                  className="h-8 rounded-lg border border-input bg-surface px-2 text-xs"
                 >
                   <option value="person">{t("scopePerson")}</option>
                   <option value="project">{t("scopeProject")}</option>
-                </select>
+                </NativeSelect>
                 <button
                   type="button"
                   onClick={() => removeDoc(doc.localId)}
@@ -394,18 +398,18 @@ export function OrganizationProgramForm({
               maxLength={120}
               className="min-w-[10rem] flex-1 rounded-xl"
             />
-            <select
+            <NativeSelect
+              className="w-auto"
               value={customScope}
               onChange={(e) =>
                 setCustomScope(
                   e.target.value === "project" ? "project" : "person",
                 )
               }
-              className="h-10 rounded-xl border border-input bg-surface px-2 text-sm"
             >
               <option value="person">{t("scopePerson")}</option>
               <option value="project">{t("scopeProject")}</option>
-            </select>
+            </NativeSelect>
             <Button
               type="button"
               variant="outline"
