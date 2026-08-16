@@ -25,6 +25,7 @@ export function StaffIntegrationCard({
   logo,
   title,
   description,
+  comingSoon,
   connectedAsLabel,
   unknownAccountLabel,
   lastSyncedKey,
@@ -41,7 +42,8 @@ export function StaffIntegrationCard({
   selected: boolean;
   logo: ReactNode;
   title: string;
-  description: string;
+  description?: string;
+  comingSoon?: boolean;
   connectedAsLabel: string;
   unknownAccountLabel: string;
   lastSyncedKey?: "googleLastSynced" | "microsoftLastSynced";
@@ -74,6 +76,7 @@ export function StaffIntegrationCard({
       logo={logo}
       title={title}
       description={description}
+      comingSoonLabel={comingSoon ? t("comingSoon") : undefined}
       connected={inUse || connected}
       statusConnectedLabel={inUse ? t("statusInUse") : t("statusConnected")}
       statusDisconnectedLabel={t("statusNotConnected")}

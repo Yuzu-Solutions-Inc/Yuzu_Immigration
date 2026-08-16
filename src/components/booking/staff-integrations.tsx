@@ -96,7 +96,6 @@ export function StaffCalendarIntegrations({
         selected={calendarProvider === "google"}
         logo={<GoogleCalendarLogo className="size-9" />}
         title={t("googleTitle")}
-        description={t("googleHelp")}
         connectedAsLabel={t("googleConnectedAs")}
         unknownAccountLabel={t("googleUnknownAccount")}
         lastSyncedKey="googleLastSynced"
@@ -128,9 +127,9 @@ export function StaffCalendarIntegrations({
             : null
         }
         selected={calendarProvider === "microsoft"}
+        comingSoon
         logo={<OutlookCalendarLogo className="size-9" />}
         title={t("microsoftTitle")}
-        description={t("microsoftHelp")}
         connectedAsLabel={t("microsoftConnectedAs")}
         unknownAccountLabel={t("microsoftUnknownAccount")}
         lastSyncedKey="microsoftLastSynced"
@@ -190,7 +189,6 @@ export function StaffMeetingIntegrations({
         selected={meetingProvider === "google_meet"}
         logo={<GoogleMeetLogo className="size-9" />}
         title={t("meetTitle")}
-        description={t("meetHelp")}
         connectedAsLabel={t("googleConnectedAs")}
         unknownAccountLabel={t("googleUnknownAccount")}
         lastSyncedKey="googleLastSynced"
@@ -220,9 +218,9 @@ export function StaffMeetingIntegrations({
             : null
         }
         selected={meetingProvider === "teams"}
+        comingSoon
         logo={<MicrosoftTeamsLogo className="size-9" />}
         title={t("teamsTitle")}
-        description={t("teamsHelp")}
         connectedAsLabel={t("microsoftConnectedAs")}
         unknownAccountLabel={t("microsoftUnknownAccount")}
         lastSyncedKey="microsoftLastSynced"
@@ -252,9 +250,9 @@ export function StaffMeetingIntegrations({
             : null
         }
         selected={meetingProvider === "zoom"}
+        comingSoon
         logo={<ZoomLogo className="size-9" />}
         title={t("zoomTitle")}
-        description={t("zoomHelp")}
         connectedAsLabel={t("zoomConnectedAs")}
         unknownAccountLabel={t("zoomUnknownAccount")}
         notConfiguredMessage={t("zoomNotConfigured")}

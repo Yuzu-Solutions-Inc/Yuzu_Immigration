@@ -7,6 +7,7 @@ export function IntegrationPanel({
   logo,
   title,
   description,
+  comingSoonLabel,
   connected,
   statusConnectedLabel,
   statusDisconnectedLabel,
@@ -19,6 +20,7 @@ export function IntegrationPanel({
   logo: ReactNode;
   title: string;
   description?: string;
+  comingSoonLabel?: string;
   connected: boolean;
   statusConnectedLabel: string;
   statusDisconnectedLabel: string;
@@ -51,6 +53,9 @@ export function IntegrationPanel({
             >
               {title}
             </HeadingTag>
+            {comingSoonLabel ? (
+              <Badge variant="outline">{comingSoonLabel}</Badge>
+            ) : null}
             <Badge
               variant={connected ? "default" : "secondary"}
               className={cn(
