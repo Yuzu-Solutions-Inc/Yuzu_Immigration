@@ -607,7 +607,7 @@ function SectionProgressNav({
       className="rounded-xl bg-canvas p-4 lg:sticky lg:top-4 lg:w-56 lg:shrink-0"
     >
       {clientSubmit ? (
-        <div className="mb-4 space-y-2 border-b border-border pb-4">
+        <div className="mb-4 space-y-2 rounded-xl border border-border bg-surface p-4 shadow-elevated">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             {t("clientSubmitLabel")}
           </p>

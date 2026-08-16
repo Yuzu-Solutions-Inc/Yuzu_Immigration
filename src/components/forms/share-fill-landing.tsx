@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { ShareFillExpired } from "@/components/forms/share-fill-expired";
+import { ShareFillHeader } from "@/components/forms/share-fill-header";
 import { Link } from "@/i18n/navigation";
 import { seedShareDocumentDefaults } from "@/lib/documents/share-seed";
 import { loadShareLandingSummary } from "@/lib/ircc/share-landing";
@@ -39,7 +40,6 @@ export async function ShareFillLanding({ token }: { token: string }) {
 
     const locale = await getLocale();
     const t = await getTranslations("documents");
-    const tf = await getTranslations("forms");
 
     try {
       await seedShareDocumentDefaults({
@@ -56,20 +56,14 @@ export async function ShareFillLanding({ token }: { token: string }) {
 
     return (
       <div className="mx-auto max-w-2xl space-y-8 px-4 py-10">
-        <header className="space-y-2">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("clientEyebrow")}
-          </p>
-          <h1 className="font-heading text-3xl font-semibold text-brand">
-            {summary.projectTitle}
-          </h1>
-          <p className="text-[15px] text-muted-foreground">{t("clientLede")}</p>
-          <p className="text-sm text-muted-foreground">
-            {tf("clientExpires", {
-              date: formatShareLinkExpiryDate(summary.expiresAt, locale),
-            })}
-          </p>
-        </header>
+        <ShareFillHeader
+          token={token}
+          projectTitle={summary.projectTitle}
+          expiresLabel={formatShareLinkExpiryDate(summary.expiresAt, locale)}
+          active="home"
+        />
+
+        <p className="text-[15px] text-muted-foreground">{t("clientLede")}</p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Link

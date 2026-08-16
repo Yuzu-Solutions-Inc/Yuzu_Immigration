@@ -1,15 +1,16 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 import { ClientDocumentsUpload } from "@/components/documents/client-documents-upload";
 import { ShareFillExpired } from "@/components/forms/share-fill-expired";
-import { Link } from "@/i18n/navigation";
+import { ShareFillHeader } from "@/components/forms/share-fill-header";
+import { formatShareLinkExpiryDate } from "@/lib/ircc/share-dates";
 import { seedShareDocumentDefaults } from "@/lib/documents/share-seed";
 import { listShareDocumentRequests } from "@/lib/documents/service";
 import { loadShareContext } from "@/lib/ircc/project-forms";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export async function ShareFillDocuments({ token }: { token: string }) {
-  const t = await getTranslations("documents");
+  const locale = await getLocale();
   const ctx = await loadShareContext(token);
 
   if (!ctx) {
@@ -36,25 +37,12 @@ export async function ShareFillDocuments({ token }: { token: string }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
-      <div>
-        <Link
-          href={`/fill/${token}`}
-          className="text-sm font-medium text-action hover:underline"
-        >
-          ← {t("backToLanding")}
-        </Link>
-      </div>
-      <header className="space-y-2">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("clientEyebrow")}
-        </p>
-        <h1 className="font-heading text-2xl font-semibold text-brand">
-          {t("landingDocumentsTitle")}
-        </h1>
-        <p className="text-[15px] text-muted-foreground">
-          {String(ctx.project.title)}
-        </p>
-      </header>
+      <ShareFillHeader
+        token={token}
+        projectTitle={String(ctx.project.title)}
+        expiresLabel={formatShareLinkExpiryDate(ctx.expiresAt, locale)}
+        active="documents"
+      />
 
       <ClientDocumentsUpload
         token={token}

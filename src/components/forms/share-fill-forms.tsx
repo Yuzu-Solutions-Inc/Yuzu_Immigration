@@ -1,14 +1,14 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 import { ClientFillForm } from "@/components/forms/client-fill-form";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import { ShareFillExpired } from "@/components/forms/share-fill-expired";
-import { Link } from "@/i18n/navigation";
+import { ShareFillHeader } from "@/components/forms/share-fill-header";
+import { formatShareLinkExpiryDate } from "@/lib/ircc/share-dates";
 import { loadShareContext } from "@/lib/ircc/project-forms";
 
 export async function ShareFillForms({ token }: { token: string }) {
-  const t = await getTranslations("forms");
-  const td = await getTranslations("documents");
+  const locale = await getLocale();
   const ctx = await loadShareContext(token);
 
   if (!ctx) {
@@ -24,20 +24,18 @@ export async function ShareFillForms({ token }: { token: string }) {
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="mx-auto max-w-6xl space-y-4 px-4 pt-6">
-        <Link
-          href={`/fill/${token}`}
-          className="text-sm font-medium text-action hover:underline"
-        >
-          ← {td("backToLanding")}
-        </Link>
+    <div className="space-y-6">
+      <div className="mx-auto max-w-6xl px-4 pt-6">
+        <ShareFillHeader
+          token={token}
+          projectTitle={String(ctx.project.title)}
+          expiresLabel={formatShareLinkExpiryDate(ctx.expiresAt, locale)}
+          active="forms"
+        />
       </div>
       <ClientFillForm
         token={token}
         people={people}
-        projectTitle={String(ctx.project.title)}
-        expiresAt={ctx.expiresAt}
         initialSubmittedAt={ctx.questionnaireSubmittedAt}
       />
     </div>
