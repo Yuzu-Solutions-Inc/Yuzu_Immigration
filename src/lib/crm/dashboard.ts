@@ -1,3 +1,4 @@
+import type { PersonImmigrationStatus, ProjectStatus } from "@/db/schema";
 import {
   listProjects,
   requireOrganizationId,
@@ -5,7 +6,11 @@ import {
   type ProjectRow,
 } from "@/lib/crm/queries";
 import { isTerminalStatus, PROJECT_STATUSES } from "@/lib/crm/statuses";
-import { addDaysToIsoDate, zonedDateIso } from "@/lib/booking/timezone";
+import {
+  addDaysToIsoDate,
+  zonedCivilToUtc,
+  zonedDateIso,
+} from "@/lib/booking/timezone";
 import type { BookingAppointmentRow } from "@/lib/booking/types";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import { createClient } from "@/lib/supabase/server";
@@ -14,38 +19,38 @@ import {
   decryptPersonRow,
 } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
-import {
-  daysUntilIso,
-  shiftIsoDate,
-  startOfIsoWeek,
-} from "@/lib/crm/dates";
-import { PROGRAM_FAMILIES } from "@/lib/crm/programs";
+import { daysUntilIso } from "@/lib/crm/dates";
 import {
   getProjectsProgress,
   type ProjectProgress,
 } from "@/lib/crm/progress";
-import type { ProgramFamily, ProjectStatus } from "@/db/schema";
 
 export type ChartDatum = {
   key: string;
   count: number;
 };
 
-export type SubmitTrendPoint = {
-  weekStart: string;
-  count: number;
-};
+export type AttentionKind =
+  | "overdue"
+  | "docs_review"
+  | "questionnaire"
+  | "unpaid"
+  | "stuck"
+  | "due_soon";
 
-export type UpcomingSubmission = {
+export type AttentionItem = {
   id: string;
+  kind: AttentionKind;
   title: string;
   href: string;
-  submitBefore: string;
-  days: number;
-  status: ProjectStatus;
-  docsDone: number;
-  docsTotal: number;
-  formPercent: number;
+  status?: ProjectStatus;
+  days?: number;
+  count?: number;
+  amountCents?: number;
+  currency?: string;
+  docsDone?: number;
+  docsTotal?: number;
+  formPercent?: number;
 };
 
 export type DashboardAppointment = {
@@ -60,6 +65,7 @@ export type DashboardAppointment = {
 export type StatusExpiryItem = {
   id: string;
   name: string;
+  immigrationStatus: PersonImmigrationStatus;
   expiresAt: string;
   days: number;
   href: string;
@@ -83,14 +89,13 @@ export type HomeDashboard = {
     overdueSubmissions: number;
     docsToReview: number;
     stuckWaiting: number;
+    pendingPayments: number;
     peopleCount: number;
     statusExpiring30: number;
   };
   booking: BookingModuleSummary;
   projectsByStatus: ChartDatum[];
-  peopleByVisa: ChartDatum[];
-  submitTrend: SubmitTrendPoint[];
-  upcoming: UpcomingSubmission[];
+  attention: AttentionItem[];
   appointments: DashboardAppointment[];
   statusExpiries: StatusExpiryItem[];
 };
@@ -103,6 +108,7 @@ const EMPTY: HomeDashboard = {
     overdueSubmissions: 0,
     docsToReview: 0,
     stuckWaiting: 0,
+    pendingPayments: 0,
     peopleCount: 0,
     statusExpiring30: 0,
   },
@@ -116,17 +122,26 @@ const EMPTY: HomeDashboard = {
     needsSetup: true,
   },
   projectsByStatus: [],
-  peopleByVisa: [],
-  submitTrend: [],
-  upcoming: [],
+  attention: [],
   appointments: [],
   statusExpiries: [],
 };
 
-const TREND_WEEKS_BEFORE = 4;
-const TREND_WEEKS_AFTER = 7;
+const ATTENTION_RANK: Record<AttentionKind, number> = {
+  overdue: 0,
+  docs_review: 1,
+  questionnaire: 2,
+  unpaid: 3,
+  stuck: 4,
+  due_soon: 5,
+};
 
-function countBy<T extends string>(values: T[], order: readonly T[]): ChartDatum[] {
+const ATTENTION_LIMIT = 8;
+
+function countBy<T extends string>(
+  values: T[],
+  order: readonly T[],
+): ChartDatum[] {
   const counts = new Map<T, number>();
   for (const value of values) {
     counts.set(value, (counts.get(value) ?? 0) + 1);
@@ -134,6 +149,23 @@ function countBy<T extends string>(values: T[], order: readonly T[]): ChartDatum
   return order
     .map((key) => ({ key, count: counts.get(key) ?? 0 }))
     .filter((row) => row.count > 0);
+}
+
+function emptyProgress(): ProjectProgress {
+  return { docsDone: 0, docsTotal: 0, formPercent: 0, docsToReview: 0 };
+}
+
+function withProgress(
+  project: ProjectRow,
+  progress: Map<string, ProjectProgress>,
+) {
+  const stats = progress.get(project.id) ?? emptyProgress();
+  return {
+    status: project.status,
+    docsDone: stats.docsDone,
+    docsTotal: stats.docsTotal,
+    formPercent: stats.formPercent,
+  };
 }
 
 export async function getHomeDashboard(
@@ -149,7 +181,6 @@ export async function getHomeDashboard(
   const [
     projects,
     peopleCountResult,
-    participantsResult,
     settingsResult,
     servicesResult,
     rulesResult,
@@ -160,12 +191,6 @@ export async function getHomeDashboard(
       .from("people")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId),
-    supabase
-      .from("project_participants")
-      .select("person_id, project_id")
-      .eq("organization_id", orgId)
-      .is("left_at", null)
-      .limit(2000),
     supabase
       .from("booking_settings")
       .select("timezone, is_enabled")
@@ -193,12 +218,6 @@ export async function getHomeDashboard(
   if (peopleCountResult.error) {
     console.error("getHomeDashboard people:", peopleCountResult.error.message);
   }
-  if (participantsResult.error) {
-    console.error(
-      "getHomeDashboard participants:",
-      participantsResult.error.message,
-    );
-  }
   if (settingsResult.error) {
     console.error("getHomeDashboard settings:", settingsResult.error.message);
   }
@@ -222,8 +241,12 @@ export async function getHomeDashboard(
   const hasAvailability = (rulesResult.count ?? 0) > 0;
   const todayIso = zonedDateIso(now, timezone);
   const rangeEndIso = addDaysToIsoDate(todayIso, 7);
-  const appointmentsFrom = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-  const appointmentsTo = `${rangeEndIso}T23:59:59.999Z`;
+  const appointmentsFrom = zonedCivilToUtc(todayIso, "00:00", timezone);
+  const appointmentsTo = zonedCivilToUtc(
+    addDaysToIsoDate(rangeEndIso, 1),
+    "00:00",
+    timezone,
+  );
 
   const liveProjects = projects.filter((project) => !project.destroyed_at);
   const openProjects = liveProjects.filter(
@@ -231,7 +254,15 @@ export async function getHomeDashboard(
   );
   const openIds = openProjects.map((project) => project.id);
 
-  const [progress, uploadedResult, appointmentsResult] = await Promise.all([
+  const [
+    progress,
+    uploadedResult,
+    appointmentsResult,
+    paymentsResult,
+    answersResult,
+    ungeneratedFormsResult,
+    unpaidBookingsResult,
+  ] = await Promise.all([
     getProjectsProgress(liveProjects.map((project) => project.id)),
     openIds.length > 0
       ? supabase
@@ -245,11 +276,45 @@ export async function getHomeDashboard(
       .from("booking_appointments")
       .select("*, service:booking_services(title, translations)")
       .eq("organization_id", orgId)
-      .gte("starts_at", appointmentsFrom)
-      .lt("starts_at", appointmentsTo)
+      .gte("starts_at", appointmentsFrom.toISOString())
+      .lt("starts_at", appointmentsTo.toISOString())
       .neq("status", "cancelled")
       .order("starts_at", { ascending: true })
-      .limit(8),
+      .limit(40),
+    supabase
+      .from("payment_requests")
+      .select(
+        "id, source, amount_cents, currency, description, project_id, appointment_id",
+      )
+      .eq("organization_id", orgId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    openIds.length > 0
+      ? supabase
+          .from("project_form_answers")
+          .select("project_id, questionnaire_submitted_at")
+          .eq("organization_id", orgId)
+          .in("project_id", openIds)
+          .not("questionnaire_submitted_at", "is", null)
+      : Promise.resolve({ data: [], error: null }),
+    openIds.length > 0
+      ? supabase
+          .from("project_forms")
+          .select("project_id")
+          .eq("organization_id", orgId)
+          .in("project_id", openIds)
+          .eq("is_required", true)
+          .in("status", ["todo", "in_progress", "ready"])
+      : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("booking_appointments")
+      .select("*, service:booking_services(title, translations)")
+      .eq("organization_id", orgId)
+      .eq("status", "pending_payment")
+      .gte("starts_at", new Date(now.getTime() - 86_400_000).toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(12),
   ]);
 
   if (uploadedResult.error) {
@@ -261,56 +326,29 @@ export async function getHomeDashboard(
       appointmentsResult.error.message,
     );
   }
+  if (paymentsResult.error) {
+    console.error("getHomeDashboard payments:", paymentsResult.error.message);
+  }
+  if (answersResult.error) {
+    console.error("getHomeDashboard answers:", answersResult.error.message);
+  }
+  if (ungeneratedFormsResult.error) {
+    console.error(
+      "getHomeDashboard forms:",
+      ungeneratedFormsResult.error.message,
+    );
+  }
+  if (unpaidBookingsResult.error) {
+    console.error(
+      "getHomeDashboard unpaid bookings:",
+      unpaidBookingsResult.error.message,
+    );
+  }
 
   const projectsByStatus = countBy(
     liveProjects.map((project) => project.status),
     PROJECT_STATUSES,
   );
-
-  const projectById = new Map(liveProjects.map((project) => [project.id, project]));
-  const visaByPerson = new Map<string, Set<ProgramFamily>>();
-  for (const row of (participantsResult.data ?? []) as {
-    person_id: string;
-    project_id: string;
-  }[]) {
-    const project = projectById.get(row.project_id);
-    if (!project || isTerminalStatus(project.status)) continue;
-    const set = visaByPerson.get(row.person_id) ?? new Set<ProgramFamily>();
-    set.add(project.program_family);
-    visaByPerson.set(row.person_id, set);
-  }
-
-  const visaValues: ProgramFamily[] = [];
-  for (const visas of visaByPerson.values()) {
-    for (const visa of visas) visaValues.push(visa);
-  }
-  const peopleByVisa = countBy(visaValues, PROGRAM_FAMILIES);
-
-  const currentWeek = startOfIsoWeek(now);
-  const firstWeek = shiftIsoDate(currentWeek, -TREND_WEEKS_BEFORE * 7);
-  const weekStarts: string[] = [];
-  for (let i = 0; i < TREND_WEEKS_BEFORE + 1 + TREND_WEEKS_AFTER; i += 1) {
-    weekStarts.push(shiftIsoDate(firstWeek, i * 7));
-  }
-  const lastWeek = weekStarts[weekStarts.length - 1]!;
-  const trendEnd = shiftIsoDate(lastWeek, 6);
-
-  const weekCounts = new Map(weekStarts.map((week) => [week, 0]));
-  for (const project of liveProjects) {
-    if (!project.submit_before) continue;
-    if (project.submit_before < firstWeek || project.submit_before > trendEnd) {
-      continue;
-    }
-    const week = startOfIsoWeek(new Date(`${project.submit_before}T12:00:00`));
-    if (weekCounts.has(week)) {
-      weekCounts.set(week, (weekCounts.get(week) ?? 0) + 1);
-    }
-  }
-
-  const submitTrend: SubmitTrendPoint[] = weekStarts.map((weekStart) => ({
-    weekStart,
-    count: weekCounts.get(weekStart) ?? 0,
-  }));
 
   const datedOpen = openProjects.filter(
     (project): project is ProjectRow & { submit_before: string } =>
@@ -325,47 +363,160 @@ export async function getHomeDashboard(
     else if (days <= 14) dueIn14Days += 1;
   }
 
-  const upcoming: UpcomingSubmission[] = [...datedOpen]
-    .sort((a, b) => a.submit_before.localeCompare(b.submit_before))
-    .slice(0, 5)
-    .map((project) => {
-      const stats: ProjectProgress = progress.get(project.id) ?? {
-        docsDone: 0,
-        docsTotal: 0,
-        formPercent: 0,
-        docsToReview: 0,
-      };
-      return {
-        id: project.id,
+  const submittedIds = new Set(
+    (
+      (answersResult.data ?? []) as Array<{
+        project_id: string;
+        questionnaire_submitted_at: string | null;
+      }>
+    ).map((row) => row.project_id),
+  );
+  const ungeneratedIds = new Set(
+    ((ungeneratedFormsResult.data ?? []) as Array<{ project_id: string }>).map(
+      (row) => row.project_id,
+    ),
+  );
+
+  const projectAttention = new Map<string, AttentionItem>();
+
+  const upsertProjectAttention = (projectId: string, item: AttentionItem) => {
+    const current = projectAttention.get(projectId);
+    if (!current) {
+      projectAttention.set(projectId, item);
+      return;
+    }
+    if (ATTENTION_RANK[item.kind] < ATTENTION_RANK[current.kind]) {
+      projectAttention.set(projectId, {
+        ...item,
+        count: item.count ?? current.count,
+      });
+      return;
+    }
+    if (item.count && !current.count) current.count = item.count;
+  };
+
+  for (const project of datedOpen) {
+    const days = daysUntilIso(project.submit_before, now);
+    if (days >= 0 && days > 14) continue;
+    const kind = days < 0 ? "overdue" : "due_soon";
+    const stats = progress.get(project.id) ?? emptyProgress();
+    upsertProjectAttention(project.id, {
+      id: `${kind}:${project.id}`,
+      kind,
+      title: project.title,
+      href: `/projects/${project.id}`,
+      days,
+      count: stats.docsToReview || undefined,
+      ...withProgress(project, progress),
+    });
+  }
+
+  for (const project of openProjects) {
+    const stats = progress.get(project.id) ?? emptyProgress();
+    if (stats.docsToReview > 0) {
+      upsertProjectAttention(project.id, {
+        id: `docs_review:${project.id}`,
+        kind: "docs_review",
+        title: project.title,
+        href: `/projects/${project.id}#documents`,
+        count: stats.docsToReview,
+        ...withProgress(project, progress),
+      });
+    }
+    if (submittedIds.has(project.id) && ungeneratedIds.has(project.id)) {
+      upsertProjectAttention(project.id, {
+        id: `questionnaire:${project.id}`,
+        kind: "questionnaire",
+        title: project.title,
+        href: `/projects/${project.id}#forms`,
+        ...withProgress(project, progress),
+      });
+    }
+    if (project.status === "stuck" || project.status === "waiting") {
+      upsertProjectAttention(project.id, {
+        id: `stuck:${project.id}`,
+        kind: "stuck",
         title: project.title,
         href: `/projects/${project.id}`,
-        submitBefore: project.submit_before,
-        days: daysUntilIso(project.submit_before, now),
-        status: project.status,
-        docsDone: stats.docsDone,
-        docsTotal: stats.docsTotal,
-        formPercent: stats.formPercent,
-      };
-    });
-
-  const rawAppointments = (appointmentsResult.data ?? []) as Array<
-    BookingAppointmentRow & {
-      service?: { title: string; translations?: unknown } | null;
+        ...withProgress(project, progress),
+      });
     }
-  >;
-  const appointments: DashboardAppointment[] = rawAppointments.map((row) => {
+  }
+
+  const attention: AttentionItem[] = [...projectAttention.values()];
+
+  const projectTitleById = new Map(
+    liveProjects.map((project) => [project.id, project.title]),
+  );
+  const paidAppointmentIds = new Set<string>();
+
+  for (const row of (paymentsResult.data ?? []) as Array<{
+    id: string;
+    source: string;
+    amount_cents: number;
+    currency: string;
+    description: string;
+    project_id: string | null;
+    appointment_id: string | null;
+  }>) {
+    if (row.appointment_id) paidAppointmentIds.add(row.appointment_id);
+    const projectTitle = row.project_id
+      ? projectTitleById.get(row.project_id)
+      : null;
+    attention.push({
+      id: `unpaid:${row.id}`,
+      kind: "unpaid",
+      title: row.description || projectTitle || "Payment",
+      href: row.project_id
+        ? `/projects/${row.project_id}#payments`
+        : "/bookings",
+      amountCents: row.amount_cents,
+      currency: row.currency,
+    });
+  }
+
+  type AppointmentJoin = BookingAppointmentRow & {
+    service?: { title: string; translations?: unknown } | null;
+  };
+
+  const mapAppointment = (row: AppointmentJoin): DashboardAppointment => {
     const guest = decryptBookingGuestRow(row, key);
     return {
       id: row.id,
       guestName: guest.guest_name,
-      serviceTitle: row.service
-        ? serviceTitle(row.service, locale)
-        : null,
+      serviceTitle: row.service ? serviceTitle(row.service, locale) : null,
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       status: row.status,
     };
+  };
+
+  for (const row of (unpaidBookingsResult.data ?? []) as AppointmentJoin[]) {
+    if (paidAppointmentIds.has(row.id)) continue;
+    const mapped = mapAppointment(row);
+    attention.push({
+      id: `unpaid-booking:${row.id}`,
+      kind: "unpaid",
+      title: mapped.guestName,
+      href: "/bookings",
+    });
+  }
+
+  attention.sort((a, b) => {
+    const rank = ATTENTION_RANK[a.kind] - ATTENTION_RANK[b.kind];
+    if (rank !== 0) return rank;
+    if (a.kind === "overdue" || a.kind === "due_soon") {
+      return (a.days ?? 0) - (b.days ?? 0);
+    }
+    if (a.kind === "docs_review") {
+      return (b.count ?? 0) - (a.count ?? 0);
+    }
+    return a.title.localeCompare(b.title);
   });
+
+  const appointments = ((appointmentsResult.data ?? []) as AppointmentJoin[]).map(
+    mapAppointment,
+  );
 
   let todayCount = 0;
   let next7Count = 0;
@@ -385,6 +536,7 @@ export async function getHomeDashboard(
       return {
         id: row.id,
         name: `${row.first_name} ${row.last_name}`.trim(),
+        immigrationStatus: row.immigration_status,
         expiresAt,
         days: daysUntilIso(expiresAt, now),
         href: `/people/${row.id}`,
@@ -395,6 +547,8 @@ export async function getHomeDashboard(
 
   const statusExpiring30 = statusExpiries.filter((row) => row.days <= 30).length;
   const peopleCount = peopleCountResult.count ?? 0;
+  const pendingPayments = attention.filter((item) => item.kind === "unpaid")
+    .length;
   const needsSetup =
     !bookingEnabled || activeServices === 0 || !hasAvailability;
 
@@ -409,6 +563,7 @@ export async function getHomeDashboard(
       stuckWaiting: liveProjects.filter(
         (project) => project.status === "stuck" || project.status === "waiting",
       ).length,
+      pendingPayments,
       peopleCount,
       statusExpiring30,
     },
@@ -422,9 +577,7 @@ export async function getHomeDashboard(
       needsSetup,
     },
     projectsByStatus,
-    peopleByVisa,
-    submitTrend,
-    upcoming,
+    attention: attention.slice(0, ATTENTION_LIMIT),
     appointments,
     statusExpiries,
   };
