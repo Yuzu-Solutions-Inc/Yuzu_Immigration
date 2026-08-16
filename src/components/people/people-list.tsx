@@ -5,6 +5,18 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { DeletePersonButton } from "@/components/people/delete-person-button";
+import {
+  ListTableCard,
+  listMobileEmptyClassName,
+  listMobileFiltersStackClassName,
+  listMobileFiltersClassName,
+  listMobileItemClassName,
+  listStackClassName,
+  listTableEdgeEndClassName,
+  listTableEdgeStartClassName,
+  listTableEmptyCellClassName,
+  listTableHeadClassName,
+} from "@/components/layout/list-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -175,10 +187,9 @@ export function PeopleList({
   }
 
   return (
-    <div className="space-y-3">
-      {/* Mobile: stacked filters + cards */}
-      <div className="space-y-3 md:hidden">
-        <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
+    <div className={listStackClassName}>
+      <div className={listMobileFiltersStackClassName}>
+        <div className={listMobileFiltersClassName}>
           <Input
             type="search"
             value={nameQuery}
@@ -226,7 +237,7 @@ export function PeopleList({
         </div>
 
         {filteredSorted.length === 0 ? (
-          <p className="rounded-xl border border-border bg-surface px-4 py-8 text-center text-[15px] text-muted-foreground">
+          <p className={listMobileEmptyClassName}>
             {t("noMatches")}
           </p>
         ) : (
@@ -235,7 +246,7 @@ export function PeopleList({
               const fullName = `${person.first_name} ${person.last_name}`;
               return (
                 <li key={person.id}>
-                  <div className="flex items-start gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
+                  <div className={cn("flex items-start gap-2", listMobileItemClassName)}>
                     <Link
                       href={`/people/${person.id}`}
                       className="min-w-0 flex-1 space-y-1"
@@ -264,11 +275,17 @@ export function PeopleList({
         )}
       </div>
 
-      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface shadow-elevated md:block">
+      <ListTableCard className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-auto min-w-[12rem] px-5 py-2.5 align-bottom">
+              <TableHead
+                className={cn(
+                  "min-w-[12rem]",
+                  listTableHeadClassName,
+                  listTableEdgeStartClassName,
+                )}
+              >
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="name" label={t("columnName")} />
                   <Input
@@ -282,7 +299,7 @@ export function PeopleList({
                   />
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[12rem] py-2.5 align-bottom">
+              <TableHead className={cn("min-w-[12rem]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="email" label={t("columnEmail")} />
                   <Input
@@ -296,7 +313,7 @@ export function PeopleList({
                   />
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-bottom">
+              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton
                     column="immigration_status"
@@ -322,7 +339,7 @@ export function PeopleList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-bottom">
+              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton
                     column="status_expires_at"
@@ -344,7 +361,13 @@ export function PeopleList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto w-12 px-5 py-2.5 align-bottom">
+              <TableHead
+                className={cn(
+                  "w-12",
+                  listTableHeadClassName,
+                  listTableEdgeEndClassName,
+                )}
+              >
                 <span className="sr-only">{t("delete")}</span>
               </TableHead>
             </TableRow>
@@ -354,7 +377,7 @@ export function PeopleList({
               <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={5}
-                  className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
+                  className={listTableEmptyCellClassName}
                 >
                   {t("noMatches")}
                 </TableCell>
@@ -371,7 +394,7 @@ export function PeopleList({
                       router.push(`/people/${person.id}`);
                     }}
                   >
-                    <TableCell className="px-5 whitespace-normal">
+                    <TableCell className={cn("whitespace-normal", listTableEdgeStartClassName)}>
                       <Link
                         href={`/people/${person.id}`}
                         className="font-medium text-brand transition-colors hover:opacity-80"
@@ -393,7 +416,7 @@ export function PeopleList({
                         ? formatDisplayDate(person.status_expires_at, locale)
                         : t("emptyValue")}
                     </TableCell>
-                    <TableCell className="px-5 text-right">
+                    <TableCell className={cn("text-right", listTableEdgeEndClassName)}>
                       <DeletePersonButton
                         locale={locale}
                         personId={person.id}
@@ -407,7 +430,7 @@ export function PeopleList({
             )}
           </TableBody>
         </Table>
-      </div>
+      </ListTableCard>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">

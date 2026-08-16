@@ -19,17 +19,19 @@ import {
 
 import { setProjectsStatusAction } from "@/app/actions/projects";
 import { docsPercent, ProgressMeter } from "@/components/home/progress-meter";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ListTableCard,
+  listMobileEmptyClassName,
+  listMobileFiltersStackClassName,
+  listMobileFiltersClassName,
+  listMobileItemClassName,
+  listStackClassName,
+  listTableEdgeEndClassName,
+  listTableEdgeStartClassName,
+  listTableEmptyCellClassName,
+} from "@/components/layout/list-layout";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -181,14 +183,8 @@ export function ProjectsTable({
   >("all");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
-
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkStatus, setBulkStatus] = useState<ProjectStatus>("in_progress");
-  const [bulkStatusAt, setBulkStatusAt] = useState(todayDateInputValue());
-  const [bulkPending, setBulkPending] = useState(false);
 
   const filteredSorted = useMemo(() => {
     const q = deferredName.trim().toLowerCase();
@@ -253,11 +249,6 @@ export function ProjectsTable({
     progressById,
   ]);
 
-  const visibleIds = filteredSorted.map((p) => p.id);
-  const allVisibleSelected =
-    visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
-  const someVisibleSelected =
-    visibleIds.some((id) => selected.has(id)) && !allVisibleSelected;
   const filtersActive = Boolean(
     nameQuery.trim() ||
       programFilter !== "all" ||
@@ -272,27 +263,6 @@ export function ProjectsTable({
     }
     setSortKey(key);
     setSortDir(key === "title" || key === "program_family" ? "asc" : "desc");
-  }
-
-  function toggleAllVisible() {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (allVisibleSelected) {
-        for (const id of visibleIds) next.delete(id);
-      } else {
-        for (const id of visibleIds) next.add(id);
-      }
-      return next;
-    });
-  }
-
-  function toggleOne(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   }
 
   function errorLabel(code?: string) {
@@ -342,71 +312,20 @@ export function ProjectsTable({
     applyStatus([project.id], nextStatus, todayDateInputValue());
   }
 
-  function openBulkDialog() {
-    setBulkStatus("in_progress");
-    setBulkStatusAt(todayDateInputValue());
-    setBulkOpen(true);
-  }
-
-  function submitBulk() {
-    const ids = Array.from(selected);
-    if (ids.length === 0) return;
-    setBulkPending(true);
-    setError(null);
-
-    startTransition(async () => {
-      const result = await setProjectsStatusAction({
-        locale,
-        projectIds: ids,
-        status: bulkStatus,
-        statusAt: bulkStatusAt,
-      });
-      setBulkPending(false);
-
-      if (result.error) {
-        setError(errorLabel(result.error));
-        return;
-      }
-
-      setBulkOpen(false);
-      setSelected(new Set());
-      router.refresh();
-    });
-  }
-
   if (projects.length === 0) {
     return null;
   }
 
   return (
-    <div className="space-y-3">
-      {selected.size > 0 ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2">
-          <p className="text-sm text-brand">
-            {t("selectedCount", { count: selected.size })}
-          </p>
-          <Button type="button" size="sm" onClick={openBulkDialog}>
-            {t("bulkUpdateStatus")}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => setSelected(new Set())}
-          >
-            {t("clearSelection")}
-          </Button>
-        </div>
-      ) : null}
-
+    <div className={listStackClassName}>
       {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
 
-      <div className="space-y-3 md:hidden">
-        <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
+      <div className={listMobileFiltersStackClassName}>
+        <div className={listMobileFiltersClassName}>
           <Input
             type="search"
             value={nameQuery}
@@ -448,7 +367,7 @@ export function ProjectsTable({
         </div>
 
         {filteredSorted.length === 0 ? (
-          <p className="rounded-xl border border-border bg-surface px-4 py-8 text-center text-[15px] text-muted-foreground">
+          <p className={listMobileEmptyClassName}>
             {t("noMatches")}
           </p>
         ) : (
@@ -459,7 +378,7 @@ export function ProjectsTable({
                 <li key={project.id}>
                   <Link
                     href={`/projects/${project.id}`}
-                    className="block space-y-2 rounded-xl border border-border bg-surface p-3 shadow-elevated"
+                    className={cn("block space-y-2", listMobileItemClassName)}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-1.5">
@@ -509,24 +428,11 @@ export function ProjectsTable({
         )}
       </div>
 
-      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface shadow-elevated md:block">
+      <ListTableCard className="hidden md:block">
         <Table>
           <TableHeader className="[&_tr:first-child]:border-b-0">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-10 px-3">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-action"
-                  checked={allVisibleSelected}
-                  ref={(el) => {
-                    if (el) el.indeterminate = someVisibleSelected;
-                  }}
-                  onChange={toggleAllVisible}
-                  aria-label={t("selectAll")}
-                  disabled={visibleIds.length === 0}
-                />
-              </TableHead>
-              <TableHead className="min-w-[12rem]">
+              <TableHead className={cn("min-w-[12rem]", listTableEdgeStartClassName)}>
                 <SortButton
                   column="title"
                   label={t("columnName")}
@@ -586,7 +492,7 @@ export function ProjectsTable({
                   onToggle={toggleSort}
                 />
               </TableHead>
-              <TableHead className="w-12 px-1.5">
+              <TableHead className={cn("w-12 px-1.5", listTableEdgeEndClassName)}>
                 <SortButton
                   column="forms"
                   label={t("columnForms")}
@@ -598,8 +504,7 @@ export function ProjectsTable({
               </TableHead>
             </TableRow>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-auto w-10 px-3 pb-2.5 pt-0" />
-              <TableHead className="h-auto min-w-[12rem] pb-2.5 pt-0">
+              <TableHead className={cn("h-auto min-w-[12rem] pb-2.5 pt-0", listTableEdgeStartClassName)}>
                 <Input
                   id="projects-filter-name"
                   type="search"
@@ -672,15 +577,15 @@ export function ProjectsTable({
               <TableHead className="h-auto pb-2.5 pt-0" />
               <TableHead className="h-auto pb-2.5 pt-0" />
               <TableHead className="h-auto pb-2.5 pt-0" />
-              <TableHead className="h-auto pb-2.5 pt-0" />
+              <TableHead className={cn("h-auto pb-2.5 pt-0", listTableEdgeEndClassName)} />
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredSorted.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={9}
-                  className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
+                  colSpan={8}
+                  className={listTableEmptyCellClassName}
                 >
                   {t("noMatches")}
                 </TableCell>
@@ -692,23 +597,13 @@ export function ProjectsTable({
                 return (
                   <TableRow
                     key={project.id}
-                    data-state={selected.has(project.id) ? "selected" : undefined}
                     className="cursor-pointer"
                     onClick={(event) => {
                       if (shouldIgnoreRowClick(event)) return;
                       router.push(`/projects/${project.id}`);
                     }}
                   >
-                    <TableCell className="px-3">
-                      <input
-                        type="checkbox"
-                        className="size-4 accent-action"
-                        checked={selected.has(project.id)}
-                        onChange={() => toggleOne(project.id)}
-                        aria-label={t("selectRow", { title: project.title })}
-                      />
-                    </TableCell>
-                    <TableCell className="max-w-[18rem] whitespace-normal">
+                    <TableCell className={cn("max-w-[18rem] whitespace-normal", listTableEdgeStartClassName)}>
                       <div className="flex items-start gap-1.5">
                         <Link
                           href={`/projects/${project.id}`}
@@ -773,7 +668,7 @@ export function ProjectsTable({
                         )}
                       />
                     </TableCell>
-                    <TableCell className="w-12 px-1.5">
+                    <TableCell className={cn("w-12 px-1.5", listTableEdgeEndClassName)}>
                       <ProgressMeter
                         compact
                         valueLabel={t("formsProgress", {
@@ -788,7 +683,7 @@ export function ProjectsTable({
             )}
           </TableBody>
         </Table>
-      </div>
+      </ListTableCard>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
@@ -813,63 +708,6 @@ export function ProjectsTable({
           </Button>
         ) : null}
       </div>
-
-      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
-        <DialogContent className="sm:max-w-md" showCloseButton>
-          <DialogHeader>
-            <DialogTitle>{t("bulkUpdateStatusTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("bulkUpdateStatusHint", { count: selected.size })}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bulk-status">{t("status")}</Label>
-              <select
-                id="bulk-status"
-                value={bulkStatus}
-                onChange={(e) => {
-                  setBulkStatus(e.target.value as ProjectStatus);
-                  setBulkStatusAt(todayDateInputValue());
-                }}
-                className={cn(selectClassName, "h-10")}
-              >
-                {PROJECT_STATUSES.map((value) => (
-                  <option key={value} value={value}>
-                    {t(`statuses.${value}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bulk-status-at">{t("statusAt")}</Label>
-              <Input
-                id="bulk-status-at"
-                type="date"
-                value={bulkStatusAt}
-                onChange={(e) => setBulkStatusAt(e.target.value)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">{t("statusAtHelp")}</p>
-            </div>
-          </div>
-
-          <DialogFooter className="px-0! mx-0! mb-0! border-0 bg-transparent p-0!">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setBulkOpen(false)}
-              disabled={bulkPending}
-            >
-              {t("cancel")}
-            </Button>
-            <Button type="button" onClick={submitBulk} disabled={bulkPending}>
-              {bulkPending ? t("savingStatus") : t("updateStatus")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -21,6 +21,15 @@ import {
 } from "@/app/actions/booking";
 import { sendBookingPaymentReminderAction } from "@/app/actions/booking-payment-reminder";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import {
+  ListTableCard,
+  listMobileFiltersClassName,
+  listStackClassName,
+  listTableEdgeEndClassName,
+  listTableEdgeStartClassName,
+  listTableEmptyCellClassName,
+  listTableHeadClassName,
+} from "@/components/layout/list-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -348,7 +357,7 @@ export function BookingsList({
 
   if (bookings.length === 0) {
     return (
-      <SurfaceCard className="p-6">
+      <SurfaceCard>
         <p className="text-sm text-muted-foreground">{t("empty")}</p>
       </SurfaceCard>
     );
@@ -357,8 +366,8 @@ export function BookingsList({
   const actionColSpan = canManage ? 7 : 6;
 
   return (
-    <div className="min-w-0 space-y-3">
-      <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated md:hidden">
+    <div className={listStackClassName}>
+      <div className={listMobileFiltersClassName}>
         <Input
           type="search"
           value={guestQuery}
@@ -437,11 +446,17 @@ export function BookingsList({
         </select>
       </div>
 
-      <SurfaceCard className="min-w-0 overflow-hidden p-0">
+      <ListTableCard>
         <Table className="table-fixed">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-auto w-[12%] py-2.5 align-bottom">
+              <TableHead
+                className={cn(
+                  "w-[12%]",
+                  listTableHeadClassName,
+                  listTableEdgeStartClassName,
+                )}
+              >
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="starts_at" label={t("colWhen")} />
                   <select
@@ -457,7 +472,7 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto w-[20%] py-2.5 align-bottom">
+              <TableHead className={cn("w-[20%]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="guest" label={t("colGuest")} />
                   <Input
@@ -470,7 +485,7 @@ export function BookingsList({
                   />
                 </div>
               </TableHead>
-              <TableHead className="h-auto w-[14%] py-2.5 align-bottom">
+              <TableHead className={cn("w-[14%]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="service" label={t("colService")} />
                   <select
@@ -488,7 +503,7 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto w-[13%] py-2.5 align-bottom">
+              <TableHead className={cn("w-[13%]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="host" label={t("colHost")} />
                   <select
@@ -506,7 +521,7 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto w-[10%] py-2.5 align-bottom">
+              <TableHead className={cn("w-[10%]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="status" label={t("colStatus")} />
                   <select
@@ -526,7 +541,13 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto w-[16%] py-2.5 align-bottom">
+              <TableHead
+                className={cn(
+                  "w-[19%]",
+                  listTableHeadClassName,
+                  !canManage && listTableEdgeEndClassName,
+                )}
+              >
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="payment" label={t("colPayment")} />
                   <select
@@ -548,7 +569,13 @@ export function BookingsList({
                 </div>
               </TableHead>
               {canManage ? (
-                <TableHead className="h-auto w-[15%] py-2.5 align-bottom">
+                <TableHead
+                  className={cn(
+                    "w-12",
+                    listTableHeadClassName,
+                    listTableEdgeEndClassName,
+                  )}
+                >
                   <span className="sr-only">{t("colActions")}</span>
                 </TableHead>
               ) : null}
@@ -559,7 +586,7 @@ export function BookingsList({
               <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={actionColSpan}
-                  className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
+                  className={listTableEmptyCellClassName}
                 >
                   {t("noMatches")}
                 </TableCell>
@@ -574,8 +601,8 @@ export function BookingsList({
               booking.paymentStatus === "pending";
 
             return (
-              <TableRow key={booking.id} className="align-top">
-                <TableCell className="text-sm whitespace-normal">
+              <TableRow key={booking.id} className="group align-top">
+                <TableCell className={cn("text-sm whitespace-normal", listTableEdgeStartClassName)}>
                   {new Date(booking.startsAt).toLocaleString(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
@@ -619,7 +646,12 @@ export function BookingsList({
                     {statusLabel(t, booking.status)}
                   </Badge>
                 </TableCell>
-                <TableCell className="whitespace-normal">
+                <TableCell
+                  className={cn(
+                    "whitespace-normal",
+                    !canManage && listTableEdgeEndClassName,
+                  )}
+                >
                   {booking.paymentStatus ? (
                     <div className="space-y-1">
                       <Badge
@@ -658,14 +690,15 @@ export function BookingsList({
                   )}
                 </TableCell>
                 {canManage ? (
-                  <TableCell className="whitespace-normal">
+                  <TableCell className={cn("whitespace-normal", listTableEdgeEndClassName)}>
                     {actionable ? (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex justify-end gap-1">
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           size="icon-sm"
                           disabled={pending || slotsPending}
+                          className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100"
                           onClick={() => openReschedule(booking.id)}
                           aria-label={t("modify")}
                           title={t("modify")}
@@ -674,9 +707,10 @@ export function BookingsList({
                         </Button>
                         <Button
                           type="button"
-                          variant="destructive"
+                          variant="ghost"
                           size="icon-sm"
                           disabled={pending}
+                          className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-destructive/10 hover:text-destructive max-md:opacity-100"
                           aria-label={t("cancel")}
                           title={t("cancel")}
                           onClick={() => {
@@ -735,7 +769,7 @@ export function BookingsList({
             )}
           </TableBody>
         </Table>
-      </SurfaceCard>
+      </ListTableCard>
 
       <Dialog
         open={Boolean(rescheduleId)}

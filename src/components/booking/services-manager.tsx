@@ -20,6 +20,15 @@ import {
   type ServiceActionState,
 } from "@/app/actions/services";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import {
+  ListTableCard,
+  listMobileFiltersClassName,
+  listStackClassName,
+  listTableEdgeEndClassName,
+  listTableEdgeStartClassName,
+  listTableEmptyCellClassName,
+  listTableHeadClassName,
+} from "@/components/layout/list-layout";
 import { ServiceBookingFormButton } from "@/components/booking/service-booking-form";
 import { ServiceEmailAutomationsButton } from "@/components/booking/service-email-automations";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +70,7 @@ import {
   type AppLocale,
 } from "@/lib/i18n/locales";
 import { centsToPriceInput, formatPriceCents } from "@/lib/booking/slots";
-import { cn } from "@/lib/utils";
+import { cn, shouldIgnoreRowClick } from "@/lib/utils";
 
 const initialState: ServiceActionState = {};
 
@@ -471,8 +480,8 @@ export function ServicesManager({
           ) : null}
         </SurfaceCard>
       ) : (
-        <div className="space-y-3">
-          <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated md:hidden">
+        <div className={listStackClassName}>
+          <div className={listMobileFiltersClassName}>
             <Input
               type="search"
               value={titleQuery}
@@ -513,11 +522,17 @@ export function ServicesManager({
             </select>
           </div>
 
-          <SurfaceCard className="overflow-hidden p-0 sm:p-0">
+          <ListTableCard>
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="h-auto min-w-[12rem] py-2.5 align-bottom">
+                  <TableHead
+                    className={cn(
+                      "min-w-[12rem]",
+                      listTableHeadClassName,
+                      listTableEdgeStartClassName,
+                    )}
+                  >
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="title" label={t("titleLabel")} />
                       <Input
@@ -530,10 +545,10 @@ export function ServicesManager({
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                  <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
                     <SortButton column="duration" label={t("duration")} />
                   </TableHead>
-                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                  <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="price" label={t("price")} />
                       <select
@@ -550,7 +565,7 @@ export function ServicesManager({
                       </select>
                     </div>
                   </TableHead>
-                  <TableHead className="h-auto min-w-[9rem] py-2.5 align-bottom">
+                  <TableHead className={cn("min-w-[9rem]", listTableHeadClassName)}>
                     <div className="flex flex-col gap-1.5">
                       <span className="font-medium">{t("columnForm")}</span>
                       <select
@@ -567,10 +582,16 @@ export function ServicesManager({
                       </select>
                     </div>
                   </TableHead>
-                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                  <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
                     {t("columnReminders")}
                   </TableHead>
-                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                  <TableHead
+                    className={cn(
+                      "min-w-[7rem]",
+                      listTableHeadClassName,
+                      !canManage && listTableEdgeEndClassName,
+                    )}
+                  >
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="is_active" label={t("active")} />
                       <select
@@ -588,7 +609,13 @@ export function ServicesManager({
                     </div>
                   </TableHead>
                   {canManage ? (
-                    <TableHead className="h-auto w-12 py-2.5 align-bottom">
+                    <TableHead
+                      className={cn(
+                        "w-12",
+                        listTableHeadClassName,
+                        listTableEdgeEndClassName,
+                      )}
+                    >
                       <span className="sr-only">{t("edit")}</span>
                     </TableHead>
                   ) : null}
@@ -599,7 +626,7 @@ export function ServicesManager({
                   <TableRow className="hover:bg-transparent">
                     <TableCell
                       colSpan={canManage ? 7 : 6}
-                      className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
+                      className={listTableEmptyCellClassName}
                     >
                       {t("noMatches")}
                     </TableCell>
@@ -608,8 +635,19 @@ export function ServicesManager({
                   filteredSorted.map((service) => {
                 const copy = serviceCopy(service, locale, orgDefaultLocale);
                 return (
-                <TableRow key={service.id} className="group">
-                  <TableCell>
+                <TableRow
+                  key={service.id}
+                  className={cn("group", canManage && "cursor-pointer")}
+                  onClick={
+                    canManage
+                      ? (event) => {
+                          if (shouldIgnoreRowClick(event)) return;
+                          setEditing(service);
+                        }
+                      : undefined
+                  }
+                >
+                  <TableCell className={listTableEdgeStartClassName}>
                     <p className="font-medium text-brand">{copy.title}</p>
                     {copy.description ? (
                       <p className="max-w-md truncate text-xs text-muted-foreground">
@@ -637,13 +675,13 @@ export function ServicesManager({
                       count: reminderCountByService.get(service.id) ?? 0,
                     })}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={cn(!canManage && listTableEdgeEndClassName)}>
                     <Badge variant={service.is_active ? "default" : "secondary"}>
                       {service.is_active ? t("active") : t("inactive")}
                     </Badge>
                   </TableCell>
                   {canManage ? (
-                    <TableCell className="text-right">
+                    <TableCell className={cn("text-right", listTableEdgeEndClassName)}>
                       <Button
                         type="button"
                         variant="ghost"
@@ -663,7 +701,7 @@ export function ServicesManager({
                 )}
               </TableBody>
             </Table>
-          </SurfaceCard>
+          </ListTableCard>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
