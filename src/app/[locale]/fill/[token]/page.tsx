@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { ShareFillLanding } from "@/components/forms/share-fill-landing";
+import { ShareFillWorkspace } from "@/components/forms/share-fill-workspace";
 import { ShareFillExpired } from "@/components/forms/share-fill-expired";
 import { ShareLinkGate } from "@/components/forms/share-link-gate";
 import { formatShareLinkExpiryDate } from "@/lib/ircc/share-dates";
@@ -34,7 +34,7 @@ export default async function ClientFillLandingPage({
       );
     }
 
-    return <ShareFillLanding token={token} />;
+    return <ShareFillWorkspace token={token} />;
   } catch (err) {
     console.error("ClientFillLandingPage:", err);
     return <ShareFillExpired />;

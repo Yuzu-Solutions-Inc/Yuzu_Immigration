@@ -1470,6 +1470,11 @@
     "landingFormsCta": "Continuar al cuestionario",
     "backToLanding": "Volver a las opciones",
     "shareNavLabel": "Secciones del expediente",
+    "shareTabs": {
+      "label": "Secciones del expediente",
+      "documents": "Documentos",
+      "forms": "Formularios"
+    },
     "keys": {
       "passport": "Pasaporte",
       "photo": "Foto"

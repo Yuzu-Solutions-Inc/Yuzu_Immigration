@@ -1471,6 +1471,11 @@
     "landingFormsCta": "Continue to forms",
     "backToLanding": "Back to options",
     "shareNavLabel": "File sections",
+    "shareTabs": {
+      "label": "File sections",
+      "documents": "Documents",
+      "forms": "Forms"
+    },
     "keys": {
       "passport": "Passport",
       "photo": "Photo"
