@@ -604,15 +604,39 @@ function SectionProgressNav({
   }, [clientSubmit?.attention, clientSubmit?.allComplete]);
 
   return (
-    <nav
-      aria-label={t("sectionStepsLabel")}
-      className="rounded-xl bg-canvas p-4 lg:sticky lg:top-4 lg:w-56 lg:shrink-0"
-    >
+    <aside className="space-y-4 lg:sticky lg:top-20 lg:w-60 lg:shrink-0">
       {clientSubmit ? (
-        <div className="mb-4 space-y-2 rounded-xl border border-border bg-surface p-4 shadow-elevated">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {t("clientSubmitLabel")}
-          </p>
+        <section
+          aria-labelledby="client-submit-heading"
+          className={cn(
+            "space-y-3 rounded-xl border bg-surface p-4 shadow-elevated",
+            clientSubmit.allComplete && !clientSubmit.pending
+              ? "border-success/40"
+              : "border-border",
+          )}
+        >
+          <div className="space-y-1">
+            <h2
+              id="client-submit-heading"
+              className="font-heading text-sm font-semibold text-brand"
+            >
+              {t("clientSubmitLabel")}
+            </h2>
+            <p
+              className={cn(
+                "text-xs leading-snug",
+                clientSubmit.allComplete
+                  ? "font-medium text-success"
+                  : "text-muted-foreground",
+              )}
+            >
+              {clientSubmit.submitted && !clientSubmit.attention
+                ? t("clientSubmitDoneHint")
+                : clientSubmit.allComplete
+                  ? t("clientSubmitReadyHint")
+                  : t("clientSubmitLockedHint")}
+            </p>
+          </div>
           <Button
             ref={submitRef}
             type="button"
@@ -640,49 +664,44 @@ function SectionProgressNav({
               t("clientSubmit")
             )}
           </Button>
-          <p
-            className={cn(
-              "text-xs leading-snug",
-              clientSubmit.allComplete
-                ? "font-medium text-success"
-                : "text-muted-foreground",
-            )}
-          >
-            {clientSubmit.submitted && !clientSubmit.attention
-              ? t("clientSubmitDoneHint")
-              : clientSubmit.allComplete
-                ? t("clientSubmitReadyHint")
-                : t("clientSubmitLockedHint")}
-          </p>
-        </div>
+        </section>
       ) : null}
 
-      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-        {t("progressLabel")}
-      </p>
-      <div
-        className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent}
-        aria-label={t("progressComplete", { percent })}
+      <nav
+        aria-label={t("sectionStepsLabel")}
+        className="rounded-xl border border-border bg-surface p-4 shadow-elevated"
       >
-        <div
-          className="h-full rounded-full bg-action transition-[width] duration-200"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <p className="mt-2 text-sm font-semibold text-brand">
-        {t("progressComplete", { percent })}
-      </p>
+        <div className="space-y-3 border-b border-border pb-4">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("progressLabel")}
+          </p>
+          <div
+            className="h-1.5 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percent}
+            aria-label={t("progressComplete", { percent })}
+          >
+            <div
+              className="h-full rounded-full bg-action transition-[width] duration-200"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <p className="text-sm font-semibold text-brand">
+            {t("progressComplete", { percent })}
+          </p>
+        </div>
 
-      <div className="relative mt-4">
-        <span
-          aria-hidden
-          className="absolute top-4 bottom-4 left-[1.375rem] w-px -translate-x-1/2 bg-border"
-        />
-        <ol className="space-y-1">
+        <div className="relative pt-4">
+          <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("sectionStepsLabel")}
+          </p>
+          <span
+            aria-hidden
+            className="absolute top-[calc(1.75rem+0.75rem)] bottom-4 left-[1.375rem] w-px -translate-x-1/2 bg-border"
+          />
+          <ol className="space-y-1">
           {sections.map((s, i) => {
             const current = i === sectionIndex;
             const complete = sectionComplete[i] ?? false;
@@ -738,9 +757,10 @@ function SectionProgressNav({
               </li>
             );
           })}
-        </ol>
-      </div>
-    </nav>
+          </ol>
+        </div>
+      </nav>
+    </aside>
   );
 }
 
@@ -1365,7 +1385,7 @@ export function ModularQuestionnaire({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
         <SectionProgressNav
           sections={sections}
           sectionIndex={sectionIndex}
@@ -1387,41 +1407,43 @@ export function ModularQuestionnaire({
           }
         />
 
-        <div className="min-w-0 flex-1 space-y-6">
-      <div className="space-y-1">
-        <h3 className="font-heading text-lg font-semibold text-brand">
-          {t(`sections.${section}`)}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {t(`sectionLedes.${section}`)}
-        </p>
-      </div>
+        <div className="min-w-0 flex-1">
+          <div className="rounded-xl border border-border bg-surface p-5 shadow-elevated sm:p-6">
+            <header className="space-y-1 border-b border-border pb-5">
+              <h3 className="font-heading text-xl font-semibold text-brand">
+                {t(`sections.${section}`)}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {t(`sectionLedes.${section}`)}
+              </p>
+            </header>
 
-      <div
-        className={cn(
-          "space-y-6",
-          readOnly && "pointer-events-none opacity-80",
-        )}
-      >
-        {buildSectionNodes()}
-      </div>
+            <div
+              className={cn(
+                "mt-6 space-y-6",
+                readOnly && "pointer-events-none opacity-80",
+              )}
+            >
+              {buildSectionNodes()}
+            </div>
 
-      <SaveFeedbackBar
-        status={
-          saveStatus === "idle" && errorMessage
-            ? "error"
-            : saveStatus
-        }
-        message={
-          saveStatus === "error" || saveStatus === "saved"
-            ? saveStatusMessage
-            : errorMessage
-        }
-        unsaved={isDirty && saveStatus !== "saving" && !readOnly}
-        t={t}
-      />
+            <div className="mt-6 space-y-4 border-t border-border pt-5">
+              <SaveFeedbackBar
+                status={
+                  saveStatus === "idle" && errorMessage
+                    ? "error"
+                    : saveStatus
+                }
+                message={
+                  saveStatus === "error" || saveStatus === "saved"
+                    ? saveStatusMessage
+                    : errorMessage
+                }
+                unsaved={isDirty && saveStatus !== "saving" && !readOnly}
+                t={t}
+              />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
         <Button
           type="button"
           variant="outline"
@@ -1490,7 +1512,9 @@ export function ModularQuestionnaire({
           )}
         </div>
         )}
-      </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
