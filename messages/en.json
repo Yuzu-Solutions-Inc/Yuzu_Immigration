@@ -911,6 +911,7 @@
     "personTabsHelp": "You are filling IRCC details for {name}. Click another person to switch.",
     "personTabsHelpSingle": "You are filling IRCC details for {name}.",
     "sectionStepsLabel": "Questionnaire sections",
+    "sectionComplete": "Complete",
     "progressLabel": "Progress",
     "progressComplete": "{percent}% complete",
     "questionnaireEmpty": "Add participants to this project to start the questionnaire.",

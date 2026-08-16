@@ -39,7 +39,7 @@ import {
   type RepeatableTable,
   type TableColumn,
 } from "@/lib/ircc/fields";
-import { questionnaireFillPercent } from "@/lib/ircc/form-readiness";
+import { questionnaireFillPercent, questionnaireSectionComplete } from "@/lib/ircc/form-readiness";
 import { cn } from "@/lib/utils";
 
 function personInitials(name: string): string {
@@ -575,6 +575,7 @@ function SectionProgressNav({
   sections,
   sectionIndex,
   percent,
+  sectionComplete,
   onSelect,
   disabled,
   t,
@@ -583,6 +584,7 @@ function SectionProgressNav({
   sections: QuestionnaireSection[];
   sectionIndex: number;
   percent: number;
+  sectionComplete: boolean[];
   onSelect: (index: number) => void;
   disabled?: boolean;
   t: ReturnType<typeof useTranslations>;
@@ -683,12 +685,17 @@ function SectionProgressNav({
         <ol className="space-y-1">
           {sections.map((s, i) => {
             const current = i === sectionIndex;
-            const done = i < sectionIndex;
+            const complete = sectionComplete[i] ?? false;
             return (
               <li key={s} className="relative">
                 <button
                   type="button"
                   aria-current={current ? "step" : undefined}
+                  aria-label={
+                    complete
+                      ? `${t(`sections.${s}`)} — ${t("sectionComplete")}`
+                      : t(`sections.${s}`)
+                  }
                   disabled={disabled}
                   onClick={() => onSelect(i)}
                   className={cn(
@@ -701,22 +708,28 @@ function SectionProgressNav({
                   <span
                     className={cn(
                       "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
-                      done && "bg-brand text-white",
-                      current && "bg-action text-action-foreground",
-                      !done &&
+                      complete && "bg-success text-white",
+                      current &&
+                        !complete &&
+                        "bg-action text-action-foreground",
+                      !complete &&
                         !current &&
                         "border-2 border-border bg-surface text-graphite-700",
                     )}
                     aria-hidden
                   >
-                    {i + 1}
+                    {complete ? (
+                      <CircleCheck className="size-4" />
+                    ) : (
+                      i + 1
+                    )}
                   </span>
                   <span
                     className={cn(
                       "min-w-0 text-sm font-semibold leading-snug",
-                      done && "text-brand",
-                      current && "text-brand",
-                      !done && !current && "text-graphite-700",
+                      complete && "text-success",
+                      current && !complete && "text-brand",
+                      !complete && !current && "text-graphite-700",
                     )}
                   >
                     {t(`sections.${s}`)}
@@ -957,6 +970,22 @@ export function ModularQuestionnaire({
   const activeFillPercent = activePerson
     ? (fillPercentByPerson.get(activePerson.id) ?? 0)
     : 0;
+
+  const liveAnswers = useMemo(
+    () => ({ ...answers, ...tableData }),
+    [answers, tableData],
+  );
+
+  const sectionCompleteFlags = useMemo(() => {
+    if (!activePerson) return sections.map(() => false);
+    return sections.map((sectionKey) =>
+      questionnaireSectionComplete(
+        activePerson.formCodes,
+        sectionKey,
+        liveAnswers,
+      ),
+    );
+  }, [activePerson, sections, liveAnswers]);
 
   const allPeopleComplete = useMemo(() => {
     if (people.length === 0) return false;
@@ -1341,6 +1370,7 @@ export function ModularQuestionnaire({
           sections={sections}
           sectionIndex={sectionIndex}
           percent={activeFillPercent}
+          sectionComplete={sectionCompleteFlags}
           onSelect={setSectionIndex}
           disabled={busy}
           t={t}

@@ -911,6 +911,7 @@
     "personTabsHelp": "Está completando los datos de IRCC de {name}. Pulse otra persona para cambiar.",
     "personTabsHelpSingle": "Está completando los datos de IRCC de {name}.",
     "sectionStepsLabel": "Secciones del cuestionario",
+    "sectionComplete": "Completa",
     "progressLabel": "Progreso",
     "progressComplete": "{percent}% completado",
     "questionnaireEmpty": "Añada participantes al proyecto para iniciar el cuestionario.",

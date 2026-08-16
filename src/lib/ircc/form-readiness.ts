@@ -58,25 +58,24 @@ export function isFormMandatoryComplete(
   return true;
 }
 
-/**
- * Visible questionnaire questions that have an answer, plus the visible total.
- * Hidden/gated fields are excluded so the percent tracks what the person sees.
- */
-export function questionnaireFillCounts(
+function countVisibleAnswers(
   formCodes: string[],
   answers: Record<string, unknown>,
+  section?: string,
 ): { filled: number; total: number } {
   const codes = formCodes.map((code) => code.toLowerCase());
   let filled = 0;
   let total = 0;
 
   for (const field of fieldsForFormCodes(codes)) {
+    if (section && field.section !== section) continue;
     if (!isFieldVisible(field, answers)) continue;
     total += 1;
     if (isFilled(answers[field.key])) filled += 1;
   }
 
   for (const table of tablesForFormCodes(codes)) {
+    if (section && table.section !== section) continue;
     if (!isTableVisible(table, answers)) continue;
     const rows = tableRows(answers, table.key);
     const cols = table.columns.filter((col) => col.required);
@@ -95,6 +94,30 @@ export function questionnaireFillCounts(
   }
 
   return { filled, total };
+}
+
+/**
+ * True when every currently visible field and table cell in the section
+ * has an answer. Empty sections (no visible questions) count as complete.
+ */
+export function questionnaireSectionComplete(
+  formCodes: string[],
+  section: string,
+  answers: Record<string, unknown>,
+): boolean {
+  const { filled, total } = countVisibleAnswers(formCodes, answers, section);
+  return total === 0 || filled === total;
+}
+
+/**
+ * Visible questionnaire questions that have an answer, plus the visible total.
+ * Hidden/gated fields are excluded so the percent tracks what the person sees.
+ */
+export function questionnaireFillCounts(
+  formCodes: string[],
+  answers: Record<string, unknown>,
+): { filled: number; total: number } {
+  return countVisibleAnswers(formCodes, answers);
 }
 
 /**
