@@ -3,6 +3,18 @@
     "name": "Yuzu Immigration",
     "tagline": "CRM para consultores y abogados de inmigración canadiense"
   },
+  "statusPages": {
+    "notFoundCode": "404",
+    "notFoundTitle": "Página no encontrada",
+    "notFoundBody": "Esta página no existe, o el enlace ya no es válido.",
+    "notFoundHome": "Volver al inicio",
+    "notFoundSignIn": "Iniciar sesión",
+    "errorTitle": "No se pudo cargar esta página",
+    "errorBody": "Se produjo un error. Inténtelo de nuevo, o vuelva al inicio si el problema continúa.",
+    "errorRetry": "Intentar de nuevo",
+    "errorHome": "Volver al inicio",
+    "errorReference": "Referencia: {digest}"
+  },
   "home": {
     "audience": "Para consultores y abogados de inmigración",
     "title": "Gestione su práctica de inmigración en un espacio seguro",

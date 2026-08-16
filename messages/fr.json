@@ -3,6 +3,18 @@
     "name": "Yuzu Immigration",
     "tagline": "CRM pour consultants et avocats en immigration canadienne"
   },
+  "statusPages": {
+    "notFoundCode": "404",
+    "notFoundTitle": "Page introuvable",
+    "notFoundBody": "Cette page n’existe pas, ou le lien n’est plus valide.",
+    "notFoundHome": "Retour à l’accueil",
+    "notFoundSignIn": "Connexion",
+    "errorTitle": "Cette page n’a pas pu s’afficher",
+    "errorBody": "Une erreur s’est produite. Réessayez, ou retournez à l’accueil si le problème continue.",
+    "errorRetry": "Réessayer",
+    "errorHome": "Retour à l’accueil",
+    "errorReference": "Référence : {digest}"
+  },
   "home": {
     "audience": "Pour les consultants et avocats en immigration",
     "title": "Gérez votre pratique d’immigration dans un espace sécurisé",

@@ -1,31 +1,14 @@
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Inter, Nunito, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { Toaster } from "@/components/ui/sonner";
+import { fontClassName } from "@/lib/fonts";
 import { routing } from "@/i18n/routing";
 
 import "../globals.css";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const nunito = Nunito({
-  variable: "--font-logo",
-  subsets: ["latin"],
-  weight: ["700", "800"],
-});
-
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -48,10 +31,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html
-      lang={locale}
-      className={`${plusJakarta.variable} ${nunito.variable} ${inter.variable} h-full antialiased`}
-    >
+    <html lang={locale} className={`${fontClassName} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <NextIntlClientProvider messages={messages}>
           <div className="flex min-h-full flex-1 flex-col">{children}</div>
