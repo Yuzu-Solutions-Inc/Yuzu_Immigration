@@ -226,7 +226,6 @@ export default async function ProjectDetailPage({
                 <span className="text-sm text-muted-foreground">
                   {t("opened")} {opened}
                 </span>
-                <StatusPill label={representativeLabel} tone="muted" />
               </div>
             </div>
 
@@ -266,6 +265,7 @@ export default async function ProjectDetailPage({
                 {t("edit")}
               </Link>
             </div>
+            <StatusPill label={representativeLabel} tone="muted" />
             <ProjectSubmitBeforeCard
               locale={locale}
               projectId={project.id}
