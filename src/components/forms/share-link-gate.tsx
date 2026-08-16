@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -14,6 +14,7 @@ import { isShareErrorKey } from "@/lib/ircc/share-error-keys";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { Link } from "@/i18n/navigation";
 import type { ShareAccessState } from "@/lib/ircc/share-auth";
 
 export function ShareLinkGate({
@@ -34,6 +35,8 @@ export function ShareLinkGate({
   initialError?: string;
 }) {
   const t = useTranslations("forms");
+  const tl = useTranslations("legal");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [setupState, setupAction, setupPending] = useActionState(
     setSharePasswordAction,
     shareAuthInitialState,
@@ -68,6 +71,7 @@ export function ShareLinkGate({
         already_set: t("shareAuth.errors.alreadySet"),
         auth_required: t("shareAuth.errors.authRequired"),
         server_config: t("shareAuth.errors.serverConfig"),
+        privacy_required: t("shareAuth.errors.privacyRequired"),
       }[errorKey] ?? t("errors.generic")
     : null;
 
@@ -123,6 +127,14 @@ export function ShareLinkGate({
                 {t("shareAuth.passwordRules")}
               </p>
             </div>
+            <div className="space-y-3 rounded-lg border border-border/70 bg-canvas/80 px-3.5 py-3">
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {tl("consentSummary")}
+              </p>
+              <Button variant="outline" size="sm" className="w-full" asChild>
+                <Link href="/privacy">{tl("viewPrivacyPolicy")}</Link>
+              </Button>
+            </div>
             <form action={setupAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="locale" value={locale} />
@@ -150,7 +162,34 @@ export function ShareLinkGate({
                   hideLabel={t("shareAuth.hidePassword")}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={setupPending}>
+              <label className="flex items-start gap-2 text-sm leading-relaxed">
+                <input
+                  type="checkbox"
+                  name="privacyAccepted"
+                  value="on"
+                  required
+                  checked={privacyAccepted}
+                  onChange={(event) =>
+                    setPrivacyAccepted(event.target.checked)
+                  }
+                  className="mt-1 size-4 rounded border-input"
+                />
+                <span>
+                  {t("shareAuth.privacyConsent")}{" "}
+                  <Link
+                    href="/privacy"
+                    className="text-action underline-offset-2 hover:underline"
+                  >
+                    {t("shareAuth.privacyPolicy")}
+                  </Link>
+                  .
+                </span>
+              </label>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={setupPending || !privacyAccepted}
+              >
                 {setupPending ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : null}

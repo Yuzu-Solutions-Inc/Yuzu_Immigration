@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 import { ClientFillForm } from "@/components/forms/client-fill-form";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import { ShareFillExpired } from "@/components/forms/share-fill-expired";
-import { ClientPrivacyNotice } from "@/components/legal/client-privacy-notice";
 import { Link } from "@/i18n/navigation";
 import { loadShareContext } from "@/lib/ircc/project-forms";
 
@@ -33,7 +32,6 @@ export async function ShareFillForms({ token }: { token: string }) {
         >
           ← {td("backToLanding")}
         </Link>
-        <ClientPrivacyNotice token={token} />
       </div>
       <ClientFillForm
         token={token}

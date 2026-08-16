@@ -856,6 +856,8 @@
       "forgotSuccess": "Nouveau lien envoyé par courriel.",
       "forgotSuccessTitle": "Vérifiez vos courriels",
       "forgotSuccessBody": "Nous avons envoyé un nouveau lien sécurisé à l’adresse du demandeur principal. Ouvrez ce lien pour définir un nouveau mot de passe. Vos réponses et fichiers sont toujours enregistrés.",
+      "privacyConsent": "J’accepte que ce cabinet recueille mes renseignements personnels et documents via ce lien sécurisé pour gérer mon dossier d’immigration, conformément à la",
+      "privacyPolicy": "politique de confidentialité",
       "errors": {
         "invalid": "Ce lien n’est pas valide. Contactez votre consultant.",
         "mismatch": "Les mots de passe ne correspondent pas.",
@@ -867,7 +869,8 @@
         "sendFailed": "Impossible d’envoyer un nouveau lien. Réessayez ou contactez votre consultant.",
         "alreadySet": "Un mot de passe est déjà défini pour ce lien.",
         "authRequired": "Entrez votre mot de passe pour continuer.",
-        "serverConfig": "Erreur de configuration du serveur. Contactez votre consultant."
+        "serverConfig": "Erreur de configuration du serveur. Contactez votre consultant.",
+        "privacyRequired": "Acceptez l’avis de confidentialité pour continuer."
       }
     },
     "sharing": "Création…",
@@ -1550,6 +1553,8 @@
     "privacyIntro": "Yuzu Immigration est un logiciel de gestion de pratique exploité par Yuzu Solutions pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez Yuzu Immigration — y compris l’espace de travail du cabinet, les liens de partage, le portail client et les pages de réservation publiques. Elle vise à appuyer l’obligation de rendre compte prévue par la LPRPDE. Elle ne constitue ni une certification ni un avis juridique.",
     "backHome": "Retour à l’accueil",
     "consentTitle": "Utilisation de vos renseignements",
+    "consentSummary": "Vos renseignements personnels et documents sont partagés afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans Yuzu Immigration.",
+    "viewPrivacyPolicy": "Voir la politique de confidentialité complète",
     "consentBody": "En continuant, vous fournissez des renseignements personnels et des documents afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans Yuzu Immigration. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier dans son espace de travail ; Yuzu Solutions les traite pour exploiter la plateforme. Les précisions sur le courriel, l’agenda et l’hébergement figurent dans notre politique de confidentialité.",
     "sections": {
       "controller": {
@@ -1566,7 +1571,7 @@
       },
       "legalBasis": {
         "title": "4. Consentement et avis",
-        "body": "Les cabinets sont responsables d’obtenir un consentement valable lorsque la loi l’exige, et d’expliquer leurs mandats et pratiques de confidentialité — y compris les devoirs de la Loi 25 du Québec le cas échéant.\n\nLes liens de partage affichent un court avis avant la soumission de documents ou de formulaires. La réservation publique exige une case à cocher renvoyant à cette politique. Continuer après cet avis, ou cocher la case, constitue un consentement au traitement décrit ici pour le dossier ou le rendez-vous de ce cabinet, sous réserve des instructions du cabinet et de la loi applicable.\n\nVous pouvez refuser en n’utilisant pas le lien ou en ne réservant pas. Vous pouvez demander au cabinet de retirer le consentement ou de supprimer des renseignements, sous réserve des règles professionnelles de conservation. Certains traitements (journaux de sécurité et conservation légale) peuvent se poursuivre lorsque la loi le permet."
+        "body": "Les cabinets sont responsables d’obtenir un consentement valable lorsque la loi l’exige, et d’expliquer leurs mandats et pratiques de confidentialité — y compris les devoirs de la Loi 25 du Québec le cas échéant.\n\nLes liens de partage exigent une case à cocher de confidentialité lorsque le client définit pour la première fois le mot de passe du lien. La réservation publique exige une case à cocher renvoyant à cette politique. Cocher l’une de ces cases constitue un consentement au traitement décrit ici pour le dossier ou le rendez-vous de ce cabinet, sous réserve des instructions du cabinet et de la loi applicable.\n\nVous pouvez refuser en n’utilisant pas le lien ou en ne réservant pas. Vous pouvez demander au cabinet de retirer le consentement ou de supprimer des renseignements, sous réserve des règles professionnelles de conservation. Certains traitements (journaux de sécurité et conservation légale) peuvent se poursuivre lorsque la loi le permet."
       },
       "safeguards": {
         "title": "5. Mesures de protection",

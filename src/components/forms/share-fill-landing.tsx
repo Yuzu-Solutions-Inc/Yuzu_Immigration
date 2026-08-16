@@ -40,7 +40,6 @@ export async function ShareFillLanding({ token }: { token: string }) {
     const locale = await getLocale();
     const t = await getTranslations("documents");
     const tf = await getTranslations("forms");
-    const tl = await getTranslations("legal");
 
     try {
       await seedShareDocumentDefaults({
@@ -71,19 +70,6 @@ export async function ShareFillLanding({ token }: { token: string }) {
             })}
           </p>
         </header>
-
-        <aside
-          className="rounded-lg border border-border/70 bg-canvas/80 px-3.5 py-3 text-xs leading-relaxed text-muted-foreground"
-          aria-label={tl("consentTitle")}
-        >
-          <p className="font-medium text-brand/80">{tl("consentTitle")}</p>
-          <p className="mt-1.5">{tl("consentBody")}</p>
-          <p className="mt-2">
-            <Link href="/privacy" className="underline-offset-2 hover:underline">
-              {tl("privacyLink")}
-            </Link>
-          </p>
-        </aside>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Link

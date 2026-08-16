@@ -69,6 +69,9 @@ export async function setSharePasswordAction(
     const confirm = String(formData.get("confirm") || "");
 
     if (!token) return { error: "invalid" };
+    if (formData.get("privacyAccepted") !== "on") {
+      return { error: "privacy_required" };
+    }
     if (password !== confirm) return { error: "mismatch" };
 
     const parsed = parseShareLinkPassword(password);

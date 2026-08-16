@@ -856,6 +856,8 @@
       "forgotSuccess": "New link sent by email.",
       "forgotSuccessTitle": "Check your email",
       "forgotSuccessBody": "We sent a new secure link to the email on file for the principal applicant. Open that link to set a new password. Your answers and uploads are still saved.",
+      "privacyConsent": "I agree that this firm may collect my personal information and documents through this secure link to manage my immigration file, as described in the",
+      "privacyPolicy": "privacy policy",
       "errors": {
         "invalid": "This link is not valid. Ask your consultant for help.",
         "mismatch": "Passwords do not match.",
@@ -867,7 +869,8 @@
         "sendFailed": "Could not send a new link. Try again or contact your consultant.",
         "alreadySet": "A password is already set for this link.",
         "authRequired": "Enter your password to continue.",
-        "serverConfig": "Server configuration error. Contact your consultant."
+        "serverConfig": "Server configuration error. Contact your consultant.",
+        "privacyRequired": "Accept the privacy notice to continue."
       }
     },
     "sharing": "Creating…",
@@ -1550,6 +1553,8 @@
     "privacyIntro": "Yuzu Immigration is practice-management software operated by Yuzu Solutions for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use Yuzu Immigration — including the consultant workspace, client share links, the client portal, and public booking pages. It is written to support PIPEDA accountability. It is not a certification, and it is not legal advice.",
     "backHome": "Back to home",
     "consentTitle": "How your information is used",
+    "consentSummary": "Your personal information and documents are shared so this firm can prepare and manage your immigration file in Yuzu Immigration.",
+    "viewPrivacyPolicy": "View full privacy policy",
     "consentBody": "By continuing, you provide personal information and documents so this consulting firm can prepare and manage your immigration file in Yuzu Immigration. Primary records are stored in Canada. Uploaded files and many identity fields are encrypted. The firm’s staff can open the file in their workspace; Yuzu Solutions processes it to operate the platform. Email, calendar, and hosting details are in our Privacy Policy.",
     "sections": {
       "controller": {
@@ -1566,7 +1571,7 @@
       },
       "legalBasis": {
         "title": "4. Consent and notice",
-        "body": "Firms are responsible for obtaining meaningful consent from clients where required, and for explaining their own retainers and privacy practices — including Québec Law 25 duties where those apply.\n\nClient share links show a short notice before documents or forms are submitted. Public booking requires a checkbox linking to this policy before a booking can be submitted. Continuing after that notice, or checking the booking box, is consent to the processing described here for that firm’s file or appointment, subject to the firm’s instructions and applicable law.\n\nYou may refuse by not using the link or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
+        "body": "Firms are responsible for obtaining meaningful consent from clients where required, and for explaining their own retainers and privacy practices — including Québec Law 25 duties where those apply.\n\nClient share links require a privacy checkbox when the client first sets a password for the link. Public booking requires a checkbox linking to this policy before a booking can be submitted. Checking either box is consent to the processing described here for that firm’s file or appointment, subject to the firm’s instructions and applicable law.\n\nYou may refuse by not using the link or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
       },
       "safeguards": {
         "title": "5. Safeguards",

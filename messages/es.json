@@ -836,6 +836,43 @@
     "revokeShareLink": "Revocar",
     "shareRevoking": "Revocando…",
     "shareRevoked": "Enlace revocado",
+    "shareAuth": {
+      "setupTitle": "Cree su contraseña",
+      "setupBody": "Defina una contraseña para proteger este enlace. La necesitará cada vez que regrese.",
+      "passwordRules": "Al menos 8 caracteres, incluyendo al menos una letra mayúscula, al menos un número y al menos un símbolo.",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "password": "Contraseña",
+      "confirm": "Confirmar contraseña",
+      "setupCta": "Guardar contraseña",
+      "settingUp": "Guardando…",
+      "loginTitle": "Introduzca su contraseña",
+      "loginBody": "Este expediente está protegido. Introduzca la contraseña que creó para este enlace.",
+      "loginCta": "Continuar",
+      "loggingIn": "Verificando…",
+      "forgotBody": "¿Olvidó su contraseña? Revocaremos este enlace y enviaremos uno nuevo al correo del solicitante principal registrado. Sus formularios y documentos no se perderán.",
+      "forgotCta": "Enviarme un nuevo enlace por correo",
+      "forgotSending": "Enviando…",
+      "forgotSuccess": "Nuevo enlace enviado por correo.",
+      "forgotSuccessTitle": "Revise su correo",
+      "forgotSuccessBody": "Enviamos un nuevo enlace seguro al correo registrado del solicitante principal. Abra ese enlace para definir una nueva contraseña. Sus respuestas y archivos cargados siguen guardados.",
+      "privacyConsent": "Acepto que esta firma recopile mi información personal y documentos a través de este enlace seguro para gestionar mi expediente de inmigración, conforme a la",
+      "privacyPolicy": "política de privacidad",
+      "errors": {
+        "invalid": "Este enlace no es válido. Pida ayuda a su consultor.",
+        "mismatch": "Las contraseñas no coinciden.",
+        "weakPassword": "Use al menos 8 caracteres, incluyendo al menos una letra mayúscula, al menos un número y al menos un símbolo.",
+        "wrongPassword": "Contraseña incorrecta. Inténtelo de nuevo.",
+        "rateLimited": "Demasiados intentos. Espere unos minutos e inténtelo de nuevo.",
+        "noEmail": "No hay correo registrado para el solicitante principal. Contacte a su consultor.",
+        "emailNotConfigured": "No se pudo enviar el correo. Contacte a su consultor para un nuevo enlace.",
+        "sendFailed": "No se pudo enviar un nuevo enlace. Inténtelo de nuevo o contacte a su consultor.",
+        "alreadySet": "Ya hay una contraseña definida para este enlace.",
+        "authRequired": "Introduzca su contraseña para continuar.",
+        "serverConfig": "Error de configuración del servidor. Contacte a su consultor.",
+        "privacyRequired": "Acepte el aviso de privacidad para continuar."
+      }
+    },
     "sharing": "Creando…",
     "generateTitle": "Generate IRCC PDFs",
     "generateHelp": "Fills certified government forms from answers asked once.",
@@ -1515,6 +1552,8 @@
     "privacyIntro": "Yuzu Immigration es un software de gestión de práctica operado por Yuzu Solutions para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa Yuzu Immigration — incluido el espacio de trabajo del consultor, los enlaces compartidos, el portal del cliente y las páginas públicas de reserva. Está redactada para apoyar la rendición de cuentas prevista por PIPEDA. No es una certificación ni un asesoramiento jurídico.",
     "backHome": "Volver al inicio",
     "consentTitle": "Cómo se usa su información",
+    "consentSummary": "Su información personal y documentos se comparten para que esta firma prepare y gestione su expediente de inmigración en Yuzu Immigration.",
+    "viewPrivacyPolicy": "Ver la política de privacidad completa",
     "consentBody": "Al continuar, usted proporciona información personal y documentos para que esta firma prepare y gestione su expediente de inmigración en Yuzu Immigration. Los registros principales se almacenan en Canadá. Los archivos cargados y muchos campos de identidad están cifrados. El personal de la firma puede abrir el expediente en su espacio de trabajo; Yuzu Solutions lo trata para operar la plataforma. Los detalles sobre correo, calendario y alojamiento están en nuestra Política de privacidad.",
     "sections": {
       "controller": {
@@ -1531,7 +1570,7 @@
       },
       "legalBasis": {
         "title": "4. Consentimiento y aviso",
-        "body": "Las firmas son responsables de obtener un consentimiento significativo cuando la ley lo exige, y de explicar sus propios contratos y prácticas de privacidad, incluidas las obligaciones de la Ley 25 de Quebec cuando apliquen.\n\nLos enlaces compartidos muestran un aviso breve antes de enviar documentos o formularios. La reserva pública exige una casilla que enlaza a esta política. Continuar después de ese aviso, o marcar la casilla, es consentimiento al tratamiento aquí descrito para el expediente o la cita de esa firma, sujeto a las instrucciones de la firma y a la ley aplicable.\n\nPuede negarse a no usar el enlace o a no reservar. Puede pedir a la firma que retire el consentimiento o elimine información, sujeto a las reglas profesionales de conservación. Algunos tratamientos (registros de seguridad y conservación legal) pueden continuar cuando la ley lo permite."
+        "body": "Las firmas son responsables de obtener un consentimiento significativo cuando la ley lo exige, y de explicar sus propios contratos y prácticas de privacidad, incluidas las obligaciones de la Ley 25 de Quebec cuando apliquen.\n\nLos enlaces compartidos exigen una casilla de privacidad cuando el cliente define por primera vez la contraseña del enlace. La reserva pública exige una casilla que enlaza a esta política. Marcar cualquiera de esas casillas es consentimiento al tratamiento aquí descrito para el expediente o la cita de esa firma, sujeto a las instrucciones de la firma y a la ley aplicable.\n\nPuede negarse a no usar el enlace o a no reservar. Puede pedir a la firma que retire el consentimiento o elimine información, sujeto a las reglas profesionales de conservación. Algunos tratamientos (registros de seguridad y conservación legal) pueden continuar cuando la ley lo permite."
       },
       "safeguards": {
         "title": "5. Medidas de seguridad",
