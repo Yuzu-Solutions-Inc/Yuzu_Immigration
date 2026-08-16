@@ -11,7 +11,8 @@ import {
 } from "@/app/actions/share-auth";
 import { shareAuthInitialState } from "@/app/actions/share-auth-state";
 import { isShareErrorKey } from "@/lib/ircc/share-error-keys";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Link } from "@/i18n/navigation";
@@ -131,9 +132,15 @@ export function ShareLinkGate({
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {tl("consentSummary")}
               </p>
-              <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link href="/privacy">{tl("viewPrivacyPolicy")}</Link>
-              </Button>
+              <Link
+                href="/privacy"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "w-full",
+                )}
+              >
+                {tl("viewPrivacyPolicy")}
+              </Link>
             </div>
             <form action={setupAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
