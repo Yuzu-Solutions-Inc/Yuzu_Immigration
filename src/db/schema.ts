@@ -1166,6 +1166,19 @@ export const shareLinkAuthEvents = pgTable("share_link_auth_events", {
     .notNull(),
 });
 
+export const portalAuthEvents = pgTable("portal_auth_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  accessHash: text("access_hash").notNull(),
+  kind: text("kind").notNull(),
+  ipHash: text("ip_hash"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 /** bcrypt hashes — never exposed to anon/authenticated Data API. */
 export const formShareLinkSecrets = privateSchema.table(
   "form_share_link_secrets",

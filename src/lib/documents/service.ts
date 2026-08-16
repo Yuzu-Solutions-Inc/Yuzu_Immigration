@@ -265,7 +265,7 @@ export async function storeEncryptedDocument(input: {
   plaintext: Buffer;
   originalFilename: string;
   contentType: string;
-  uploadedVia: "share_link" | "staff";
+  uploadedVia: "share_link" | "staff" | "portal";
   client?: SupabaseClient;
 }) {
   const admin = input.client ?? createServiceClient();

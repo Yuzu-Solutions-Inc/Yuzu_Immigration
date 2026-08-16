@@ -9,6 +9,10 @@ import {
   type FormsActionState,
 } from "@/app/actions/forms";
 import {
+  savePortalAnswersAction,
+  submitPortalQuestionnaireAction,
+} from "@/app/actions/portal-workspace";
+import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
@@ -18,23 +22,26 @@ const initial: FormsActionState = {};
 
 export function ClientFillForm({
   token,
+  projectId,
   people,
   formLanguage,
   initialSubmittedAt,
 }: {
-  token: string;
+  token?: string;
+  projectId?: string;
   people: QuestionnairePerson[];
   formLanguage: ProjectFormLanguage;
   initialSubmittedAt?: string | null;
 }) {
   const t = useTranslations("forms");
   const tp = useTranslations("projects");
+  const portal = Boolean(projectId);
   const [saveState, saveAction, savePending] = useActionState(
-    saveShareAnswersAction,
+    portal ? savePortalAnswersAction : saveShareAnswersAction,
     initial,
   );
   const [submitState, submitAction, submitPending] = useActionState(
-    submitShareQuestionnaireAction,
+    portal ? submitPortalQuestionnaireAction : submitShareQuestionnaireAction,
     initial,
   );
   const [localPeople, setLocalPeople] = useState(people);
@@ -61,7 +68,8 @@ export function ClientFillForm({
       prev.map((p) => (p.id === personId ? { ...p, answers } : p)),
     );
     const fd = new FormData();
-    fd.set("token", token);
+    if (projectId) fd.set("projectId", projectId);
+    if (token) fd.set("token", token);
     fd.set("personId", personId);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(answers));
@@ -77,7 +85,8 @@ export function ClientFillForm({
       prev.map((p) => (p.id === personId ? { ...p, answers } : p)),
     );
     const fd = new FormData();
-    fd.set("token", token);
+    if (projectId) fd.set("projectId", projectId);
+    if (token) fd.set("token", token);
     fd.set("personId", personId);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(answers));
@@ -95,6 +104,7 @@ export function ClientFillForm({
       save_failed: t("errors.saveFailed"),
       incomplete: t("errors.incomplete"),
       submit_failed: t("errors.submitFailed"),
+      granted: t("errors.granted"),
     }[errorKey] ??
       t("errors.generic"));
 

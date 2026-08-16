@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { DeletePersonButton } from "@/components/people/delete-person-button";
 import { PersonNotesSection } from "@/components/people/person-notes-section";
+import { PersonPortalCard } from "@/components/people/person-portal-card";
 import { ExportPersonButton } from "@/components/privacy/retention-export";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
@@ -14,7 +15,10 @@ import {
   canDeleteRecord,
 } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { getPerson, getPersonProjects, listPersonNotes } from "@/lib/crm/queries";
+import { portalUrl } from "@/lib/portal/auth";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 export default async function PersonDetailPage({
@@ -36,9 +40,24 @@ export default async function PersonDetailPage({
     createdBy: person.created_by,
     actorUserId: user?.id,
   });
-  const [projects, notes] = await Promise.all([
+  const [projects, notes, portalAccess, baseUrl] = await Promise.all([
     getPersonProjects(id),
     listPersonNotes(id),
+    (async () => {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("customer_portal_access")
+        .select("access_code, access_token, is_active, last_authenticated_at")
+        .eq("person_id", id)
+        .maybeSingle();
+      return data as {
+        access_code: string;
+        access_token: string;
+        is_active: boolean;
+        last_authenticated_at: string | null;
+      } | null;
+    })(),
+    getAppBaseUrl(),
   ]);
   const t = await getTranslations("people");
   const ti = await getTranslations("immigrationStatus");
@@ -165,6 +184,28 @@ export default async function PersonDetailPage({
           </ul>
         )}
       </section>
+
+      {canCreate ? (
+        <PersonPortalCard
+          locale={locale}
+          personId={person.id}
+          hasEmail={Boolean(person.email)}
+          access={
+            portalAccess
+              ? {
+                  accessCode: portalAccess.access_code,
+                  portalUrl: portalUrl(
+                    baseUrl,
+                    locale,
+                    portalAccess.access_token,
+                  ),
+                  isActive: portalAccess.is_active,
+                  lastAuthenticatedAt: portalAccess.last_authenticated_at,
+                }
+              : null
+          }
+        />
+      ) : null}
 
       <PersonNotesSection locale={locale} personId={person.id} notes={notes} />
     </div>

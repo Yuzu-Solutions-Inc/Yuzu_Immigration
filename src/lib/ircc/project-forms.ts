@@ -926,6 +926,134 @@ export async function loadShareGateContext(token: string) {
   }
 }
 
+export async function loadProjectFillContext(input: {
+  organizationId: string;
+  projectId: string;
+}) {
+  try {
+    const admin = createServiceClient();
+    const [projectRes, formsRes, answersRes, orgRes, people] = await Promise.all([
+      admin
+        .from("immigration_projects")
+        .select(
+          "id, title, program_family, organization_id, form_language, representative_user_id, status, docs_done, docs_total, form_percent, status_at",
+        )
+        .eq("id", input.projectId)
+        .eq("organization_id", input.organizationId)
+        .maybeSingle(),
+      admin
+        .from("project_forms")
+        .select("*")
+        .eq("project_id", input.projectId)
+        .order("sort_order", { ascending: true }),
+      admin
+        .from("project_form_answers")
+        .select("*")
+        .eq("project_id", input.projectId)
+        .maybeSingle(),
+      admin
+        .from("organizations")
+        .select("id, name")
+        .eq("id", input.organizationId)
+        .maybeSingle(),
+      listActiveProjectPeople(admin, input.projectId),
+    ]);
+
+    const loadError =
+      projectRes.error || formsRes.error || answersRes.error || orgRes.error;
+    if (loadError) {
+      console.error("loadProjectFillContext:", loadError.message);
+      return null;
+    }
+    if (!projectRes.data) return null;
+
+    const project = decryptProjectRow(
+      projectRes.data as {
+        id: string;
+        title: string;
+        program_family: string;
+        organization_id: string;
+        form_language: string | null;
+        representative_user_id: string | null;
+        status: string;
+        docs_done: number;
+        docs_total: number;
+        form_percent: number;
+        status_at: string;
+      },
+      await getOrgDataKey(input.organizationId),
+    );
+    const principal = people.find((p) => p.role === "principal") ?? people[0];
+    const forms = sortFormsPrincipalFirst(
+      (formsRes.data ?? []) as ProjectFormRow[],
+      people,
+    );
+    const store = normalizeAnswersStore(
+      decryptAnswersValue(
+        answersRes.data?.answers,
+        await getOrgDataKey(input.organizationId),
+      ),
+      { principalPersonId: principal?.id },
+    );
+
+    const repUserId = project.representative_user_id as string | null;
+    const { data: repProfile } = repUserId
+      ? await admin
+          .from("profiles")
+          .select(PROFILE_REP_SELECT)
+          .eq("id", repUserId)
+          .maybeSingle()
+      : { data: null };
+
+    const peopleWithAnswers = people.map((person) => {
+      const formCodes = forms
+        .filter(
+          (f: ProjectFormRow) =>
+            f.person_id === person.id ||
+            (person.role === "principal" && !f.person_id),
+        )
+        .map((f: ProjectFormRow) => f.form_code as string);
+
+      const merged = withProjectFormLanguage(
+        mergeAccountRepIntoAnswers(
+          injectPersonContact(
+            {
+              ...store.byPerson[person.id],
+              ...(person.role === "principal" ? store.project : {}),
+            },
+            person,
+          ),
+          repProfile,
+        ),
+        project.form_language,
+      );
+
+      return {
+        ...person,
+        formCodes,
+        answers: merged,
+      };
+    });
+
+    return {
+      organizationId: input.organizationId,
+      projectId: input.projectId,
+      project,
+      forms,
+      answersStore: store,
+      people: peopleWithAnswers,
+      currentSection:
+        (answersRes.data?.current_section as string | null) ?? null,
+      questionnaireSubmittedAt:
+        (answersRes.data?.questionnaire_submitted_at as string | null) ?? null,
+      organization: orgRes.data,
+    };
+  } catch (err) {
+    console.error("loadProjectFillContext unexpected:", err);
+    return null;
+  }
+}
+
 export async function loadShareContext(
   token: string,
   options?: { skipPasswordGate?: boolean },
@@ -1062,31 +1190,23 @@ export async function loadShareContext(
   }
 }
 
-export async function saveShareAnswers(input: {
-  token: string;
+export async function saveProjectAnswers(input: {
+  organizationId: string;
+  projectId: string;
   personId: string;
   answers: Record<string, unknown>;
   currentSection?: string | null;
 }) {
-  const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
-  let resolved;
-  try {
-    resolved = await assertShareAuthenticated(input.token);
-  } catch (err) {
-    if (err instanceof Error && err.message === "auth_required") {
-      throw new Error("auth_required");
-    }
-    throw new Error("expired");
-  }
   const admin = createServiceClient();
-  const people = await listActiveProjectPeople(admin, resolved.projectId);
+  const people = await listActiveProjectPeople(admin, input.projectId);
   const person = people.find((p) => p.id === input.personId);
   if (!person) throw new Error("invalid_person");
 
   const { data: project } = await admin
     .from("immigration_projects")
     .select("form_language, representative_user_id, program_family, status")
-    .eq("id", resolved.projectId)
+    .eq("id", input.projectId)
+    .eq("organization_id", input.organizationId)
     .maybeSingle();
 
   if (isGrantedStatus(project?.status as string | undefined)) {
@@ -1105,14 +1225,14 @@ export async function saveShareAnswers(input: {
   const { data: answersRow } = await admin
     .from("project_form_answers")
     .select("answers")
-    .eq("project_id", resolved.projectId)
+    .eq("project_id", input.projectId)
     .maybeSingle();
 
   const principal = people.find((p) => p.role === "principal") ?? people[0];
   let store = normalizeAnswersStore(
     decryptAnswersValue(
       answersRow?.answers,
-      await getOrgDataKey(resolved.organizationId),
+      await getOrgDataKey(input.organizationId),
     ),
     {
       principalPersonId: principal?.id,
@@ -1138,11 +1258,11 @@ export async function saveShareAnswers(input: {
 
   const { error } = await admin.from("project_form_answers").upsert(
     {
-      organization_id: resolved.organizationId,
-      project_id: resolved.projectId,
+      organization_id: input.organizationId,
+      project_id: input.projectId,
       answers: encryptAnswersValue(
         store,
-        await getOrgDataKey(resolved.organizationId),
+        await getOrgDataKey(input.organizationId),
       ),
       current_section: input.currentSection ?? null,
       updated_at: new Date().toISOString(),
@@ -1154,7 +1274,7 @@ export async function saveShareAnswers(input: {
   const { data: existingShareForms } = await admin
     .from("project_forms")
     .select("form_code")
-    .eq("project_id", resolved.projectId);
+    .eq("project_id", input.projectId);
   const kit = kitOptionsFromAnswersStore(
     store,
     String(project?.program_family || ""),
@@ -1162,8 +1282,8 @@ export async function saveShareAnswers(input: {
     (existingShareForms ?? []).map((r: { form_code: string }) => r.form_code),
   );
   await reconcileProjectKitForms({
-    organizationId: resolved.organizationId,
-    projectId: resolved.projectId,
+    organizationId: input.organizationId,
+    projectId: input.projectId,
     programFamily: String(project?.program_family || "other"),
     personIds: people.map((p) => p.id),
     applicationLocation: kit.applicationLocation,
@@ -1176,7 +1296,97 @@ export async function saveShareAnswers(input: {
     client: admin,
   });
   const { refreshProjectProgress } = await import("@/lib/crm/progress");
-  await refreshProjectProgress(resolved.organizationId, resolved.projectId, admin);
+  await refreshProjectProgress(input.organizationId, input.projectId, admin);
+}
+
+export async function saveShareAnswers(input: {
+  token: string;
+  personId: string;
+  answers: Record<string, unknown>;
+  currentSection?: string | null;
+}) {
+  const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
+  let resolved;
+  try {
+    resolved = await assertShareAuthenticated(input.token);
+  } catch (err) {
+    if (err instanceof Error && err.message === "auth_required") {
+      throw new Error("auth_required");
+    }
+    throw new Error("expired");
+  }
+  await saveProjectAnswers({
+    organizationId: resolved.organizationId,
+    projectId: resolved.projectId,
+    personId: input.personId,
+    answers: input.answers,
+    currentSection: input.currentSection,
+  });
+}
+
+export async function submitProjectQuestionnaire(input: {
+  organizationId: string;
+  projectId: string;
+  personId?: string;
+  answers?: Record<string, unknown>;
+  currentSection?: string | null;
+}): Promise<{ submittedAt: string }> {
+  if (input.personId && input.answers) {
+    await saveProjectAnswers({
+      organizationId: input.organizationId,
+      projectId: input.projectId,
+      personId: input.personId,
+      answers: input.answers,
+      currentSection: input.currentSection,
+    });
+  }
+
+  const admin = createServiceClient();
+  const ctx = await loadProjectFillContext({
+    organizationId: input.organizationId,
+    projectId: input.projectId,
+  });
+  if (!ctx) throw new Error("expired");
+
+  const incomplete = ctx.people.filter((person) => {
+    const { filled, total } = questionnaireFillCounts(
+      person.formCodes,
+      person.answers,
+    );
+    if (total === 0) return false;
+    return filled < total;
+  });
+  if (incomplete.length > 0) {
+    throw new Error("incomplete");
+  }
+
+  const submittedAt = new Date().toISOString();
+  const { error, data } = await admin
+    .from("project_form_answers")
+    .update({
+      questionnaire_submitted_at: submittedAt,
+      updated_at: submittedAt,
+    })
+    .eq("project_id", input.projectId)
+    .eq("organization_id", input.organizationId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error(
+      "submitProjectQuestionnaire:",
+      error?.message ?? "no answers row",
+    );
+    throw new Error("submit_failed");
+  }
+
+  const { notifyFormsSubmitted } = await import("@/lib/notifications/emit");
+  await notifyFormsSubmitted({
+    organizationId: input.organizationId,
+    projectId: input.projectId,
+  });
+
+  return { submittedAt };
 }
 
 export async function submitShareQuestionnaire(input: {

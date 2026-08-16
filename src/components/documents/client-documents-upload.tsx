@@ -8,6 +8,10 @@ import {
   uploadShareDocumentAction,
   type DocumentsActionState,
 } from "@/app/actions/documents";
+import {
+  downloadPortalDocumentAction,
+  uploadPortalDocumentAction,
+} from "@/app/actions/portal-workspace";
 import { DocumentFileActions } from "@/components/documents/document-file-actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,17 +40,19 @@ function formatBytes(bytes: number) {
 
 export function ClientDocumentsUpload({
   token,
+  projectId,
   people,
   requests,
 }: {
-  token: string;
+  token?: string;
+  projectId?: string;
   people: Array<{ id: string; displayName: string; role: string }>;
   requests: DocumentRequestWithFile[];
 }) {
   const t = useTranslations("documents");
   const tf = useTranslations("forms");
   const [state, action, pending] = useActionState(
-    uploadShareDocumentAction,
+    projectId ? uploadPortalDocumentAction : uploadShareDocumentAction,
     initial,
   );
   const [localRequests, setLocalRequests] = useState(requests);
@@ -121,7 +127,8 @@ export function ClientDocumentsUpload({
     pendingUploadRef.current = { requestId, file: selected };
     setActiveRequestId(requestId);
     setSuccessRequestId(null);
-    formData.set("token", token);
+    if (projectId) formData.set("projectId", projectId);
+    if (token) formData.set("token", token);
     formData.set("requestId", requestId);
     formData.set("file", selected);
     action(formData);
@@ -138,6 +145,7 @@ export function ClientDocumentsUpload({
       upload_failed: t("errors.uploadFailed"),
       server_config: t("errors.serverConfig"),
       locked: t("errors.locked"),
+      granted: t("errors.granted"),
     }[state.error] ??
       t("errors.generic"));
 
@@ -216,7 +224,9 @@ export function ClientDocumentsUpload({
                             requestId={row.id}
                             filename={row.file!.original_filename}
                             fetchFile={(id) =>
-                              downloadShareDocumentAction(token, id)
+                              projectId
+                                ? downloadPortalDocumentAction(projectId, id)
+                                : downloadShareDocumentAction(token ?? "", id)
                             }
                           />
                         </div>

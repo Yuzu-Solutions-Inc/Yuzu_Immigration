@@ -6,6 +6,7 @@ export type AuditActorKind =
   | "staff"
   | "share_link"
   | "public_booking"
+  | "portal"
   | "system"
   | "service";
 
