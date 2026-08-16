@@ -312,7 +312,10 @@ export default async function ProjectDetailPage({
                   <ProjectPortalCard
                     locale={locale}
                     projectId={project.id}
-                    portalBaseUrl={portalBaseUrl(appBaseUrl, locale)}
+                    portalBaseUrl={portalBaseUrl(
+                      appBaseUrl,
+                      toAppLocale(project.form_language),
+                    )}
                     inviteeNames={portalInviteeNames}
                     hasAnyInviteeEmail={portalHasEmail}
                   />

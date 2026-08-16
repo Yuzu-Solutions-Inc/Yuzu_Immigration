@@ -17,6 +17,7 @@ import {
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getPerson, getPersonProjects, listPersonNotes } from "@/lib/crm/queries";
+import { toAppLocale } from "@/lib/i18n/locales";
 import { portalBaseUrl } from "@/lib/portal/auth";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -188,7 +189,10 @@ export default async function PersonDetailPage({
           locale={locale}
           personId={person.id}
           hasEmail={Boolean(person.email)}
-          portalBaseUrl={portalBaseUrl(baseUrl, locale)}
+          portalBaseUrl={portalBaseUrl(
+            baseUrl,
+            toAppLocale(person.preferred_locale),
+          )}
           access={
             portalAccess
               ? {
