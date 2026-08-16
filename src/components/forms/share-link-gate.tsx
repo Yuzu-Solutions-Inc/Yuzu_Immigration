@@ -22,7 +22,6 @@ export function ShareLinkGate({
   token,
   locale,
   mode,
-  organizationName,
   projectTitle,
   expiresLabel,
   initialError,
@@ -30,7 +29,6 @@ export function ShareLinkGate({
   token: string;
   locale: string;
   mode: ShareAccessState;
-  organizationName: string;
   projectTitle: string;
   expiresLabel: string;
   initialError?: string;
@@ -101,11 +99,6 @@ export function ShareLinkGate({
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-16">
       <header className="space-y-2 text-center">
-        {organizationName ? (
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {organizationName}
-          </p>
-        ) : null}
         <h1 className="font-heading text-2xl font-semibold text-brand">
           {projectTitle}
         </h1>

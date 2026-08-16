@@ -39,6 +39,19 @@ export type AccountRepAnswerKey = (typeof ACCOUNT_REP_ANSWER_KEYS)[number];
 export const PROFILE_REP_SELECT =
   "id, email, full_name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code";
 
+/** Display name for a staff representative on client-facing surfaces. */
+export function representativeDisplayName(
+  profile: AccountRepSource | null | undefined,
+): string {
+  if (!profile) return "";
+  const repName = [profile.rep_given_name, profile.rep_family_name]
+    .map((part) => String(part ?? "").trim())
+    .filter(Boolean)
+    .join(" ");
+  if (repName) return repName;
+  return String(profile.full_name ?? profile.email ?? "").trim();
+}
+
 /** Map profiles.rep_* into questionnaire / PDF answer keys. */
 export function accountRepAnswersFromProfile(
   profile: AccountRepSource | null | undefined,

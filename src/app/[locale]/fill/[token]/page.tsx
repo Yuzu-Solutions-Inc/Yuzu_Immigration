@@ -26,7 +26,6 @@ export default async function ClientFillLandingPage({
           token={token}
           locale={locale}
           mode={gate.access}
-          organizationName={gate.organizationName}
           projectTitle={gate.projectTitle}
           expiresLabel={formatShareLinkExpiryDate(gate.expiresAt, locale)}
           initialError={shareError}
