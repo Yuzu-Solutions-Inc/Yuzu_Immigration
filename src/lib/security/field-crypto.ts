@@ -25,14 +25,10 @@ export function isEncryptedJson(value: unknown): value is EncryptedJsonEnvelope 
   return isEncryptedField(blob);
 }
 
-function resolveKey(key?: Buffer): Buffer {
-  return key ?? requireAppEncryptionKey();
-}
-
 /**
  * Encrypt a UTF-8 string. AAD binds ciphertext to a table.column so blobs
- * cannot be copied between fields. Pass the org DEK for client PII; omit
- * `key` to wrap with the platform DOCUMENT_ENCRYPTION_KEY.
+ * cannot be copied between fields. Pass the org DEK for org data; omit `key`
+ * only for app-level wrap (DOCUMENT_ENCRYPTION_KEY).
  */
 export function encryptField(
   plaintext: string,
@@ -40,7 +36,7 @@ export function encryptField(
   key?: Buffer,
 ): string {
   const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALG, resolveKey(key), iv);
+  const cipher = createCipheriv(ALG, key ?? requireAppEncryptionKey(), iv);
   cipher.setAAD(Buffer.from(aad, "utf8"));
   const ciphertext = Buffer.concat([
     cipher.update(plaintext, "utf8"),
@@ -65,7 +61,11 @@ export function decryptField(
   const iv = raw.subarray(0, IV_LENGTH);
   const authTag = raw.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH);
   const ciphertext = raw.subarray(IV_LENGTH + AUTH_TAG_LENGTH);
-  const decipher = createDecipheriv(ALG, resolveKey(key), iv);
+  const decipher = createDecipheriv(
+    ALG,
+    key ?? requireAppEncryptionKey(),
+    iv,
+  );
   decipher.setAAD(Buffer.from(aad, "utf8"));
   decipher.setAuthTag(authTag);
   return Buffer.concat([
@@ -74,48 +74,29 @@ export function decryptField(
   ]).toString("utf8");
 }
 
-function uniqueKeys(keys: Buffer[]): Buffer[] {
-  const seen = new Set<string>();
-  const out: Buffer[] = [];
-  for (const key of keys) {
-    const id = key.toString("hex");
-    if (seen.has(id)) continue;
-    seen.add(id);
-    out.push(key);
-  }
-  return out;
-}
-
 /**
  * Decrypt when prefixed; otherwise return the legacy plaintext (or null).
- * Tries the org DEK first, then the platform key so rows sealed before
- * per-org keys still read.
+ * Uses the org DEK only — do not pass the platform wrap key here.
  */
 export function decryptFieldMaybe(
   value: string | null | undefined,
   aad: string,
-  key?: Buffer,
+  key: Buffer,
 ): string | null | undefined {
   if (value == null) return value;
   if (value === "") return value;
-  const keys = uniqueKeys(
-    key ? [key, requireAppEncryptionKey()] : [requireAppEncryptionKey()],
-  );
-  for (const candidate of keys) {
-    try {
-      return decryptField(value, aad, candidate);
-    } catch {
-      continue;
-    }
+  try {
+    return decryptField(value, aad, key);
+  } catch {
+    console.error("decryptField failed:", aad);
+    return "[unavailable]";
   }
-  console.error("decryptField failed:", aad);
-  return "[unavailable]";
 }
 
 export function encryptOptionalField(
   value: string | null | undefined,
   aad: string,
-  key?: Buffer,
+  key: Buffer,
 ): string | null {
   const trimmed = typeof value === "string" ? value.trim() : "";
   if (!trimmed) return null;
@@ -125,7 +106,7 @@ export function encryptOptionalField(
 export function encryptJson(
   value: unknown,
   aad: string,
-  key?: Buffer,
+  key: Buffer,
 ): EncryptedJsonEnvelope {
   return {
     [JSON_ENC_KEY]: encryptField(JSON.stringify(value ?? {}), aad, key),
@@ -135,7 +116,7 @@ export function encryptJson(
 export function decryptJson(
   value: unknown,
   aad: string,
-  key?: Buffer,
+  key: Buffer,
 ): unknown {
   if (value == null) return {};
   if (!isEncryptedJson(value)) return value;

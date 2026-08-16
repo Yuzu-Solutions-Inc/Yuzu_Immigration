@@ -269,7 +269,10 @@ export async function storeEncryptedDocument(input: {
   client?: SupabaseClient;
 }) {
   const admin = input.client ?? createServiceClient();
-  const encrypted = encryptDocument(input.plaintext);
+  const encrypted = encryptDocument(
+    input.plaintext,
+    await getOrgDataKey(input.organizationId),
+  );
   const fileId = randomUUID();
   const path = storagePath({
     organizationId: input.organizationId,
@@ -373,7 +376,10 @@ export async function downloadDecryptedDocument(input: {
   }
 
   const encrypted = Buffer.from(await data.arrayBuffer());
-  const plaintext = decryptDocument(encrypted);
+  const plaintext = decryptDocument(
+    encrypted,
+    await getOrgDataKey(input.organizationId),
+  );
   return {
     buffer: plaintext,
     contentType: input.contentType,

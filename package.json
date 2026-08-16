@@ -11,6 +11,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "pii:seal": "npx tsx scripts/seal-client-pii.ts",
+    "key:generate": "npx tsx scripts/generate-encryption-key.ts",
+    "key:rotate": "npx tsx scripts/rotate-encryption-key.ts",
     "scale:backfill": "npx tsx scripts/backfill-scale-lookups.ts",
     "ircc:validate": "npx tsx scripts/validate-ircc-forms.ts",
     "ircc:validate:local": "npx tsx scripts/validate-ircc-forms.ts --local"

@@ -96,6 +96,7 @@ export async function createPersonAction(
       ? data.statusExpiresAt
       : null;
 
+  const key = await getOrgDataKey(orgId);
   const { data: created, error: createError } = await supabase
     .from("people")
     .insert({
@@ -107,13 +108,17 @@ export async function createPersonAction(
           email: data.email || null,
           phone: data.phone || null,
         },
-        await getOrgDataKey(orgId),
+        key,
       ),
-      ...personLookupWrite(orgId, {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email || null,
-      }),
+      ...personLookupWrite(
+        orgId,
+        {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email || null,
+        },
+        key,
+      ),
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,
@@ -170,6 +175,7 @@ export async function updatePersonAction(
     return { error: "not_found" };
   }
 
+  const key = await getOrgDataKey(orgId);
   const { error: updateError } = await supabase
     .from("people")
     .update({
@@ -180,13 +186,17 @@ export async function updatePersonAction(
           email: data.email || null,
           phone: data.phone || null,
         },
-        await getOrgDataKey(orgId),
+        key,
       ),
-      ...personLookupWrite(orgId, {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email || null,
-      }),
+      ...personLookupWrite(
+        orgId,
+        {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email || null,
+        },
+        key,
+      ),
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,

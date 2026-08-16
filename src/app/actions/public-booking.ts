@@ -89,14 +89,16 @@ async function bookingSubjectHashes(
   organizationId: string,
   email: string,
 ) {
+  const dek = await getOrgDataKey(organizationId);
   const emailHash = hashBookingSubject(
     "email",
     organizationId,
     normalizeGuestEmail(email),
+    dek,
   );
   const ip = await getRequestClientIp();
   const ipHash = ip
-    ? hashBookingSubject("ip", organizationId, ip)
+    ? hashBookingSubject("ip", organizationId, ip, dek)
     : null;
   return { emailHash, ipHash };
 }
@@ -235,11 +237,15 @@ export async function submitPublicBookingAction(
           },
           dek,
         ),
-        ...personLookupWrite(ctx.organizationId, {
-          first_name: parsed.data.guestFirstName,
-          last_name: parsed.data.guestLastName,
-          email: guestEmail,
-        }),
+        ...personLookupWrite(
+          ctx.organizationId,
+          {
+            first_name: parsed.data.guestFirstName,
+            last_name: parsed.data.guestLastName,
+            email: guestEmail,
+          },
+          dek,
+        ),
         preferred_locale: preferredLocale,
         immigration_status: "none",
       })
@@ -292,7 +298,7 @@ export async function submitPublicBookingAction(
         },
         dek,
       ),
-      ...appointmentLookupWrite(ctx.organizationId, guestEmail),
+      ...appointmentLookupWrite(ctx.organizationId, guestEmail, dek),
       privacy_accepted_at: new Date().toISOString(),
       guest_preferred_locale: preferredLocale,
       status: requiresPayment ? "pending_payment" : "confirmed",

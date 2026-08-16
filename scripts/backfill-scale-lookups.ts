@@ -42,7 +42,7 @@ async function main() {
     );
     const { error } = await admin
       .from("people")
-      .update(personLookupWrite(orgId, person))
+      .update(personLookupWrite(orgId, person, key))
       .eq("id", row.id as string);
     if (error) throw new Error(error.message);
     peopleUpdated += 1;
@@ -66,7 +66,7 @@ async function main() {
     );
     const { error } = await admin
       .from("booking_appointments")
-      .update(appointmentLookupWrite(orgId, guest.guest_email))
+      .update(appointmentLookupWrite(orgId, guest.guest_email, key))
       .eq("id", row.id as string);
     if (error) throw new Error(error.message);
     appointmentsUpdated += 1;

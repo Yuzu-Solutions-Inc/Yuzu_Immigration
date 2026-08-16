@@ -1,14 +1,31 @@
-import { createServiceClient } from "@/lib/supabase/admin";
+import { CLIENT_DOCUMENTS_BUCKET } from "@/lib/documents/catalog";
+import { decryptDocument } from "@/lib/documents/crypto";
+import { GOOGLE_CALENDAR_AAD } from "@/lib/google/oauth";
+import {
+  getGoogleCalendarSecrets,
+  updateGoogleCalendarSecrets,
+  upsertGoogleCalendarSecrets,
+} from "@/lib/google/secrets";
 import { hasAppEncryptionKey } from "@/lib/security/app-encryption-key";
-import { encryptAnswersValue, PII_AAD } from "@/lib/security/client-pii";
+import {
+  decryptBookingGuestRow,
+  decryptPersonRow,
+  encryptAnswersValue,
+  encryptBookingFormAnswers,
+  PII_AAD,
+} from "@/lib/security/client-pii";
+import { hashEmailLookup } from "@/lib/security/email-lookup";
 import {
   decryptField,
-  decryptJson,
   encryptField,
   isEncryptedField,
   isEncryptedJson,
 } from "@/lib/security/field-crypto";
 import { loadOrCreateOrgDataKey } from "@/lib/security/org-data-key";
+import { SQUARE_AAD } from "@/lib/square/oauth";
+import { MANAGE_TOKEN_AAD, PAYMENT_TOKEN_AAD } from "@/lib/square/payments";
+import { getSquareSecrets, upsertSquareSecrets } from "@/lib/square/secrets";
+import { createServiceClient } from "@/lib/supabase/admin";
 
 const PAGE = 200;
 
@@ -20,8 +37,16 @@ export type SealClientPiiResult = {
   projects: number;
   answers: number;
   documentFiles: number;
+  documentBlobs: number;
   documentRequests: number;
   destructions: number;
+  appointments: number;
+  paymentTokens: number;
+  squareSecrets: number;
+  googleSecrets: number;
+  bookingSettings: number;
+  shareLinks: number;
+  bookingInvites: number;
 };
 
 const dekCache = new Map<string, Buffer>();
@@ -47,8 +72,7 @@ function rekeyString(
     decryptField(value, aad, key);
     return undefined;
   } catch {
-    const plain = decryptField(value, aad);
-    return encryptField(plain, aad, key);
+    throw new Error(`rekey_failed:${aad}`);
   }
 }
 
@@ -96,7 +120,9 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
     async (from, to) => {
       const { data, error } = await admin
         .from("people")
-        .select("id, organization_id, first_name, last_name, email, phone")
+        .select(
+          "id, organization_id, first_name, last_name, email, phone, email_lookup_hash",
+        )
         .order("created_at", { ascending: true })
         .range(from, to);
       if (error) throw new Error(`people: ${error.message}`);
@@ -107,6 +133,7 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
         last_name: string;
         email: string | null;
         phone: string | null;
+        email_lookup_hash: string | null;
       }>;
     },
     async (row) => {
@@ -120,6 +147,20 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
       if (last !== undefined) patch.last_name = last;
       if (email !== undefined) patch.email = email;
       if (phone !== undefined) patch.phone = phone;
+      const person = decryptPersonRow(
+        {
+          first_name: first ?? row.first_name,
+          last_name: last ?? row.last_name,
+          email: email ?? row.email,
+        },
+        key,
+      );
+      const nextHash = person.email
+        ? hashEmailLookup(row.organization_id, person.email, key)
+        : null;
+      if ((row.email_lookup_hash ?? null) !== nextHash) {
+        patch.email_lookup_hash = nextHash;
+      }
       if (Object.keys(patch).length === 0) return false;
       const { error } = await admin.from("people").update(patch).eq("id", row.id);
       if (error) throw new Error(`people update: ${error.message}`);
@@ -246,20 +287,8 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
     async (row) => {
       const key = await orgKey(row.organization_id);
       if (isEncryptedJson(row.answers)) {
-        try {
-          decryptField(row.answers.__mc_enc, PII_AAD.answers, key);
-          return false;
-        } catch {
-          const plain = decryptJson(row.answers, PII_AAD.answers);
-          const { error } = await admin
-            .from("project_form_answers")
-            .update({ answers: encryptAnswersValue(plain, key) })
-            .eq("id", row.id);
-          if (error) {
-            throw new Error(`project_form_answers update: ${error.message}`);
-          }
-          return true;
-        }
+        decryptField(row.answers.__mc_enc, PII_AAD.answers, key);
+        return false;
       }
       const { error } = await admin
         .from("project_form_answers")
@@ -381,6 +410,315 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
     },
   );
 
+  const documentBlobs = await forEachPage(
+    async (from, to) => {
+      const { data, error } = await admin
+        .from("project_document_files")
+        .select("id, organization_id, storage_path")
+        .order("created_at", { ascending: true })
+        .range(from, to);
+      if (error) throw new Error(`document blobs: ${error.message}`);
+      return (data ?? []) as Array<{
+        id: string;
+        organization_id: string;
+        storage_path: string | null;
+      }>;
+    },
+    async (row) => {
+      if (!row.storage_path) return false;
+      const key = await orgKey(row.organization_id);
+      const { data, error } = await admin.storage
+        .from(CLIENT_DOCUMENTS_BUCKET)
+        .download(row.storage_path);
+      if (error || !data) {
+        throw new Error(
+          `document download ${row.id}: ${error?.message ?? "missing"}`,
+        );
+      }
+      const payload = Buffer.from(await data.arrayBuffer());
+      decryptDocument(payload, key);
+      return false;
+    },
+  );
+
+  const appointments = await forEachPage(
+    async (from, to) => {
+      const { data, error } = await admin
+        .from("booking_appointments")
+        .select(
+          "id, organization_id, guest_name, guest_email, guest_phone, guest_address, manage_token_encrypted, form_answers, email_lookup_hash",
+        )
+        .order("created_at", { ascending: true })
+        .range(from, to);
+      if (error) throw new Error(`booking_appointments: ${error.message}`);
+      return (data ?? []) as Array<{
+        id: string;
+        organization_id: string;
+        guest_name: string;
+        guest_email: string;
+        guest_phone: string | null;
+        guest_address: string | null;
+        manage_token_encrypted: string | null;
+        form_answers: unknown;
+        email_lookup_hash: string | null;
+      }>;
+    },
+    async (row) => {
+      const key = await orgKey(row.organization_id);
+      const patch: Record<string, unknown> = {};
+      const guestName = rekeyString(row.guest_name, PII_AAD.booking.guestName, key);
+      const guestEmail = rekeyString(
+        row.guest_email,
+        PII_AAD.booking.guestEmail,
+        key,
+      );
+      const guestPhone = rekeyString(
+        row.guest_phone,
+        PII_AAD.booking.guestPhone,
+        key,
+      );
+      const guestAddress = rekeyString(
+        row.guest_address,
+        PII_AAD.booking.guestAddress,
+        key,
+      );
+      const manageToken = rekeyString(
+        row.manage_token_encrypted,
+        MANAGE_TOKEN_AAD,
+        key,
+      );
+      if (guestName !== undefined) patch.guest_name = guestName;
+      if (guestEmail !== undefined) patch.guest_email = guestEmail;
+      if (guestPhone !== undefined) patch.guest_phone = guestPhone;
+      if (guestAddress !== undefined) patch.guest_address = guestAddress;
+      if (manageToken !== undefined) patch.manage_token_encrypted = manageToken;
+      if (isEncryptedJson(row.form_answers)) {
+        decryptField(row.form_answers.__mc_enc, PII_AAD.booking.formAnswers, key);
+      } else if (row.form_answers && typeof row.form_answers === "object") {
+        patch.form_answers = encryptBookingFormAnswers(
+          row.form_answers as Record<string, string>,
+          key,
+        );
+      }
+      const guest = decryptBookingGuestRow(
+        {
+          guest_name: (patch.guest_name as string | undefined) ?? row.guest_name,
+          guest_email:
+            (patch.guest_email as string | undefined) ?? row.guest_email,
+        },
+        key,
+      );
+      const nextHash = guest.guest_email
+        ? hashEmailLookup(row.organization_id, guest.guest_email, key)
+        : null;
+      if ((row.email_lookup_hash ?? null) !== nextHash) {
+        patch.email_lookup_hash = nextHash;
+      }
+      if (Object.keys(patch).length === 0) return false;
+      const { error } = await admin
+        .from("booking_appointments")
+        .update(patch)
+        .eq("id", row.id);
+      if (error) throw new Error(`booking_appointments update: ${error.message}`);
+      return true;
+    },
+  );
+
+  const paymentTokens = await forEachPage(
+    async (from, to) => {
+      const { data, error } = await admin
+        .from("payment_requests")
+        .select("id, organization_id, token_encrypted")
+        .order("created_at", { ascending: true })
+        .range(from, to);
+      if (error) throw new Error(`payment_requests: ${error.message}`);
+      return (data ?? []) as Array<{
+        id: string;
+        organization_id: string;
+        token_encrypted: string | null;
+      }>;
+    },
+    async (row) => {
+      const key = await orgKey(row.organization_id);
+      const next = rekeyString(row.token_encrypted, PAYMENT_TOKEN_AAD, key);
+      if (next === undefined) return false;
+      const { error } = await admin
+        .from("payment_requests")
+        .update({ token_encrypted: next })
+        .eq("id", row.id);
+      if (error) throw new Error(`payment token: ${error.message}`);
+      return true;
+    },
+  );
+
+  const { data: squareRows, error: squareError } = await admin
+    .from("square_connections")
+    .select("id, organization_id");
+  if (squareError) throw new Error(`square_connections: ${squareError.message}`);
+  let squareSecrets = 0;
+  for (const row of squareRows ?? []) {
+    const connectionId = row.id as string;
+    const key = await orgKey(row.organization_id as string);
+    const secrets = await getSquareSecrets(connectionId);
+    if (!secrets) continue;
+    const access = rekeyString(
+      secrets.access_token_encrypted,
+      SQUARE_AAD.accessToken,
+      key,
+    );
+    const refresh = rekeyString(
+      secrets.refresh_token_encrypted,
+      SQUARE_AAD.refreshToken,
+      key,
+    );
+    if (access === undefined && refresh === undefined) continue;
+    await upsertSquareSecrets({
+      connectionId,
+      accessTokenEncrypted: access ?? secrets.access_token_encrypted,
+      refreshTokenEncrypted: refresh ?? secrets.refresh_token_encrypted,
+      accessTokenExpiresAt: secrets.access_token_expires_at
+        ? new Date(secrets.access_token_expires_at)
+        : null,
+    });
+    squareSecrets += 1;
+  }
+
+  const { data: googleRows, error: googleError } = await admin
+    .from("google_calendar_connections")
+    .select("id, organization_id");
+  if (googleError) {
+    throw new Error(`google_calendar_connections: ${googleError.message}`);
+  }
+  let googleSecrets = 0;
+  for (const row of googleRows ?? []) {
+    const connectionId = row.id as string;
+    const key = await orgKey(row.organization_id as string);
+    const secrets = await getGoogleCalendarSecrets(connectionId);
+    if (!secrets) continue;
+    const refresh = rekeyString(
+      secrets.refresh_token_encrypted,
+      GOOGLE_CALENDAR_AAD.refreshToken,
+      key,
+    );
+    const access = rekeyString(
+      secrets.access_token_encrypted,
+      GOOGLE_CALENDAR_AAD.accessToken,
+      key,
+    );
+    const channel = rekeyString(
+      secrets.channel_token_encrypted,
+      GOOGLE_CALENDAR_AAD.channelToken,
+      key,
+    );
+    if (refresh === undefined && access === undefined && channel === undefined) {
+      continue;
+    }
+    await upsertGoogleCalendarSecrets({
+      connectionId,
+      refreshTokenEncrypted: refresh ?? secrets.refresh_token_encrypted,
+      accessTokenEncrypted: access ?? secrets.access_token_encrypted,
+      accessTokenExpiresAt: secrets.access_token_expires_at
+        ? new Date(secrets.access_token_expires_at)
+        : null,
+      syncToken: secrets.sync_token,
+    });
+    if (channel !== undefined) {
+      await updateGoogleCalendarSecrets(connectionId, {
+        channelTokenEncrypted: channel,
+      });
+    }
+    googleSecrets += 1;
+  }
+
+  const bookingSettings = await forEachPage(
+    async (from, to) => {
+      const { data, error } = await admin
+        .from("booking_settings")
+        .select("id, organization_id, public_token_encrypted")
+        .order("created_at", { ascending: true })
+        .range(from, to);
+      if (error) throw new Error(`booking_settings: ${error.message}`);
+      return (data ?? []) as Array<{
+        id: string;
+        organization_id: string;
+        public_token_encrypted: string | null;
+      }>;
+    },
+    async (row) => {
+      const key = await orgKey(row.organization_id);
+      const next = rekeyString(
+        row.public_token_encrypted,
+        PII_AAD.booking.token,
+        key,
+      );
+      if (next === undefined) return false;
+      const { error } = await admin
+        .from("booking_settings")
+        .update({ public_token_encrypted: next })
+        .eq("id", row.id);
+      if (error) throw new Error(`booking_settings update: ${error.message}`);
+      return true;
+    },
+  );
+
+  const shareLinks = await forEachPage(
+    async (from, to) => {
+      const { data, error } = await admin
+        .from("form_share_links")
+        .select("id, organization_id, token_encrypted")
+        .order("created_at", { ascending: true })
+        .range(from, to);
+      if (error) throw new Error(`form_share_links: ${error.message}`);
+      return (data ?? []) as Array<{
+        id: string;
+        organization_id: string;
+        token_encrypted: string | null;
+      }>;
+    },
+    async (row) => {
+      const key = await orgKey(row.organization_id);
+      const next = rekeyString(row.token_encrypted, PII_AAD.shareLinks.token, key);
+      if (next === undefined) return false;
+      const { error } = await admin
+        .from("form_share_links")
+        .update({ token_encrypted: next })
+        .eq("id", row.id);
+      if (error) throw new Error(`form_share_links update: ${error.message}`);
+      return true;
+    },
+  );
+
+  const bookingInvites = await forEachPage(
+    async (from, to) => {
+      const { data, error } = await admin
+        .from("project_booking_invites")
+        .select("id, organization_id, token_encrypted")
+        .order("created_at", { ascending: true })
+        .range(from, to);
+      if (error) throw new Error(`project_booking_invites: ${error.message}`);
+      return (data ?? []) as Array<{
+        id: string;
+        organization_id: string;
+        token_encrypted: string | null;
+      }>;
+    },
+    async (row) => {
+      const key = await orgKey(row.organization_id);
+      const next = rekeyString(
+        row.token_encrypted,
+        PII_AAD.bookingInvites.token,
+        key,
+      );
+      if (next === undefined) return false;
+      const { error } = await admin
+        .from("project_booking_invites")
+        .update({ token_encrypted: next })
+        .eq("id", row.id);
+      if (error) throw new Error(`booking invites update: ${error.message}`);
+      return true;
+    },
+  );
+
   return {
     orgs,
     people,
@@ -389,7 +727,15 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
     projects,
     answers,
     documentFiles,
+    documentBlobs,
     documentRequests,
     destructions,
+    appointments,
+    paymentTokens,
+    squareSecrets,
+    googleSecrets,
+    bookingSettings,
+    shareLinks,
+    bookingInvites,
   };
 }

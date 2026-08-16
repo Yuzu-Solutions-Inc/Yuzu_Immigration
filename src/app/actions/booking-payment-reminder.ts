@@ -81,7 +81,8 @@ export async function sendBookingPaymentReminderAction(
     .maybeSingle();
   if (!payment) return { error: "no_payment" };
 
-  const token = decryptPaymentToken(payment.token_encrypted as string | null);
+  const dek = await getOrgDataKey(orgId);
+  const token = decryptPaymentToken(payment.token_encrypted as string | null, dek);
   const origin = await getAppBaseUrl();
   const emailLocale = toAppLocale(
     (appointment.guest_preferred_locale as string | null) || parsedLocale.data,
@@ -116,7 +117,6 @@ export async function sendBookingPaymentReminderAction(
     ]);
 
   const timezone = (settings?.timezone as string | null) || "America/Toronto";
-  const dek = await getOrgDataKey(orgId);
   const guest = decryptBookingGuestRow(
     {
       guest_name: appointment.guest_name as string,

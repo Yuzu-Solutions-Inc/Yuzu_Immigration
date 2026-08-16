@@ -11,6 +11,7 @@ import {
   updateGoogleCalendarSecrets,
 } from "@/lib/google/secrets";
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 const APPOINTMENT_PROP = "myconsultantAppointmentId";
@@ -80,12 +81,27 @@ async function loadSecrets(connectionId: string) {
   return getGoogleCalendarSecrets(connectionId);
 }
 
+async function googleOrgDek(connectionId: string, organizationId?: string) {
+  if (organizationId) return getOrgDataKey(organizationId);
+  const { data, error } = await admin()
+    .from("google_calendar_connections")
+    .select("organization_id")
+    .eq("id", connectionId)
+    .maybeSingle();
+  if (error || !data?.organization_id) {
+    throw new Error("google_not_connected");
+  }
+  return getOrgDataKey(data.organization_id as string);
+}
+
 export async function getValidAccessToken(connectionId: string) {
   const secrets = await loadSecrets(connectionId);
   if (!secrets) throw new Error("google_not_connected");
+  const dek = await googleOrgDek(connectionId);
   const refreshToken = decryptField(
     secrets.refresh_token_encrypted,
     GOOGLE_CALENDAR_AAD.refreshToken,
+    dek,
   );
   const expiresAt = secrets.access_token_expires_at
     ? new Date(secrets.access_token_expires_at).getTime()
@@ -97,6 +113,7 @@ export async function getValidAccessToken(connectionId: string) {
     return decryptField(
       secrets.access_token_encrypted,
       GOOGLE_CALENDAR_AAD.accessToken,
+      dek,
     );
   }
   const refreshed = await refreshGoogleAccessToken(refreshToken);
@@ -104,6 +121,7 @@ export async function getValidAccessToken(connectionId: string) {
     accessTokenEncrypted: encryptField(
       refreshed.access_token,
       GOOGLE_CALENDAR_AAD.accessToken,
+      dek,
     ),
     accessTokenExpiresAt: new Date(Date.now() + refreshed.expires_in * 1000),
   });
@@ -499,6 +517,7 @@ export async function startGoogleWatch(
     channelTokenEncrypted: encryptField(
       channelToken,
       GOOGLE_CALENDAR_AAD.channelToken,
+      await getOrgDataKey(connection.organization_id),
     ),
   });
 }
@@ -514,6 +533,7 @@ export async function verifyGoogleChannelToken(
     const expected = decryptField(
       secrets.channel_token_encrypted,
       GOOGLE_CALENDAR_AAD.channelToken,
+      await googleOrgDek(connectionId),
     );
     return expected === incomingToken;
   } catch {

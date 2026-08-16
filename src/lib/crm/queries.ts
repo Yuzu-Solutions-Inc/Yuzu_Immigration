@@ -136,7 +136,7 @@ export async function listPeople(
     .limit(limit);
 
   if (q && looksLikeEmail(q)) {
-    request = request.eq("email_lookup_hash", hashEmailLookup(orgId, q));
+    request = request.eq("email_lookup_hash", hashEmailLookup(orgId, q, key));
   } else if (q) {
     request = request.ilike("search_name", `%${escapeIlike(q)}%`);
   }

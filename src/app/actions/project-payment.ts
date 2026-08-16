@@ -8,6 +8,7 @@ import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { getOrgSquareConnection } from "@/lib/square/client";
 import {
   createCheckoutPaymentRequest,
@@ -157,8 +158,12 @@ export async function listProjectPaymentLinks(projectId: string) {
     console.error("listProjectPaymentLinks:", error.message);
     return [];
   }
+  const dek = await getOrgDataKey(orgId);
   return (data ?? []).map((row) => {
-    const token = decryptPaymentToken(row.token_encrypted as string | null);
+    const token = decryptPaymentToken(
+      row.token_encrypted as string | null,
+      dek,
+    );
     return {
       id: row.id as string,
       status: row.status as string,

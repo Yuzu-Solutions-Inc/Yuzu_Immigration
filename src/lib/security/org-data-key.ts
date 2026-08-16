@@ -1,8 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { cache } from "react";
 
-import { createServiceClient } from "@/lib/supabase/admin";
+import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
+import { createServiceClient } from "@/lib/supabase/admin";
 
 const WRAP_AAD_PREFIX = "organizations.wrapped_dek";
 
@@ -14,15 +15,30 @@ function wrapAad(orgId: string): string {
   return `${WRAP_AAD_PREFIX}:${orgId}`;
 }
 
-export function wrapOrgDataKey(dek: Buffer, orgId: string): string {
+export function wrapOrgDataKey(
+  dek: Buffer,
+  orgId: string,
+  wrapKey?: Buffer,
+): string {
   if (dek.length !== 32) {
     throw new Error("invalid_org_dek");
   }
-  return encryptField(dek.toString("base64"), wrapAad(orgId));
+  return encryptField(dek.toString("base64"), wrapAad(orgId), wrapKey);
 }
 
-export function unwrapOrgDataKey(wrapped: string, orgId: string): Buffer {
-  const decoded = Buffer.from(decryptField(wrapped, wrapAad(orgId)), "base64");
+export function unwrapOrgDataKey(
+  wrapped: string,
+  orgId: string,
+  wrapKey?: Buffer,
+): Buffer {
+  const decoded = Buffer.from(
+    decryptField(
+      wrapped,
+      wrapAad(orgId),
+      wrapKey ?? requireAppEncryptionKey(),
+    ),
+    "base64",
+  );
   if (decoded.length !== 32) {
     throw new Error("invalid_org_dek");
   }

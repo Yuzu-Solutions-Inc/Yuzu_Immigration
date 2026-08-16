@@ -120,14 +120,17 @@ export async function processDuePaymentReminders(now = new Date()) {
     const payment = paymentByAppointment.get(appointment.id as string);
     if (!payment) continue;
 
-    const token = decryptPaymentToken(payment.token_encrypted as string | null);
+    const dek = await getOrgDataKey(appointment.organization_id as string);
+    const token = decryptPaymentToken(
+      payment.token_encrypted as string | null,
+      dek,
+    );
     const checkoutUrl = (payment.checkout_url as string | null) ?? null;
     if (!token && !checkoutUrl) continue;
 
     const timeZone =
       timezoneByOrg.get(appointment.organization_id as string) ?? DEFAULT_TZ;
     const startsAt = new Date(appointment.starts_at as string);
-    const dek = await getOrgDataKey(appointment.organization_id as string);
     const guest = decryptBookingGuestRow(
       {
         guest_name: appointment.guest_name as string,

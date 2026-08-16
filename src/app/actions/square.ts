@@ -7,6 +7,7 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import {
   getValidSquareAccessToken,
@@ -82,6 +83,7 @@ export async function disconnectSquareAction(
         const access = decryptField(
           secrets.access_token_encrypted,
           SQUARE_AAD.accessToken,
+          await getOrgDataKey(orgId),
         );
         await revokeSquareToken(access);
       } catch {
@@ -271,15 +273,18 @@ export async function persistSquareConnection(input: {
   }
 
   const { upsertSquareSecrets } = await import("@/lib/square/secrets");
+  const dek = await getOrgDataKey(input.organizationId);
   await upsertSquareSecrets({
     connectionId,
     accessTokenEncrypted: encryptField(
       input.accessToken,
       SQUARE_AAD.accessToken,
+      dek,
     ),
     refreshTokenEncrypted: encryptField(
       input.refreshToken,
       SQUARE_AAD.refreshToken,
+      dek,
     ),
     accessTokenExpiresAt: input.expiresAt,
   });

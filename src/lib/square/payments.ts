@@ -20,7 +20,7 @@ import {
   refundSquarePayment,
 } from "./client";
 
-const PAYMENT_TOKEN_AAD = "payment_requests.token_encrypted";
+export const PAYMENT_TOKEN_AAD = "payment_requests.token_encrypted";
 export const MANAGE_TOKEN_AAD = "booking_appointments.manage_token_encrypted";
 
 export type PaymentRequestRow = {
@@ -74,6 +74,7 @@ export async function createCheckoutPaymentRequest(input: {
     new Date(Date.now() + (input.expiresInHours ?? 72) * 3_600_000)
   ).toISOString();
 
+  const dek = await getOrgDataKey(input.organizationId);
   const { data: payment, error } = await admin
     .from("payment_requests")
     .insert({
@@ -88,7 +89,7 @@ export async function createCheckoutPaymentRequest(input: {
       appointment_id: input.appointmentId ?? null,
       created_by: input.createdBy ?? null,
       token_hash: tokenHash,
-      token_encrypted: encryptField(token, PAYMENT_TOKEN_AAD),
+      token_encrypted: encryptField(token, PAYMENT_TOKEN_AAD, dek),
       expires_at: expiresAt,
     })
     .select("*")
@@ -388,10 +389,13 @@ export async function listProjectPayments(projectId: string) {
   return data ?? [];
 }
 
-export function decryptPaymentToken(encrypted: string | null | undefined) {
+export function decryptPaymentToken(
+  encrypted: string | null | undefined,
+  orgKey: Buffer,
+) {
   if (!encrypted) return null;
   try {
-    return decryptField(encrypted, PAYMENT_TOKEN_AAD);
+    return decryptField(encrypted, PAYMENT_TOKEN_AAD, orgKey);
   } catch {
     return null;
   }

@@ -14,6 +14,7 @@ import {
 import { GOOGLE_CALENDAR_AAD } from "@/lib/google/oauth";
 import { getGoogleCalendarSecrets, upsertGoogleCalendarSecrets } from "@/lib/google/secrets";
 import { encryptField } from "@/lib/security/field-crypto";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -110,14 +111,16 @@ export async function GET(request: Request) {
       return fail("no_refresh");
     }
 
+    const dek = await getOrgDataKey(state.organizationId);
     await upsertGoogleCalendarSecrets({
       connectionId,
       refreshTokenEncrypted: refreshToken
-        ? encryptField(refreshToken, GOOGLE_CALENDAR_AAD.refreshToken)
+        ? encryptField(refreshToken, GOOGLE_CALENDAR_AAD.refreshToken, dek)
         : existingSecrets!.refresh_token_encrypted,
       accessTokenEncrypted: encryptField(
         tokens.access_token,
         GOOGLE_CALENDAR_AAD.accessToken,
+        dek,
       ),
       accessTokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
       syncToken: null,

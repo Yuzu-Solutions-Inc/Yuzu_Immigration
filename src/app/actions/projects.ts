@@ -324,11 +324,15 @@ async function resolveParticipants(
           },
           key,
         ),
-        ...personLookupWrite(orgId, {
-          first_name: participant.firstName,
-          last_name: participant.lastName,
-          email,
-        }),
+        ...personLookupWrite(
+          orgId,
+          {
+            first_name: participant.firstName,
+            last_name: participant.lastName,
+            email,
+          },
+          key,
+        ),
         preferred_locale: locale,
         immigration_status: immigrationStatus,
         status_expires_at: statusExpiresAt,

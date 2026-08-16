@@ -306,7 +306,7 @@ export async function submitProjectCallBookingAction(
         },
         dek,
       ),
-      ...appointmentLookupWrite(ctx.organizationId, ctx.guestEmail),
+      ...appointmentLookupWrite(ctx.organizationId, ctx.guestEmail, dek),
       privacy_accepted_at: new Date().toISOString(),
       guest_preferred_locale: toAppLocale(ctx.guestPreferredLocale),
       status: "confirmed",

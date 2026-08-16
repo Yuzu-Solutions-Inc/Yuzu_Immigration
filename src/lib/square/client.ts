@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 import {
@@ -87,9 +88,11 @@ export async function getValidSquareAccessToken(
   const expiresAt = secrets.access_token_expires_at
     ? Date.parse(secrets.access_token_expires_at)
     : 0;
+  const dek = await getOrgDataKey(connection.organization_id);
   const accessToken = decryptField(
     secrets.access_token_encrypted,
     SQUARE_AAD.accessToken,
+    dek,
   );
 
   if (expiresAt > Date.now() + 60_000) {
@@ -99,6 +102,7 @@ export async function getValidSquareAccessToken(
   const refreshToken = decryptField(
     secrets.refresh_token_encrypted,
     SQUARE_AAD.refreshToken,
+    dek,
   );
   try {
     const tokens = await refreshSquareAccessToken(refreshToken);
@@ -107,6 +111,7 @@ export async function getValidSquareAccessToken(
       accessTokenEncrypted: encryptField(
         tokens.access_token,
         SQUARE_AAD.accessToken,
+        dek,
       ),
       accessTokenExpiresAt: expires,
     });
@@ -116,10 +121,12 @@ export async function getValidSquareAccessToken(
         accessTokenEncrypted: encryptField(
           tokens.access_token,
           SQUARE_AAD.accessToken,
+          dek,
         ),
         refreshTokenEncrypted: encryptField(
           tokens.refresh_token,
           SQUARE_AAD.refreshToken,
+          dek,
         ),
         accessTokenExpiresAt: expires,
       });

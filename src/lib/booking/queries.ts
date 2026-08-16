@@ -908,7 +908,7 @@ export async function findPersonByEmail(
     .from("people")
     .select("*")
     .eq("organization_id", organizationId)
-    .eq("email_lookup_hash", hashEmailLookup(organizationId, email))
+    .eq("email_lookup_hash", hashEmailLookup(organizationId, email, key))
     .limit(1)
     .maybeSingle();
   if (error) {
@@ -942,7 +942,10 @@ export async function listFutureGuestAppointmentsByEmail(input: {
       "id, starts_at, guest_name, guest_email, service_id, host_user_id, meet_join_url, status",
     )
     .eq("organization_id", input.organizationId)
-    .eq("email_lookup_hash", hashEmailLookup(input.organizationId, input.email))
+    .eq(
+      "email_lookup_hash",
+      hashEmailLookup(input.organizationId, input.email, key),
+    )
     .in("status", ["confirmed", "pending_payment"])
     .gt("starts_at", new Date().toISOString())
     .order("starts_at", { ascending: true })

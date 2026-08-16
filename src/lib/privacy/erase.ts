@@ -1,4 +1,5 @@
-import { hashBookingSubject, normalizeGuestEmail } from "@/lib/booking/abuse";
+import { normalizeGuestEmail } from "@/lib/booking/abuse";
+import { hashEmailLookup } from "@/lib/security/email-lookup";
 import { CLIENT_DOCUMENTS_BUCKET } from "@/lib/documents/catalog";
 import {
   normalizeAnswersStore,
@@ -203,16 +204,16 @@ async function eraseBookingAbuseForEmail(
   admin: AdminClient,
   organizationId: string,
   email: string | null | undefined,
+  orgKey: Buffer,
 ) {
   const normalized = email ? normalizeGuestEmail(email) : "";
   if (!normalized) return;
   try {
-    const emailHash = hashBookingSubject("email", organizationId, normalized);
     const { error } = await admin
       .from("booking_abuse_events")
       .delete()
       .eq("organization_id", organizationId)
-      .eq("email_hash", emailHash);
+      .eq("email_hash", hashEmailLookup(organizationId, normalized, orgKey));
     if (error) console.error("erase booking abuse:", error.message);
   } catch (error) {
     console.error("erase booking abuse:", error);
@@ -368,7 +369,12 @@ export async function erasePersonPersonalData(input: {
     organizationId,
     personId,
   );
-  await eraseBookingAbuseForEmail(admin, organizationId, decrypted.email);
+  await eraseBookingAbuseForEmail(
+    admin,
+    organizationId,
+    decrypted.email,
+    key,
+  );
 
   await admin
     .from("project_participants")

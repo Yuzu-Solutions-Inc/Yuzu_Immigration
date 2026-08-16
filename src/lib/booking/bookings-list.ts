@@ -96,7 +96,7 @@ export async function listOrgBookingsWithPayment(
     const resolvedTitle = serviceTitle(serviceRow, locale);
     const payment = paymentByAppointment.get(row.id as string);
     const token = payment
-      ? decryptPaymentToken(payment.token_encrypted as string | null)
+      ? decryptPaymentToken(payment.token_encrypted as string | null, dek)
       : null;
     const payUrl =
       payment?.status === "pending" && token

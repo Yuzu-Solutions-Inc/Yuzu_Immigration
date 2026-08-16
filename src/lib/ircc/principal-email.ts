@@ -42,11 +42,11 @@ export async function fetchPrincipalEmail(
     .maybeSingle();
 
   const orgId = person?.organization_id as string | undefined;
-  const key = orgId ? await getOrgDataKey(orgId) : undefined;
+  if (!orgId) return null;
   const email = decryptFieldMaybe(
     person?.email as string | null | undefined,
     PII_AAD.people.email,
-    key,
+    await getOrgDataKey(orgId),
   );
   return String(email ?? "").trim() || null;
 }
