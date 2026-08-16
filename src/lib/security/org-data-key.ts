@@ -1,10 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { cache } from "react";
 
-import {
-  activeAppWrapKey,
-  appWrapKeysForUnwrap,
-} from "@/lib/security/app-encryption-key";
+import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -29,19 +26,8 @@ export function wrapOrgDataKey(
   return encryptField(
     dek.toString("base64"),
     wrapAad(orgId),
-    wrapKey ?? activeAppWrapKey(),
+    wrapKey ?? requireAppEncryptionKey(),
   );
-}
-
-function decodeOrgDek(wrapped: string, orgId: string, wrapKey: Buffer): Buffer {
-  const decoded = Buffer.from(
-    decryptField(wrapped, wrapAad(orgId), wrapKey),
-    "base64",
-  );
-  if (decoded.length !== 32) {
-    throw new Error("invalid_org_dek");
-  }
-  return decoded;
 }
 
 export function unwrapOrgDataKey(
@@ -49,20 +35,18 @@ export function unwrapOrgDataKey(
   orgId: string,
   wrapKey?: Buffer,
 ): Buffer {
-  if (wrapKey) {
-    return decodeOrgDek(wrapped, orgId, wrapKey);
+  const decoded = Buffer.from(
+    decryptField(
+      wrapped,
+      wrapAad(orgId),
+      wrapKey ?? requireAppEncryptionKey(),
+    ),
+    "base64",
+  );
+  if (decoded.length !== 32) {
+    throw new Error("invalid_org_dek");
   }
-
-  const keys = appWrapKeysForUnwrap();
-  let lastError: unknown;
-  for (const key of keys) {
-    try {
-      return decodeOrgDek(wrapped, orgId, key);
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error("unwrap_failed");
+  return decoded;
 }
 
 /**
