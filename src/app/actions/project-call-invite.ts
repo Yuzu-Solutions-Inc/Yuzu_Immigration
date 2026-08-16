@@ -24,6 +24,7 @@ import {
   encryptBookingGuestWrite,
   PII_AAD,
 } from "@/lib/security/client-pii";
+import { appointmentLookupWrite } from "@/lib/security/email-lookup";
 import { encryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
@@ -305,6 +306,7 @@ export async function submitProjectCallBookingAction(
         },
         dek,
       ),
+      ...appointmentLookupWrite(ctx.organizationId, ctx.guestEmail),
       privacy_accepted_at: new Date().toISOString(),
       guest_preferred_locale: toAppLocale(ctx.guestPreferredLocale),
       status: "confirmed",

@@ -3,6 +3,22 @@ import path from "node:path";
 
 const blankCache = new Map<string, Uint8Array>();
 const SITE_URL = "https://yuzu.solutions";
+export const IRCC_BLANKS_BUCKET = "ircc-blanks";
+
+async function loadBlankFromStorage(key: string): Promise<Uint8Array | null> {
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/admin");
+    const admin = createServiceClient();
+    const { data, error } = await admin.storage
+      .from(IRCC_BLANKS_BUCKET)
+      .download(`${key}.pdf`);
+    if (error || !data) return null;
+    const bytes = new Uint8Array(await data.arrayBuffer());
+    return bytes.byteLength > 1000 ? bytes : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function loadBlankPdf(
   code: string,
@@ -11,6 +27,12 @@ export async function loadBlankPdf(
   const key = `${code}${lang}`;
   const cached = blankCache.get(key);
   if (cached) return cached;
+
+  const fromStorage = await loadBlankFromStorage(key);
+  if (fromStorage) {
+    blankCache.set(key, fromStorage);
+    return fromStorage;
+  }
 
   const localPath = path.join(
     process.cwd(),

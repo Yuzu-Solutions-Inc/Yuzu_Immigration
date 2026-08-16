@@ -347,6 +347,9 @@ export async function storeEncryptedDocument(input: {
     console.error("storeEncryptedDocument status:", statusError.message);
   }
 
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(input.organizationId, input.projectId, admin);
+
   return decryptDocumentFileRow(
     fileRow as DocumentFileRow,
     await getOrgDataKey(input.organizationId),

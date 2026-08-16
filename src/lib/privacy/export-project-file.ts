@@ -290,9 +290,10 @@ export async function buildProjectFileZip(
     );
   }
 
-  for (const request of documentRequests) {
-    const file = request.file;
-    if (!file?.storage_path) continue;
+  const exportable = documentRequests.filter((request) => request.file?.storage_path);
+  const { mapLimit } = await import("@/lib/async/map-limit");
+  const downloadedDocs = await mapLimit(exportable, 4, async (request) => {
+    const file = request.file!;
     const person = people.find((p) => p.id === file.person_id);
     const personFolder = safeSegment(
       person
@@ -307,17 +308,28 @@ export async function buildProjectFileZip(
         contentType: file.content_type,
         originalFilename: file.original_filename,
       });
-      const path = uniquePath(
-        used,
-        `${root}/documents/${personFolder}/${safeSegment(downloaded.filename, "document")}`,
-      );
-      zip.file(path, downloaded.buffer);
-      documentCount += 1;
+      return { file, personFolder, downloaded };
     } catch (error) {
-      warnings.push(
-        `Could not include ${file.original_filename}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      return {
+        file,
+        personFolder,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
+  });
+
+  for (const item of downloadedDocs) {
+    if ("error" in item && item.error) {
+      warnings.push(`Could not include ${item.file.original_filename}: ${item.error}`);
+      continue;
+    }
+    if (!("downloaded" in item) || !item.downloaded) continue;
+    const path = uniquePath(
+      used,
+      `${root}/documents/${item.personFolder}/${safeSegment(item.downloaded.filename, "document")}`,
+    );
+    zip.file(path, item.downloaded.buffer);
+    documentCount += 1;
   }
 
   zip.file(

@@ -77,7 +77,9 @@ export async function listStaffNotifications(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("staff_notifications")
-    .select("*")
+    .select(
+      "id, organization_id, user_id, project_id, kind, title, body, href, metadata, read_at, created_at",
+    )
     .eq("organization_id", orgId)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })

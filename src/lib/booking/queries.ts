@@ -903,23 +903,19 @@ export async function findPersonByEmail(
 ): Promise<PersonRow | null> {
   const admin = createServiceClient();
   const key = await getOrgDataKey(organizationId);
+  const { hashEmailLookup } = await import("@/lib/security/email-lookup");
   const { data, error } = await admin
     .from("people")
     .select("*")
     .eq("organization_id", organizationId)
-    .limit(500);
+    .eq("email_lookup_hash", hashEmailLookup(organizationId, email))
+    .limit(1)
+    .maybeSingle();
   if (error) {
     console.error("findPersonByEmail:", error.message);
     return null;
   }
-  const needle = email.trim().toLowerCase();
-  for (const row of (data ?? []) as PersonRow[]) {
-    const person = decryptPersonRow(row, key);
-    if ((person.email ?? "").trim().toLowerCase() === needle) {
-      return person;
-    }
-  }
-  return null;
+  return data ? decryptPersonRow(data as PersonRow, key) : null;
 }
 
 export type FutureGuestAppointmentMatch = {
@@ -939,17 +935,18 @@ export async function listFutureGuestAppointmentsByEmail(input: {
 }): Promise<FutureGuestAppointmentMatch[]> {
   const admin = createServiceClient();
   const key = await getOrgDataKey(input.organizationId);
-  const needle = input.email.trim().toLowerCase();
+  const { hashEmailLookup } = await import("@/lib/security/email-lookup");
   const { data, error } = await admin
     .from("booking_appointments")
     .select(
       "id, starts_at, guest_name, guest_email, service_id, host_user_id, meet_join_url, status",
     )
     .eq("organization_id", input.organizationId)
+    .eq("email_lookup_hash", hashEmailLookup(input.organizationId, input.email))
     .in("status", ["confirmed", "pending_payment"])
     .gt("starts_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
-    .limit(200);
+    .limit(50);
   if (error) {
     console.error("listFutureGuestAppointmentsByEmail:", error.message);
     return [];
@@ -972,7 +969,6 @@ export async function listFutureGuestAppointmentsByEmail(input: {
       },
       key,
     );
-    if ((guest.guest_email ?? "").trim().toLowerCase() !== needle) continue;
     matched.push({
       id: row.id as string,
       startsAt: row.starts_at as string,

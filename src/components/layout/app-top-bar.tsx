@@ -295,10 +295,17 @@ function AppNotifications() {
   }
 
   useEffect(() => {
+    function onFocus() {
+      if (document.visibilityState === "visible") refresh();
+    }
     refresh();
-    const id = window.setInterval(refresh, 60_000);
-    return () => window.clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only poll
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- focus-only refresh
   }, []);
 
   const unread = items.filter((row) => !row.read_at);

@@ -708,6 +708,8 @@ export async function upsertProjectFormAnswers(input: {
     console.error("upsertProjectFormAnswers:", error.message);
     throw new Error(error.message);
   }
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(input.organizationId, input.projectId, supabase);
 }
 
 export async function addProjectForm(input: {
@@ -758,6 +760,8 @@ export async function addProjectForm(input: {
     console.error("addProjectForm:", error.message);
     throw new Error(error.message);
   }
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(input.organizationId, input.projectId, supabase);
 }
 
 export async function removeProjectForm(input: {
@@ -787,6 +791,8 @@ export async function removeProjectForm(input: {
     console.error("removeProjectForm:", error?.message ?? "no rows deleted");
     throw new Error(error?.message ?? "not_found");
   }
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(input.organizationId, input.projectId, supabase);
 }
 
 export async function getActiveShareLink(
@@ -1169,6 +1175,8 @@ export async function saveShareAnswers(input: {
     ),
     client: admin,
   });
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(resolved.organizationId, resolved.projectId, admin);
 }
 
 export async function submitShareQuestionnaire(input: {

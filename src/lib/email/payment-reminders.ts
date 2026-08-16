@@ -17,7 +17,8 @@ export async function processDuePaymentReminders(now = new Date()) {
   const admin = createServiceClient();
   const { data: services, error: servicesError } = await admin
     .from("booking_services")
-    .select("id, title, translations, payment_reminder_days, organization_id");
+    .select("id, title, translations, payment_reminder_days, organization_id")
+    .not("payment_reminder_days", "is", null);
   if (servicesError) {
     console.error("payment reminders services:", servicesError.message);
     return { processed: 0, sent: 0 };

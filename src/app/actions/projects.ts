@@ -33,6 +33,7 @@ import {
   encryptProjectNoteBody,
   encryptProjectWrite,
 } from "@/lib/security/client-pii";
+import { personLookupWrite, projectSearchTitle } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
@@ -323,6 +324,11 @@ async function resolveParticipants(
           },
           key,
         ),
+        ...personLookupWrite(orgId, {
+          first_name: participant.firstName,
+          last_name: participant.lastName,
+          email,
+        }),
         preferred_locale: locale,
         immigration_status: immigrationStatus,
         status_expires_at: statusExpiresAt,
@@ -467,6 +473,7 @@ export async function createProjectAction(
         },
         await getOrgDataKey(orgId),
       ),
+      search_title: projectSearchTitle(title),
       status: "new",
       status_at: statusAt,
       submit_before: submitBefore,
@@ -683,6 +690,8 @@ export async function createProjectAction(
       answers: encryptAnswersValue(initialAnswers, orgKey),
       current_section: "identity",
     });
+    const { refreshProjectProgress } = await import("@/lib/crm/progress");
+    await refreshProjectProgress(orgId, project.id, supabase);
   } catch (error) {
     console.error("project forms bootstrap:", error);
   }
@@ -797,6 +806,7 @@ export async function updateProjectAction(
         },
         await getOrgDataKey(orgId),
       ),
+      search_title: projectSearchTitle(title),
       status,
       status_at: statusAt,
       submit_before: data.submitBefore || null,

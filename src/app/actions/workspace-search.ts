@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { listPeople, listProjects } from "@/lib/crm/queries";
+import { listPeople, searchProjects } from "@/lib/crm/queries";
 import {
   listStaffNotifications,
   markAllStaffNotificationsRead,
@@ -34,26 +34,19 @@ export async function searchWorkspaceAction(
   if (q.length > 120) return [];
 
   const [projects, people] = await Promise.all([
-    listProjects(),
-    listPeople(q),
+    searchProjects(q, 8),
+    listPeople(q, { limit: 8 }),
   ]);
 
-  const needle = q.toLowerCase();
-  const projectHits: WorkspaceSearchHit[] = projects
-    .filter((project) => {
-      const hay = `${project.title} ${project.organization_program_name ?? ""} ${project.status}`.toLowerCase();
-      return hay.includes(needle);
-    })
-    .slice(0, 8)
-    .map((project) => ({
-      type: "project" as const,
-      id: project.id,
-      title: project.title,
-      subtitle: project.organization_program_name ?? project.status,
-      href: `/projects/${project.id}`,
-    }));
+  const projectHits: WorkspaceSearchHit[] = projects.map((project) => ({
+    type: "project" as const,
+    id: project.id,
+    title: project.title,
+    subtitle: project.organization_program_name ?? project.status,
+    href: `/projects/${project.id}`,
+  }));
 
-  const personHits: WorkspaceSearchHit[] = people.slice(0, 8).map((person) => ({
+  const personHits: WorkspaceSearchHit[] = people.map((person) => ({
     type: "person" as const,
     id: person.id,
     title: `${person.first_name} ${person.last_name}`.trim(),

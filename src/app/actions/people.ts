@@ -11,6 +11,7 @@ import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { erasePersonPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { encryptNoteBody, encryptPersonWrite } from "@/lib/security/client-pii";
+import { personLookupWrite } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
@@ -108,6 +109,11 @@ export async function createPersonAction(
         },
         await getOrgDataKey(orgId),
       ),
+      ...personLookupWrite(orgId, {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email || null,
+      }),
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,
@@ -176,6 +182,11 @@ export async function updatePersonAction(
         },
         await getOrgDataKey(orgId),
       ),
+      ...personLookupWrite(orgId, {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email || null,
+      }),
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,

@@ -147,6 +147,9 @@ export async function addCustomDocumentRequestAction(
     return { error: "add_failed" };
   }
 
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(orgId, projectId, supabase);
+
   revalidatePath(`/${locale}/projects/${projectId}`);
   return { message: "added" };
 }
@@ -213,6 +216,9 @@ export async function removeDocumentRequestAction(
       console.error("removeDocumentRequest storage:", err);
     }
   }
+
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(orgId, projectId, supabase);
 
   revalidatePath(`/${locale}/projects/${projectId}`);
   return { message: "removed" };
@@ -431,6 +437,9 @@ export async function reviewDocumentRequestAction(
     },
   });
 
+  const { refreshProjectProgress } = await import("@/lib/crm/progress");
+  await refreshProjectProgress(orgId, projectId, supabase);
+
   revalidatePath(`/${locale}/projects/${projectId}`);
   return { message: "reviewed" };
 }
@@ -576,9 +585,8 @@ export async function downloadAllProjectDocumentsAction(
 
   const zip = new JSZip();
   const used = new Set<string>();
-  let fileCount = 0;
-
-  for (const row of uploaded) {
+  const { mapLimit } = await import("@/lib/async/map-limit");
+  const downloadedFiles = await mapLimit(uploaded, 4, async (row) => {
     const file = row.file!;
     try {
       const downloaded = await downloadDecryptedDocument({
@@ -587,16 +595,23 @@ export async function downloadAllProjectDocumentsAction(
         contentType: file.content_type,
         originalFilename: file.original_filename,
       });
-      const folder = zipPathSegment(
-        nameById.get(row.person_id) || row.person_id.slice(0, 8),
-        row.person_id.slice(0, 8),
-      );
-      const filename = zipPathSegment(downloaded.filename, "document");
-      zip.file(uniqueZipPath(used, `${folder}/${filename}`), downloaded.buffer);
-      fileCount += 1;
+      return { row, downloaded };
     } catch (err) {
       console.error("downloadAllProjectDocumentsAction file:", err);
+      return null;
     }
+  });
+
+  let fileCount = 0;
+  for (const item of downloadedFiles) {
+    if (!item) continue;
+    const folder = zipPathSegment(
+      nameById.get(item.row.person_id) || item.row.person_id.slice(0, 8),
+      item.row.person_id.slice(0, 8),
+    );
+    const filename = zipPathSegment(item.downloaded.filename, "document");
+    zip.file(uniqueZipPath(used, `${folder}/${filename}`), item.downloaded.buffer);
+    fileCount += 1;
   }
 
   if (fileCount === 0) {

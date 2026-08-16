@@ -613,14 +613,13 @@ export async function refreshGoogleBusyIfStale(organizationId: string) {
 
 export async function refreshAllGoogleCalendars() {
   const connections = await listAllEnabledGoogleConnections();
-  let synced = 0;
-  let failed = 0;
-  for (const connection of connections) {
+  const { mapLimit } = await import("@/lib/async/map-limit");
+  const results = await mapLimit(connections, 3, async (connection) => {
+    let synced = false;
     try {
       await syncGoogleBusy(connection);
-      synced += 1;
+      synced = true;
     } catch (error) {
-      failed += 1;
       console.error("cron google sync:", connection.id, error);
     }
     try {
@@ -628,8 +627,14 @@ export async function refreshAllGoogleCalendars() {
     } catch (error) {
       console.error("cron google watch:", connection.id, error);
     }
-  }
-  return { connections: connections.length, synced, failed };
+    return synced;
+  });
+  const synced = results.filter(Boolean).length;
+  return {
+    connections: connections.length,
+    synced,
+    failed: connections.length - synced,
+  };
 }
 
 export async function pushAppointmentToGoogleCalendar(input: {

@@ -1,7 +1,9 @@
-import { createHmac } from "node:crypto";
 import { headers } from "next/headers";
 
-import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
+import {
+  hashBookingSubject,
+  normalizeGuestEmail,
+} from "@/lib/security/email-lookup";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export const MAX_FUTURE_BOOKINGS_PER_EMAIL = 3;
@@ -16,19 +18,7 @@ export const MANAGE_LINKS_PER_IP_PER_DAY = 8;
 
 export type AbuseKind = "book_attempt" | "book_success" | "manage_links";
 
-export function normalizeGuestEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
-export function hashBookingSubject(
-  kind: "email" | "ip",
-  organizationId: string,
-  value: string,
-) {
-  return createHmac("sha256", requireAppEncryptionKey())
-    .update(`booking-${kind}:${organizationId}:${value}`)
-    .digest("hex");
-}
+export { hashBookingSubject, normalizeGuestEmail };
 
 export async function getRequestClientIp() {
   try {

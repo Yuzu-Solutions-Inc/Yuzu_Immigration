@@ -30,6 +30,10 @@ import {
   encryptBookingGuestWrite,
   encryptPersonWrite,
 } from "@/lib/security/client-pii";
+import {
+  appointmentLookupWrite,
+  personLookupWrite,
+} from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -231,6 +235,11 @@ export async function submitPublicBookingAction(
           },
           dek,
         ),
+        ...personLookupWrite(ctx.organizationId, {
+          first_name: parsed.data.guestFirstName,
+          last_name: parsed.data.guestLastName,
+          email: guestEmail,
+        }),
         preferred_locale: preferredLocale,
         immigration_status: "none",
       })
@@ -283,6 +292,7 @@ export async function submitPublicBookingAction(
         },
         dek,
       ),
+      ...appointmentLookupWrite(ctx.organizationId, guestEmail),
       privacy_accepted_at: new Date().toISOString(),
       guest_preferred_locale: preferredLocale,
       status: requiresPayment ? "pending_payment" : "confirmed",

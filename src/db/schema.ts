@@ -172,6 +172,10 @@ export const people = pgTable("people", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email"),
+  /** HMAC of normalized email; used for exact lookup without decrypting the org. */
+  emailLookupHash: text("email_lookup_hash"),
+  /** Lowercased first+last for CRM search. Ciphertext remains the source of truth. */
+  searchName: text("search_name"),
   phone: text("phone"),
   preferredLocale: text("preferred_locale").default("en").notNull(),
   immigrationStatus: personImmigrationStatusEnum("immigration_status")
@@ -216,6 +220,12 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
+  /** Lowercased title for CRM search. Encrypted title remains the source of truth. */
+  searchTitle: text("search_title"),
+  docsDone: integer("docs_done").notNull().default(0),
+  docsTotal: integer("docs_total").notNull().default(0),
+  docsToReview: integer("docs_to_review").notNull().default(0),
+  formPercent: integer("form_percent").notNull().default(0),
   description: text("description"),
   notes: text("notes"),
   status: projectStatusEnum("status").notNull().default("new"),
@@ -851,6 +861,7 @@ export const bookingAppointments = pgTable("booking_appointments", {
   endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
   guestName: text("guest_name").notNull(),
   guestEmail: text("guest_email").notNull(),
+  emailLookupHash: text("email_lookup_hash"),
   guestPhone: text("guest_phone").notNull(),
   guestAddress: text("guest_address").notNull(),
   guestPreferredLocale: text("guest_preferred_locale"),

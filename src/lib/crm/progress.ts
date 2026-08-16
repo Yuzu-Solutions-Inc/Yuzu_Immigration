@@ -30,6 +30,13 @@ type ParticipantRow = {
   person_id: string;
   role: string;
 };
+type StoredProgressRow = {
+  id: string;
+  docs_done: number | null;
+  docs_total: number | null;
+  docs_to_review: number | null;
+  form_percent: number | null;
+};
 
 const EMPTY: ProjectProgress = {
   docsDone: 0,
@@ -76,12 +83,21 @@ function formPercentForProject(
   return Math.round((filled / total) * 100);
 }
 
+function progressFromStored(row: StoredProgressRow): ProjectProgress {
+  return {
+    docsDone: row.docs_done ?? 0,
+    docsTotal: row.docs_total ?? 0,
+    docsToReview: row.docs_to_review ?? 0,
+    formPercent: row.form_percent ?? 0,
+  };
+}
+
 export async function getProjectsProgress(
   projectIds: string[],
 ): Promise<Map<string, ProjectProgress>> {
   const orgId = await requireOrganizationId();
   if (!orgId) return new Map();
-  return getProjectsProgressForOrg(orgId, projectIds, await createClient());
+  return readStoredProgress(orgId, projectIds, await createClient());
 }
 
 /** Form completion % for project ids (bypasses RLS via service role). */
@@ -89,7 +105,7 @@ export async function formPercentForProjectIds(
   organizationId: string,
   projectIds: string[],
 ): Promise<Map<string, number>> {
-  const full = await getProjectsProgressForOrg(
+  const full = await readStoredProgress(
     organizationId,
     projectIds,
     createServiceClient(),
@@ -101,7 +117,62 @@ export async function formPercentForProjectIds(
   return map;
 }
 
-async function getProjectsProgressForOrg(
+async function readStoredProgress(
+  orgId: string,
+  projectIds: string[],
+  supabase: SupabaseClient,
+): Promise<Map<string, ProjectProgress>> {
+  const progress = new Map<string, ProjectProgress>();
+  if (projectIds.length === 0) return progress;
+
+  const { data, error } = await supabase
+    .from("immigration_projects")
+    .select("id, docs_done, docs_total, docs_to_review, form_percent")
+    .eq("organization_id", orgId)
+    .in("id", projectIds);
+
+  if (error) {
+    console.error("getProjectsProgress stored:", error.message);
+    return progress;
+  }
+
+  for (const row of (data ?? []) as StoredProgressRow[]) {
+    progress.set(row.id, progressFromStored(row));
+  }
+  for (const projectId of projectIds) {
+    if (!progress.has(projectId)) progress.set(projectId, { ...EMPTY });
+  }
+  return progress;
+}
+
+export async function refreshProjectProgress(
+  organizationId: string,
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<ProjectProgress> {
+  const supabase = client ?? createServiceClient();
+  const computed = await computeProgressForProjects(organizationId, [projectId], supabase);
+  const stats = computed.get(projectId) ?? { ...EMPTY };
+
+  const { error } = await supabase
+    .from("immigration_projects")
+    .update({
+      docs_done: stats.docsDone,
+      docs_total: stats.docsTotal,
+      docs_to_review: stats.docsToReview,
+      form_percent: stats.formPercent,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", projectId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    console.error("refreshProjectProgress:", error.message);
+  }
+  return stats;
+}
+
+async function computeProgressForProjects(
   orgId: string,
   projectIds: string[],
   supabase: SupabaseClient,
@@ -143,17 +214,17 @@ async function getProjectsProgressForOrg(
     ]);
 
   if (docsResult.error) {
-    console.error("getProjectsProgress docs:", docsResult.error.message);
+    console.error("refreshProjectProgress docs:", docsResult.error.message);
   }
   if (formsResult.error) {
-    console.error("getProjectsProgress forms:", formsResult.error.message);
+    console.error("refreshProjectProgress forms:", formsResult.error.message);
   }
   if (answersResult.error) {
-    console.error("getProjectsProgress answers:", answersResult.error.message);
+    console.error("refreshProjectProgress answers:", answersResult.error.message);
   }
   if (participantsResult.error) {
     console.error(
-      "getProjectsProgress participants:",
+      "refreshProjectProgress participants:",
       participantsResult.error.message,
     );
   }
