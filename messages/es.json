@@ -37,14 +37,14 @@
     "showcases": {
       "eyebrow": "Dentro del producto",
       "title": "Las mismas pantallas que usarán su firma y sus clientes",
-      "subtitle": "Inicio le dice qué requiere acción hoy. Los clientes reservan, pagan, suben documentos y se unen a la llamada en páginas hechas para ellos.",
+      "subtitle": "El calendario muestra el día de la firma. Los clientes usan un portal para subir documentos, pagar y unirse a la llamada — en páginas hechas para ellos.",
       "file": {
         "title": "Un expediente de inmigración, no una carpeta de herramientas",
-        "body": "Abra un proyecto y gestione todo el encargo: participantes, revisión de documentos, cuestionarios IRCC, enlace del cliente, llamadas, notas y enlaces de pago de Square."
+        "body": "Abra un proyecto y gestione todo el encargo: participantes, revisión de documentos, cuestionarios IRCC, el portal del cliente, llamadas, notas y enlaces de pago de Square."
       },
       "client": {
-        "title": "El cliente completa su parte en un enlace seguro",
-        "body": "Envíe un enlace de 30 días. El cliente crea una contraseña, sube los documentos pedidos y responde el cuestionario una sola vez. Puede regenerar el acceso sin perder lo ya enviado."
+        "title": "El cliente trabaja en un portal, no en un enlace de un solo uso",
+        "body": "Invite a los adultos del expediente al portal. Crean una cuenta con el correo que ya figura en el expediente y actualizan documentos y cuestionarios de todos. También ven facturas y citas."
       },
       "booking": {
         "title": "Los clientes reservan una consulta en su página pública",
@@ -73,11 +73,11 @@
       },
       "documents": {
         "title": "Recogida y revisión de documentos",
-        "body": "Pida pasaportes, fotos y archivos a medida. El cliente sube en el enlace; su firma previsualiza, aprueba o devuelve un archivo con un comentario."
+        "body": "Pida pasaportes, fotos y archivos a medida. El cliente sube en el portal; su firma previsualiza, aprueba o devuelve un archivo con un comentario."
       },
       "share": {
-        "title": "Enlaces seguros y portal",
-        "body": "Envíe un enlace de expediente con caducidad, o un acceso duradero al portal con código y contraseña tratados en el servidor — nunca en el navegador."
+        "title": "Portal del cliente",
+        "body": "Invite a los clientes a un portal duradero. Inician sesión con el correo del expediente y una contraseña tratada en el servidor — nunca en el navegador. Documentos, cuestionarios, facturas y citas quedan en un solo lugar."
       },
       "booking": {
         "title": "Google Calendar y Google Meet",
@@ -101,7 +101,7 @@
       },
       "two": {
         "title": "Recoja una vez",
-        "body": "Comparta un enlace seguro para documentos y el cuestionario. Revise las cargas sin perseguir adjuntos de correo."
+        "body": "Invite a los clientes al portal para documentos y el cuestionario. Revise las cargas sin perseguir adjuntos de correo."
       },
       "three": {
         "title": "Reserve, reúnase y cobre",
@@ -118,7 +118,9 @@
       "userFullName": "Amélie Chen",
       "urlHome": "app.yuzu.solutions/es/home",
       "urlProject": "app.yuzu.solutions/es/projects/chen-family",
+      "urlCalendar": "app.yuzu.solutions/es/calendar",
       "urlFill": "yuzu.solutions/es/fill/chen-family",
+      "urlPortal": "yuzu.solutions/es/portal/home",
       "urlBook": "yuzu.solutions/es/book/north-star",
       "urlPay": "yuzu.solutions/es/pay/consultation",
       "urlBookConfirm": "yuzu.solutions/es/book/confirmed",

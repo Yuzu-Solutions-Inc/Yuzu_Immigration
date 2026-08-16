@@ -37,14 +37,14 @@
     "showcases": {
       "eyebrow": "Dans le produit",
       "title": "Les mêmes écrans que votre cabinet et vos clients utiliseront",
-      "subtitle": "L’accueil indique ce qui demande une action aujourd’hui. Les clients réservent, paient, déposent et rejoignent l’appel sur des pages conçues pour eux.",
+      "subtitle": "Le calendrier montre la journée du cabinet. Les clients utilisent un portail pour déposer, payer et joindre l’appel — sur des pages conçues pour eux.",
       "file": {
         "title": "Un dossier d’immigration, pas une liasse d’outils",
-        "body": "Ouvrez un projet et menez tout l’engagement : participants, révision des documents, questionnaires IRCC, lien client, appels, notes et liens de paiement Square."
+        "body": "Ouvrez un projet et menez tout l’engagement : participants, révision des documents, questionnaires IRCC, le portail client, appels, notes et liens de paiement Square."
       },
       "client": {
-        "title": "Le client complète sa part sur un lien sécurisé",
-        "body": "Envoyez un lien de 30 jours. Le client définit un mot de passe, dépose les pièces demandées et répond une seule fois au questionnaire. Vous pouvez régénérer l’accès sans perdre ce qui est déjà envoyé."
+        "title": "Le client travaille dans un portail, pas un lien jetable",
+        "body": "Invitez les adultes du dossier au portail client. Ils créent un compte avec le courriel déjà au dossier, puis mettent à jour documents et questionnaires pour tout le monde. Factures et rendez-vous s’y trouvent aussi."
       },
       "booking": {
         "title": "Les clients réservent une consultation sur votre page publique",
@@ -73,11 +73,11 @@
       },
       "documents": {
         "title": "Collecte et révision des documents",
-        "body": "Demandez passeports, photos et pièces sur mesure. Le client dépose sur le lien; votre cabinet prévisualise, accepte ou renvoie un fichier avec un commentaire."
+        "body": "Demandez passeports, photos et pièces sur mesure. Le client dépose dans le portail; votre cabinet prévisualise, accepte ou renvoie un fichier avec un commentaire."
       },
       "share": {
-        "title": "Liens clients et portail",
-        "body": "Envoyez un lien de dossier à durée limitée, ou un accès portail durable avec code et mot de passe traités côté serveur — jamais dans le navigateur."
+        "title": "Portail client",
+        "body": "Invitez les clients à un portail durable. Ils se connectent avec le courriel du dossier et un mot de passe traité côté serveur — jamais dans le navigateur. Documents, questionnaires, factures et rendez-vous restent au même endroit."
       },
       "booking": {
         "title": "Google Calendar et Google Meet",
@@ -101,7 +101,7 @@
       },
       "two": {
         "title": "Collectez une fois",
-        "body": "Partagez un lien sécurisé pour les documents et le questionnaire. Révisez les dépôts sans courir après les pièces jointes."
+        "body": "Invitez les clients au portail pour les documents et le questionnaire. Révisez les dépôts sans courir après les pièces jointes."
       },
       "three": {
         "title": "Réservez, rencontrez, encaissez",
@@ -118,7 +118,9 @@
       "userFullName": "Amélie Chen",
       "urlHome": "app.yuzu.solutions/fr/home",
       "urlProject": "app.yuzu.solutions/fr/projects/chen-family",
+      "urlCalendar": "app.yuzu.solutions/fr/calendar",
       "urlFill": "yuzu.solutions/fr/fill/chen-family",
+      "urlPortal": "yuzu.solutions/fr/portal/home",
       "urlBook": "yuzu.solutions/fr/book/north-star",
       "urlPay": "yuzu.solutions/fr/pay/consultation",
       "urlBookConfirm": "yuzu.solutions/fr/book/confirmed",

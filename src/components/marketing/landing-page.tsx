@@ -24,10 +24,10 @@ import { ZoomLogo } from "@/components/brand/zoom-logo";
 import { LegalLinks } from "@/components/legal/legal-links";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
-  AppHomePreview,
+  AppCalendarPreview,
   AppProjectPreview,
   BookingConfirmedPreview,
-  ClientFillPreview,
+  ClientPortalPreview,
   PublicBookingPreview,
   PublicPayPreview,
 } from "@/components/marketing/product-previews";
@@ -240,7 +240,7 @@ export async function LandingPage() {
                   "linear-gradient(to bottom, #000 0%, #000 42%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,0.32) 82%, transparent 100%)",
               }}
             >
-              <AppHomePreview />
+              <AppCalendarPreview />
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 sm:h-52"
@@ -292,7 +292,7 @@ export async function LandingPage() {
               </p>
             </div>
             <div className="pointer-events-none order-first select-none lg:order-last">
-              <ClientFillPreview />
+              <ClientPortalPreview />
             </div>
           </div>
 

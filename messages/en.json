@@ -37,14 +37,14 @@
     "showcases": {
       "eyebrow": "Inside the product",
       "title": "The same screens your firm and clients will use",
-      "subtitle": "Home tells you what needs action today. Clients book, pay, upload, and join a call on pages built for them — not a generic scheduling widget.",
+      "subtitle": "Your calendar shows the firm’s day. Clients use a portal to upload, pay, and join a call — on pages built for them, not a generic scheduling widget.",
       "file": {
         "title": "One immigration file, not a folder of tools",
-        "body": "Open a project and work the whole engagement: participants, document review, IRCC questionnaires, a client link, scheduled calls, notes, and Square payment links."
+        "body": "Open a project and work the whole engagement: participants, document review, IRCC questionnaires, the client portal, scheduled calls, notes, and Square payment links."
       },
       "client": {
-        "title": "Clients complete their part on a secure link",
-        "body": "Send a 30-day link. Clients set a password, upload requested documents, and answer the questionnaire once. You can regenerate access without losing what they already sent."
+        "title": "Clients work in a portal, not a one-off link",
+        "body": "Invite adults on the file to the client portal. They create an account with the email already on file, then update documents and questionnaires for everyone on the file. Invoices and appointments are there too."
       },
       "booking": {
         "title": "Clients book a consultation on your public page",
@@ -73,11 +73,11 @@
       },
       "documents": {
         "title": "Document collection and review",
-        "body": "Ask for passports, photos, and custom files. Clients upload on the share link; your firm previews, approves, or sends a file back with a comment."
+        "body": "Ask for passports, photos, and custom files. Clients upload in the portal; your firm previews, approves, or sends a file back with a comment."
       },
       "share": {
-        "title": "Secure client links and portal",
-        "body": "Send a time-limited file link, or give clients lasting portal access with a code and password handled on the server — never in the browser."
+        "title": "Client portal",
+        "body": "Invite clients to a lasting portal. They sign in with the email on their file and a password handled on the server — never in the browser. Documents, questionnaires, invoices, and appointments stay in one place."
       },
       "booking": {
         "title": "Google Calendar and Google Meet",
@@ -101,7 +101,7 @@
       },
       "two": {
         "title": "Collect once",
-        "body": "Share a secure link so clients upload documents and complete the questionnaire. Review uploads without chasing email attachments."
+        "body": "Invite clients to the portal so they upload documents and complete the questionnaire. Review uploads without chasing email attachments."
       },
       "three": {
         "title": "Book, meet, and get paid",
@@ -118,7 +118,9 @@
       "userFullName": "Amélie Chen",
       "urlHome": "app.yuzu.solutions/en/home",
       "urlProject": "app.yuzu.solutions/en/projects/chen-family",
+      "urlCalendar": "app.yuzu.solutions/en/calendar",
       "urlFill": "yuzu.solutions/en/fill/chen-family",
+      "urlPortal": "yuzu.solutions/en/portal/home",
       "urlBook": "yuzu.solutions/en/book/north-star",
       "urlPay": "yuzu.solutions/en/pay/consultation",
       "urlBookConfirm": "yuzu.solutions/en/book/confirmed",

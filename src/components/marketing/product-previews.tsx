@@ -1,4 +1,5 @@
 import {
+  Ban,
   Bell,
   Briefcase,
   CalendarDays,
@@ -8,9 +9,11 @@ import {
   ClipboardList,
   FolderKanban,
   Home,
+  Link2,
   LogOut,
   Search,
   Settings,
+  Settings2,
   Users,
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -60,6 +63,37 @@ const BOOKING_AVAILABLE = new Set([
   "2026-08-28",
 ]);
 const BOOKING_SLOT_HOURS = ["09:00", "10:00", "11:00", "14:00", "14:30", "16:00"];
+const CALENDAR_MARKERS: Record<string, number> = {
+  "2026-08-17": 1,
+  "2026-08-18": 2,
+  "2026-08-19": 1,
+  "2026-08-21": 1,
+  "2026-08-25": 1,
+  "2026-08-26": 1,
+};
+const CALENDAR_BLOCKED = new Set(["2026-08-20"]);
+const CAL_TIMELINE_START = 9;
+const CAL_TIMELINE_HOURS = 8;
+const CAL_HOUR_PX = 36;
+
+function previewHourLabel(hour: number, locale: string) {
+  return formatTimeInZone(
+    zonedCivilToUtc(
+      BOOKING_SELECTED,
+      `${String(hour).padStart(2, "0")}:00`,
+      BOOKING_ZONE,
+    ),
+    BOOKING_ZONE,
+    locale,
+  );
+}
+
+function previewRangeStyle(startHour: number, endHour: number) {
+  return {
+    top: (startHour - CAL_TIMELINE_START) * CAL_HOUR_PX,
+    height: Math.max(18, (endHour - startHour) * CAL_HOUR_PX),
+  };
+}
 
 function PreviewSidebar({
   orgName,
@@ -589,9 +623,356 @@ export async function AppHomePreview({
   );
 }
 
+export async function AppCalendarPreview({
+  fadeBottom = false,
+  tone = "dark",
+}: {
+  fadeBottom?: boolean;
+  tone?: "dark" | "light";
+}) {
+  const locale = await getLocale();
+  const [t, tApp, tNav, tTop, tCal, tAuth] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("appHome"),
+    getTranslations("nav"),
+    getTranslations("topBar"),
+    getTranslations("calendar"),
+    getTranslations("auth"),
+  ]);
+
+  const start = weekStartsOn(locale);
+  const orderedWeekdays = [
+    ...WEEKDAY_KEYS.slice(start),
+    ...WEEKDAY_KEYS.slice(0, start),
+  ];
+  const cells = monthGrid(BOOKING_YEAR, BOOKING_MONTH, start);
+  const selectedNoon = zonedCivilToUtc(BOOKING_SELECTED, "12:00", BOOKING_ZONE);
+  const selectedStart = zonedCivilToUtc(BOOKING_SELECTED, "10:00", BOOKING_ZONE);
+  const selectedEnd = zonedCivilToUtc(BOOKING_SELECTED, "11:00", BOOKING_ZONE);
+  const consultPrice = formatPriceCents(15000, locale, "CAD");
+  const gridHeight = CAL_TIMELINE_HOURS * CAL_HOUR_PX;
+  const hours = Array.from(
+    { length: CAL_TIMELINE_HOURS },
+    (_, index) => CAL_TIMELINE_START + index,
+  );
+
+  return (
+    <ProductChrome
+      url={t("preview.urlCalendar")}
+      fadeBottom={fadeBottom}
+      tone={tone}
+      innerHeight={680}
+    >
+      <PreviewSidebar
+        orgName={t("preview.orgName")}
+        active="calendar"
+        newProject={tApp("newProject")}
+        newPerson={tApp("newPerson")}
+        signOut={tAuth("signOut")}
+        navLabels={{
+          home: tNav("home"),
+          projects: tNav("projects"),
+          people: tNav("people"),
+          calendar: tNav("calendar"),
+          bookings: tNav("bookings"),
+          services: tNav("services"),
+        }}
+      />
+      <div className="flex min-w-0 flex-1 flex-col bg-canvas">
+        <PreviewTopBar
+          crumb={tTop("crumbCalendar")}
+          searchPlaceholder={tTop("searchPlaceholder")}
+        />
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 py-4">
+          <div className="flex shrink-0 items-start justify-between gap-3">
+            <div className="min-w-0 space-y-0.5">
+              <h1 className="font-heading text-xl font-semibold text-brand">
+                {tCal("title")}
+              </h1>
+              <p className="truncate text-sm text-muted-foreground">
+                {tCal("subtitle")}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "gap-2",
+                )}
+              >
+                <Link2 className="size-4" aria-hidden />
+                {tCal("copyLink")}
+              </span>
+              <span
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "gap-2",
+                )}
+              >
+                <Settings2 className="size-4" aria-hidden />
+                {tCal("settings")}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.15fr)_minmax(20rem,1fr)] gap-4 overflow-hidden">
+            <SurfaceCard className="flex min-h-0 flex-col overflow-hidden p-4">
+              <div className="flex shrink-0 items-center justify-between gap-3">
+                <h2 className="font-heading text-lg font-semibold text-brand">
+                  {formatMonthYear(BOOKING_YEAR, BOOKING_MONTH, locale)}
+                </h2>
+                <div className="flex items-center gap-1">
+                  <span className="inline-flex size-8 items-center justify-center rounded-xl border border-border bg-surface">
+                    <ChevronLeft className="size-4" />
+                  </span>
+                  <span className="inline-flex size-8 items-center justify-center rounded-xl border border-border bg-surface">
+                    <ChevronRight className="size-4" />
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 grid shrink-0 grid-cols-7 gap-1 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                {orderedWeekdays.map((key) => (
+                  <div key={key} className="py-1">
+                    {tCal(`weekdaysShort.${key}`)}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-1 grid min-h-0 flex-1 grid-cols-7 grid-rows-6 gap-1">
+                {cells.map((cell) => {
+                  const count = CALENDAR_MARKERS[cell.dateIso] ?? 0;
+                  const selected = cell.dateIso === BOOKING_SELECTED;
+                  const isBlocked = CALENDAR_BLOCKED.has(cell.dateIso);
+                  const hasOpenHours = BOOKING_AVAILABLE.has(cell.dateIso);
+                  const dayNumber = Number(cell.dateIso.slice(8, 10));
+                  return (
+                    <div
+                      key={cell.dateIso}
+                      className={cn(
+                        "relative flex min-h-0 flex-col items-center justify-center rounded-xl border px-1 py-1 text-sm",
+                        cell.inMonth
+                          ? "bg-surface"
+                          : "bg-canvas/60 text-muted-foreground",
+                        selected
+                          ? "border-action bg-action/5 text-brand"
+                          : "border-transparent",
+                        isBlocked &&
+                          !selected &&
+                          "border-amber-100 bg-warning-bg text-warning-text",
+                        isBlocked && selected && "border-warning bg-warning-bg",
+                      )}
+                    >
+                      {isBlocked ? (
+                        <Ban
+                          className="absolute top-1 right-1 size-2.5 text-warning"
+                          aria-hidden
+                        />
+                      ) : null}
+                      <span className="inline-flex size-6 items-center justify-center rounded-full text-[13px]">
+                        {dayNumber}
+                      </span>
+                      {count > 0 || hasOpenHours || isBlocked ? (
+                        <span className="mt-0.5 flex items-center gap-0.5">
+                          {count > 0 ? (
+                            <span className="h-1 w-1 rounded-full bg-action" />
+                          ) : null}
+                          {hasOpenHours ? (
+                            <span className="h-1 w-1 rounded-full bg-success" />
+                          ) : null}
+                          {isBlocked && count === 0 ? (
+                            <span className="h-1 w-1 rounded-full bg-warning" />
+                          ) : null}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-2 flex shrink-0 flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-action" />
+                  {tCal("legendBookings")}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                  {tCal("legendOpen")}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Ban className="size-3 text-warning" aria-hidden />
+                  {tCal("legendBlocked")}
+                </span>
+              </div>
+            </SurfaceCard>
+
+            <SurfaceCard className="flex min-h-0 flex-col gap-3 overflow-hidden p-4">
+              <div className="flex shrink-0 items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    {tCal("dayDetail")}
+                  </p>
+                  <h2 className="font-heading truncate text-base font-semibold text-brand">
+                    {formatDateInZone(selectedNoon, BOOKING_ZONE, locale)}
+                  </h2>
+                </div>
+                <span
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "gap-2",
+                  )}
+                >
+                  <Ban className="size-4" />
+                  {tCal("blockDay")}
+                </span>
+              </div>
+
+              <div className="flex shrink-0 flex-wrap gap-3 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-emerald-100 ring-1 ring-success/60" />
+                  {tCal("legendOpen")}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-action" />
+                  {tCal("legendBookings")}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-warning" />
+                  {tCal("legendBlocked")}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm bg-slate-300" />
+                  {tCal("legendExternal")}
+                </span>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-surface">
+                <div
+                  className="grid"
+                  style={{ gridTemplateColumns: "3rem minmax(0, 1fr)" }}
+                >
+                  <div
+                    className="relative border-r border-border bg-canvas/80"
+                    style={{ height: gridHeight }}
+                  >
+                    {hours.map((hour) => (
+                      <div
+                        key={hour}
+                        className="absolute right-1 text-[10px] tabular-nums text-muted-foreground"
+                        style={{
+                          top: (hour - CAL_TIMELINE_START) * CAL_HOUR_PX + 2,
+                        }}
+                      >
+                        {previewHourLabel(hour, locale)}
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className="relative bg-canvas/40"
+                    style={{ height: gridHeight }}
+                  >
+                    {hours.map((hour) => (
+                      <div
+                        key={hour}
+                        className="pointer-events-none absolute inset-x-0 border-t border-border/70"
+                        style={{
+                          top: (hour - CAL_TIMELINE_START) * CAL_HOUR_PX,
+                          height: CAL_HOUR_PX,
+                        }}
+                      >
+                        <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-border/50" />
+                      </div>
+                    ))}
+                    <div
+                      className="pointer-events-none absolute inset-x-0 z-0 bg-success-bg/70"
+                      style={previewRangeStyle(9, 17)}
+                      aria-hidden
+                    />
+                    <div
+                      className="absolute inset-x-1 z-[1] overflow-hidden rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-left text-[11px] leading-tight text-slate-700"
+                      style={previewRangeStyle(9, 10)}
+                    >
+                      <p className="truncate font-medium tabular-nums">
+                        {previewHourLabel(9, locale)}–{previewHourLabel(10, locale)}
+                      </p>
+                      <p className="truncate text-[10px] text-slate-500">
+                        {tCal("googleBusyLabel")}
+                      </p>
+                    </div>
+                    <div
+                      className="absolute inset-x-1 z-[3] overflow-hidden rounded-md bg-action-hover px-1.5 py-0.5 text-left text-[11px] leading-tight text-action-foreground shadow-sm ring-2 ring-action ring-offset-1"
+                      style={previewRangeStyle(10, 11)}
+                    >
+                      <p className="truncate font-medium tabular-nums">
+                        {previewHourLabel(10, locale)}–{previewHourLabel(11, locale)}
+                      </p>
+                      <p className="truncate text-[10px] text-action-foreground/90">
+                        {t("preview.guestPriya")}
+                      </p>
+                    </div>
+                    <div
+                      className="absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg/90 px-1.5 py-0.5 text-left text-[11px] leading-tight text-warning-text"
+                      style={previewRangeStyle(12, 13)}
+                    >
+                      <p className="truncate font-medium">{tCal("legendBlocked")}</p>
+                      <p className="truncate text-[10px] tabular-nums text-warning-text/80">
+                        {previewHourLabel(12, locale)}–{previewHourLabel(13, locale)}
+                      </p>
+                    </div>
+                    <div
+                      className="absolute inset-x-1 z-[3] overflow-hidden rounded-md bg-action px-1.5 py-0.5 text-left text-[11px] leading-tight text-action-foreground shadow-sm"
+                      style={previewRangeStyle(14, 15)}
+                    >
+                      <p className="truncate font-medium tabular-nums">
+                        {previewHourLabel(14, locale)}–{previewHourLabel(15, locale)}
+                      </p>
+                      <p className="truncate text-[10px] text-action-foreground/90">
+                        {t("preview.guestLucas")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="shrink-0 rounded-xl border border-border bg-canvas/50 p-3.5 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="truncate font-heading text-base font-semibold text-brand">
+                      {t("preview.guestPriya")}
+                    </p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {t("preview.serviceConsult")} · {consultPrice}
+                    </p>
+                  </div>
+                  <StatusPill
+                    label={tCal("status.confirmed")}
+                    tone="action"
+                  />
+                </div>
+                <div className="mt-3 rounded-lg border border-border/80 bg-surface px-3 py-2">
+                  <p className="text-sm font-medium text-brand">
+                    {formatDateTimeInZone(selectedStart, BOOKING_ZONE, locale)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatTimeInZone(selectedStart, BOOKING_ZONE, locale)}
+                    {" – "}
+                    {formatTimeInZone(selectedEnd, BOOKING_ZONE, locale)}
+                    {" · "}
+                    {tCal("hostedBy", { name: t("preview.userFullName") })}
+                  </p>
+                </div>
+                <p className="mt-2 text-xs font-medium text-action">
+                  {tCal("joinMeet")}
+                </p>
+              </div>
+            </SurfaceCard>
+          </div>
+        </div>
+      </div>
+    </ProductChrome>
+  );
+}
+
 export async function AppProjectPreview() {
   const locale = await getLocale();
-  const [t, tApp, tNav, tTop, tProj, tProg, tForms, tRoles, tAuth] =
+  const [t, tApp, tNav, tTop, tProj, tProg, tRoles, tAuth] =
     await Promise.all([
       getTranslations("home"),
       getTranslations("appHome"),
@@ -599,16 +980,11 @@ export async function AppProjectPreview() {
       getTranslations("topBar"),
       getTranslations("projects"),
       getTranslations("programs"),
-      getTranslations("forms"),
       getTranslations("roles"),
       getTranslations("auth"),
     ]);
 
   const opened = new Date("2026-03-04").toLocaleDateString(
-    locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
-    { year: "numeric", month: "short", day: "numeric" },
-  );
-  const expires = new Date("2026-09-12").toLocaleDateString(
     locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
     { year: "numeric", month: "short", day: "numeric" },
   );
@@ -703,14 +1079,16 @@ export async function AppProjectPreview() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-heading text-sm font-semibold text-brand">
-                  {tForms("shareTitle")}
+                  {tProj("portal.title")}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {tForms("shareActive", { date: expires })}
+                  {tProj("portal.recipients", {
+                    names: t("preview.personWei"),
+                  })}
                 </p>
               </div>
-              <span className="inline-flex h-9 items-center rounded-xl border border-border bg-surface px-3 text-sm font-semibold">
-                {tForms("shareCopyButton")}
+              <span className="inline-flex h-9 shrink-0 items-center rounded-xl border border-border bg-surface px-3 text-sm font-semibold">
+                {tProj("portal.copy")}
               </span>
             </div>
           </SurfaceCard>
@@ -821,6 +1199,174 @@ export async function ClientFillPreview() {
               </div>
             ))}
           </SurfaceCard>
+        </div>
+      </div>
+    </ProductChrome>
+  );
+}
+
+export async function ClientPortalPreview() {
+  const locale = await getLocale();
+  const [t, tPortal, tProg, tRoles, tPay, tAuth, tProj] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("portal"),
+    getTranslations("programs"),
+    getTranslations("roles"),
+    getTranslations("publicPay"),
+    getTranslations("auth"),
+    getTranslations("projects"),
+  ]);
+
+  const chenOpened = new Date("2026-03-04").toLocaleDateString(
+    locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
+    { year: "numeric", month: "short", day: "numeric" },
+  );
+  const appointmentWhen = new Date(
+    zonedCivilToUtc(BOOKING_SELECTED, "10:00", BOOKING_ZONE),
+  ).toLocaleString(
+    locale === "fr" ? "fr-CA" : locale === "es" ? "es" : "en-CA",
+    {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    },
+  );
+
+  return (
+    <ProductChrome url={t("preview.urlPortal")} tone="light" innerHeight={560}>
+      <div className="flex min-w-0 flex-1 flex-col bg-canvas">
+        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground">
+          <BrandLogo href={null} size="sm" inverted className="shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-sidebar-foreground">
+              {t("preview.orgName")}
+            </p>
+            <p className="truncate text-xs text-sidebar-foreground/70">
+              {t("preview.personWei")}
+            </p>
+          </div>
+          <span className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-sidebar-foreground/80">
+            {tPortal("home")}
+          </span>
+          <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sidebar-border bg-sidebar-accent px-3 text-sm font-medium text-sidebar-foreground">
+            <LogOut className="size-3.5 shrink-0" aria-hidden />
+            {tAuth("signOut")}
+          </span>
+        </div>
+
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 overflow-hidden px-6 py-6">
+          <header className="space-y-1">
+            <h1 className="font-heading text-2xl font-semibold text-brand">
+              {tPortal("hello", { name: "Wei" })}
+            </h1>
+            <p className="text-[15px] text-muted-foreground">{tPortal("lede")}</p>
+          </header>
+
+          <section className="space-y-2">
+            <h2 className="font-heading text-lg font-semibold text-brand">
+              {tPortal("files")}
+            </h2>
+            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+              <div className="flex items-center justify-between gap-3 px-5 py-3.5">
+                <div className="min-w-0 space-y-1">
+                  <p className="font-medium text-brand">
+                    {t("preview.projectChen")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {tProg("express_entry")} · {tRoles("principal")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {tPortal("progress", {
+                      forms: 72,
+                      docsDone: 6,
+                      docsTotal: 9,
+                    })}
+                  </p>
+                </div>
+                <span className="inline-flex flex-col items-end gap-0.5 text-xs">
+                  <span className="font-semibold tracking-wide text-brand uppercase">
+                    {tProj("statuses.in_progress")}
+                  </span>
+                  <span className="text-muted-foreground">{chenOpened}</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3 px-5 py-3.5">
+                <div className="min-w-0 space-y-1">
+                  <p className="font-medium text-brand">
+                    {t("preview.projectDubois")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {tProg("study_permit")} · {tRoles("principal")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {tPortal("progress", {
+                      forms: 40,
+                      docsDone: 2,
+                      docsTotal: 8,
+                    })}
+                  </p>
+                </div>
+                <span className="inline-flex flex-col items-end gap-0.5 text-xs">
+                  <span className="font-semibold tracking-wide text-brand uppercase">
+                    {tProj("statuses.in_progress")}
+                  </span>
+                  <span className="text-muted-foreground">{chenOpened}</span>
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="font-heading text-lg font-semibold text-brand">
+              {tPortal("payments")}
+            </h2>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-5 py-3.5 shadow-elevated">
+              <div>
+                <p className="font-medium text-brand">
+                  {t("preview.serviceConsult")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("preview.unpaidAmount")} · {tPortal("paymentStatus.pending")}
+                </p>
+              </div>
+              <span
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "bg-action text-action-foreground",
+                )}
+              >
+                {tPay("payWithSquare")}
+              </span>
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="font-heading text-lg font-semibold text-brand">
+              {tPortal("appointments")}
+            </h2>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-5 py-3.5 shadow-elevated">
+              <div>
+                <p className="font-medium text-brand">
+                  {t("preview.serviceConsult")}
+                </p>
+                <p className="text-sm text-muted-foreground">{appointmentWhen}</p>
+              </div>
+              <div className="flex gap-2">
+                <span
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                >
+                  {tPortal("joinMeet")}
+                </span>
+                <span
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                >
+                  {tPortal("manage")}
+                </span>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </ProductChrome>
