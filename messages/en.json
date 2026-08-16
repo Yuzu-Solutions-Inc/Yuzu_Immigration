@@ -139,15 +139,42 @@
     },
     "integrations": {
       "eyebrow": "Integrations",
-      "title": "Google Calendar, Google Meet, and Square",
+      "title": "Calendar, meetings, and payments in the tools you already use",
       "subtitle": "Connect the accounts your firm already uses. Booking, video calls, and payments stay in those products — Yuzu Immigration coordinates them around the immigration file.",
+      "beta": "Beta",
+      "groups": {
+        "calendar": {
+          "title": "Calendar",
+          "help": "Connect one calendar. Public booking skips busy times; confirmed appointments are written there."
+        },
+        "meetings": {
+          "title": "Meetings",
+          "help": "Choose one meeting tool for join links on confirmed bookings."
+        },
+        "payment": {
+          "title": "Payment",
+          "help": "Collect consultation fees at booking or send a payment link on a file."
+        }
+      },
       "calendar": {
         "title": "Google Calendar",
         "body": "Each staff member connects their Google Calendar in calendar settings. Public booking and call invites respect busy times and blocked hours. Confirmed appointments are created on that calendar."
       },
+      "outlook": {
+        "title": "Outlook Calendar",
+        "body": "Connect Microsoft 365 Outlook instead of Google. Public booking respects Outlook busy times, and confirmed appointments are created on that calendar."
+      },
       "meet": {
         "title": "Google Meet",
-        "body": "When Calendar is connected, each confirmed booking can include a Google Meet link. Clients join from the confirmation page, the email, or the manage-booking link."
+        "body": "When a calendar is connected, each confirmed booking can include a Google Meet link. Clients join from the confirmation page, the email, or the manage-booking link."
+      },
+      "teams": {
+        "title": "Microsoft Teams",
+        "body": "Each confirmed booking can include a Microsoft Teams join link. Clients join from the confirmation page, the email, or the manage-booking link. Works with Google Calendar or Outlook."
+      },
+      "zoom": {
+        "title": "Zoom",
+        "body": "Each confirmed booking can include a Zoom Meeting link. Clients join from the confirmation page, the email, or the manage-booking link. Works with Google Calendar or Outlook."
       },
       "square": {
         "title": "Square",

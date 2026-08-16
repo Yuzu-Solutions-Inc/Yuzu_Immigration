@@ -17,7 +17,10 @@ import { getTranslations } from "next-intl/server";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { GoogleCalendarLogo } from "@/components/brand/google-calendar-logo";
 import { GoogleMeetLogo } from "@/components/brand/google-meet-logo";
+import { MicrosoftTeamsLogo } from "@/components/brand/microsoft-teams-logo";
+import { OutlookCalendarLogo } from "@/components/brand/outlook-calendar-logo";
 import { SquareLogo } from "@/components/brand/square-logo";
+import { ZoomLogo } from "@/components/brand/zoom-logo";
 import { LegalLinks } from "@/components/legal/legal-links";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
@@ -65,13 +68,27 @@ const FEATURE_ICONS = {
   team: UsersRound,
 } as const;
 
-const INTEGRATION_KEYS = ["calendar", "meet", "square"] as const;
-
-const INTEGRATION_LOGOS = {
-  calendar: GoogleCalendarLogo,
-  meet: GoogleMeetLogo,
-  square: SquareLogo,
-} as const;
+const INTEGRATION_GROUPS = [
+  {
+    key: "calendar",
+    items: [
+      { key: "calendar", Logo: GoogleCalendarLogo, beta: false },
+      { key: "outlook", Logo: OutlookCalendarLogo, beta: true },
+    ],
+  },
+  {
+    key: "meetings",
+    items: [
+      { key: "meet", Logo: GoogleMeetLogo, beta: false },
+      { key: "teams", Logo: MicrosoftTeamsLogo, beta: true },
+      { key: "zoom", Logo: ZoomLogo, beta: true },
+    ],
+  },
+  {
+    key: "payment",
+    items: [{ key: "square", Logo: SquareLogo, beta: false }],
+  },
+] as const;
 
 const HOW_KEYS = ["one", "two", "three", "four"] as const;
 
@@ -145,13 +162,13 @@ export async function LandingPage() {
         </div>
       </header>
 
-      <section className="relative isolate overflow-hidden bg-graphite-700 text-white">
+      <section className="relative isolate overflow-hidden bg-graphite-900 text-white">
         <div
           aria-hidden
           className="lp-mesh pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 80% 60% at 15% 20%, color-mix(in srgb, var(--indigo-500) 28%, transparent), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 10%, color-mix(in srgb, var(--emerald-500) 18%, transparent), transparent 50%), radial-gradient(ellipse 60% 40% at 70% 80%, color-mix(in srgb, var(--amber-500) 14%, transparent), transparent 55%), linear-gradient(180deg, var(--graphite-700) 0%, var(--graphite-900) 55%, var(--graphite-700) 100%)",
+              "radial-gradient(ellipse 80% 55% at 12% 16%, color-mix(in srgb, var(--indigo-500) 34%, transparent), transparent 58%), radial-gradient(ellipse 55% 42% at 90% 8%, color-mix(in srgb, var(--emerald-500) 16%, transparent), transparent 52%), radial-gradient(ellipse 48% 32% at 82% 38%, color-mix(in srgb, var(--amber-500) 10%, transparent), transparent 55%), linear-gradient(180deg, var(--graphite-700) 0%, var(--graphite-900) 38%, var(--graphite-900) 100%)",
           }}
         />
         <div
@@ -214,11 +231,23 @@ export async function LandingPage() {
           </div>
 
           <div className="landing-preview relative mt-4 w-full">
-            <div className="relative max-h-[min(36rem,52svh)] overflow-hidden">
+            <div
+              className="relative max-h-[min(36rem,52svh)] overflow-hidden"
+              style={{
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, #000 0%, #000 42%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,0.32) 82%, transparent 100%)",
+                maskImage:
+                  "linear-gradient(to bottom, #000 0%, #000 42%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,0.32) 82%, transparent 100%)",
+              }}
+            >
               <AppHomePreview />
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-canvas to-transparent"
+                className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 sm:h-52"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to top, var(--graphite-900) 0%, color-mix(in srgb, var(--graphite-900) 82%, transparent) 28%, color-mix(in srgb, var(--graphite-900) 38%, transparent) 62%, transparent 100%)",
+                }}
               />
             </div>
           </div>
@@ -315,26 +344,47 @@ export async function LandingPage() {
               {t("integrations.subtitle")}
             </p>
           </div>
-          <ul className="mt-12 grid gap-10 sm:grid-cols-3">
-            {INTEGRATION_KEYS.map((key) => {
-              const Logo = INTEGRATION_LOGOS[key];
-              return (
-                <li key={key} className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-surface p-1 shadow-sm">
-                      <Logo className="size-9" />
-                    </div>
-                    <h3 className="font-heading text-base font-semibold text-brand">
-                      {t(`integrations.${key}.title`)}
-                    </h3>
-                  </div>
-                  <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                    {t(`integrations.${key}.body`)}
+          <div className="mt-12 space-y-14">
+            {INTEGRATION_GROUPS.map((group) => (
+              <div key={group.key} className="space-y-6">
+                <div className="max-w-2xl space-y-1">
+                  <h3 className="font-heading text-lg font-semibold tracking-tight text-brand">
+                    {t(`integrations.groups.${group.key}.title`)}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
+                    {t(`integrations.groups.${group.key}.help`)}
                   </p>
-                </li>
-              );
-            })}
-          </ul>
+                </div>
+                <ul className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+                  {group.items.map((item) => {
+                    const Logo = item.Logo;
+                    return (
+                      <li key={item.key} className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-surface p-1 shadow-sm">
+                            <Logo className="size-9" />
+                          </div>
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <h4 className="font-heading text-base font-semibold text-brand">
+                              {t(`integrations.${item.key}.title`)}
+                            </h4>
+                            {item.beta ? (
+                              <span className="inline-flex h-5 shrink-0 items-center rounded-full border border-border bg-secondary px-2 text-[11px] font-medium text-muted-foreground">
+                                {t("integrations.beta")}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                          {t(`integrations.${item.key}.body`)}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -454,20 +504,20 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-graphite-700 py-20 text-white sm:py-24">
+      <section className="relative overflow-hidden bg-graphite-900 py-20 text-white sm:py-24">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 70% 80% at 50% 120%, color-mix(in srgb, var(--indigo-500) 35%, transparent), transparent 60%)",
+              "radial-gradient(ellipse 90% 45% at 50% -10%, color-mix(in srgb, var(--indigo-500) 18%, transparent), transparent 58%)",
           }}
         />
         <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 text-left sm:items-center sm:text-center">
-          <h2 className="font-heading text-3xl font-bold tracking-tight text-pretty sm:text-4xl">
+          <h2 className="font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
             {t("finalTitle")}
           </h2>
-          <p className="max-w-xl text-[15px] leading-relaxed text-white/65 text-pretty sm:text-base">
+          <p className="max-w-xl text-[15px] leading-relaxed text-pretty text-white/90 sm:text-base">
             {t("finalSubtitle")}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -484,17 +534,17 @@ export async function LandingPage() {
               href="/login"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                "border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white",
+                "border-white/45 bg-transparent text-white hover:bg-white/10 hover:text-white",
               )}
             >
               {t("secondaryCta")}
             </Link>
           </div>
-          <p className="text-sm text-white/45">{t("finalNote")}</p>
+          <p className="text-sm text-white/75">{t("finalNote")}</p>
         </div>
       </section>
 
-      <footer className="bg-graphite-900 py-8 text-white/50">
+      <footer className="border-t border-white/10 bg-graphite-900 py-8 text-white/50">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <BrandLogo size="sm" inverted />

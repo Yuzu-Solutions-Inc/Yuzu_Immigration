@@ -139,15 +139,42 @@
     },
     "integrations": {
       "eyebrow": "Intégrations",
-      "title": "Google Calendar, Google Meet et Square",
+      "title": "Calendrier, réunions et paiements dans les outils que vous utilisez déjà",
       "subtitle": "Branchez les comptes que votre cabinet utilise déjà. Réservation, visio et paiements restent dans ces produits — Yuzu Immigration les coordonne autour du dossier d’immigration.",
+      "beta": "Bêta",
+      "groups": {
+        "calendar": {
+          "title": "Calendrier",
+          "help": "Connectez un calendrier. La réservation publique évite les plages occupées ; les rendez-vous confirmés y sont inscrits."
+        },
+        "meetings": {
+          "title": "Réunions",
+          "help": "Choisissez un outil de visio pour les liens de participation des rendez-vous confirmés."
+        },
+        "payment": {
+          "title": "Paiement",
+          "help": "Encaissez les honoraires à la réservation ou envoyez un lien de paiement sur un dossier."
+        }
+      },
       "calendar": {
         "title": "Google Calendar",
         "body": "Chaque membre du personnel connecte son Google Calendar dans les réglages. La réservation publique et les invitations d’appel respectent les plages occupées et les blocages. Les rendez-vous confirmés sont créés dans ce calendrier."
       },
+      "outlook": {
+        "title": "Calendrier Outlook",
+        "body": "Connectez Outlook Microsoft 365 à la place de Google. La réservation publique respecte les plages occupées d’Outlook, et les rendez-vous confirmés y sont créés."
+      },
       "meet": {
         "title": "Google Meet",
-        "body": "Quand Calendar est connecté, chaque réservation confirmée peut inclure un lien Google Meet. Le client le rejoint depuis la confirmation, le courriel, ou le lien de gestion."
+        "body": "Quand un calendrier est connecté, chaque réservation confirmée peut inclure un lien Google Meet. Le client le rejoint depuis la confirmation, le courriel, ou le lien de gestion."
+      },
+      "teams": {
+        "title": "Microsoft Teams",
+        "body": "Chaque réservation confirmée peut inclure un lien Microsoft Teams. Le client le rejoint depuis la confirmation, le courriel ou le lien de gestion. Fonctionne avec Google Calendar ou Outlook."
+      },
+      "zoom": {
+        "title": "Zoom",
+        "body": "Chaque réservation confirmée peut inclure un lien Zoom Meeting. Le client le rejoint depuis la confirmation, le courriel ou le lien de gestion. Fonctionne avec Google Calendar ou Outlook."
       },
       "square": {
         "title": "Square",

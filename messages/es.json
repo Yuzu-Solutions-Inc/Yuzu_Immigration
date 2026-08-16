@@ -139,15 +139,42 @@
     },
     "integrations": {
       "eyebrow": "Integraciones",
-      "title": "Google Calendar, Google Meet y Square",
+      "title": "Calendario, reuniones y pagos en las herramientas que ya usa",
       "subtitle": "Conecte las cuentas que su firma ya usa. Reservas, videollamadas y pagos siguen en esos productos — Yuzu Immigration los coordina en torno al expediente de inmigración.",
+      "beta": "Beta",
+      "groups": {
+        "calendar": {
+          "title": "Calendario",
+          "help": "Conecte un calendario. La reserva pública evita el tiempo ocupado; las citas confirmadas se escriben ahí."
+        },
+        "meetings": {
+          "title": "Reuniones",
+          "help": "Elija una herramienta de videollamada para los enlaces de las reservas confirmadas."
+        },
+        "payment": {
+          "title": "Pago",
+          "help": "Cobre honorarios al reservar o envíe un enlace de pago en un expediente."
+        }
+      },
       "calendar": {
         "title": "Google Calendar",
         "body": "Cada miembro del personal conecta su Google Calendar en los ajustes. La reserva pública y las invitaciones a llamadas respetan horarios ocupados y bloqueos. Las citas confirmadas se crean en ese calendario."
       },
+      "outlook": {
+        "title": "Calendario de Outlook",
+        "body": "Conecte Outlook de Microsoft 365 en lugar de Google. La reserva pública respeta el tiempo ocupado de Outlook y las citas confirmadas se crean en ese calendario."
+      },
       "meet": {
         "title": "Google Meet",
-        "body": "Cuando Calendar está conectado, cada reserva confirmada puede incluir un enlace de Google Meet. El cliente se une desde la confirmación, el correo o el enlace para gestionar la cita."
+        "body": "Cuando hay un calendario conectado, cada reserva confirmada puede incluir un enlace de Google Meet. El cliente se une desde la confirmación, el correo o el enlace para gestionar la cita."
+      },
+      "teams": {
+        "title": "Microsoft Teams",
+        "body": "Cada reserva confirmada puede incluir un enlace de Microsoft Teams. El cliente se une desde la confirmación, el correo o el enlace para gestionar la cita. Funciona con Google Calendar o Outlook."
+      },
+      "zoom": {
+        "title": "Zoom",
+        "body": "Cada reserva confirmada puede incluir un enlace de Zoom Meeting. El cliente se une desde la confirmación, el correo o el enlace para gestionar la cita. Funciona con Google Calendar o Outlook."
       },
       "square": {
         "title": "Square",
