@@ -64,10 +64,10 @@ export function ProjectDetailTabs({
           window.location.hash = value;
         }
       }}
-      className={cn("mx-auto w-full max-w-3xl gap-6", className)}
+      className={cn("w-full gap-6", className)}
     >
-      <div className="-mx-1 overflow-x-auto px-1 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <TabsList className="group-data-horizontal/tabs:h-auto h-auto w-max max-w-none justify-start gap-1 p-0">
+      <div className="-mx-1 w-full overflow-x-auto px-1 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsList className="group-data-horizontal/tabs:h-auto h-auto w-full max-w-none justify-start gap-1 p-0">
           {TAB_VALUES.map((value) => (
             <TabsTrigger
               key={value}
@@ -85,8 +85,8 @@ export function ProjectDetailTabs({
       </div>
 
       {TAB_VALUES.map((value) => (
-        <TabsContent key={value} value={value} className="min-w-0">
-          <div className="space-y-6">{panels[value]}</div>
+        <TabsContent key={value} value={value} className="min-w-0 w-full">
+          <div className="w-full space-y-6">{panels[value]}</div>
         </TabsContent>
       ))}
     </Tabs>
