@@ -1,7 +1,14 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { useActionState, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -53,8 +60,24 @@ import {
   type AppLocale,
 } from "@/lib/i18n/locales";
 import { centsToPriceInput, formatPriceCents } from "@/lib/booking/slots";
+import { cn } from "@/lib/utils";
 
 const initialState: ServiceActionState = {};
+
+type ActiveFilter = "all" | "active" | "inactive";
+type FormFilter = "all" | "has_form" | "no_form";
+type PriceFilter = "all" | "free" | "paid";
+type SortKey =
+  | "sort_order"
+  | "title"
+  | "duration"
+  | "price"
+  | "created_at"
+  | "is_active";
+type SortDir = "asc" | "desc";
+
+const headerControlClassName =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-surface px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:opacity-60";
 
 const EMPTY_COPY: ServiceLocaleCopy = { title: "", description: "" };
 
@@ -269,6 +292,13 @@ export function ServicesManager({
   }
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<BookingServiceRow | null>(null);
+  const [titleQuery, setTitleQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
+  const [formFilter, setFormFilter] = useState<FormFilter>("all");
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("sort_order");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const deferredTitle = useDeferredValue(titleQuery);
   const [createState, createAction, createPending] = useActionState(
     createServiceAction,
     initialState,
@@ -293,6 +323,107 @@ export function ServicesManager({
     }
     if (updateState.error) toast.error(t(`errors.${updateState.error}`));
   }, [updateState, t]);
+
+  const filteredSorted = useMemo(() => {
+    const titleQ = deferredTitle.trim().toLowerCase();
+
+    const rows = services.filter((service) => {
+      const copy = serviceCopy(service, locale, orgDefaultLocale);
+      if (titleQ && !copy.title.toLowerCase().includes(titleQ)) return false;
+      if (activeFilter === "active" && !service.is_active) return false;
+      if (activeFilter === "inactive" && service.is_active) return false;
+      if (formFilter === "has_form" && !service.form_id) return false;
+      if (formFilter === "no_form" && service.form_id) return false;
+      if (priceFilter === "free" && service.price_cents !== 0) return false;
+      if (priceFilter === "paid" && service.price_cents === 0) return false;
+      return true;
+    });
+
+    rows.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "sort_order") {
+        cmp = a.sort_order - b.sort_order;
+        if (cmp === 0) {
+          cmp = a.created_at.localeCompare(b.created_at);
+        }
+      } else if (sortKey === "title") {
+        cmp = serviceCopy(a, locale, orgDefaultLocale).title.localeCompare(
+          serviceCopy(b, locale, orgDefaultLocale).title,
+          undefined,
+          { sensitivity: "base" },
+        );
+      } else if (sortKey === "duration") {
+        cmp = a.duration_minutes - b.duration_minutes;
+      } else if (sortKey === "price") {
+        cmp = a.price_cents - b.price_cents;
+      } else if (sortKey === "created_at") {
+        cmp = a.created_at.localeCompare(b.created_at);
+      } else {
+        cmp = Number(b.is_active) - Number(a.is_active);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return rows;
+  }, [
+    services,
+    deferredTitle,
+    activeFilter,
+    formFilter,
+    priceFilter,
+    sortKey,
+    sortDir,
+    locale,
+    orgDefaultLocale,
+  ]);
+
+  const filtersActive = Boolean(
+    titleQuery.trim() ||
+      activeFilter !== "all" ||
+      formFilter !== "all" ||
+      priceFilter !== "all",
+  );
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir(key === "sort_order" || key === "title" ? "asc" : "desc");
+  }
+
+  function SortButton({
+    column,
+    label,
+  }: {
+    column: SortKey;
+    label: string;
+  }) {
+    const active = sortKey === column;
+    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSort(column)}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
+          "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+          active ? "text-brand" : "text-foreground",
+        )}
+      >
+        {label}
+        <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
+      </button>
+    );
+  }
+
+  function clearFilters() {
+    setTitleQuery("");
+    setActiveFilter("all");
+    setFormFilter("all");
+    setPriceFilter("all");
+  }
 
   return (
     <div className="space-y-6">
@@ -338,23 +469,141 @@ export function ServicesManager({
           ) : null}
         </SurfaceCard>
       ) : (
-        <SurfaceCard className="overflow-hidden p-0 sm:p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("titleLabel")}</TableHead>
-                <TableHead>{t("duration")}</TableHead>
-                <TableHead>{t("price")}</TableHead>
-                <TableHead>{t("columnForm")}</TableHead>
-                <TableHead>{t("columnReminders")}</TableHead>
-                <TableHead>{t("active")}</TableHead>
-                {canManage ? (
-                  <TableHead className="text-right">{t("actions")}</TableHead>
-                ) : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {services.map((service) => {
+        <div className="space-y-3">
+          <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated md:hidden">
+            <Input
+              type="search"
+              value={titleQuery}
+              onChange={(e) => setTitleQuery(e.target.value)}
+              placeholder={t("filterTitlePlaceholder")}
+              aria-label={t("filterTitle")}
+              className="h-10"
+            />
+            <select
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value as ActiveFilter)}
+              aria-label={t("filterActive")}
+              className={cn(headerControlClassName, "h-10")}
+            >
+              <option value="all">{t("filterAll")}</option>
+              <option value="active">{t("active")}</option>
+              <option value="inactive">{t("inactive")}</option>
+            </select>
+            <select
+              value={formFilter}
+              onChange={(e) => setFormFilter(e.target.value as FormFilter)}
+              aria-label={t("filterForm")}
+              className={cn(headerControlClassName, "h-10")}
+            >
+              <option value="all">{t("filterAll")}</option>
+              <option value="has_form">{t("filterFormAssigned")}</option>
+              <option value="no_form">{t("filterFormNone")}</option>
+            </select>
+            <select
+              value={priceFilter}
+              onChange={(e) => setPriceFilter(e.target.value as PriceFilter)}
+              aria-label={t("filterPrice")}
+              className={cn(headerControlClassName, "h-10")}
+            >
+              <option value="all">{t("filterAll")}</option>
+              <option value="free">{t("filterPriceFree")}</option>
+              <option value="paid">{t("filterPricePaid")}</option>
+            </select>
+          </div>
+
+          <SurfaceCard className="overflow-hidden p-0 sm:p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-auto min-w-[12rem] py-2.5 align-bottom">
+                    <div className="flex flex-col gap-1.5">
+                      <SortButton column="title" label={t("titleLabel")} />
+                      <Input
+                        type="search"
+                        value={titleQuery}
+                        onChange={(e) => setTitleQuery(e.target.value)}
+                        placeholder={t("filterTitlePlaceholder")}
+                        aria-label={t("filterTitle")}
+                        className={headerControlClassName}
+                      />
+                    </div>
+                  </TableHead>
+                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                    <SortButton column="duration" label={t("duration")} />
+                  </TableHead>
+                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                    <div className="flex flex-col gap-1.5">
+                      <SortButton column="price" label={t("price")} />
+                      <select
+                        value={priceFilter}
+                        onChange={(e) =>
+                          setPriceFilter(e.target.value as PriceFilter)
+                        }
+                        aria-label={t("filterPrice")}
+                        className={headerControlClassName}
+                      >
+                        <option value="all">{t("filterAll")}</option>
+                        <option value="free">{t("filterPriceFree")}</option>
+                        <option value="paid">{t("filterPricePaid")}</option>
+                      </select>
+                    </div>
+                  </TableHead>
+                  <TableHead className="h-auto min-w-[9rem] py-2.5 align-bottom">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="font-medium">{t("columnForm")}</span>
+                      <select
+                        value={formFilter}
+                        onChange={(e) =>
+                          setFormFilter(e.target.value as FormFilter)
+                        }
+                        aria-label={t("filterForm")}
+                        className={headerControlClassName}
+                      >
+                        <option value="all">{t("filterAll")}</option>
+                        <option value="has_form">{t("filterFormAssigned")}</option>
+                        <option value="no_form">{t("filterFormNone")}</option>
+                      </select>
+                    </div>
+                  </TableHead>
+                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                    {t("columnReminders")}
+                  </TableHead>
+                  <TableHead className="h-auto min-w-[7rem] py-2.5 align-bottom">
+                    <div className="flex flex-col gap-1.5">
+                      <SortButton column="is_active" label={t("active")} />
+                      <select
+                        value={activeFilter}
+                        onChange={(e) =>
+                          setActiveFilter(e.target.value as ActiveFilter)
+                        }
+                        aria-label={t("filterActive")}
+                        className={headerControlClassName}
+                      >
+                        <option value="all">{t("filterAll")}</option>
+                        <option value="active">{t("active")}</option>
+                        <option value="inactive">{t("inactive")}</option>
+                      </select>
+                    </div>
+                  </TableHead>
+                  {canManage ? (
+                    <TableHead className="h-auto py-2.5 align-bottom text-right">
+                      {t("actions")}
+                    </TableHead>
+                  ) : null}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSorted.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={canManage ? 7 : 6}
+                      className="px-5 py-8 text-center whitespace-normal text-[15px] text-muted-foreground"
+                    >
+                      {t("noMatches")}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredSorted.map((service) => {
                 const copy = serviceCopy(service, locale, orgDefaultLocale);
                 return (
                 <TableRow key={service.id}>
@@ -430,10 +679,31 @@ export function ServicesManager({
                   ) : null}
                 </TableRow>
                 );
+              })
+                )}
+              </TableBody>
+            </Table>
+          </SurfaceCard>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              {t("showingCount", {
+                shown: filteredSorted.length,
+                total: services.length,
               })}
-            </TableBody>
-          </Table>
-        </SurfaceCard>
+            </p>
+            {filtersActive ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+              >
+                {t("clearFilters")}
+              </Button>
+            ) : null}
+          </div>
+        </div>
       )}
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

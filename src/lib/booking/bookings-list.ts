@@ -8,6 +8,8 @@ import { serviceTitle } from "@/lib/booking/service-i18n";
 export type BookingListItem = {
   id: string;
   personId: string | null;
+  serviceId: string;
+  hostUserId: string;
   startsAt: string;
   endsAt: string;
   status: string;
@@ -106,6 +108,8 @@ export async function listOrgBookingsWithPayment(
     return {
       id: row.id as string,
       personId: (row.person_id as string | null) ?? null,
+      serviceId: row.service_id as string,
+      hostUserId: row.host_user_id as string,
       startsAt: row.starts_at as string,
       endsAt: row.ends_at as string,
       status: row.status as string,
