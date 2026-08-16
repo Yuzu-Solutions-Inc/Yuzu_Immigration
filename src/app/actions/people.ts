@@ -14,8 +14,6 @@ import { encryptNoteBody, encryptPersonWrite } from "@/lib/security/client-pii";
 import { personLookupWrite } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
-import { zonedCivilToUtc } from "@/lib/booking/timezone";
-import type { BookingAppointmentStatus } from "@/db/schema";
 
 const personFieldsSchema = z.object({
   locale: z.enum(["en", "fr", "es"]).default("en"),
@@ -303,46 +301,17 @@ export async function deletePersonAction(
   redirect(`/${data.locale}/people`);
 }
 
-const meetingStatusSchema = z.enum([
-  "confirmed",
-  "cancelled",
-  "completed",
-  "no_show",
-]);
-const datetimeLocalSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/);
-
 function encryptNoteBodyOrEmpty(body: string, key: Buffer) {
   const trimmed = body.trim();
   return trimmed ? encryptNoteBody(trimmed, key) : "";
 }
 
-function occurredAtFromForm(occurredAt: string, timeZone: string) {
-  const [dateIso, timePart] = occurredAt.split("T");
-  return zonedCivilToUtc(dateIso, timePart.slice(0, 5), timeZone).toISOString();
-}
-
-const addPersonNoteSchema = z
-  .object({
-    locale: z.enum(["en", "fr", "es"]).default("en"),
-    personId: z.string().uuid(),
-    body: z.string().max(20000),
-    appointmentId: z.string().uuid().optional().or(z.literal("")),
-    occurredAt: z.string().optional().or(z.literal("")),
-    status: meetingStatusSchema.optional().or(z.literal("")),
-    timeZone: z.string().trim().min(1).max(64).default("America/Toronto"),
-  })
-  .superRefine((data, ctx) => {
-    const appointmentId = data.appointmentId?.trim();
-    if (appointmentId) return;
-    if (!datetimeLocalSchema.safeParse(data.occurredAt).success) {
-      ctx.addIssue({ code: "custom", path: ["occurredAt"], message: "invalid" });
-    }
-    if (!meetingStatusSchema.safeParse(data.status).success) {
-      ctx.addIssue({ code: "custom", path: ["status"], message: "invalid" });
-    }
-  });
+const addPersonNoteSchema = z.object({
+  locale: z.enum(["en", "fr", "es"]).default("en"),
+  personId: z.string().uuid(),
+  body: z.string().trim().min(1).max(20000),
+  appointmentId: z.string().uuid().optional().or(z.literal("")),
+});
 
 export type AddPersonNoteState = {
   error?: string;
@@ -358,9 +327,6 @@ export async function addPersonNoteAction(
     personId: String(formData.get("personId") || ""),
     body: String(formData.get("body") || ""),
     appointmentId: String(formData.get("appointmentId") || ""),
-    occurredAt: String(formData.get("occurredAt") || ""),
-    status: String(formData.get("status") || ""),
-    timeZone: String(formData.get("timeZone") || "America/Toronto"),
   });
 
   if (!parsed.success) {
@@ -393,8 +359,6 @@ export async function addPersonNoteAction(
     body: string;
     created_by: string | null;
     appointment_id?: string;
-    occurred_at?: string;
-    status?: BookingAppointmentStatus;
   } = {
     organization_id: orgId,
     person_id: data.personId,
@@ -440,12 +404,6 @@ export async function addPersonNoteAction(
     }
 
     insert = { ...insert, appointment_id: appointmentId };
-  } else {
-    insert = {
-      ...insert,
-      occurred_at: occurredAtFromForm(data.occurredAt as string, data.timeZone),
-      status: data.status as BookingAppointmentStatus,
-    };
   }
 
   const { error: insertError } = await supabase.from("person_notes").insert(insert);
@@ -459,25 +417,12 @@ export async function addPersonNoteAction(
   return { message: "saved" };
 }
 
-const updatePersonNoteSchema = z
-  .object({
-    locale: z.enum(["en", "fr", "es"]).default("en"),
-    personId: z.string().uuid(),
-    noteId: z.string().uuid(),
-    body: z.string().max(20000),
-    occurredAt: z.string().optional().or(z.literal("")),
-    status: meetingStatusSchema.optional().or(z.literal("")),
-    timeZone: z.string().trim().min(1).max(64).default("America/Toronto"),
-  })
-  .superRefine((data, ctx) => {
-    if (!data.occurredAt) return;
-    if (!datetimeLocalSchema.safeParse(data.occurredAt).success) {
-      ctx.addIssue({ code: "custom", path: ["occurredAt"], message: "invalid" });
-    }
-    if (data.status && !meetingStatusSchema.safeParse(data.status).success) {
-      ctx.addIssue({ code: "custom", path: ["status"], message: "invalid" });
-    }
-  });
+const updatePersonNoteSchema = z.object({
+  locale: z.enum(["en", "fr", "es"]).default("en"),
+  personId: z.string().uuid(),
+  noteId: z.string().uuid(),
+  body: z.string().trim().min(1).max(20000),
+});
 
 export async function updatePersonNoteAction(
   _prev: AddPersonNoteState,
@@ -488,9 +433,6 @@ export async function updatePersonNoteAction(
     personId: String(formData.get("personId") || ""),
     noteId: String(formData.get("noteId") || ""),
     body: String(formData.get("body") || ""),
-    occurredAt: String(formData.get("occurredAt") || ""),
-    status: String(formData.get("status") || ""),
-    timeZone: String(formData.get("timeZone") || "America/Toronto"),
   });
 
   if (!parsed.success) {
@@ -506,7 +448,7 @@ export async function updatePersonNoteAction(
   const supabase = await createClient();
   const { data: existing, error: existingError } = await supabase
     .from("person_notes")
-    .select("id, appointment_id")
+    .select("id")
     .eq("id", data.noteId)
     .eq("person_id", data.personId)
     .eq("organization_id", orgId)
@@ -516,29 +458,10 @@ export async function updatePersonNoteAction(
     return { error: "not_found" };
   }
 
-  const patch: {
-    body: string;
-    updated_at: string;
-    occurred_at?: string;
-    status?: BookingAppointmentStatus;
-  } = {
+  const patch = {
     body: encryptNoteBodyOrEmpty(data.body, await getOrgDataKey(orgId)),
     updated_at: new Date().toISOString(),
   };
-
-  if (!existing.appointment_id) {
-    if (!datetimeLocalSchema.safeParse(data.occurredAt).success) {
-      return { error: "invalid" };
-    }
-    if (!meetingStatusSchema.safeParse(data.status).success) {
-      return { error: "invalid" };
-    }
-    patch.occurred_at = occurredAtFromForm(
-      data.occurredAt as string,
-      data.timeZone,
-    );
-    patch.status = data.status as BookingAppointmentStatus;
-  }
 
   const { error: updateError } = await supabase
     .from("person_notes")

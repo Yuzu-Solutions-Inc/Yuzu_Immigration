@@ -15,19 +15,15 @@ import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
-  FieldGrid,
   FieldLabel,
   FieldSuccess,
   FormStack,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { formStackVariants } from "@/lib/field-styles";
 import {
   formatDateTimeInZone,
   formatTimeInZone,
-  toDatetimeLocalValue,
 } from "@/lib/booking/timezone";
 import type { PersonMeetingItem } from "@/lib/crm/queries";
 
@@ -57,74 +53,30 @@ function statusVariant(status: string | null) {
   return "secondary" as const;
 }
 
-function MeetingFields({
-  idPrefix,
-  defaultOccurredAt,
-  defaultStatus,
+function NoteBodyField({
+  id,
   defaultBody,
-  showMeta,
-  notesRequired,
 }: {
-  idPrefix: string;
-  defaultOccurredAt: string;
-  defaultStatus: string;
+  id: string;
   defaultBody: string;
-  showMeta: boolean;
-  notesRequired: boolean;
 }) {
   const t = useTranslations("people");
 
   return (
-    <>
-      {showMeta ? (
-        <FieldGrid>
-          <Field>
-            <FieldLabel htmlFor={`${idPrefix}-occurred-at`} required>
-              {t("meetingDateTime")}
-            </FieldLabel>
-            <Input
-              id={`${idPrefix}-occurred-at`}
-              name="occurredAt"
-              type="datetime-local"
-              required
-              step={60}
-              defaultValue={defaultOccurredAt}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${idPrefix}-status`} required>
-              {t("meetingStatusLabel")}
-            </FieldLabel>
-            <NativeSelect
-              id={`${idPrefix}-status`}
-              name="status"
-              required
-              defaultValue={defaultStatus}
-            >
-              {MEETING_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {t(`meetingStatus.${status}`)}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-        </FieldGrid>
-      ) : null}
-      <Field>
-        <FieldLabel htmlFor={`${idPrefix}-body`} required={notesRequired}>
-          {t("meetingNotes")}
-        </FieldLabel>
-        <Textarea
-          id={`${idPrefix}-body`}
-          name="body"
-          required={notesRequired}
-          rows={6}
-          maxLength={20000}
-          defaultValue={defaultBody}
-          placeholder={t("notesPlaceholder")}
-        />
-      </Field>
-    </>
+    <Field>
+      <FieldLabel htmlFor={id} required>
+        {t("meetingNotes")}
+      </FieldLabel>
+      <Textarea
+        id={id}
+        name="body"
+        required
+        rows={6}
+        maxLength={20000}
+        defaultValue={defaultBody}
+        placeholder={t("notesPlaceholder")}
+      />
+    </Field>
   );
 }
 
@@ -178,7 +130,7 @@ function MeetingItem({
             >
               {when}
             </time>
-            {meeting.status ? (
+            {isBooked && meeting.status ? (
               <Badge variant={statusVariant(meeting.status)}>
                 {meetingStatusLabel(t, meeting.status)}
               </Badge>
@@ -205,8 +157,8 @@ function MeetingItem({
             variant="ghost"
             size="icon-sm"
             onClick={() => setEditing(true)}
-            aria-label={hasNote || !isBooked ? t("editMeeting") : t("addNotes")}
-            title={hasNote || !isBooked ? t("editMeeting") : t("addNotes")}
+            aria-label={hasNote || !isBooked ? t("editNote") : t("addNotes")}
+            title={hasNote || !isBooked ? t("editNote") : t("addNotes")}
             className="text-muted-foreground hover:text-brand"
           >
             <Pencil className="size-4" />
@@ -218,28 +170,13 @@ function MeetingItem({
         <FormStack action={formAction} gap="tight">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="personId" value={personId} />
-          <input type="hidden" name="timeZone" value={timeZone} />
           {meeting.noteId ? (
             <input type="hidden" name="noteId" value={meeting.noteId} />
           ) : null}
           {meeting.appointmentId ? (
             <input type="hidden" name="appointmentId" value={meeting.appointmentId} />
           ) : null}
-          <MeetingFields
-            idPrefix={meeting.key}
-            defaultOccurredAt={toDatetimeLocalValue(occurred, timeZone)}
-            defaultStatus={
-              meeting.status &&
-              MEETING_STATUSES.includes(
-                meeting.status as (typeof MEETING_STATUSES)[number],
-              )
-                ? meeting.status
-                : "completed"
-            }
-            defaultBody={meeting.body}
-            showMeta={!isBooked}
-            notesRequired={isBooked}
-          />
+          <NoteBodyField id={`${meeting.key}-body`} defaultBody={meeting.body} />
           {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
           <div className="flex flex-wrap justify-end gap-2">
             <Button
@@ -313,15 +250,7 @@ export function PersonNotesSection({
         >
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="personId" value={personId} />
-          <input type="hidden" name="timeZone" value={timeZone} />
-          <MeetingFields
-            idPrefix="new-meeting"
-            defaultOccurredAt={toDatetimeLocalValue(new Date(), timeZone)}
-            defaultStatus="completed"
-            defaultBody=""
-            showMeta
-            notesRequired={false}
-          />
+          <NoteBodyField id="new-meeting-body" defaultBody="" />
           <div className="flex flex-wrap items-center justify-between gap-3">
             {errorMessage ? (
               <FieldError>{errorMessage}</FieldError>
@@ -331,7 +260,7 @@ export function PersonNotesSection({
               <span />
             )}
             <Button type="submit" disabled={pending}>
-              {pending ? t("noteSaving") : t("addMeeting")}
+              {pending ? t("noteSaving") : t("addNote")}
             </Button>
           </div>
         </form>
