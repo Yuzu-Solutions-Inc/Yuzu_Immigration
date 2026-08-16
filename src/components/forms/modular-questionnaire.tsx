@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { GripVertical, Loader2, X } from "lucide-react";
+import {
+  AlertCircle,
+  CircleCheck,
+  GripVertical,
+  Loader2,
+  X,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { CertifiedSearchSelect } from "@/components/forms/certified-search-select";
 import { Button } from "@/components/ui/button";
@@ -750,6 +757,73 @@ function initTables(
 
 type SaveIntent = "save" | "next" | "finish";
 
+function SaveFeedbackBar({
+  status,
+  message,
+  unsaved,
+  t,
+}: {
+  status: "idle" | "saving" | "saved" | "error";
+  message?: string | null;
+  unsaved: boolean;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  if (status === "error" && message) {
+    return (
+      <div
+        className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        role="alert"
+      >
+        <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+        <span>{message}</span>
+      </div>
+    );
+  }
+
+  if (status === "saving") {
+    return (
+      <div
+        className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas px-4 py-3 text-sm text-muted-foreground"
+        role="status"
+        aria-live="polite"
+      >
+        <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+        <span>{t("saving")}</span>
+      </div>
+    );
+  }
+
+  if (status === "saved" && message) {
+    return (
+      <div
+        className="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success-bg px-4 py-3 text-sm font-medium text-success-text"
+        role="status"
+        aria-live="polite"
+      >
+        <CircleCheck className="size-4 shrink-0" aria-hidden />
+        <span>{message}</span>
+      </div>
+    );
+  }
+
+  if (unsaved) {
+    return (
+      <div
+        className="flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
+        role="status"
+      >
+        <span
+          className="size-2 shrink-0 rounded-full bg-warning"
+          aria-hidden
+        />
+        <span>{t("unsavedChanges")}</span>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export function ModularQuestionnaire({
   people,
   onSave,
@@ -809,8 +883,39 @@ export function ModularQuestionnaire({
   >(() => initTables(activePerson?.formCodes ?? [], activePerson?.answers ?? {}));
   const [sectionIndex, setSectionIndex] = useState(0);
   const [busyIntent, setBusyIntent] = useState<SaveIntent | null>(null);
-  const [saveNotice, setSaveNotice] = useState<"saving" | "saved" | null>(null);
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const [saveStatusMessage, setSaveStatusMessage] = useState<string | null>(
+    null,
+  );
+  const [isDirty, setIsDirty] = useState(false);
   const savedNoticeTimeoutRef = useRef<number | null>(null);
+
+  function mapSaveError(code: string): string {
+    return (
+      {
+        invalid: t("errors.invalid"),
+        unauthorized: t("errors.unauthorized"),
+        save_failed: t("errors.saveFailed"),
+        granted: t("errors.granted"),
+        expired: t("errors.expired"),
+        auth_required: t("shareAuth.errors.authRequired"),
+      }[code] ?? t("errors.generic")
+    );
+  }
+
+  function markDirty() {
+    setIsDirty(true);
+    if (saveStatus === "saved" || saveStatus === "error") {
+      setSaveStatus("idle");
+      setSaveStatusMessage(null);
+    }
+    if (savedNoticeTimeoutRef.current != null) {
+      window.clearTimeout(savedNoticeTimeoutRef.current);
+      savedNoticeTimeoutRef.current = null;
+    }
+  }
 
   useEffect(() => {
     if (!activePersonId) return;
@@ -820,7 +925,9 @@ export function ModularQuestionnaire({
     setTableData(initTables(person.formCodes, person.answers));
     setSectionIndex(0);
     setBusyIntent(null);
-    setSaveNotice(null);
+    setSaveStatus("idle");
+    setSaveStatusMessage(null);
+    setIsDirty(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on person switch only
   }, [activePersonId]);
 
@@ -887,7 +994,7 @@ export function ModularQuestionnaire({
   const sectionGroups = FIELD_GROUPS.filter((g) => g.section === section);
 
   function update(key: string, value: string) {
-    setSaveNotice((current) => (current === "saved" ? null : current));
+    markDirty();
     setAnswers((prev) =>
       applyDerivedAnswers({ ...prev, [key]: value, hasRepresentative: "Y" }),
     );
@@ -910,16 +1017,22 @@ export function ModularQuestionnaire({
     if (!activePerson || !payload) return;
 
     setBusyIntent(intent);
-    setSaveNotice("saving");
+    setSaveStatus("saving");
+    setSaveStatusMessage(null);
     if (savedNoticeTimeoutRef.current != null) {
       window.clearTimeout(savedNoticeTimeoutRef.current);
       savedNoticeTimeoutRef.current = null;
     }
 
+    const toastId = toast.loading(t("saving"));
+
     try {
       const result = await onSave(activePerson.id, payload, section);
       if (result?.error) {
-        setSaveNotice(null);
+        const errorText = mapSaveError(result.error);
+        toast.error(errorText, { id: toastId });
+        setSaveStatus("error");
+        setSaveStatusMessage(errorText);
         return;
       }
 
@@ -927,13 +1040,22 @@ export function ModularQuestionnaire({
         setSectionIndex((i) => Math.min(sections.length - 1, i + 1));
       }
 
-      setSaveNotice("saved");
+      const successText =
+        intent === "next" ? t("saveSuccessNext") : t("saveSuccess");
+      toast.success(successText, { id: toastId });
+      setIsDirty(false);
+      setSaveStatus("saved");
+      setSaveStatusMessage(successText);
       savedNoticeTimeoutRef.current = window.setTimeout(() => {
-        setSaveNotice(null);
+        setSaveStatus("idle");
+        setSaveStatusMessage(null);
         savedNoticeTimeoutRef.current = null;
-      }, 2500);
+      }, 4000);
     } catch {
-      setSaveNotice(null);
+      const errorText = t("errors.saveFailed");
+      toast.error(errorText, { id: toastId });
+      setSaveStatus("error");
+      setSaveStatusMessage(errorText);
     } finally {
       setBusyIntent(null);
     }
@@ -973,9 +1095,10 @@ export function ModularQuestionnaire({
           key={table.key}
           table={table}
           rows={tableData[table.key] ?? [emptyTableRow(table)]}
-          onChange={(rows) =>
-            setTableData((prev) => ({ ...prev, [table.key]: rows }))
-          }
+          onChange={(rows) => {
+            markDirty();
+            setTableData((prev) => ({ ...prev, [table.key]: rows }));
+          }}
           t={t}
           th={th}
         />,
@@ -1032,9 +1155,10 @@ export function ModularQuestionnaire({
             key={table.key}
             table={table}
             rows={tableData[table.key] ?? [emptyTableRow(table)]}
-            onChange={(rows) =>
-              setTableData((prev) => ({ ...prev, [table.key]: rows }))
-            }
+            onChange={(rows) => {
+              markDirty();
+              setTableData((prev) => ({ ...prev, [table.key]: rows }));
+            }}
             t={t}
             th={th}
           />,
@@ -1250,23 +1374,20 @@ export function ModularQuestionnaire({
         {buildSectionNodes()}
       </div>
 
-      {errorMessage ? (
-        <p className="text-sm text-destructive" role="alert">
-          {errorMessage}
-        </p>
-      ) : saveNotice === "saving" ? (
-        <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
-          {t("saving")}
-        </p>
-      ) : saveNotice === "saved" ? (
-        <p className="text-sm font-medium text-success" role="status" aria-live="polite">
-          {t("saved")}
-        </p>
-      ) : (
-        <p className="text-sm text-muted-foreground" aria-hidden>
-          {"\u00a0"}
-        </p>
-      )}
+      <SaveFeedbackBar
+        status={
+          saveStatus === "idle" && errorMessage
+            ? "error"
+            : saveStatus
+        }
+        message={
+          saveStatus === "error" || saveStatus === "saved"
+            ? saveStatusMessage
+            : errorMessage
+        }
+        unsaved={isDirty && saveStatus !== "saving" && !readOnly}
+        t={t}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button
