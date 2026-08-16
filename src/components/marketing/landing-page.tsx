@@ -16,7 +16,7 @@ import {
 import { getTranslations } from "next-intl/server";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { PrivacyLink } from "@/components/legal/privacy-link";
+import { LegalLinks } from "@/components/legal/legal-links";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
   AppHomePreview,
@@ -507,7 +507,7 @@ export async function LandingPage() {
               compact
               className="[&_select]:border-white/15 [&_select]:bg-white/5 [&_select]:text-white/80"
             />
-            <PrivacyLink className="text-white/45 hover:text-white/70" />
+            <LegalLinks linkClassName="text-white/45 hover:text-white/70" />
           </div>
         </div>
       </footer>

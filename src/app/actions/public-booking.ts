@@ -72,6 +72,7 @@ const bookSchema = z.object({
   guestPhone: z.string().trim().min(6).max(40),
   guestAddress: z.string().trim().max(300).optional().default(""),
   privacyAccepted: z.literal("on"),
+  termsAccepted: z.literal("on"),
   confirmAnother: z.enum(["on"]).optional(),
 });
 
@@ -123,6 +124,7 @@ export async function submitPublicBookingAction(
     guestPhone: String(formData.get("guestPhone") || ""),
     guestAddress: String(formData.get("guestAddress") || ""),
     privacyAccepted: formData.get("privacyAccepted") === "on" ? "on" : "",
+    termsAccepted: formData.get("termsAccepted") === "on" ? "on" : "",
     confirmAnother: formData.get("confirmAnother") === "on" ? "on" : undefined,
   });
 

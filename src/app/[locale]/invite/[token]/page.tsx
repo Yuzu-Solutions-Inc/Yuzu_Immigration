@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { PrivacyLink } from "@/components/legal/privacy-link";
+import { LegalLinks } from "@/components/legal/legal-links";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -11,6 +11,7 @@ import {
   getInvitationByToken,
 } from "@/lib/auth/invitations";
 import { getSessionUser } from "@/lib/auth/session";
+import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,12 @@ export default async function InvitePage({
   const roleLabel = tRoles(invitation.role);
 
   if (user) {
+    if (!hasAcceptedLegal(user)) {
+      redirect(
+        `/${locale}/legal/accept?next=${encodeURIComponent(nextPath)}`,
+      );
+    }
+
     const result = await acceptInvitationByToken(token);
     if (result.ok) {
       redirect(`/${locale}/home`);
@@ -61,6 +68,7 @@ export default async function InvitePage({
         join_failed: t("joinFailed"),
         invalid: t("invalid"),
         unauthorized: t("invalid"),
+        legal_required: t("joinFailed"),
       }[result.error] ?? t("joinFailed");
 
     return (
@@ -119,7 +127,7 @@ function InviteShell({ children }: { children: React.ReactNode }) {
     <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col justify-center gap-6 px-6 py-14">
       <SurfaceCard className="space-y-4">{children}</SurfaceCard>
       <div className="flex justify-center sm:justify-start">
-        <PrivacyLink />
+        <LegalLinks />
       </div>
     </main>
   );

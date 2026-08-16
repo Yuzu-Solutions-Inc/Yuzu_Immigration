@@ -8,6 +8,10 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { safeInternalPath } from "@/lib/auth/next-path";
 import { replacePathLocale } from "@/lib/i18n/locales";
+import {
+  formAcceptedLegal,
+  legalAcceptanceMetadata,
+} from "@/lib/legal/acceptance";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -90,6 +94,10 @@ export async function signUpWithPassword(
     return { error: "invalid_credentials" };
   }
 
+  if (!formAcceptedLegal(formData)) {
+    return { error: "legal_required" };
+  }
+
   const supabase = await createClient();
   const origin = await getAppBaseUrl();
   const next = safeInternalPath(
@@ -104,6 +112,7 @@ export async function signUpWithPassword(
       emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
       data: {
         full_name: parsed.data.fullName,
+        ...legalAcceptanceMetadata(),
       },
     },
   });

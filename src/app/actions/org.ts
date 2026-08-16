@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { setActiveOrganizationId } from "@/lib/auth/active-org";
 import { getUserMemberships } from "@/lib/auth/session";
+import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyOrganizationName } from "@/lib/org/slug";
@@ -53,6 +54,12 @@ export async function createOrganizationAction(
 
   if (!user) {
     redirect(`/${locale}/login`);
+  }
+
+  if (!hasAcceptedLegal(user)) {
+    redirect(
+      `/${locale}/legal/accept?next=${encodeURIComponent(`/${locale}/onboarding`)}`,
+    );
   }
 
   // Privileged RPC is service_role-only; session already verified above.

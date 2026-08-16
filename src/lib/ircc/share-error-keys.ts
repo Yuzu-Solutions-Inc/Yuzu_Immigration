@@ -12,6 +12,7 @@ export const SHARE_ERROR_KEYS = [
   "auth_required",
   "server_config",
   "privacy_required",
+  "legal_required",
 ] as const;
 
 export type ShareErrorKey = (typeof SHARE_ERROR_KEYS)[number];

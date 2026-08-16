@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { LoginForm } from "@/components/auth/login-form";
-import { PrivacyLink } from "@/components/legal/privacy-link";
+import { LegalLinks } from "@/components/legal/legal-links";
 import { SurfaceCard } from "@/components/layout/surface-card";
 
 export default async function LoginPage({
@@ -37,7 +37,7 @@ export default async function LoginPage({
       </SurfaceCard>
 
       <div className="flex justify-center sm:justify-start">
-        <PrivacyLink />
+        <LegalLinks />
       </div>
     </main>
   );

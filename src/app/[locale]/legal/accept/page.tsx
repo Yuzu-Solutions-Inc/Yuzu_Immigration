@@ -2,19 +2,23 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { CreateOrganizationForm } from "@/components/org/create-organization-form";
+import { AcceptLegalForm } from "@/components/legal/accept-legal-form";
 import { LegalLinks } from "@/components/legal/legal-links";
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 
-export default async function OnboardingPage({
+export const dynamic = "force-dynamic";
+
+export default async function AcceptLegalPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ next?: string }>;
 }) {
   const { locale } = await params;
+  const { next } = await searchParams;
   setRequestLocale(locale);
 
   const user = await getSessionUser();
@@ -22,35 +26,25 @@ export default async function OnboardingPage({
     redirect(`/${locale}/login`);
   }
 
-  if (!hasAcceptedLegal(user)) {
-    redirect(
-      `/${locale}/legal/accept?next=${encodeURIComponent(`/${locale}/onboarding`)}`,
-    );
+  if (hasAcceptedLegal(user)) {
+    const membership = await getPrimaryMembership();
+    redirect(membership ? `/${locale}/home` : `/${locale}/onboarding`);
   }
 
-  await acceptPendingInvitationsForUser();
-
-  const membership = await getPrimaryMembership();
-  if (membership) {
-    redirect(`/${locale}/home`);
-  }
-
-  const t = await getTranslations("onboarding");
+  const t = await getTranslations("legal");
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-lg flex-1 flex-col justify-center gap-6 px-6 py-14">
-      <div className="space-y-3">
+    <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col justify-center gap-6 px-6 py-14">
+      <div className="space-y-3 text-center sm:text-left">
         <BrandLogo size="sm" href={null} />
         <h1 className="font-heading text-3xl font-bold tracking-tight text-brand">
-          {t("title")}
+          {t("acceptTitle")}
         </h1>
-        <p className="text-[15px] text-muted-foreground text-pretty">
-          {t("subtitle")}
-        </p>
+        <p className="text-[15px] text-muted-foreground">{t("acceptSubtitle")}</p>
       </div>
 
       <SurfaceCard>
-        <CreateOrganizationForm locale={locale as "en" | "fr"} />
+        <AcceptLegalForm locale={locale} nextPath={next} />
       </SurfaceCard>
 
       <LegalLinks className="justify-center sm:justify-start" />

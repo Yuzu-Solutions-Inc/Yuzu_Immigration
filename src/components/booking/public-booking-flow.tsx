@@ -14,7 +14,8 @@ import { CancelPolicyNotice } from "@/components/booking/cancel-policy-notice";
 import { BookingCompositeField } from "@/components/booking/booking-composite-field";
 import { MonthCalendar } from "@/components/booking/month-calendar";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { PrivacyLink } from "@/components/legal/privacy-link";
+import { LegalConsentFields } from "@/components/legal/legal-consent-fields";
+import { LegalLinks } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGrid, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -96,6 +97,7 @@ export function PublicBookingFlow({
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [chosePayLater, setChosePayLater] = useState(false);
 
   const host = payload.hosts.find((row) => row.userId === hostUserId) ?? null;
@@ -339,7 +341,7 @@ export function PublicBookingFlow({
             </p>
           </div>
         ) : null}
-        <PrivacyLink />
+        <LegalLinks className="justify-center" />
       </div>
     );
   }
@@ -405,7 +407,7 @@ export function PublicBookingFlow({
               {t("bookingWith", { name: host.name })}
             </p>
           ) : null}
-          <PrivacyLink />
+          <LegalLinks className="justify-end" />
         </div>
       </header>
 
@@ -763,29 +765,25 @@ export function PublicBookingFlow({
                 {serviceFields.map((field) => (
                   <PublicCustomField key={field.id} field={field} locale={locale} />
                 ))}
-                <label className="flex items-start gap-2 text-sm leading-relaxed">
-                  <input
-                    type="checkbox"
-                    name="privacyAccepted"
-                    value="on"
-                    required
-                    checked={privacyAccepted}
-                    onChange={(event) =>
-                      setPrivacyAccepted(event.target.checked)
-                    }
-                    className="mt-1 size-4 rounded border-input"
-                  />
-                  <span>
-                    {t("privacyConsent")}{" "}
-                    <Link
-                      href="/privacy"
-                      className="text-action underline-offset-2 hover:underline"
-                    >
-                      {t("privacyPolicy")}
-                    </Link>
-                    .
-                  </span>
-                </label>
+                <LegalConsentFields
+                  privacyChecked={privacyAccepted}
+                  termsChecked={termsAccepted}
+                  onPrivacyChange={setPrivacyAccepted}
+                  onTermsChange={setTermsAccepted}
+                  disabled={pending}
+                  privacyLabel={
+                    <>
+                      {t("privacyConsent")}{" "}
+                      <Link
+                        href="/privacy"
+                        className="text-action underline-offset-2 hover:underline"
+                      >
+                        {t("privacyPolicy")}
+                      </Link>
+                      .
+                    </>
+                  }
+                />
                 {service.price_cents > 0 && payload.cancelPolicy ? (
                   <CancelPolicyNotice
                     policy={payload.cancelPolicy}
@@ -797,7 +795,12 @@ export function PublicBookingFlow({
                 {atBookingCap ? null : (
                   <Button
                     type="submit"
-                    disabled={pending || linksPending}
+                    disabled={
+                      pending ||
+                      linksPending ||
+                      !privacyAccepted ||
+                      !termsAccepted
+                    }
                     className="w-full"
                   >
                     {pending

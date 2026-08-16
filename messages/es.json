@@ -997,7 +997,8 @@
         "alreadySet": "Ya hay una contraseña definida para este enlace.",
         "authRequired": "Introduzca su contraseña para continuar.",
         "serverConfig": "Error de configuración del servidor. Contacte a su consultor.",
-        "privacyRequired": "Acepte el aviso de privacidad para continuar."
+        "privacyRequired": "Acepte el aviso de privacidad para continuar.",
+        "legalRequired": "Acepte los Términos y condiciones y la Política de privacidad para continuar."
       }
     },
     "sharing": "Creando…",
@@ -1686,12 +1687,27 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacidad",
     "privacyTitle": "Política de privacidad",
-    "privacyUpdated": "Última actualización: 14 de agosto de 2026",
-    "privacyIntro": "Yuzu Immigration es un software de gestión de práctica operado por Yuzu Solutions para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa Yuzu Immigration — incluido el espacio de trabajo del consultor, los enlaces compartidos, el portal del cliente y las páginas públicas de reserva. Está redactada para apoyar la rendición de cuentas prevista por PIPEDA. No es una certificación ni un asesoramiento jurídico.",
+    "privacyUpdated": "Última actualización: 16 de agosto de 2026",
+    "privacyIntro": "Yuzu Immigration es un software de gestión de práctica operado por Yuzu Solutions para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa Yuzu Immigration — incluido el espacio de trabajo del consultor, los enlaces compartidos, el portal del cliente y las páginas públicas de reserva. El uso del servicio también se rige por nuestros Términos y condiciones. Está redactada para apoyar la rendición de cuentas prevista por PIPEDA. No es una certificación ni un asesoramiento jurídico.",
     "backHome": "Volver al inicio",
     "consentTitle": "Cómo se usa su información",
     "consentSummary": "Su información personal y documentos se comparten para que esta firma prepare y gestione su expediente de inmigración en Yuzu Immigration.",
     "viewPrivacyPolicy": "Ver la política de privacidad completa",
+    "viewTerms": "Ver los términos y condiciones",
+    "termsLink": "Términos",
+    "termsTitle": "Términos y condiciones",
+    "termsUpdated": "Última actualización: 16 de agosto de 2026",
+    "termsIntro": "Estos términos rigen el uso de Yuzu Immigration, software de gestión de práctica operado por Yuzu Solutions. Aplican a las firmas consultoras y su personal, y a los clientes y personas que reservan mediante los enlaces de una firma. No son asesoramiento jurídico ni un contrato de representación con Yuzu Solutions.",
+    "termsName": "Términos y condiciones",
+    "privacyName": "Política de privacidad",
+    "agreeTerms": "He leído y acepto los",
+    "agreePrivacy": "He leído y acepto la",
+    "legalRequired": "Acepte los Términos y condiciones y la Política de privacidad para continuar.",
+    "acceptTitle": "Aceptar para continuar",
+    "acceptSubtitle": "Para crear su cuenta de Yuzu Immigration, debe aceptar ambos documentos.",
+    "acceptCta": "Aceptar y continuar",
+    "accepting": "Guardando…",
+    "acceptFailed": "No se pudo guardar su aceptación. Inténtelo de nuevo.",
     "consentBody": "Al continuar, usted proporciona información personal y documentos para que esta firma prepare y gestione su expediente de inmigración en Yuzu Immigration. Los registros principales se almacenan en Canadá. Los archivos cargados y muchos campos de identidad están cifrados. El personal de la firma puede abrir el expediente en su espacio de trabajo; Yuzu Solutions lo trata para operar la plataforma. Los detalles sobre correo, calendario y alojamiento están en nuestra Política de privacidad.",
     "sections": {
       "controller": {
@@ -1708,7 +1724,7 @@
       },
       "legalBasis": {
         "title": "4. Consentimiento y aviso",
-        "body": "Las firmas son responsables de obtener un consentimiento significativo cuando la ley lo exige, y de explicar sus propios contratos y prácticas de privacidad, incluidas las obligaciones de la Ley 25 de Quebec cuando apliquen.\n\nLos enlaces compartidos exigen una casilla de privacidad cuando el cliente define por primera vez la contraseña del enlace. La reserva pública exige una casilla que enlaza a esta política. Marcar cualquiera de esas casillas es consentimiento al tratamiento aquí descrito para el expediente o la cita de esa firma, sujeto a las instrucciones de la firma y a la ley aplicable.\n\nPuede negarse a no usar el enlace o a no reservar. Puede pedir a la firma que retire el consentimiento o elimine información, sujeto a las reglas profesionales de conservación. Algunos tratamientos (registros de seguridad y conservación legal) pueden continuar cuando la ley lo permite."
+        "body": "Las firmas son responsables de obtener un consentimiento significativo cuando la ley lo exige, y de explicar sus propios contratos y prácticas de privacidad, incluidas las obligaciones de la Ley 25 de Quebec cuando apliquen.\n\nEl personal (consultores y otros usuarios de la firma) debe aceptar esta Política de privacidad y los Términos y condiciones al crear una cuenta de Yuzu Immigration. Los enlaces compartidos exigen ambas casillas cuando el cliente define por primera vez la contraseña del enlace. La reserva pública exige ambas casillas antes de enviar. Marcar esas casillas es consentimiento al tratamiento aquí descrito para esa cuenta, expediente o cita, sujeto a las instrucciones de la firma y a la ley aplicable.\n\nPuede negarse a no crear una cuenta, a no usar el enlace o a no reservar. Puede pedir a la firma que retire el consentimiento o elimine información, sujeto a las reglas profesionales de conservación. Algunos tratamientos (registros de seguridad y conservación legal) pueden continuar cuando la ley lo permite."
       },
       "safeguards": {
         "title": "5. Medidas de seguridad",
@@ -1749,6 +1765,80 @@
       "contact": {
         "title": "14. Contacto",
         "body": "Consultas de privacidad sobre la plataforma Yuzu Immigration:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente de inmigración o su cita."
+      }
+    },
+    "termsSections": {
+      "agreement": {
+        "title": "1. Acuerdo",
+        "body": "Al crear una cuenta, unirse al espacio de una firma, definir una contraseña en un enlace compartido o enviar una reserva pública, usted acepta estos Términos y condiciones y la Política de privacidad.\n\nSi no está de acuerdo, no use Yuzu Immigration. Si acepta en nombre de una firma, confirma que tiene autoridad para vincular a esa firma."
+      },
+      "parties": {
+        "title": "2. A quién aplican estos términos",
+        "body": "Yuzu Solutions opera Yuzu Immigration.\n\nUna «firma» es la organización consultora que tiene un espacio de trabajo. El «personal» son los usuarios de la firma (administradores, consultores y asistentes).\n\nUn «cliente» o «invitado» usa el enlace compartido, el portal o la página pública de reserva de una firma. El cliente tiene relación con la firma, no un contrato profesional con Yuzu Solutions."
+      },
+      "service": {
+        "title": "3. El servicio",
+        "body": "Yuzu Immigration es software de gestión de práctica: registros de clientes, cuestionarios, preparación de formularios, carga de documentos, enlaces compartidos, calendario y reserva pública.\n\nYuzu Solutions provee el software. No presta asesoramiento, representación ni servicios jurídicos de inmigración. No está afiliada a Immigration, Refugees and Citizenship Canada (IRCC) ni al Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI).\n\nLas funciones pueden cambiar. Podemos añadir, modificar o retirar funciones con un aviso razonable cuando sea práctico."
+      },
+      "accounts": {
+        "title": "4. Cuentas",
+        "body": "Las cuentas del personal son para personas autorizadas por una firma. Debe proporcionar información exacta, mantener las credenciales en confidencialidad y avisar a la firma si pierde el acceso.\n\nLos clientes crean una contraseña en un enlace compartido para proteger ese enlace. Esa contraseña no es una cuenta de personal. Quienes reservan una cita crean un registro de cliente en el espacio de la firma.\n\nPodemos suspender una cuenta que razonablemente creamos que se usa sin autorización, en incumplimiento de estos términos, o de un modo que ponga en riesgo la seguridad del servicio o de otros usuarios."
+      },
+      "firmDuties": {
+        "title": "5. Responsabilidades de la firma",
+        "body": "La firma es responsable de su práctica de inmigración, incluidos mandatos, asesoramiento, deberes del College of Immigration and Citizenship Consultants y obligaciones de privacidad hacia sus clientes (incluida la Ley 25 de Quebec cuando aplique).\n\nLa firma decide qué información de clientes recopilar y cuánto tiempo conservarla. Debe obtener consentimiento significativo cuando la ley lo exija, usar el producto solo con fines profesionales lícitos y configurar el acceso para que solo el personal autorizado abra expedientes.\n\nYuzu Solutions trata la información de clientes como proveedor de servicios según las instrucciones de la firma, como describe la Política de privacidad y, si se firma, un addendum de tratamiento de datos."
+      },
+      "clientUse": {
+        "title": "6. Uso por clientes e invitados",
+        "body": "Si abre el enlace compartido de una firma o reserva en su página, entrega información a esa firma para gestionar su expediente o cita. Yuzu Solutions aloja y trata esa información para operar el producto.\n\nSolo debe enviar información que esté autorizado a proporcionar. No comparta la contraseña de un enlace salvo según indique la firma. Las páginas de reserva y los enlaces se identifican con tokens difíciles de adivinar; no los publique.\n\nLas preguntas sobre su expediente, cita u honorarios de la firma deben dirigirse a la firma."
+      },
+      "acceptableUse": {
+        "title": "7. Uso aceptable",
+        "body": "No puede:\n• Sondear, interrumpir o sobrecargar el servicio, ni intentar eludir la seguridad o los controles de acceso\n• Usar la cuenta de otra persona o un enlace compartido sin autorización\n• Cargar malware o contenido que no tenga derecho a compartir\n• Usar el producto para enviar spam o inducir a error a IRCC, MIFI o cualquier autoridad\n• Revender o sublicenciar el software salvo acuerdo escrito de Yuzu Solutions\n\nPodemos investigar un uso sospechoso y cooperar con una firma o con las autoridades cuando la ley lo exija."
+      },
+      "fees": {
+        "title": "8. Honorarios",
+        "body": "Yuzu Solutions puede cobrar a las firmas por el software según un pedido, plan o factura aparte. Si no hay un plan de pago, podemos ofrecer acceso de prueba o anticipado e introducir tarifas con aviso a los administradores de la firma.\n\nLos honorarios que un invitado paga por una consulta los cobra la firma (por ejemplo a través de Square). Yuzu Solutions no es parte de ese encargo. Los reembolsos y cancelaciones siguen la política de cancelación de la firma mostrada al reservar."
+      },
+      "ip": {
+        "title": "9. Propiedad intelectual",
+        "body": "Yuzu Solutions y sus licenciantes son dueños de Yuzu Immigration, incluido el software, el diseño y la documentación. Estos términos no transfieren la propiedad.\n\nLa firma y sus clientes conservan sus derechos sobre el contenido que envían (cuestionarios, documentos, notas y similares). La firma otorga a Yuzu Solutions una licencia limitada para alojar, tratar y mostrar ese contenido solo para prestar el servicio.\n\nLos formularios de IRCC y MIFI siguen siendo de esas autoridades. El producto ayuda a completarlos; no sustituye las instrucciones oficiales."
+      },
+      "privacy": {
+        "title": "10. Privacidad",
+        "body": "La información personal se trata como describe la Política de privacidad. Esa política forma parte de estos términos.\n\nLos datos principales de la aplicación se alojan en Canadá. Algunos subprocesadores (cómputo de alojamiento, correo y servicios de Google cuando se usan) pueden tratar información fuera de Canadá, incluso en Estados Unidos, como explica la Política de privacidad."
+      },
+      "thirdParties": {
+        "title": "11. Servicios de terceros",
+        "body": "El producto puede conectarse a terceros que la firma o un miembro del personal active, incluidos el inicio de sesión con Google, Google Calendar y Meet, el correo transaccional y el pago (Square). Esos servicios tienen sus propios términos. Yuzu Solutions no es responsable de los actos o interrupciones de un tercero, salvo en la medida en que la ley no permita esa limitación."
+      },
+      "disclaimers": {
+        "title": "12. Exenciones",
+        "body": "El servicio se ofrece «tal cual» y «según disponibilidad». No garantizamos que sea ininterrumpido, sin errores, ni que los formularios generados estén completos o sean aceptados por una autoridad. El personal debe revisar cada formulario y cada presentación.\n\nYuzu Solutions no garantiza resultados de inmigración. En la máxima medida permitida por la ley, excluimos las garantías implícitas de comerciabilidad, idoneidad para un fin particular y no infracción."
+      },
+      "liability": {
+        "title": "13. Limitación de responsabilidad",
+        "body": "En la máxima medida permitida por la ley, Yuzu Solutions no es responsable de lucro cesante, pérdida de datos, interrupción del negocio ni daños indirectos, incidentales, especiales o consecuentes, aunque se nos hubiera avisado de su posibilidad.\n\nNuestra responsabilidad total derivada del servicio se limita a las tarifas que la firma nos pagó por el software en los tres meses anteriores a la reclamación, o CAD 100 si no se pagaron tarifas.\n\nEstos límites no aplican a la responsabilidad que no pueda limitarse (fraude, muerte o lesiones personales por negligencia cuando no pueda excluirse). Los consumidores conservan los derechos imperativos que la ley local no les permite renunciar."
+      },
+      "indemnity": {
+        "title": "14. Indemnización",
+        "body": "La firma defenderá e indemnizará a Yuzu Solutions frente a reclamaciones derivadas del uso del servicio por la firma, de su asesoramiento o presentaciones de inmigración, del contenido que la firma o sus clientes envíen, o del incumplimiento de estos términos por la firma, salvo en la medida en que la reclamación se deba a dolo de Yuzu Solutions."
+      },
+      "termination": {
+        "title": "15. Suspensión y terminación",
+        "body": "Una firma puede dejar de usar el servicio y solicitar la eliminación de los datos de su espacio según la Política de privacidad, sujeta a reglas profesionales de conservación y ciclos de copia de seguridad.\n\nPodemos suspender o terminar el acceso si hay tarifas impagas (cuando aplique un plan de pago), si se incumplen estos términos, o si discontinuamos el producto. Avisaremos a los administradores de la firma con un plazo razonable cuando sea práctico.\n\nLas cláusulas que deban sobrevivir (propiedad intelectual, exenciones, límites de responsabilidad e indemnización) sobreviven a la terminación."
+      },
+      "changes": {
+        "title": "16. Cambios a estos términos",
+        "body": "Podemos actualizar estos términos para reflejar cambios de producto, legales o de seguridad. La fecha de «Última actualización» cambiará entonces. Los cambios materiales se señalarán en el producto o a los administradores de la firma cuando sea práctico. El uso continuado después de la fecha de vigencia es aceptación de los términos actualizados, salvo cuando la ley exija un nuevo consentimiento."
+      },
+      "governingLaw": {
+        "title": "17. Ley aplicable",
+        "body": "Estos términos se rigen por las leyes de la provincia de Ontario y las leyes federales de Canadá aplicables allí, sin tener en cuenta las normas de conflicto de leyes. Los tribunales de Ontario tienen jurisdicción exclusiva, salvo que podamos solicitar medidas cautelares en cualquier tribunal competente, y salvo que los consumidores conserven cualquier fuero o derecho imperativo al que no puedan renunciar (incluso en Quebec)."
+      },
+      "contact": {
+        "title": "18. Contacto",
+        "body": "Preguntas sobre estos términos:\nYuzu Solutions — privacy@yuzusolutions.ca\n\nSi es cliente de una firma, contacte a esa firma para su expediente, cita o el contrato de la firma."
       }
     }
   },

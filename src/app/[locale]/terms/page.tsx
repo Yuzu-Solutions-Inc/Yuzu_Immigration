@@ -3,23 +3,27 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LegalDocument } from "@/components/legal/legal-document";
 
 const SECTIONS = [
-  "controller",
-  "purposes",
-  "collection",
-  "legalBasis",
-  "safeguards",
-  "retention",
-  "sharing",
-  "transfers",
-  "cookies",
-  "rights",
-  "breach",
-  "children",
+  "agreement",
+  "parties",
+  "service",
+  "accounts",
+  "firmDuties",
+  "clientUse",
+  "acceptableUse",
+  "fees",
+  "ip",
+  "privacy",
+  "thirdParties",
+  "disclaimers",
+  "liability",
+  "indemnity",
+  "termination",
   "changes",
+  "governingLaw",
   "contact",
 ] as const;
 
-export default async function PrivacyPolicyPage({
+export default async function TermsPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -31,15 +35,15 @@ export default async function PrivacyPolicyPage({
 
   return (
     <LegalDocument
-      title={t("privacyTitle")}
-      updated={t("privacyUpdated")}
-      intro={t("privacyIntro")}
+      title={t("termsTitle")}
+      updated={t("termsUpdated")}
+      intro={t("termsIntro")}
       backHomeLabel={t("backHome")}
       appName={app("name")}
       sections={SECTIONS.map((id) => ({
         id,
-        title: t(`sections.${id}.title`),
-        body: t(`sections.${id}.body`),
+        title: t(`termsSections.${id}.title`),
+        body: t(`termsSections.${id}.body`),
       }))}
     />
   );

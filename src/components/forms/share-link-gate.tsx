@@ -11,6 +11,7 @@ import {
 } from "@/app/actions/share-auth";
 import { shareAuthInitialState } from "@/app/actions/share-auth-state";
 import { isShareErrorKey } from "@/lib/ircc/share-error-keys";
+import { LegalConsentFields } from "@/components/legal/legal-consent-fields";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function ShareLinkGate({
   const t = useTranslations("forms");
   const tl = useTranslations("legal");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [setupState, setupAction, setupPending] = useActionState(
     setSharePasswordAction,
     shareAuthInitialState,
@@ -71,6 +73,7 @@ export function ShareLinkGate({
         auth_required: t("shareAuth.errors.authRequired"),
         server_config: t("shareAuth.errors.serverConfig"),
         privacy_required: t("shareAuth.errors.privacyRequired"),
+        legal_required: t("shareAuth.errors.legalRequired"),
       }[errorKey] ?? t("errors.generic")
     : null;
 
@@ -125,15 +128,26 @@ export function ShareLinkGate({
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {tl("consentSummary")}
               </p>
-              <Link
-                href="/privacy"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "w-full",
-                )}
-              >
-                {tl("viewPrivacyPolicy")}
-              </Link>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Link
+                  href="/privacy"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "w-full",
+                  )}
+                >
+                  {tl("viewPrivacyPolicy")}
+                </Link>
+                <Link
+                  href="/terms"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "w-full",
+                  )}
+                >
+                  {tl("viewTerms")}
+                </Link>
+              </div>
             </div>
             <form action={setupAction} className="space-y-4">
               <input type="hidden" name="token" value={token} />
@@ -166,33 +180,29 @@ export function ShareLinkGate({
                   hideLabel={t("shareAuth.hidePassword")}
                 />
               </Field>
-              <label className="flex items-start gap-2 text-sm leading-relaxed">
-                <input
-                  type="checkbox"
-                  name="privacyAccepted"
-                  value="on"
-                  required
-                  checked={privacyAccepted}
-                  onChange={(event) =>
-                    setPrivacyAccepted(event.target.checked)
-                  }
-                  className="mt-1 size-4 rounded border-input"
-                />
-                <span>
-                  {t("shareAuth.privacyConsent")}{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-action underline-offset-2 hover:underline"
-                  >
-                    {t("shareAuth.privacyPolicy")}
-                  </Link>
-                  .
-                </span>
-              </label>
+              <LegalConsentFields
+                privacyChecked={privacyAccepted}
+                termsChecked={termsAccepted}
+                onPrivacyChange={setPrivacyAccepted}
+                onTermsChange={setTermsAccepted}
+                disabled={setupPending}
+                privacyLabel={
+                  <>
+                    {t("shareAuth.privacyConsent")}{" "}
+                    <Link
+                      href="/privacy"
+                      className="text-action underline-offset-2 hover:underline"
+                    >
+                      {t("shareAuth.privacyPolicy")}
+                    </Link>
+                    .
+                  </>
+                }
+              />
               <Button
                 type="submit"
                 className="w-full"
-                disabled={setupPending || !privacyAccepted}
+                disabled={setupPending || !privacyAccepted || !termsAccepted}
               >
                 {setupPending ? (
                   <Loader2 className="size-4 animate-spin" />

@@ -29,6 +29,7 @@ import { recordAuditEvent } from "@/lib/security/audit";
 import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import { parseShareLinkPassword } from "@/lib/security/share-password";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { formAcceptedLegal } from "@/lib/legal/acceptance";
 
 import type { ShareAuthActionState } from "./share-auth-state";
 
@@ -69,8 +70,8 @@ export async function setSharePasswordAction(
     const confirm = String(formData.get("confirm") || "");
 
     if (!token) return { error: "invalid" };
-    if (formData.get("privacyAccepted") !== "on") {
-      return { error: "privacy_required" };
+    if (!formAcceptedLegal(formData)) {
+      return { error: "legal_required" };
     }
     if (password !== confirm) return { error: "mismatch" };
 

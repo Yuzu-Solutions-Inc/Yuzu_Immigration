@@ -19,7 +19,7 @@ import { useState } from "react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { PrivacyLink } from "@/components/legal/privacy-link";
+import { LegalLinks } from "@/components/legal/legal-links";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
   OrgSwitcher,
@@ -222,9 +222,14 @@ function SidebarBody({
           collapsed ? "flex flex-col items-center p-2" : "p-3",
         )}
       >
-        <PrivacyLink
+        <LegalLinks
           onNavigate={onNavigate}
           className={cn(
+            collapsed
+              ? "flex-col items-center gap-0"
+              : undefined,
+          )}
+          linkClassName={cn(
             "block text-sidebar-foreground/45 hover:text-sidebar-foreground/70",
             collapsed
               ? "w-9 truncate px-0 py-1 text-center text-[11px]"

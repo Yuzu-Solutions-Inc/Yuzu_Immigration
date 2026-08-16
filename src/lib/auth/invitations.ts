@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 
 import type { OrgRole } from "@/lib/auth/rbac";
 import { getSessionUser } from "@/lib/auth/session";
+import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export const INVITE_TTL_DAYS = 14;
@@ -60,6 +61,9 @@ export async function acceptInvitationByToken(
   if (!user?.email) {
     return { ok: false, error: "unauthorized" };
   }
+  if (!hasAcceptedLegal(user)) {
+    return { ok: false, error: "legal_required" };
+  }
 
   const admin = createServiceClient();
   const { data, error } = await admin
@@ -107,7 +111,7 @@ export async function acceptInvitationByToken(
 /** Join any pending invites for the signed-in user's email. */
 export async function acceptPendingInvitationsForUser(): Promise<number> {
   const user = await getSessionUser();
-  if (!user?.email) return 0;
+  if (!user?.email || !hasAcceptedLegal(user)) return 0;
 
   const admin = createServiceClient();
   const email = normalizeInviteEmail(user.email);

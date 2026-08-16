@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
-import { PrivacyLink } from "@/components/legal/privacy-link";
+import { LegalLinks } from "@/components/legal/legal-links";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
@@ -74,7 +74,7 @@ export default async function SecuritySettingsPage({
           {t("security")}
         </h2>
         <p className="text-sm text-muted-foreground">{t("securityHelp")}</p>
-        <PrivacyLink className="inline-block pt-1" />
+        <LegalLinks className="pt-1" />
       </div>
 
       <div className="space-y-2">
