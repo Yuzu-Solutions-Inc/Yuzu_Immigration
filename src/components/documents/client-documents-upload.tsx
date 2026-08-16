@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -13,12 +13,19 @@ import {
   uploadPortalDocumentAction,
 } from "@/app/actions/portal-workspace";
 import { DocumentFileActions } from "@/components/documents/document-file-actions";
-import { Button } from "@/components/ui/button";
+import { SurfaceCard } from "@/components/layout/surface-card";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { FieldHint } from "@/components/ui/field";
+import {
+  StatusPill,
+  type StatusPillTone,
+} from "@/components/ui/status-pill";
 import {
   DOCUMENT_ALLOWED_MIME_TYPES,
   DOCUMENT_MAX_BYTES,
 } from "@/lib/documents/catalog";
 import type { DocumentRequestWithFile } from "@/lib/documents/service";
+import { cn } from "@/lib/utils";
 
 const initial: DocumentsActionState = {};
 
@@ -32,10 +39,20 @@ function documentLabel(
   return t(`keys.${row.doc_key}`);
 }
 
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function documentPill(
+  row: DocumentRequestWithFile,
+  t: ReturnType<typeof useTranslations<"documents">>,
+): { label: string; tone: StatusPillTone } {
+  if (row.status === "accepted") {
+    return { label: t("pills.completed"), tone: "success" };
+  }
+  if (row.status === "uploaded") {
+    return { label: t("pills.submitted"), tone: "action" };
+  }
+  if (row.status === "rejected") {
+    return { label: t("pills.denied"), tone: "destructive" };
+  }
+  return { label: t("pills.waiting"), tone: "warning" };
 }
 
 export function ClientDocumentsUpload({
@@ -67,6 +84,22 @@ export function ClientDocumentsUpload({
 
   const accept = DOCUMENT_ALLOWED_MIME_TYPES.join(",");
   const maxMb = Math.round(DOCUMENT_MAX_BYTES / (1024 * 1024));
+
+  const peopleById = useMemo(
+    () => new Map(people.map((person) => [person.id, person])),
+    [people],
+  );
+  const showPerson = people.length > 1;
+
+  const ordered = useMemo(() => {
+    const index = new Map(people.map((person, i) => [person.id, i]));
+    return [...localRequests].sort((a, b) => {
+      const ai = index.get(a.person_id) ?? 999;
+      const bi = index.get(b.person_id) ?? 999;
+      if (ai !== bi) return ai - bi;
+      return a.sort_order - b.sort_order;
+    });
+  }, [people, localRequests]);
 
   useEffect(() => {
     const pendingUpload = pendingUploadRef.current;
@@ -134,6 +167,12 @@ export function ClientDocumentsUpload({
     action(formData);
   }
 
+  function fetchFile(requestId: string) {
+    return projectId
+      ? downloadPortalDocumentAction(projectId, requestId)
+      : downloadShareDocumentAction(token ?? "", requestId);
+  }
+
   const error =
     state.error &&
     ({
@@ -150,116 +189,82 @@ export function ClientDocumentsUpload({
       t("errors.generic"));
 
   return (
-    <div className="w-full space-y-6">
-      <p className="text-sm text-muted-foreground">
-        {t("clientFormats", { maxMb })}
-      </p>
+    <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
+      <div className="space-y-1 px-5 py-4">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("title")}
+        </h2>
+        <FieldHint>{t("clientFormats", { maxMb })}</FieldHint>
+      </div>
 
-      {people.map((person) => {
-        const rows = localRequests.filter((r) => r.person_id === person.id);
-        if (rows.length === 0) return null;
-        return (
-          <section key={person.id} className="space-y-3">
-            <h2 className="font-heading text-lg font-semibold text-brand">
-              {person.displayName}
-            </h2>
-            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-              {rows.map((row) => {
-                const selected = selectedFiles[row.id] ?? null;
-                const isUploading = pending && activeRequestId === row.id;
-                const justUploaded = successRequestId === row.id;
-                const hasUploaded = Boolean(row.file);
-                const isRejected = row.status === "rejected";
-                const isApproved = row.status === "accepted";
-                const canModify = !isApproved;
+      <ul className="divide-y divide-border border-t border-border">
+        {ordered.length === 0 ? (
+          <li className="px-5 py-3 text-sm text-muted-foreground">
+            {t("emptyPerson")}
+          </li>
+        ) : (
+          ordered.map((row) => {
+            const person = peopleById.get(row.person_id);
+            const pill = documentPill(row, t);
+            const selected = selectedFiles[row.id] ?? null;
+            const isUploading = pending && activeRequestId === row.id;
+            const justUploaded = successRequestId === row.id;
+            const hasUploaded = Boolean(row.file);
+            const isApproved = row.status === "accepted";
+            const canModify = !isApproved;
+            const title = [
+              documentLabel(row, t),
+              row.request_scope === "project"
+                ? t("scopeProject")
+                : showPerson && person
+                  ? person.displayName
+                  : null,
+              row.consultant_note,
+            ]
+              .filter(Boolean)
+              .join(" · ");
 
-                return (
-                  <li key={row.id} className="space-y-3 px-4 py-4">
-                    <div className="space-y-1.5">
-                      <p className="font-medium text-brand">
-                        {documentLabel(row, t)}
-                        {row.is_required ? (
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            · {t("required")}
-                          </span>
-                        ) : null}
-                      </p>
-                      {row.consultant_note ? (
-                        <p className="text-sm text-muted-foreground">
-                          {row.consultant_note}
-                        </p>
-                      ) : null}
-
-                      {isRejected && row.rejection_comment ? (
-                        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                          <span className="font-semibold">
-                            {t("review.clientDenied")}
-                          </span>
-                          {": "}
-                          {row.rejection_comment}
-                        </p>
-                      ) : null}
-
-                      {hasUploaded ? (
-                        <div className="space-y-2">
-                          <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
-                            <span className="font-semibold">
-                              {isApproved
-                                ? t("statusApproved")
-                                : t("statusUploaded")}
-                            </span>
-                            {": "}
-                            {row.file!.original_filename}
-                            <span className="text-success/80">
-                              {" "}
-                              · {formatBytes(row.file!.byte_size)}
-                            </span>
-                            {justUploaded ? (
-                              <span className="ml-2 font-medium">
-                                {t("justUploaded")}
-                              </span>
-                            ) : null}
-                          </p>
-                          <DocumentFileActions
-                            requestId={row.id}
-                            filename={row.file!.original_filename}
-                            fetchFile={(id) =>
-                              projectId
-                                ? downloadPortalDocumentAction(projectId, id)
-                                : downloadShareDocumentAction(token ?? "", id)
-                            }
-                          />
-                        </div>
-                      ) : (
-                        <p className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
-                          <span className="font-semibold">
-                            {t("statusMissing")}
-                          </span>
-                        </p>
-                      )}
-
-                      {selected ? (
-                        <p className="rounded-lg border border-dashed border-action/40 bg-action/5 px-3 py-2 text-sm text-brand">
-                          <span className="font-semibold text-action">
-                            {t("statusSelected")}
-                          </span>
-                          {": "}
-                          {selected.name}
-                          <span className="text-muted-foreground">
-                            {" "}
-                            · {formatBytes(selected.size)}
-                          </span>
-                        </p>
-                      ) : null}
-                    </div>
-
+            return (
+              <li key={row.id} className="group space-y-2 px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <p
+                    className="min-w-0 flex-1 truncate text-sm font-medium text-brand"
+                    title={title}
+                  >
+                    {documentLabel(row, t)}
+                    {row.request_scope === "project" ? (
+                      <span className="font-normal text-muted-foreground">
+                        {` · ${t("scopeProject")}`}
+                      </span>
+                    ) : showPerson && person ? (
+                      <span className="font-normal text-muted-foreground">
+                        {` · ${person.displayName}`}
+                      </span>
+                    ) : null}
+                  </p>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {row.file ? (
+                      <div className="flex items-center opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[p[role=alert]]:opacity-100">
+                        <DocumentFileActions
+                          compact
+                          requestId={row.id}
+                          filename={row.file.original_filename}
+                          fetchFile={fetchFile}
+                        />
+                      </div>
+                    ) : null}
                     {canModify ? (
                       <form
                         action={(fd) => onSubmit(row.id, fd)}
-                        className="flex flex-wrap items-center gap-2"
+                        className="flex shrink-0 items-center gap-1.5"
                       >
-                        <label className="inline-flex cursor-pointer items-center rounded-lg bg-muted px-3 py-2 text-sm font-medium text-brand hover:bg-muted/80">
-                          {hasUploaded ? t("chooseReplacement") : t("chooseFile")}
+                        <label
+                          className={cn(
+                            buttonVariants({ variant: "outline", size: "xs" }),
+                            "cursor-pointer",
+                          )}
+                        >
+                          {t("chooseFile")}
                           <input
                             type="file"
                             accept={accept}
@@ -270,10 +275,15 @@ export function ClientDocumentsUpload({
                             }}
                           />
                         </label>
-
                         {selected ? (
                           <>
-                            <Button type="submit" disabled={isUploading}>
+                            <span
+                              className="hidden max-w-[9rem] truncate text-xs text-muted-foreground sm:inline"
+                              title={selected.name}
+                            >
+                              {selected.name}
+                            </span>
+                            <Button type="submit" size="xs" disabled={isUploading}>
                               {isUploading
                                 ? t("uploading")
                                 : hasUploaded
@@ -282,7 +292,8 @@ export function ClientDocumentsUpload({
                             </Button>
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="ghost"
+                              size="xs"
                               disabled={isUploading}
                               onClick={() => clearSelection(row.id)}
                             >
@@ -292,19 +303,32 @@ export function ClientDocumentsUpload({
                         ) : null}
                       </form>
                     ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        );
-      })}
+                  </div>
+                  <StatusPill
+                    label={
+                      justUploaded ? t("justUploaded") : pill.label
+                    }
+                    tone={justUploaded ? "success" : pill.tone}
+                  />
+                </div>
+                {row.status === "rejected" && row.rejection_comment ? (
+                  <p className="text-sm text-destructive">
+                    {t("review.rejectionNote", {
+                      comment: row.rejection_comment,
+                    })}
+                  </p>
+                ) : null}
+              </li>
+            );
+          })
+        )}
+      </ul>
 
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="border-t border-border px-5 py-3 text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
-    </div>
+    </SurfaceCard>
   );
 }
