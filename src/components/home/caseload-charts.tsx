@@ -188,8 +188,8 @@ export function TodayStrip({
               className={cn(
                 "absolute top-5 bottom-1.5 overflow-hidden rounded-md px-1.5 py-0.5 text-[10px] leading-tight font-medium",
                 item.unpaid
-                  ? "bg-warning-bg text-warning-text"
-                  : "bg-action/15 text-action",
+                  ? "bg-action/10 text-action ring-1 ring-inset ring-action/30"
+                  : "bg-muted text-brand",
                 item.past && "opacity-50",
               )}
               style={{ left: `${left}%`, width: `${width}%` }}

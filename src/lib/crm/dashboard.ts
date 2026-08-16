@@ -30,24 +30,31 @@ export type ChartDatum = {
   count: number;
 };
 
-export type AttentionKind =
-  | "overdue"
-  | "docs_review"
-  | "questionnaire"
-  | "unpaid"
-  | "stuck"
-  | "due_soon";
+export const ATTENTION_KINDS = [
+  "overdue",
+  "docs_review",
+  "questionnaire",
+  "unpaid",
+  "stuck",
+  "due_soon",
+] as const;
 
-export type AttentionItem = {
-  id: string;
+export type AttentionKind = (typeof ATTENTION_KINDS)[number];
+
+export type AttentionAlert = {
   kind: AttentionKind;
-  title: string;
-  href: string;
-  status?: ProjectStatus;
   days?: number;
   count?: number;
   amountCents?: number;
   currency?: string;
+};
+
+export type AttentionRow = {
+  id: string;
+  title: string;
+  href: string;
+  status?: ProjectStatus;
+  alerts: AttentionAlert[];
   docsDone?: number;
   docsTotal?: number;
   formPercent?: number;
@@ -85,20 +92,17 @@ export type HomeDashboard = {
   hasCaseload: boolean;
   kpis: {
     openProjects: number;
-    dueIn14Days: number;
-    overdueSubmissions: number;
+    readyToSubmit: number;
+    submittedProjects: number;
     docsToReview: number;
-    formsReady: number;
-    stuckWaiting: number;
     pendingPayments: number;
     pendingAmountCents: number;
     pendingCurrency: string;
     peopleCount: number;
-    statusExpiring30: number;
   };
   booking: BookingModuleSummary;
   projectsByStatus: ChartDatum[];
-  attention: AttentionItem[];
+  attention: AttentionRow[];
   appointments: DashboardAppointment[];
   statusExpiries: StatusExpiryItem[];
 };
@@ -107,16 +111,13 @@ const EMPTY: HomeDashboard = {
   hasCaseload: false,
   kpis: {
     openProjects: 0,
-    dueIn14Days: 0,
-    overdueSubmissions: 0,
+    readyToSubmit: 0,
+    submittedProjects: 0,
     docsToReview: 0,
-    formsReady: 0,
-    stuckWaiting: 0,
     pendingPayments: 0,
     pendingAmountCents: 0,
     pendingCurrency: "CAD",
     peopleCount: 0,
-    statusExpiring30: 0,
   },
   booking: {
     timezone: "America/Toronto",
@@ -142,7 +143,31 @@ const ATTENTION_RANK: Record<AttentionKind, number> = {
   due_soon: 5,
 };
 
-const ATTENTION_LIMIT = 8;
+const ATTENTION_LIMIT = 12;
+
+function isReadyToSubmit(stats: ProjectProgress) {
+  if (stats.formPercent < 100 || stats.docsToReview > 0) return false;
+  return stats.docsTotal === 0 || stats.docsDone >= stats.docsTotal;
+}
+
+function addAlert(row: AttentionRow, alert: AttentionAlert) {
+  const existing = row.alerts.find((item) => item.kind === alert.kind);
+  if (!existing) {
+    row.alerts.push(alert);
+    return;
+  }
+  if (alert.count != null) {
+    existing.count = Math.max(existing.count ?? 0, alert.count);
+  }
+  if (alert.amountCents != null) {
+    existing.amountCents = (existing.amountCents ?? 0) + alert.amountCents;
+    existing.currency = alert.currency ?? existing.currency;
+  }
+  if (alert.days != null) {
+    existing.days =
+      existing.days == null ? alert.days : Math.min(existing.days, alert.days);
+  }
+}
 
 function countBy<T extends string>(
   values: T[],
@@ -363,14 +388,6 @@ export async function getHomeDashboard(
       Boolean(project.submit_before),
   );
 
-  let dueIn14Days = 0;
-  let overdueSubmissions = 0;
-  for (const project of datedOpen) {
-    const days = daysUntilIso(project.submit_before, now);
-    if (days < 0) overdueSubmissions += 1;
-    else if (days <= 14) dueIn14Days += 1;
-  }
-
   const submittedIds = new Set(
     (
       (answersResult.data ?? []) as Array<{
@@ -385,77 +402,51 @@ export async function getHomeDashboard(
     ),
   );
 
-  const projectAttention = new Map<string, AttentionItem>();
+  const rows = new Map<string, AttentionRow>();
+  const projectById = new Map(
+    liveProjects.map((project) => [project.id, project]),
+  );
 
-  const upsertProjectAttention = (projectId: string, item: AttentionItem) => {
-    const current = projectAttention.get(projectId);
-    if (!current) {
-      projectAttention.set(projectId, item);
-      return;
-    }
-    if (ATTENTION_RANK[item.kind] < ATTENTION_RANK[current.kind]) {
-      projectAttention.set(projectId, {
-        ...item,
-        count: item.count ?? current.count,
-      });
-      return;
-    }
-    if (item.count && !current.count) current.count = item.count;
+  const touchProject = (project: ProjectRow): AttentionRow => {
+    const id = `project:${project.id}`;
+    const current = rows.get(id);
+    if (current) return current;
+    const row: AttentionRow = {
+      id,
+      title: project.title,
+      href: `/projects/${project.id}`,
+      alerts: [],
+      ...withProgress(project, progress),
+    };
+    rows.set(id, row);
+    return row;
   };
 
   for (const project of datedOpen) {
     const days = daysUntilIso(project.submit_before, now);
     if (days >= 0 && days > 14) continue;
-    const kind = days < 0 ? "overdue" : "due_soon";
-    const stats = progress.get(project.id) ?? emptyProgress();
-    upsertProjectAttention(project.id, {
-      id: `${kind}:${project.id}`,
-      kind,
-      title: project.title,
-      href: `/projects/${project.id}`,
+    addAlert(touchProject(project), {
+      kind: days < 0 ? "overdue" : "due_soon",
       days,
-      count: stats.docsToReview || undefined,
-      ...withProgress(project, progress),
     });
   }
 
   for (const project of openProjects) {
     const stats = progress.get(project.id) ?? emptyProgress();
     if (stats.docsToReview > 0) {
-      upsertProjectAttention(project.id, {
-        id: `docs_review:${project.id}`,
+      addAlert(touchProject(project), {
         kind: "docs_review",
-        title: project.title,
-        href: `/projects/${project.id}#documents`,
         count: stats.docsToReview,
-        ...withProgress(project, progress),
       });
     }
     if (submittedIds.has(project.id) && ungeneratedIds.has(project.id)) {
-      upsertProjectAttention(project.id, {
-        id: `questionnaire:${project.id}`,
-        kind: "questionnaire",
-        title: project.title,
-        href: `/projects/${project.id}#forms`,
-        ...withProgress(project, progress),
-      });
+      addAlert(touchProject(project), { kind: "questionnaire" });
     }
     if (project.status === "stuck" || project.status === "waiting") {
-      upsertProjectAttention(project.id, {
-        id: `stuck:${project.id}`,
-        kind: "stuck",
-        title: project.title,
-        href: `/projects/${project.id}`,
-        ...withProgress(project, progress),
-      });
+      addAlert(touchProject(project), { kind: "stuck" });
     }
   }
 
-  const attention: AttentionItem[] = [...projectAttention.values()];
-
-  const projectTitleById = new Map(
-    liveProjects.map((project) => [project.id, project.title]),
-  );
   const paidAppointmentIds = new Set<string>();
 
   for (const row of (paymentsResult.data ?? []) as Array<{
@@ -468,18 +459,26 @@ export async function getHomeDashboard(
     appointment_id: string | null;
   }>) {
     if (row.appointment_id) paidAppointmentIds.add(row.appointment_id);
-    const projectTitle = row.project_id
-      ? projectTitleById.get(row.project_id)
-      : null;
-    attention.push({
+    const project = row.project_id ? projectById.get(row.project_id) : null;
+    if (project) {
+      addAlert(touchProject(project), {
+        kind: "unpaid",
+        amountCents: row.amount_cents,
+        currency: row.currency,
+      });
+      continue;
+    }
+    rows.set(`unpaid:${row.id}`, {
       id: `unpaid:${row.id}`,
-      kind: "unpaid",
-      title: row.description || projectTitle || "Payment",
-      href: row.project_id
-        ? `/projects/${row.project_id}#payments`
-        : "/bookings",
-      amountCents: row.amount_cents,
-      currency: row.currency,
+      title: row.description || "Payment",
+      href: "/bookings",
+      alerts: [
+        {
+          kind: "unpaid",
+          amountCents: row.amount_cents,
+          currency: row.currency,
+        },
+      ],
     });
   }
 
@@ -507,27 +506,46 @@ export async function getHomeDashboard(
   for (const row of (unpaidBookingsResult.data ?? []) as AppointmentJoin[]) {
     if (paidAppointmentIds.has(row.id)) continue;
     const mapped = mapAppointment(row);
-    attention.push({
+    const project = row.project_id ? projectById.get(row.project_id) : null;
+    if (project) {
+      addAlert(touchProject(project), {
+        kind: "unpaid",
+        amountCents: row.service?.price_cents || undefined,
+        currency: row.service?.currency,
+      });
+      continue;
+    }
+    rows.set(`unpaid-booking:${row.id}`, {
       id: `unpaid-booking:${row.id}`,
-      kind: "unpaid",
       title: mapped.guestName,
       href: "/bookings",
-      amountCents: row.service?.price_cents || undefined,
-      currency: row.service?.currency,
+      alerts: [
+        {
+          kind: "unpaid",
+          amountCents: row.service?.price_cents || undefined,
+          currency: row.service?.currency,
+        },
+      ],
     });
   }
 
-  attention.sort((a, b) => {
-    const rank = ATTENTION_RANK[a.kind] - ATTENTION_RANK[b.kind];
-    if (rank !== 0) return rank;
-    if (a.kind === "overdue" || a.kind === "due_soon") {
-      return (a.days ?? 0) - (b.days ?? 0);
-    }
-    if (a.kind === "docs_review") {
-      return (b.count ?? 0) - (a.count ?? 0);
-    }
-    return a.title.localeCompare(b.title);
-  });
+  const attention = [...rows.values()]
+    .map((row) => ({
+      ...row,
+      alerts: [...row.alerts].sort(
+        (a, b) => ATTENTION_RANK[a.kind] - ATTENTION_RANK[b.kind],
+      ),
+    }))
+    .sort((a, b) => {
+      const rankA = ATTENTION_RANK[a.alerts[0]?.kind ?? "due_soon"];
+      const rankB = ATTENTION_RANK[b.alerts[0]?.kind ?? "due_soon"];
+      if (rankA !== rankB) return rankA - rankB;
+      const daysA = a.alerts.find((alert) => alert.days != null)?.days;
+      const daysB = b.alerts.find((alert) => alert.days != null)?.days;
+      if (daysA != null && daysB != null && daysA !== daysB) return daysA - daysB;
+      return a.title.localeCompare(b.title);
+    })
+    .slice(0, ATTENTION_LIMIT);
 
   const appointments = ((appointmentsResult.data ?? []) as AppointmentJoin[]).map(
     mapAppointment,
@@ -560,19 +578,28 @@ export async function getHomeDashboard(
     .filter((row): row is StatusExpiryItem => row != null && row.days <= 60)
     .slice(0, 5);
 
-  const statusExpiring30 = statusExpiries.filter((row) => row.days <= 30).length;
   const peopleCount = peopleCountResult.count ?? 0;
-  const unpaidItems = attention.filter((item) => item.kind === "unpaid");
-  const pendingPayments = unpaidItems.length;
-  const pendingAmountCents = unpaidItems.reduce(
-    (sum, item) => sum + (item.amountCents ?? 0),
+  const unpaidAlerts = attention.flatMap((row) =>
+    row.alerts.filter((alert) => alert.kind === "unpaid"),
+  );
+  const pendingPayments = unpaidAlerts.length;
+  const pendingAmountCents = unpaidAlerts.reduce(
+    (sum, alert) => sum + (alert.amountCents ?? 0),
     0,
   );
   const pendingCurrency =
-    unpaidItems.find((item) => item.currency)?.currency ?? "CAD";
-  let formsReady = 0;
-  for (const projectId of submittedIds) {
-    if (ungeneratedIds.has(projectId)) formsReady += 1;
+    unpaidAlerts.find((alert) => alert.currency)?.currency ?? "CAD";
+
+  const submittedProjects = liveProjects.filter(
+    (project) => project.status === "submitted",
+  ).length;
+  let readyToSubmit = 0;
+  let openInProgress = 0;
+  for (const project of openProjects) {
+    if (project.status === "submitted") continue;
+    const stats = progress.get(project.id) ?? emptyProgress();
+    if (isReadyToSubmit(stats)) readyToSubmit += 1;
+    else openInProgress += 1;
   }
   const needsSetup =
     !bookingEnabled || activeServices === 0 || !hasAvailability;
@@ -581,19 +608,14 @@ export async function getHomeDashboard(
     hasCaseload:
       liveProjects.length > 0 || peopleCount > 0 || appointments.length > 0,
     kpis: {
-      openProjects: openProjects.length,
-      dueIn14Days,
-      overdueSubmissions,
+      openProjects: openInProgress,
+      readyToSubmit,
+      submittedProjects,
       docsToReview: uploadedResult.count ?? 0,
-      formsReady,
-      stuckWaiting: liveProjects.filter(
-        (project) => project.status === "stuck" || project.status === "waiting",
-      ).length,
       pendingPayments,
       pendingAmountCents,
       pendingCurrency,
       peopleCount,
-      statusExpiring30,
     },
     booking: {
       timezone,

@@ -323,6 +323,9 @@
       "title": "Needs you",
       "empty": "Nothing waiting on open files.",
       "docsCount": "{count, plural, one {# doc} other {# docs}}",
+      "filter": "Filter alerts",
+      "filterAll": "All alerts",
+      "filterEmpty": "No files match this alert.",
       "kinds": {
         "overdue": "Overdue",
         "docs_review": "Review",
@@ -350,6 +353,13 @@
       "title": "Status expiries",
       "viewPeople": "Clients",
       "empty": "No status expiries in the next 60 days."
+    },
+    "caseload": {
+      "title": "Caseload",
+      "open": "Open",
+      "ready": "Ready to submit",
+      "submitted": "Submitted",
+      "empty": "No active files yet."
     },
     "charts": {
       "pipeline": "Open files",

@@ -323,6 +323,9 @@
       "title": "Requiere acción",
       "empty": "Nada pendiente en expedientes abiertos.",
       "docsCount": "{count, plural, one {# doc} other {# docs}}",
+      "filter": "Filtrar alertas",
+      "filterAll": "Todas las alertas",
+      "filterEmpty": "Ningún expediente coincide con esta alerta.",
       "kinds": {
         "overdue": "Vencido",
         "docs_review": "Revisar",
@@ -350,6 +353,13 @@
       "title": "Estatus por vencer",
       "viewPeople": "Clientes",
       "empty": "No hay vencimientos de estatus en los próximos 60 días."
+    },
+    "caseload": {
+      "title": "Carga de trabajo",
+      "open": "Abiertos",
+      "ready": "Listos para presentar",
+      "submitted": "Presentados",
+      "empty": "Aún no hay expedientes activos."
     },
     "charts": {
       "pipeline": "Expedientes abiertos",

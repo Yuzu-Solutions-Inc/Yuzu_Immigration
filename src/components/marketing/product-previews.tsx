@@ -1,23 +1,16 @@
 import {
   Ban,
-  Banknote,
   Bell,
   Briefcase,
-  CalendarClock,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  CircleAlert,
   CircleHelp,
   ClipboardList,
-  FileCheck,
-  FileStack,
   FolderKanban,
   Home,
-  Hourglass,
   Link2,
   LogOut,
-  type LucideIcon,
   Search,
   Settings,
   Settings2,
@@ -26,14 +19,13 @@ import {
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { PipelineDonut } from "@/components/home/caseload-charts";
+import { CaseloadBar } from "@/components/home/caseload-bar";
 import { docsPercent, ProgressMeter } from "@/components/home/progress-meter";
 import { ProductChrome } from "@/components/marketing/product-chrome";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { StatusPill, type StatusPillTone } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { formatPriceCents } from "@/lib/booking/slots";
-import { projectStatusTone } from "@/lib/crm/statuses";
 import {
   formatDateInZone,
   formatDateTimeInZone,
@@ -201,108 +193,65 @@ function PreviewKpi({
   label,
   value,
   hint,
-  icon: Icon,
-  accent = "neutral",
+  emphasize = false,
+  className,
 }: {
   label: string;
   value: number;
   hint: string;
-  icon: LucideIcon;
-  accent?: "neutral" | "action" | "warning" | "danger";
+  emphasize?: boolean;
+  className?: string;
 }) {
-  const iconClass =
-    accent === "danger"
-      ? "bg-destructive/10 text-destructive"
-      : accent === "warning"
-        ? "bg-warning-bg text-warning-text"
-        : accent === "action"
-          ? "bg-action/10 text-action"
-          : "bg-muted text-muted-foreground";
-  const barClass =
-    accent === "danger"
-      ? "bg-destructive"
-      : accent === "warning"
-        ? "bg-warning"
-        : accent === "action"
-          ? "bg-action"
-          : "bg-border";
-
   return (
-    <div className="relative flex min-w-0 items-start gap-3 overflow-hidden rounded-xl border border-border bg-surface p-3 shadow-elevated">
-      <span className={cn("absolute inset-x-0 top-0 h-0.5", barClass)} />
-      <span
+    <div
+      className={cn(
+        "flex min-w-0 flex-col gap-1 rounded-xl border border-border bg-surface p-3 shadow-elevated",
+        className,
+      )}
+    >
+      <p
         className={cn(
-          "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-          iconClass,
+          "font-heading text-xl leading-none font-semibold tracking-tight tabular-nums",
+          emphasize ? "text-action" : "text-brand",
         )}
       >
-        <Icon className="size-4" />
-      </span>
-      <div className="min-w-0 flex-1 space-y-1">
-        <p
-          className={cn(
-            "font-heading text-xl leading-none font-semibold tracking-tight tabular-nums",
-            accent === "danger" ? "text-destructive" : "text-brand",
-          )}
-        >
-          {value}
-        </p>
-        <p className="truncate text-[13px] font-medium text-brand">{label}</p>
-        <p className="truncate text-[11px] leading-snug text-muted-foreground">
-          {hint}
-        </p>
-      </div>
+        {value}
+      </p>
+      <p className="truncate text-[13px] font-medium text-brand">{label}</p>
+      <p className="truncate text-[11px] leading-snug text-muted-foreground">
+        {hint}
+      </p>
     </div>
   );
 }
 
 function AttentionRow({
-  kind,
+  kinds,
   title,
-  status,
   meta,
   metaClass,
-  docs,
-  forms,
 }: {
-  kind: { label: string; tone: StatusPillTone };
+  kinds: { label: string; tone: StatusPillTone }[];
   title: string;
-  status?: string;
   meta: string;
   metaClass: string;
-  docs?: { done: number; total: number; label: string };
-  forms?: { percent: number; label: string };
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-2">
-      <div className="min-w-0 space-y-1">
-        <div className="flex items-center gap-2">
-          <StatusPill
-            label={kind.label}
-            tone={kind.tone}
-            className="px-2 py-0 text-[10px]"
-          />
-          <p className="truncate text-sm font-medium text-brand">{title}</p>
-        </div>
-        {status ? (
-          <p className="text-[11px] text-muted-foreground">{status}</p>
-        ) : null}
-        {docs && forms ? (
-          <div className="flex gap-3">
-            <ProgressMeter
-              compact
-              valueLabel={docs.label}
-              percent={docsPercent(docs.done, docs.total)}
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <p className="min-w-0 truncate text-sm font-medium text-brand">{title}</p>
+        <span className="flex min-w-0 flex-wrap items-center gap-1">
+          {kinds.map((kind) => (
+            <StatusPill
+              key={kind.label}
+              label={kind.label}
+              tone={kind.tone}
+              className="px-2 py-0 text-[10px]"
             />
-            <ProgressMeter
-              compact
-              valueLabel={forms.label}
-              percent={forms.percent}
-            />
-          </div>
-        ) : null}
+          ))}
+        </span>
       </div>
-      <p className={cn("shrink-0 text-right text-sm font-medium", metaClass)}>
+      <p className={cn("shrink-0 text-right text-xs font-medium", metaClass)}>
         {meta}
       </p>
     </div>
@@ -384,71 +333,50 @@ export async function AppHomePreview({
                 <p className="text-xs text-muted-foreground">{dateLabel}</p>
               </div>
               <p className="text-sm text-muted-foreground">
-                {tApp("actionSummary", { count: 9, bookings: 2 })}
-                {" · "}
-                {tApp("tiles.openFilesCount", { count: 12 })}
-                {" · "}
-                {tApp("tiles.peopleCount", { count: 18 })}
+                {tApp("actionSummary", { count: 4, bookings: 2 })}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs shadow-elevated">
-                <CalendarClock className="size-3.5 text-action" />
-                <span className="font-medium text-brand">
-                  {tApp("appointments.next")}
-                </span>
-                <span className="text-muted-foreground">
-                  10:00 · {t("preview.guestPriya")}
-                </span>
-              </span>
-              <span className="inline-flex h-9 items-center rounded-xl bg-action px-3 text-sm font-semibold text-action-foreground">
-                {tApp("newProject")}
-              </span>
-            </div>
+            <span className="inline-flex h-9 items-center rounded-xl bg-action px-3 text-sm font-semibold text-action-foreground">
+              {tApp("newProject")}
+            </span>
           </div>
 
-          <div className="grid shrink-0 grid-cols-6 gap-2.5">
+          <div className="grid shrink-0 grid-cols-12 gap-2.5">
+            <div className="col-span-6 flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
+              <p className="font-heading text-sm font-semibold text-brand">
+                {tApp("caseload.title")}
+              </p>
+              <CaseloadBar
+                open={8}
+                ready={3}
+                submitted={4}
+                empty={tApp("caseload.empty")}
+                labels={{
+                  open: tApp("caseload.open"),
+                  ready: tApp("caseload.ready"),
+                  submitted: tApp("caseload.submitted"),
+                }}
+              />
+            </div>
             <PreviewKpi
-              icon={FileCheck}
+              className="col-span-2"
               label={tApp("tiles.docsToReview")}
               value={3}
               hint={tApp("tiles.docsToReviewHint")}
-              accent="action"
+              emphasize
             />
             <PreviewKpi
-              icon={CircleAlert}
-              label={tApp("tiles.overdue")}
-              value={1}
-              hint={tApp("dueIn14", { count: 2 })}
-              accent="danger"
-            />
-            <PreviewKpi
-              icon={FileStack}
-              label={tApp("tiles.formsReady")}
-              value={2}
-              hint={tApp("tiles.formsReadyHint")}
-              accent="action"
-            />
-            <PreviewKpi
-              icon={Banknote}
+              className="col-span-2"
               label={tApp("tiles.unpaid")}
               value={1}
               hint={formatPriceCents(15000, locale, "CAD")}
-              accent="warning"
+              emphasize
             />
             <PreviewKpi
-              icon={CalendarClock}
+              className="col-span-2"
               label={tApp("tiles.todayBookings")}
               value={2}
               hint={tApp("tiles.weekBookings", { count: 6 })}
-              accent="action"
-            />
-            <PreviewKpi
-              icon={Hourglass}
-              label={tApp("tiles.statusExpiring")}
-              value={2}
-              hint={tApp("tiles.statusExpiringHint")}
-              accent="warning"
             />
           </div>
 
@@ -458,58 +386,71 @@ export async function AppHomePreview({
                 <h2 className="font-heading text-sm font-semibold text-brand">
                   {tApp("attention.title")}
                 </h2>
-                <span className="text-xs font-medium text-action">
-                  {tApp("viewAllProjects")}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-7 items-center rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold">
+                    {tApp("attention.filterAll")}
+                  </span>
+                  <span className="text-xs font-medium text-action">
+                    {tApp("viewAllProjects")}
+                  </span>
+                </div>
               </div>
               <div className="divide-y divide-border">
                 <AttentionRow
-                  kind={{
-                    label: tApp("attention.kinds.docs_review"),
-                    tone: "action",
-                  }}
+                  kinds={[
+                    {
+                      label: tApp("attention.kinds.docs_review"),
+                      tone: "action",
+                    },
+                    {
+                      label: tApp("attention.kinds.stuck"),
+                      tone: "muted",
+                    },
+                  ]}
                   title={t("preview.projectChen")}
-                  status={tProj("statuses.in_progress")}
                   meta={tApp("attention.docsCount", { count: 3 })}
                   metaClass="text-brand"
-                  docs={{
-                    done: 6,
-                    total: 9,
-                    label: tApp("upcoming.docs", { done: 6, total: 9 }),
-                  }}
-                  forms={{
-                    percent: 72,
-                    label: tApp("upcoming.forms", { percent: 72 }),
-                  }}
                 />
                 <AttentionRow
-                  kind={{
-                    label: tApp("attention.kinds.overdue"),
-                    tone: "destructive",
-                  }}
+                  kinds={[
+                    {
+                      label: tApp("attention.kinds.overdue"),
+                      tone: "destructive",
+                    },
+                    {
+                      label: tApp("attention.kinds.docs_review"),
+                      tone: "action",
+                    },
+                  ]}
                   title={t("preview.projectDubois")}
-                  status={tProj("statuses.in_progress")}
                   meta={tApp("timing.overdue", { days: 4 })}
                   metaClass="text-destructive"
                 />
                 <AttentionRow
-                  kind={{
-                    label: tApp("attention.kinds.stuck"),
-                    tone: "warning",
-                  }}
+                  kinds={[
+                    {
+                      label: tApp("attention.kinds.questionnaire"),
+                      tone: "action",
+                    },
+                    {
+                      label: tApp("attention.kinds.unpaid"),
+                      tone: "action",
+                    },
+                  ]}
                   title={t("preview.projectOkonkwo")}
-                  status={tProj("statuses.stuck")}
-                  meta={tApp("attention.docsCount", { count: 2 })}
+                  meta={t("preview.unpaidAmount")}
                   metaClass="text-brand"
                 />
                 <AttentionRow
-                  kind={{
-                    label: tApp("attention.kinds.unpaid"),
-                    tone: "warning",
-                  }}
+                  kinds={[
+                    {
+                      label: tApp("attention.kinds.due_soon"),
+                      tone: "muted",
+                    },
+                  ]}
                   title={t("preview.guestPriya")}
-                  meta={t("preview.unpaidAmount")}
-                  metaClass="text-brand"
+                  meta={tApp("timing.inDays", { days: 6 })}
+                  metaClass="text-muted-foreground"
                 />
               </div>
             </SurfaceCard>
@@ -538,7 +479,7 @@ export async function AppHomePreview({
                 <div className="absolute top-5 bottom-1.5 left-[18%] w-[22%] overflow-hidden rounded-md bg-action/15 px-1.5 py-0.5 text-[10px] leading-tight font-medium text-action">
                   <span className="block truncate">{t("preview.guestPriya")}</span>
                 </div>
-                <div className="absolute top-5 bottom-1.5 left-[52%] w-[24%] overflow-hidden rounded-md bg-warning-bg px-1.5 py-0.5 text-[10px] leading-tight font-medium text-warning-text">
+                <div className="absolute top-5 bottom-1.5 left-[52%] w-[24%] overflow-hidden rounded-md bg-action/10 px-1.5 py-0.5 text-[10px] leading-tight font-medium text-action ring-1 ring-inset ring-action/30">
                   <span className="block truncate">{t("preview.guestLucas")}</span>
                 </div>
                 <div className="absolute inset-y-0 left-[38%] z-10 w-px bg-destructive" />
@@ -579,87 +520,44 @@ export async function AppHomePreview({
               </div>
             </SurfaceCard>
 
-            <div className="col-span-3 flex min-h-0 flex-col gap-2.5">
-              <SurfaceCard className="shrink-0 space-y-2 p-4">
+            <SurfaceCard className="col-span-3 flex min-h-0 flex-col gap-2.5 p-4">
+              <div className="flex items-center justify-between gap-2">
                 <h2 className="font-heading text-sm font-semibold text-brand">
-                  {tApp("charts.pipeline")}
+                  {tApp("expiries.title")}
                 </h2>
-                <PipelineDonut
-                  empty={tApp("charts.pipelineEmpty")}
-                  totalLabel={tApp("charts.pipelineTotal")}
-                  items={[
-                    {
-                      key: "new",
-                      label: tProj("statuses.new"),
-                      count: 2,
-                      tone: projectStatusTone("new"),
-                    },
-                    {
-                      key: "in_progress",
-                      label: tProj("statuses.in_progress"),
-                      count: 5,
-                      tone: projectStatusTone("in_progress"),
-                    },
-                    {
-                      key: "waiting",
-                      label: tProj("statuses.waiting"),
-                      count: 3,
-                      tone: projectStatusTone("waiting"),
-                    },
-                    {
-                      key: "stuck",
-                      label: tProj("statuses.stuck"),
-                      count: 2,
-                      tone: projectStatusTone("stuck"),
-                    },
-                    {
-                      key: "submitted",
-                      label: tProj("statuses.submitted"),
-                      count: 4,
-                      tone: projectStatusTone("submitted"),
-                    },
-                  ]}
-                />
-              </SurfaceCard>
-              <SurfaceCard className="min-h-0 flex-1 space-y-2 p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="font-heading text-sm font-semibold text-brand">
-                    {tApp("expiries.title")}
-                  </h2>
-                  <span className="text-xs font-medium text-action">
-                    {tApp("expiries.viewPeople")}
+                <span className="text-xs font-medium text-action">
+                  {tApp("expiries.viewPeople")}
+                </span>
+              </div>
+              <div className="divide-y divide-border">
+                <div className="flex items-center justify-between gap-2 py-2">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-brand">
+                      {t("preview.personAmina")}
+                    </span>
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      {tImm("worker")}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                    {tApp("timing.inDays", { days: 12 })}
                   </span>
                 </div>
-                <div className="divide-y divide-border">
-                  <div className="flex items-center justify-between gap-2 py-2">
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-brand">
-                        {t("preview.personAmina")}
-                      </span>
-                      <span className="block truncate text-[11px] text-muted-foreground">
-                        {tImm("worker")}
-                      </span>
+                <div className="flex items-center justify-between gap-2 py-2">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-brand">
+                      {t("preview.guestLucas")}
                     </span>
-                    <span className="shrink-0 text-xs font-medium text-warning-text">
-                      {tApp("timing.inDays", { days: 12 })}
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      {tImm("student")}
                     </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 py-2">
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-brand">
-                        {t("preview.guestLucas")}
-                      </span>
-                      <span className="block truncate text-[11px] text-muted-foreground">
-                        {tImm("student")}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                      {tApp("timing.inDays", { days: 21 })}
-                    </span>
-                  </div>
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                    {tApp("timing.inDays", { days: 21 })}
+                  </span>
                 </div>
-              </SurfaceCard>
-            </div>
+              </div>
+            </SurfaceCard>
           </div>
         </div>
       </div>

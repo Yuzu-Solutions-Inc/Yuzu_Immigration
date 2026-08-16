@@ -323,6 +323,9 @@
       "title": "À traiter",
       "empty": "Rien n’attend sur les dossiers ouverts.",
       "docsCount": "{count, plural, one {# doc} other {# docs}}",
+      "filter": "Filtrer les alertes",
+      "filterAll": "Toutes les alertes",
+      "filterEmpty": "Aucun dossier ne correspond à cette alerte.",
       "kinds": {
         "overdue": "En retard",
         "docs_review": "Réviser",
@@ -350,6 +353,13 @@
       "title": "Statuts qui expirent",
       "viewPeople": "Clients",
       "empty": "Aucune expiration de statut dans les 60 prochains jours."
+    },
+    "caseload": {
+      "title": "Dossiers",
+      "open": "Ouverts",
+      "ready": "Prêts à déposer",
+      "submitted": "Déposés",
+      "empty": "Aucun dossier actif pour l’instant."
     },
     "charts": {
       "pipeline": "Dossiers ouverts",
