@@ -895,6 +895,7 @@
     "refineCertifiedSearch": "Continuez à écrire pour affiner la liste officielle",
     "clientEyebrow": "Questionnaire sécurisé",
     "clientLede": "Répondez pour chaque personne du dossier, puis soumettez lorsque tout le monde est à 100 % pour aviser votre consultant.",
+    "clientAnswerLanguage": "Toutes les réponses doivent être rédigées en {language} — la langue choisie pour ce dossier.",
     "clientExpires": "Ce lien fonctionne jusqu’au {date}.",
     "clientSubmitLabel": "Envoyer au consultant",
     "clientSubmit": "Soumettre le questionnaire",

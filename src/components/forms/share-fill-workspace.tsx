@@ -9,6 +9,7 @@ import { ShareFillTabs } from "@/components/forms/share-fill-tabs";
 import { seedShareDocumentDefaults } from "@/lib/documents/share-seed";
 import { listShareDocumentRequests } from "@/lib/documents/service";
 import { formatShareLinkExpiryDate } from "@/lib/ircc/share-dates";
+import { toProjectFormLanguage } from "@/lib/ircc/form-language";
 import { loadShareContext } from "@/lib/ircc/project-forms";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -77,6 +78,7 @@ export async function ShareFillWorkspace({ token }: { token: string }) {
               <ClientFillForm
                 token={token}
                 people={questionnairePeople}
+                formLanguage={toProjectFormLanguage(ctx.project.form_language)}
                 initialSubmittedAt={ctx.questionnaireSubmittedAt}
               />
             ),

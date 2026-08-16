@@ -895,6 +895,7 @@
     "refineCertifiedSearch": "Keep typing to narrow the official list",
     "clientEyebrow": "Secure questionnaire",
     "clientLede": "Answer for each person on the file, then submit when everyone is 100% complete so your consultant is notified.",
+    "clientAnswerLanguage": "All answers must be filled in {language} — the language selected for this file.",
     "clientExpires": "This link works until {date}.",
     "clientSubmitLabel": "Send to consultant",
     "clientSubmit": "Submit questionnaire",

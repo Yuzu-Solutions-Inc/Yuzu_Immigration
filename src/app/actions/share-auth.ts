@@ -243,3 +243,38 @@ export async function forgotSharePasswordAction(
 export async function assertShareTokenForAction(token: string) {
   return assertShareAuthenticated(token);
 }
+
+export async function logoutShareLinkAction(
+  _prev: ShareAuthActionState,
+  formData: FormData,
+): Promise<ShareAuthActionState> {
+  try {
+    const token = String(formData.get("token") || "");
+    const locale = String(formData.get("locale") || "en");
+
+    if (!token) return { error: "invalid" };
+
+    const resolved = await resolveShareToken(token);
+    if (resolved) {
+      auditShareAuthEvent({
+        organizationId: resolved.organizationId,
+        projectId: resolved.projectId,
+        action: "share_link.logout",
+        shareLinkId: resolved.linkId,
+      });
+    }
+
+    const { clearShareSessionCookie } = await import("@/lib/ircc/share-auth");
+    await clearShareSessionCookie();
+
+    const { redirect } = await import("@/i18n/navigation");
+    redirect({ href: `/fill/${token}`, locale });
+    return {};
+  } catch (err) {
+    if (err && typeof err === "object" && "digest" in err) {
+      throw err;
+    }
+    console.error("logoutShareLinkAction:", err);
+    return { error: "server_config" };
+  }
+}

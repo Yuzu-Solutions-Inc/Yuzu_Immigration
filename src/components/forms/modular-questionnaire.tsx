@@ -83,6 +83,7 @@ function FieldControl({
   maxLength,
   options,
   t,
+  optionsLocale,
   compact,
   placeholder,
 }: {
@@ -96,17 +97,17 @@ function FieldControl({
   maxLength?: number;
   options?: FieldOption[];
   t: ReturnType<typeof useTranslations>;
+  optionsLocale: string;
   compact?: boolean;
   placeholder?: string;
 }) {
-  const locale = useLocale();
   const selectClass = compact ? compactControlClass : defaultSelectClass;
   const selectOptions = options
-    ? orderedFieldOptions(options, locale, t)
+    ? orderedFieldOptions(options, optionsLocale, t)
     : [];
   const labeledOptions = selectOptions.map((opt) => ({
     value: opt.value,
-    label: fieldOptionLabel(opt, locale, t),
+    label: fieldOptionLabel(opt, optionsLocale, t),
   }));
   const searchable = type === "select" && labeledOptions.length > 5;
   const control =
@@ -137,7 +138,7 @@ function FieldControl({
         </option>
         {selectOptions.map((opt) => (
           <option key={opt.value} value={opt.value}>
-            {fieldOptionLabel(opt, locale, t)}
+            {fieldOptionLabel(opt, optionsLocale, t)}
           </option>
         ))}
       </select>
@@ -152,8 +153,12 @@ function FieldControl({
         <option value="" disabled={Boolean(value)}>
           {placeholder ?? t("selectPlaceholder")}
         </option>
-        <option value="Y">{t("options.yes")}</option>
-        <option value="N">{t("options.no")}</option>
+        <option value="Y">
+          {optionsLocale.startsWith("fr") ? "Oui" : t("options.yes")}
+        </option>
+        <option value="N">
+          {optionsLocale.startsWith("fr") ? "Non" : t("options.no")}
+        </option>
       </select>
     ) : type === "checkbox" ? (
       <label className="flex h-9 items-center justify-center gap-2 text-sm text-brand">
@@ -320,6 +325,7 @@ function FieldGroupEditor({
   onChange,
   t,
   th,
+  optionsLocale,
 }: {
   group: QuestionnaireFieldGroup;
   fields: CanonicalField[];
@@ -327,6 +333,7 @@ function FieldGroupEditor({
   onChange: (key: string, value: string) => void;
   t: ReturnType<typeof useTranslations>;
   th: ReturnType<typeof useTranslations>;
+  optionsLocale: string;
 }) {
   if (fields.length === 0) return null;
   const twoCol = group.columns === 2;
@@ -350,6 +357,7 @@ function FieldGroupEditor({
         maxLength={field.maxLength}
         options={field.options}
         t={t}
+        optionsLocale={optionsLocale}
         compact
         placeholder={field.key === "phoneCountryCode" ? "+" : undefined}
       />
@@ -386,12 +394,14 @@ function TableEditor({
   onChange,
   t,
   th,
+  optionsLocale,
 }: {
   table: RepeatableTable;
   rows: Array<Record<string, string>>;
   onChange: (rows: Array<Record<string, string>>) => void;
   t: ReturnType<typeof useTranslations>;
   th: ReturnType<typeof useTranslations>;
+  optionsLocale: string;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
@@ -508,6 +518,7 @@ function TableEditor({
                     maxLength={col.maxLength}
                     options={col.options}
                     t={t}
+                    optionsLocale={optionsLocale}
                     compact
                     placeholder={
                       col.placeholderKey
@@ -868,6 +879,7 @@ export function ModularQuestionnaire({
   submitPending,
   submittedAt,
   readOnly = false,
+  answerLocale,
 }: {
   people: QuestionnairePerson[];
   onSave: (
@@ -886,10 +898,15 @@ export function ModularQuestionnaire({
   submitPending?: boolean;
   submittedAt?: string | null;
   readOnly?: boolean;
+  /** IRCC answer option labels — project form language on client links. */
+  answerLocale?: "en" | "fr";
 }) {
   const t = useTranslations("forms");
   const th = useTranslations("forms.help");
   const tr = useTranslations("roles");
+  const uiLocale = useLocale();
+  const optionsLocale =
+    mode === "client" && answerLocale ? answerLocale : uiLocale;
 
   const [activePersonId, setActivePersonId] = useState(
     () => people[0]?.id ?? "",
@@ -1151,6 +1168,7 @@ export function ModularQuestionnaire({
           }}
           t={t}
           th={th}
+          optionsLocale={optionsLocale}
         />,
       );
     }
@@ -1170,6 +1188,7 @@ export function ModularQuestionnaire({
           onChange={update}
           t={t}
           th={th}
+          optionsLocale={optionsLocale}
         />,
       );
     }
@@ -1192,6 +1211,7 @@ export function ModularQuestionnaire({
             onChange={update}
             t={t}
             th={th}
+            optionsLocale={optionsLocale}
           />,
         );
       }
@@ -1211,6 +1231,7 @@ export function ModularQuestionnaire({
             }}
             t={t}
             th={th}
+            optionsLocale={optionsLocale}
           />,
         );
       }
@@ -1241,6 +1262,7 @@ export function ModularQuestionnaire({
           maxLength={field.maxLength}
           options={field.options}
           t={t}
+          optionsLocale={optionsLocale}
         />
       );
       if (followUps.length === 0) {

@@ -12,19 +12,23 @@ import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
+import type { ProjectFormLanguage } from "@/lib/ircc/form-language";
 
 const initial: FormsActionState = {};
 
 export function ClientFillForm({
   token,
   people,
+  formLanguage,
   initialSubmittedAt,
 }: {
   token: string;
   people: QuestionnairePerson[];
+  formLanguage: ProjectFormLanguage;
   initialSubmittedAt?: string | null;
 }) {
   const t = useTranslations("forms");
+  const tp = useTranslations("projects");
   const [saveState, saveAction, savePending] = useActionState(
     saveShareAnswersAction,
     initial,
@@ -36,6 +40,10 @@ export function ClientFillForm({
   const [localPeople, setLocalPeople] = useState(people);
   const [submittedAt, setSubmittedAt] = useState<string | null>(
     initialSubmittedAt ?? null,
+  );
+
+  const answerLanguageLabel = tp(
+    `formLanguages.${formLanguage === "fr" ? "fr" : "en"}`,
   );
 
   useEffect(() => {
@@ -114,9 +122,14 @@ export function ClientFillForm({
         </div>
       )}
 
-      <p className="max-w-2xl text-[15px] text-muted-foreground">
-        {t("clientLede")}
-      </p>
+      <div
+        className="rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
+        role="note"
+      >
+        {t("clientAnswerLanguage", { language: answerLanguageLabel })}
+      </div>
+
+      <p className="text-[15px] text-muted-foreground">{t("clientLede")}</p>
 
       <ModularQuestionnaire
         people={localPeople}
@@ -124,6 +137,7 @@ export function ClientFillForm({
         pending={savePending}
         errorMessage={error}
         mode="client"
+        answerLocale={formLanguage}
         onSubmitQuestionnaire={handleSubmit}
         submitPending={submitPending}
         submittedAt={submittedAt}

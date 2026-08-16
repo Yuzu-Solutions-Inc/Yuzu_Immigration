@@ -895,6 +895,7 @@
     "refineCertifiedSearch": "Siga escribiendo para acotar la lista oficial",
     "clientEyebrow": "Cuestionario seguro",
     "clientLede": "Responda por cada persona del expediente y, cuando todos estén al 100 %, envíe el cuestionario para avisar a su consultor.",
+    "clientAnswerLanguage": "Todas las respuestas deben completarse en {language}, el idioma seleccionado para este expediente.",
     "clientExpires": "Este enlace funciona hasta el {date}.",
     "clientSubmitLabel": "Enviar al consultor",
     "clientSubmit": "Enviar cuestionario",
