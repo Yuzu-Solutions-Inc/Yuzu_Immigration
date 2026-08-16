@@ -40,6 +40,23 @@ export function ShareFillTopBar({
         className,
       )}
     >
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <BrandLogo href={null} size="sm" inverted className="shrink-0" />
+
+        {org || rep ? (
+          <div className="min-w-0">
+            {org ? (
+              <p className="truncate text-sm font-semibold text-sidebar-foreground">
+                {org}
+              </p>
+            ) : null}
+            {rep ? (
+              <p className="truncate text-xs text-sidebar-foreground/70">{rep}</p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
       <div className="flex shrink-0 items-center gap-1.5">
         <LocaleSwitcher
           variant="sidebar"
@@ -61,23 +78,6 @@ export function ShareFillTopBar({
               <span className="sr-only sm:hidden">{t("signOut")}</span>
             </button>
           </form>
-        ) : null}
-      </div>
-
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <BrandLogo href={null} size="sm" inverted className="shrink-0" />
-
-        {org || rep ? (
-          <div className="min-w-0">
-            {org ? (
-              <p className="truncate text-sm font-semibold text-sidebar-foreground">
-                {org}
-              </p>
-            ) : null}
-            {rep ? (
-              <p className="truncate text-xs text-sidebar-foreground/70">{rep}</p>
-            ) : null}
-          </div>
         ) : null}
       </div>
     </header>
