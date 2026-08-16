@@ -196,25 +196,37 @@ export const people = pgTable("people", {
 });
 
 /** Internal consultation notes for a person (firm-only). */
-export const personNotes = pgTable("person_notes", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  personId: uuid("person_id")
-    .notNull()
-    .references(() => people.id, { onDelete: "cascade" }),
-  body: text("body").notNull(),
-  createdBy: uuid("created_by").references(() => profiles.id, {
-    onDelete: "set null",
-  }),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const personNotes = pgTable(
+  "person_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    appointmentId: uuid("appointment_id").references(
+      (): AnyPgColumn => bookingAppointments.id,
+      { onDelete: "set null" },
+    ),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }),
+    status: text("status").$type<BookingAppointmentStatus>(),
+    createdBy: uuid("created_by").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("person_notes_appointment_id_uidx").on(table.appointmentId),
+  ],
+);
 
 export const immigrationProjects = pgTable("immigration_projects", {
   id: uuid("id").defaultRandom().primaryKey(),

@@ -16,7 +16,8 @@ import {
 } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { getPerson, getPersonProjects, listPersonNotes } from "@/lib/crm/queries";
+import { getBookingSettings } from "@/lib/booking/queries";
+import { getPerson, getPersonProjects, listPersonMeetings } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { portalBaseUrl } from "@/lib/portal/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -41,23 +42,25 @@ export default async function PersonDetailPage({
     createdBy: person.created_by,
     actorUserId: user?.id,
   });
-  const [projects, notes, portalAccess, baseUrl] = await Promise.all([
-    getPersonProjects(id),
-    listPersonNotes(id),
-    (async () => {
-      const supabase = await createClient();
-      const { data } = await supabase
-        .from("customer_portal_access")
-        .select("is_active, last_authenticated_at")
-        .eq("person_id", id)
-        .maybeSingle();
-      return data as {
-        is_active: boolean;
-        last_authenticated_at: string | null;
-      } | null;
-    })(),
-    getAppBaseUrl(),
-  ]);
+  const [projects, meetings, portalAccess, baseUrl, bookingSettings] =
+    await Promise.all([
+      getPersonProjects(id),
+      listPersonMeetings(id, locale),
+      (async () => {
+        const supabase = await createClient();
+        const { data } = await supabase
+          .from("customer_portal_access")
+          .select("is_active, last_authenticated_at")
+          .eq("person_id", id)
+          .maybeSingle();
+        return data as {
+          is_active: boolean;
+          last_authenticated_at: string | null;
+        } | null;
+      })(),
+      getAppBaseUrl(),
+      getBookingSettings(),
+    ]);
   const t = await getTranslations("people");
   const ti = await getTranslations("immigrationStatus");
   const tprog = await getTranslations("programs");
@@ -204,7 +207,12 @@ export default async function PersonDetailPage({
         />
       ) : null}
 
-      <PersonNotesSection locale={locale} personId={person.id} notes={notes} />
+      <PersonNotesSection
+        locale={locale}
+        personId={person.id}
+        meetings={meetings}
+        timeZone={bookingSettings?.timezone ?? "America/Toronto"}
+      />
     </div>
   );
 }

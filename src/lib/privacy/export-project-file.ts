@@ -194,6 +194,9 @@ export async function buildProjectFileZip(
         notes: (notesMap.get(person.id) ?? []).map((note) => ({
           body: note.body,
           author_name: note.author_name,
+          appointment_id: note.appointment_id,
+          occurred_at: note.occurred_at,
+          status: note.status,
           created_at: note.created_at,
           updated_at: note.updated_at,
         })),

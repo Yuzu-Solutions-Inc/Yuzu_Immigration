@@ -3,12 +3,14 @@ import { getPrimaryMembership } from "@/lib/auth/session";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { isOrgRole } from "@/lib/auth/rbac";
 import type {
+  BookingAppointmentStatus,
   ParticipantRole,
   PersonImmigrationStatus,
   ProgramFamily,
   ProjectJurisdiction,
   ProjectStatus,
 } from "@/db/schema";
+import { serviceTitle } from "@/lib/booking/service-i18n";
 import {
   decryptNoteBody,
   decryptPersonRow,
@@ -43,11 +45,45 @@ export type PersonNoteRow = {
   organization_id: string;
   person_id: string;
   body: string;
+  appointment_id: string | null;
+  occurred_at: string | null;
+  status: BookingAppointmentStatus | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
   author_name: string | null;
 };
+
+export type PersonMeetingItem = {
+  key: string;
+  noteId: string | null;
+  appointmentId: string | null;
+  source: "booking" | "manual";
+  occurredAt: string;
+  endsAt: string | null;
+  status: BookingAppointmentStatus | null;
+  serviceTitle: string | null;
+  hostName: string | null;
+  body: string;
+  authorName: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const MANUAL_MEETING_STATUSES = [
+  "confirmed",
+  "cancelled",
+  "completed",
+  "no_show",
+  "pending_payment",
+] as const satisfies readonly BookingAppointmentStatus[];
+
+function isMeetingStatus(value: string | null): value is BookingAppointmentStatus {
+  return (
+    value != null &&
+    (MANUAL_MEETING_STATUSES as readonly string[]).includes(value)
+  );
+}
 
 export type ProjectNoteRow = {
   id: string;
@@ -206,7 +242,9 @@ export async function listPersonNotes(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("person_notes")
-    .select("id, organization_id, person_id, body, created_by, created_at, updated_at")
+    .select(
+      "id, organization_id, person_id, body, appointment_id, occurred_at, status, created_by, created_at, updated_at",
+    )
     .eq("organization_id", orgId)
     .eq("person_id", personId)
     .order("created_at", { ascending: false });
@@ -243,8 +281,130 @@ export async function listPersonNotes(
   return rows.map((row) => ({
     ...row,
     body: decryptNoteBody(row.body, key),
+    appointment_id: row.appointment_id ?? null,
+    occurred_at: row.occurred_at ?? null,
+    status: isMeetingStatus(row.status) ? row.status : null,
     author_name: row.created_by ? (names.get(row.created_by) ?? null) : null,
   }));
+}
+
+function oneRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+export async function listPersonMeetings(
+  personId: string,
+  locale: string,
+): Promise<PersonMeetingItem[]> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const [notes, appointmentsResult] = await Promise.all([
+    listPersonNotes(personId),
+    supabase
+      .from("booking_appointments")
+      .select(
+        "id, starts_at, ends_at, status, host_user_id, created_at, updated_at, service:booking_services(title, translations)",
+      )
+      .eq("organization_id", orgId)
+      .eq("person_id", personId)
+      .order("starts_at", { ascending: false }),
+  ]);
+
+  if (appointmentsResult.error) {
+    console.error("listPersonMeetings:", appointmentsResult.error.message);
+  }
+
+  type AppointmentJoin = {
+    id: string;
+    starts_at: string;
+    ends_at: string;
+    status: string;
+    host_user_id: string;
+    created_at: string;
+    updated_at: string;
+    service:
+      | { title: string | null; translations: unknown }
+      | { title: string | null; translations: unknown }[]
+      | null;
+  };
+
+  const appointments = (appointmentsResult.data ?? []) as AppointmentJoin[];
+  const notesByAppointment = new Map(
+    notes
+      .filter((note) => note.appointment_id)
+      .map((note) => [note.appointment_id as string, note]),
+  );
+
+  const hostIds = [
+    ...new Set(appointments.map((row) => row.host_user_id).filter(Boolean)),
+  ];
+  let hostNames = new Map<string, string | null>();
+  if (hostIds.length > 0) {
+    const { data: profiles, error: hostError } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", hostIds);
+    if (hostError) {
+      console.error("listPersonMeetings hosts:", hostError.message);
+    } else {
+      hostNames = new Map(
+        (profiles ?? []).map((p) => [
+          p.id as string,
+          (p.full_name as string | null) || (p.email as string | null),
+        ]),
+      );
+    }
+  }
+
+  const items: PersonMeetingItem[] = [];
+
+  for (const appointment of appointments) {
+    const note = notesByAppointment.get(appointment.id) ?? null;
+    const service = oneRelation(appointment.service);
+    items.push({
+      key: `appointment:${appointment.id}`,
+      noteId: note?.id ?? null,
+      appointmentId: appointment.id,
+      source: "booking",
+      occurredAt: appointment.starts_at,
+      endsAt: appointment.ends_at,
+      status: isMeetingStatus(appointment.status) ? appointment.status : null,
+      serviceTitle: service ? serviceTitle(service, locale) : null,
+      hostName: hostNames.get(appointment.host_user_id) ?? null,
+      body: note?.body ?? "",
+      authorName: note?.author_name ?? null,
+      createdAt: note?.created_at ?? appointment.created_at,
+      updatedAt: note?.updated_at ?? appointment.updated_at,
+    });
+  }
+
+  for (const note of notes) {
+    if (note.appointment_id) continue;
+    items.push({
+      key: `note:${note.id}`,
+      noteId: note.id,
+      appointmentId: null,
+      source: "manual",
+      occurredAt: note.occurred_at ?? note.created_at,
+      endsAt: null,
+      status: note.status,
+      serviceTitle: null,
+      hostName: null,
+      body: note.body,
+      authorName: note.author_name,
+      createdAt: note.created_at,
+      updatedAt: note.updated_at,
+    });
+  }
+
+  items.sort(
+    (a, b) =>
+      new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
+  );
+  return items;
 }
 
 export async function listProjectNotes(

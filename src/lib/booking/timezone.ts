@@ -206,6 +206,12 @@ export function formatDateTimeInZone(
   }).format(date);
 }
 
+/** Value for `<input type="datetime-local">` in `timeZone`. */
+export function toDatetimeLocalValue(date: Date, timeZone: string) {
+  const parts = zonedParts(date, timeZone);
+  return `${isoDateFromParts(parts.year, parts.month, parts.day)}T${pad2(parts.hour)}:${pad2(parts.minute)}`;
+}
+
 export function formatMonthYear(year: number, month: number, locale: string) {
   return new Intl.DateTimeFormat(intlLocale(locale), {
     month: "long",

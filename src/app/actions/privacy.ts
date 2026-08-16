@@ -68,7 +68,7 @@ export async function exportPersonDataAction(
     await Promise.all([
       supabase
         .from("person_notes")
-        .select("id, body, created_at, updated_at")
+        .select("id, body, appointment_id, occurred_at, status, created_at, updated_at")
         .eq("person_id", personId)
         .eq("organization_id", orgId)
         .order("created_at", { ascending: true }),
