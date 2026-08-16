@@ -19,6 +19,9 @@ export function zoomClientConfig() {
   const clientId = process.env.ZOOM_CLIENT_ID?.trim();
   const clientSecret = process.env.ZOOM_CLIENT_SECRET?.trim();
   if (!clientId || !clientSecret) return null;
+  if (clientId === "ZOOM_CLIENT_ID" || clientSecret === "ZOOM_CLIENT_SECRET") {
+    return null;
+  }
   return { clientId, clientSecret };
 }
 
