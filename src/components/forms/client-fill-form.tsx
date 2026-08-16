@@ -61,7 +61,7 @@ export function ClientFillForm({
     fd.set("personId", personId);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(answers));
-    saveAction(fd);
+    return saveAction(fd);
   }
 
   function handleSubmit(
@@ -80,11 +80,7 @@ export function ClientFillForm({
     submitAction(fd);
   }
 
-  const errorKey = submitPending
-    ? submitState.error
-    : savePending
-      ? saveState.error
-      : submitState.error || saveState.error;
+  const errorKey = submitState.error || saveState.error;
 
   const error =
     errorKey &&

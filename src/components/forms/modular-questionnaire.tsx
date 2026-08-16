@@ -766,7 +766,7 @@ export function ModularQuestionnaire({
     personId: string,
     answers: Record<string, unknown>,
     section: string,
-  ) => void;
+  ) => void | Promise<{ error?: string } | void>;
   pending?: boolean;
   errorMessage?: string | null;
   mode?: "staff" | "client";
@@ -810,8 +810,7 @@ export function ModularQuestionnaire({
   const [sectionIndex, setSectionIndex] = useState(0);
   const [busyIntent, setBusyIntent] = useState<SaveIntent | null>(null);
   const [saveNotice, setSaveNotice] = useState<"saving" | "saved" | null>(null);
-  const saveIntentRef = useRef<SaveIntent | null>(null);
-  const sawPendingRef = useRef(false);
+  const savedNoticeTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!activePersonId) return;
@@ -820,39 +819,18 @@ export function ModularQuestionnaire({
     setAnswers(answersToState(person.answers));
     setTableData(initTables(person.formCodes, person.answers));
     setSectionIndex(0);
-    saveIntentRef.current = null;
-    sawPendingRef.current = false;
     setBusyIntent(null);
     setSaveNotice(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on person switch only
   }, [activePersonId]);
 
   useEffect(() => {
-    if (pending) {
-      sawPendingRef.current = true;
-      setSaveNotice("saving");
-      return;
-    }
-    if (!sawPendingRef.current) return;
-    sawPendingRef.current = false;
-
-    const intent = saveIntentRef.current;
-    saveIntentRef.current = null;
-    setBusyIntent(null);
-
-    if (errorMessage) {
-      setSaveNotice(null);
-      return;
-    }
-
-    if (intent === "next") {
-      setSectionIndex((i) => Math.min(sections.length - 1, i + 1));
-    }
-
-    setSaveNotice("saved");
-    const timeoutId = window.setTimeout(() => setSaveNotice(null), 2500);
-    return () => window.clearTimeout(timeoutId);
-  }, [pending, errorMessage, sections.length]);
+    return () => {
+      if (savedNoticeTimeoutRef.current != null) {
+        window.clearTimeout(savedNoticeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const fillPercentByPerson = useMemo(() => {
     const liveAnswers = { ...answers, ...tableData };
@@ -915,8 +893,8 @@ export function ModularQuestionnaire({
     );
   }
 
-  function save() {
-    if (!activePerson) return false;
+  function buildSavePayload(): Record<string, unknown> | null {
+    if (!activePerson) return null;
     const payload: Record<string, unknown> = applyDerivedAnswers({
       ...answers,
       hasRepresentative: "Y",
@@ -924,18 +902,40 @@ export function ModularQuestionnaire({
     for (const [key, rows] of Object.entries(tableData)) {
       payload[key] = rows;
     }
-    onSave(activePerson.id, payload, section);
-    return true;
+    return payload;
   }
 
-  function requestSave(intent: SaveIntent) {
-    saveIntentRef.current = intent;
+  async function requestSave(intent: SaveIntent) {
+    const payload = buildSavePayload();
+    if (!activePerson || !payload) return;
+
     setBusyIntent(intent);
     setSaveNotice("saving");
-    if (!save()) {
-      saveIntentRef.current = null;
-      setBusyIntent(null);
+    if (savedNoticeTimeoutRef.current != null) {
+      window.clearTimeout(savedNoticeTimeoutRef.current);
+      savedNoticeTimeoutRef.current = null;
+    }
+
+    try {
+      const result = await onSave(activePerson.id, payload, section);
+      if (result?.error) {
+        setSaveNotice(null);
+        return;
+      }
+
+      if (intent === "next") {
+        setSectionIndex((i) => Math.min(sections.length - 1, i + 1));
+      }
+
+      setSaveNotice("saved");
+      savedNoticeTimeoutRef.current = window.setTimeout(() => {
+        setSaveNotice(null);
+        savedNoticeTimeoutRef.current = null;
+      }, 2500);
+    } catch {
       setSaveNotice(null);
+    } finally {
+      setBusyIntent(null);
     }
   }
 

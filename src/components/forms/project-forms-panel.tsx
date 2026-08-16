@@ -377,7 +377,7 @@ export function ProjectQuestionnaire({
     fd.set("locale", locale);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(next));
-    saveAction(fd);
+    return saveAction(fd);
   }
 
   const saveError =
