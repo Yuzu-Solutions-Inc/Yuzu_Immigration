@@ -7,7 +7,6 @@ import {
   CalendarClock,
   Mail,
   Trash2,
-  X,
 } from "lucide-react";
 import { useDeferredValue, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -24,6 +23,14 @@ import { sendBookingPaymentReminderAction } from "@/app/actions/booking-payment-
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -308,6 +315,18 @@ export function BookingsList({
   const selectedSlot =
     (slots ?? []).find((slot) => slot.startsAt === slotStart) ?? null;
 
+  const reschedulingBooking = useMemo(
+    () => bookings.find((booking) => booking.id === rescheduleId) ?? null,
+    [bookings, rescheduleId],
+  );
+
+  function closeReschedule() {
+    setRescheduleId(null);
+    setSlots(null);
+    setDateIso(null);
+    setSlotStart(null);
+  }
+
   function openReschedule(appointmentId: string) {
     setRescheduleId(appointmentId);
     setSlots(null);
@@ -338,7 +357,7 @@ export function BookingsList({
   const actionColSpan = canManage ? 7 : 6;
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div className="grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated md:hidden">
         <Input
           type="search"
@@ -418,11 +437,11 @@ export function BookingsList({
         </select>
       </div>
 
-      <SurfaceCard className="overflow-hidden p-0">
-        <Table>
+      <SurfaceCard className="min-w-0 overflow-hidden p-0">
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-bottom">
+              <TableHead className="h-auto w-[12%] py-2.5 align-bottom">
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="starts_at" label={t("colWhen")} />
                   <select
@@ -438,7 +457,7 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[12rem] py-2.5 align-bottom">
+              <TableHead className="h-auto w-[20%] py-2.5 align-bottom">
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="guest" label={t("colGuest")} />
                   <Input
@@ -451,7 +470,7 @@ export function BookingsList({
                   />
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-bottom">
+              <TableHead className="h-auto w-[14%] py-2.5 align-bottom">
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="service" label={t("colService")} />
                   <select
@@ -469,7 +488,7 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] py-2.5 align-bottom">
+              <TableHead className="h-auto w-[13%] py-2.5 align-bottom">
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="host" label={t("colHost")} />
                   <select
@@ -487,7 +506,7 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[9rem] py-2.5 align-bottom">
+              <TableHead className="h-auto w-[10%] py-2.5 align-bottom">
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="status" label={t("colStatus")} />
                   <select
@@ -507,7 +526,7 @@ export function BookingsList({
                   </select>
                 </div>
               </TableHead>
-              <TableHead className="h-auto min-w-[9rem] py-2.5 align-bottom">
+              <TableHead className="h-auto w-[16%] py-2.5 align-bottom">
                 <div className="flex flex-col gap-1.5">
                   <SortButton column="payment" label={t("colPayment")} />
                   <select
@@ -529,8 +548,8 @@ export function BookingsList({
                 </div>
               </TableHead>
               {canManage ? (
-                <TableHead className="h-auto py-2.5 align-bottom">
-                  {t("colActions")}
+                <TableHead className="h-auto w-[15%] py-2.5 align-bottom">
+                  <span className="sr-only">{t("colActions")}</span>
                 </TableHead>
               ) : null}
             </TableRow>
@@ -553,51 +572,54 @@ export function BookingsList({
             const unpaid =
               booking.status === "pending_payment" &&
               booking.paymentStatus === "pending";
-            const rescheduling = rescheduleId === booking.id;
 
             return (
               <TableRow key={booking.id} className="align-top">
-                <TableCell className="whitespace-nowrap text-sm">
+                <TableCell className="text-sm whitespace-normal">
                   {new Date(booking.startsAt).toLocaleString(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-w-0 whitespace-normal">
                   {booking.personId ? (
-                    <div className="space-y-0.5">
+                    <div className="min-w-0 space-y-0.5">
                       <Link
                         href={`/people/${booking.personId}`}
-                        className="text-sm font-medium text-action hover:underline"
+                        className="block truncate text-sm font-medium text-action hover:underline"
                       >
                         {booking.guestName}
                       </Link>
                       <Link
                         href={`/people/${booking.personId}`}
-                        className="block text-xs text-muted-foreground hover:text-action hover:underline"
+                        className="block truncate text-xs text-muted-foreground hover:text-action hover:underline"
                       >
                         {booking.guestEmail}
                       </Link>
                     </div>
                   ) : (
-                    <div>
-                      <div className="text-sm font-medium text-brand">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-brand">
                         {booking.guestName}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="truncate text-xs text-muted-foreground">
                         {booking.guestEmail}
                       </div>
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="text-sm">{booking.serviceTitle}</TableCell>
-                <TableCell className="text-sm">{booking.hostName}</TableCell>
-                <TableCell>
+                <TableCell className="max-w-0 truncate text-sm whitespace-normal">
+                  {booking.serviceTitle}
+                </TableCell>
+                <TableCell className="max-w-0 truncate text-sm whitespace-normal">
+                  {booking.hostName}
+                </TableCell>
+                <TableCell className="whitespace-normal">
                   <Badge variant="secondary">
                     {statusLabel(t, booking.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-normal">
                   {booking.paymentStatus ? (
                     <div className="space-y-1">
                       <Badge
@@ -636,198 +658,70 @@ export function BookingsList({
                   )}
                 </TableCell>
                 {canManage ? (
-                  <TableCell className="min-w-[12rem]">
+                  <TableCell className="whitespace-normal">
                     {actionable ? (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon-sm"
+                          disabled={pending || slotsPending}
+                          onClick={() => openReschedule(booking.id)}
+                          aria-label={t("modify")}
+                          title={t("modify")}
+                        >
+                          <CalendarClock className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon-sm"
+                          disabled={pending}
+                          aria-label={t("cancel")}
+                          title={t("cancel")}
+                          onClick={() => {
+                            if (!window.confirm(t("cancelConfirm"))) return;
+                            startTransition(async () => {
+                              const result = await cancelAppointmentAction(
+                                booking.id,
+                                locale,
+                              );
+                              if (result.error) {
+                                toast.error(t(`errors.${result.error}`));
+                                return;
+                              }
+                              toast.success(t("cancelled"));
+                              router.refresh();
+                            });
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                        {unpaid ? (
                           <Button
                             type="button"
                             variant="outline"
                             size="icon-sm"
-                            disabled={pending || slotsPending}
-                            onClick={() => openReschedule(booking.id)}
-                            aria-label={t("modify")}
-                            title={t("modify")}
-                          >
-                            <CalendarClock className="size-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon-sm"
                             disabled={pending}
-                            aria-label={t("cancel")}
-                            title={t("cancel")}
+                            aria-label={t("sendReminder")}
+                            title={t("sendReminder")}
                             onClick={() => {
-                              if (!window.confirm(t("cancelConfirm"))) return;
                               startTransition(async () => {
-                                const result = await cancelAppointmentAction(
-                                  booking.id,
-                                  locale,
-                                );
+                                const result =
+                                  await sendBookingPaymentReminderAction(
+                                    booking.id,
+                                    locale,
+                                  );
                                 if (result.error) {
                                   toast.error(t(`errors.${result.error}`));
                                   return;
                                 }
-                                toast.success(t("cancelled"));
-                                router.refresh();
+                                toast.success(t("reminderSent"));
                               });
                             }}
                           >
-                            <Trash2 className="size-4" />
+                            <Mail className="size-4" />
                           </Button>
-                          {unpaid ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={pending}
-                              onClick={() => {
-                                startTransition(async () => {
-                                  const result =
-                                    await sendBookingPaymentReminderAction(
-                                      booking.id,
-                                      locale,
-                                    );
-                                  if (result.error) {
-                                    toast.error(t(`errors.${result.error}`));
-                                    return;
-                                  }
-                                  toast.success(t("reminderSent"));
-                                });
-                              }}
-                            >
-                              <Mail className="size-3.5" />
-                              {t("sendReminder")}
-                            </Button>
-                          ) : null}
-                        </div>
-
-                        {rescheduling ? (
-                          <div className="rounded-xl border border-border bg-canvas p-3">
-                            <div className="mb-2 flex items-start justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-medium text-brand">
-                                  {tc("changeTimeTitle")}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {tc("changeTimeHelp")}
-                                </p>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                disabled={pending || slotsPending}
-                                aria-label={tc("rescheduleBack")}
-                                onClick={() => setRescheduleId(null)}
-                              >
-                                <X className="size-4" />
-                              </Button>
-                            </div>
-
-                            {slotsPending && !slots ? (
-                              <p className="text-xs text-muted-foreground">
-                                {tc("saving")}
-                              </p>
-                            ) : !slots || slots.length === 0 ? (
-                              <p className="text-xs text-muted-foreground">
-                                {tc("noRescheduleSlots")}
-                              </p>
-                            ) : (
-                              <div className="space-y-3">
-                                <div className="flex gap-1.5 overflow-x-auto pb-0.5">
-                                  {availableDays.map((day) => {
-                                    const noon = zonedCivilToUtc(
-                                      day,
-                                      "12:00",
-                                      timezone,
-                                    );
-                                    const selected = day === dateIso;
-                                    return (
-                                      <button
-                                        key={day}
-                                        type="button"
-                                        disabled={pending}
-                                        onClick={() => {
-                                          setDateIso(day);
-                                          setSlotStart(null);
-                                        }}
-                                        className={cn(
-                                          "shrink-0 rounded-lg border px-2.5 py-1.5 text-left text-xs",
-                                          selected
-                                            ? "border-action bg-action/5 text-brand"
-                                            : "border-border bg-surface text-muted-foreground hover:border-action/40",
-                                        )}
-                                      >
-                                        <span className="block font-medium">
-                                          {formatDateInZone(
-                                            noon,
-                                            timezone,
-                                            locale,
-                                          )}
-                                        </span>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {daySlots.map((slot) => {
-                                    const selected =
-                                      slot.startsAt === slotStart;
-                                    return (
-                                      <button
-                                        key={slot.startsAt}
-                                        type="button"
-                                        disabled={pending}
-                                        onClick={() =>
-                                          setSlotStart(slot.startsAt)
-                                        }
-                                        className={cn(
-                                          "rounded-lg border px-2.5 py-1.5 text-xs font-medium",
-                                          selected
-                                            ? "border-action bg-action text-action-foreground"
-                                            : "border-border bg-surface text-brand hover:border-action/40",
-                                        )}
-                                      >
-                                        {formatTimeInZone(
-                                          new Date(slot.startsAt),
-                                          timezone,
-                                          locale,
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  disabled={!selectedSlot || pending}
-                                  onClick={() => {
-                                    if (!selectedSlot) return;
-                                    startTransition(async () => {
-                                      const result =
-                                        await rescheduleAppointmentAction({
-                                          appointmentId: booking.id,
-                                          locale,
-                                          startsAt: selectedSlot.startsAt,
-                                          endsAt: selectedSlot.endsAt,
-                                        });
-                                      if (result.error) {
-                                        toast.error(t(`errors.${result.error}`));
-                                        return;
-                                      }
-                                      toast.success(t("modified"));
-                                      setRescheduleId(null);
-                                      router.refresh();
-                                    });
-                                  }}
-                                >
-                                  {pending ? tc("saving") : tc("saveNewTime")}
-                                </Button>
-                              </div>
-                            )}
-                          </div>
                         ) : null}
                       </div>
                     ) : (
@@ -842,6 +736,133 @@ export function BookingsList({
           </TableBody>
         </Table>
       </SurfaceCard>
+
+      <Dialog
+        open={Boolean(rescheduleId)}
+        onOpenChange={(open) => {
+          if (!open) closeReschedule();
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{tc("changeTimeTitle")}</DialogTitle>
+            <DialogDescription>
+              {reschedulingBooking ? (
+                <>
+                  {reschedulingBooking.guestName} · {reschedulingBooking.serviceTitle}
+                  <br />
+                  {tc("changeTimeHelp")}
+                </>
+              ) : (
+                tc("changeTimeHelp")
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {slotsPending && !slots ? (
+            <p className="text-sm text-muted-foreground">{tc("saving")}</p>
+          ) : !slots || slots.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {tc("noRescheduleSlots")}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+                {availableDays.map((day) => {
+                  const noon = zonedCivilToUtc(day, "12:00", timezone);
+                  const selected = day === dateIso;
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setDateIso(day);
+                        setSlotStart(null);
+                      }}
+                      className={cn(
+                        "shrink-0 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors",
+                        selected
+                          ? "border-action bg-action/10 font-medium text-brand"
+                          : "border-border bg-canvas hover:border-action/40",
+                      )}
+                    >
+                      {formatDateInZone(noon, timezone, locale)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {daySlots.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {tc("noRescheduleSlotsDay")}
+                </p>
+              ) : (
+                <div className="grid max-h-40 grid-cols-3 gap-1.5 overflow-y-auto sm:grid-cols-4">
+                  {daySlots.map((slot) => {
+                    const selected = slot.startsAt === slotStart;
+                    return (
+                      <button
+                        key={slot.startsAt}
+                        type="button"
+                        disabled={pending}
+                        onClick={() => setSlotStart(slot.startsAt)}
+                        className={cn(
+                          "rounded-lg border px-2 py-1.5 text-xs tabular-nums transition-colors",
+                          selected
+                            ? "border-action bg-action text-action-foreground"
+                            : "border-border bg-canvas hover:border-action/50",
+                        )}
+                      >
+                        {formatTimeInZone(
+                          new Date(slot.startsAt),
+                          timezone,
+                          locale,
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending || slotsPending}
+              onClick={closeReschedule}
+            >
+              {tc("rescheduleBack")}
+            </Button>
+            <Button
+              type="button"
+              disabled={!selectedSlot || pending || slotsPending}
+              onClick={() => {
+                if (!selectedSlot || !rescheduleId) return;
+                startTransition(async () => {
+                  const result = await rescheduleAppointmentAction({
+                    appointmentId: rescheduleId,
+                    locale,
+                    startsAt: selectedSlot.startsAt,
+                    endsAt: selectedSlot.endsAt,
+                  });
+                  if (result.error) {
+                    toast.error(t(`errors.${result.error}`));
+                    return;
+                  }
+                  toast.success(t("modified"));
+                  closeReschedule();
+                  router.refresh();
+                });
+              }}
+            >
+              {pending ? tc("saving") : tc("saveNewTime")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">

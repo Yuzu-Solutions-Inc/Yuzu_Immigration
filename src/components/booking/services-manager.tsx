@@ -588,8 +588,8 @@ export function ServicesManager({
                     </div>
                   </TableHead>
                   {canManage ? (
-                    <TableHead className="h-auto py-2.5 align-bottom text-right">
-                      {t("actions")}
+                    <TableHead className="h-auto w-12 py-2.5 align-bottom">
+                      <span className="sr-only">{t("edit")}</span>
                     </TableHead>
                   ) : null}
                 </TableRow>
@@ -608,7 +608,7 @@ export function ServicesManager({
                   filteredSorted.map((service) => {
                 const copy = serviceCopy(service, locale, orgDefaultLocale);
                 return (
-                <TableRow key={service.id}>
+                <TableRow key={service.id} className="group">
                   <TableCell>
                     <p className="font-medium text-brand">{copy.title}</p>
                     {copy.description ? (
@@ -644,17 +644,17 @@ export function ServicesManager({
                   </TableCell>
                   {canManage ? (
                     <TableCell className="text-right">
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditing(service)}
-                        >
-                          <Pencil className="size-4" />
-                          {t("edit")}
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100"
+                        onClick={() => setEditing(service)}
+                        aria-label={t("edit")}
+                        title={t("edit")}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
                     </TableCell>
                   ) : null}
                 </TableRow>
