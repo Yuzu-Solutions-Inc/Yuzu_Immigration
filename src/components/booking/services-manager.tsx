@@ -135,18 +135,24 @@ function ServiceFormFields({
   locale,
   orgDefaultLocale,
   service,
+  isActive,
+  onIsActiveChange,
+  allowPayLater,
+  onAllowPayLaterChange,
+  showActiveToggle = true,
 }: {
   locale: string;
   orgDefaultLocale: AppLocale;
   service?: BookingServiceRow;
+  isActive: boolean;
+  onIsActiveChange: (value: boolean) => void;
+  allowPayLater: boolean;
+  onAllowPayLaterChange: (value: boolean) => void;
+  showActiveToggle?: boolean;
 }) {
   const t = useTranslations("services");
   const [copies, setCopies] = useState(() =>
     initialCopies(service, orgDefaultLocale),
-  );
-  const [isActive, setIsActive] = useState(service?.is_active ?? true);
-  const [allowPayLater, setAllowPayLater] = useState(
-    service?.allow_pay_later ?? false,
   );
 
   return (
@@ -268,21 +274,26 @@ function ServiceFormFields({
             {t("serviceOptionsSection")}
           </h3>
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
-              <div className="min-w-0 space-y-0.5">
-                <Label htmlFor="service-is-active" className="text-sm font-medium">
-                  {t("active")}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t("activeHelp")}
-                </p>
+            {showActiveToggle ? (
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+                <div className="min-w-0 space-y-0.5">
+                  <Label
+                    htmlFor="service-is-active"
+                    className="text-sm font-medium"
+                  >
+                    {t("active")}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t("activeHelp")}
+                  </p>
+                </div>
+                <Switch
+                  id="service-is-active"
+                  checked={isActive}
+                  onCheckedChange={onIsActiveChange}
+                />
               </div>
-              <Switch
-                id="service-is-active"
-                checked={isActive}
-                onCheckedChange={setIsActive}
-              />
-            </div>
+            ) : null}
             <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
               <div className="min-w-0 space-y-0.5">
                 <Label htmlFor="service-pay-later" className="text-sm font-medium">
@@ -295,7 +306,7 @@ function ServiceFormFields({
               <Switch
                 id="service-pay-later"
                 checked={allowPayLater}
-                onCheckedChange={setAllowPayLater}
+                onCheckedChange={onAllowPayLaterChange}
               />
             </div>
           </div>
@@ -345,6 +356,16 @@ function ServiceFormDialog({
   onDelete?: () => void;
 }) {
   const t = useTranslations("services");
+  const [isActive, setIsActive] = useState(service?.is_active ?? true);
+  const [allowPayLater, setAllowPayLater] = useState(
+    service?.allow_pay_later ?? false,
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    setIsActive(service?.is_active ?? true);
+    setAllowPayLater(service?.allow_pay_later ?? false);
+  }, [open, service?.id, service?.is_active, service?.allow_pay_later]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -353,12 +374,32 @@ function ServiceFormDialog({
         showCloseButton
       >
         <DialogHeader>
-          <DialogTitle>
-            {mode === "create" ? t("createTitle") : t("editTitle")}
-          </DialogTitle>
-          <DialogDescription>
-            {mode === "create" ? t("createSubtitle") : t("editSubtitle")}
-          </DialogDescription>
+          <div className="flex items-start justify-between gap-4 pr-8">
+            <div className="min-w-0 space-y-2">
+              <DialogTitle>
+                {mode === "create" ? t("createTitle") : t("editTitle")}
+              </DialogTitle>
+              <DialogDescription>
+                {mode === "create" ? t("createSubtitle") : t("editSubtitle")}
+              </DialogDescription>
+            </div>
+            {mode === "edit" ? (
+              <div className="flex shrink-0 items-center gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5">
+                <Label
+                  htmlFor="service-is-active-header"
+                  className="text-sm font-semibold text-brand"
+                >
+                  {t("active")}
+                </Label>
+                <Switch
+                  id="service-is-active-header"
+                  checked={isActive}
+                  onCheckedChange={setIsActive}
+                  className="h-7 w-12 shrink-0 data-[size=default]:h-7 data-[size=default]:w-12 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-checked:translate-x-5"
+                />
+              </div>
+            ) : null}
+          </div>
         </DialogHeader>
         <form action={action} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
@@ -367,6 +408,11 @@ function ServiceFormDialog({
               locale={locale}
               orgDefaultLocale={orgDefaultLocale}
               service={service}
+              isActive={isActive}
+              onIsActiveChange={setIsActive}
+              allowPayLater={allowPayLater}
+              onAllowPayLaterChange={setAllowPayLater}
+              showActiveToggle={mode === "create"}
             />
           </div>
           <DialogFooter className="mt-4 gap-2 sm:justify-between">
