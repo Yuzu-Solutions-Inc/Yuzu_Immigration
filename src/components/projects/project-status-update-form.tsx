@@ -83,9 +83,7 @@ export function ProjectStatusCard({
       }[state.error] ?? t("errors.generic")
     : null;
 
-  const pillLabel = `${t("status")} · ${t(`statuses.${currentStatus}`)} · ${t("statusSince", {
-    date: formatStatusDate(currentStatusAt, locale),
-  })}`;
+  const pillLabel = t(`statuses.${currentStatus}`);
 
   return (
     <>

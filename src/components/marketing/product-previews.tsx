@@ -1058,32 +1058,35 @@ export async function AppProjectPreview() {
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 overflow-hidden px-6 py-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 space-y-2">
-              <h1 className="font-heading text-2xl font-semibold tracking-tight text-brand">
-                {t("preview.projectChen")}
-              </h1>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-medium text-brand/85">
-                  {tProg("express_entry")}
-                </p>
-                <StatusPill label={tProj("formLanguages.en")} tone="muted" />
-                <span className="text-sm text-muted-foreground">
-                  {tProj("opened")} {opened}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <h1 className="font-heading text-2xl font-semibold tracking-tight text-brand">
+                  {t("preview.projectChen")}
+                </h1>
                 <StatusPill
                   label={tProj("statuses.in_progress")}
                   tone="action"
                 />
-                <StatusPill
-                  label={t("preview.userFullName")}
-                  tone="muted"
-                />
               </div>
+              <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                <span className="font-medium text-brand/85">
+                  {tProg("express_entry")}
+                </span>
+                <span aria-hidden>·</span>
+                <span>{tProj("formLanguages.en")}</span>
+                <span aria-hidden>·</span>
+                <span>
+                  {tProj("opened")} {opened}
+                </span>
+              </p>
             </div>
-            <span className="inline-flex h-9 items-center rounded-xl bg-action px-3 text-sm font-semibold text-action-foreground">
-              {tProj("edit")}
-            </span>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <span className="inline-flex h-9 items-center rounded-xl bg-action px-3 text-sm font-semibold text-action-foreground">
+                {tProj("edit")}
+              </span>
+              <p className="text-sm text-muted-foreground">
+                {tProj("representative")} · {t("preview.userFullName")}
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-1">

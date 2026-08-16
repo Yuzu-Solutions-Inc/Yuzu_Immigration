@@ -23,7 +23,6 @@ import { ProjectScheduleCallCard } from "@/components/projects/project-schedule-
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { ProjectSubmitBeforeCard } from "@/components/projects/project-submit-before-card";
 import { buttonVariants } from "@/components/ui/button";
-import { StatusPill } from "@/components/ui/status-pill";
 import { Link } from "@/i18n/navigation";
 import {
   canAdministerOrg,
@@ -199,9 +198,21 @@ export default async function ProjectDetailPage({
     .filter(Boolean);
   const portalHasEmail = portalInviteeNames.length > 0;
 
+  const languageLabel = t(
+    `formLanguages.${project.form_language === "fr" ? "fr" : "en"}`,
+  );
+  const metaParts = [
+    programLabel,
+    languageLabel,
+    project.jurisdiction !== "federal"
+      ? t(`jurisdictions.${project.jurisdiction}`)
+      : null,
+    `${t("opened")} ${opened}`,
+  ].filter(Boolean) as string[];
+
   return (
     <div>
-      <header className="space-y-5 pb-6">
+      <header className="space-y-4 pb-5">
         <Link
           href="/projects"
           className="inline-flex text-sm font-medium text-action hover:underline"
@@ -209,27 +220,12 @@ export default async function ProjectDetailPage({
           ← {t("back")}
         </Link>
 
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 space-y-4">
-            <div className="space-y-1.5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <h1 className="font-heading text-2xl font-semibold tracking-tight text-brand sm:text-3xl">
                 {project.title}
               </h1>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base font-medium text-brand/85">{programLabel}</p>
-                <StatusPill
-                  label={t(
-                    `formLanguages.${project.form_language === "fr" ? "fr" : "en"}`,
-                  )}
-                  tone="muted"
-                />
-                <span className="text-sm text-muted-foreground">
-                  {t("opened")} {opened}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
               <ProjectStatusCard
                 locale={locale}
                 projectId={project.id}
@@ -237,13 +233,22 @@ export default async function ProjectDetailPage({
                 currentStatusAt={project.status_at}
                 history={history}
               />
-              {project.jurisdiction !== "federal" ? (
-                <StatusPill
-                  label={t(`jurisdictions.${project.jurisdiction}`)}
-                  tone="muted"
-                />
-              ) : null}
             </div>
+
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              {metaParts.map((part, index) => (
+                <span key={part} className="inline-flex items-center gap-x-2">
+                  {index > 0 ? <span aria-hidden>·</span> : null}
+                  <span
+                    className={
+                      index === 0 ? "font-medium text-brand/85" : undefined
+                    }
+                  >
+                    {part}
+                  </span>
+                </span>
+              ))}
+            </p>
 
             {project.description ? (
               <p className="max-w-2xl text-sm leading-relaxed text-brand/75">
@@ -252,8 +257,8 @@ export default async function ProjectDetailPage({
             ) : null}
           </div>
 
-          <div className="flex shrink-0 flex-col items-end gap-2">
-            <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex shrink-0 flex-col items-start gap-2 lg:items-end">
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
               <ExportProjectFileButton locale={locale} projectId={project.id} />
               <Link
                 href={`/projects/${project.id}/edit`}
@@ -265,7 +270,9 @@ export default async function ProjectDetailPage({
                 {t("edit")}
               </Link>
             </div>
-            <StatusPill label={representativeLabel} tone="muted" />
+            <p className="text-sm text-muted-foreground">
+              {t("representative")} · {representativeLabel}
+            </p>
             <ProjectSubmitBeforeCard
               locale={locale}
               projectId={project.id}
