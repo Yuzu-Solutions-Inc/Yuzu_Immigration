@@ -142,7 +142,7 @@ export function ClientDocumentsUpload({
       t("errors.generic"));
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <p className="text-sm text-muted-foreground">
         {t("clientFormats", { maxMb })}
       </p>

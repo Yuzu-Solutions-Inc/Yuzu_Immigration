@@ -44,7 +44,7 @@ export function ShareFillTabs({
           window.location.hash = value;
         }
       }}
-      className={cn("mx-auto w-full max-w-6xl gap-6", className)}
+      className={cn("w-full gap-6", className)}
     >
       <div className="-mx-1 overflow-x-auto px-1 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <TabsList
@@ -68,8 +68,8 @@ export function ShareFillTabs({
       </div>
 
       {TAB_VALUES.map((value) => (
-        <TabsContent key={value} value={value} className="min-w-0">
-          <div className="space-y-6">{panels[value]}</div>
+        <TabsContent key={value} value={value} className="min-w-0 w-full">
+          <div className="w-full space-y-6">{panels[value]}</div>
         </TabsContent>
       ))}
     </Tabs>

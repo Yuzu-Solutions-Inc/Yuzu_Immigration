@@ -52,13 +52,13 @@ export async function ShareFillWorkspace({ token }: { token: string }) {
   }));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <header className="space-y-5 pb-6">
         <ShareFillHeader
           projectTitle={String(ctx.project.title)}
           expiresLabel={formatShareLinkExpiryDate(ctx.expiresAt, locale)}
         />
-        <p className="max-w-2xl text-[15px] text-muted-foreground">
+        <p className="text-[15px] text-muted-foreground">
           {t("clientLede")}
         </p>
       </header>

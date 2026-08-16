@@ -96,7 +96,7 @@ export function ClientFillForm({
       : null;
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {(submittedAt || successMessage) && (
         <div className="max-w-2xl space-y-2">
           {submittedAt ? (

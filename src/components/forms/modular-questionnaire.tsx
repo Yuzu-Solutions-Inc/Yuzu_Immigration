@@ -1303,7 +1303,7 @@ export function ModularQuestionnaire({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {showPersonTabs ? (
         <div className="space-y-4 rounded-xl border border-border bg-canvas p-4">
           <div className="space-y-2">
