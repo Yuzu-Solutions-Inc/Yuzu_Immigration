@@ -42,8 +42,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { getAppBaseUrl } from "@/lib/app-url";
 
-export const maxDuration = 60;
-
 export type FormsActionState = {
   error?: string;
   message?: string;

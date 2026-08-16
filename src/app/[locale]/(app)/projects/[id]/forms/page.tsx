@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+export const maxDuration = 60;
+
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectQuestionnaire } from "@/components/forms/project-forms-panel";
 import { Link } from "@/i18n/navigation";
