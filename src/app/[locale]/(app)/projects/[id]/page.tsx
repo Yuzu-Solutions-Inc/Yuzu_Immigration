@@ -8,7 +8,7 @@ import { getOrgSquareConnection } from "@/lib/square/client";
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
-import { ProjectShareLinkCard } from "@/components/forms/project-share-link-card";
+import { ProjectPortalCard } from "@/components/projects/project-portal-card";
 import {
   ExportProjectFileButton,
   ProjectRetentionPanel,
@@ -40,18 +40,20 @@ import {
   listProjectNotes,
 } from "@/lib/crm/queries";
 import { computeProjectProgressFromDetail } from "@/lib/crm/progress";
+import { isChildParticipantRole } from "@/lib/crm/programs";
 import {
   listProjectCallInvites,
   listProjectMeetingHistory,
 } from "@/lib/booking/queries";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { toAppLocale } from "@/lib/i18n/locales";
+import { portalBaseUrl } from "@/lib/portal/auth";
 import { ensureProjectDocumentsSeeded } from "@/lib/documents/service";
 import { listProjectDocumentRequests } from "@/lib/documents/service";
 import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
 import { isFormMandatoryComplete } from "@/lib/ircc/form-readiness";
 import { PROFILE_REP_SELECT } from "@/lib/ircc/account-rep";
 import {
-  getActiveShareLink,
   getProjectFormAnswers,
   listProjectForms,
 } from "@/lib/ircc/project-forms";
@@ -73,6 +75,7 @@ export default async function ProjectDetailPage({
 
   const membership = await getPrimaryMembership();
   const canShare = canShareProjects(membership?.role);
+  const canCreate = canCreateRecords(membership?.role);
 
   await ensureProjectFormsSeeded(
     project.organization_id,
@@ -90,7 +93,6 @@ export default async function ProjectDetailPage({
     history,
     forms,
     answersRow,
-    share,
     documentRequests,
     members,
     assistantIds,
@@ -100,12 +102,12 @@ export default async function ProjectDetailPage({
     bookingSettings,
     projectPayments,
     squareConnection,
+    appBaseUrl,
   ] = await Promise.all([
     getProjectParticipants(id),
     getProjectStatusHistory(id),
     listProjectForms(id),
     getProjectFormAnswers(id),
-    getActiveShareLink(id),
     listProjectDocumentRequests(id),
     canShare ? listOrgMembers() : Promise.resolve([]),
     canShare ? listProjectAssistantUserIds(id) : Promise.resolve([]),
@@ -123,6 +125,7 @@ export default async function ProjectDetailPage({
     })(),
     listProjectPaymentLinks(id),
     getOrgSquareConnection(project.organization_id),
+    getAppBaseUrl(),
   ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
@@ -183,6 +186,18 @@ export default async function ProjectDetailPage({
     project.representative?.email ||
     t("representativeUnassigned");
   const modificationBlocked = project.status === "granted";
+  const portalInvitees = participants.filter(
+    (row) =>
+      !isChildParticipantRole(row.role) && Boolean(row.person?.email?.trim()),
+  );
+  const portalInviteeNames = portalInvitees
+    .map((row) => {
+      const person = row.person;
+      const name = `${person?.first_name ?? ""} ${person?.last_name ?? ""}`.trim();
+      return name || person?.email?.trim() || "";
+    })
+    .filter(Boolean);
+  const portalHasEmail = portalInviteeNames.length > 0;
 
   return (
     <div>
@@ -293,13 +308,15 @@ export default async function ProjectDetailPage({
               docsTotal={docsTotal}
               formPercent={formPercent}
               clientLink={
-                <ProjectShareLinkCard
-                  locale={formLocale}
-                  projectId={project.id}
-                  activeShareExpiresAt={share?.expires_at ?? null}
-                  canReveal={share?.canReveal ?? false}
-                  modificationBlocked={modificationBlocked}
-                />
+                canCreate ? (
+                  <ProjectPortalCard
+                    locale={locale}
+                    projectId={project.id}
+                    portalBaseUrl={portalBaseUrl(appBaseUrl, locale)}
+                    inviteeNames={portalInviteeNames}
+                    hasAnyInviteeEmail={portalHasEmail}
+                  />
+                ) : null
               }
               participants={
                 <ProjectParticipantsList

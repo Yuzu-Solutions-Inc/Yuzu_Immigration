@@ -25,12 +25,11 @@ import {
   listShareDocumentRequests,
   storeEncryptedDocument,
 } from "@/lib/documents/service";
-import {
-  personDisplayName,
-  resolveProjectShareUrl,
-} from "@/lib/documents/share-url";
+import { personDisplayName } from "@/lib/documents/share-url";
 import { sendDocumentRejectionEmail } from "@/lib/email/document-rejection";
 import { assertShareAuthenticated } from "@/lib/ircc/share-auth";
+import { getAppBaseUrl } from "@/lib/app-url";
+import { portalBaseUrl } from "@/lib/portal/auth";
 
 async function resolveShareForDocuments(token: string) {
   try {
@@ -401,7 +400,6 @@ export async function reviewDocumentRequestAction(
     const recipientEmail = decryptedPerson?.email?.trim();
 
     if (recipientEmail) {
-      const shareUrl = await resolveProjectShareUrl(orgId, projectId, locale);
       const emailResult = await sendDocumentRejectionEmail({
         locale: decryptedPerson?.preferred_locale || locale,
         to: recipientEmail,
@@ -410,7 +408,7 @@ export async function reviewDocumentRequestAction(
         projectTitle: decryptedProject?.title || "Your file",
         documentName,
         comment,
-        shareUrl,
+        shareUrl: portalBaseUrl(await getAppBaseUrl(), locale),
       });
 
       if (!emailResult.sent) {

@@ -6,7 +6,7 @@ import {
   updateGoogleCalendarSecrets,
   upsertGoogleCalendarSecrets,
 } from "@/lib/google/secrets";
-import { hasAppEncryptionKey } from "@/lib/security/app-encryption-key";
+import { hasAppEncryptionKey, requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import {
   decryptBookingGuestRow,
   decryptPersonRow,
@@ -14,7 +14,7 @@ import {
   encryptBookingFormAnswers,
   PII_AAD,
 } from "@/lib/security/client-pii";
-import { hashEmailLookup } from "@/lib/security/email-lookup";
+import { hashEmailLookup, hashPortalEmail } from "@/lib/security/email-lookup";
 import {
   decryptField,
   encryptField,
@@ -121,7 +121,7 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
       const { data, error } = await admin
         .from("people")
         .select(
-          "id, organization_id, first_name, last_name, email, phone, email_lookup_hash",
+          "id, organization_id, first_name, last_name, email, phone, email_lookup_hash, portal_email_hash",
         )
         .order("created_at", { ascending: true })
         .range(from, to);
@@ -134,6 +134,7 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
         email: string | null;
         phone: string | null;
         email_lookup_hash: string | null;
+        portal_email_hash: string | null;
       }>;
     },
     async (row) => {
@@ -160,6 +161,13 @@ export async function sealAllClientPii(): Promise<SealClientPiiResult> {
         : null;
       if ((row.email_lookup_hash ?? null) !== nextHash) {
         patch.email_lookup_hash = nextHash;
+      }
+      const nextPortalHash =
+        person.email && hasAppEncryptionKey()
+          ? hashPortalEmail(person.email, requireAppEncryptionKey())
+          : null;
+      if ((row.portal_email_hash ?? null) !== nextPortalHash) {
+        patch.portal_email_hash = nextPortalHash;
       }
       if (Object.keys(patch).length === 0) return false;
       const { error } = await admin.from("people").update(patch).eq("id", row.id);

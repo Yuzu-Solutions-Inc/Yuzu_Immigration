@@ -79,6 +79,11 @@ const PARTICIPANT_ROLE_RANK: Record<ParticipantRole, number> = {
   accompanying: 5,
 };
 
+/** Dependents on a file are treated as children and are not invited to the portal. */
+export function isChildParticipantRole(role: string): boolean {
+  return role === "dependent";
+}
+
 export function compareParticipantRole(a: string, b: string): number {
   const left = PARTICIPANT_ROLE_RANK[a as ParticipantRole] ?? 50;
   const right = PARTICIPANT_ROLE_RANK[b as ParticipantRole] ?? 50;

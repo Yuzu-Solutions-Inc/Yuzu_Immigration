@@ -6,18 +6,31 @@ import { useTranslations } from "next-intl";
 
 import {
   forgotPortalPasswordAction,
+  identifyPortalAction,
   loginPortalAction,
   setPortalPasswordAction,
 } from "@/app/actions/portal-auth";
 import { portalAuthInitialState } from "@/app/actions/portal-state";
 import { LegalConsentFields } from "@/components/legal/legal-consent-fields";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Field, FieldError, FieldHint, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldHint,
+  FieldLabel,
+  FormStack,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Link } from "@/i18n/navigation";
 import type { PortalAccessState } from "@/lib/portal/session";
 import { cn } from "@/lib/utils";
+
+type GateView =
+  | "identify"
+  | "choose_org"
+  | Exclude<PortalAccessState, "authenticated">;
 
 export function PortalLoginGate({
   locale,
@@ -35,8 +48,17 @@ export function PortalLoginGate({
   const t = useTranslations("portal");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [view, setView] = useState(mode);
-  const [accessCode, setAccessCode] = useState("");
+  const [view, setView] = useState<GateView>(token ? mode : "identify");
+  const [email, setEmail] = useState("");
+  const [personId, setPersonId] = useState("");
+  const [organizationId, setOrganizationId] = useState("");
+  const [orgName, setOrgName] = useState(organizationName ?? "");
+  const [accountKey, setAccountKey] = useState("");
+
+  const [identifyState, identifyAction, identifyPending] = useActionState(
+    identifyPortalAction,
+    portalAuthInitialState,
+  );
   const [setupState, setupAction, setupPending] = useActionState(
     setPortalPasswordAction,
     portalAuthInitialState,
@@ -51,7 +73,11 @@ export function PortalLoginGate({
   );
 
   const activeState =
-    view === "needs_password_setup" ? setupState : loginState;
+    view === "identify" || view === "choose_org"
+      ? identifyState
+      : view === "needs_password_setup"
+        ? setupState
+        : loginState;
   const rawError = activeState.error ?? forgotState.error ?? initialError;
   const errorKey =
     (rawError === "needs_setup" && view === "needs_password_setup") ||
@@ -77,8 +103,33 @@ export function PortalLoginGate({
     : null;
 
   useEffect(() => {
-    setView(mode);
-  }, [mode]);
+    setView(token ? mode : "identify");
+    setOrgName(organizationName ?? "");
+  }, [mode, token, organizationName]);
+
+  useEffect(() => {
+    if (identifyState.message === "choose_org") {
+      setView("choose_org");
+      const first = identifyState.organizations?.[0];
+      if (first) {
+        setAccountKey(`${first.personId}:${first.organizationId}`);
+        setPersonId(first.personId);
+        setOrganizationId(first.organizationId);
+      }
+    }
+    if (identifyState.message === "needs_setup") {
+      setView("needs_password_setup");
+      setPersonId(identifyState.personId ?? "");
+      setOrganizationId(identifyState.organizationId ?? "");
+      setOrgName(identifyState.organizationName ?? "");
+    }
+    if (identifyState.message === "needs_login") {
+      setView("needs_password_login");
+      setPersonId(identifyState.personId ?? "");
+      setOrganizationId(identifyState.organizationId ?? "");
+      setOrgName(identifyState.organizationName ?? "");
+    }
+  }, [identifyState]);
 
   useEffect(() => {
     if (loginState.error === "needs_setup") {
@@ -101,6 +152,18 @@ export function PortalLoginGate({
     }
   }, [setupState.message, loginState.message, locale]);
 
+  const identityFields = (
+    <>
+      {token ? <input type="hidden" name="token" value={token} /> : null}
+      <input type="hidden" name="locale" value={locale} />
+      {email ? <input type="hidden" name="email" value={email} /> : null}
+      {personId ? <input type="hidden" name="personId" value={personId} /> : null}
+      {organizationId ? (
+        <input type="hidden" name="organizationId" value={organizationId} />
+      ) : null}
+    </>
+  );
+
   if (forgotState.message === "email_sent") {
     return (
       <div className="mx-auto max-w-md space-y-3 px-4 py-16 text-center">
@@ -121,14 +184,111 @@ export function PortalLoginGate({
           {t("title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {organizationName
-            ? t("subtitleOrg", { org: organizationName })
-            : t("subtitle")}
+          {orgName ? t("subtitleOrg", { org: orgName }) : t("subtitle")}
         </p>
       </header>
 
       <div className="space-y-4 rounded-xl border border-border bg-surface p-5 shadow-elevated">
-        {view === "needs_password_setup" ? (
+        {view === "identify" || view === "choose_org" ? (
+          <>
+            <div className="space-y-1">
+              <h2 className="font-heading text-lg font-semibold text-brand">
+                {view === "choose_org" ? t("chooseOrgTitle") : t("loginTitle")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {view === "choose_org" ? t("chooseOrgBody") : t("loginBody")}
+              </p>
+            </div>
+            <FormStack
+              action={identifyAction}
+              onSubmit={(event) => {
+                const value = String(
+                  new FormData(event.currentTarget).get("email") || "",
+                );
+                if (value) setEmail(value);
+              }}
+            >
+              <input type="hidden" name="locale" value={locale} />
+              {view === "choose_org" ? (
+                <>
+                  <input type="hidden" name="email" value={email} />
+                  <Field>
+                    <FieldLabel htmlFor="portal-account" required>
+                      {t("account")}
+                    </FieldLabel>
+                    <NativeSelect
+                      id="portal-account"
+                      name="account"
+                      required
+                      value={accountKey}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setAccountKey(value);
+                        const [nextPerson, nextOrg] = value.split(":");
+                        setPersonId(nextPerson ?? "");
+                        setOrganizationId(nextOrg ?? "");
+                      }}
+                    >
+                      {(identifyState.organizations ?? []).map((org) => {
+                        const value = `${org.personId}:${org.organizationId}`;
+                        return (
+                          <option key={value} value={value}>
+                            {org.label}
+                          </option>
+                        );
+                      })}
+                    </NativeSelect>
+                  </Field>
+                  <input type="hidden" name="personId" value={personId} />
+                  <input
+                    type="hidden"
+                    name="organizationId"
+                    value={organizationId}
+                  />
+                </>
+              ) : (
+                <Field>
+                  <FieldLabel htmlFor="portal-email" required>
+                    {t("email")}
+                  </FieldLabel>
+                  <Input
+                    id="portal-email"
+                    name="email"
+                    type="email"
+                    autoComplete="username"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                  <FieldHint>{t("emailHint")}</FieldHint>
+                </Field>
+              )}
+              <Button type="submit" className="w-full" disabled={identifyPending}>
+                {identifyPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {identifyPending ? t("continuing") : t("continueCta")}
+              </Button>
+            </FormStack>
+            {view === "choose_org" ? (
+              <button
+                type="button"
+                className={cn(
+                  buttonVariants({ variant: "link", size: "sm" }),
+                  "h-auto p-0 text-action",
+                )}
+                onClick={() => {
+                  setView("identify");
+                  setPersonId("");
+                  setOrganizationId("");
+                  setAccountKey("");
+                }}
+              >
+                {t("useAnotherEmail")}
+              </button>
+            ) : null}
+          </>
+        ) : view === "needs_password_setup" ? (
           <>
             <div className="space-y-1">
               <h2 className="font-heading text-lg font-semibold text-brand">
@@ -137,25 +297,8 @@ export function PortalLoginGate({
               <p className="text-sm text-muted-foreground">{t("setupBody")}</p>
               <p className="text-xs text-muted-foreground">{t("passwordRules")}</p>
             </div>
-            <form action={setupAction} className="space-y-4">
-              {token ? <input type="hidden" name="token" value={token} /> : null}
-              <input type="hidden" name="locale" value={locale} />
-              {token ? null : (
-                <Field>
-                  <FieldLabel htmlFor="portal-access-code" required>
-                    {t("accessCode")}
-                  </FieldLabel>
-                  <Input
-                    id="portal-access-code"
-                    name="accessCode"
-                    autoComplete="username"
-                    required
-                    className="uppercase"
-                    value={accessCode}
-                    onChange={(event) => setAccessCode(event.target.value)}
-                  />
-                </Field>
-              )}
+            <FormStack action={setupAction}>
+              {identityFields}
               <Field>
                 <FieldLabel htmlFor="portal-password" required>
                   {t("password")}
@@ -201,7 +344,7 @@ export function PortalLoginGate({
                 ) : null}
                 {setupPending ? t("settingUp") : t("setupCta")}
               </Button>
-            </form>
+            </FormStack>
           </>
         ) : (
           <>
@@ -209,28 +352,10 @@ export function PortalLoginGate({
               <h2 className="font-heading text-lg font-semibold text-brand">
                 {t("loginTitle")}
               </h2>
-              <p className="text-sm text-muted-foreground">{t("loginBody")}</p>
+              <p className="text-sm text-muted-foreground">{t("signInBody")}</p>
             </div>
-            <form action={loginAction} className="space-y-4">
-              {token ? <input type="hidden" name="token" value={token} /> : null}
-              <input type="hidden" name="locale" value={locale} />
-              {token ? null : (
-                <Field>
-                  <FieldLabel htmlFor="portal-login-code" required>
-                    {t("accessCode")}
-                  </FieldLabel>
-                  <Input
-                    id="portal-login-code"
-                    name="accessCode"
-                    autoComplete="username"
-                    required
-                    className="uppercase"
-                    value={accessCode}
-                    onChange={(event) => setAccessCode(event.target.value)}
-                  />
-                  <FieldHint>{t("accessCodeHint")}</FieldHint>
-                </Field>
-              )}
+            <FormStack action={loginAction}>
+              {identityFields}
               <Field>
                 <FieldLabel htmlFor="portal-login-password" required>
                   {t("password")}
@@ -250,28 +375,11 @@ export function PortalLoginGate({
                 ) : null}
                 {loginPending ? t("loggingIn") : t("loginCta")}
               </Button>
-            </form>
+            </FormStack>
             <div className="space-y-3 border-t border-border pt-4">
               <p className="text-sm text-muted-foreground">{t("forgotBody")}</p>
-              <form action={forgotAction} className="space-y-3">
-                {token ? <input type="hidden" name="token" value={token} /> : null}
-                <input type="hidden" name="locale" value={locale} />
-                {token ? null : (
-                  <Field>
-                    <FieldLabel htmlFor="portal-forgot-code" required>
-                      {t("accessCode")}
-                    </FieldLabel>
-                  <Input
-                    id="portal-forgot-code"
-                    name="accessCode"
-                    autoComplete="username"
-                    required
-                    className="uppercase"
-                    value={accessCode}
-                    onChange={(event) => setAccessCode(event.target.value)}
-                  />
-                  </Field>
-                )}
+              <FormStack action={forgotAction}>
+                {identityFields}
                 <Button
                   type="submit"
                   variant="outline"
@@ -283,31 +391,26 @@ export function PortalLoginGate({
                   ) : null}
                   {forgotPending ? t("forgotSending") : t("forgotCta")}
                 </Button>
-              </form>
+              </FormStack>
             </div>
+            {!token ? (
+              <button
+                type="button"
+                className={cn(
+                  buttonVariants({ variant: "link", size: "sm" }),
+                  "h-auto p-0 text-action",
+                )}
+                onClick={() => {
+                  setView("identify");
+                  setPersonId("");
+                  setOrganizationId("");
+                }}
+              >
+                {t("useAnotherEmail")}
+              </button>
+            ) : null}
           </>
         )}
-
-        {!token ? (
-          <button
-            type="button"
-            className={cn(
-              buttonVariants({ variant: "link", size: "sm" }),
-              "h-auto p-0 text-action",
-            )}
-            onClick={() =>
-              setView(
-                view === "needs_password_setup"
-                  ? "needs_password_login"
-                  : "needs_password_setup",
-              )
-            }
-          >
-            {view === "needs_password_setup"
-              ? t("signInInstead")
-              : t("firstVisitCta")}
-          </button>
-        ) : null}
 
         {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
       </div>

@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { Check, Copy, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
   disablePersonPortalAction,
-  enablePersonPortalAction,
   resendPersonPortalInviteAction,
   resetPersonPortalAction,
 } from "@/app/actions/portal-staff";
@@ -29,80 +28,49 @@ export function PersonPortalCard({
   locale,
   personId,
   hasEmail,
+  portalBaseUrl,
   access,
 }: {
   locale: string;
   personId: string;
   hasEmail: boolean;
+  portalBaseUrl: string;
   access: {
-    accessCode: string;
-    portalUrl: string;
     isActive: boolean;
     lastAuthenticatedAt: string | null;
   } | null;
 }) {
   const t = useTranslations("people.portal");
-  const [enableState, enableAction, enablePending] = useActionState(
-    enablePersonPortalAction,
+  const [inviteState, inviteAction, invitePending] = useActionState(
+    resendPersonPortalInviteAction,
     portalStaffInitialState,
   );
   const [disableState, disableAction, disablePending] = useActionState(
     disablePersonPortalAction,
     portalStaffInitialState,
   );
-  const [resendState, resendAction, resendPending] = useActionState(
-    resendPersonPortalInviteAction,
-    portalStaffInitialState,
-  );
   const [resetState, resetAction, resetPending] = useActionState(
     resetPersonPortalAction,
     portalStaffInitialState,
   );
-  const [copied, setCopied] = useState<"url" | "code" | null>(null);
-  const copiedRef = useRef<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const generatedUrl =
-    enableState.portalUrl ?? resendState.portalUrl ?? resetState.portalUrl ?? null;
-  const portalUrl = generatedUrl ?? access?.portalUrl ?? null;
-  const accessCode =
-    enableState.accessCode ??
-    resetState.accessCode ??
-    resendState.accessCode ??
-    access?.accessCode ??
-    null;
   const active =
-    disableState.message !== "disabled" &&
-    (Boolean(access?.isActive) ||
-      enableState.message === "enabled" ||
-      enableState.message === "invited");
+    disableState.message !== "disabled" && Boolean(access?.isActive);
 
-  useEffect(() => {
-    if (!generatedUrl || copiedRef.current === generatedUrl) return;
-    copiedRef.current = generatedUrl;
-    void writeClipboard(generatedUrl).then((ok) => {
-      if (!ok) return;
-      setCopied("url");
-      toast.success(t("copiedUrl"));
-      window.setTimeout(() => setCopied(null), 2000);
-    });
-  }, [generatedUrl, t]);
-
-  async function copy(value: string, kind: "url" | "code") {
-    const ok = await writeClipboard(value);
+  async function copyLink() {
+    const ok = await writeClipboard(portalBaseUrl);
     if (!ok) {
       toast.error(t("copyFailed"));
       return;
     }
-    setCopied(kind);
-    toast.success(kind === "url" ? t("copiedUrl") : t("copiedCode"));
-    window.setTimeout(() => setCopied(null), 2000);
+    setCopied(true);
+    toast.success(t("copiedUrl"));
+    window.setTimeout(() => setCopied(false), 2000);
   }
 
   const error =
-    enableState.error ||
-    disableState.error ||
-    resendState.error ||
-    resetState.error;
+    inviteState.error || disableState.error || resetState.error;
   const errorMessage = error
     ? {
         invalid: t("errors.invalid"),
@@ -111,7 +79,6 @@ export function PersonPortalCard({
         not_found: t("errors.not_found"),
         no_email: t("errors.no_email"),
         email_not_configured: t("errors.email_not_configured"),
-        enable_failed: t("errors.enable_failed"),
         disable_failed: t("errors.disable_failed"),
         reset_failed: t("errors.reset_failed"),
       }[error] ?? t("errors.generic")
@@ -126,86 +93,60 @@ export function PersonPortalCard({
         <p className="text-sm text-muted-foreground">{t("help")}</p>
       </div>
 
-      {active && accessCode ? (
-        <div className="space-y-2 rounded-lg border border-border bg-canvas px-3 py-3">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {t("accessCode")}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <code className="font-mono text-sm font-semibold text-brand">
-              {accessCode}
-            </code>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => copy(accessCode, "code")}
-            >
-              {copied === "code" ? (
-                <Check className="size-3.5" />
-              ) : (
-                <Copy className="size-3.5" />
-              )}
-              {t("copyCode")}
-            </Button>
-            {portalUrl ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => copy(portalUrl, "url")}
-              >
-                {copied === "url" ? (
-                  <Check className="size-3.5" />
-                ) : (
-                  <Copy className="size-3.5" />
-                )}
-                {t("copyUrl")}
-              </Button>
-            ) : null}
-          </div>
-          {access?.lastAuthenticatedAt ? (
-            <FieldHint>
-              {t("lastSeen", {
-                date: new Date(access.lastAuthenticatedAt).toLocaleString(),
-              })}
-            </FieldHint>
+      <div className="group relative rounded-xl border border-border bg-canvas px-3 py-2.5 pr-11">
+        <p className="truncate font-mono text-sm text-brand" title={portalBaseUrl}>
+          {portalBaseUrl}
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => void copyLink()}
+          aria-label={copied ? t("copiedUrl") : t("copyUrl")}
+          title={t("copyUrl")}
+          className="absolute top-1.5 right-1.5 text-muted-foreground hover:text-brand"
+        >
+          {copied ? (
+            <Check className="size-4 text-success" />
           ) : (
-            <FieldHint>{t("neverSignedIn")}</FieldHint>
+            <Copy className="size-4" />
           )}
-        </div>
+        </Button>
+      </div>
+
+      {active ? (
+        access?.lastAuthenticatedAt ? (
+          <FieldHint>
+            {t("lastSeen", {
+              date: new Date(access.lastAuthenticatedAt).toLocaleString(),
+            })}
+          </FieldHint>
+        ) : (
+          <FieldHint>{t("neverSignedIn")}</FieldHint>
+        )
       ) : null}
 
       {!hasEmail ? <FieldHint>{t("noEmailHint")}</FieldHint> : null}
 
       <div className="flex flex-wrap gap-2">
-        {!active ? (
-          <form action={enableAction}>
-            <input type="hidden" name="personId" value={personId} />
-            <input type="hidden" name="locale" value={locale} />
-            <Button type="submit" disabled={enablePending}>
-              {enablePending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : null}
-              {enablePending ? t("enabling") : t("enable")}
-            </Button>
-          </form>
-        ) : (
+        <Button type="button" onClick={() => void copyLink()}>
+          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+          {t("copyUrl")}
+        </Button>
+        <form action={inviteAction}>
+          <input type="hidden" name="personId" value={personId} />
+          <input type="hidden" name="locale" value={locale} />
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={invitePending || !hasEmail}
+          >
+            {invitePending ? <Loader2 className="size-4 animate-spin" /> : null}
+            {invitePending ? t("sending") : t("send")}
+          </Button>
+        </form>
+        {active ? (
           <>
-            <form action={resendAction}>
-              <input type="hidden" name="personId" value={personId} />
-              <input type="hidden" name="locale" value={locale} />
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={resendPending || !hasEmail}
-              >
-                {resendPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : null}
-                {resendPending ? t("sending") : t("resend")}
-              </Button>
-            </form>
             <form action={resetAction}>
               <input type="hidden" name="personId" value={personId} />
               <input type="hidden" name="locale" value={locale} />
@@ -231,15 +172,10 @@ export function PersonPortalCard({
               </Button>
             </form>
           </>
-        )}
+        ) : null}
       </div>
 
-      {enableState.message === "enabled" || enableState.message === "invited" ? (
-        <p className="text-sm font-medium text-success" role="status">
-          {enableState.message === "invited" ? t("invited") : t("enabled")}
-        </p>
-      ) : null}
-      {resendState.message === "invited" ? (
+      {inviteState.message === "invited" ? (
         <p className="text-sm font-medium text-success" role="status">
           {t("invited")}
         </p>

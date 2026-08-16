@@ -10,6 +10,12 @@ import {
   type PortalSession,
 } from "@/lib/portal/session";
 import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
+import { decryptPersonRow } from "@/lib/security/client-pii";
+import {
+  hashPortalEmail,
+  normalizeGuestEmail,
+} from "@/lib/security/email-lookup";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export type { PortalAccessState, PortalSession };
@@ -29,6 +35,9 @@ const VERIFY_FAIL_LIMIT = 10;
 const VERIFY_FAIL_WINDOW_SEC = 15 * 60;
 const FORGOT_PER_ACCESS_PER_DAY = 3;
 const FORGOT_PER_IP_PER_DAY = 8;
+const IDENTIFY_PER_EMAIL_WINDOW = 10;
+const IDENTIFY_PER_IP_WINDOW = 30;
+const IDENTIFY_WINDOW_SEC = 15 * 60;
 
 function hashAccessId(accessId: string) {
   return createHmac("sha256", requireAppEncryptionKey())
@@ -75,8 +84,104 @@ function sessionFromAccess(row: PortalAccessRow): PortalSession {
   };
 }
 
+export function portalBaseUrl(base: string, locale: string) {
+  return `${base.replace(/\/$/, "")}/${locale}/portal`;
+}
+
 export function portalUrl(base: string, locale: string, accessToken: string) {
   return `${base.replace(/\/$/, "")}/${locale}/portal/${accessToken}`;
+}
+
+export type PortalEmailMatch = {
+  personId: string;
+  organizationId: string;
+  organizationName: string;
+  personLabel: string;
+};
+
+export async function findPortalMatches(
+  email: string,
+): Promise<PortalEmailMatch[]> {
+  const trimmed = normalizeGuestEmail(email);
+  if (!trimmed.includes("@")) return [];
+  let hash: string;
+  try {
+    hash = hashPortalEmail(trimmed, requireAppEncryptionKey());
+  } catch (err) {
+    console.error("findPortalMatches hash:", err);
+    return [];
+  }
+
+  const admin = createServiceClient();
+  const { data: rows, error } = await admin
+    .from("people")
+    .select("id, organization_id, first_name, last_name")
+    .eq("portal_email_hash", hash);
+  if (error) {
+    console.error("findPortalMatches:", error.message);
+    return [];
+  }
+  if (!rows?.length) return [];
+
+  const orgIds = [
+    ...new Set(rows.map((row) => String(row.organization_id))),
+  ];
+  const { data: orgs } = await admin
+    .from("organizations")
+    .select("id, name")
+    .in("id", orgIds);
+  const orgName = new Map(
+    (orgs ?? []).map((org) => [String(org.id), String(org.name ?? "")]),
+  );
+
+  const matches: PortalEmailMatch[] = [];
+  for (const row of rows) {
+    const organizationId = String(row.organization_id);
+    const person = decryptPersonRow(
+      {
+        first_name: row.first_name as string,
+        last_name: row.last_name as string,
+      },
+      await getOrgDataKey(organizationId),
+    );
+    matches.push({
+      personId: String(row.id),
+      organizationId,
+      organizationName: orgName.get(organizationId) || "",
+      personLabel: `${person.first_name} ${person.last_name}`.trim(),
+    });
+  }
+  return matches;
+}
+
+export async function openPortalAccount(
+  personId: string,
+): Promise<PortalAccessRow | null> {
+  const admin = createServiceClient();
+  const { data, error } = await admin.rpc("client_open_customer_portal", {
+    p_person_id: personId,
+  });
+  if (error) {
+    console.error("client_open_customer_portal:", error.message);
+    return null;
+  }
+  return asAccessRow(data);
+}
+
+export async function resolvePortalAccount(
+  email: string,
+  personId: string,
+  organizationId: string,
+): Promise<PortalAccessRow | "disabled" | null> {
+  const match = (await findPortalMatches(email)).find(
+    (row) =>
+      row.personId === personId && row.organizationId === organizationId,
+  );
+  if (!match) return null;
+  const access = await openPortalAccount(personId);
+  if (!access || access.organization_id !== organizationId) return null;
+  if (!access.is_active) return "disabled";
+  return access;
 }
 
 export async function lookupPortalAccess(
@@ -176,9 +281,9 @@ export async function resetPortalPassword(
 }
 
 async function countAuthEvents(input: {
-  organizationId: string;
-  accessHash: string;
-  kind: "verify_fail" | "forgot_password";
+  organizationId?: string | null;
+  accessHash?: string | null;
+  kind: "verify_fail" | "forgot_password" | "identify";
   ipHash?: string | null;
   sinceIso: string;
 }) {
@@ -186,10 +291,12 @@ async function countAuthEvents(input: {
   let query = admin
     .from("portal_auth_events")
     .select("id", { count: "exact", head: true })
-    .eq("organization_id", input.organizationId)
-    .eq("access_hash", input.accessHash)
     .eq("kind", input.kind)
     .gte("created_at", input.sinceIso);
+  if (input.organizationId) {
+    query = query.eq("organization_id", input.organizationId);
+  }
+  if (input.accessHash) query = query.eq("access_hash", input.accessHash);
   if (input.ipHash) query = query.eq("ip_hash", input.ipHash);
   const { count, error } = await query;
   if (error) {
@@ -200,14 +307,14 @@ async function countAuthEvents(input: {
 }
 
 async function recordAuthEvent(input: {
-  organizationId: string;
+  organizationId?: string | null;
   accessHash: string;
-  kind: "verify_fail" | "forgot_password";
+  kind: "verify_fail" | "forgot_password" | "identify";
   ipHash?: string | null;
 }) {
   const admin = createServiceClient();
   const { error } = await admin.from("portal_auth_events").insert({
-    organization_id: input.organizationId,
+    organization_id: input.organizationId ?? null,
     access_hash: input.accessHash,
     kind: input.kind,
     ip_hash: input.ipHash ?? null,
@@ -271,6 +378,55 @@ export async function recordPortalForgotPassword(access: PortalAccessRow) {
     organizationId: access.organization_id,
     accessHash: hashAccessId(access.id),
     kind: "forgot_password",
+    ipHash: ip ? hashIp(ip) : null,
+  });
+}
+
+function hashPortalIdentifyEmail(email: string) {
+  return hashPortalEmail(email, requireAppEncryptionKey());
+}
+
+export async function checkPortalIdentifyRateLimit(
+  email: string,
+  ipHash: string | null,
+): Promise<"ok" | "rate_limited"> {
+  let emailHash: string;
+  try {
+    emailHash = hashPortalIdentifyEmail(email);
+  } catch {
+    return "ok";
+  }
+  const since = agoIso(IDENTIFY_WINDOW_SEC);
+  const [emailCount, ipCount] = await Promise.all([
+    countAuthEvents({
+      accessHash: emailHash,
+      kind: "identify",
+      sinceIso: since,
+    }),
+    ipHash
+      ? countAuthEvents({
+          kind: "identify",
+          ipHash,
+          sinceIso: since,
+        })
+      : Promise.resolve(0),
+  ]);
+  if (emailCount >= IDENTIFY_PER_EMAIL_WINDOW) return "rate_limited";
+  if (ipCount >= IDENTIFY_PER_IP_WINDOW) return "rate_limited";
+  return "ok";
+}
+
+export async function recordPortalIdentifyAttempt(email: string) {
+  const ip = await getRequestClientIp();
+  let emailHash: string;
+  try {
+    emailHash = hashPortalIdentifyEmail(email);
+  } catch {
+    return;
+  }
+  await recordAuthEvent({
+    accessHash: emailHash,
+    kind: "identify",
     ipHash: ip ? hashIp(ip) : null,
   });
 }

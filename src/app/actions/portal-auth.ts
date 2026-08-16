@@ -1,6 +1,8 @@
 "use server";
 
 import { createHmac } from "node:crypto";
+import { z } from "zod";
+
 import { redirect } from "@/i18n/navigation";
 import { getRequestClientIp } from "@/lib/booking/abuse";
 import { getAppBaseUrl } from "@/lib/app-url";
@@ -8,16 +10,23 @@ import { sendPortalInviteEmail } from "@/lib/email/portal-invite";
 import { formAcceptedLegal } from "@/lib/legal/acceptance";
 import {
   checkPortalForgotRateLimit,
+  checkPortalIdentifyRateLimit,
   checkPortalVerifyRateLimit,
   clearPortalSessionCookie,
   establishPortalSession,
+  findPortalMatches,
   lookupPortalAccess,
+  portalBaseUrl,
   portalPasswordExists,
   recordPortalForgotPassword,
+  recordPortalIdentifyAttempt,
   recordPortalVerifyFailure,
   resetPortalPassword,
+  resolvePortalAccount,
   setPortalPassword,
   verifyPortalLogin,
+  type PortalAccessRow,
+  type PortalEmailMatch,
 } from "@/lib/portal/auth";
 import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import { recordAuditEvent } from "@/lib/security/audit";
@@ -29,10 +38,29 @@ import { toAppLocale } from "@/lib/i18n/locales";
 
 import type { PortalAuthActionState } from "./portal-state";
 
+const emailSchema = z.string().trim().email().max(320);
+const uuid = z.string().uuid();
+
 function accessIdFromForm(formData: FormData) {
   const token = String(formData.get("token") || "").trim();
   const code = String(formData.get("accessCode") || "").trim();
   return token || code;
+}
+
+function identityFromForm(formData: FormData) {
+  const email = emailSchema.safeParse(String(formData.get("email") || ""));
+  const personId = uuid.safeParse(String(formData.get("personId") || ""));
+  const organizationId = uuid.safeParse(
+    String(formData.get("organizationId") || ""),
+  );
+  if (!email.success || !personId.success || !organizationId.success) {
+    return null;
+  }
+  return {
+    email: email.data,
+    personId: personId.data,
+    organizationId: organizationId.data,
+  };
 }
 
 function hashIp(ip: string) {
@@ -46,24 +74,134 @@ async function getIpHash() {
   return ip ? hashIp(ip) : null;
 }
 
+function choiceLabel(match: PortalEmailMatch) {
+  if (match.personLabel && match.organizationName) {
+    return `${match.personLabel} · ${match.organizationName}`;
+  }
+  return match.organizationName || match.personLabel;
+}
+
+function identifiedState(
+  access: PortalAccessRow,
+  match: PortalEmailMatch,
+  hasPassword: boolean,
+): PortalAuthActionState {
+  return {
+    message: hasPassword ? "needs_login" : "needs_setup",
+    personId: access.person_id,
+    organizationId: access.organization_id,
+    organizationName: match.organizationName,
+  };
+}
+
+async function resolveIdentifiedAccess(
+  formData: FormData,
+): Promise<
+  | { access: PortalAccessRow }
+  | { error: PortalAuthActionState }
+> {
+  const token = accessIdFromForm(formData);
+  if (token) {
+    const access = await lookupPortalAccess(token);
+    if (!access || !access.is_active) return { error: { error: "invalid" } };
+    return { access };
+  }
+
+  const identity = identityFromForm(formData);
+  if (!identity) return { error: { error: "invalid" } };
+  const resolved = await resolvePortalAccount(
+    identity.email,
+    identity.personId,
+    identity.organizationId,
+  );
+  if (!resolved || resolved === "disabled") {
+    return { error: { error: "invalid" } };
+  }
+  return { access: resolved };
+}
+
+export async function identifyPortalAction(
+  _prev: PortalAuthActionState,
+  formData: FormData,
+): Promise<PortalAuthActionState> {
+  try {
+    const parsedEmail = emailSchema.safeParse(String(formData.get("email") || ""));
+    if (!parsedEmail.success) return { error: "invalid" };
+    const email = parsedEmail.data;
+
+    const ipHash = await getIpHash();
+    if ((await checkPortalIdentifyRateLimit(email, ipHash)) === "rate_limited") {
+      return { error: "rate_limited" };
+    }
+    await recordPortalIdentifyAttempt(email);
+
+    const matches = await findPortalMatches(email);
+    if (matches.length === 0) return { error: "invalid" };
+
+    const accountKey = String(formData.get("account") || "").trim();
+    const [keyPerson, keyOrg] = accountKey.split(":");
+    const selectedPerson = uuid.safeParse(
+      String(formData.get("personId") || keyPerson || ""),
+    );
+    const selectedOrg = uuid.safeParse(
+      String(formData.get("organizationId") || keyOrg || ""),
+    );
+    const selected =
+      selectedPerson.success && selectedOrg.success
+        ? matches.find(
+            (row) =>
+              row.personId === selectedPerson.data &&
+              row.organizationId === selectedOrg.data,
+          )
+        : matches.length === 1
+          ? matches[0]
+          : null;
+
+    if (!selected) {
+      return {
+        message: "choose_org",
+        organizations: matches.map((row) => ({
+          personId: row.personId,
+          organizationId: row.organizationId,
+          label: choiceLabel(row),
+        })),
+      };
+    }
+
+    const access = await resolvePortalAccount(
+      email,
+      selected.personId,
+      selected.organizationId,
+    );
+    if (!access || access === "disabled") return { error: "invalid" };
+
+    const hasPassword = await portalPasswordExists(
+      access.access_token || access.access_code,
+    );
+    return identifiedState(access, selected, hasPassword);
+  } catch (err) {
+    console.error("identifyPortalAction:", err);
+    return { error: "server_config" };
+  }
+}
+
 export async function setPortalPasswordAction(
   _prev: PortalAuthActionState,
   formData: FormData,
 ): Promise<PortalAuthActionState> {
   try {
-    const accessId = accessIdFromForm(formData);
     const password = String(formData.get("password") || "");
     const confirm = String(formData.get("confirm") || "");
 
-    if (!accessId) return { error: "invalid" };
     if (!formAcceptedLegal(formData)) return { error: "legal_required" };
     if (password !== confirm) return { error: "mismatch" };
 
     const parsed = parseShareLinkPassword(password);
     if (!parsed.success) return { error: "weak_password" };
 
-    const access = await lookupPortalAccess(accessId);
-    if (!access) return { error: "invalid" };
+    const resolved = await resolveIdentifiedAccess(formData);
+    if ("error" in resolved) return resolved.error;
+    const { access } = resolved;
 
     if (await portalPasswordExists(access.access_token)) {
       return { error: "already_set" };
@@ -101,12 +239,12 @@ export async function loginPortalAction(
   formData: FormData,
 ): Promise<PortalAuthActionState> {
   try {
-    const accessId = accessIdFromForm(formData);
     const password = String(formData.get("password") || "");
-    if (!accessId || !password) return { error: "invalid" };
+    if (!password) return { error: "invalid" };
 
-    const access = await lookupPortalAccess(accessId);
-    if (!access) return { error: "invalid" };
+    const resolved = await resolveIdentifiedAccess(formData);
+    if ("error" in resolved) return resolved.error;
+    const { access } = resolved;
 
     if (!(await portalPasswordExists(access.access_token))) {
       return { error: "needs_setup" };
@@ -148,12 +286,10 @@ export async function forgotPortalPasswordAction(
   _prev: PortalAuthActionState,
   formData: FormData,
 ): Promise<PortalAuthActionState> {
-  const accessId = accessIdFromForm(formData);
   const locale = toAppLocale(String(formData.get("locale") || "en"));
-  if (!accessId) return { error: "invalid" };
-
-  const access = await lookupPortalAccess(accessId);
-  if (!access) return { error: "invalid" };
+  const resolved = await resolveIdentifiedAccess(formData);
+  if ("error" in resolved) return resolved.error;
+  const { access } = resolved;
 
   const ipHash = await getIpHash();
   if ((await checkPortalForgotRateLimit(access, ipHash)) === "rate_limited") {
@@ -185,7 +321,7 @@ export async function forgotPortalPasswordAction(
     .maybeSingle();
 
   const base = await getAppBaseUrl();
-  const portalUrl = `${base.replace(/\/$/, "")}/${locale}/portal/${reset.access_token}`;
+  const url = portalBaseUrl(base, locale);
   const clientName =
     `${person.first_name} ${person.last_name}`.trim() || email;
 
@@ -194,8 +330,7 @@ export async function forgotPortalPasswordAction(
     to: email,
     clientName,
     organizationName: String(org?.name ?? ""),
-    portalUrl,
-    accessCode: reset.access_code,
+    portalUrl: url,
     reset: true,
   });
 

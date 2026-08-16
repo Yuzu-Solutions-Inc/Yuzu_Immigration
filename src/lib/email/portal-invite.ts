@@ -32,7 +32,6 @@ export async function sendPortalInviteEmail(input: {
   clientName: string;
   organizationName: string;
   portalUrl: string;
-  accessCode: string;
   reset?: boolean;
 }) {
   const locale = toAppLocale(input.locale);
@@ -57,7 +56,6 @@ export async function sendPortalInviteEmail(input: {
     <p style="margin:0 0 16px;">
       <a href="${portalUrl}" style="${emailStyle.ctaCompact}">${escapeHtml(t("cta"))}</a>
     </p>
-    <p style="${emailStyle.mutedSmall}">${escapeHtml(t("accessCodeLabel"))}: <strong>${escapeHtml(input.accessCode)}</strong></p>
     <p style="${emailStyle.mutedSmall}">${escapeHtml(t("footer"))}</p>
     <p style="${emailStyle.mutedSmall}">${portalUrl}</p>
   </div>
@@ -71,8 +69,6 @@ export async function sendPortalInviteEmail(input: {
     "",
     t("cta"),
     input.portalUrl,
-    "",
-    `${t("accessCodeLabel")}: ${input.accessCode}`,
     "",
     t("footer"),
   ].join("\n");
