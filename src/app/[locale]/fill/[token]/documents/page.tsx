@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { ShareFillDocuments } from "@/components/forms/share-fill-documents";
 import { ShareFillExpired } from "@/components/forms/share-fill-expired";
 import { ShareLinkGate } from "@/components/forms/share-link-gate";
+import { formatShareLinkExpiryDate } from "@/lib/ircc/share-dates";
 import { loadShareFillGate } from "@/lib/ircc/share-fill-gate";
 
 export default async function ClientFillDocumentsPage({
@@ -26,7 +27,7 @@ export default async function ClientFillDocumentsPage({
         mode={gate.access}
         organizationName={gate.organizationName}
         projectTitle={gate.projectTitle}
-        expiresAt={gate.expiresAt}
+        expiresLabel={formatShareLinkExpiryDate(gate.expiresAt, locale)}
         initialError={shareError}
       />
     );

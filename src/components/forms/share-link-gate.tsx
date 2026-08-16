@@ -8,8 +8,8 @@ import {
   forgotSharePasswordAction,
   loginSharePasswordAction,
   setSharePasswordAction,
-  shareAuthInitialState,
 } from "@/app/actions/share-auth";
+import { shareAuthInitialState } from "@/app/actions/share-auth-state";
 import { isShareErrorKey } from "@/lib/ircc/share-error-keys";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ export function ShareLinkGate({
   mode,
   organizationName,
   projectTitle,
-  expiresAt,
+  expiresLabel,
   initialError,
 }: {
   token: string;
@@ -30,7 +30,7 @@ export function ShareLinkGate({
   mode: ShareAccessState;
   organizationName: string;
   projectTitle: string;
-  expiresAt: string;
+  expiresLabel: string;
   initialError?: string;
 }) {
   const t = useTranslations("forms");
@@ -92,10 +92,6 @@ export function ShareLinkGate({
       </div>
     );
   }
-
-  const expiresLabel = new Date(expiresAt).toLocaleDateString(
-    locale === "fr" ? "fr-CA" : "en-CA",
-  );
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-16">

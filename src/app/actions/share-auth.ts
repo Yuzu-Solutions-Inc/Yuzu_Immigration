@@ -30,12 +30,7 @@ import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import { parseShareLinkPassword } from "@/lib/security/share-password";
 import { createServiceClient } from "@/lib/supabase/admin";
 
-export type ShareAuthActionState = {
-  error?: string;
-  message?: string;
-};
-
-const initialState: ShareAuthActionState = {};
+import type { ShareAuthActionState } from "./share-auth-state";
 
 function hashIp(ip: string) {
   return createHmac("sha256", requireAppEncryptionKey())
@@ -245,5 +240,3 @@ export async function forgotSharePasswordAction(
 export async function assertShareTokenForAction(token: string) {
   return assertShareAuthenticated(token);
 }
-
-export { initialState as shareAuthInitialState };

@@ -1,9 +1,10 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { ShareFillExpired } from "@/components/forms/share-fill-expired";
 import { Link } from "@/i18n/navigation";
 import { seedShareDocumentDefaults } from "@/lib/documents/share-seed";
 import { loadShareLandingSummary } from "@/lib/ircc/share-landing";
+import { formatShareLinkExpiryDate } from "@/lib/ircc/share-dates";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 async function countShareDocuments(projectId: string) {
@@ -36,6 +37,7 @@ export async function ShareFillLanding({ token }: { token: string }) {
       return <ShareFillExpired />;
     }
 
+    const locale = await getLocale();
     const t = await getTranslations("documents");
     const tf = await getTranslations("forms");
     const tl = await getTranslations("legal");
@@ -65,7 +67,7 @@ export async function ShareFillLanding({ token }: { token: string }) {
           <p className="text-[15px] text-muted-foreground">{t("clientLede")}</p>
           <p className="text-sm text-muted-foreground">
             {tf("clientExpires", {
-              date: new Date(summary.expiresAt).toLocaleDateString(),
+              date: formatShareLinkExpiryDate(summary.expiresAt, locale),
             })}
           </p>
         </header>
