@@ -695,7 +695,9 @@ function SectionProgressNav({
                       "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                       done && "bg-brand text-white",
                       current && "bg-action text-action-foreground",
-                      !done && !current && "bg-muted text-white",
+                      !done &&
+                        !current &&
+                        "border-2 border-border bg-surface text-graphite-700",
                     )}
                     aria-hidden
                   >
@@ -706,7 +708,7 @@ function SectionProgressNav({
                       "min-w-0 text-sm font-semibold leading-snug",
                       done && "text-brand",
                       current && "text-brand",
-                      !done && !current && "text-muted-foreground",
+                      !done && !current && "text-graphite-700",
                     )}
                   >
                     {t(`sections.${s}`)}
