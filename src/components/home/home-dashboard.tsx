@@ -176,12 +176,12 @@ export async function HomeDashboardView({
           <div
             role="navigation"
             aria-label={t("tiles.aria")}
-            className="grid shrink-0 grid-cols-3 gap-2.5 lg:grid-cols-12"
+            className="grid shrink-0 grid-cols-2 gap-2.5 lg:grid-cols-12"
           >
             <Link
               href="/projects"
               className={cn(
-                "col-span-3 flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated lg:col-span-6",
+                "col-span-2 flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated lg:col-span-6",
                 "transition-[border-color,box-shadow] hover:border-action/25 hover:shadow-md",
                 "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
               )}
@@ -203,7 +203,7 @@ export async function HomeDashboardView({
             </Link>
             <KpiCard
               href="/projects"
-              className="lg:col-span-2"
+              className="lg:col-span-3"
               label={t("tiles.docsToReview")}
               value={kpis.docsToReview}
               hint={t("tiles.docsToReviewHint")}
@@ -211,18 +211,11 @@ export async function HomeDashboardView({
             />
             <KpiCard
               href="/bookings"
-              className="lg:col-span-2"
+              className="lg:col-span-3"
               label={t("tiles.unpaid")}
               value={kpis.pendingPayments}
               hint={unpaidHint}
               emphasize={kpis.pendingPayments > 0}
-            />
-            <KpiCard
-              href="/calendar"
-              className="lg:col-span-2"
-              label={t("tiles.todayBookings")}
-              value={booking.todayCount}
-              hint={t("tiles.weekBookings", { count: booking.next7Count })}
             />
           </div>
 
@@ -256,9 +249,20 @@ export async function HomeDashboardView({
 
             <SurfaceCard className="flex min-h-0 flex-col gap-2.5 p-3 sm:p-4 lg:col-span-4 lg:overflow-hidden">
               <div className="flex shrink-0 items-center justify-between gap-2">
-                <h2 className="font-heading text-sm font-semibold text-brand">
-                  {t("appointments.title")}
-                </h2>
+                <div className="min-w-0">
+                  <h2 className="font-heading text-sm font-semibold text-brand">
+                    {t("appointments.title")}
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground tabular-nums">
+                    {t("appointments.todayCount", {
+                      count: booking.todayCount,
+                    })}
+                    {" · "}
+                    {t("appointments.weekCount", {
+                      count: booking.next7Count,
+                    })}
+                  </p>
+                </div>
                 <Link
                   href="/calendar"
                   className="shrink-0 text-xs font-medium text-action hover:underline"

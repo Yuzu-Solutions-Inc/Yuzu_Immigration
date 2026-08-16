@@ -347,7 +347,9 @@
       "emptyToday": "No bookings today.",
       "unknownService": "Consultation",
       "next": "Up next",
-      "unpaid": "Unpaid"
+      "unpaid": "Unpaid",
+      "todayCount": "{count, plural, one {# today} other {# today}}",
+      "weekCount": "{count, plural, one {# this week} other {# this week}}"
     },
     "expiries": {
       "title": "Status expiries",

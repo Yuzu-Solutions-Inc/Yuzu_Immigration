@@ -347,7 +347,9 @@
       "emptyToday": "No hay citas hoy.",
       "unknownService": "Consulta",
       "next": "Siguiente",
-      "unpaid": "Impago"
+      "unpaid": "Impago",
+      "todayCount": "{count, plural, one {# hoy} other {# hoy}}",
+      "weekCount": "{count, plural, one {# esta semana} other {# esta semana}}"
     },
     "expiries": {
       "title": "Estatus por vencer",

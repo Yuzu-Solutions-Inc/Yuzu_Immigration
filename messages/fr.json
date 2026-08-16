@@ -347,7 +347,9 @@
       "emptyToday": "Aucun rendez-vous aujourd’hui.",
       "unknownService": "Consultation",
       "next": "À venir",
-      "unpaid": "Impayé"
+      "unpaid": "Impayé",
+      "todayCount": "{count, plural, one {# aujourd’hui} other {# aujourd’hui}}",
+      "weekCount": "{count, plural, one {# cette semaine} other {# cette semaine}}"
     },
     "expiries": {
       "title": "Statuts qui expirent",

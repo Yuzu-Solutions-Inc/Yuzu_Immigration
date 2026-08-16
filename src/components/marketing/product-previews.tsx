@@ -359,24 +359,18 @@ export async function AppHomePreview({
               />
             </div>
             <PreviewKpi
-              className="col-span-2"
+              className="col-span-3"
               label={tApp("tiles.docsToReview")}
               value={3}
               hint={tApp("tiles.docsToReviewHint")}
               emphasize
             />
             <PreviewKpi
-              className="col-span-2"
+              className="col-span-3"
               label={tApp("tiles.unpaid")}
               value={1}
               hint={formatPriceCents(15000, locale, "CAD")}
               emphasize
-            />
-            <PreviewKpi
-              className="col-span-2"
-              label={tApp("tiles.todayBookings")}
-              value={2}
-              hint={tApp("tiles.weekBookings", { count: 6 })}
             />
           </div>
 
@@ -457,9 +451,16 @@ export async function AppHomePreview({
 
             <SurfaceCard className="col-span-4 flex min-h-0 flex-col gap-2.5 p-4">
               <div className="flex items-center justify-between gap-2">
-                <h2 className="font-heading text-sm font-semibold text-brand">
-                  {tApp("appointments.title")}
-                </h2>
+                <div className="min-w-0">
+                  <h2 className="font-heading text-sm font-semibold text-brand">
+                    {tApp("appointments.title")}
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground tabular-nums">
+                    {tApp("appointments.todayCount", { count: 2 })}
+                    {" · "}
+                    {tApp("appointments.weekCount", { count: 6 })}
+                  </p>
+                </div>
                 <span className="text-xs font-medium text-action">
                   {tApp("appointments.viewCalendar")}
                 </span>
