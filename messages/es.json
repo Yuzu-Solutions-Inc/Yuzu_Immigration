@@ -276,6 +276,12 @@
     "title": "Inicio",
     "welcome": "Bienvenido de nuevo, {name}",
     "welcomeFallback": "Bienvenido de nuevo",
+    "greetingMorning": "Buenos días, {name}",
+    "greetingMorningFallback": "Buenos días",
+    "greetingAfternoon": "Buenas tardes, {name}",
+    "greetingAfternoonFallback": "Buenas tardes",
+    "greetingEvening": "Buenas noches, {name}",
+    "greetingEveningFallback": "Buenas noches",
     "dashboardSubtitle": "Actúe sobre expedientes, citas y estatus de clientes en un solo lugar.",
     "actionSummary": "{count, plural, one {# asunto le espera} other {# asuntos le esperan}}{bookings, plural, =0 {} one { · # cita hoy} other { · # citas hoy}}",
     "actionSummaryClear": "Nada pendiente{bookings, plural, =0 {} one { · # cita hoy} other { · # citas hoy}}",
@@ -301,13 +307,17 @@
       "overdue": "Vencidos",
       "stuck": "Atascados",
       "stuckHint": "Necesitan avance de estado",
+      "formsReady": "Formularios listos",
+      "formsReadyHint": "Cuestionario enviado",
       "todayBookings": "Citas de hoy",
       "weekBookings": "{count, plural, one {# esta semana} other {# esta semana}}",
       "statusExpiring": "Estatus por vencer",
       "statusExpiringHint": "Próximos 30 días",
       "unpaid": "Impagos",
       "unpaidHint": "Reservas y facturas",
-      "peopleCount": "{count, plural, one {# cliente en expediente} other {# clientes en expediente}}"
+      "unpaidCount": "{count, plural, one {# factura} other {# facturas}}",
+      "peopleCount": "{count, plural, one {# cliente en expediente} other {# clientes en expediente}}",
+      "openFilesCount": "{count, plural, one {# expediente abierto} other {# expedientes abiertos}}"
     },
     "attention": {
       "title": "Requiere acción",
@@ -332,7 +342,9 @@
       "viewCalendar": "Calendario",
       "empty": "No hay citas en los próximos 7 días.",
       "emptyToday": "No hay citas hoy.",
-      "unknownService": "Consulta"
+      "unknownService": "Consulta",
+      "next": "Siguiente",
+      "unpaid": "Impago"
     },
     "expiries": {
       "title": "Estatus por vencer",

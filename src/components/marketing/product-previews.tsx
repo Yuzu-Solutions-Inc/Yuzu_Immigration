@@ -1,16 +1,23 @@
 import {
   Ban,
+  Banknote,
   Bell,
   Briefcase,
+  CalendarClock,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  CircleAlert,
   CircleHelp,
   ClipboardList,
+  FileCheck,
+  FileStack,
   FolderKanban,
   Home,
+  Hourglass,
   Link2,
   LogOut,
+  type LucideIcon,
   Search,
   Settings,
   Settings2,
@@ -194,41 +201,57 @@ function PreviewKpi({
   label,
   value,
   hint,
-  accent = "none",
+  icon: Icon,
+  accent = "neutral",
 }: {
   label: string;
   value: number;
   hint: string;
-  accent?: "none" | "action" | "warning" | "danger";
+  icon: LucideIcon;
+  accent?: "neutral" | "action" | "warning" | "danger";
 }) {
-  const mark =
+  const iconClass =
+    accent === "danger"
+      ? "bg-destructive/10 text-destructive"
+      : accent === "warning"
+        ? "bg-warning-bg text-warning-text"
+        : accent === "action"
+          ? "bg-action/10 text-action"
+          : "bg-muted text-muted-foreground";
+  const barClass =
     accent === "danger"
       ? "bg-destructive"
       : accent === "warning"
         ? "bg-warning"
         : accent === "action"
           ? "bg-action"
-          : null;
+          : "bg-border";
 
   return (
-    <div className="flex min-w-0 flex-col gap-1 px-3 py-2.5">
-      <div className="flex items-baseline justify-between gap-2">
+    <div className="relative flex min-w-0 items-start gap-3 overflow-hidden rounded-xl border border-border bg-surface p-3 shadow-elevated">
+      <span className={cn("absolute inset-x-0 top-0 h-0.5", barClass)} />
+      <span
+        className={cn(
+          "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+          iconClass,
+        )}
+      >
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1 space-y-1">
         <p
           className={cn(
-            "font-heading text-[1.5rem] leading-none font-semibold tracking-tight tabular-nums",
+            "font-heading text-xl leading-none font-semibold tracking-tight tabular-nums",
             accent === "danger" ? "text-destructive" : "text-brand",
           )}
         >
           {value}
         </p>
-        {mark ? (
-          <span className={cn("size-1.5 shrink-0 rounded-full", mark)} />
-        ) : null}
+        <p className="truncate text-[13px] font-medium text-brand">{label}</p>
+        <p className="truncate text-[11px] leading-snug text-muted-foreground">
+          {hint}
+        </p>
       </div>
-      <p className="truncate text-[13px] font-medium text-brand">{label}</p>
-      <p className="truncate text-[11px] leading-snug text-muted-foreground">
-        {hint}
-      </p>
     </div>
   );
 }
@@ -356,51 +379,72 @@ export async function AppHomePreview({
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-baseline gap-x-3">
                 <h1 className="font-heading text-xl font-semibold text-brand">
-                  {tApp("welcome", { name: t("preview.userName") })}
+                  {tApp("greetingAfternoon", { name: t("preview.userName") })}
                 </h1>
                 <p className="text-xs text-muted-foreground">{dateLabel}</p>
               </div>
               <p className="text-sm text-muted-foreground">
                 {tApp("actionSummary", { count: 9, bookings: 2 })}
+                {" · "}
+                {tApp("tiles.openFilesCount", { count: 12 })}
+                {" · "}
+                {tApp("tiles.peopleCount", { count: 18 })}
               </p>
             </div>
-            <span className="inline-flex h-9 items-center rounded-xl bg-action px-3 text-sm font-semibold text-action-foreground">
-              {tApp("newProject")}
-            </span>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs shadow-elevated">
+                <CalendarClock className="size-3.5 text-action" />
+                <span className="font-medium text-brand">
+                  {tApp("appointments.next")}
+                </span>
+                <span className="text-muted-foreground">
+                  10:00 · {t("preview.guestPriya")}
+                </span>
+              </span>
+              <span className="inline-flex h-9 items-center rounded-xl bg-action px-3 text-sm font-semibold text-action-foreground">
+                {tApp("newProject")}
+              </span>
+            </div>
           </div>
 
-          <div className="grid shrink-0 grid-cols-6 divide-x divide-border overflow-hidden rounded-xl border border-border bg-surface">
+          <div className="grid shrink-0 grid-cols-6 gap-2.5">
             <PreviewKpi
+              icon={FileCheck}
               label={tApp("tiles.docsToReview")}
               value={3}
               hint={tApp("tiles.docsToReviewHint")}
               accent="action"
             />
             <PreviewKpi
+              icon={CircleAlert}
               label={tApp("tiles.overdue")}
               value={1}
               hint={tApp("dueIn14", { count: 2 })}
               accent="danger"
             />
             <PreviewKpi
-              label={tApp("tiles.stuck")}
+              icon={FileStack}
+              label={tApp("tiles.formsReady")}
               value={2}
-              hint={tApp("tiles.stuckHint")}
-              accent="warning"
+              hint={tApp("tiles.formsReadyHint")}
+              accent="action"
             />
             <PreviewKpi
+              icon={Banknote}
               label={tApp("tiles.unpaid")}
               value={1}
-              hint={tApp("tiles.unpaidHint")}
+              hint={formatPriceCents(15000, locale, "CAD")}
               accent="warning"
             />
             <PreviewKpi
+              icon={CalendarClock}
               label={tApp("tiles.todayBookings")}
               value={2}
               hint={tApp("tiles.weekBookings", { count: 6 })}
               accent="action"
             />
             <PreviewKpi
+              icon={Hourglass}
               label={tApp("tiles.statusExpiring")}
               value={2}
               hint={tApp("tiles.statusExpiringHint")}

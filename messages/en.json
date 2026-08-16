@@ -276,6 +276,12 @@
     "title": "Home",
     "welcome": "Welcome back, {name}",
     "welcomeFallback": "Welcome back",
+    "greetingMorning": "Good morning, {name}",
+    "greetingMorningFallback": "Good morning",
+    "greetingAfternoon": "Good afternoon, {name}",
+    "greetingAfternoonFallback": "Good afternoon",
+    "greetingEvening": "Good evening, {name}",
+    "greetingEveningFallback": "Good evening",
     "dashboardSubtitle": "Act on files, bookings, and client status from one place.",
     "actionSummary": "{count, plural, one {# item needs you} other {# items need you}}{bookings, plural, =0 {} one { · # booking today} other { · # bookings today}}",
     "actionSummaryClear": "Nothing waiting{bookings, plural, =0 {} one { · # booking today} other { · # bookings today}}",
@@ -301,13 +307,17 @@
       "overdue": "Overdue",
       "stuck": "Stuck / waiting",
       "stuckHint": "Need a status push",
+      "formsReady": "Forms ready",
+      "formsReadyHint": "Questionnaire submitted",
       "todayBookings": "Bookings today",
       "weekBookings": "{count, plural, one {# this week} other {# this week}}",
       "statusExpiring": "Status expiring",
       "statusExpiringHint": "Next 30 days",
       "unpaid": "Unpaid",
       "unpaidHint": "Bookings and invoices",
-      "peopleCount": "{count, plural, one {# client on file} other {# clients on file}}"
+      "unpaidCount": "{count, plural, one {# invoice} other {# invoices}}",
+      "peopleCount": "{count, plural, one {# client on file} other {# clients on file}}",
+      "openFilesCount": "{count, plural, one {# open file} other {# open files}}"
     },
     "attention": {
       "title": "Needs you",
@@ -332,7 +342,9 @@
       "viewCalendar": "Calendar",
       "empty": "No bookings in the next 7 days.",
       "emptyToday": "No bookings today.",
-      "unknownService": "Consultation"
+      "unknownService": "Consultation",
+      "next": "Up next",
+      "unpaid": "Unpaid"
     },
     "expiries": {
       "title": "Status expiries",

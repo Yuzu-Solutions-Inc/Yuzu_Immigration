@@ -88,8 +88,11 @@ export type HomeDashboard = {
     dueIn14Days: number;
     overdueSubmissions: number;
     docsToReview: number;
+    formsReady: number;
     stuckWaiting: number;
     pendingPayments: number;
+    pendingAmountCents: number;
+    pendingCurrency: string;
     peopleCount: number;
     statusExpiring30: number;
   };
@@ -107,8 +110,11 @@ const EMPTY: HomeDashboard = {
     dueIn14Days: 0,
     overdueSubmissions: 0,
     docsToReview: 0,
+    formsReady: 0,
     stuckWaiting: 0,
     pendingPayments: 0,
+    pendingAmountCents: 0,
+    pendingCurrency: "CAD",
     peopleCount: 0,
     statusExpiring30: 0,
   },
@@ -309,7 +315,9 @@ export async function getHomeDashboard(
       : Promise.resolve({ data: [], error: null }),
     supabase
       .from("booking_appointments")
-      .select("*, service:booking_services(title, translations)")
+      .select(
+        "*, service:booking_services(title, translations, price_cents, currency)",
+      )
       .eq("organization_id", orgId)
       .eq("status", "pending_payment")
       .gte("starts_at", new Date(now.getTime() - 86_400_000).toISOString())
@@ -476,7 +484,12 @@ export async function getHomeDashboard(
   }
 
   type AppointmentJoin = BookingAppointmentRow & {
-    service?: { title: string; translations?: unknown } | null;
+    service?: {
+      title: string;
+      translations?: unknown;
+      price_cents?: number;
+      currency?: string;
+    } | null;
   };
 
   const mapAppointment = (row: AppointmentJoin): DashboardAppointment => {
@@ -499,6 +512,8 @@ export async function getHomeDashboard(
       kind: "unpaid",
       title: mapped.guestName,
       href: "/bookings",
+      amountCents: row.service?.price_cents || undefined,
+      currency: row.service?.currency,
     });
   }
 
@@ -547,8 +562,18 @@ export async function getHomeDashboard(
 
   const statusExpiring30 = statusExpiries.filter((row) => row.days <= 30).length;
   const peopleCount = peopleCountResult.count ?? 0;
-  const pendingPayments = attention.filter((item) => item.kind === "unpaid")
-    .length;
+  const unpaidItems = attention.filter((item) => item.kind === "unpaid");
+  const pendingPayments = unpaidItems.length;
+  const pendingAmountCents = unpaidItems.reduce(
+    (sum, item) => sum + (item.amountCents ?? 0),
+    0,
+  );
+  const pendingCurrency =
+    unpaidItems.find((item) => item.currency)?.currency ?? "CAD";
+  let formsReady = 0;
+  for (const projectId of submittedIds) {
+    if (ungeneratedIds.has(projectId)) formsReady += 1;
+  }
   const needsSetup =
     !bookingEnabled || activeServices === 0 || !hasAvailability;
 
@@ -560,10 +585,13 @@ export async function getHomeDashboard(
       dueIn14Days,
       overdueSubmissions,
       docsToReview: uploadedResult.count ?? 0,
+      formsReady,
       stuckWaiting: liveProjects.filter(
         (project) => project.status === "stuck" || project.status === "waiting",
       ).length,
       pendingPayments,
+      pendingAmountCents,
+      pendingCurrency,
       peopleCount,
       statusExpiring30,
     },

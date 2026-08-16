@@ -1,4 +1,14 @@
-import { Briefcase } from "lucide-react";
+import {
+  Banknote,
+  Briefcase,
+  CalendarClock,
+  CircleAlert,
+  CircleCheck,
+  FileCheck,
+  FileStack,
+  Hourglass,
+  type LucideIcon,
+} from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { PipelineDonut, TodayStrip } from "@/components/home/caseload-charts";
@@ -36,6 +46,12 @@ function timingClass(days: number) {
   return "text-muted-foreground";
 }
 
+function greetingKey(hour: number) {
+  if (hour < 12) return "greetingMorning" as const;
+  if (hour < 17) return "greetingAfternoon" as const;
+  return "greetingEvening" as const;
+}
+
 const KIND_TONE: Record<AttentionItem["kind"], StatusPillTone> = {
   overdue: "destructive",
   docs_review: "action",
@@ -45,61 +61,85 @@ const KIND_TONE: Record<AttentionItem["kind"], StatusPillTone> = {
   due_soon: "warning",
 };
 
-type KpiAccent = "none" | "action" | "warning" | "danger";
+type KpiAccent = "neutral" | "action" | "warning" | "danger";
 
-function KpiCell({
+const ACCENT_ICON: Record<KpiAccent, string> = {
+  neutral: "bg-muted text-muted-foreground",
+  action: "bg-action/10 text-action",
+  warning: "bg-warning-bg text-warning-text",
+  danger: "bg-destructive/10 text-destructive",
+};
+
+const ACCENT_VALUE: Record<KpiAccent, string> = {
+  neutral: "text-brand",
+  action: "text-brand",
+  warning: "text-brand",
+  danger: "text-destructive",
+};
+
+const ACCENT_BAR: Record<KpiAccent, string> = {
+  neutral: "bg-border",
+  action: "bg-action",
+  warning: "bg-warning",
+  danger: "bg-destructive",
+};
+
+function KpiCard({
   href,
   label,
   value,
   hint,
-  accent = "none",
+  icon: Icon,
+  accent = "neutral",
 }: {
   href: string;
   label: string;
-  value: number;
+  value: string | number;
   hint?: string;
+  icon: LucideIcon;
   accent?: KpiAccent;
 }) {
-  const quiet = value === 0;
-  const mark =
-    accent === "danger"
-      ? "bg-destructive"
-      : accent === "warning"
-        ? "bg-warning"
-        : accent === "action"
-          ? "bg-action"
-          : null;
+  const quiet = value === 0 || value === "0";
+  const tone = quiet ? "neutral" : accent;
 
   return (
     <Link
       href={href}
       className={cn(
-        "relative flex min-w-0 flex-col gap-1 px-3 py-2.5 transition-colors",
-        "hover:bg-canvas focus-visible:bg-canvas focus-visible:outline-none",
-        quiet && "opacity-65 hover:opacity-100",
+        "relative flex min-w-0 items-start gap-2.5 overflow-hidden rounded-xl border border-border bg-surface p-2.5 shadow-elevated sm:p-3",
+        "transition-[border-color,box-shadow,transform] hover:-translate-y-px hover:border-action/25 hover:shadow-md",
+        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+        quiet && "opacity-70 hover:opacity-100",
       )}
     >
-      <div className="flex items-baseline justify-between gap-2">
+      <span
+        className={cn("absolute inset-x-0 top-0 h-0.5", ACCENT_BAR[tone])}
+        aria-hidden
+      />
+      <span
+        className={cn(
+          "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+          ACCENT_ICON[tone],
+        )}
+        aria-hidden
+      >
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1 space-y-1">
         <p
           className={cn(
-            "font-heading text-[1.5rem] leading-none font-semibold tracking-tight tabular-nums",
-            quiet ? "text-muted-foreground" : "text-brand",
-            accent === "danger" && !quiet && "text-destructive",
+            "font-heading text-xl leading-none font-semibold tracking-tight tabular-nums",
+            quiet ? "text-muted-foreground" : ACCENT_VALUE[tone],
           )}
         >
           {value}
         </p>
-        {mark ? (
-          <span
-            className={cn("size-1.5 shrink-0 rounded-full", mark)}
-            aria-hidden
-          />
-        ) : null}
-      </div>
-      <div className="min-w-0 space-y-0.5">
         <p className="truncate text-[13px] font-medium text-brand">{label}</p>
         {hint ? (
-          <p className="truncate text-[11px] leading-snug text-muted-foreground">
+          <p
+            className="truncate text-[11px] leading-snug text-muted-foreground"
+            title={hint}
+          >
             {hint}
           </p>
         ) : null}
@@ -178,9 +218,14 @@ export async function HomeDashboardView({
   const todayIso = zonedDateIso(now, booking.timezone);
   const nowParts = zonedParts(now, booking.timezone);
   const nowMinutes = nowParts.hour * 60 + nowParts.minute;
+  const greet = greetingKey(nowParts.hour);
+  const title = displayName
+    ? t(greet, { name: displayName })
+    : t(`${greet}Fallback`);
   const actionCount =
     kpis.docsToReview +
     kpis.overdueSubmissions +
+    kpis.formsReady +
     kpis.stuckWaiting +
     kpis.pendingPayments +
     kpis.statusExpiring30;
@@ -197,10 +242,31 @@ export async function HomeDashboardView({
       : todayAppointments),
     ...laterAppointments,
   ].slice(0, 6);
+  const nextAppointment = upcomingAppointments.find(
+    (item) => new Date(item.startsAt) >= now,
+  );
+  const nextAppointmentTime = nextAppointment
+    ? formatTimeInZone(
+        new Date(nextAppointment.startsAt),
+        booking.timezone,
+        locale,
+      )
+    : null;
 
   const openPipeline = dashboard.projectsByStatus.filter(
     (row) => !isTerminalStatus(row.key as ProjectStatus),
   );
+
+  const unpaidHint =
+    kpis.pendingAmountCents > 0
+      ? formatPriceCents(
+          kpis.pendingAmountCents,
+          locale,
+          kpis.pendingCurrency,
+        )
+      : kpis.pendingPayments > 0
+        ? t("tiles.unpaidCount", { count: kpis.pendingPayments })
+        : t("tiles.unpaidHint");
 
   return (
     <div className="flex flex-col gap-2.5 lg:h-[calc(100dvh-5.5rem)] lg:min-h-0 lg:overflow-hidden">
@@ -208,26 +274,54 @@ export async function HomeDashboardView({
         <div className="min-w-0 space-y-0.5">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <h1 className="font-heading text-xl font-semibold text-brand sm:text-2xl lg:text-xl">
-              {displayName
-                ? t("welcome", { name: displayName })
-                : t("welcomeFallback")}
+              {title}
             </h1>
             <p className="hidden text-xs text-muted-foreground sm:block">
               {formatDateInZone(now, booking.timezone, locale)}
             </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {dashboard.hasCaseload
-              ? actionCount > 0
-                ? t("actionSummary", {
-                    count: actionCount,
-                    bookings: booking.todayCount,
-                  })
-                : t("actionSummaryClear", { bookings: booking.todayCount })
-              : t("dashboardSubtitle")}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
+            <span>
+              {dashboard.hasCaseload
+                ? actionCount > 0
+                  ? t("actionSummary", {
+                      count: actionCount,
+                      bookings: booking.todayCount,
+                    })
+                  : t("actionSummaryClear", { bookings: booking.todayCount })
+                : t("dashboardSubtitle")}
+            </span>
+            {dashboard.hasCaseload ? (
+              <>
+                <span aria-hidden>·</span>
+                <Link href="/projects" className="hover:text-brand hover:underline">
+                  {t("tiles.openFilesCount", { count: kpis.openProjects })}
+                </Link>
+                <span aria-hidden>·</span>
+                <Link href="/people" className="hover:text-brand hover:underline">
+                  {t("tiles.peopleCount", { count: kpis.peopleCount })}
+                </Link>
+              </>
+            ) : null}
+          </div>
         </div>
-        {canCreate ? <NewProjectButton label={t("newProject")} /> : null}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {nextAppointment && nextAppointmentTime ? (
+            <Link
+              href="/calendar"
+              className="hidden items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs shadow-elevated transition-colors hover:border-action/30 lg:inline-flex"
+            >
+              <CalendarClock className="size-3.5 text-action" aria-hidden />
+              <span className="font-medium text-brand">
+                {t("appointments.next")}
+              </span>
+              <span className="max-w-[11rem] truncate text-muted-foreground">
+                {nextAppointmentTime} · {nextAppointment.guestName}
+              </span>
+            </Link>
+          ) : null}
+          {canCreate ? <NewProjectButton label={t("newProject")} /> : null}
+        </div>
       </div>
 
       {!dashboard.hasCaseload ? (
@@ -240,49 +334,55 @@ export async function HomeDashboardView({
           <div
             role="navigation"
             aria-label={t("tiles.aria")}
-            className="grid shrink-0 grid-cols-2 divide-x divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface sm:grid-cols-3 xl:grid-cols-6 xl:divide-y-0"
+            className="grid shrink-0 grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6"
           >
-            <KpiCell
+            <KpiCard
               href="/projects"
+              icon={FileCheck}
               label={t("tiles.docsToReview")}
               value={kpis.docsToReview}
               hint={t("tiles.docsToReviewHint")}
-              accent={kpis.docsToReview > 0 ? "action" : "none"}
+              accent={kpis.docsToReview > 0 ? "action" : "neutral"}
             />
-            <KpiCell
+            <KpiCard
               href="/projects"
+              icon={CircleAlert}
               label={t("tiles.overdue")}
               value={kpis.overdueSubmissions}
               hint={t("dueIn14", { count: kpis.dueIn14Days })}
-              accent={kpis.overdueSubmissions > 0 ? "danger" : "none"}
+              accent={kpis.overdueSubmissions > 0 ? "danger" : "neutral"}
             />
-            <KpiCell
+            <KpiCard
               href="/projects"
-              label={t("tiles.stuck")}
-              value={kpis.stuckWaiting}
-              hint={t("tiles.stuckHint")}
-              accent={kpis.stuckWaiting > 0 ? "warning" : "none"}
+              icon={FileStack}
+              label={t("tiles.formsReady")}
+              value={kpis.formsReady}
+              hint={t("tiles.formsReadyHint")}
+              accent={kpis.formsReady > 0 ? "action" : "neutral"}
             />
-            <KpiCell
+            <KpiCard
               href="/bookings"
+              icon={Banknote}
               label={t("tiles.unpaid")}
               value={kpis.pendingPayments}
-              hint={t("tiles.unpaidHint")}
-              accent={kpis.pendingPayments > 0 ? "warning" : "none"}
+              hint={unpaidHint}
+              accent={kpis.pendingPayments > 0 ? "warning" : "neutral"}
             />
-            <KpiCell
+            <KpiCard
               href="/calendar"
+              icon={CalendarClock}
               label={t("tiles.todayBookings")}
               value={booking.todayCount}
               hint={t("tiles.weekBookings", { count: booking.next7Count })}
-              accent={booking.todayCount > 0 ? "action" : "none"}
+              accent={booking.todayCount > 0 ? "action" : "neutral"}
             />
-            <KpiCell
+            <KpiCard
               href="/people"
+              icon={Hourglass}
               label={t("tiles.statusExpiring")}
               value={kpis.statusExpiring30}
               hint={t("tiles.statusExpiringHint")}
-              accent={kpis.statusExpiring30 > 0 ? "warning" : "none"}
+              accent={kpis.statusExpiring30 > 0 ? "warning" : "neutral"}
             />
           </div>
 
@@ -317,9 +417,14 @@ export async function HomeDashboardView({
               className="lg:col-span-5 lg:overflow-hidden"
             >
               {dashboard.attention.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("attention.empty")}
-                </p>
+                <div className="flex h-full min-h-[6rem] flex-col items-center justify-center gap-2 text-center">
+                  <span className="inline-flex size-9 items-center justify-center rounded-full bg-success-bg text-success-text">
+                    <CircleCheck className="size-4" aria-hidden />
+                  </span>
+                  <p className="text-sm text-muted-foreground">
+                    {t("attention.empty")}
+                  </p>
+                </div>
               ) : (
                 <ul className="divide-y divide-border">
                   {dashboard.attention.map((item) => {
@@ -448,16 +553,35 @@ export async function HomeDashboardView({
                         booking.timezone,
                       );
                       const isToday = day === todayIso;
+                      const isNext = item.id === nextAppointment?.id;
                       return (
                         <li key={item.id}>
                           <Link
                             href="/bookings"
-                            className="flex items-start justify-between gap-3 py-2 transition-colors hover:bg-muted/40"
+                            className={cn(
+                              "flex items-start justify-between gap-3 py-2 transition-colors hover:bg-muted/40",
+                              isNext && "-mx-1 rounded-lg bg-action/5 px-1",
+                            )}
                           >
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-brand">
-                                {item.guestName}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="truncate text-sm font-medium text-brand">
+                                  {item.guestName}
+                                </p>
+                                {isNext ? (
+                                  <StatusPill
+                                    label={t("appointments.next")}
+                                    tone="action"
+                                    className="px-2 py-0 text-[10px]"
+                                  />
+                                ) : item.status === "pending_payment" ? (
+                                  <StatusPill
+                                    label={t("appointments.unpaid")}
+                                    tone="warning"
+                                    className="px-2 py-0 text-[10px]"
+                                  />
+                                ) : null}
+                              </div>
                               <p className="truncate text-[11px] text-muted-foreground">
                                 {item.serviceTitle ??
                                   t("appointments.unknownService")}
@@ -495,9 +619,18 @@ export async function HomeDashboardView({
 
             <div className="flex min-h-0 flex-col gap-2.5 lg:col-span-3 lg:overflow-hidden">
               <SurfaceCard className="shrink-0 space-y-2 p-3 sm:p-4">
-                <h2 className="font-heading text-sm font-semibold text-brand">
-                  {t("charts.pipeline")}
-                </h2>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="font-heading text-sm font-semibold text-brand">
+                    {t("charts.pipeline")}
+                  </h2>
+                  {kpis.stuckWaiting > 0 ? (
+                    <StatusPill
+                      label={t("stuckWaiting", { count: kpis.stuckWaiting })}
+                      tone="warning"
+                      className="px-2 py-0 text-[10px]"
+                    />
+                  ) : null}
+                </div>
                 <PipelineDonut
                   empty={t("charts.pipelineEmpty")}
                   totalLabel={t("charts.pipelineTotal")}
@@ -538,10 +671,11 @@ export async function HomeDashboardView({
                           </span>
                           <span
                             className={cn(
-                              "shrink-0 text-xs font-medium",
+                              "inline-flex shrink-0 items-center gap-1 text-xs font-medium",
                               timingClass(item.days),
                             )}
                           >
+                            <Hourglass className="size-3" aria-hidden />
                             {timingLabel(item.days, t)}
                           </span>
                         </Link>

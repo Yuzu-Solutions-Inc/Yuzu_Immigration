@@ -276,6 +276,12 @@
     "title": "Accueil",
     "welcome": "Bon retour, {name}",
     "welcomeFallback": "Bon retour",
+    "greetingMorning": "Bonjour, {name}",
+    "greetingMorningFallback": "Bonjour",
+    "greetingAfternoon": "Bon après-midi, {name}",
+    "greetingAfternoonFallback": "Bon après-midi",
+    "greetingEvening": "Bonsoir, {name}",
+    "greetingEveningFallback": "Bonsoir",
     "dashboardSubtitle": "Agissez sur les dossiers, rendez-vous et statuts clients au même endroit.",
     "actionSummary": "{count, plural, one {# élément vous attend} other {# éléments vous attendent}}{bookings, plural, =0 {} one { · # rendez-vous aujourd’hui} other { · # rendez-vous aujourd’hui}}",
     "actionSummaryClear": "Rien en attente{bookings, plural, =0 {} one { · # rendez-vous aujourd’hui} other { · # rendez-vous aujourd’hui}}",
@@ -301,13 +307,17 @@
       "overdue": "En retard",
       "stuck": "Bloqué / attente",
       "stuckHint": "Statut à faire avancer",
+      "formsReady": "Formulaires prêts",
+      "formsReadyHint": "Questionnaire soumis",
       "todayBookings": "Rendez-vous aujourd’hui",
       "weekBookings": "{count, plural, one {# cette semaine} other {# cette semaine}}",
       "statusExpiring": "Statuts qui expirent",
       "statusExpiringHint": "30 prochains jours",
       "unpaid": "Impayés",
       "unpaidHint": "Réservations et factures",
-      "peopleCount": "{count, plural, one {# client au dossier} other {# clients au dossier}}"
+      "unpaidCount": "{count, plural, one {# facture} other {# factures}}",
+      "peopleCount": "{count, plural, one {# client au dossier} other {# clients au dossier}}",
+      "openFilesCount": "{count, plural, one {# dossier ouvert} other {# dossiers ouverts}}"
     },
     "attention": {
       "title": "À traiter",
@@ -332,7 +342,9 @@
       "viewCalendar": "Calendrier",
       "empty": "Aucun rendez-vous dans les 7 prochains jours.",
       "emptyToday": "Aucun rendez-vous aujourd’hui.",
-      "unknownService": "Consultation"
+      "unknownService": "Consultation",
+      "next": "À venir",
+      "unpaid": "Impayé"
     },
     "expiries": {
       "title": "Statuts qui expirent",
