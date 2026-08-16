@@ -6,47 +6,78 @@
   "home": {
     "audience": "For immigration consultants and lawyers",
     "title": "Run your immigration practice in one secure workspace",
-    "subtitle": "Clients, files, IRCC questionnaires, documents, booking, and portals — built for Canadian immigration work, not generic CRM.",
+    "subtitle": "Clients, files, IRCC questionnaires, documents, Google Calendar and Meet, Square payments, and portals — built for Canadian immigration work, not generic CRM.",
     "cta": "Start free — open testing",
     "secondaryCta": "Sign in",
     "ctaNote": "Free during open testing. No credit card required.",
     "navSignIn": "Sign in",
     "navCta": "Start free",
+    "capabilities": {
+      "projects": "Projects",
+      "people": "Clients",
+      "forms": "IRCC forms",
+      "documents": "Documents",
+      "calendar": "Google Calendar",
+      "meet": "Google Meet",
+      "square": "Square",
+      "languages": "EN · FR · ES"
+    },
+    "showcases": {
+      "eyebrow": "Inside the product",
+      "title": "The same screens your firm and clients will use",
+      "subtitle": "Home tells you what needs action today. Clients book, pay, upload, and join a call on pages built for them — not a generic scheduling widget.",
+      "file": {
+        "title": "One immigration file, not a folder of tools",
+        "body": "Open a project and work the whole engagement: participants, document review, IRCC questionnaires, a client link, scheduled calls, notes, and Square payment links."
+      },
+      "client": {
+        "title": "Clients complete their part on a secure link",
+        "body": "Send a 30-day link. Clients set a password, upload requested documents, and answer the questionnaire once. You can regenerate access without losing what they already sent."
+      },
+      "booking": {
+        "title": "Clients book a consultation on your public page",
+        "body": "They choose a service, a day, and a time. Busy hours from Google Calendar are already blocked. After they confirm, they can pay with Square and join on Google Meet."
+      },
+      "after": {
+        "title": "Then they pay with Square and join on Google Meet",
+        "body": "Paid services open Square Checkout. When Google Calendar is connected, the appointment includes a Google Meet link — on the confirmation screen, in email, and when they manage the booking."
+      }
+    },
     "featuresEyebrow": "What you get",
     "featuresTitle": "Everything your firm needs to move files forward",
     "featuresSubtitle": "Replace scattered spreadsheets, email threads, and ad-hoc portals with a practice system designed around immigration files.",
     "features": {
       "projects": {
         "title": "Immigration projects",
-        "body": "Open a file once: program family, jurisdiction, status, participants, and the forms checklist seeded for that pathway."
+        "body": "Open a file once: program, jurisdiction, status, and participants. Forms and document checklists seed from a standard pathway or a template your firm maintains."
       },
       "people": {
         "title": "Lifelong client records",
-        "body": "Keep clients as durable records across engagements — contact details, history, notes, and linked projects in one place."
+        "body": "Keep clients as durable records across engagements — contact details, consultation notes, immigration status, and expiry dates in one place."
       },
       "forms": {
         "title": "Ask-once questionnaires",
-        "body": "Clients answer once. Your team uses those answers to prepare IRCC forms, including IMM 5476 representative details."
+        "body": "Clients answer once. Your team uses those answers to prepare IRCC PDFs, including IMM 5476 representative details from the assigned staff profile."
+      },
+      "documents": {
+        "title": "Document collection and review",
+        "body": "Ask for passports, photos, and custom files. Clients upload on the share link; your firm previews, approves, or sends a file back with a comment."
       },
       "share": {
-        "title": "Secure client links",
-        "body": "Send a time-limited link for forms and document upload. Regenerate access without losing answers already collected."
+        "title": "Secure client links and portal",
+        "body": "Send a time-limited file link, or give clients lasting portal access with a code and password handled on the server — never in the browser."
       },
       "booking": {
-        "title": "Booking and calendar",
-        "body": "Publish consultation services, take public bookings, and sync busy times with Google Calendar and Meet when you connect it."
+        "title": "Google Calendar and Google Meet",
+        "body": "Each consultant connects their own Google Calendar. Public booking skips busy times, confirmed appointments sync to the calendar, and a Google Meet link is attached for the call."
       },
-      "portal": {
-        "title": "Client portal access",
-        "body": "Give clients a firm-branded way back into their file with access codes and passwords handled on the server, not in the browser."
+      "payments": {
+        "title": "Square payments",
+        "body": "Connect Square to collect consultation fees at booking or send a payment link on a file. Clients pay on Square Checkout. Unpaid bookings surface on the home screen."
       },
       "team": {
         "title": "Firm workspace",
-        "body": "Each consulting firm gets its own tenant. Staff sign in with email or Google and work inside firm-scoped data."
-      },
-      "languages": {
-        "title": "Built bilingual",
-        "body": "Work in English, French, or Spanish — for your team and for the client-facing flows they use."
+        "body": "Each consulting firm is its own tenant. Invite admins, consultants, and assistants. Work in English, French, or Spanish — including the client-facing flows they use."
       }
     },
     "howEyebrow": "How it works",
@@ -54,15 +85,61 @@
     "how": {
       "one": {
         "title": "Create the project",
-        "body": "Add participants inline, pick the program, and seed the forms checklist in one screen."
+        "body": "Add participants inline, pick the program or a firm template, and seed the forms and document checklist in one screen."
       },
       "two": {
         "title": "Collect once",
-        "body": "Share a secure link so clients upload documents and complete the questionnaire."
+        "body": "Share a secure link so clients upload documents and complete the questionnaire. Review uploads without chasing email attachments."
       },
       "three": {
-        "title": "Prepare and track",
-        "body": "Your firm reviews answers, fills forms, books follow-ups, and keeps status visible."
+        "title": "Book, meet, and get paid",
+        "body": "Clients book on your public page. Google Calendar blocks busy time, Google Meet is attached to the appointment, and Square collects the fee."
+      },
+      "four": {
+        "title": "Prepare and close",
+        "body": "Fill IRCC PDFs from answers already collected, keep status visible, and retain or destroy closed files to match your firm’s duties."
+      }
+    },
+    "preview": {
+      "orgName": "North Star Immigration",
+      "userName": "Amélie",
+      "userFullName": "Amélie Chen",
+      "urlHome": "app.yuzu.solutions/en/home",
+      "urlProject": "app.yuzu.solutions/en/projects/chen-family",
+      "urlFill": "yuzu.solutions/en/fill/chen-family",
+      "urlBook": "yuzu.solutions/en/book/north-star",
+      "urlPay": "yuzu.solutions/en/pay/consultation",
+      "urlBookConfirm": "yuzu.solutions/en/book/confirmed",
+      "projectChen": "Chen family — Express Entry",
+      "projectDubois": "Dubois — Study permit",
+      "projectOkonkwo": "Okonkwo — Work permit",
+      "guestPriya": "Priya Nair",
+      "guestLucas": "Lucas Moreau",
+      "serviceConsult": "Initial consultation",
+      "serviceConsultDesc": "First meeting to review your situation",
+      "servicePgwp": "PGWP review",
+      "servicePgwpDesc": "Permit expiry and next steps",
+      "personAmina": "Amina Diallo",
+      "personWei": "Wei Chen",
+      "personMei": "Mei Chen",
+      "unpaidAmount": "$250.00",
+      "docStudyLetter": "Letter of explanation"
+    },
+    "integrations": {
+      "eyebrow": "Integrations",
+      "title": "Google Calendar, Google Meet, and Square",
+      "subtitle": "Connect the accounts your firm already uses. Booking, video calls, and payments stay in those products — Yuzu Immigration coordinates them around the immigration file.",
+      "calendar": {
+        "title": "Google Calendar",
+        "body": "Each staff member connects their Google Calendar in calendar settings. Public booking and call invites respect busy times and blocked hours. Confirmed appointments are created on that calendar."
+      },
+      "meet": {
+        "title": "Google Meet",
+        "body": "When Calendar is connected, each confirmed booking can include a Google Meet link. Clients join from the confirmation page, the email, or the manage-booking link."
+      },
+      "square": {
+        "title": "Square",
+        "body": "Connect Square to charge consultation services and send payment links on a project. Clients check out on Square. You see unpaid bookings on home until they pay."
       }
     },
     "securityEyebrow": "Security, simply",

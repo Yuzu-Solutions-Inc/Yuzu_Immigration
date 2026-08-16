@@ -6,47 +6,78 @@
   "home": {
     "audience": "Para consultores y abogados de inmigración",
     "title": "Gestione su práctica de inmigración en un espacio seguro",
-    "subtitle": "Clientes, expedientes, cuestionarios IRCC, documentos, citas y portales — pensado para inmigración canadiense, no un CRM genérico.",
+    "subtitle": "Clientes, expedientes, cuestionarios IRCC, documentos, Google Calendar y Meet, pagos Square y portales — pensado para inmigración canadiense, no un CRM genérico.",
     "cta": "Empezar gratis — fase de prueba",
     "secondaryCta": "Iniciar sesión",
     "ctaNote": "Gratis durante la fase de prueba abierta. Sin tarjeta de crédito.",
     "navSignIn": "Iniciar sesión",
     "navCta": "Empezar gratis",
+    "capabilities": {
+      "projects": "Proyectos",
+      "people": "Clientes",
+      "forms": "Formularios IRCC",
+      "documents": "Documentos",
+      "calendar": "Google Calendar",
+      "meet": "Google Meet",
+      "square": "Square",
+      "languages": "EN · FR · ES"
+    },
+    "showcases": {
+      "eyebrow": "Dentro del producto",
+      "title": "Las mismas pantallas que usarán su firma y sus clientes",
+      "subtitle": "Inicio le dice qué requiere acción hoy. Los clientes reservan, pagan, suben documentos y se unen a la llamada en páginas hechas para ellos.",
+      "file": {
+        "title": "Un expediente de inmigración, no una carpeta de herramientas",
+        "body": "Abra un proyecto y gestione todo el encargo: participantes, revisión de documentos, cuestionarios IRCC, enlace del cliente, llamadas, notas y enlaces de pago de Square."
+      },
+      "client": {
+        "title": "El cliente completa su parte en un enlace seguro",
+        "body": "Envíe un enlace de 30 días. El cliente crea una contraseña, sube los documentos pedidos y responde el cuestionario una sola vez. Puede regenerar el acceso sin perder lo ya enviado."
+      },
+      "booking": {
+        "title": "Los clientes reservan una consulta en su página pública",
+        "body": "Eligen un servicio, un día y una hora. Los horarios ocupados de Google Calendar ya están bloqueados. Tras confirmar, pueden pagar con Square y unirse en Google Meet."
+      },
+      "after": {
+        "title": "Luego pagan con Square y se unen en Google Meet",
+        "body": "Los servicios de pago abren Square Checkout. Si Google Calendar está conectado, la cita incluye un enlace de Google Meet — en la confirmación, el correo y el enlace para gestionar la reserva."
+      }
+    },
     "featuresEyebrow": "Qué incluye",
     "featuresTitle": "Todo lo que su firma necesita para avanzar expedientes",
     "featuresSubtitle": "Sustituya hojas de cálculo, hilos de correo y portales improvisados por un sistema diseñado en torno a expedientes de inmigración.",
     "features": {
       "projects": {
         "title": "Proyectos de inmigración",
-        "body": "Abra un expediente una vez: familia de programa, jurisdicción, estado, participantes y lista de formularios según la vía."
+        "body": "Abra un expediente una vez: programa, jurisdicción, estado y participantes. Los formularios y las listas de documentos se generan según la vía o una plantilla de su firma."
       },
       "people": {
         "title": "Clientes de por vida",
-        "body": "Mantenga clientes como fichas duraderas — contacto, historial, notas y proyectos vinculados en un solo lugar."
+        "body": "Mantenga clientes como fichas duraderas — contacto, notas de consulta, estatus migratorio y fechas de vencimiento en un solo lugar."
       },
       "forms": {
         "title": "Cuestionarios de una sola vez",
-        "body": "El cliente responde una vez. Su equipo usa esas respuestas para preparar formularios IRCC, incluido el IMM 5476."
+        "body": "El cliente responde una vez. Su equipo usa esas respuestas para preparar PDF de IRCC, incluido el IMM 5476 con los datos del representante asignado."
+      },
+      "documents": {
+        "title": "Recogida y revisión de documentos",
+        "body": "Pida pasaportes, fotos y archivos a medida. El cliente sube en el enlace; su firma previsualiza, aprueba o devuelve un archivo con un comentario."
       },
       "share": {
-        "title": "Enlaces seguros para clientes",
-        "body": "Envíe un enlace con caducidad para formularios y documentos. Regenere el acceso sin perder respuestas ya recogidas."
+        "title": "Enlaces seguros y portal",
+        "body": "Envíe un enlace de expediente con caducidad, o un acceso duradero al portal con código y contraseña tratados en el servidor — nunca en el navegador."
       },
       "booking": {
-        "title": "Reservas y calendario",
-        "body": "Publique servicios de consulta, acepte reservas públicas y sincronice Google Calendar y Meet si lo conecta."
+        "title": "Google Calendar y Google Meet",
+        "body": "Cada consultor conecta su propio Google Calendar. La reserva pública evita horarios ocupados, las citas confirmadas se sincronizan y se adjunta un enlace de Google Meet para la llamada."
       },
-      "portal": {
-        "title": "Acceso al portal del cliente",
-        "body": "Ofrezca un regreso seguro al expediente con códigos y contraseñas tratados en el servidor, no en el navegador."
+      "payments": {
+        "title": "Pagos con Square",
+        "body": "Conecte Square para cobrar consultas al reservar o enviar un enlace de pago en un expediente. El cliente paga en Square Checkout. Los impagos aparecen en el inicio."
       },
       "team": {
         "title": "Espacio de la firma",
-        "body": "Cada firma tiene su propio inquilino. El personal inicia sesión con correo o Google dentro de datos limitados a la firma."
-      },
-      "languages": {
-        "title": "Multilingüe de origen",
-        "body": "Trabaje en inglés, francés o español — para su equipo y para los flujos orientados al cliente."
+        "body": "Cada firma es su propio inquilino. Invite administradores, consultores y asistentes. Trabaje en inglés, francés o español — también en los flujos orientados al cliente."
       }
     },
     "howEyebrow": "Cómo funciona",
@@ -54,15 +85,61 @@
     "how": {
       "one": {
         "title": "Cree el proyecto",
-        "body": "Añada participantes, elija el programa y genere la lista de formularios en una sola pantalla."
+        "body": "Añada participantes, elija el programa o una plantilla de la firma, y genere formularios y lista de documentos en una sola pantalla."
       },
       "two": {
         "title": "Recoja una vez",
-        "body": "Comparta un enlace seguro para documentos y el cuestionario."
+        "body": "Comparta un enlace seguro para documentos y el cuestionario. Revise las cargas sin perseguir adjuntos de correo."
       },
       "three": {
-        "title": "Prepare y siga",
-        "body": "Su firma revisa, completa formularios, agenda seguimientos y mantiene el estado visible."
+        "title": "Reserve, reúnase y cobre",
+        "body": "Los clientes reservan en su página pública. Google Calendar bloquea el tiempo ocupado, Google Meet se adjunta a la cita y Square cobra el honorario."
+      },
+      "four": {
+        "title": "Prepare y cierre",
+        "body": "Rellene los PDF de IRCC con las respuestas ya recogidas, mantenga el estado visible y conserve o destruya expedientes cerrados según las obligaciones de su firma."
+      }
+    },
+    "preview": {
+      "orgName": "North Star Immigration",
+      "userName": "Amélie",
+      "userFullName": "Amélie Chen",
+      "urlHome": "app.yuzu.solutions/es/home",
+      "urlProject": "app.yuzu.solutions/es/projects/chen-family",
+      "urlFill": "yuzu.solutions/es/fill/chen-family",
+      "urlBook": "yuzu.solutions/es/book/north-star",
+      "urlPay": "yuzu.solutions/es/pay/consultation",
+      "urlBookConfirm": "yuzu.solutions/es/book/confirmed",
+      "projectChen": "Familia Chen — Entrada exprés",
+      "projectDubois": "Dubois — Permiso de estudios",
+      "projectOkonkwo": "Okonkwo — Permiso de trabajo",
+      "guestPriya": "Priya Nair",
+      "guestLucas": "Lucas Moreau",
+      "serviceConsult": "Consulta inicial",
+      "serviceConsultDesc": "Primera reunión para revisar su situación",
+      "servicePgwp": "Revisión PGWP",
+      "servicePgwpDesc": "Vencimiento del permiso y siguientes pasos",
+      "personAmina": "Amina Diallo",
+      "personWei": "Wei Chen",
+      "personMei": "Mei Chen",
+      "unpaidAmount": "250,00 $",
+      "docStudyLetter": "Carta de explicación"
+    },
+    "integrations": {
+      "eyebrow": "Integraciones",
+      "title": "Google Calendar, Google Meet y Square",
+      "subtitle": "Conecte las cuentas que su firma ya usa. Reservas, videollamadas y pagos siguen en esos productos — Yuzu Immigration los coordina en torno al expediente de inmigración.",
+      "calendar": {
+        "title": "Google Calendar",
+        "body": "Cada miembro del personal conecta su Google Calendar en los ajustes. La reserva pública y las invitaciones a llamadas respetan horarios ocupados y bloqueos. Las citas confirmadas se crean en ese calendario."
+      },
+      "meet": {
+        "title": "Google Meet",
+        "body": "Cuando Calendar está conectado, cada reserva confirmada puede incluir un enlace de Google Meet. El cliente se une desde la confirmación, el correo o el enlace para gestionar la cita."
+      },
+      "square": {
+        "title": "Square",
+        "body": "Conecte Square para cobrar consultas y enviar enlaces de pago en un proyecto. El cliente paga en Square. Usted ve los impagos en el inicio hasta que paguen."
       }
     },
     "securityEyebrow": "Seguridad, en claro",

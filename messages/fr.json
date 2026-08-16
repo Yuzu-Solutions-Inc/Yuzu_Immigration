@@ -6,47 +6,78 @@
   "home": {
     "audience": "Pour les consultants et avocats en immigration",
     "title": "Gérez votre pratique d’immigration dans un espace sécurisé",
-    "subtitle": "Clients, dossiers, questionnaires IRCC, documents, rendez-vous et portails — pensé pour l’immigration canadienne, pas un CRM générique.",
+    "subtitle": "Clients, dossiers, questionnaires IRCC, documents, Google Calendar et Meet, paiements Square et portails — pensé pour l’immigration canadienne, pas un CRM générique.",
     "cta": "Commencer gratuitement — phase de test",
     "secondaryCta": "Se connecter",
     "ctaNote": "Gratuit pendant la phase de test ouverte. Aucune carte de crédit.",
     "navSignIn": "Se connecter",
     "navCta": "Essai gratuit",
+    "capabilities": {
+      "projects": "Projets",
+      "people": "Clients",
+      "forms": "Formulaires IRCC",
+      "documents": "Documents",
+      "calendar": "Google Calendar",
+      "meet": "Google Meet",
+      "square": "Square",
+      "languages": "EN · FR · ES"
+    },
+    "showcases": {
+      "eyebrow": "Dans le produit",
+      "title": "Les mêmes écrans que votre cabinet et vos clients utiliseront",
+      "subtitle": "L’accueil indique ce qui demande une action aujourd’hui. Les clients réservent, paient, déposent et rejoignent l’appel sur des pages conçues pour eux.",
+      "file": {
+        "title": "Un dossier d’immigration, pas une liasse d’outils",
+        "body": "Ouvrez un projet et menez tout l’engagement : participants, révision des documents, questionnaires IRCC, lien client, appels, notes et liens de paiement Square."
+      },
+      "client": {
+        "title": "Le client complète sa part sur un lien sécurisé",
+        "body": "Envoyez un lien de 30 jours. Le client définit un mot de passe, dépose les pièces demandées et répond une seule fois au questionnaire. Vous pouvez régénérer l’accès sans perdre ce qui est déjà envoyé."
+      },
+      "booking": {
+        "title": "Les clients réservent une consultation sur votre page publique",
+        "body": "Ils choisissent un service, un jour et une heure. Les plages occupées de Google Calendar sont déjà bloquées. Après confirmation, ils peuvent payer avec Square et joindre l’appel sur Google Meet."
+      },
+      "after": {
+        "title": "Ensuite, ils paient avec Square et joignent Google Meet",
+        "body": "Les services payants ouvrent Square Checkout. Quand Google Calendar est connecté, le rendez-vous inclut un lien Google Meet — sur la confirmation, dans le courriel, et sur le lien de gestion."
+      }
+    },
     "featuresEyebrow": "Ce que vous obtenez",
     "featuresTitle": "Tout ce qu’il faut pour faire avancer les dossiers",
     "featuresSubtitle": "Remplacez tableurs, fils de courriels et portails improvisés par un système conçu autour des dossiers d’immigration.",
     "features": {
       "projects": {
         "title": "Projets d’immigration",
-        "body": "Ouvrez un dossier une fois : famille de programme, juridiction, statut, participants et liste de formulaires selon le parcours."
+        "body": "Ouvrez un dossier une fois : programme, juridiction, statut et participants. Formulaires et listes de documents se remplissent selon le parcours ou un modèle de votre cabinet."
       },
       "people": {
         "title": "Clients à vie",
-        "body": "Conservez vos clients comme fiches durables — coordonnées, historique, notes et projets liés au même endroit."
+        "body": "Conservez vos clients comme fiches durables — coordonnées, notes de consultation, statut d’immigration et dates d’expiration au même endroit."
       },
       "forms": {
         "title": "Questionnaires une seule fois",
-        "body": "Le client répond une fois. Votre équipe utilise ces réponses pour préparer les formulaires IRCC, y compris l’IMM 5476."
+        "body": "Le client répond une fois. Votre équipe utilise ces réponses pour préparer les PDF IRCC, y compris l’IMM 5476 à partir du profil du représentant assigné."
+      },
+      "documents": {
+        "title": "Collecte et révision des documents",
+        "body": "Demandez passeports, photos et pièces sur mesure. Le client dépose sur le lien; votre cabinet prévisualise, accepte ou renvoie un fichier avec un commentaire."
       },
       "share": {
-        "title": "Liens clients sécurisés",
-        "body": "Envoyez un lien à durée limitée pour les formulaires et le dépôt de documents. Régénérez l’accès sans perdre les réponses."
+        "title": "Liens clients et portail",
+        "body": "Envoyez un lien de dossier à durée limitée, ou un accès portail durable avec code et mot de passe traités côté serveur — jamais dans le navigateur."
       },
       "booking": {
-        "title": "Réservation et calendrier",
-        "body": "Publiez vos services de consultation, acceptez les réservations publiques et synchronisez Google Calendar et Meet si vous le branchez."
+        "title": "Google Calendar et Google Meet",
+        "body": "Chaque consultant connecte son propre Google Calendar. La réservation publique évite les plages occupées, les rendez-vous confirmés se synchronisent, et un lien Google Meet est joint à l’appel."
       },
-      "portal": {
-        "title": "Accès portail client",
-        "body": "Offrez un retour sécurisé au dossier avec codes d’accès et mots de passe traités côté serveur, jamais dans le navigateur."
+      "payments": {
+        "title": "Paiements Square",
+        "body": "Connectez Square pour encaisser les consultations à la réservation ou envoyer un lien de paiement sur un dossier. Le client paie sur Square Checkout. Les impayés apparaissent à l’accueil."
       },
       "team": {
         "title": "Espace cabinet",
-        "body": "Chaque cabinet a son propre locataire. Le personnel se connecte par courriel ou Google dans des données limitées au cabinet."
-      },
-      "languages": {
-        "title": "Bilingue dès le départ",
-        "body": "Travaillez en français, anglais ou espagnol — pour votre équipe et pour les parcours clients."
+        "body": "Chaque cabinet a son propre locataire. Invitez des admins, consultants et assistants. Travaillez en français, anglais ou espagnol — y compris les parcours clients."
       }
     },
     "howEyebrow": "Comment ça marche",
@@ -54,15 +85,61 @@
     "how": {
       "one": {
         "title": "Créez le projet",
-        "body": "Ajoutez des participants, choisissez le programme et générez la liste de formulaires en un écran."
+        "body": "Ajoutez des participants, choisissez le programme ou un modèle du cabinet, et générez formulaires et liste de documents en un écran."
       },
       "two": {
         "title": "Collectez une fois",
-        "body": "Partagez un lien sécurisé pour les documents et le questionnaire."
+        "body": "Partagez un lien sécurisé pour les documents et le questionnaire. Révisez les dépôts sans courir après les pièces jointes."
       },
       "three": {
-        "title": "Préparez et suivez",
-        "body": "Votre cabinet révise, remplit les formulaires, planifie les suivis et garde le statut visible."
+        "title": "Réservez, rencontrez, encaissez",
+        "body": "Les clients réservent sur votre page publique. Google Calendar bloque les plages occupées, Google Meet est joint au rendez-vous, et Square encaisse les honoraires."
+      },
+      "four": {
+        "title": "Préparez et clôturez",
+        "body": "Remplissez les PDF IRCC à partir des réponses déjà collectées, suivez le statut, et conservez ou détruisez les dossiers fermés selon les devoirs du cabinet."
+      }
+    },
+    "preview": {
+      "orgName": "North Star Immigration",
+      "userName": "Amélie",
+      "userFullName": "Amélie Chen",
+      "urlHome": "app.yuzu.solutions/fr/home",
+      "urlProject": "app.yuzu.solutions/fr/projects/chen-family",
+      "urlFill": "yuzu.solutions/fr/fill/chen-family",
+      "urlBook": "yuzu.solutions/fr/book/north-star",
+      "urlPay": "yuzu.solutions/fr/pay/consultation",
+      "urlBookConfirm": "yuzu.solutions/fr/book/confirmed",
+      "projectChen": "Famille Chen — Entrée express",
+      "projectDubois": "Dubois — Permis d’études",
+      "projectOkonkwo": "Okonkwo — Permis de travail",
+      "guestPriya": "Priya Nair",
+      "guestLucas": "Lucas Moreau",
+      "serviceConsult": "Consultation initiale",
+      "serviceConsultDesc": "Première rencontre pour faire le point",
+      "servicePgwp": "Révision PGWP",
+      "servicePgwpDesc": "Expiration du permis et prochaines étapes",
+      "personAmina": "Amina Diallo",
+      "personWei": "Wei Chen",
+      "personMei": "Mei Chen",
+      "unpaidAmount": "250,00 $",
+      "docStudyLetter": "Lettre d’explication"
+    },
+    "integrations": {
+      "eyebrow": "Intégrations",
+      "title": "Google Calendar, Google Meet et Square",
+      "subtitle": "Branchez les comptes que votre cabinet utilise déjà. Réservation, visio et paiements restent dans ces produits — Yuzu Immigration les coordonne autour du dossier d’immigration.",
+      "calendar": {
+        "title": "Google Calendar",
+        "body": "Chaque membre du personnel connecte son Google Calendar dans les réglages. La réservation publique et les invitations d’appel respectent les plages occupées et les blocages. Les rendez-vous confirmés sont créés dans ce calendrier."
+      },
+      "meet": {
+        "title": "Google Meet",
+        "body": "Quand Calendar est connecté, chaque réservation confirmée peut inclure un lien Google Meet. Le client le rejoint depuis la confirmation, le courriel, ou le lien de gestion."
+      },
+      "square": {
+        "title": "Square",
+        "body": "Connectez Square pour facturer les consultations et envoyer des liens de paiement sur un projet. Le client paie sur Square. Vous voyez les impayés à l’accueil jusqu’au règlement."
       }
     },
     "securityEyebrow": "Sécurité, simplement",

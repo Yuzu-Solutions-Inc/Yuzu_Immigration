@@ -1,8 +1,9 @@
 import {
   CalendarDays,
+  CreditCard,
+  FileCheck,
   FileStack,
   FolderKanban,
-  Globe2,
   Link2,
   LockKeyhole,
   MapPin,
@@ -10,39 +11,67 @@ import {
   ShieldCheck,
   Users,
   UsersRound,
+  Video,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { PrivacyLink } from "@/components/legal/privacy-link";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import {
+  AppHomePreview,
+  AppProjectPreview,
+  BookingConfirmedPreview,
+  ClientFillPreview,
+  PublicBookingPreview,
+  PublicPayPreview,
+} from "@/components/marketing/product-previews";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+
+const CAPABILITY_KEYS = [
+  "projects",
+  "people",
+  "forms",
+  "documents",
+  "calendar",
+  "meet",
+  "square",
+  "languages",
+] as const;
 
 const FEATURE_KEYS = [
   "projects",
   "people",
   "forms",
+  "documents",
   "share",
   "booking",
-  "portal",
+  "payments",
   "team",
-  "languages",
 ] as const;
 
 const FEATURE_ICONS = {
   projects: FolderKanban,
   people: Users,
   forms: FileStack,
+  documents: FileCheck,
   share: Link2,
   booking: CalendarDays,
-  portal: LockKeyhole,
+  payments: CreditCard,
   team: UsersRound,
-  languages: Globe2,
 } as const;
 
-const HOW_KEYS = ["one", "two", "three"] as const;
+const INTEGRATION_KEYS = ["calendar", "meet", "square"] as const;
+
+const INTEGRATION_ICONS = {
+  calendar: CalendarDays,
+  meet: Video,
+  square: CreditCard,
+} as const;
+
+const HOW_KEYS = ["one", "two", "three", "four"] as const;
 
 const SECURITY_KEYS = ["canada", "encryption", "access", "privacy"] as const;
 
@@ -52,65 +81,6 @@ const SECURITY_ICONS = {
   access: ShieldCheck,
   privacy: ScrollText,
 } as const;
-
-function ProductPreview() {
-  return (
-    <div
-      aria-hidden
-      className="landing-preview relative mx-auto w-full max-w-5xl overflow-hidden rounded-t-[1.25rem] border border-white/10 border-b-0 bg-graphite-900 shadow-[0_-24px_80px_-20px_color-mix(in_srgb,var(--graphite-900)_55%,transparent)]"
-    >
-      <div className="flex items-center gap-2 border-b border-white/8 px-4 py-3">
-        <span className="size-2.5 rounded-full bg-white/20" />
-        <span className="size-2.5 rounded-full bg-white/20" />
-        <span className="size-2.5 rounded-full bg-white/20" />
-        <div className="ml-3 h-6 flex-1 rounded-md bg-white/6" />
-      </div>
-      <div className="grid grid-cols-[7.5rem_1fr] sm:grid-cols-[10rem_1fr]">
-        <div className="space-y-3 border-r border-white/8 bg-graphite-700 p-4">
-          <div className="h-2.5 w-16 rounded bg-action/80" />
-          <div className="h-2 w-12 rounded bg-white/15" />
-          <div className="h-2 w-14 rounded bg-white/10" />
-          <div className="h-2 w-10 rounded bg-white/10" />
-          <div className="h-2 w-16 rounded bg-white/10" />
-        </div>
-        <div className="space-y-4 p-4 sm:p-5">
-          <div className="flex items-end justify-between gap-4">
-            <div className="space-y-2">
-              <div className="h-3 w-28 rounded bg-white/25" />
-              <div className="h-2 w-40 rounded bg-white/10" />
-            </div>
-            <div className="h-8 w-24 rounded-lg bg-action/90" />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/8 bg-white/4 p-3">
-              <div className="mb-3 h-2 w-16 rounded bg-success/70" />
-              <div className="h-8 rounded-md bg-white/8" />
-            </div>
-            <div className="rounded-xl border border-white/8 bg-white/4 p-3">
-              <div className="mb-3 h-2 w-14 rounded bg-warning/70" />
-              <div className="h-8 rounded-md bg-white/8" />
-            </div>
-            <div className="hidden rounded-xl border border-white/8 bg-white/4 p-3 sm:block">
-              <div className="mb-3 h-2 w-20 rounded bg-action/70" />
-              <div className="h-8 rounded-md bg-white/8" />
-            </div>
-          </div>
-          <div className="overflow-hidden rounded-xl border border-white/8">
-            <div className="grid grid-cols-4 gap-px bg-white/8">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-8 bg-graphite-900/70 sm:h-9"
-                  style={{ opacity: 0.55 + (i % 4) * 0.1 }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export async function LandingPage() {
   const t = await getTranslations("home");
@@ -229,19 +199,146 @@ export async function LandingPage() {
               </Link>
             </div>
             <p className="lp-fade lp-delay-4 text-sm text-white/50">{t("ctaNote")}</p>
+            <ul className="lp-fade lp-delay-4 flex flex-wrap gap-2 pt-1">
+              {CAPABILITY_KEYS.map((key) => (
+                <li
+                  key={key}
+                  className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-xs font-medium text-white/70"
+                >
+                  {t(`capabilities.${key}`)}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="relative mt-4 w-full">
-            <ProductPreview />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-canvas to-transparent"
-            />
+          <div className="landing-preview relative mt-4 w-full">
+            <div className="relative max-h-[min(36rem,52svh)] overflow-hidden">
+              <AppHomePreview />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-canvas to-transparent"
+              />
+            </div>
           </div>
         </div>
       </section>
 
       <section className="relative z-10 border-b border-border bg-canvas py-20 sm:py-24">
+        <div className="mx-auto w-full max-w-6xl space-y-20 px-6">
+          <div className="max-w-2xl space-y-3">
+            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
+              {t("showcases.eyebrow")}
+            </p>
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+              {t("showcases.title")}
+            </h2>
+            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
+              {t("showcases.subtitle")}
+            </p>
+          </div>
+
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12">
+            <div className="pointer-events-none select-none">
+              <AppProjectPreview />
+            </div>
+            <div className="space-y-3 lg:max-w-md">
+              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
+                {t("showcases.file.title")}
+              </h3>
+              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                {t("showcases.file.body")}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12">
+            <div className="space-y-3 lg:max-w-md lg:justify-self-end">
+              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
+                {t("showcases.client.title")}
+              </h3>
+              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                {t("showcases.client.body")}
+              </p>
+            </div>
+            <div className="pointer-events-none order-first select-none lg:order-last">
+              <ClientFillPreview />
+            </div>
+          </div>
+
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12">
+            <div className="pointer-events-none select-none">
+              <PublicBookingPreview />
+            </div>
+            <div className="space-y-3 lg:max-w-md">
+              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
+                {t("showcases.booking.title")}
+              </h3>
+              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                {t("showcases.booking.body")}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="max-w-2xl space-y-3">
+              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
+                {t("showcases.after.title")}
+              </h3>
+              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                {t("showcases.after.body")}
+              </p>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="pointer-events-none select-none">
+                <PublicPayPreview />
+              </div>
+              <div className="pointer-events-none select-none">
+                <BookingConfirmedPreview />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-surface py-20 sm:py-24">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <div className="max-w-2xl space-y-3">
+            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
+              {t("integrations.eyebrow")}
+            </p>
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+              {t("integrations.title")}
+            </h2>
+            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
+              {t("integrations.subtitle")}
+            </p>
+          </div>
+          <ul className="mt-12 grid gap-10 sm:grid-cols-3">
+            {INTEGRATION_KEYS.map((key) => {
+              const Icon = INTEGRATION_ICONS[key];
+              return (
+                <li key={key} className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className="size-5 text-action"
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <h3 className="font-heading text-base font-semibold text-brand">
+                      {t(`integrations.${key}.title`)}
+                    </h3>
+                  </div>
+                  <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                    {t(`integrations.${key}.body`)}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
           <div className="max-w-2xl space-y-3">
             <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
@@ -255,22 +352,21 @@ export async function LandingPage() {
             </p>
           </div>
 
-          <ul className="mt-12 divide-y divide-border border-y border-border">
+          <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2">
             {FEATURE_KEYS.map((key) => {
               const Icon = FEATURE_ICONS[key];
               return (
-                <li
-                  key={key}
-                  className="grid gap-3 py-6 sm:grid-cols-[2.5rem_minmax(0,14rem)_1fr] sm:items-start sm:gap-6"
-                >
-                  <Icon
-                    className="mt-0.5 size-5 text-action"
-                    strokeWidth={1.75}
-                    aria-hidden
-                  />
-                  <h3 className="font-heading text-base font-semibold text-brand">
-                    {t(`features.${key}.title`)}
-                  </h3>
+                <li key={key} className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className="size-5 text-action"
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <h3 className="font-heading text-base font-semibold text-brand">
+                      {t(`features.${key}.title`)}
+                    </h3>
+                  </div>
                   <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
                     {t(`features.${key}.body`)}
                   </p>
@@ -292,7 +388,7 @@ export async function LandingPage() {
             </h2>
           </div>
 
-          <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
+          <ol className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
             {HOW_KEYS.map((key, index) => (
               <li key={key} className="relative space-y-3">
                 <span className="font-heading text-4xl font-bold tracking-tight text-brand/15">
