@@ -226,7 +226,9 @@
     "hasAccount": "Déjà inscrit ?",
     "pleaseWait": "Veuillez patienter…",
     "redirecting": "Redirection…",
-    "checkEmail": "Vérifiez votre e-mail pour confirmer le compte, puis connectez-vous.",
+    "checkEmailTitle": "Vérifiez votre e-mail",
+    "checkEmail": "Rendez-vous dans votre boîte de réception pour vérifier votre compte. Nous avons envoyé un lien de confirmation à {email}.",
+    "checkEmailHint": "Après confirmation, revenez ici pour vous connecter.",
     "googleFailed": "Échec de la connexion Google. Activez le fournisseur Google dans Supabase, puis réessayez.",
     "signOut": "Se déconnecter",
     "errors": {

@@ -32,6 +32,7 @@ const signUpSchema = credentialsSchema
 export type AuthActionState = {
   error?: string;
   success?: string;
+  email?: string;
 };
 
 async function destForSignedInUser(fallbackPath: string) {
@@ -126,7 +127,7 @@ export async function signUpWithPassword(
     redirect(await destForSignedInUser(next));
   }
 
-  return { success: "check_email" };
+  return { success: "check_email", email: parsed.data.email };
 }
 
 export async function signOutAction(formData: FormData) {

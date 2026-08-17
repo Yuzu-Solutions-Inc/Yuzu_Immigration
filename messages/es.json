@@ -226,7 +226,9 @@
     "hasAccount": "Already registered?",
     "pleaseWait": "Please wait…",
     "redirecting": "Redirecting…",
-    "checkEmail": "Check your email to confirm your account, then sign in.",
+    "checkEmailTitle": "Revisa tu correo",
+    "checkEmail": "Ve a tu correo para verificar tu cuenta. Enviamos un enlace de confirmación a {email}.",
+    "checkEmailHint": "Cuando confirmes, vuelve aquí para iniciar sesión.",
     "googleFailed": "Google sign-in failed. Enable the Google provider in Supabase, then try again.",
     "signOut": "Sign out",
     "errors": {
