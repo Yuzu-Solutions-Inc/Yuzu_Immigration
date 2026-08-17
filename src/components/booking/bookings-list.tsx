@@ -439,17 +439,17 @@ export function BookingsList({
       </div>
 
       <ListTableCard>
-        <Table className="table-fixed">
+        <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead
                 className={cn(
-                  "w-[12%]",
+                  "min-w-[10.5rem]",
                   listTableHeadClassName,
                   listTableEdgeStartClassName,
                 )}
               >
-                <div className="flex flex-col gap-1.5">
+                <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="starts_at" label={t("colWhen")} />
                   <NativeSelect
                     value={timeFilter}
@@ -464,8 +464,8 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("w-[20%]", listTableHeadClassName)}>
-                <div className="flex flex-col gap-1.5">
+              <TableHead className={cn("min-w-[12rem]", listTableHeadClassName)}>
+                <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="guest" label={t("colGuest")} />
                   <Input
                     type="search"
@@ -477,8 +477,8 @@ export function BookingsList({
                   />
                 </div>
               </TableHead>
-              <TableHead className={cn("w-[14%]", listTableHeadClassName)}>
-                <div className="flex flex-col gap-1.5">
+              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
+                <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="service" label={t("colService")} />
                   <NativeSelect
                     value={serviceFilter}
@@ -495,8 +495,8 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("w-[13%]", listTableHeadClassName)}>
-                <div className="flex flex-col gap-1.5">
+              <TableHead className={cn("min-w-[9rem]", listTableHeadClassName)}>
+                <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="host" label={t("colHost")} />
                   <NativeSelect
                     value={hostFilter}
@@ -513,8 +513,8 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("w-[10%]", listTableHeadClassName)}>
-                <div className="flex flex-col gap-1.5">
+              <TableHead className={cn("min-w-[10.5rem]", listTableHeadClassName)}>
+                <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="status" label={t("colStatus")} />
                   <NativeSelect
                     value={statusFilter}
@@ -535,12 +535,12 @@ export function BookingsList({
               </TableHead>
               <TableHead
                 className={cn(
-                  "w-[19%]",
+                  "min-w-[11rem]",
                   listTableHeadClassName,
                   !canManage && listTableEdgeEndClassName,
                 )}
               >
-                <div className="flex flex-col gap-1.5">
+                <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="payment" label={t("colPayment")} />
                   <NativeSelect
                     value={paymentFilter}
@@ -594,13 +594,18 @@ export function BookingsList({
 
             return (
               <TableRow key={booking.id} className="group align-top">
-                <TableCell className={cn("text-sm whitespace-normal", listTableEdgeStartClassName)}>
+                <TableCell
+                  className={cn(
+                    "text-sm whitespace-normal",
+                    listTableEdgeStartClassName,
+                  )}
+                >
                   {new Date(booking.startsAt).toLocaleString(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}
                 </TableCell>
-                <TableCell className="max-w-0 whitespace-normal">
+                <TableCell className="max-w-[14rem] whitespace-normal">
                   {booking.personId ? (
                     <div className="min-w-0 space-y-0.5">
                       <Link
@@ -627,10 +632,10 @@ export function BookingsList({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="max-w-0 truncate text-sm whitespace-normal">
+                <TableCell className="max-w-[12rem] truncate text-sm">
                   {booking.serviceTitle}
                 </TableCell>
-                <TableCell className="max-w-0 truncate text-sm whitespace-normal">
+                <TableCell className="max-w-[10rem] truncate text-sm">
                   {booking.hostName}
                 </TableCell>
                 <TableCell className="whitespace-normal">
@@ -645,31 +650,33 @@ export function BookingsList({
                   )}
                 >
                   {booking.paymentStatus ? (
-                    <div className="space-y-1">
-                      <Badge
-                        variant={
-                          booking.paymentStatus === "paid"
-                            ? "default"
-                            : "outline"
-                        }
-                      >
-                        {paymentLabel(t, booking.paymentStatus)}
-                      </Badge>
-                      {booking.paymentAmountCents != null ? (
-                        <p className="text-xs text-muted-foreground">
-                          {formatPriceCents(
-                            booking.paymentAmountCents,
-                            locale,
-                            booking.paymentCurrency ?? "CAD",
-                          )}
-                        </p>
-                      ) : null}
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge
+                          variant={
+                            booking.paymentStatus === "paid"
+                              ? "default"
+                              : "outline"
+                          }
+                        >
+                          {paymentLabel(t, booking.paymentStatus)}
+                        </Badge>
+                        {booking.paymentAmountCents != null ? (
+                          <span className="text-xs text-muted-foreground">
+                            {formatPriceCents(
+                              booking.paymentAmountCents,
+                              locale,
+                              booking.paymentCurrency ?? "CAD",
+                            )}
+                          </span>
+                        ) : null}
+                      </div>
                       {booking.payUrl ? (
                         <a
                           href={booking.payUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="block text-xs font-medium text-action hover:underline"
+                          className="block truncate text-xs font-medium text-action hover:underline"
                         >
                           {t("openPayLink")}
                         </a>
