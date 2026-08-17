@@ -55,7 +55,7 @@ The Firm will:
 
 ## 6. Subprocessors
 
-The Firm authorizes the processors listed in `yuzu-subprocessors.md` as updated from time to time. Yuzu Solutions Inc. will impose comparable protection by contract and will update the public list when processors change. For a new extra-Québec processor, Yuzu will update its transfer assessment.
+The Firm authorizes the processors listed in `yuzu-subprocessors.pdf` as updated from time to time. Yuzu Solutions Inc. will impose comparable protection by contract and will update the public list when processors change. For a new extra-Québec processor, Yuzu will update its transfer assessment.
 
 ## 7. Liability
 

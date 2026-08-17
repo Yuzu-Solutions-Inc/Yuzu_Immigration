@@ -2,7 +2,7 @@
 
 **For:** consulting firms that use Yuzu Immigration  
 **Why:** Québec Law 25 requires an EFVP before acquiring, developing, or overhauling an information system that involves personal information, and before communicating personal information outside Québec.  
-**Vendor pack:** read `vendor-due-diligence-pack.md` and `yuzu-subprocessors.md` first.  
+**Vendor pack:** read `vendor-due-diligence-pack.pdf` and `yuzu-subprocessors.pdf` first.  
 **This is a template, not legal advice.** Complete it for **your** firm. Keep the signed copy in your privacy file. You may send a high-level copy to Yuzu Solutions Inc. at privacy@yuzu.solutions if you wish; you are not required to.
 
 **Firm legal name:** ________________________________  
@@ -31,7 +31,7 @@ Check all that apply:
 - [ ] Booking and payment details
 - [ ] Other: ______________
 
-**Sensitive information:** immigration files are generally sensitive. We will obtain **express** consent (see `firm-consent-retainer-language.md`).
+**Sensitive information:** immigration files are generally sensitive. We will obtain **express** consent (see `firm-consent-retainer-language.pdf`).
 
 ## 3. Purposes
 
@@ -62,7 +62,7 @@ For each box checked, we accept that personal information (for example guest nam
 | Over-collection | We will only request documents and answers needed for the mandate |
 | Minors | Parental / guardian authorization before collecting information about a child under 14 |
 | Retention | We will close files in the product so the six-year hold starts; after that we will destroy when purposes are fulfilled |
-| Incidents | We will keep `firm-confidentiality-incident-register.md` and use the notice templates |
+| Incidents | We will keep `firm-confidentiality-incident-register.pdf` and use the notice templates |
 
 ## 6. Residual risk we accept
 

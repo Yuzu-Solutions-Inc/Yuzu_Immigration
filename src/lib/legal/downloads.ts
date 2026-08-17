@@ -1,57 +1,60 @@
+/** PDF filenames served to firms. Sibling `.md` files are the templates; run `npm run legal:pdf` after editing them. */
+export const FIRM_DPA_DOWNLOAD_FILE = "firm-data-processing-addendum.pdf";
+
 export const LEGAL_DOWNLOAD_FILES = [
   {
     id: "governance",
-    file: "yuzu-governance-summary.md",
+    file: "yuzu-governance-summary.pdf",
     group: "yuzu",
   },
   {
     id: "subprocessors",
-    file: "yuzu-subprocessors.md",
+    file: "yuzu-subprocessors.pdf",
     group: "yuzu",
   },
   {
     id: "vendorPack",
-    file: "vendor-due-diligence-pack.md",
+    file: "vendor-due-diligence-pack.pdf",
     group: "firm",
   },
   {
     id: "dpa",
-    file: "firm-data-processing-addendum.md",
+    file: FIRM_DPA_DOWNLOAD_FILE,
     group: "firm",
   },
   {
     id: "efvp",
-    file: "firm-efvp-template.md",
+    file: "firm-efvp-template.pdf",
     group: "firm",
   },
   {
     id: "privacyNotice",
-    file: "firm-privacy-notice-template.md",
+    file: "firm-privacy-notice-template.pdf",
     group: "firm",
   },
   {
     id: "consent",
-    file: "firm-consent-retainer-language.md",
+    file: "firm-consent-retainer-language.pdf",
     group: "firm",
   },
   {
     id: "incidentRegister",
-    file: "firm-confidentiality-incident-register.md",
+    file: "firm-confidentiality-incident-register.pdf",
     group: "firm",
   },
   {
     id: "incidentNotices",
-    file: "firm-incident-notice-templates.md",
+    file: "firm-incident-notice-templates.pdf",
     group: "firm",
   },
   {
     id: "rightsRequest",
-    file: "firm-individual-rights-request.md",
+    file: "firm-individual-rights-request.pdf",
     group: "firm",
   },
   {
     id: "destruction",
-    file: "firm-destruction-register.md",
+    file: "firm-destruction-register.pdf",
     group: "firm",
   },
 ] as const;

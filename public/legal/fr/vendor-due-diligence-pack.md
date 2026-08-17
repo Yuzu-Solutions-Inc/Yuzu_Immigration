@@ -50,7 +50,7 @@ Absent du produit : appariement biométrique.
 - Calcul / journaux : Vercel (souvent États-Unis)  
 - Courriel / agendas / réunions / paiements facultatifs : généralement États-Unis  
 
-Voir `yuzu-subprocessors.md`. Yuzu a des EFVP internes. **Votre cabinet doit faire la sienne** (`firm-efvp-template.md`).
+Voir `yuzu-subprocessors.pdf`. Yuzu a des EFVP internes. **Votre cabinet doit faire la sienne** (`firm-efvp-template.pdf`).
 
 ## 6. Conservation
 
@@ -72,7 +72,7 @@ Yuzu tient un registre et avisera votre cabinet sans délai injustifié. Vous re
 ## 9. Contrats
 
 - Conditions et politique (acceptées dans le produit)  
-- `firm-data-processing-addendum.md` (à signer avant d’y mettre des RP clients de production)
+- `firm-data-processing-addendum.pdf` (à signer avant d’y mettre des RP clients de production)
 
 ## 10. Ce que nous ne prétendons pas
 

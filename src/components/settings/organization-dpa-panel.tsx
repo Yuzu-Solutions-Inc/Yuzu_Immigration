@@ -10,7 +10,10 @@ import {
 import { FirmDpaConsentFields } from "@/components/legal/legal-consent-fields";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldHint, FieldSuccess } from "@/components/ui/field";
-import { legalDownloadHref } from "@/lib/legal/downloads";
+import {
+  FIRM_DPA_DOWNLOAD_FILE,
+  legalDownloadHref,
+} from "@/lib/legal/downloads";
 import { FIRM_DPA_VERSION } from "@/lib/legal/dpa";
 import type { AppLocale } from "@/lib/i18n/locales";
 
@@ -70,11 +73,8 @@ export function OrganizationDpaPanel({
           <FieldHint>
             {tl("dpaCountersignHelp")}{" "}
             <a
-              href={legalDownloadHref(
-                "firm-data-processing-addendum.md",
-                locale,
-              )}
-              download="firm-data-processing-addendum.md"
+              href={legalDownloadHref(FIRM_DPA_DOWNLOAD_FILE, locale)}
+              download={FIRM_DPA_DOWNLOAD_FILE}
               className="text-action underline-offset-2 hover:underline"
             >
               {tl("dpaDownload")}

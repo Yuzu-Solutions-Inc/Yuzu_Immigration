@@ -29,5 +29,5 @@ Les dossiers peuvent comprendre des noms, coordonnées, passeports, questionnair
 ## Pour aller plus loin
 
 - Politique de confidentialité : `/fr/privacy`  
-- Sous-traitants : [yuzu-subprocessors.md](./yuzu-subprocessors.md)  
+- Sous-traitants : [yuzu-subprocessors.pdf](./yuzu-subprocessors.pdf)  
 - Modèles pour cabinets : listés sur la page de confidentialité

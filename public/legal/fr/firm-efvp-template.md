@@ -2,7 +2,7 @@
 
 **Pour :** les cabinets qui utilisent Yuzu Immigration  
 **Pourquoi :** la Loi 25 exige une EFVP avant d’acquérir, de développer ou de refondre un système d’information impliquant des renseignements personnels, et avant de communiquer des renseignements hors Québec.  
-**Dossier fournisseur :** lire d’abord `vendor-due-diligence-pack.md` et `yuzu-subprocessors.md`.  
+**Dossier fournisseur :** lire d’abord `vendor-due-diligence-pack.pdf` et `yuzu-subprocessors.pdf`.  
 **Ceci est un modèle, pas un avis juridique.**
 
 **Raison sociale du cabinet :** ________________________________  
@@ -29,7 +29,7 @@ Nous adoptons Yuzu Immigration comme système de gestion de pratique (dossiers, 
 - [ ] Rendez-vous et paiements
 - [ ] Autre : ______________
 
-Les dossiers d’immigration sont généralement **sensibles**. Nous obtiendrons un consentement **exprès** (voir `firm-consent-retainer-language.md`).
+Les dossiers d’immigration sont généralement **sensibles**. Nous obtiendrons un consentement **exprès** (voir `firm-consent-retainer-language.pdf`).
 
 ## 3. Fins
 
@@ -60,7 +60,7 @@ Pour chaque case, nous acceptons que des renseignements (p. ex. nom, courriel, t
 | Surcollecte | Seulement ce qui est nécessaire au mandat |
 | Mineurs | Autorisation parentale / tuteur avant toute collecte concernant un enfant de moins de 14 ans |
 | Conservation | Fermer les dossiers dans le produit (délai de six ans) ; détruire ensuite lorsque les fins sont atteintes |
-| Incidents | Tenir `firm-confidentiality-incident-register.md` |
+| Incidents | Tenir `firm-confidentiality-incident-register.pdf` |
 
 ## 6. Risque résiduel accepté
 

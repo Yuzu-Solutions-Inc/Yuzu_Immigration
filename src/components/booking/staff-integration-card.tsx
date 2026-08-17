@@ -17,6 +17,13 @@ type ConnectionPublic = {
   is_enabled: boolean;
 };
 
+type DisconnectSuccessKey =
+  | "googleDisconnected"
+  | "microsoftDisconnected"
+  | "meetDisconnected"
+  | "teamsDisconnected"
+  | "zoomDisconnected";
+
 export function StaffIntegrationCard({
   locale,
   configured,
@@ -34,7 +41,9 @@ export function StaffIntegrationCard({
   connectAction,
   onUse,
   onStop,
+  onDisconnect,
   onSync,
+  disconnectSuccessKey,
 }: {
   locale: string;
   configured: boolean;
@@ -49,9 +58,11 @@ export function StaffIntegrationCard({
   lastSyncedKey?: "googleLastSynced" | "microsoftLastSynced";
   notConfiguredMessage: string;
   syncSuccessKey?: "googleSynced" | "microsoftSynced";
+  disconnectSuccessKey: DisconnectSuccessKey;
   connectAction: ReactNode;
   onUse: () => Promise<{ error?: string; message?: string }>;
   onStop: () => Promise<{ error?: string; message?: string }>;
+  onDisconnect: () => Promise<{ error?: string; message?: string }>;
   onSync?: () => Promise<{ error?: string; message?: string }>;
 }) {
   const t = useTranslations("calendar");
@@ -84,38 +95,51 @@ export function StaffIntegrationCard({
         configured ? (
           !connected ? (
             connectAction
-          ) : inUse ? (
+          ) : (
             <>
-              {onSync && syncSuccessKey ? (
+              {inUse ? (
+                <>
+                  {onSync && syncSuccessKey ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() => run(onSync, syncSuccessKey)}
+                    >
+                      {t("googleSyncNow")}
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={pending}
+                    onClick={() => run(onStop, "stoppedUsing")}
+                  >
+                    {t("stopUsing")}
+                  </Button>
+                </>
+              ) : (
                 <Button
                   type="button"
-                  variant="outline"
                   size="sm"
                   disabled={pending}
-                  onClick={() => run(onSync, syncSuccessKey)}
+                  onClick={() => run(onUse, "nowUsing")}
                 >
-                  {t("googleSyncNow")}
+                  {t("useThis")}
                 </Button>
-              ) : null}
+              )}
               <Button
                 type="button"
-                variant="outline"
+                variant="destructive"
                 size="sm"
                 disabled={pending}
-                onClick={() => run(onStop, "stoppedUsing")}
+                onClick={() => run(onDisconnect, disconnectSuccessKey)}
               >
-                {t("stopUsing")}
+                {t("disconnect")}
               </Button>
             </>
-          ) : (
-            <Button
-              type="button"
-              size="sm"
-              disabled={pending}
-              onClick={() => run(onUse, "nowUsing")}
-            >
-              {t("useThis")}
-            </Button>
           )
         ) : null
       }

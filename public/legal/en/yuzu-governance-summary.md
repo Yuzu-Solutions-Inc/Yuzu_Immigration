@@ -29,5 +29,5 @@ Immigration files can include names, contact details, passports, questionnaires,
 ## Where to read more
 
 - Privacy Policy: `/en/privacy`  
-- Subprocessors: [yuzu-subprocessors.md](./yuzu-subprocessors.md)  
+- Subprocessors: [yuzu-subprocessors.pdf](./yuzu-subprocessors.pdf)  
 - Firm templates (DPA, EFVP, consent, incidents): listed on the Privacy Policy page

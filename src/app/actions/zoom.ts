@@ -103,6 +103,26 @@ export async function stopUsingZoomMeetingsAction(
   return { message: "stopped_meetings" };
 }
 
+export async function disconnectZoomAction(
+  locale: string,
+): Promise<ZoomActionState> {
+  const gate = await requireMember();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
+  const integrations = await getStaffBookingIntegrations(orgId, gate.user.id);
+  try {
+    if (integrations?.meeting_provider === "zoom") {
+      await clearMeetingProvider(orgId, gate.user.id);
+    }
+    await deleteZoomConnection(orgId, gate.user.id);
+  } catch (error) {
+    console.error("disconnect zoom:", error);
+    return { error: "save_failed" };
+  }
+  revalidateCalendar(locale);
+  return { message: "disconnected" };
+}
+
 async function deleteZoomConnection(orgId: string, userId: string) {
   const admin = createServiceClient();
   const { error } = await admin

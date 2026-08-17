@@ -53,7 +53,7 @@ Le cabinet reconnaît que :
 
 ## 6. Sous-traitants
 
-Le cabinet autorise les sous-traitants listés dans `yuzu-subprocessors.md`, mis à jour au besoin. Yuzu Solutions Inc. impose une protection comparable par contrat.
+Le cabinet autorise les sous-traitants listés dans `yuzu-subprocessors.pdf`, mis à jour au besoin. Yuzu Solutions Inc. impose une protection comparable par contrat.
 
 ## 7. Responsabilité
 

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import {
+  disconnectGoogleCalendarAction,
   startGoogleCalendarConnectAction,
   stopUsingGoogleCalendarAction,
   stopUsingGoogleMeetAction,
@@ -12,6 +13,7 @@ import {
   useGoogleMeetAction,
 } from "@/app/actions/google-calendar";
 import {
+  disconnectMicrosoftCalendarAction,
   startMicrosoftCalendarConnectAction,
   stopUsingMicrosoftCalendarAction,
   stopUsingMicrosoftTeamsAction,
@@ -20,6 +22,7 @@ import {
   useMicrosoftTeamsAction,
 } from "@/app/actions/microsoft-calendar";
 import {
+  disconnectZoomAction,
   startZoomConnectAction,
   stopUsingZoomMeetingsAction,
   useZoomMeetingsAction,
@@ -110,8 +113,10 @@ export function StaffCalendarIntegrations({
             label={t("googleConnect")}
           />
         }
+        disconnectSuccessKey="googleDisconnected"
         onUse={() => useGoogleCalendarAction(locale)}
         onStop={() => stopUsingGoogleCalendarAction(locale)}
+        onDisconnect={() => disconnectGoogleCalendarAction(locale)}
         onSync={() => syncGoogleCalendarNowAction(locale)}
       />
       <StaffIntegrationCard
@@ -144,8 +149,10 @@ export function StaffCalendarIntegrations({
             label={t("microsoftConnect")}
           />
         }
+        disconnectSuccessKey="microsoftDisconnected"
         onUse={() => useMicrosoftCalendarAction(locale)}
         onStop={() => stopUsingMicrosoftCalendarAction(locale)}
+        onDisconnect={() => disconnectMicrosoftCalendarAction(locale)}
         onSync={() => syncMicrosoftCalendarNowAction(locale)}
       />
     </div>
@@ -202,8 +209,10 @@ export function StaffMeetingIntegrations({
             label={t("meetConnect")}
           />
         }
+        disconnectSuccessKey="meetDisconnected"
         onUse={() => useGoogleMeetAction(locale)}
         onStop={() => stopUsingGoogleMeetAction(locale)}
+        onDisconnect={() => disconnectGoogleCalendarAction(locale)}
       />
       <StaffIntegrationCard
         locale={locale}
@@ -234,8 +243,10 @@ export function StaffMeetingIntegrations({
             label={t("teamsConnect")}
           />
         }
+        disconnectSuccessKey="teamsDisconnected"
         onUse={() => useMicrosoftTeamsAction(locale)}
         onStop={() => stopUsingMicrosoftTeamsAction(locale)}
+        onDisconnect={() => disconnectMicrosoftCalendarAction(locale)}
       />
       <StaffIntegrationCard
         locale={locale}
@@ -265,8 +276,10 @@ export function StaffMeetingIntegrations({
             label={t("zoomConnect")}
           />
         }
+        disconnectSuccessKey="zoomDisconnected"
         onUse={() => useZoomMeetingsAction(locale)}
         onStop={() => stopUsingZoomMeetingsAction(locale)}
+        onDisconnect={() => disconnectZoomAction(locale)}
       />
     </div>
   );

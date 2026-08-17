@@ -50,7 +50,7 @@ Not in product: biometric matching.
 - App compute/logs: Vercel (often United States)  
 - Email / optional calendars / meetings / payments: typically United States  
 
-See `yuzu-subprocessors.md`. Yuzu has internal extra-Québec EFVPs. **Your firm still needs its own EFVP** (`firm-efvp-template.md`).
+See `yuzu-subprocessors.pdf`. Yuzu has internal extra-Québec EFVPs. **Your firm still needs its own EFVP** (`firm-efvp-template.pdf`).
 
 ## 6. Retention
 
@@ -72,7 +72,7 @@ Yuzu maintains an incident register and will notify your firm without undue dela
 ## 9. Contracts to sign
 
 - Terms and Privacy Policy (accepted in-product)  
-- This pack’s `firm-data-processing-addendum.md` (sign before loading production client PII)
+- This pack’s `firm-data-processing-addendum.pdf` (sign before loading production client PII)
 
 ## 10. What we do not claim
 

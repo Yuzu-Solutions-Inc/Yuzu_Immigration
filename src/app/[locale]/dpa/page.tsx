@@ -1,7 +1,10 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LegalDocument } from "@/components/legal/legal-document";
-import { legalDownloadHref } from "@/lib/legal/downloads";
+import {
+  FIRM_DPA_DOWNLOAD_FILE,
+  legalDownloadHref,
+} from "@/lib/legal/downloads";
 import { FIRM_DPA_VERSION } from "@/lib/legal/dpa";
 import {
   loadFirmDpaMarkdown,
@@ -31,11 +34,8 @@ export default async function FirmDpaPage({
       <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
         {t("dpaCountersignHelp")}{" "}
         <a
-          href={legalDownloadHref(
-            "firm-data-processing-addendum.md",
-            locale,
-          )}
-          download="firm-data-processing-addendum.md"
+          href={legalDownloadHref(FIRM_DPA_DOWNLOAD_FILE, locale)}
+          download={FIRM_DPA_DOWNLOAD_FILE}
           className="text-action underline-offset-2 hover:underline"
         >
           {t("dpaDownload")}
