@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
+  requestPasswordReset,
   signInWithPassword,
   signUpWithPassword,
   type AuthActionState,
@@ -28,6 +29,8 @@ function markLegalAcceptedForOAuth() {
   document.cookie = `${LEGAL_ACCEPT_COOKIE}=1; Path=/; Max-Age=600; SameSite=Lax`;
 }
 
+type AuthMode = "signin" | "signup" | "forgot";
+
 export function LoginForm({
   locale,
   nextPath,
@@ -39,12 +42,43 @@ export function LoginForm({
   initialMode?: "signin" | "signup";
   initialError?: string;
 }) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
+
+  return (
+    <LoginFormMode
+      key={mode}
+      locale={locale}
+      nextPath={nextPath}
+      mode={mode}
+      initialError={initialError}
+      onModeChange={setMode}
+    />
+  );
+}
+
+function LoginFormMode({
+  locale,
+  nextPath,
+  mode,
+  initialError,
+  onModeChange,
+}: {
+  locale: string;
+  nextPath?: string;
+  mode: AuthMode;
+  initialError?: string;
+  onModeChange: (mode: AuthMode) => void;
+}) {
   const t = useTranslations("auth");
   const tl = useTranslations("legal");
-  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const action = mode === "signin" ? signInWithPassword : signUpWithPassword;
+  const action =
+    mode === "signin"
+      ? signInWithPassword
+      : mode === "signup"
+        ? signUpWithPassword
+        : requestPasswordReset;
   const [state, formAction, pending] = useActionState(action, initialState);
   const legalReady = privacyAccepted && termsAccepted;
 
@@ -53,6 +87,7 @@ export function LoginForm({
         invalid_credentials: t("errors.invalid"),
         password_mismatch: t("errors.passwordMismatch"),
         sign_in_failed: t("errors.signIn"),
+        email_not_confirmed: t("errors.emailNotConfirmed"),
         sign_up_failed: t("errors.signUp"),
         email_send_failed: t("errors.emailSendFailed"),
         legal_required: tl("legalRequired"),
@@ -62,12 +97,11 @@ export function LoginForm({
       : null;
 
   const awaitingVerification =
-    mode === "signup" && state.success === "check_email";
+    (mode === "signup" && state.success === "check_email") ||
+    (mode === "forgot" && state.success === "check_reset_email");
 
-  function switchMode() {
-    setPrivacyAccepted(false);
-    setTermsAccepted(false);
-    setMode(mode === "signin" ? "signup" : "signin");
+  function switchTo(next: AuthMode) {
+    onModeChange(next);
   }
 
   return (
@@ -75,12 +109,20 @@ export function LoginForm({
       <div className="space-y-3 text-center sm:text-left">
         <BrandLogo size="sm" />
         <h1 className="font-heading text-3xl font-bold tracking-tight text-brand">
-          {awaitingVerification ? t("checkEmailTitle") : t("title")}
+          {awaitingVerification
+            ? t("checkEmailTitle")
+            : mode === "forgot"
+              ? t("forgotTitle")
+              : t("title")}
         </h1>
         <p className="text-[15px] text-muted-foreground">
           {awaitingVerification
-            ? t("checkEmail", { email: state.email ?? "" })
-            : t("subtitle")}
+            ? state.success === "check_reset_email"
+              ? t("checkResetEmail", { email: state.email ?? "" })
+              : t("checkEmail", { email: state.email ?? "" })
+            : mode === "forgot"
+              ? t("forgotSubtitle")
+              : t("subtitle")}
         </p>
       </div>
 
@@ -88,13 +130,15 @@ export function LoginForm({
         {awaitingVerification ? (
           <div className="space-y-6">
             <p className="text-sm text-muted-foreground" role="status">
-              {t("checkEmailHint")}
+              {state.success === "check_reset_email"
+                ? t("checkResetEmailHint")
+                : t("checkEmailHint")}
             </p>
             <Button
               type="button"
               size="lg"
               className="w-full"
-              onClick={switchMode}
+              onClick={() => switchTo("signin")}
             >
               {t("signIn")}
             </Button>
@@ -111,22 +155,26 @@ export function LoginForm({
               />
             ) : null}
 
-            <GoogleSignInButton
-              locale={locale}
-              nextPath={nextPath}
-              disabled={mode === "signup" && !legalReady}
-              onBeforeRedirect={
-                mode === "signup" && legalReady
-                  ? markLegalAcceptedForOAuth
-                  : undefined
-              }
-            />
+            {mode === "forgot" ? null : (
+              <>
+                <GoogleSignInButton
+                  locale={locale}
+                  nextPath={nextPath}
+                  disabled={mode === "signup" && !legalReady}
+                  onBeforeRedirect={
+                    mode === "signup" && legalReady
+                      ? markLegalAcceptedForOAuth
+                      : undefined
+                  }
+                />
 
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              <span>{t("orEmail")}</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  <span>{t("orEmail")}</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+              </>
+            )}
 
             <FormStack action={formAction} gap="tight">
               <input type="hidden" name="locale" value={locale} />
@@ -175,21 +223,23 @@ export function LoginForm({
                 />
               </Field>
 
-              <Field>
-                <FieldLabel htmlFor="password" required>
-                  {t("password")}
-                </FieldLabel>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete={
-                    mode === "signin" ? "current-password" : "new-password"
-                  }
-                  minLength={8}
-                  required
-                />
-              </Field>
+              {mode === "forgot" ? null : (
+                <Field>
+                  <FieldLabel htmlFor="password" required>
+                    {t("password")}
+                  </FieldLabel>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete={
+                      mode === "signin" ? "current-password" : "new-password"
+                    }
+                    minLength={8}
+                    required
+                  />
+                </Field>
+              )}
 
               {mode === "signup" ? (
                 <Field>
@@ -219,20 +269,48 @@ export function LoginForm({
                   ? t("pleaseWait")
                   : mode === "signin"
                     ? t("signIn")
-                    : t("createAccount")}
+                    : mode === "signup"
+                      ? t("createAccount")
+                      : t("sendResetLink")}
               </Button>
             </FormStack>
 
-            <p className="text-center text-sm text-muted-foreground">
-              {mode === "signin" ? t("noAccount") : t("hasAccount")}{" "}
-              <button
-                type="button"
-                className="font-medium text-foreground underline underline-offset-4"
-                onClick={switchMode}
-              >
-                {mode === "signin" ? t("createAccount") : t("signIn")}
-              </button>
-            </p>
+            {mode === "signin" ? (
+              <p className="text-center text-sm">
+                <button
+                  type="button"
+                  className="font-medium text-foreground underline underline-offset-4"
+                  onClick={() => switchTo("forgot")}
+                >
+                  {t("forgotPassword")}
+                </button>
+              </p>
+            ) : null}
+
+            {mode === "forgot" ? (
+              <p className="text-center text-sm text-muted-foreground">
+                <button
+                  type="button"
+                  className="font-medium text-foreground underline underline-offset-4"
+                  onClick={() => switchTo("signin")}
+                >
+                  {t("signIn")}
+                </button>
+              </p>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">
+                {mode === "signin" ? t("noAccount") : t("hasAccount")}{" "}
+                <button
+                  type="button"
+                  className="font-medium text-foreground underline underline-offset-4"
+                  onClick={() =>
+                    switchTo(mode === "signin" ? "signup" : "signin")
+                  }
+                >
+                  {mode === "signin" ? t("createAccount") : t("signIn")}
+                </button>
+              </p>
+            )}
           </div>
         )}
       </SurfaceCard>

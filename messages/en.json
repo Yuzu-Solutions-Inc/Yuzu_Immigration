@@ -229,15 +229,27 @@
     "checkEmailTitle": "Check your email",
     "checkEmail": "Go to your email to verify your account. We sent a confirmation link to {email}.",
     "checkEmailHint": "After you confirm, come back here to sign in.",
+    "forgotPassword": "Forgot password?",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "We will email you a link to choose a new password.",
+    "sendResetLink": "Send reset link",
+    "checkResetEmail": "We sent a password reset link to {email}.",
+    "checkResetEmailHint": "Open the email, then choose a new password. The link expires after a short time.",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "This password is what you will use to sign in next time.",
+    "newPassword": "New password",
+    "savePassword": "Save password",
     "googleFailed": "Google sign-in failed. Enable the Google provider in Supabase, then try again.",
     "signOut": "Sign out",
     "errors": {
       "invalid": "Enter a valid email and a password with at least 8 characters.",
       "passwordMismatch": "Passwords do not match.",
       "signIn": "Could not sign in. Check your email and password.",
+      "emailNotConfirmed": "This email is not verified yet. Open the confirmation link we sent, or create the account again to get a new one.",
       "signUp": "Could not create the account. Try a different email.",
-      "emailSendFailed": "The confirmation email could not be sent. Try again in a minute.",
-      "confirm": "That confirmation link is invalid or has expired. Request a new one by creating the account again.",
+      "emailSendFailed": "The email could not be sent. Try again in a minute.",
+      "passwordUpdateFailed": "Could not save the new password. Try again.",
+      "confirm": "That link is invalid or has expired. Request a new one from the sign-in page.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -2734,6 +2746,14 @@
     "intro": "Confirm this email address to finish creating your Yuzu Immigration account.",
     "cta": "Verify email",
     "footer": "If you did not create this account, you can ignore this email."
+  },
+  "passwordResetEmail": {
+    "subject": "Reset your Yuzu Immigration password",
+    "heading": "Reset your password",
+    "greetingGeneric": "Hi,",
+    "intro": "Use this link to choose a new password for your Yuzu Immigration account.",
+    "cta": "Choose a new password",
+    "footer": "If you did not ask to reset your password, you can ignore this email."
   },
   "portalEmail": {
     "inviteSubject": "{org}: your client portal",

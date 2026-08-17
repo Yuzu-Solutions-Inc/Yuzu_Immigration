@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { routing } from "@/i18n/routing";
 import { safeInternalPath } from "@/lib/auth/next-path";
+import { PASSWORD_RESET_COOKIE } from "@/lib/auth/password-reset-cookie";
 import { isAppLocale, type AppLocale } from "@/lib/i18n/locales";
 
 function getLocaleFromPath(pathname: string): AppLocale {
@@ -32,6 +33,7 @@ export async function updateSession(request: NextRequest) {
   const { locale, pathname } = stripLocale(request.nextUrl.pathname);
 
   const isAuthRoute = pathname === "/login";
+  const isPasswordResetRoute = pathname === "/reset-password";
   const isProtectedRoute =
     pathname === "/home" ||
     pathname.startsWith("/home/") ||
@@ -50,9 +52,10 @@ export async function updateSession(request: NextRequest) {
     pathname === "/services" ||
     pathname.startsWith("/services/") ||
     pathname === "/settings" ||
-    pathname.startsWith("/settings/");
+    pathname.startsWith("/settings/") ||
+    isPasswordResetRoute;
 
-  if (!isProtectedRoute && !isAuthRoute) {
+  if (!isProtectedRoute && !isAuthRoute && !isPasswordResetRoute) {
     return supabaseResponse;
   }
 
@@ -81,6 +84,21 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = `/${locale}/login`;
     redirectUrl.searchParams.set("next", `/${locale}${pathname}`);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  }
+
+  const mustResetPassword =
+    Boolean(user) &&
+    request.cookies.get(PASSWORD_RESET_COOKIE)?.value === "1";
+
+  if (mustResetPassword && !isPasswordResetRoute) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = `/${locale}/reset-password`;
+    redirectUrl.search = "";
     const redirectResponse = NextResponse.redirect(redirectUrl);
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie.name, cookie.value);
