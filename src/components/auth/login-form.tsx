@@ -52,6 +52,7 @@ export function LoginForm({
         password_mismatch: t("errors.passwordMismatch"),
         sign_in_failed: t("errors.signIn"),
         sign_up_failed: t("errors.signUp"),
+        email_send_failed: t("errors.emailSendFailed"),
         legal_required: tl("legalRequired"),
       }[state.error] ?? t("errors.generic")
     : null;

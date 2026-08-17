@@ -3,15 +3,17 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { createClient } from "@/lib/supabase/server";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { sendSignupConfirmationEmail } from "@/lib/email/signup-confirmation";
 import { safeInternalPath } from "@/lib/auth/next-path";
 import { replacePathLocale } from "@/lib/i18n/locales";
 import {
   formAcceptedLegal,
   legalAcceptanceMetadata,
 } from "@/lib/legal/acceptance";
+import { createServiceClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -42,6 +44,59 @@ async function destForSignedInUser(fallbackPath: string) {
     fallbackPath,
     membership.organization.defaultLocale,
   );
+}
+
+async function sendSignupConfirmationLink(input: {
+  email: string;
+  password: string;
+  fullName?: string;
+  locale: "en" | "fr" | "es";
+  next: string;
+}): Promise<{ error?: string }> {
+  const admin = createServiceClient();
+  const origin = await getAppBaseUrl();
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "signup",
+    email: input.email,
+    password: input.password,
+    options: {
+      data: {
+        full_name: input.fullName,
+        ...legalAcceptanceMetadata(),
+      },
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(input.next)}`,
+    },
+  });
+
+  if (error || !data?.properties?.hashed_token) {
+    // Confirmed account already exists — do not leak that.
+    return {};
+  }
+
+  const { error: passwordError } = await admin.auth.admin.updateUserById(
+    data.user.id,
+    { password: input.password },
+  );
+  if (passwordError) {
+    console.error("signup password sync:", passwordError.message);
+  }
+
+  const tokenHash = data.properties.hashed_token;
+  const verifyType = data.properties.verification_type;
+  const confirmUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(verifyType)}&next=${encodeURIComponent(input.next)}`;
+  const sent = await sendSignupConfirmationEmail({
+    locale: input.locale,
+    to: input.email,
+    confirmUrl,
+    fullName: input.fullName,
+  });
+
+  if (!sent.sent) {
+    console.error("signup confirmation email:", sent.reason);
+    return { error: "email_send_failed" };
+  }
+
+  return {};
 }
 
 export async function signInWithPassword(
@@ -99,32 +154,21 @@ export async function signUpWithPassword(
     return { error: "legal_required" };
   }
 
-  const supabase = await createClient();
-  const origin = await getAppBaseUrl();
   const next = safeInternalPath(
     formData.get("next"),
     `/${parsed.data.locale}/home`,
   );
 
-  const { data, error } = await supabase.auth.signUp({
+  const result = await sendSignupConfirmationLink({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      data: {
-        full_name: parsed.data.fullName,
-        ...legalAcceptanceMetadata(),
-      },
-    },
+    fullName: parsed.data.fullName,
+    locale: parsed.data.locale,
+    next,
   });
 
-  if (error) {
-    return { error: "sign_up_failed" };
-  }
-
-  // If email confirmation is disabled, session exists immediately.
-  if (data.session) {
-    redirect(await destForSignedInUser(next));
+  if (result.error) {
+    return { error: result.error, email: parsed.data.email };
   }
 
   return { success: "check_email", email: parsed.data.email };

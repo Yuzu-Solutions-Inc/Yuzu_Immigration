@@ -236,6 +236,7 @@
       "passwordMismatch": "Passwords do not match.",
       "signIn": "Could not sign in. Check your email and password.",
       "signUp": "Could not create the account. Try a different email.",
+      "emailSendFailed": "The confirmation email could not be sent. Try again in a minute.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -2723,6 +2724,15 @@
       "serverConfig": "The portal is temporarily unavailable. Try again later.",
       "generic": "Something went wrong. Try again."
     }
+  },
+  "authEmail": {
+    "subject": "Verify your Yuzu Immigration account",
+    "heading": "Verify your email",
+    "greeting": "Hi {name},",
+    "greetingGeneric": "Hi,",
+    "intro": "Confirm this email address to finish creating your Yuzu Immigration account.",
+    "cta": "Verify email",
+    "footer": "If you did not create this account, you can ignore this email."
   },
   "portalEmail": {
     "inviteSubject": "{org}: your client portal",

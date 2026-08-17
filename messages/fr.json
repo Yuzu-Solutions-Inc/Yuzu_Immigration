@@ -236,6 +236,7 @@
       "passwordMismatch": "Les mots de passe ne correspondent pas.",
       "signIn": "Connexion impossible. Vérifiez l’e-mail et le mot de passe.",
       "signUp": "Impossible de créer le compte. Essayez un autre e-mail.",
+      "emailSendFailed": "L’e-mail de confirmation n’a pas pu être envoyé. Réessayez dans une minute.",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },
@@ -2723,6 +2724,15 @@
       "serverConfig": "Le portail est temporairement indisponible. Réessayez plus tard.",
       "generic": "Une erreur est survenue. Réessayez."
     }
+  },
+  "authEmail": {
+    "subject": "Vérifiez votre compte Yuzu Immigration",
+    "heading": "Vérifiez votre e-mail",
+    "greeting": "Bonjour {name},",
+    "greetingGeneric": "Bonjour,",
+    "intro": "Confirmez cette adresse e-mail pour terminer la création de votre compte Yuzu Immigration.",
+    "cta": "Vérifier l’e-mail",
+    "footer": "Si vous n’avez pas créé ce compte, vous pouvez ignorer ce message."
   },
   "portalEmail": {
     "inviteSubject": "{org} : votre portail client",

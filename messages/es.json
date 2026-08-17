@@ -236,6 +236,7 @@
       "passwordMismatch": "Las contraseñas no coinciden.",
       "signIn": "No se pudo iniciar sesión. Revisa el correo y la contraseña.",
       "signUp": "Could not create the account. Try a different email.",
+      "emailSendFailed": "No se pudo enviar el correo de confirmación. Inténtelo de nuevo en un minuto.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -2722,6 +2723,15 @@
       "serverConfig": "El portal no está disponible temporalmente. Inténtelo más tarde.",
       "generic": "Algo salió mal. Inténtelo de nuevo."
     }
+  },
+  "authEmail": {
+    "subject": "Verifique su cuenta de Yuzu Immigration",
+    "heading": "Verifique su correo",
+    "greeting": "Hola {name},",
+    "greetingGeneric": "Hola,",
+    "intro": "Confirme esta dirección de correo para terminar de crear su cuenta de Yuzu Immigration.",
+    "cta": "Verificar correo",
+    "footer": "Si no creó esta cuenta, puede ignorar este mensaje."
   },
   "portalEmail": {
     "inviteSubject": "{org}: su portal de cliente",
