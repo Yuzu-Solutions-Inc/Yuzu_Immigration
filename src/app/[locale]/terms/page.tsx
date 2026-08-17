@@ -6,6 +6,7 @@ const SECTIONS = [
   "agreement",
   "parties",
   "service",
+  "noProfessionalRelationship",
   "accounts",
   "firmDuties",
   "clientUse",
@@ -17,9 +18,12 @@ const SECTIONS = [
   "disclaimers",
   "liability",
   "indemnity",
+  "consumerRights",
   "termination",
   "changes",
   "governingLaw",
+  "language",
+  "severability",
   "contact",
 ] as const;
 

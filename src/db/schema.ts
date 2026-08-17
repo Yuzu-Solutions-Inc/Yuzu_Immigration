@@ -85,6 +85,12 @@ export const organizations = pgTable("organizations", {
   defaultLocale: text("default_locale").notNull().default("en"),
   /** Org AES key wrapped with DOCUMENT_ENCRYPTION_KEY. Never store plaintext. */
   wrappedDek: text("wrapped_dek"),
+  /** Legal/security inbox for client portal deletion requests. */
+  privacyContactEmail: text("privacy_contact_email"),
+  /** In-product Firm DPA clickwrap (Law 25 written contract). */
+  dpaAcceptedAt: timestamp("dpa_accepted_at", { withTimezone: true }),
+  dpaVersion: text("dpa_version"),
+  dpaAcceptedBy: uuid("dpa_accepted_by"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

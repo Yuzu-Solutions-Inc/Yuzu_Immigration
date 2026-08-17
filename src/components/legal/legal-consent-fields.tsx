@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { fieldControlClassName } from "@/lib/field-styles";
+import { FIRM_DPA_VERSION } from "@/lib/legal/dpa";
 import { cn } from "@/lib/utils";
 
 type LegalConsentFieldsProps = {
@@ -100,6 +101,55 @@ export function LegalConsentFields({
             .
           </>
         )}
+      </ConsentCheckbox>
+    </div>
+  );
+}
+
+/** Unchecked Firm DPA + authority-to-bind boxes for workspace creation. */
+export function FirmDpaConsentFields({
+  dpaChecked,
+  authorityChecked,
+  onDpaChange,
+  onAuthorityChange,
+  disabled,
+}: {
+  dpaChecked: boolean;
+  authorityChecked: boolean;
+  onDpaChange: (checked: boolean) => void;
+  onAuthorityChange: (checked: boolean) => void;
+  disabled?: boolean;
+}) {
+  const t = useTranslations("legal");
+
+  return (
+    <div className="space-y-3">
+      <ConsentCheckbox
+        id="dpaAccepted"
+        name="dpaAccepted"
+        checked={dpaChecked}
+        disabled={disabled}
+        onChange={onDpaChange}
+      >
+        {t("agreeDpa")}{" "}
+        <Link
+          href="/dpa"
+          target="_blank"
+          rel="noreferrer"
+          className="text-action underline-offset-2 hover:underline"
+        >
+          {t("dpaName")}
+        </Link>{" "}
+        {t("dpaVersionNote", { version: FIRM_DPA_VERSION })}
+      </ConsentCheckbox>
+      <ConsentCheckbox
+        id="dpaAuthority"
+        name="dpaAuthority"
+        checked={authorityChecked}
+        disabled={disabled}
+        onChange={onAuthorityChange}
+      >
+        {t("agreeDpaAuthority")}
       </ConsentCheckbox>
     </div>
   );

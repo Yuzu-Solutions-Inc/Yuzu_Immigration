@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
+import { LegalDownloads } from "@/components/legal/legal-downloads";
 import { LegalLinks } from "@/components/legal/legal-links";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { canAdministerOrg } from "@/lib/auth/rbac";
@@ -76,6 +77,8 @@ export default async function SecuritySettingsPage({
         <p className="text-sm text-muted-foreground">{t("securityHelp")}</p>
         <LegalLinks className="pt-1" />
       </div>
+
+      <LegalDownloads headingId="security-legal-downloads" />
 
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-brand">

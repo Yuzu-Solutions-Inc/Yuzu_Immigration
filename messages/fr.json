@@ -244,12 +244,17 @@
     "orgNamePlaceholder": "Immigration Étoile du Nord",
     "orgSlug": "Identifiant d’espace",
     "orgSlugHelp": "Utilisé dans les liens. Lettres minuscules, chiffres et tirets.",
+    "privacyContactEmail": "Courriel juridique ou de sécurité",
+    "privacyContactEmailPlaceholder": "confidentialite@votre-cabinet.com",
+    "privacyContactEmailHelp": "Les demandes de suppression du portail client sont envoyées ici. Utilisez une boîte que le cabinet surveille.",
+    "dpaHelp": "C’est le contrat écrit de sous-traitance avec Yuzu Solutions Inc. Une copie contresignée est facultative — écrivez à privacy@yuzu.solutions si votre cabinet en a besoin.",
     "create": "Créer l’organisation",
     "creating": "Création…",
     "errors": {
-      "invalid": "Entrez un nom et un identifiant valides.",
+      "invalid": "Entrez un nom, un identifiant et un courriel de contact valides.",
       "slugTaken": "Cet identifiant est déjà pris. Essayez-en un autre.",
       "createFailed": "Impossible de créer l’organisation. Réessayez.",
+      "dpaRequired": "Ouvrez l’avenant, puis cochez les deux cases pour lier votre cabinet.",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },
@@ -483,7 +488,7 @@
       "supporting": "Déclarations complémentaires",
       "checklists": "Listes de contrôle"
     },
-    "organizationHelp": "Nom du cabinet, identifiant de l’espace, langue par défaut et invitations du personnel.",
+    "organizationHelp": "Nom du cabinet, identifiant de l’espace, langue par défaut, contact de confidentialité et invitations du personnel.",
     "squareTitle": "Paiements Square",
     "squareHelp": "Connectez Square pour encaisser les services tarifés et les liens de paiement de dossier.",
     "squareConnect": "Connecter Square",
@@ -527,7 +532,7 @@
       "invalid_policy": "Le délai d’annulation gratuite doit être supérieur au délai avec frais.",
       "no_location": "Votre compte Square doit avoir un emplacement actif."
     },
-    "securityHelp": "Actions sensibles récentes dans l’espace du cabinet (admins seulement).",
+    "securityHelp": "Actions sensibles récentes dans l’espace du cabinet (admins seulement). Téléchargez ci-dessous les modèles Loi 25 et LPRPDE pour votre pratique.",
     "securityForbidden": "Seuls les administrateurs peuvent consulter le journal d’audit.",
     "securityEmpty": "Aucun événement audité pour le moment.",
     "securityAuditHeading": "Journal d’audit",
@@ -563,6 +568,15 @@
     "orgSlugHelp": "Lettres minuscules, chiffres et tirets.",
     "orgDefaultLocale": "Langue par défaut",
     "orgDefaultLocaleHelp": "Langue par défaut de l’espace et des rappels de rendez-vous lorsqu’il n’existe pas de version dans la langue préférée du client. Le personnel peut toujours changer de langue dans l’application.",
+    "privacyContactTitle": "Contact juridique et de sécurité",
+    "privacyContactEmail": "Courriel juridique ou de sécurité",
+    "privacyContactEmailHelp": "Obligatoire. Les demandes de suppression du portail client sont envoyées à cette adresse.",
+    "dpaTitle": "Avenant de traitement",
+    "dpaHelp": "Un administrateur du cabinet doit accepter cet avenant pour lier le cabinet. Ce clic est le contrat écrit. Une copie manuscrite ou DocuSign est facultative.",
+    "dpaAcceptedMeta": "Accepté le {date} (version {version}).",
+    "dpaAcceptedNow": "Avenant accepté (version {version}).",
+    "dpaAcceptCta": "Accepter l’avenant",
+    "dpaAccepting": "Enregistrement…",
     "repTitle": "Représentant (IMM 5476)",
     "repHelp": "Vos coordonnées de consultant pour le IMM 5476. Utilisées sur les dossiers où vous êtes le représentant assigné.",
     "repFamilyName": "Nom de famille",
@@ -581,7 +595,6 @@
     "save": "Enregistrer",
     "saving": "Enregistrement…",
     "saved": "Enregistré.",
-    "team": "Équipe",
     "teamHelp": "Invitez le personnel par courriel et attribuez Admin, Consultant ou Adjoint.",
     "inviteEmail": "Courriel",
     "inviteRole": "Rôle",
@@ -612,6 +625,7 @@
       "lastAdmin": "L’organisation doit conserver au moins un admin.",
       "cannotRemoveSelf": "Vous ne pouvez pas vous retirer vous-même.",
       "notFound": "Ce membre ou cette invitation est introuvable.",
+      "dpaRequired": "Ouvrez l’avenant, puis cochez les deux cases pour lier votre cabinet.",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },
@@ -1814,7 +1828,7 @@
     "privacyLink": "Confidentialité",
     "privacyTitle": "Politique de confidentialité",
     "privacyUpdated": "Dernière mise à jour : 16 août 2026",
-    "privacyIntro": "Yuzu Immigration est un logiciel de gestion de pratique exploité par Yuzu Solutions pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez Yuzu Immigration — y compris l’espace de travail du cabinet, les liens de partage, le portail client et les pages de réservation publiques. L’utilisation du service est aussi régie par nos conditions générales. Elle vise à appuyer l’obligation de rendre compte prévue par la LPRPDE. Elle ne constitue ni une certification ni un avis juridique.",
+    "privacyIntro": "Yuzu Immigration est un logiciel de gestion de pratique exploité par Yuzu Solutions Inc. pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez Yuzu Immigration — y compris l’espace de travail du cabinet, les liens de partage, le portail client et les pages de réservation publiques. L’utilisation du service est aussi régie par nos conditions générales.\n\nCette politique appuie l’obligation de rendre compte prévue par la LPRPDE et par la Loi sur la protection des renseignements personnels dans le secteur privé du Québec (Loi 25). Elle ne constitue ni une certification, ni un avis juridique, ni un mandat d’immigration avec Yuzu Solutions Inc.",
     "backHome": "Retour à l’accueil",
     "consentTitle": "Utilisation de vos renseignements",
     "consentSummary": "Vos renseignements personnels et documents sont partagés afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans Yuzu Immigration.",
@@ -1823,149 +1837,243 @@
     "termsLink": "Conditions",
     "termsTitle": "Conditions générales",
     "termsUpdated": "Dernière mise à jour : 16 août 2026",
-    "termsIntro": "Ces conditions régissent l’utilisation de Yuzu Immigration, logiciel de gestion de pratique exploité par Yuzu Solutions. Elles s’appliquent aux cabinets et à leur personnel, ainsi qu’aux clients et aux personnes qui réservent via les liens d’un cabinet. Elles ne constituent pas un avis juridique ni un mandat d’immigration avec Yuzu Solutions.",
+    "termsIntro": "Ces conditions régissent l’utilisation de Yuzu Immigration, logiciel de gestion de pratique exploité par Yuzu Solutions Inc. Elles s’appliquent aux cabinets et à leur personnel, ainsi qu’aux clients et aux personnes qui réservent via les liens d’un cabinet.\n\nElles ne constituent pas un avis juridique. Elles ne créent pas de mandat, d’engagement ni de relation professionnelle avec Yuzu Solutions Inc. pour des services de consultation, de représentation ou des services juridiques en immigration. Les services d’immigration sont fournis uniquement par le cabinet avec lequel vous transigez.",
     "termsName": "Conditions générales",
     "privacyName": "Politique de confidentialité",
     "agreeTerms": "J’ai lu et j’accepte les",
     "agreePrivacy": "J’ai lu et j’accepte la",
+    "dpaTitle": "Avenant relatif au traitement des données",
+    "dpaName": "l’avenant relatif au traitement des données",
+    "dpaUpdated": "Version {version} · Dernière mise à jour : 16 août 2026",
+    "agreeDpa": "J’ai lu et j’accepte",
+    "dpaVersionNote": "(version {version}).",
+    "agreeDpaAuthority": "J’ai le pouvoir de lier ce cabinet à cet avenant.",
+    "dpaDownload": "Télécharger l’avenant",
+    "dpaCountersignHelp": "Si votre cabinet a besoin d’une copie manuscrite ou DocuSign, téléchargez l’avenant et envoyez-le à privacy@yuzu.solutions.",
     "legalRequired": "Acceptez les conditions générales et la politique de confidentialité pour continuer.",
     "acceptTitle": "Accepter pour continuer",
     "acceptSubtitle": "Pour créer votre compte Yuzu Immigration, vous devez accepter les deux documents.",
     "acceptCta": "Accepter et continuer",
     "accepting": "Enregistrement…",
     "acceptFailed": "Impossible d’enregistrer votre acceptation. Réessayez.",
-    "consentBody": "En continuant, vous fournissez des renseignements personnels et des documents afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans Yuzu Immigration. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier dans son espace de travail ; Yuzu Solutions les traite pour exploiter la plateforme. Les précisions sur le courriel, l’agenda et l’hébergement figurent dans notre politique de confidentialité.",
+    "consentBody": "En continuant, vous fournissez des renseignements personnels — qui peuvent inclure des renseignements sensibles d’identité, d’immigration, de famille et de documents — afin que ce cabinet puisse préparer et gérer votre dossier ou rendez-vous dans Yuzu Immigration. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier. Yuzu Solutions Inc. les traite pour exploiter la plateforme, y compris avec des fournisseurs pouvant être hors Québec, comme le décrit la politique de confidentialité. L’analytique facultative est désactivée tant que vous ne l’acceptez pas.",
     "sections": {
       "controller": {
         "title": "1. Responsables",
-        "body": "Votre cabinet (l’organisation qui a un espace Yuzu Immigration) décide pourquoi et comment les renseignements personnels des clients sont traités pour ses services d’immigration. Ce cabinet est généralement responsable du dossier client.\n\nYuzu Solutions exploite le logiciel et traite ces renseignements selon les instructions du cabinet, à titre de fournisseur de services. Yuzu Solutions est responsable des renseignements de compte du personnel que nous utilisons pour exploiter le service (nom, courriel et identifiants d’authentification).\n\nSi vous prenez rendez-vous ou remplissez un formulaire via le lien d’un cabinet, vous communiquez des renseignements à ce cabinet. Yuzu Solutions les héberge et les traite pour que le cabinet puisse utiliser Yuzu Immigration."
+        "body": "Votre cabinet (l’organisation qui a un espace Yuzu Immigration) décide pourquoi et comment les renseignements personnels des clients sont traités pour ses services d’immigration. Ce cabinet est l’organisation responsable du dossier client.\n\nYuzu Solutions Inc. exploite le logiciel et traite les renseignements des clients et des personnes qui réservent selon les instructions du cabinet, à titre de fournisseur de services. Yuzu Solutions Inc. est responsable des renseignements de compte du personnel qu’elle utilise pour exploiter le service (nom, courriel, identifiants d’authentification et données opérationnelles similaires).\n\nSi vous prenez rendez-vous ou remplissez un formulaire via le lien d’un cabinet, vous communiquez des renseignements à ce cabinet. Yuzu Solutions Inc. les héberge et les traite pour que le cabinet puisse utiliser le logiciel. Les questions sur les conseils d’immigration, les mandats, les honoraires ou l’utilisation de votre dossier par le cabinet doivent être adressées au cabinet — et non à Yuzu Solutions Inc. comme représentant."
+      },
+      "officer": {
+        "title": "2. Responsable de la protection des renseignements personnels",
+        "body": "La personne responsable de la protection des renseignements personnels chez Yuzu Solutions Inc. est Adrien Yvin, privacy@yuzu.solutions.\n\nCe contact est publié comme l’exige la Loi 25 du Québec. Vous pouvez écrire à la même adresse pour les demandes LPRPDE concernant la plateforme. Si vous êtes client d’un cabinet, contactez d’abord ce cabinet au sujet de votre dossier d’immigration."
       },
       "purposes": {
-        "title": "2. Fins",
-        "body": "Nous traitons les renseignements personnels afin de :\n• Fournir le CRM, les questionnaires, la préparation de formulaires, le dépôt de documents, les liens de partage, le portail client, le calendrier et la réservation publique\n• Authentifier le personnel et, si le cabinet l’active, l’accès au portail client\n• Envoyer les confirmations de rendez-vous, les liens de modification ou d’annulation, et les rappels configurés par le cabinet\n• Synchroniser les plages occupées et les rendez-vous avec Google Agenda ou Outlook lorsqu’un consultant les connecte, et créer un lien Google Meet, Microsoft Teams ou Zoom lorsque cet outil de réunion est choisi\n• Assurer la sécurité, prévenir les abus de réservation, tenir des journaux d’audit et exploiter le service\n• Respecter les obligations légales applicables à Yuzu Solutions comme fournisseur de services\n\nNous ne vendons pas les renseignements personnels. Nous n’utilisons pas le contenu des dossiers à des fins publicitaires."
+        "title": "3. Fins",
+        "body": "Nous traitons les renseignements personnels afin de :\n• Fournir le CRM, les questionnaires, la préparation de formulaires, le dépôt de documents, les liens de partage, le portail client, le calendrier et la réservation publique\n• Authentifier le personnel et, si le cabinet l’active, l’accès au portail client\n• Envoyer les confirmations de rendez-vous, les liens de modification ou d’annulation, et les rappels configurés par le cabinet\n• Synchroniser les plages occupées et les rendez-vous avec Google Agenda ou Outlook lorsqu’un consultant les connecte, et créer un lien Google Meet, Microsoft Teams ou Zoom lorsque cet outil de réunion est choisi\n• Assurer la sécurité, prévenir les abus de réservation, tenir des journaux d’audit et exploiter le service\n• Respecter les obligations légales applicables à Yuzu Solutions Inc. comme fournisseur de services et comme entreprise\n\nNous ne vendons pas les renseignements personnels. Nous n’utilisons pas le contenu des dossiers à des fins publicitaires. Nous n’utilisons pas les renseignements à de nouvelles fins sans avis et, lorsque la loi l’exige, un nouveau consentement."
       },
       "collection": {
-        "title": "3. Ce que nous recueillons",
-        "body": "Selon l’utilisation du produit, cela peut inclure :\n\nPersonnel et cabinet : nom, courriel, rôle, champs de profil de représentant utilisés pour le IMM 5476, identifiants d’authentification, langue par défaut du cabinet et — si un consultant connecte Google Agenda, Outlook, Google Meet, Teams ou Zoom — le courriel du compte connecté.\n\nClients et personnes qui réservent : prénom, nom, courriel, téléphone, adresse (lorsque demandée à la réservation), langue préférée, champs de statut d’immigration saisis par le cabinet, réponses aux questionnaires, questions supplémentaires d’un formulaire de réservation, documents justificatifs, notes de consultation et fichiers de formulaires générés.\n\nRendez-vous : horaire, service, consultant, moment de l’acceptation de l’avis de confidentialité, liens de réunion lorsqu’ils sont créés (Google Meet, Microsoft Teams ou Zoom), identifiants de réunion Zoom ou Teams, et hachage du courriel et de l’adresse IP uniquement pour limiter les abus sur la page publique.\n\nAgenda et réunions (seulement si un consultant les connecte) : jetons OAuth chiffrés ; le courriel du compte connecté ; plages occupées et titres d’événements de Google Agenda ou Outlook ; et URL de réunion. Les nouveaux rendez-vous y sont inscrits avec le nom, le courriel et le téléphone de la personne. Si Zoom est l’outil de réunion, nous créons une réunion Zoom sur le compte du consultant (titre et horaire), puis stockons l’identifiant et le lien. Nous n’envoyons pas le courriel de la personne comme inscrit Zoom, n’accédons pas aux enregistrements infonuagiques, au clavardage ni au téléphone Zoom, et n’utilisons pas les données Zoom à des fins publicitaires.\n\nTechnique : journaux d’audit de sécurité (y compris l’adresse IP et l’agent utilisateur du navigateur pour certaines actions), hachages d’IP et de courriel pour le contrôle des abus (environ 14 jours), et mesures anonymes d’utilisation et de performance.\n\nLes cabinets ne doivent recueillir que ce qui est nécessaire au mandat. Les questions supplémentaires de réservation sont stockées avec le rendez-vous."
+        "title": "4. Ce que nous recueillons",
+        "body": "Selon l’utilisation du produit, cela peut inclure :\n\nPersonnel et cabinet : nom, courriel, rôle, champs de profil de représentant utilisés pour le IMM 5476, identifiants d’authentification, langue par défaut du cabinet et — si un consultant connecte Google Agenda, Outlook, Google Meet, Teams ou Zoom — le courriel du compte connecté.\n\nClients et personnes qui réservent : prénom, nom, courriel, téléphone, adresse (lorsque demandée à la réservation), langue préférée, champs de statut d’immigration saisis par le cabinet, réponses aux questionnaires, questions supplémentaires d’un formulaire de réservation, documents justificatifs (par exemple un passeport), notes de consultation et fichiers de formulaires générés. Les dossiers d’immigration comprennent souvent des renseignements sensibles et peuvent inclure des membres de la famille, y compris des mineurs.\n\nRendez-vous : horaire, service, consultant, moment de l’acceptation de l’avis de confidentialité, liens de réunion, identifiants de réunion Zoom ou Teams, et hachage du courriel et de l’adresse IP uniquement pour limiter les abus sur la page publique.\n\nAgenda et réunions (seulement si un consultant les connecte) : jetons OAuth chiffrés ; le courriel du compte connecté ; plages occupées et titres d’événements ; et URL de réunion. Les nouveaux rendez-vous y sont inscrits avec le nom, le courriel et le téléphone de la personne. Si Zoom est l’outil de réunion, nous créons une réunion Zoom sur le compte du consultant (titre et horaire), puis stockons l’identifiant et le lien. Nous n’envoyons pas le courriel de la personne comme inscrit Zoom, n’accédons pas aux enregistrements infonuagiques, au clavardage ni au téléphone Zoom, et n’utilisons pas les données Zoom à des fins publicitaires.\n\nTechnique : journaux d’audit de sécurité (y compris l’adresse IP et l’agent utilisateur pour certaines actions), hachages d’IP et de courriel pour le contrôle des abus (environ 14 jours), et — seulement si vous y consentez — des mesures d’utilisation et de performance.\n\nLes cabinets ne doivent recueillir que ce qui est nécessaire au mandat. Nous n’exploitons pas de système d’identification biométrique."
       },
       "legalBasis": {
-        "title": "4. Consentement et avis",
-        "body": "Les cabinets sont responsables d’obtenir un consentement valable lorsque la loi l’exige, et d’expliquer leurs mandats et pratiques de confidentialité — y compris les devoirs de la Loi 25 du Québec le cas échéant.\n\nLe personnel (consultants et autres utilisateurs du cabinet) doit accepter la présente politique de confidentialité et les conditions générales lors de la création d’un compte Yuzu Immigration. Les liens de partage exigent les deux cases à cocher lorsque le client définit pour la première fois le mot de passe du lien. La réservation publique exige les deux cases avant l’envoi. Cocher ces cases constitue un consentement au traitement décrit ici pour ce compte, ce dossier ou ce rendez-vous, sous réserve des instructions du cabinet et de la loi applicable.\n\nVous pouvez refuser en ne créant pas de compte, en n’utilisant pas le lien ou en ne réservant pas. Vous pouvez demander au cabinet de retirer le consentement ou de supprimer des renseignements, sous réserve des règles professionnelles de conservation. Certains traitements (journaux de sécurité et conservation légale) peuvent se poursuivre lorsque la loi le permet."
+        "title": "5. Consentement et avis",
+        "body": "Les cabinets sont responsables d’obtenir un consentement valable lorsque la loi l’exige — y compris un consentement exprès pour les renseignements sensibles et, au Québec, l’autorisation d’un parent ou tuteur avant de recueillir des renseignements sur un enfant de moins de 14 ans — et d’expliquer leurs mandats et pratiques de confidentialité.\n\nLe personnel doit accepter la présente politique et les conditions générales lors de la création d’un compte. Les liens de partage exigent les deux cases lorsque le client définit pour la première fois le mot de passe du lien. La réservation publique exige les deux cases avant l’envoi. Cocher ces cases constitue un consentement au traitement décrit ici, sous réserve des instructions du cabinet et de la loi. Ces cases ne sont pas précochées.\n\nLes outils d’agenda, de réunion et de paiement sont désactivés tant qu’un membre du personnel ou le cabinet ne les connecte pas. Les connecter constitue une instruction de communication à ce fournisseur. L’analytique facultative est désactivée tant que vous ne l’acceptez pas dans la bannière de témoins.\n\nVous pouvez refuser en ne créant pas de compte, en n’utilisant pas le lien ou en ne réservant pas. Vous pouvez demander au cabinet de retirer le consentement ou de supprimer des renseignements, sous réserve des règles professionnelles de conservation. Certains traitements (journaux de sécurité et conservation légale) peuvent se poursuivre lorsque la loi le permet."
+      },
+      "governance": {
+        "title": "6. Gouvernance",
+        "body": "Yuzu Solutions Inc. tient des politiques sur la collecte, l’utilisation, l’accès, la conservation, la destruction, les incidents de confidentialité et les fournisseurs. Un résumé en langage clair et des modèles connexes peuvent être téléchargés depuis cette page et depuis Paramètres → Sécurité dans l’espace d’un cabinet.\n\nLes cabinets demeurent responsables de leur propre gouvernance envers leurs clients, y compris une évaluation des facteurs relatifs à la vie privée lorsque la Loi 25 l’exige."
       },
       "safeguards": {
-        "title": "5. Mesures de protection",
-        "body": "Nous appliquons des mesures proportionnées à la sensibilité des dossiers d’immigration, notamment :\n• Chiffrement en transit (TLS)\n• Chiffrement au repos côté infrastructure pour la base de données, l’authentification et le stockage de fichiers\n• AES-256-GCM au niveau applicatif pour les documents clients et pour plusieurs champs (noms, courriels, téléphones, notes, réponses aux questionnaires, coordonnées des personnes qui réservent), avec une clé distincte par cabinet\n• Certains champs opérationnels ne reçoivent pas ce chiffrement applicatif (par exemple la langue préférée, les libellés de statut d’immigration, les horaires de rendez-vous et les métadonnées d’audit)\n• Contrôles d’accès limités à chaque cabinet ; les adjoints ne voient que les dossiers qui leur sont partagés\n• Privilèges service_role de la base de données limités à des chemins serveur\n• Liens de réservation et de partage identifiés par des jetons difficiles à deviner ; les limites de débit utilisent un hachage du courriel et de l’IP\n• Mots de passe du personnel gérés par Supabase Auth ; mots de passe du portail client stockés dans un schéma privé et vérifiés seulement côté serveur\n\nLe personnel Yuzu qui détient la clé d’enveloppe de la plateforme peut techniquement déchiffrer les clés des cabinets pour exploiter et restaurer le service. Nous limitons cet accès sur le plan opérationnel. Aucune méthode n’est parfaitement sûre."
+        "title": "7. Mesures de protection",
+        "body": "Nous appliquons des mesures proportionnées à la sensibilité des dossiers d’immigration, notamment :\n• Chiffrement en transit (TLS)\n• Chiffrement au repos côté infrastructure pour la base de données, l’authentification et le stockage de fichiers\n• AES-256-GCM au niveau applicatif pour les documents clients et pour plusieurs champs, avec une clé distincte par cabinet\n• Certains champs opérationnels ne reçoivent pas ce chiffrement applicatif (par exemple la langue préférée, les libellés de statut, les horaires de rendez-vous et les métadonnées d’audit)\n• Contrôles d’accès limités à chaque cabinet ; les adjoints ne voient que les dossiers qui leur sont partagés (paramètres de plus haute confidentialité par défaut pour ce rôle)\n• Privilèges service_role limités à des chemins serveur\n• Liens identifiés par des jetons difficiles à deviner ; limites de débit par hachage du courriel et de l’IP\n• Mots de passe du personnel gérés par Supabase Auth ; mots de passe du portail vérifiés seulement côté serveur\n\nLe personnel Yuzu qui détient la clé d’enveloppe de la plateforme peut techniquement déchiffrer les clés des cabinets pour exploiter, restaurer ou sécuriser le service, ou pour respecter la loi. Nous limitons cet accès sur le plan opérationnel. Aucune méthode n’est parfaitement sûre. Vous utilisez le service en comprenant ce risque résiduel."
       },
       "retention": {
-        "title": "6. Conservation",
-        "body": "Les dossiers clients et projets restent tant que l’espace de travail du cabinet est actif. À la fermeture d’un dossier, le produit fixe une date de conservation de six ans pour appuyer les devoirs typiques du Collège des consultants en immigration et en citoyenneté.\n\nSupprimer une personne ou un projet dans l’espace de travail efface les renseignements personnels de ce dossier dans l’application : identité et coordonnées, notes, documents téléversés, réponses au questionnaire, liens de partage, accès au portail et rendez-vous liés (y compris une tentative de suppression de l’événement Google Agenda ou Outlook correspondant et de toute réunion Zoom ou Teams créée pour ce rendez-vous). Déconnecter Zoom dans les paramètres supprime les jetons OAuth Zoom de ce membre du personnel dans Yuzu Immigration. Les personnes qui restent sur un autre dossier du cabinet sont conservées. Après la date de conservation, un administrateur du cabinet peut détruire un dossier fermé de la même façon. Une fiche projet vide (sans renseignements personnels) et une inscription chiffrée au registre de destruction (nom du client et résumé du service) sont conservées pour le dossier professionnel du cabinet. Les journaux d’audit de ce dossier ou de cette personne sont conservés comme preuve de l’action, sans adresse IP, agent utilisateur ni métadonnées d’événement.\n\nLes événements d’abus hachés sont supprimés après environ 14 jours, et aussi pour le courriel d’une personne effacée.\n\nLes courriels déjà envoyés, les copies d’événements ou de réunions détenues par Google, Microsoft ou Zoom, et les copies de sauvegarde ou de reprise ponctuelle peuvent survivre à une suppression dans l’application jusqu’à leur expiration. Les cabinets demeurent responsables de leurs devoirs professionnels de conservation et de destruction."
+        "title": "8. Conservation et destruction",
+        "body": "Les dossiers restent tant que l’espace de travail du cabinet est actif. À la fermeture d’un dossier, le produit fixe une date de conservation de six ans pour appuyer les devoirs typiques du Collège des consultants en immigration et en citoyenneté. Cette conservation professionnelle est une fin documentée. Un client peut demander au cabinet de supprimer ses renseignements (y compris depuis Sécurité dans le portail). Le cabinet ne peut généralement pas détruire un dossier fermé avant l’écoulement de ces six ans. Lorsque les fins sont atteintes, la Loi 25 du Québec exige la destruction ou l’anonymisation.\n\nSupprimer une personne ou un projet dans l’espace de travail efface les renseignements personnels de ce dossier dans l’application, comme le décrit la politique antérieure (identité, notes, documents, questionnaires, liens, portail, rendez-vous, tentative de suppression des événements d’agenda et réunions). Après la date de conservation, un administrateur peut détruire un dossier fermé. Une fiche projet vide et une inscription chiffrée au registre de destruction sont conservées pour le dossier professionnel. Les journaux d’audit sont conservés comme preuve de l’action, sans IP, agent utilisateur ni métadonnées d’événement.\n\nLes événements d’abus hachés sont supprimés après environ 14 jours.\n\nLes courriels déjà envoyés, les copies chez Google, Microsoft ou Zoom, et les sauvegardes ou reprises ponctuelles peuvent survivre à une suppression dans l’application jusqu’à leur expiration. Les cabinets demeurent responsables de leurs devoirs professionnels de conservation et de destruction."
       },
       "sharing": {
-        "title": "7. Communication et fournisseurs",
-        "body": "Nous utilisons ces fournisseurs pour exploiter Yuzu Immigration :\n• Supabase (Canada) — base de données, authentification et stockage de fichiers\n• Vercel — hébergement de l’application, Web Analytics et Speed Insights\n• Resend — courriel transactionnel lorsque l’envoi est configuré (confirmations, rappels et liens de gestion)\n• Google — seulement si un membre du personnel se connecte avec Google, ou si un consultant connecte Google Agenda ou Google Meet (OAuth, événements d’agenda et liens Meet)\n• Microsoft — seulement si un consultant connecte Outlook ou Microsoft Teams (OAuth, événements d’agenda et liens Teams)\n• Zoom — seulement si un consultant connecte Zoom (OAuth, création/mise à jour/suppression de réunions, courriel du compte et liens de participation)\n\nCes fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet (par exemple l’envoi d’un rappel rédigé par le cabinet).\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone), et nous recevons les plages occupées et les titres d’événements. Lorsque Zoom est connecté, Zoom reçoit le titre et l’horaire de la réunion sur le compte Zoom du consultant et renvoie un lien de participation ; les personnes rejoignent la réunion avec ce lien."
+        "title": "9. Communication et fournisseurs",
+        "body": "Nous utilisons ces fournisseurs pour exploiter Yuzu Immigration :\n• Supabase (Canada) — base de données, authentification et fichiers\n• Vercel — hébergement applicatif, journaux, et Web Analytics / Speed Insights facultatifs\n• Resend — courriel transactionnel lorsque l’envoi est configuré\n• Google — seulement si un membre du personnel se connecte avec Google, ou connecte Google Agenda ou Meet\n• Microsoft — seulement si un consultant connecte Outlook ou Teams\n• Zoom — seulement si un consultant connecte Zoom\n• Square — seulement si le cabinet connecte les paiements\n\nUne liste à jour peut être téléchargée depuis cette page. Ces fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet.\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone)."
       },
       "transfers": {
-        "title": "8. Lieu de traitement",
-        "body": "Les données applicatives principales (base de données, authentification et fichiers) sont hébergées au Canada (AWS Canada Central, via Supabase).\n\nL’application est hébergée chez Vercel. Le calcul, les journaux, Web Analytics et Speed Insights peuvent être traités hors du Canada, y compris aux États-Unis.\n\nLe courriel transactionnel via Resend, ainsi que Google, Microsoft ou Zoom lorsqu’un membre du personnel les connecte, sont traités par ces fournisseurs hors du Canada.\n\nSi vous êtes au Québec, certains renseignements personnels peuvent donc être communiqués à l’extérieur du Québec. Les cabinets demeurent responsables de leurs propres évaluations de transfert lorsque la Loi 25 l’exige."
+        "title": "10. Lieu de traitement",
+        "body": "Les données applicatives principales (base de données, authentification et fichiers) sont hébergées au Canada (AWS Canada Central — Montréal — via Supabase).\n\nL’application est hébergée chez Vercel. Le calcul et les journaux peuvent être traités hors du Canada, y compris aux États-Unis. L’analytique facultative, si vous l’acceptez, peut aussi y être traitée.\n\nLe courriel via Resend, ainsi que Google, Microsoft, Zoom ou Square lorsqu’ils sont connectés, sont traités par ces fournisseurs hors du Canada.\n\nSi vous êtes au Québec, certains renseignements personnels peuvent donc être communiqués à l’extérieur du Québec. Yuzu Solutions Inc. a évalué ces communications en vertu de la Loi 25. Les cabinets qui activent un agenda, une réunion ou un paiement nous instruisent d’envoyer les renseignements concernés à ce fournisseur et demeurent responsables de leurs propres évaluations de transfert lorsque la loi l’exige."
       },
       "cookies": {
-        "title": "9. Témoins et données d’utilisation",
-        "body": "Des témoins essentiels conservent une session authentifiée (personnel ou portail client) et quelques préférences d’interface, comme l’état replié de la barre latérale. La langue de la page vient de l’URL.\n\nVercel Web Analytics et Speed Insights recueillent des données anonymes de pages vues et de performance pour nous aider à exploiter le produit. Elles ne servent pas à vendre de la publicité."
+        "title": "11. Témoins et données d’utilisation",
+        "body": "Des témoins essentiels conservent une session authentifiée (personnel ou portail client) et quelques préférences d’interface, comme l’état replié de la barre latérale. La langue de la page vient de l’URL. Ces témoins sont nécessaires au service.\n\nVercel Web Analytics et Speed Insights sont facultatifs. Ils recueillent des données de pages vues et de performance pour nous aider à exploiter le produit. Ils ne servent pas à vendre de la publicité. Ils sont désactivés tant que vous ne les acceptez pas dans la bannière. Vous pouvez refuser. Les paramètres de plus haute confidentialité sont le défaut : l’analytique reste éteinte sauf opt-in."
       },
       "rights": {
-        "title": "10. Vos droits",
-        "body": "Sous réserve de la LPRPDE et des autres lois applicables, les personnes peuvent demander l’accès, la correction, la suppression ou des renseignements sur le traitement de leurs données.\n\nLes clients et les personnes qui réservent devraient d’abord contacter le cabinet. Les liens de modification ou d’annulation du courriel de confirmation restent utilisables tant qu’ils sont valides. Les administrateurs du cabinet peuvent utiliser les outils d’export du produit (export JSON d’une personne et ZIP du dossier) et, lorsque la conservation professionnelle le permet, supprimer une personne ou détruire un dossier fermé. La suppression dans le produit est décrite à la section 6.\n\nVous pouvez aussi contacter Yuzu Solutions ci-dessous. Vous pouvez déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada et, au Québec, auprès de la Commission d’accès à l’information."
+        "title": "12. Vos droits",
+        "body": "Sous réserve de la LPRPDE, de la Loi 25 du Québec et des autres lois applicables, les personnes peuvent demander l’accès, la correction, la suppression, une copie portable des renseignements personnels informatisés (dans un format technologique structuré et couramment utilisé), ou des informations sur le traitement. Nous visons à répondre dans un délai de 30 jours.\n\nLes clients qui utilisent le portail peuvent ouvrir Sécurité. Ils peuvent y télécharger une copie de leurs renseignements et de ceux des autres personnes sur les dossiers auxquels ils sont liés, et envoyer une demande de suppression au contact juridique ou de sécurité du cabinet. Cette demande n’est pas un effacement immédiat : le Collège des consultants en immigration et en citoyenneté exige de conserver un dossier fermé pendant six ans après sa fermeture. Tant que ce délai n’est pas écoulé, le cabinet ne peut généralement pas détruire le dossier. Ensuite, un administrateur peut le détruire comme le décrit la section 8.\n\nLes clients et les personnes qui réservent peuvent aussi contacter le cabinet directement. Les liens de modification ou d’annulation du courriel de confirmation restent utilisables tant qu’ils sont valides. Les administrateurs du cabinet peuvent utiliser les outils d’export du produit (JSON d’une personne et ZIP du dossier) et, lorsque la conservation professionnelle le permet, supprimer une personne ou détruire un dossier fermé.\n\nVous pouvez aussi contacter Yuzu Solutions Inc. ci-dessous. Vous pouvez déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada et, au Québec, auprès de la Commission d’accès à l’information."
       },
       "breach": {
-        "title": "11. Atteintes",
-        "body": "Si nous prenons connaissance d’une atteinte à la vie privée, nous évaluerons si elle crée un risque réel de préjudice grave. Lorsque la loi l’exige, nous aviserons les organisations et les personnes concernées, nous déclarerons au Commissariat à la protection de la vie privée du Canada, et nous fournirons aux cabinets les informations nécessaires à leurs propres avis."
+        "title": "13. Incidents de confidentialité",
+        "body": "Yuzu Solutions Inc. tient un registre des incidents de confidentialité. Si nous prenons connaissance d’un incident, nous évaluerons s’il crée un risque de préjudice sérieux (Québec) ou un risque réel de préjudice grave (LPRPDE).\n\nLorsque la loi l’exige, nous aviserons la Commission d’accès à l’information et/ou le Commissariat à la protection de la vie privée du Canada, aviserons les cabinets concernés, et leur fournirons les faits nécessaires pour aviser leurs clients. Nous aviserons les personnes directement lorsque nous sommes l’organisation responsable de ces renseignements ou lorsqu’un cabinet ne peut raisonnablement le faire.\n\nCeci n’est pas une renonciation à un moyen de défense. L’avis est donné parce que la loi l’exige lorsque le seuil est atteint."
       },
       "children": {
-        "title": "12. Enfants et personnes à charge",
-        "body": "Le service peut stocker des renseignements sur des mineurs lorsqu’ils font partie d’un dossier d’immigration. Les cabinets doivent s’assurer que la collecte est nécessaire et dûment autorisée par un parent, un tuteur, ou autrement permise par la loi."
+        "title": "14. Enfants et personnes à charge",
+        "body": "Le service peut stocker des renseignements sur des mineurs lorsqu’ils font partie d’un dossier d’immigration. Les cabinets doivent s’assurer que la collecte est nécessaire et, au Québec, généralement autorisée par un parent ou un tuteur si l’enfant a moins de 14 ans, ou autrement permise par la loi. Yuzu Solutions Inc. ne recueille pas sciemment de renseignements d’enfants, sauf à titre de fournisseur de services selon les instructions d’un cabinet."
+      },
+      "automated": {
+        "title": "15. Décisions automatisées",
+        "body": "Yuzu Immigration ne prend pas de décision fondée exclusivement sur un traitement automatisé de renseignements personnels qui produit des effets juridiques ou des effets semblables significatifs à l’égard d’une personne. Le remplissage de formulaires est une aide à la rédaction. Le personnel titulaire de permis doit réviser chaque formulaire et chaque dépôt. Si cela change, nous le dirons dans cette politique et fournirons les informations exigées par la loi."
       },
       "changes": {
-        "title": "13. Modifications de cette politique",
-        "body": "Nous pouvons mettre à jour cette politique pour refléter des changements de produit, de droit ou de sécurité. La date de « Dernière mise à jour » changera alors. Les changements importants seront signalés dans le produit ou aux administrateurs du cabinet lorsque c’est possible."
+        "title": "16. Modifications de cette politique",
+        "body": "Nous pouvons mettre à jour cette politique pour refléter des changements de produit, de droit ou de sécurité. La date de « Dernière mise à jour » changera alors. Les changements importants seront signalés dans le produit ou aux administrateurs du cabinet lorsque c’est possible. Lorsque la loi exige un nouveau consentement, nous le demanderons."
       },
       "contact": {
-        "title": "14. Contact",
-        "body": "Demandes de confidentialité pour la plateforme Yuzu Immigration :\nYuzu Solutions — privacy@yuzu.solutions\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier d’immigration ou à votre rendez-vous."
+        "title": "17. Contact",
+        "body": "Responsable de la protection des renseignements personnels, Yuzu Solutions Inc. : Adrien Yvin — privacy@yuzu.solutions\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier ou à votre rendez-vous. Des modèles pour les cabinets sont téléchargeables sur cette page."
       }
     },
     "termsSections": {
       "agreement": {
         "title": "1. Entente",
-        "body": "En créant un compte, en rejoignant l’espace d’un cabinet, en définissant un mot de passe sur un lien de partage, ou en soumettant une réservation publique, vous acceptez les présentes conditions générales et la politique de confidentialité.\n\nSi vous n’êtes pas d’accord, n’utilisez pas Yuzu Immigration. Si vous acceptez au nom d’un cabinet, vous confirmez avoir le pouvoir de lier ce cabinet."
+        "body": "En créant un compte, en rejoignant l’espace d’un cabinet, en définissant un mot de passe sur un lien de partage, ou en soumettant une réservation publique, vous acceptez les présentes conditions générales et la politique de confidentialité.\n\nSi vous n’êtes pas d’accord, n’utilisez pas Yuzu Immigration. Si vous acceptez au nom d’un cabinet, vous confirmez avoir le pouvoir de lier ce cabinet. Pour certains utilisateurs, il s’agit d’un contrat d’adhésion ; nous avons cherché un langage clair. Les documents externes (politique de confidentialité et avenant de traitement) sont portés à votre attention par ces conditions, les liens et les cases à cocher du produit. Un administrateur du cabinet accepte l’avenant à la création de l’espace, ou plus tard dans Réglages. Ce clic constitue le contrat écrit de sous-traitance. Une copie contresignée est facultative."
       },
       "parties": {
         "title": "2. À qui s’appliquent ces conditions",
-        "body": "Yuzu Solutions exploite Yuzu Immigration.\n\nUn « cabinet » est l’organisation qui détient un espace de travail. Le « personnel » désigne les utilisateurs du cabinet (administrateurs, consultants et adjoints).\n\nUn « client » ou une « personne qui réserve » utilise le lien de partage, le portail ou la page de réservation publique d’un cabinet. Le client a une relation avec le cabinet, et non un mandat professionnel avec Yuzu Solutions."
+        "body": "Yuzu Solutions Inc. exploite Yuzu Immigration.\n\nUn « cabinet » est l’organisation qui détient un espace de travail. Le « personnel » désigne les utilisateurs du cabinet (administrateurs, consultants et adjoints).\n\nUn « client » ou une « personne qui réserve » utilise le lien de partage, le portail ou la page de réservation publique d’un cabinet. Le client a une relation avec le cabinet, et non un mandat professionnel avec Yuzu Solutions Inc.\n\nLes articles qui imposent des devoirs professionnels, d’indemnisation ou de paiement à un « cabinet » s’appliquent aux cabinets et à leur personnel. Ils n’imposent pas ces devoirs aux clients, sauf les règles d’utilisation acceptable et d’exactitude qui s’appliquent à tous."
       },
       "service": {
         "title": "3. Le service",
-        "body": "Yuzu Immigration est un logiciel de gestion de pratique : dossiers clients, questionnaires, préparation de formulaires, dépôt de documents, liens de partage, calendrier et réservation publique.\n\nYuzu Solutions fournit le logiciel. Elle ne fournit pas de conseils, de représentation ni de services juridiques en immigration. Elle n’est pas affiliée à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI).\n\nLes fonctions peuvent changer. Nous pouvons en ajouter, modifier ou retirer, avec un préavis raisonnable lorsque c’est possible."
+        "body": "Yuzu Immigration est un logiciel de gestion de pratique : dossiers clients, questionnaires, préparation de formulaires, dépôt de documents, liens de partage, calendrier et réservation publique.\n\nYuzu Solutions Inc. fournit le logiciel. Les fonctions peuvent changer. Nous pouvons en ajouter, modifier ou retirer, avec un préavis raisonnable lorsque c’est possible. Nous ne garantissons pas qu’une édition de formulaire, un portail gouvernemental ou une API tierce demeurera disponible."
+      },
+      "noProfessionalRelationship": {
+        "title": "4. Aucun conseil d’immigration ni relation professionnelle",
+        "body": "Yuzu Solutions Inc. ne fournit pas de conseils, de représentation ni de services juridiques en immigration. Elle n’est pas membre du Collège des consultants en immigration et en citoyenneté et n’est pas un cabinet d’avocats. Elle n’est pas affiliée à IRCC ni au MIFI.\n\nRien dans le logiciel, les formulaires générés, les courriels ou ces conditions ne crée de relation consultant-client, avocat-client ou fiduciaire avec Yuzu Solutions Inc. Le personnel doit réviser chaque formulaire et chaque dépôt. Yuzu Solutions Inc. ne garantit aucun résultat en immigration ni l’acceptation d’un formulaire par une autorité.\n\nLes clients s’adressent uniquement au cabinet pour les services professionnels. Toute réclamation liée aux conseils, dépôts, délais, refus ou honoraires est une affaire entre le client et le cabinet, sauf dans la mesure où une loi impérative rend Yuzu Solutions Inc. responsable de ses propres actes comme fournisseur de logiciel."
       },
       "accounts": {
-        "title": "4. Comptes",
-        "body": "Les comptes du personnel sont destinés aux personnes autorisées par un cabinet. Vous devez fournir des renseignements exacts, garder vos identifiants confidentiels et aviser rapidement le cabinet en cas de perte d’accès.\n\nLes clients créent un mot de passe sur un lien de partage pour protéger ce lien. Ce mot de passe n’est pas un compte du personnel. Les personnes qui réservent un rendez-vous créent une fiche client dans l’espace du cabinet.\n\nNous pouvons suspendre un compte dont nous croyons raisonnablement qu’il est utilisé sans autorisation, en violation de ces conditions, ou d’une façon qui met en danger la sécurité du service ou d’autres utilisateurs."
+        "title": "5. Comptes et identifiants",
+        "body": "Les comptes du personnel sont destinés aux personnes autorisées par un cabinet. Vous devez fournir des renseignements exacts, garder vos identifiants confidentiels et aviser rapidement le cabinet en cas de perte d’accès. Le cabinet est responsable des invitations et des rôles qu’il attribue.\n\nLes clients créent un mot de passe sur un lien de partage pour protéger ce lien. Ce mot de passe n’est pas un compte du personnel. Les personnes qui réservent un rendez-vous créent une fiche client dans l’espace du cabinet.\n\nNous pouvons suspendre un compte dont nous croyons raisonnablement qu’il est utilisé sans autorisation, en violation de ces conditions, ou d’une façon qui met en danger la sécurité du service ou d’autres utilisateurs. Le cabinet demeure responsable de l’activité sous ses comptes du personnel."
       },
       "firmDuties": {
-        "title": "5. Responsabilités du cabinet",
-        "body": "Le cabinet est responsable de sa pratique en immigration, y compris les mandats, les conseils, les devoirs du Collège des consultants en immigration et en citoyenneté, et ses obligations de confidentialité envers ses clients (y compris la Loi 25 du Québec le cas échéant).\n\nLe cabinet décide quels renseignements clients recueillir et combien de temps les conserver. Il doit obtenir un consentement valable lorsque la loi l’exige, n’utiliser le produit qu’à des fins professionnelles licites, et configurer l’accès pour que seuls les membres autorisés ouvrent les dossiers.\n\nYuzu Solutions traite les renseignements clients à titre de fournisseur de services selon les instructions du cabinet, comme le décrit la politique de confidentialité et, le cas échéant, un avenant de traitement des données."
+        "title": "6. Responsabilités et instructions du cabinet",
+        "body": "Le cabinet est responsable de sa pratique en immigration, y compris les mandats, les conseils, les devoirs du Collège (ou du barreau), et ses obligations de confidentialité envers ses clients (y compris la Loi 25 du Québec et la LPRPDE le cas échéant).\n\nLe cabinet décide quels renseignements clients recueillir et combien de temps les conserver. Il doit obtenir un consentement valable lorsque la loi l’exige (y compris un consentement exprès pour les renseignements sensibles), n’utiliser le produit qu’à des fins professionnelles licites, configurer l’accès, et réaliser toute EFVP que la loi exige du cabinet lorsqu’il adopte ce système ou communique des renseignements hors Québec.\n\nYuzu Solutions Inc. traite les renseignements clients à titre de fournisseur de services selon les instructions documentées du cabinet — soit l’utilisation du produit, la configuration, la politique de confidentialité et l’avenant de traitement accepté dans le produit par un administrateur. Le cabinet garantit que ses instructions sont licites et qu’il a l’autorité et les consentements requis. Yuzu Solutions Inc. peut refuser une instruction qui violerait la loi et en informera le cabinet."
       },
       "clientUse": {
-        "title": "6. Utilisation par les clients",
-        "body": "Si vous ouvrez le lien de partage d’un cabinet ou réservez via sa page, vous communiquez des renseignements à ce cabinet pour la gestion de votre dossier ou rendez-vous. Yuzu Solutions les héberge et les traite pour exploiter le produit.\n\nVous ne devez soumettre que des renseignements que vous êtes autorisé à fournir. Ne partagez le mot de passe d’un lien que selon les instructions du cabinet. Les pages de réservation et les liens de partage sont identifiés par des jetons difficiles à deviner ; ne les publiez pas publiquement.\n\nLes questions sur votre dossier, votre rendez-vous ou les honoraires du cabinet doivent être adressées au cabinet."
+        "title": "7. Utilisation par les clients",
+        "body": "Si vous ouvrez le lien de partage d’un cabinet ou réservez via sa page, vous communiquez des renseignements à ce cabinet pour la gestion de votre dossier ou rendez-vous. Yuzu Solutions Inc. les héberge et les traite pour exploiter le produit. Vous n’engagez pas Yuzu Solutions Inc.\n\nVous ne devez soumettre que des renseignements que vous êtes autorisé à fournir. Ne partagez le mot de passe d’un lien que selon les instructions du cabinet. Ne publiez pas les liens publiquement.\n\nLes questions sur votre dossier, votre rendez-vous ou les honoraires du cabinet doivent être adressées au cabinet. L’analytique facultative est décrite dans la politique de confidentialité et est désactivée tant que vous ne l’acceptez pas."
       },
       "acceptableUse": {
-        "title": "7. Utilisation acceptable",
-        "body": "Il est interdit de :\n• Sonder, perturber ou surcharger le service, ou tenter de contourner la sécurité ou les contrôles d’accès\n• Utiliser le compte d’une autre personne ou un lien de partage sans autorisation\n• Téléverser des logiciels malveillants ou du contenu que vous n’avez pas le droit de partager\n• Utiliser le produit pour envoyer du pourriel ou induire en erreur IRCC, le MIFI ou une autorité gouvernementale\n• Revendre ou sous-licencier le logiciel, sauf accord écrit de Yuzu Solutions\n\nNous pouvons enquêter sur un usage suspect et collaborer avec un cabinet ou les autorités lorsque la loi l’exige."
+        "title": "8. Utilisation acceptable",
+        "body": "Il est interdit de :\n• Sonder, perturber ou surcharger le service, ou tenter de contourner la sécurité\n• Utiliser le compte d’une autre personne ou un lien de partage sans autorisation\n• Téléverser des logiciels malveillants ou du contenu que vous n’avez pas le droit de partager\n• Utiliser le produit pour envoyer du pourriel ou induire en erreur IRCC, le MIFI ou une autorité\n• Revendre ou sous-licencier le logiciel, sauf accord écrit de Yuzu Solutions Inc.\n\nNous pouvons enquêter sur un usage suspect et collaborer avec un cabinet ou les autorités lorsque la loi l’exige. Nous pouvons retirer ou désactiver un contenu que nous croyons raisonnablement illégal ou menaçant pour la sécurité du service."
       },
       "fees": {
-        "title": "8. Frais",
-        "body": "Yuzu Solutions peut facturer les cabinets pour le logiciel selon une commande, un forfait ou une facture distincts. En l’absence de forfait payant, nous pouvons offrir un accès d’essai ou en avant-première et introduire des frais avec avis aux administrateurs du cabinet.\n\nLes honoraires qu’une personne paie pour une consultation sont facturés par le cabinet (par exemple via Square). Yuzu Solutions n’est pas partie à ce mandat. Les remboursements et annulations suivent la politique d’annulation du cabinet affichée à la réservation."
+        "title": "9. Frais",
+        "body": "Yuzu Solutions Inc. peut facturer les cabinets pour le logiciel selon une commande, un forfait ou une facture distincts. En l’absence de forfait payant, nous pouvons offrir un accès d’essai ou en avant-première et introduire des frais avec avis aux administrateurs.\n\nLes honoraires qu’une personne paie pour une consultation sont facturés par le cabinet (par exemple via Square). Yuzu Solutions Inc. n’est pas partie à ce mandat et n’est pas le commerçant inscrit pour ces frais, sauf écrit contraire. Les remboursements et annulations suivent la politique d’annulation du cabinet affichée à la réservation. Les rétrofacturations pour les frais perçus par le cabinet sont entre la personne, le cabinet et le fournisseur de paiement."
       },
       "ip": {
-        "title": "9. Propriété intellectuelle",
-        "body": "Yuzu Solutions et ses concédants de licence détiennent Yuzu Immigration, y compris le logiciel, le design et la documentation. Ces conditions ne transfèrent aucun droit de propriété.\n\nLe cabinet et ses clients conservent leurs droits sur le contenu qu’ils soumettent (questionnaires, documents, notes et similaires). Le cabinet accorde à Yuzu Solutions une licence limitée pour héberger, traiter et afficher ce contenu uniquement afin de fournir le service.\n\nLes formulaires IRCC et MIFI restent la propriété de ces autorités. Le produit aide à les remplir ; il ne remplace pas les instructions officielles."
+        "title": "10. Propriété intellectuelle",
+        "body": "Yuzu Solutions Inc. et ses concédants de licence détiennent Yuzu Immigration, y compris le logiciel, le design et la documentation. Ces conditions ne transfèrent aucun droit de propriété.\n\nLe cabinet et ses clients conservent leurs droits sur le contenu qu’ils soumettent. Le cabinet accorde à Yuzu Solutions Inc. une licence limitée pour héberger, traiter et afficher ce contenu uniquement afin de fournir le service, y compris via des sous-traitants.\n\nLes formulaires IRCC et MIFI restent la propriété de ces autorités. Le produit aide à les remplir ; il ne remplace pas les instructions officielles."
       },
       "privacy": {
-        "title": "10. Confidentialité",
-        "body": "Les renseignements personnels sont traités comme le décrit la politique de confidentialité, qui fait partie de ces conditions.\n\nLes données applicatives principales sont hébergées au Canada. Certains sous-traitants (calcul d’hébergement, courriel et Google, Microsoft ou Zoom lorsqu’ils sont utilisés) peuvent traiter des renseignements hors du Canada, y compris aux États-Unis, comme l’explique la politique de confidentialité."
+        "title": "11. Confidentialité",
+        "body": "Les renseignements personnels sont traités comme le décrit la politique de confidentialité, qui fait partie de ces conditions.\n\nLes données applicatives principales sont hébergées au Canada. Certains sous-traitants (calcul d’hébergement, courriel et Google, Microsoft, Zoom ou Square lorsqu’ils sont utilisés) peuvent traiter des renseignements hors du Canada, y compris aux États-Unis. L’analytique facultative est désactivée tant qu’elle n’est pas acceptée.\n\nLe cabinet est l’organisation responsable des renseignements du dossier client. Yuzu Solutions Inc. est fournisseur de services pour ces renseignements et est responsable des renseignements de compte du personnel qu’elle utilise pour exploiter le service."
       },
       "thirdParties": {
-        "title": "11. Services de tiers",
-        "body": "Le produit peut se connecter à des tiers que le cabinet ou un membre du personnel active, notamment la connexion Google, Google Agenda et Meet, Outlook, Microsoft Teams, Zoom Meetings, le courriel transactionnel et le paiement (Square). Ces services ont leurs propres conditions. Yuzu Solutions n’est pas responsable des actes ou pannes d’un tiers, sauf dans la mesure où la loi n’autorise pas cette limitation."
+        "title": "12. Services de tiers",
+        "body": "Le produit peut se connecter à des tiers que le cabinet ou un membre du personnel active, notamment la connexion Google, Google Agenda et Meet, Outlook, Microsoft Teams, Zoom Meetings, le courriel transactionnel et le paiement (Square). Ces services ont leurs propres conditions. Activer une connexion constitue l’instruction du cabinet de communiquer les renseignements concernés à ce fournisseur.\n\nYuzu Solutions Inc. n’est pas responsable des actes, contenus, sécurité ou pannes d’un tiers, sauf dans la mesure où la loi n’autorise pas cette limitation ou où la panne est causée par une faute intentionnelle ou lourde de Yuzu Solutions Inc."
       },
       "disclaimers": {
-        "title": "12. Exclusions de garantie",
-        "body": "Le service est fourni « tel quel » et « selon disponibilité ». Nous ne garantissons pas qu’il sera ininterrompu, sans erreur, ni que les formulaires générés sont complets ou acceptés par une autorité. Le personnel doit réviser chaque formulaire et chaque dépôt.\n\nYuzu Solutions ne garantit aucun résultat en immigration. Dans toute la mesure permise par la loi, nous excluons les garanties implicites de qualité marchande, d’adaptation à un usage particulier et d’absence de contrefaçon."
+        "title": "13. Exclusions de garantie",
+        "body": "Le service est fourni « tel quel » et « selon disponibilité », sauf les garanties qu’une loi impérative ne permet pas d’exclure. Nous ne garantissons pas qu’il sera ininterrompu, sans erreur, ni que les formulaires générés sont complets, à jour ou acceptés par une autorité.\n\nDans toute la mesure permise par la loi, nous excluons les garanties implicites de qualité marchande, d’adaptation à un usage particulier et d’absence de contrefaçon. Les consommateurs du Québec conservent toute garantie légale de qualité à laquelle ils ne peuvent renoncer."
       },
       "liability": {
-        "title": "13. Limitation de responsabilité",
-        "body": "Dans toute la mesure permise par la loi, Yuzu Solutions n’est pas responsable des pertes de profits, de données, d’interruption d’activités, ni des dommages indirects, accessoires, spéciaux ou consécutifs, même si nous avons été avisés de leur possibilité.\n\nNotre responsabilité totale liée au service est limitée aux frais que le cabinet nous a payés pour le logiciel au cours des trois mois précédant la réclamation, ou à 100 $ CA si aucun frais n’a été payé.\n\nCes limites ne s’appliquent pas à la responsabilité qui ne peut être limitée (fraude, décès ou blessures corporelles causés par une négligence lorsque cela ne peut être exclu). Les consommateurs conservent les droits impératifs que le droit local ne leur permet pas de renoncer."
+        "title": "14. Limitation de responsabilité",
+        "body": "Le présent article s’applique dans toute la mesure permise par la loi. Il n’exclut ni ne limite la responsabilité pour faute intentionnelle ou lourde, pour décès ou blessures corporelles lorsque cela ne peut être exclu, ni toute responsabilité qu’une loi impérative (y compris la Loi sur la protection du consommateur du Québec et le Code civil du Québec) ne permet pas de limiter. Il ne constitue pas une renonciation à des dommages-intérêts légaux ou à des sanctions réglementaires auxquels on ne peut renoncer.\n\nSous réserve de l’alinéa précédent, Yuzu Solutions Inc. n’est pas responsable des pertes de profits, de données, d’interruption d’activités, ni des dommages indirects, accessoires, spéciaux ou consécutifs, même si nous avons été avisés de leur possibilité.\n\nSous réserve du même alinéa, notre responsabilité totale liée au service est limitée aux frais que le cabinet nous a payés pour le logiciel au cours des douze mois précédant la réclamation, ou à 1 000 $ CA si aucun frais n’a été payé.\n\nClients et personnes qui réservent : le rôle de Yuzu Solutions Inc. est d’héberger un logiciel pour le cabinet. Sauf lorsqu’une loi impérative prévoit autrement, vous vous adressez au cabinet pour les pertes découlant de ses services. Les consommateurs conservent les droits impératifs auxquels le droit local ne leur permet pas de renoncer."
       },
       "indemnity": {
-        "title": "14. Indemnisation",
-        "body": "Le cabinet défendra et indemnisera Yuzu Solutions contre les réclamations découlant de l’utilisation du service par le cabinet, de ses conseils ou dépôts en immigration, du contenu soumis par le cabinet ou ses clients, ou de la violation de ces conditions par le cabinet, sauf dans la mesure où la réclamation est causée par une faute intentionnelle de Yuzu Solutions."
+        "title": "15. Indemnisation (cabinets seulement)",
+        "body": "Le cabinet défendra et indemnisera Yuzu Solutions Inc. ainsi que ses administrateurs, dirigeants et personnel contre les réclamations, dommages et frais juridiques raisonnables découlant : de l’utilisation du service par le cabinet ; de ses conseils, dépôts ou conduite professionnelle en immigration ; du contenu soumis par le cabinet ou ses clients ; du défaut d’obtenir un consentement requis ou d’exécuter ses devoirs comme organisation responsable des dossiers clients ; d’un service de tiers activé par le cabinet ou son personnel ; ou de la violation de ces conditions par le cabinet — sauf dans la mesure où la réclamation est causée par une faute intentionnelle ou lourde de Yuzu Solutions Inc.\n\nLe présent article n’oblige pas un client à indemniser Yuzu Solutions Inc."
+      },
+      "consumerRights": {
+        "title": "16. Droits impératifs des consommateurs et de la vie privée",
+        "body": "Rien dans ces conditions n’enlève les droits qu’une loi impérative accorde à un consommateur, y compris en vertu de la Loi sur la protection du consommateur du Québec, ni les droits que la LPRPDE ou la Loi 25 du Québec accordent à une personne et auxquels on ne peut renoncer.\n\nSi vous êtes un consommateur qui transige avec un cabinet via une réservation ou un lien de partage, les règles d’annulation, de remboursement et professionnelles du cabinet s’appliquent à ce mandat. Ces conditions ne font pas de Yuzu Solutions Inc. le vendeur de la consultation."
       },
       "termination": {
-        "title": "15. Suspension et fin",
-        "body": "Un cabinet peut cesser d’utiliser le service et demander la suppression des données de son espace comme le décrit la politique de confidentialité, sous réserve des règles professionnelles de conservation et des cycles de sauvegarde.\n\nNous pouvons suspendre ou mettre fin à l’accès en cas de frais impayés (lorsqu’un forfait payant s’applique), de violation de ces conditions, ou si nous cessons le produit. Nous aviserons les administrateurs du cabinet dans un délai raisonnable lorsque c’est possible.\n\nLes dispositions destinées à survivre (propriété intellectuelle, exclusions, limites de responsabilité et indemnisation) survivent à la fin."
+        "title": "17. Suspension et fin",
+        "body": "Un cabinet peut cesser d’utiliser le service et demander la suppression des données de son espace comme le décrit la politique de confidentialité, sous réserve des règles professionnelles de conservation et des cycles de sauvegarde. Le cabinet devrait exporter les dossiers qu’il doit conserver avant de demander la suppression.\n\nNous pouvons suspendre ou mettre fin à l’accès en cas de frais impayés (lorsqu’un forfait payant s’applique), de violation de ces conditions, si nous croyons raisonnablement que l’accès continu menace la sécurité du service ou d’autrui, ou si nous cessons le produit. Nous aviserons les administrateurs dans un délai raisonnable lorsque c’est possible, sauf action immédiate requise pour la sécurité ou la loi.\n\nLes dispositions destinées à survivre (propriété intellectuelle, exclusions, limites de responsabilité, indemnisation, confidentialité et droit applicable) survivent à la fin."
       },
       "changes": {
-        "title": "16. Modifications de ces conditions",
-        "body": "Nous pouvons mettre à jour ces conditions pour refléter des changements de produit, de droit ou de sécurité. La date de « Dernière mise à jour » changera alors. Les changements importants seront signalés dans le produit ou aux administrateurs du cabinet lorsque c’est possible. L’usage continu après la date d’entrée en vigueur vaut acceptation des conditions mises à jour, sauf lorsque la loi exige un nouveau consentement."
+        "title": "18. Modifications de ces conditions",
+        "body": "Nous pouvons mettre à jour ces conditions pour refléter des changements de produit, de droit ou de sécurité. La date de « Dernière mise à jour » changera alors. Les changements importants seront signalés dans le produit ou aux administrateurs lorsque c’est possible. L’usage continu après la date d’entrée en vigueur vaut acceptation des conditions mises à jour, sauf lorsque la loi exige un nouveau consentement ou interdit de traiter le silence comme une acceptation. Nous n’utiliserons pas une clause de modification pour imposer une obligation qu’une loi impérative de protection du consommateur interdit."
       },
       "governingLaw": {
-        "title": "17. Droit applicable",
-        "body": "Ces conditions sont régies par les lois de la province de l’Ontario et les lois fédérales du Canada qui s’y appliquent, sans égard aux règles de conflit de lois. Les tribunaux de l’Ontario ont compétence exclusive, sauf que nous pouvons demander une injonction devant tout tribunal compétent, et sauf que les consommateurs conservent tout for ou droit impératif auquel ils ne peuvent renoncer (y compris au Québec)."
+        "title": "19. Droit applicable",
+        "body": "Ces conditions sont régies par les lois de la province de Québec et les lois fédérales du Canada qui s’y appliquent, sans égard aux règles de conflit de lois qui renverraient à un autre droit.\n\nLes tribunaux du Québec, district de Montréal, ont compétence exclusive sur les différends entre un cabinet (ou son personnel) et Yuzu Solutions Inc. au sujet du service, sauf que nous pouvons demander une injonction ou une mesure équivalente devant tout tribunal compétent pour protéger le service ou la propriété intellectuelle.\n\nLes consommateurs conservent tout for ou droit impératif auquel ils ne peuvent renoncer, y compris au Québec."
+      },
+      "language": {
+        "title": "20. Langue",
+        "body": "Ces conditions et la politique de confidentialité sont disponibles en français et en anglais (et en espagnol pour commodité). Si vous utilisez l’interface française, c’est la version française qui vous est présentée.\n\nPour un consommateur au Québec, en cas de conflit entre versions linguistiques, la version française prévaut. Les cabinets qui choisissent l’interface anglaise demandent la version anglaise pour leur espace ; les deux versions visent le même sens."
+      },
+      "severability": {
+        "title": "21. Divisibilité et intégralité",
+        "body": "Si un tribunal juge une partie de ces conditions inapplicable, le reste demeure en vigueur. Ces conditions, la politique de confidentialité, l’avenant de traitement accepté pour l’espace et tout bon de commande constituent l’entente intégrale entre vous et Yuzu Solutions Inc. au sujet du logiciel. Elles ne modifient pas le mandat distinct du cabinet avec ses clients."
       },
       "contact": {
-        "title": "18. Contact",
-        "body": "Questions sur ces conditions :\nYuzu Solutions — privacy@yuzu.solutions\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour votre dossier, votre rendez-vous ou le mandat du cabinet."
+        "title": "22. Contact",
+        "body": "Questions sur ces conditions : Yuzu Solutions Inc. — privacy@yuzu.solutions (Adrien Yvin, responsable de la protection des renseignements personnels).\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour votre dossier, votre rendez-vous ou le mandat du cabinet."
       }
+    },
+    "downloads": {
+      "title": "Téléchargements pour les cabinets",
+      "help": "Modèles pour aider votre cabinet à respecter la LPRPDE et la Loi 25 du Québec envers vos clients. Ce ne sont pas des avis juridiques. Un administrateur accepte l’avenant de traitement dans le produit à la création de l’espace. Les versions françaises s’affichent lorsque le site est en français.",
+      "groupYuzu": "Yuzu Solutions Inc.",
+      "groupFirm": "Modèles pour votre cabinet",
+      "items": {
+        "governance": {
+          "label": "Résumé de gouvernance",
+          "hint": "Description publique de la gouvernance des renseignements personnels chez Yuzu Solutions Inc."
+        },
+        "subprocessors": {
+          "label": "Sous-traitants et lieux",
+          "hint": "Où Yuzu et ses fournisseurs traitent les renseignements personnels."
+        },
+        "vendorPack": {
+          "label": "Dossier de diligence du fournisseur",
+          "hint": "Schéma des données et mesures pour votre propre EFVP."
+        },
+        "dpa": {
+          "label": "Avenant de traitement des données",
+          "hint": "Contrat écrit de sous-traitance. Accepté dans le produit par un administrateur ; téléchargez-le si vous avez besoin d’une copie contresignée."
+        },
+        "efvp": {
+          "label": "EFVP du cabinet",
+          "hint": "Modèle pour l’adoption de Yuzu Immigration et des outils hors Québec."
+        },
+        "privacyNotice": {
+          "label": "Avis de confidentialité pour vos clients",
+          "hint": "Avis du responsable que vous pouvez joindre au mandat."
+        },
+        "consent": {
+          "label": "Langage de consentement et de mandat",
+          "hint": "Consentement exprès pour les renseignements sensibles, les enfants et les outils US facultatifs."
+        },
+        "incidentRegister": {
+          "label": "Registre des incidents de confidentialité",
+          "hint": "Tous les incidents, y compris ceux non déclarés à la CAI."
+        },
+        "incidentNotices": {
+          "label": "Modèles d’avis d’incident",
+          "hint": "Trames pour les clients, la CAI et le CPVP."
+        },
+        "rightsRequest": {
+          "label": "Formulaire de droits d’une personne",
+          "hint": "Accès, rectification, portabilité et suppression (objectif : 30 jours)."
+        },
+        "destruction": {
+          "label": "Registre de destruction (papier)",
+          "hint": "Copie facultative du registre de destruction du produit."
+        }
+      }
+    },
+    "analyticsConsent": {
+      "body": "Nous utilisons des témoins essentiels pour faire fonctionner Yuzu Immigration. L’analytique facultative (Vercel) nous aide à exploiter le service et peut être traitée hors Québec, y compris aux États-Unis. Elle est désactivée tant que vous n’acceptez pas. Elle ne sert pas à la publicité.",
+      "privacyLink": "Politique de confidentialité",
+      "accept": "Accepter l’analytique",
+      "refuse": "Refuser"
     }
   },
   "calendar": {
@@ -2566,6 +2674,33 @@
     "forgotSuccessTitle": "Vérifiez votre courriel",
     "forgotSuccessBody": "Si ce courriel est au dossier, un lien vers le portail est en route.",
     "privacy": "Confidentialité",
+    "security": {
+      "nav": "Sécurité",
+      "title": "Sécurité et confidentialité",
+      "lede": "Téléchargez une copie des données de votre dossier, ou demandez au cabinet de les supprimer.",
+      "downloadTitle": "Télécharger vos données",
+      "downloadHelp": "Téléchargez un ZIP de vos renseignements personnels et de ceux de toutes les personnes présentes sur les dossiers d’immigration auxquels vous êtes lié (par exemple un conjoint ou un enfant sur le même dossier). Les réponses au questionnaire, les documents téléversés, les rendez-vous et les factures sont inclus. Les notes internes du consultant ne le sont pas.",
+      "downloadCta": "Télécharger mes données",
+      "downloading": "Préparation…",
+      "deleteTitle": "Demander la suppression",
+      "deleteHelp": "Ceci envoie une demande au cabinet. Cela n’efface pas votre dossier immédiatement. Le Collège des consultants en immigration et en citoyenneté exige de conserver un dossier client fermé pendant {years} ans après sa fermeture. Tant que ce délai n’est pas écoulé, le cabinet ne peut généralement pas détruire le dossier. Ensuite, il peut l’effacer comme le décrit la politique de confidentialité.",
+      "noteLabel": "Message au cabinet (facultatif)",
+      "noteHint": "Vous pouvez expliquer votre demande. Le contact juridique ou de sécurité du cabinet la recevra.",
+      "deleteCta": "Demander la suppression",
+      "deleteSending": "Envoi…",
+      "deleteSent": "Votre demande a été envoyée au cabinet. Il vous contactera pour la suite et les règles de conservation qui s’appliquent encore.",
+      "errors": {
+        "invalid": "Vérifiez le formulaire et réessayez.",
+        "unauthorized": "Connectez-vous pour continuer.",
+        "alreadyRequested": "Une demande de suppression a déjà été envoyée au cours des 24 dernières heures.",
+        "noFirmContact": "Ce cabinet n’a pas encore indiqué de contact de confidentialité. Demandez à votre consultant comment demander la suppression.",
+        "notFound": "Nous n’avons pas trouvé votre fiche client.",
+        "emailNotConfigured": "Le courriel n’est pas configuré. Demandez de l’aide à votre consultant.",
+        "sendFailed": "Impossible d’envoyer la demande. Réessayez.",
+        "exportFailed": "Impossible de préparer le téléchargement. Réessayez.",
+        "generic": "Une erreur est survenue. Réessayez."
+      }
+    },
     "errors": {
       "invalid": "Vérifiez le courriel et réessayez.",
       "mismatch": "Les mots de passe ne correspondent pas.",
@@ -2592,6 +2727,20 @@
     "resetIntro": "Ouvrez votre portail client {org} et créez un nouveau mot de passe avec cette adresse courriel.",
     "cta": "Ouvrir le portail",
     "footer": "Si vous n’attendiez pas ce courriel, vous pouvez l’ignorer."
+  },
+  "portalDeletionEmail": {
+    "subject": "{org} : demande de suppression de {name}",
+    "heading": "Demande de suppression d’un client",
+    "intro": "{name} a demandé, depuis le portail client, que le cabinet supprime ses renseignements personnels.",
+    "emailLabel": "Courriel du client",
+    "personId": "Identifiant de la fiche",
+    "filesLabel": "Dossiers concernés",
+    "noFiles": "Aucun dossier ouvert listé.",
+    "noteLabel": "Message du client",
+    "noNote": "(aucun)",
+    "noEmail": "(aucun courriel au dossier)",
+    "retention": "Les règles du Collège des consultants en immigration et en citoyenneté exigent généralement de conserver un dossier fermé pendant {years} ans après la fermeture. Ne détruisez pas le dossier avant la fin de ce délai (et de toute autre obligation légale). Répondez au client pour la suite.",
+    "footer": "Ce message a été envoyé par Yuzu Immigration parce qu’un client a utilisé Sécurité dans le portail."
   },
   "shareLinkEmail": {
     "resetSubject": "{org} : votre nouveau lien client sécurisé",

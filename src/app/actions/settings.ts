@@ -10,6 +10,11 @@ import { requireOrganizationId } from "@/lib/crm/queries";
 import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
 import { resolveCountryLic } from "@/lib/ircc/codes/resolve-lic";
 import { slugifyOrganizationName } from "@/lib/org/slug";
+import {
+  FIRM_DPA_VERSION,
+  firmDpaAcceptanceColumns,
+  formAcceptedFirmDpa,
+} from "@/lib/legal/dpa";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -63,6 +68,7 @@ const orgSchema = z.object({
     .min(2)
     .max(48),
   defaultLocale: localeEnum,
+  privacyContactEmail: z.string().trim().toLowerCase().email().max(254),
 });
 
 export async function updateAccountSettingsAction(
@@ -139,6 +145,7 @@ export async function updateOrganizationSettingsAction(
     name: formData.get("name"),
     slug: formData.get("slug") || slugifyOrganizationName(empty("name")),
     defaultLocale: formData.get("defaultLocale") || "en",
+    privacyContactEmail: formData.get("privacyContactEmail"),
   });
 
   if (!parsed.success) {
@@ -162,6 +169,7 @@ export async function updateOrganizationSettingsAction(
       name: parsed.data.name,
       slug: parsed.data.slug,
       default_locale: parsed.data.defaultLocale,
+      privacy_contact_email: parsed.data.privacyContactEmail,
       updated_at: new Date().toISOString(),
     })
     .eq("id", orgId);
@@ -194,6 +202,58 @@ export async function updateOrganizationSettingsAction(
   if (parsed.data.defaultLocale !== parsed.data.locale) {
     redirect(`/${parsed.data.defaultLocale}/settings/organization`);
   }
+  return { success: true };
+}
+
+export async function acceptOrganizationDpaAction(
+  _prev: SettingsActionState,
+  formData: FormData,
+): Promise<SettingsActionState> {
+  const locale = String(formData.get("locale") || "en");
+  if (!formAcceptedFirmDpa(formData)) {
+    return { error: "dpa_required" };
+  }
+
+  const orgId = await requireOrganizationId();
+  if (!orgId) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const membership = await getPrimaryMembership();
+  if (!canAdministerOrg(membership?.role)) {
+    return { error: "forbidden" };
+  }
+
+  const user = await getSessionUser();
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("organizations")
+    .update({
+      ...firmDpaAcceptanceColumns(user.id),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orgId);
+
+  if (error) {
+    console.error("accept organization dpa:", error.message);
+    return { error: "save_failed" };
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user.id,
+    actorKind: "staff",
+    action: "organization.dpa_accept",
+    resourceType: "organization",
+    resourceId: orgId,
+    metadata: { version: FIRM_DPA_VERSION },
+  });
+
+  revalidatePath(`/${locale}/settings/organization`);
   return { success: true };
 }
 

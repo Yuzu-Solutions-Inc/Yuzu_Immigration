@@ -8,7 +8,7 @@ import { logoutPortalAction } from "@/app/actions/portal-auth";
 import { portalAuthInitialState } from "@/app/actions/portal-state";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 export function PortalTopBar({
@@ -23,6 +23,7 @@ export function PortalTopBar({
   const t = useTranslations("auth");
   const tp = useTranslations("portal");
   const locale = useLocale();
+  const pathname = usePathname();
   const [, logoutAction, logoutPending] = useActionState(
     logoutPortalAction,
     portalAuthInitialState,
@@ -53,12 +54,30 @@ export function PortalTopBar({
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {showSignOut ? (
-            <Link
-              href="/portal/home"
-              className="hidden rounded-lg px-2.5 py-1.5 text-xs font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground sm:inline"
-            >
-              {tp("home")}
-            </Link>
+            <>
+              <Link
+                href="/portal/home"
+                className={cn(
+                  "hidden rounded-lg px-2.5 py-1.5 text-xs font-medium sm:inline",
+                  pathname === "/portal/home" || pathname.startsWith("/portal/projects")
+                    ? "bg-sidebar-accent text-sidebar-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                )}
+              >
+                {tp("home")}
+              </Link>
+              <Link
+                href="/portal/security"
+                className={cn(
+                  "rounded-lg px-2.5 py-1.5 text-xs font-medium",
+                  pathname.startsWith("/portal/security")
+                    ? "bg-sidebar-accent text-sidebar-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                )}
+              >
+                {tp("security.nav")}
+              </Link>
+            </>
           ) : null}
           <LocaleSwitcher
             variant="sidebar"

@@ -7,7 +7,9 @@ import {
   createOrganizationAction,
   type CreateOrgState,
 } from "@/app/actions/org";
+import { FirmDpaConsentFields } from "@/components/legal/legal-consent-fields";
 import { slugifyOrganizationName } from "@/lib/org/slug";
+import type { AppLocale } from "@/lib/i18n/locales";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -20,7 +22,7 @@ import { Input } from "@/components/ui/input";
 
 const initialState: CreateOrgState = {};
 
-export function CreateOrganizationForm({ locale }: { locale: "en" | "fr" }) {
+export function CreateOrganizationForm({ locale }: { locale: AppLocale }) {
   const t = useTranslations("onboarding");
   const [name, setName] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -29,6 +31,8 @@ export function CreateOrganizationForm({ locale }: { locale: "en" | "fr" }) {
     createOrganizationAction,
     initialState,
   );
+  const [dpaAccepted, setDpaAccepted] = useState(false);
+  const [dpaAuthority, setDpaAuthority] = useState(false);
 
   const computedSlug = useMemo(() => slugifyOrganizationName(name), [name]);
   const effectiveSlug = slugTouched ? slug : computedSlug;
@@ -38,6 +42,7 @@ export function CreateOrganizationForm({ locale }: { locale: "en" | "fr" }) {
         invalid_org: t("errors.invalid"),
         slug_taken: t("errors.slugTaken"),
         create_failed: t("errors.createFailed"),
+        dpa_required: t("errors.dpaRequired"),
       }[state.error] ?? t("errors.generic")
     : null;
 
@@ -76,9 +81,42 @@ export function CreateOrganizationForm({ locale }: { locale: "en" | "fr" }) {
         <FieldHint>{t("orgSlugHelp")}</FieldHint>
       </Field>
 
+      <Field>
+        <FieldLabel htmlFor="privacyContactEmail" required>
+          {t("privacyContactEmail")}
+        </FieldLabel>
+        <Input
+          id="privacyContactEmail"
+          name="privacyContactEmail"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder={t("privacyContactEmailPlaceholder")}
+        />
+        <FieldHint>{t("privacyContactEmailHelp")}</FieldHint>
+      </Field>
+
+      <div className="space-y-2">
+        <FirmDpaConsentFields
+          dpaChecked={dpaAccepted}
+          authorityChecked={dpaAuthority}
+          onDpaChange={setDpaAccepted}
+          onAuthorityChange={setDpaAuthority}
+          disabled={pending}
+        />
+        <FieldHint>{t("dpaHelp")}</FieldHint>
+      </div>
+
       {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
 
-      <Button type="submit" size="lg" className="w-full" disabled={pending || !effectiveSlug}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={
+          pending || !effectiveSlug || !dpaAccepted || !dpaAuthority
+        }
+      >
         {pending ? t("creating") : t("create")}
       </Button>
     </FormStack>

@@ -31,6 +31,7 @@ export type OrgSettingsValues = {
   name: string;
   slug: string;
   defaultLocale: AppLocale;
+  privacyContactEmail: string;
 };
 
 export function OrganizationSettingsForm({
@@ -106,6 +107,27 @@ export function OrganizationSettingsForm({
             <FieldHint>{t("orgDefaultLocaleHelp")}</FieldHint>
           </Field>
         </FieldGrid>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="font-heading text-base font-semibold text-brand">
+          {t("privacyContactTitle")}
+        </h3>
+        <Field>
+          <FieldLabel htmlFor="privacyContactEmail" required>
+            {t("privacyContactEmail")}
+          </FieldLabel>
+          <Input
+            id="privacyContactEmail"
+            name="privacyContactEmail"
+            type="email"
+            required
+            autoComplete="email"
+            defaultValue={initialValues.privacyContactEmail}
+            maxLength={254}
+          />
+          <FieldHint>{t("privacyContactEmailHelp")}</FieldHint>
+        </Field>
       </section>
 
       {error ? <FieldError>{error}</FieldError> : null}

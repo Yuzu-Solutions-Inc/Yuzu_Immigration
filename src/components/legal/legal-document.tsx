@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { LegalLinks } from "@/components/legal/legal-links";
 import { Link } from "@/i18n/navigation";
@@ -9,6 +11,7 @@ export function LegalDocument({
   sections,
   backHomeLabel,
   appName,
+  children,
 }: {
   title: string;
   updated: string;
@@ -16,6 +19,7 @@ export function LegalDocument({
   sections: readonly { id: string; title: string; body: string }[];
   backHomeLabel: string;
   appName: string;
+  children?: ReactNode;
 }) {
   return (
     <main className="mx-auto flex min-h-full w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10 pb-16">
@@ -44,6 +48,8 @@ export function LegalDocument({
           </section>
         ))}
       </article>
+
+      {children}
 
       <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground">
         <p>{appName}</p>

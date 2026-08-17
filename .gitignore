@@ -43,5 +43,5 @@ yarn-error.log*
 next-env.d.ts
 .env*
 
-# Zoom Marketplace review artifacts (local only)
-/docs/zoom-marketplace/
+# Internal working notes and compliance drafts (not product source)
+/docs/

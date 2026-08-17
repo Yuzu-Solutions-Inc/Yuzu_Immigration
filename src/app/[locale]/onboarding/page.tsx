@@ -8,6 +8,7 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
+import { toAppLocale } from "@/lib/i18n/locales";
 
 export default async function OnboardingPage({
   params,
@@ -50,7 +51,7 @@ export default async function OnboardingPage({
       </div>
 
       <SurfaceCard>
-        <CreateOrganizationForm locale={locale as "en" | "fr"} />
+        <CreateOrganizationForm locale={toAppLocale(locale)} />
       </SurfaceCard>
 
       <LegalLinks className="justify-center sm:justify-start" />

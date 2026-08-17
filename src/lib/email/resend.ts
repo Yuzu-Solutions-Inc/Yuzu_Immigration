@@ -86,6 +86,7 @@ export async function sendResendEmail(input: {
   organizationName?: string;
   locale?: string;
   includeDoNotReply?: boolean;
+  replyTo?: string;
 }) {
   const config = emailConfigured();
   if (!config) return { sent: false as const, reason: "not_configured" as const };
@@ -110,7 +111,8 @@ export async function sendResendEmail(input: {
       "X-Auto-Response-Suppress": "All",
     },
   };
-  if (sender?.replyTo) body.reply_to = sender.replyTo;
+  if (input.replyTo) body.reply_to = input.replyTo;
+  else if (sender?.replyTo) body.reply_to = sender.replyTo;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

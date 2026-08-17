@@ -7,10 +7,17 @@ import { z } from "zod";
 import { setActiveOrganizationId } from "@/lib/auth/active-org";
 import { getUserMemberships } from "@/lib/auth/session";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
+import {
+  FIRM_DPA_VERSION,
+  firmDpaAcceptanceColumns,
+  formAcceptedFirmDpa,
+} from "@/lib/legal/dpa";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyOrganizationName } from "@/lib/org/slug";
 import { recordAuditEvent } from "@/lib/security/audit";
+
+const emailSchema = z.string().trim().toLowerCase().email().max(254);
 
 const createOrgSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -22,6 +29,7 @@ const createOrgSchema = z.object({
     .min(2)
     .max(48)
     .optional(),
+  privacyContactEmail: emailSchema,
   locale: z.enum(["en", "fr", "es"]).default("en"),
 });
 
@@ -40,11 +48,16 @@ export async function createOrganizationAction(
   const parsed = createOrgSchema.safeParse({
     name,
     slug: slugInput || slugifyOrganizationName(name) || undefined,
+    privacyContactEmail: String(formData.get("privacyContactEmail") ?? ""),
     locale,
   });
 
   if (!parsed.success) {
     return { error: "invalid_org" };
+  }
+
+  if (!formAcceptedFirmDpa(formData)) {
+    return { error: "dpa_required" };
   }
 
   const supabase = await createClient();
@@ -88,10 +101,18 @@ export async function createOrganizationAction(
   const org = data as { id?: string };
   if (org.id) {
     await setActiveOrganizationId(org.id);
-    await admin
+    const { error: orgUpdateError } = await admin
       .from("organizations")
-      .update({ default_locale: parsed.data.locale })
+      .update({
+        default_locale: parsed.data.locale,
+        privacy_contact_email: parsed.data.privacyContactEmail,
+        ...firmDpaAcceptanceColumns(user.id),
+      })
       .eq("id", org.id);
+    if (orgUpdateError) {
+      console.error("create_organization settings:", orgUpdateError.message);
+      return { error: "create_failed" };
+    }
     const { loadOrCreateOrgDataKey } = await import(
       "@/lib/security/org-data-key"
     );
@@ -104,7 +125,7 @@ export async function createOrganizationAction(
     action: "organization.create",
     resourceType: "organization",
     resourceId: org.id,
-    metadata: { name: parsed.data.name },
+    metadata: { name: parsed.data.name, dpaVersion: FIRM_DPA_VERSION },
   });
 
   redirect(`/${locale}/home`);

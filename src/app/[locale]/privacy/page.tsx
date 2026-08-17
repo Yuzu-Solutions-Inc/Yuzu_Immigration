@@ -1,12 +1,15 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LegalDocument } from "@/components/legal/legal-document";
+import { LegalDownloads } from "@/components/legal/legal-downloads";
 
 const SECTIONS = [
   "controller",
+  "officer",
   "purposes",
   "collection",
   "legalBasis",
+  "governance",
   "safeguards",
   "retention",
   "sharing",
@@ -15,6 +18,7 @@ const SECTIONS = [
   "rights",
   "breach",
   "children",
+  "automated",
   "changes",
   "contact",
 ] as const;
@@ -41,6 +45,8 @@ export default async function PrivacyPolicyPage({
         title: t(`sections.${id}.title`),
         body: t(`sections.${id}.body`),
       }))}
-    />
+    >
+      <LegalDownloads />
+    </LegalDocument>
   );
 }
