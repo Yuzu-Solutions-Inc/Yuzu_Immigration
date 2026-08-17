@@ -122,7 +122,7 @@ export function AttentionList({
       : t(`attention.kinds.${filter}`);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <h2 className="font-heading text-sm font-semibold text-brand">
           {t("attention.title")}
@@ -165,7 +165,7 @@ export function AttentionList({
           </Link>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div>
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("attention.empty")}</p>
         ) : visible.length === 0 ? (

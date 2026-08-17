@@ -141,7 +141,7 @@ export async function HomeDashboardView({
         : t("tiles.unpaidHint");
 
   return (
-    <div className="flex flex-col gap-3 lg:h-[calc(100dvh-5.5rem)] lg:min-h-0 lg:overflow-hidden">
+    <div className="flex flex-col gap-3">
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-2">
         <div className="min-w-0 space-y-0.5">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
@@ -242,12 +242,12 @@ export async function HomeDashboardView({
             </div>
           ) : null}
 
-          <div className="grid min-h-0 flex-1 gap-2.5 lg:grid-cols-12 lg:overflow-hidden">
-            <SurfaceCard className="flex min-h-0 flex-col p-3 sm:p-4 lg:col-span-5 lg:overflow-hidden">
+          <div className="grid items-start gap-2.5 lg:grid-cols-12">
+            <SurfaceCard className="flex flex-col p-3 sm:p-4 lg:col-span-5">
               <AttentionList rows={dashboard.attention} locale={locale} />
             </SurfaceCard>
 
-            <SurfaceCard className="flex min-h-0 flex-col gap-2.5 p-3 sm:p-4 lg:col-span-4 lg:overflow-hidden">
+            <SurfaceCard className="flex flex-col gap-2.5 p-3 sm:p-4 lg:col-span-4">
               <div className="flex shrink-0 items-center justify-between gap-2">
                 <div className="min-w-0">
                   <h2 className="font-heading text-sm font-semibold text-brand">
@@ -270,8 +270,7 @@ export async function HomeDashboardView({
                   {t("appointments.viewCalendar")}
                 </Link>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="flex min-h-0 flex-col gap-2.5">
+              <div className="flex flex-col gap-2.5">
                   {todayAppointments.length > 0 ? (
                     <TodayStrip
                       nowMinutes={nowMinutes}
@@ -363,12 +362,11 @@ export async function HomeDashboardView({
                       })}
                     </ul>
                   )}
-                </div>
               </div>
             </SurfaceCard>
 
-            <SurfaceCard className="flex min-h-0 flex-col gap-2.5 p-3 sm:p-4 lg:col-span-3 lg:overflow-hidden">
-              <div className="flex shrink-0 items-center justify-between gap-2">
+            <SurfaceCard className="flex flex-col gap-2.5 p-3 sm:p-4 lg:col-span-3">
+              <div className="flex items-center justify-between gap-2">
                 <h2 className="font-heading text-sm font-semibold text-brand">
                   {t("expiries.title")}
                 </h2>
@@ -379,8 +377,7 @@ export async function HomeDashboardView({
                   {t("expiries.viewPeople")}
                 </Link>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                {dashboard.statusExpiries.length === 0 ? (
+              {dashboard.statusExpiries.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     {t("expiries.empty")}
                   </p>
@@ -415,7 +412,6 @@ export async function HomeDashboardView({
                     ))}
                   </ul>
                 )}
-              </div>
             </SurfaceCard>
           </div>
         </>
