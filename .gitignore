@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Internal working notes and compliance drafts (not product source)
 /docs/
+
+# Local sales/outreach materials (prospect lists, CASL logs, pitch emails)
+/marketing/
