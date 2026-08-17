@@ -40,8 +40,9 @@ export async function GET(request: Request) {
       });
       if (!error) {
         await finishSignedInRedirect(next);
+      } else {
+        console.error("auth confirm:", type, error.message);
       }
-      console.error("auth confirm:", type, error.message);
     }
   }
 
