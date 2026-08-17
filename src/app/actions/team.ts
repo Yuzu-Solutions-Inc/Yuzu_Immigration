@@ -227,6 +227,9 @@ export async function updateOrgMemberRoleAction(
 
   if (error) {
     console.error("update member role:", error.message);
+    if (error.code === "42501" || /row-level security/i.test(error.message)) {
+      return { error: "last_admin" };
+    }
     return { error: "save_failed" };
   }
 
@@ -298,6 +301,9 @@ export async function removeOrgMemberAction(
 
   if (error) {
     console.error("remove member:", error.message);
+    if (error.code === "42501" || /row-level security/i.test(error.message)) {
+      return { error: "last_admin" };
+    }
     return { error: "save_failed" };
   }
 

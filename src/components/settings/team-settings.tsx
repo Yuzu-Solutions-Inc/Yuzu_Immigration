@@ -100,6 +100,7 @@ export function TeamSettings({
   );
   const [copied, setCopied] = useState(false);
 
+  const adminCount = members.filter((m) => m.role === "admin").length;
   const error =
     teamErrorMessage(inviteState.error, t) ||
     teamErrorMessage(memberState.error, t) ||
@@ -177,6 +178,7 @@ export function TeamSettings({
             const name =
               member.profile.full_name || member.profile.email || member.user_id;
             const isSelf = member.user_id === currentUserId;
+            const isLastAdmin = member.role === "admin" && adminCount <= 1;
             return (
               <li
                 key={member.id}
@@ -198,7 +200,8 @@ export function TeamSettings({
                       name="role"
                       density="compact"
                       defaultValue={member.role}
-                      disabled={memberPending}
+                      disabled={memberPending || isLastAdmin}
+                      title={isLastAdmin ? t("errors.lastAdmin") : undefined}
                       onChange={(event) => event.currentTarget.form?.requestSubmit()}
                       aria-label={t("changeRole")}
                       className="w-auto"
@@ -210,7 +213,7 @@ export function TeamSettings({
                       ))}
                     </NativeSelect>
                   </form>
-                  {isSelf ? null : (
+                  {isSelf || isLastAdmin ? null : (
                     <form
                       action={removeAction}
                       onSubmit={(event) => {
