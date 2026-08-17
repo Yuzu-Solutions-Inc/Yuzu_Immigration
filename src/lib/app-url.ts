@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 
-import { env } from "@/lib/env";
+import { publicEnv } from "@/lib/public-env";
 
 function isLocalhostUrl(url: string) {
   try {
@@ -19,7 +19,7 @@ function isLocalhostUrl(url: string) {
  * Server-only: uses next/headers. Do not import from client components.
  */
 export async function getAppBaseUrl(): Promise<string> {
-  const configured = env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  const configured = publicEnv.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
   if (configured && !isLocalhostUrl(configured)) {
     return configured;
   }

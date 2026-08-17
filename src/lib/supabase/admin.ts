@@ -1,6 +1,7 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import { env, requireSupabasePublicEnv } from "@/lib/env";
+import { env } from "@/lib/env";
+import { requireSupabasePublicEnv } from "@/lib/public-env";
 
 /**
  * Service-role client — SERVER ONLY.

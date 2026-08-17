@@ -1,22 +1,23 @@
+import "server-only";
+
 import { z } from "zod";
+
+import { publicEnv, type PublicEnv } from "@/lib/public-env";
+
+/**
+ * Server-only env. Do not import from client components or `@/lib/supabase/client`.
+ * Public `NEXT_PUBLIC_*` values live in `@/lib/public-env`.
+ */
 
 const emptyToUndefined = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? undefined : value;
 
-const optionalUrl = z.preprocess(emptyToUndefined, z.string().url().optional());
 const optionalSecret = z.preprocess(
   emptyToUndefined,
   z.string().min(1).optional(),
 );
 
-const serverSchema = z.object({
-  NEXT_PUBLIC_APP_URL: optionalUrl,
-  NEXT_PUBLIC_DEFAULT_LOCALE: z.preprocess(
-    emptyToUndefined,
-    z.enum(["en", "fr", "es"]).default("en"),
-  ),
-  NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalSecret,
+const secretSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
   /** 64 hex chars — wrap key for per-org DEKs (client data uses the org key). */
   DOCUMENT_ENCRYPTION_KEY: optionalSecret,
@@ -24,14 +25,10 @@ const serverSchema = z.object({
   DIRECT_DATABASE_URL: optionalSecret,
 });
 
-export type ServerEnv = z.infer<typeof serverSchema>;
+export type ServerEnv = PublicEnv & z.infer<typeof secretSchema>;
 
-function readEnv(): ServerEnv {
-  const parsed = serverSchema.safeParse({
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+function readSecrets(): z.infer<typeof secretSchema> {
+  const parsed = secretSchema.safeParse({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     DOCUMENT_ENCRYPTION_KEY: process.env.DOCUMENT_ENCRYPTION_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
@@ -45,20 +42,10 @@ function readEnv(): ServerEnv {
   return parsed.data;
 }
 
-export const env = readEnv();
-
-export function requireSupabasePublicEnv() {
-  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local",
-    );
-  }
-
-  return {
-    url: env.NEXT_PUBLIC_SUPABASE_URL,
-    anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  };
-}
+export const env: ServerEnv = {
+  ...publicEnv,
+  ...readSecrets(),
+};
 
 export function requireDatabaseUrl() {
   if (!env.DATABASE_URL) {
