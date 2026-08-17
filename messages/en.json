@@ -237,6 +237,7 @@
       "signIn": "Could not sign in. Check your email and password.",
       "signUp": "Could not create the account. Try a different email.",
       "emailSendFailed": "The confirmation email could not be sent. Try again in a minute.",
+      "confirm": "That confirmation link is invalid or has expired. Request a new one by creating the account again.",
       "generic": "Something went wrong. Try again."
     }
   },

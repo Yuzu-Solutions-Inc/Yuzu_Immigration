@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 
 import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { getPrimaryMembership } from "@/lib/auth/session";
@@ -17,8 +17,7 @@ function localeFromPath(path: string) {
 }
 
 /** After a session exists: legal acceptance, invitations, then redirect. */
-export async function redirectSignedInUser(request: Request, nextPath: string) {
-  const { origin } = new URL(request.url);
+export async function finishSignedInRedirect(nextPath: string): Promise<never> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,18 +31,15 @@ export async function redirectSignedInUser(request: Request, nextPath: string) {
     if (!legalError) accepted = true;
   }
 
+  jar.set(LEGAL_ACCEPT_COOKIE, "", { path: "/", maxAge: 0 });
+
   if (user && !accepted) {
     const membership = await getPrimaryMembership();
     if (!membership) {
       const locale = localeFromPath(nextPath);
-      const acceptUrl = new URL(`/${locale}/legal/accept`, origin);
-      acceptUrl.searchParams.set("next", nextPath);
-      const response = NextResponse.redirect(acceptUrl);
-      response.cookies.set(LEGAL_ACCEPT_COOKIE, "", {
-        path: "/",
-        maxAge: 0,
-      });
-      return response;
+      redirect(
+        `/${locale}/legal/accept?next=${encodeURIComponent(nextPath)}`,
+      );
     }
   }
 
@@ -52,7 +48,5 @@ export async function redirectSignedInUser(request: Request, nextPath: string) {
   const dest = membership
     ? replacePathLocale(nextPath, membership.organization.defaultLocale)
     : nextPath;
-  const response = NextResponse.redirect(`${origin}${dest}`);
-  response.cookies.set(LEGAL_ACCEPT_COOKIE, "", { path: "/", maxAge: 0 });
-  return response;
+  redirect(dest);
 }

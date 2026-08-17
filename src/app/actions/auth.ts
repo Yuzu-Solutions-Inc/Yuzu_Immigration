@@ -73,17 +73,8 @@ async function sendSignupConfirmationLink(input: {
     return {};
   }
 
-  const { error: passwordError } = await admin.auth.admin.updateUserById(
-    data.user.id,
-    { password: input.password },
-  );
-  if (passwordError) {
-    console.error("signup password sync:", passwordError.message);
-  }
-
   const tokenHash = data.properties.hashed_token;
-  const verifyType = data.properties.verification_type;
-  const confirmUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(verifyType)}&next=${encodeURIComponent(input.next)}`;
+  const confirmUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}`;
   const sent = await sendSignupConfirmationEmail({
     locale: input.locale,
     to: input.email,

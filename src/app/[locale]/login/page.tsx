@@ -8,10 +8,10 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string; mode?: string }>;
+  searchParams: Promise<{ next?: string; mode?: string; error?: string }>;
 }) {
   const { locale } = await params;
-  const { next, mode } = await searchParams;
+  const { next, mode, error } = await searchParams;
   setRequestLocale(locale);
   const initialMode = mode === "signup" ? "signup" : "signin";
 
@@ -21,6 +21,7 @@ export default async function LoginPage({
         locale={locale as "en" | "fr" | "es"}
         nextPath={next}
         initialMode={initialMode}
+        initialError={error}
       />
 
       <div className="flex justify-center sm:justify-start">

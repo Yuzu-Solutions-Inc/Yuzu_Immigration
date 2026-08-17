@@ -237,6 +237,7 @@
       "signIn": "Connexion impossible. Vérifiez l’e-mail et le mot de passe.",
       "signUp": "Impossible de créer le compte. Essayez un autre e-mail.",
       "emailSendFailed": "L’e-mail de confirmation n’a pas pu être envoyé. Réessayez dans une minute.",
+      "confirm": "Ce lien de confirmation est invalide ou a expiré. Créez le compte à nouveau pour en recevoir un autre.",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },

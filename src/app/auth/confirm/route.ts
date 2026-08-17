@@ -1,17 +1,17 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 
-import { redirectSignedInUser } from "@/lib/auth/finish-login";
+import { finishSignedInRedirect } from "@/lib/auth/finish-login";
 import { safeInternalPath } from "@/lib/auth/next-path";
 import { createClient } from "@/lib/supabase/server";
 
 const OTP_TYPES: EmailOtpType[] = [
+  "email",
   "signup",
   "invite",
   "magiclink",
   "recovery",
   "email_change",
-  "email",
 ];
 
 function asOtpType(value: string | null): EmailOtpType | null {
@@ -22,21 +22,28 @@ function asOtpType(value: string | null): EmailOtpType | null {
 }
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
-  const type = asOtpType(searchParams.get("type"));
+  const requestedType = asOtpType(searchParams.get("type"));
   const next = safeInternalPath(searchParams.get("next"), "/en/home");
 
-  if (tokenHash && type) {
+  if (tokenHash) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash: tokenHash,
-    });
-    if (!error) {
-      return redirectSignedInUser(request, next);
+    const types: EmailOtpType[] = requestedType
+      ? [requestedType, requestedType === "email" ? "signup" : "email"]
+      : ["email", "signup"];
+
+    for (const type of types) {
+      const { error } = await supabase.auth.verifyOtp({
+        type,
+        token_hash: tokenHash,
+      });
+      if (!error) {
+        await finishSignedInRedirect(next);
+      }
+      console.error("auth confirm:", type, error.message);
     }
   }
 
-  return NextResponse.redirect(`${origin}/en/login?error=auth_callback`);
+  redirect("/en/login?error=confirm");
 }

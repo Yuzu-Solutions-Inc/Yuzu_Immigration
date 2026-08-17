@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 
-import { redirectSignedInUser } from "@/lib/auth/finish-login";
+import { finishSignedInRedirect } from "@/lib/auth/finish-login";
 import { safeInternalPath } from "@/lib/auth/next-path";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = safeInternalPath(searchParams.get("next"), "/en/home");
 
@@ -13,9 +13,9 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return redirectSignedInUser(request, next);
+      await finishSignedInRedirect(next);
     }
   }
 
-  return NextResponse.redirect(`${origin}/en/login?error=auth_callback`);
+  redirect("/en/login?error=auth_callback");
 }

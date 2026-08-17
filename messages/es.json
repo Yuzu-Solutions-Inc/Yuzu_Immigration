@@ -237,6 +237,7 @@
       "signIn": "No se pudo iniciar sesión. Revisa el correo y la contraseña.",
       "signUp": "Could not create the account. Try a different email.",
       "emailSendFailed": "No se pudo enviar el correo de confirmación. Inténtelo de nuevo en un minuto.",
+      "confirm": "Ese enlace de confirmación no es válido o ha caducado. Cree la cuenta de nuevo para recibir otro.",
       "generic": "Something went wrong. Try again."
     }
   },

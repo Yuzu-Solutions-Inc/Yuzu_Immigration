@@ -32,10 +32,12 @@ export function LoginForm({
   locale,
   nextPath,
   initialMode = "signin",
+  initialError,
 }: {
   locale: string;
   nextPath?: string;
   initialMode?: "signin" | "signup";
+  initialError?: string;
 }) {
   const t = useTranslations("auth");
   const tl = useTranslations("legal");
@@ -55,7 +57,9 @@ export function LoginForm({
         email_send_failed: t("errors.emailSendFailed"),
         legal_required: tl("legalRequired"),
       }[state.error] ?? t("errors.generic")
-    : null;
+    : initialError === "confirm" || initialError === "auth_callback"
+      ? t("errors.confirm")
+      : null;
 
   const awaitingVerification =
     mode === "signup" && state.success === "check_email";
