@@ -1825,6 +1825,7 @@
     "destroySuccess": "The file was erased and recorded in the destruction register.",
     "destroyNotYet": "Secure destruction becomes available after the retention date.",
     "exportPerson": "Export data",
+    "exportPersonHelp": "JSON copy of this client’s personal information for access requests (Loi 25 / PIPEDA): identity, notes, questionnaire answers, forms, document metadata, bookings, and payments. Omits encryption keys, tokens, and hashes.",
     "downloadFile": "Download full file",
     "downloadingFile": "Preparing ZIP…",
     "downloadFileHelp": "ZIP of participants, forms, answers, and uploaded documents for this file.",

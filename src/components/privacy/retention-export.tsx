@@ -213,6 +213,7 @@ export function ExportPersonButton({ personId }: { personId: string }) {
       type="button"
       variant="outline"
       size="sm"
+      title={t("exportPersonHelp")}
       onClick={async () => {
         const result = await exportPersonDataAction(personId);
         if (!result.exportBase64 || !result.exportFilename) {

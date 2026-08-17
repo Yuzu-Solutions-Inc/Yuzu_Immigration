@@ -1825,6 +1825,7 @@
     "destroySuccess": "Le dossier a été effacé et inscrit au registre de destruction.",
     "destroyNotYet": "La destruction sécuritaire sera disponible après la date de conservation.",
     "exportPerson": "Exporter les données",
+    "exportPersonHelp": "Copie JSON des renseignements personnels de ce client pour les demandes d’accès (Loi 25 / LPRPDE) : identité, notes, réponses aux questionnaires, formulaires, métadonnées de documents, rendez-vous et paiements. Exclut les clés de chiffrement, jetons et hachages.",
     "downloadFile": "Télécharger le dossier complet",
     "downloadingFile": "Préparation du ZIP…",
     "downloadFileHelp": "Archive ZIP : participants, formulaires, réponses et documents de ce dossier.",

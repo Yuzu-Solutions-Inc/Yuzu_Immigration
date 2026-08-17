@@ -7,14 +7,10 @@ import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { eraseProjectPersonalData } from "@/lib/privacy/erase";
+import { buildPersonDataExport } from "@/lib/privacy/export-person";
 import { isEligibleForDestruction } from "@/lib/privacy/retention";
 import { recordAuditEvent } from "@/lib/security/audit";
-import {
-  decryptDocumentFileRow,
-  decryptNoteBody,
-  decryptPersonRow,
-  decryptProjectRow,
-} from "@/lib/security/client-pii";
+import { decryptPersonRow, decryptProjectRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -41,92 +37,13 @@ export async function exportPersonDataAction(
     return { error: "forbidden" };
   }
 
-  const supabase = await createClient();
-  const key = await getOrgDataKey(orgId);
-  const { data: person, error: personError } = await supabase
-    .from("people")
-    .select("*")
-    .eq("id", personId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-
-  if (personError || !person) {
+  const payload = await buildPersonDataExport({
+    organizationId: orgId,
+    personId,
+  });
+  if ("error" in payload) {
     return { error: "not_found" };
   }
-
-  const decryptedPerson = decryptPersonRow(
-    person as {
-      first_name: string;
-      last_name: string;
-      email: string | null;
-      phone: string | null;
-    },
-    key,
-  );
-
-  const [{ data: notes }, { data: participants }, { data: docFiles }] =
-    await Promise.all([
-      supabase
-        .from("person_notes")
-        .select("id, body, appointment_id, occurred_at, status, created_at, updated_at")
-        .eq("person_id", personId)
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("project_participants")
-        .select("id, role, left_at, project_id, created_at")
-        .eq("person_id", personId)
-        .eq("organization_id", orgId),
-      supabase
-        .from("project_document_files")
-        .select(
-          "id, project_id, original_filename, content_type, byte_size, created_at, encryption_alg",
-        )
-        .eq("person_id", personId)
-        .eq("organization_id", orgId),
-    ]);
-
-  const projectIds = [
-    ...new Set((participants ?? []).map((p) => p.project_id as string)),
-  ];
-  const { data: projects } =
-    projectIds.length > 0
-      ? await supabase
-          .from("immigration_projects")
-          .select(
-            "id, title, status, program_family, closed_at, retain_until, destroyed_at, opened_at",
-          )
-          .eq("organization_id", orgId)
-          .in("id", projectIds)
-      : { data: [] };
-
-  const payload = {
-    exportedAt: new Date().toISOString(),
-    organizationId: orgId,
-    person: decryptedPerson,
-    notes: (notes ?? []).map((note) => ({
-      ...note,
-      body: decryptNoteBody(note.body as string, key),
-    })),
-    projectParticipations: participants ?? [],
-    projects: (projects ?? []).map((project) =>
-      decryptProjectRow(
-        project as {
-          title: string;
-          description?: string | null;
-          notes?: string | null;
-        },
-        key,
-      ),
-    ),
-    documents: (docFiles ?? []).map((f) => ({
-      ...decryptDocumentFileRow(
-        f as { original_filename: string },
-        key,
-      ),
-      note: "Document ciphertext is stored encrypted; content omitted from this export metadata package.",
-    })),
-  };
 
   const user = await getSessionUser();
   await recordAuditEvent({
@@ -136,10 +53,15 @@ export async function exportPersonDataAction(
     action: "person.export",
     resourceType: "person",
     resourceId: personId,
+    metadata: {
+      formAnswerProjects: payload.formAnswers.length,
+      documentCount: payload.documents.length,
+      appointmentCount: payload.appointments.length,
+    },
   });
 
   const json = JSON.stringify(payload, null, 2);
-  const safeName = `${decryptedPerson.last_name}_${decryptedPerson.first_name}`
+  const safeName = `${payload.person.last_name}_${payload.person.first_name}`
     .replace(/[^a-zA-Z0-9_-]+/g, "_")
     .slice(0, 80);
 

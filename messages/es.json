@@ -1824,6 +1824,7 @@
     "destroySuccess": "El expediente se borró y se registró en el registro de destrucción.",
     "destroyNotYet": "La destrucción segura estará disponible después de la fecha de retención.",
     "exportPerson": "Exportar datos",
+    "exportPersonHelp": "Copia JSON de la información personal de este cliente para solicitudes de acceso (Ley 25 / PIPEDA): identidad, notas, respuestas a cuestionarios, formularios, metadatos de documentos, citas y pagos. Omite claves de cifrado, tokens y hashes.",
     "downloadFile": "Descargar expediente completo",
     "downloadingFile": "Preparando ZIP…",
     "downloadFileHelp": "ZIP con participantes, formularios, respuestas y documentos de este expediente.",
