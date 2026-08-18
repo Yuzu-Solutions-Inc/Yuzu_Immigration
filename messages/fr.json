@@ -1171,6 +1171,7 @@
     "saveSuccess": "Réponses enregistrées.",
     "saveSuccessNext": "Enregistré — section suivante.",
     "unsavedChanges": "Modifications non enregistrées sur cette section.",
+    "recycleBanner": "Certaines réponses ont été copiées à partir de dossiers antérieurs pour cette personne. Passez en revue chaque section — il s’agit d’une nouvelle demande.",
     "save": "Enregistrer",
     "saving": "Enregistrement…",
     "saveFinish": "Enregistrer",

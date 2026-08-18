@@ -43,6 +43,7 @@ import {
   type TableColumn,
 } from "@/lib/ircc/fields";
 import { questionnaireFillPercent, questionnaireSectionComplete } from "@/lib/ircc/form-readiness";
+import { getRecycleMeta } from "@/lib/ircc/recycle-meta";
 import { cn } from "@/lib/utils";
 
 function personInitials(name: string): string {
@@ -1241,6 +1242,12 @@ export function ModularQuestionnaire({
               {t("personTabsHelp", { name: activePerson.displayName })}
             </p>
           </div>
+        </div>
+      ) : null}
+
+      {getRecycleMeta(activePerson.answers) ? (
+        <div className="rounded-xl border border-border bg-canvas px-4 py-3 text-sm text-brand">
+          <p>{t("recycleBanner")}</p>
         </div>
       ) : null}
 

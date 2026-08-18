@@ -1171,6 +1171,7 @@
     "saveSuccess": "Respuestas guardadas.",
     "saveSuccessNext": "Guardado — siguiente sección.",
     "unsavedChanges": "Cambios sin guardar en esta sección.",
+    "recycleBanner": "Algunas respuestas se copiaron de expedientes anteriores de esta persona. Revise cada sección: esta es una solicitud nueva.",
     "save": "Guardar",
     "saving": "Saving…",
     "saveFinish": "Save",

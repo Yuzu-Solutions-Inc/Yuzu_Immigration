@@ -1171,6 +1171,7 @@
     "saveSuccess": "Answers saved.",
     "saveSuccessNext": "Saved — moved to the next section.",
     "unsavedChanges": "Unsaved changes on this section.",
+    "recycleBanner": "Some answers were copied from earlier files for this person. Review every section — this is a new application.",
     "save": "Save",
     "saving": "Saving…",
     "saveFinish": "Save",

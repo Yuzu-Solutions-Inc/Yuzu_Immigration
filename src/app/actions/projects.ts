@@ -688,10 +688,22 @@ export async function createProjectAction(
       personKits: custom ? personKits : undefined,
     });
 
+    const { recycleExistingPeopleIntoStore, formCodesByPersonFromSeeds } =
+      await import("@/lib/ircc/recycle-answers");
+    const recycledAnswers = await recycleExistingPeopleIntoStore({
+      supabase,
+      organizationId: orgId,
+      orgKey,
+      store: initialAnswers,
+      people: resolved.people,
+      formCodesByPerson: formCodesByPersonFromSeeds(seeds, resolved.people),
+      excludeProjectId: project.id as string,
+    });
+
     await supabase.from("project_form_answers").insert({
       organization_id: orgId,
       project_id: project.id,
-      answers: encryptAnswersValue(initialAnswers, orgKey),
+      answers: encryptAnswersValue(recycledAnswers, orgKey),
       current_section: "identity",
     });
     const { refreshProjectProgress } = await import("@/lib/crm/progress");
@@ -912,10 +924,36 @@ export async function updateProjectAction(
       };
     }
 
+    const orgKey = await getOrgDataKey(orgId);
+    const { data: formRowsForRecycle } = await supabase
+      .from("project_forms")
+      .select("form_code, person_id")
+      .eq("project_id", projectId)
+      .eq("organization_id", orgId);
+    const {
+      recycleExistingPeopleIntoStore,
+      formCodesByPersonFromRows,
+    } = await import("@/lib/ircc/recycle-answers");
+    const recycledStore = await recycleExistingPeopleIntoStore({
+      supabase,
+      organizationId: orgId,
+      orgKey,
+      store,
+      people: resolved.people,
+      formCodesByPerson: formCodesByPersonFromRows(
+        (formRowsForRecycle ?? []) as Array<{
+          form_code: string;
+          person_id: string | null;
+        }>,
+        resolved.people,
+      ),
+      excludeProjectId: projectId,
+    });
+
     await supabase
       .from("project_form_answers")
       .update({
-        answers: encryptAnswersValue(store, await getOrgDataKey(orgId)),
+        answers: encryptAnswersValue(recycledStore, orgKey),
         updated_at: new Date().toISOString(),
       })
       .eq("id", answersRow.id);

@@ -189,6 +189,13 @@ export function mergePersonQuestionnaireSave(
     }
   }
 
+  const previous = store.byPerson[personId] ?? {};
+  for (const [key, value] of Object.entries(previous)) {
+    if (key.startsWith("_") && !(key in personBag)) {
+      personBag[key] = value;
+    }
+  }
+
   return {
     byPerson: {
       ...store.byPerson,
