@@ -48,3 +48,6 @@ next-env.d.ts
 
 # Local sales/outreach materials (prospect lists, CASL logs, pitch emails)
 /marketing/
+
+# Local brand explorations (not product source)
+/logo-ideas-mycanadianpermit.html
