@@ -28,7 +28,7 @@ export default async function OrganizationSettingsPage({
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "name, slug, default_locale, privacy_contact_email, dpa_accepted_at, dpa_version",
+      "name, slug, default_locale, privacy_contact_email, portal_google_login_enabled, dpa_accepted_at, dpa_version",
     )
     .eq("id", membership.organization.id)
     .maybeSingle();
@@ -52,6 +52,7 @@ export default async function OrganizationSettingsPage({
           slug: org.slug ?? "",
           defaultLocale: toAppLocale(org.default_locale),
           privacyContactEmail: org.privacy_contact_email ?? "",
+          portalGoogleLoginEnabled: org.portal_google_login_enabled === true,
         }}
       />
       <OrganizationDpaPanel

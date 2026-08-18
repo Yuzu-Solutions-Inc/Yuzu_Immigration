@@ -504,7 +504,7 @@
       "supporting": "Supporting declarations",
       "checklists": "Document checklists"
     },
-    "organizationHelp": "Firm name, workspace slug, default language, privacy contact, and staff invitations.",
+    "organizationHelp": "Firm name, workspace slug, default language, privacy contact, client portal Google sign-in, and staff invitations.",
     "squareTitle": "Square payments",
     "squareHelp": "Connect Square so clients can pay for priced booking services and project payment links.",
     "squareConnect": "Connect Square",
@@ -553,6 +553,9 @@
     "privacyContactTitle": "Legal and security contact",
     "privacyContactEmail": "Legal or security contact email",
     "privacyContactEmailHelp": "Required. Client portal deletion requests are emailed to this address.",
+    "portalGoogleTitle": "Client portal sign-in",
+    "portalGoogleLogin": "Allow Google sign-in",
+    "portalGoogleLoginHelp": "Clients whose Gmail (or Google account) matches the email on their file can open the portal without a password. Password sign-in still works.",
     "dpaTitle": "Data processing addendum",
     "dpaHelp": "A firm administrator must accept this addendum to bind the firm. That clickwrap is the written contract. A wet-ink or DocuSign copy is optional.",
     "dpaAcceptedMeta": "Accepted {date} (version {version}).",
@@ -1844,7 +1847,7 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacy",
     "privacyTitle": "Privacy Policy",
-    "privacyUpdated": "Last updated: 16 August 2026",
+    "privacyUpdated": "Last updated: 17 August 2026",
     "privacyIntro": "Yuzu Immigration is practice-management software operated by Yuzu Solutions Inc. for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use Yuzu Immigration — including the consultant workspace, client share links, the client portal, and public booking pages. Use of the service is also governed by our Terms and Conditions.\n\nThis policy supports accountability under the federal Personal Information Protection and Electronic Documents Act (PIPEDA) and Québec’s Act respecting the protection of personal information in the private sector (Law 25). It is not a certification, not legal advice, and not a retainer with Yuzu Solutions Inc. for immigration services.",
     "backHome": "Back to home",
     "consentTitle": "How your information is used",
@@ -1893,7 +1896,7 @@
       },
       "legalBasis": {
         "title": "5. Consent and notice",
-        "body": "Firms are responsible for obtaining valid consent from clients where required — including express consent for sensitive information and, in Québec, parental or guardian authorization before collecting information about a child under 14 — and for explaining their own retainers and privacy practices.\n\nStaff must accept this Privacy Policy and the Terms and Conditions when they create a Yuzu Immigration account. Client share links require both checkboxes when the client first sets a password for the link. Public booking requires both checkboxes before a booking can be submitted. Checking those boxes is consent to the processing described here for that account, file, or appointment, subject to the firm’s instructions and applicable law. Those checkboxes are not pre-checked.\n\nCalendar, meeting, and payment tools are off until a staff member or the firm connects them. Connecting them is an instruction to communicate related details to that provider. Optional product analytics are off until you accept them in the cookie banner.\n\nYou may refuse by not creating an account, not using the link, or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
+        "body": "Firms are responsible for obtaining valid consent from clients where required — including express consent for sensitive information and, in Québec, parental or guardian authorization before collecting information about a child under 14 — and for explaining their own retainers and privacy practices.\n\nStaff must accept this Privacy Policy and the Terms and Conditions when they create a Yuzu Immigration account. Client share links require both checkboxes when the client first sets a password for the link. The client portal requires both checkboxes when the client first creates a password or first signs in with Google. Public booking requires both checkboxes before a booking can be submitted. Checking those boxes is consent to the processing described here for that account, file, or appointment, subject to the firm’s instructions and applicable law. Those checkboxes are not pre-checked.\n\nCalendar, meeting, and payment tools are off until a staff member or the firm connects them. Connecting them is an instruction to communicate related details to that provider. Optional product analytics are off until you accept them in the cookie banner.\n\nYou may refuse by not creating an account, not using the link, or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
       },
       "governance": {
         "title": "6. Governance",
@@ -1901,7 +1904,7 @@
       },
       "safeguards": {
         "title": "7. Safeguards",
-        "body": "We apply safeguards proportionate to the sensitivity of immigration files, including:\n• Encryption in transit (TLS)\n• Infrastructure encryption at rest for the database, authentication, and file storage\n• Application-level AES-256-GCM for uploaded client documents and for many client fields (names, emails, phones, notes, questionnaire answers, booking guest details, and similar), using a separate encryption key per firm\n• Some operational fields are stored without that application-level encryption (for example preferred language, immigration-status labels, appointment times, and security audit metadata)\n• Access controls scoped to each firm; assistants only see projects they are shared on (highest confidentiality by default for that role)\n• Database service-role privileges restricted to server-only paths\n• Public booking and share links identified by unguessable tokens; booking rate limits use hashed email and IP\n• Staff passwords handled by Supabase Auth; client portal passwords stored in a private schema and verified only on the server\n\nYuzu personnel who hold the platform wrap key can technically decrypt firm keys in order to operate, restore, or secure the service, or to comply with law. We limit that access operationally. No method of transmission or storage is perfectly secure. You use the service understanding that residual risk."
+        "body": "We apply safeguards proportionate to the sensitivity of immigration files, including:\n• Encryption in transit (TLS)\n• Infrastructure encryption at rest for the database, authentication, and file storage\n• Application-level AES-256-GCM for uploaded client documents and for many client fields (names, emails, phones, notes, questionnaire answers, booking guest details, and similar), using a separate encryption key per firm\n• Some operational fields are stored without that application-level encryption (for example preferred language, immigration-status labels, appointment times, and security audit metadata)\n• Access controls scoped to each firm; assistants only see projects they are shared on (highest confidentiality by default for that role)\n• Database service-role privileges restricted to server-only paths\n• Public booking and share links identified by unguessable tokens; booking rate limits use hashed email and IP\n• Staff passwords handled by Supabase Auth; client portal passwords stored in a private schema and verified only on the server; optional Google sign-in for the client portal is verified on the server and does not create a staff account\n\nYuzu personnel who hold the platform wrap key can technically decrypt firm keys in order to operate, restore, or secure the service, or to comply with law. We limit that access operationally. No method of transmission or storage is perfectly secure. You use the service understanding that residual risk."
       },
       "retention": {
         "title": "8. Retention and destruction",
@@ -1909,7 +1912,7 @@
       },
       "sharing": {
         "title": "9. Sharing and service providers",
-        "body": "We use these providers to run Yuzu Immigration:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, logs, and optional Web Analytics and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, or a consultant connects Google Calendar or Google Meet\n• Microsoft — only if a consultant connects Outlook Calendar or Microsoft Teams\n• Zoom — only if a consultant connects Zoom\n• Square — only if the firm connects payments for priced bookings\n\nA current list is available for download from this page. Those providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects a calendar, that provider receives the booking details the product writes there (including guest name, email, and phone), and we receive busy times and event titles from that calendar. When Zoom is connected, Zoom receives the meeting title and start/end time on that consultant’s Zoom account and returns a join URL."
+        "body": "We use these providers to run Yuzu Immigration:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, logs, and optional Web Analytics and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, a firm enables Google sign-in on the client portal, or a consultant connects Google Calendar or Google Meet\n• Microsoft — only if a consultant connects Outlook Calendar or Microsoft Teams\n• Zoom — only if a consultant connects Zoom\n• Square — only if the firm connects payments for priced bookings\n\nA current list is available for download from this page. Those providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects a calendar, that provider receives the booking details the product writes there (including guest name, email, and phone), and we receive busy times and event titles from that calendar. When Zoom is connected, Zoom receives the meeting title and start/end time on that consultant’s Zoom account and returns a join URL."
       },
       "transfers": {
         "title": "10. Location of processing",
@@ -1991,7 +1994,7 @@
       },
       "thirdParties": {
         "title": "12. Third-party services",
-        "body": "The product may connect to third parties the firm or a staff member enables, including Google sign-in, Google Calendar and Meet, Outlook Calendar, Microsoft Teams, Zoom Meetings, transactional email, and payment (Square). Those services have their own terms. Enabling a connection is the firm’s instruction to communicate related personal information to that provider.\n\nYuzu Solutions Inc. is not responsible for a third party’s acts, content, security, or outages, except to the extent the law does not allow that limitation or the outage is caused by Yuzu Solutions Inc.’s own intentional or gross fault."
+        "body": "The product may connect to third parties the firm or a staff member enables, including Google sign-in (staff and, when a firm enables it, the client portal), Google Calendar and Meet, Outlook Calendar, Microsoft Teams, Zoom Meetings, transactional email, and payment (Square). Those services have their own terms. Enabling a connection is the firm’s instruction to communicate related personal information to that provider.\n\nYuzu Solutions Inc. is not responsible for a third party’s acts, content, security, or outages, except to the extent the law does not allow that limitation or the outage is caused by Yuzu Solutions Inc.’s own intentional or gross fault."
       },
       "disclaimers": {
         "title": "13. Disclaimers",
@@ -2683,6 +2686,11 @@
     "emailHint": "Use the same email as on your immigration file.",
     "continueCta": "Continue",
     "continuing": "Checking…",
+    "continueGoogle": "Continue with Google",
+    "orEmail": "or use email",
+    "orPassword": "or use a password",
+    "googleLegalTitle": "Accept to continue",
+    "googleLegalBody": "To open this portal with Google, accept the terms and privacy policy.",
     "useAnotherEmail": "Use a different email",
     "loginCta": "Sign in",
     "loggingIn": "Signing in…",
@@ -2736,6 +2744,7 @@
       "sendFailed": "Could not send the email. Try again.",
       "legalRequired": "Accept the terms and privacy policy to continue.",
       "serverConfig": "The portal is temporarily unavailable. Try again later.",
+      "google": "Google sign-in is not available for this email. Use the email on your file, or ask your consultant.",
       "generic": "Something went wrong. Try again."
     }
   },

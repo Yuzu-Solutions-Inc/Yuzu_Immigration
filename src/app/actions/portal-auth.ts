@@ -1,6 +1,7 @@
 "use server";
 
 import { createHmac } from "node:crypto";
+import { redirect as nextRedirect } from "next/navigation";
 import { z } from "zod";
 
 import { redirect } from "@/i18n/navigation";
@@ -10,6 +11,7 @@ import { sendPortalInviteEmail } from "@/lib/email/portal-invite";
 import { formAcceptedLegal } from "@/lib/legal/acceptance";
 import {
   checkPortalForgotRateLimit,
+  checkPortalGoogleOAuthRateLimit,
   checkPortalIdentifyRateLimit,
   checkPortalVerifyRateLimit,
   clearPortalSessionCookie,
@@ -19,6 +21,7 @@ import {
   portalBaseUrl,
   portalPasswordExists,
   recordPortalForgotPassword,
+  recordPortalGoogleOAuthAttempt,
   recordPortalIdentifyAttempt,
   recordPortalVerifyFailure,
   resetPortalPassword,
@@ -28,6 +31,22 @@ import {
   type PortalAccessRow,
   type PortalEmailMatch,
 } from "@/lib/portal/auth";
+import {
+  clearPortalGooglePending,
+  consumePortalLegalPreAccept,
+  findPortalGoogleMatches,
+  markPortalGoogleLogin,
+  markPortalLegalAccepted,
+  portalNeedsLegalConsent,
+  readPortalGooglePending,
+  resolvePortalGoogleAccess,
+  setPortalGoogleOAuthNonce,
+} from "@/lib/portal/google";
+import {
+  encodePortalGoogleOAuthState,
+  portalGoogleAuthUrl,
+  portalGoogleConfigured,
+} from "@/lib/google/portal-oauth";
 import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { parseShareLinkPassword } from "@/lib/security/share-password";
@@ -91,6 +110,8 @@ function identifiedState(
     personId: access.person_id,
     organizationId: access.organization_id,
     organizationName: match.organizationName,
+    googleLoginEnabled: match.googleLoginEnabled,
+    legalAccepted: Boolean(access.legal_accepted_at),
   };
 }
 
@@ -218,6 +239,8 @@ export async function setPortalPasswordAction(
       console.error("setPortalSessionCookie:", err);
       return { error: "server_config" };
     }
+
+    await markPortalLegalAccepted(access);
 
     void recordAuditEvent({
       organizationId: access.organization_id,
@@ -359,6 +382,7 @@ export async function logoutPortalAction(
   try {
     const locale = toAppLocale(String(formData.get("locale") || "en"));
     await clearPortalSessionCookie();
+    await clearPortalGooglePending();
     redirect({ href: "/portal", locale });
     return {};
   } catch (err) {
@@ -366,4 +390,147 @@ export async function logoutPortalAction(
     console.error("logoutPortalAction:", err);
     return { error: "server_config" };
   }
+}
+
+export async function startPortalGoogleAction(formData: FormData) {
+  const locale = toAppLocale(String(formData.get("locale") || "en"));
+  const fail = (reason: string): never => {
+    nextRedirect(`/${locale}/portal?error=${encodeURIComponent(reason)}`);
+  };
+
+  if (!portalGoogleConfigured()) fail("google");
+
+  const ipHash = await getIpHash();
+  if ((await checkPortalGoogleOAuthRateLimit(ipHash)) === "rate_limited") {
+    fail("rate_limited");
+  }
+  await recordPortalGoogleOAuthAttempt();
+
+  const token = accessIdFromForm(formData) || undefined;
+  const emailRaw = String(formData.get("email") || "").trim();
+  const email = emailSchema.safeParse(emailRaw);
+  const personId = uuid.safeParse(String(formData.get("personId") || ""));
+  const organizationId = uuid.safeParse(
+    String(formData.get("organizationId") || ""),
+  );
+
+  const origin = await getAppBaseUrl();
+  const { state, nonce } = encodePortalGoogleOAuthState({
+    locale,
+    origin,
+    email: email.success ? email.data : undefined,
+    personId: personId.success ? personId.data : undefined,
+    organizationId: organizationId.success ? organizationId.data : undefined,
+    token,
+  });
+  await setPortalGoogleOAuthNonce(nonce);
+  nextRedirect(portalGoogleAuthUrl({ origin, state }));
+}
+
+export async function completePortalGoogleAction(
+  _prev: PortalAuthActionState,
+  formData: FormData,
+): Promise<PortalAuthActionState> {
+  try {
+    const pending = await readPortalGooglePending();
+    if (!pending) return { error: "google" };
+
+    const matches = await findPortalGoogleMatches(pending);
+    if (matches.length === 0) {
+      await clearPortalGooglePending();
+      return { error: "google" };
+    }
+
+    const accountKey = String(formData.get("account") || "").trim();
+    const [keyPerson, keyOrg] = accountKey.split(":");
+    const selectedPerson = uuid.safeParse(
+      String(formData.get("personId") || keyPerson || pending.personId || ""),
+    );
+    const selectedOrg = uuid.safeParse(
+      String(
+        formData.get("organizationId") || keyOrg || pending.organizationId || "",
+      ),
+    );
+    const selected =
+      selectedPerson.success && selectedOrg.success
+        ? matches.find(
+            (row) =>
+              row.personId === selectedPerson.data &&
+              row.organizationId === selectedOrg.data,
+          )
+        : matches.length === 1
+          ? matches[0]
+          : null;
+
+    if (!selected) {
+      return {
+        message: "google_choose_org",
+        organizations: matches.map((row) => ({
+          personId: row.personId,
+          organizationId: row.organizationId,
+          label: choiceLabel(row),
+        })),
+        googleLoginEnabled: true,
+      };
+    }
+
+    const access = await resolvePortalGoogleAccess(
+      pending,
+      {
+        personId: selected.personId,
+        organizationId: selected.organizationId,
+      },
+      pending.token,
+    );
+    if (!access || access === "disabled") {
+      await clearPortalGooglePending();
+      return { error: "google" };
+    }
+
+    const needsLegal = await portalNeedsLegalConsent(access);
+    const acceptedOnForm = formAcceptedLegal(formData);
+    const acceptedBeforeOAuth = needsLegal
+      ? await consumePortalLegalPreAccept()
+      : false;
+    if (needsLegal && !acceptedOnForm && !acceptedBeforeOAuth) {
+      return {
+        message: "google_legal",
+        personId: selected.personId,
+        organizationId: selected.organizationId,
+        organizationName: selected.organizationName,
+        googleLoginEnabled: true,
+      };
+    }
+
+    await markPortalGoogleLogin(
+      access,
+      pending.googleSub,
+      acceptedOnForm || acceptedBeforeOAuth,
+    );
+    await clearPortalGooglePending();
+    try {
+      await establishPortalSession(access);
+    } catch (err) {
+      console.error("setPortalSessionCookie:", err);
+      return { error: "server_config" };
+    }
+
+    void recordAuditEvent({
+      organizationId: access.organization_id,
+      actorKind: "portal",
+      action: "portal.google_login",
+      resourceType: "person",
+      resourceId: access.person_id,
+    }).catch((err) => console.error("portal google audit:", err));
+
+    return { message: "authenticated" };
+  } catch (err) {
+    console.error("completePortalGoogleAction:", err);
+    return { error: "server_config" };
+  }
+}
+
+export async function cancelPortalGoogleAction(): Promise<PortalAuthActionState> {
+  await clearPortalGooglePending();
+  return {};
 }

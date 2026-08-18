@@ -2,7 +2,7 @@
 
 **Yuzu Solutions Inc.**  
 **Privacy Officer:** Adrien Yvin — privacy@yuzu.solutions  
-**Last updated:** 16 August 2026
+**Last updated:** 17 August 2026
 
 This list is for consulting firms completing a privacy impact assessment or vendor review.
 
@@ -12,7 +12,7 @@ This list is for consulting firms completing a privacy impact assessment or vend
 | Vercel | Application hosting and logs | United States and global edge | Required for hosting |
 | Vercel Web Analytics and Speed Insights | Usage and performance metrics | United States | Optional — off until the user consents |
 | Resend | Transactional email (confirmations, reminders, manage links) | United States | When email sending is configured |
-| Google | Staff Google sign-in, Calendar, Meet | United States | Staff opt-in |
+| Google | Staff Google sign-in, optional client portal Google sign-in, Calendar, Meet | United States | Staff or firm opt-in |
 | Microsoft | Outlook Calendar, Teams | United States | Staff opt-in |
 | Zoom | Meeting join links | United States | Staff opt-in |
 | Square | Payments on priced bookings | United States | Firm opt-in |

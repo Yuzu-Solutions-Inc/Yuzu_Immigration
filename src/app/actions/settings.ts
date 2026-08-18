@@ -69,6 +69,7 @@ const orgSchema = z.object({
     .max(48),
   defaultLocale: localeEnum,
   privacyContactEmail: z.string().trim().toLowerCase().email().max(254),
+  portalGoogleLoginEnabled: z.boolean(),
 });
 
 export async function updateAccountSettingsAction(
@@ -146,6 +147,8 @@ export async function updateOrganizationSettingsAction(
     slug: formData.get("slug") || slugifyOrganizationName(empty("name")),
     defaultLocale: formData.get("defaultLocale") || "en",
     privacyContactEmail: formData.get("privacyContactEmail"),
+    portalGoogleLoginEnabled:
+      formData.get("portalGoogleLoginEnabled") === "on",
   });
 
   if (!parsed.success) {
@@ -170,6 +173,7 @@ export async function updateOrganizationSettingsAction(
       slug: parsed.data.slug,
       default_locale: parsed.data.defaultLocale,
       privacy_contact_email: parsed.data.privacyContactEmail,
+      portal_google_login_enabled: parsed.data.portalGoogleLoginEnabled,
       updated_at: new Date().toISOString(),
     })
     .eq("id", orgId);

@@ -47,6 +47,7 @@ export type PersonDataExportPayload = {
     is_active: boolean;
     expires_at: string | null;
     last_authenticated_at: string | null;
+    google_login_linked: boolean;
     created_at: string;
     updated_at: string;
   } | null;
@@ -243,7 +244,7 @@ export async function buildPersonDataExport(input: {
     supabase
       .from("customer_portal_access")
       .select(
-        "is_active, expires_at, last_authenticated_at, created_at, updated_at",
+        "is_active, expires_at, last_authenticated_at, google_sub, created_at, updated_at",
       )
       .eq("person_id", input.personId)
       .eq("organization_id", input.organizationId)
@@ -505,6 +506,7 @@ export async function buildPersonDataExport(input: {
           expires_at: (portalRow.expires_at as string | null) ?? null,
           last_authenticated_at:
             (portalRow.last_authenticated_at as string | null) ?? null,
+          google_login_linked: Boolean(portalRow.google_sub),
           created_at: portalRow.created_at as string,
           updated_at: portalRow.updated_at as string,
         }

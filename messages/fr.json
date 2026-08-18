@@ -504,7 +504,7 @@
       "supporting": "Déclarations complémentaires",
       "checklists": "Listes de contrôle"
     },
-    "organizationHelp": "Nom du cabinet, identifiant de l’espace, langue par défaut, contact de confidentialité et invitations du personnel.",
+    "organizationHelp": "Nom du cabinet, identifiant de l’espace, langue par défaut, contact de confidentialité, connexion Google au portail client et invitations du personnel.",
     "squareTitle": "Paiements Square",
     "squareHelp": "Connectez Square pour encaisser les services tarifés et les liens de paiement de dossier.",
     "squareConnect": "Connecter Square",
@@ -587,6 +587,9 @@
     "privacyContactTitle": "Contact juridique et de sécurité",
     "privacyContactEmail": "Courriel juridique ou de sécurité",
     "privacyContactEmailHelp": "Obligatoire. Les demandes de suppression du portail client sont envoyées à cette adresse.",
+    "portalGoogleTitle": "Connexion au portail client",
+    "portalGoogleLogin": "Autoriser la connexion Google",
+    "portalGoogleLoginHelp": "Les clients dont le compte Gmail (ou Google) correspond au courriel au dossier peuvent ouvrir le portail sans mot de passe. La connexion par mot de passe reste disponible.",
     "dpaTitle": "Avenant de traitement",
     "dpaHelp": "Un administrateur du cabinet doit accepter cet avenant pour lier le cabinet. Ce clic est le contrat écrit. Une copie manuscrite ou DocuSign est facultative.",
     "dpaAcceptedMeta": "Accepté le {date} (version {version}).",
@@ -1844,7 +1847,7 @@
     "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI).",
     "privacyLink": "Confidentialité",
     "privacyTitle": "Politique de confidentialité",
-    "privacyUpdated": "Dernière mise à jour : 16 août 2026",
+    "privacyUpdated": "Dernière mise à jour : 17 août 2026",
     "privacyIntro": "Yuzu Immigration est un logiciel de gestion de pratique exploité par Yuzu Solutions Inc. pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez Yuzu Immigration — y compris l’espace de travail du cabinet, les liens de partage, le portail client et les pages de réservation publiques. L’utilisation du service est aussi régie par nos conditions générales.\n\nCette politique appuie l’obligation de rendre compte prévue par la LPRPDE et par la Loi sur la protection des renseignements personnels dans le secteur privé du Québec (Loi 25). Elle ne constitue ni une certification, ni un avis juridique, ni un mandat d’immigration avec Yuzu Solutions Inc.",
     "backHome": "Retour à l’accueil",
     "consentTitle": "Utilisation de vos renseignements",
@@ -1909,7 +1912,7 @@
       },
       "sharing": {
         "title": "9. Communication et fournisseurs",
-        "body": "Nous utilisons ces fournisseurs pour exploiter Yuzu Immigration :\n• Supabase (Canada) — base de données, authentification et fichiers\n• Vercel — hébergement applicatif, journaux, et Web Analytics / Speed Insights facultatifs\n• Resend — courriel transactionnel lorsque l’envoi est configuré\n• Google — seulement si un membre du personnel se connecte avec Google, ou connecte Google Agenda ou Meet\n• Microsoft — seulement si un consultant connecte Outlook ou Teams\n• Zoom — seulement si un consultant connecte Zoom\n• Square — seulement si le cabinet connecte les paiements\n\nUne liste à jour peut être téléchargée depuis cette page. Ces fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet.\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone)."
+        "body": "Nous utilisons ces fournisseurs pour exploiter Yuzu Immigration :\n• Supabase (Canada) — base de données, authentification et fichiers\n• Vercel — hébergement applicatif, journaux, et Web Analytics / Speed Insights facultatifs\n• Resend — courriel transactionnel lorsque l’envoi est configuré\n• Google — seulement si un membre du personnel se connecte avec Google, si un cabinet active Google sur le portail client, ou si un consultant connecte Google Agenda ou Meet\n• Microsoft — seulement si un consultant connecte Outlook ou Teams\n• Zoom — seulement si un consultant connecte Zoom\n• Square — seulement si le cabinet connecte les paiements\n\nUne liste à jour peut être téléchargée depuis cette page. Ces fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet.\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone)."
       },
       "transfers": {
         "title": "10. Lieu de traitement",
@@ -2683,6 +2686,11 @@
     "emailHint": "Utilisez le même courriel que sur votre dossier d’immigration.",
     "continueCta": "Continuer",
     "continuing": "Vérification…",
+    "continueGoogle": "Continuer avec Google",
+    "orEmail": "ou utiliser le courriel",
+    "orPassword": "ou utiliser un mot de passe",
+    "googleLegalTitle": "Accepter pour continuer",
+    "googleLegalBody": "Pour ouvrir ce portail avec Google, acceptez les conditions et la politique de confidentialité.",
     "useAnotherEmail": "Utiliser un autre courriel",
     "loginCta": "Se connecter",
     "loggingIn": "Connexion…",
@@ -2736,6 +2744,7 @@
       "sendFailed": "Impossible d’envoyer le courriel. Réessayez.",
       "legalRequired": "Acceptez les conditions et la politique de confidentialité pour continuer.",
       "serverConfig": "Le portail est temporairement indisponible. Réessayez plus tard.",
+      "google": "La connexion Google n’est pas disponible pour ce courriel. Utilisez le courriel au dossier, ou demandez à votre consultant.",
       "generic": "Une erreur est survenue. Réessayez."
     }
   },

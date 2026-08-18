@@ -504,7 +504,7 @@
       "supporting": "Declaraciones complementarias",
       "checklists": "Listas de documentos"
     },
-    "organizationHelp": "Nombre del despacho, identificador del espacio, idioma predeterminado, contacto de privacidad e invitaciones del personal.",
+    "organizationHelp": "Nombre del despacho, identificador del espacio, idioma predeterminado, contacto de privacidad, inicio de sesión con Google en el portal e invitaciones del personal.",
     "squareTitle": "Pagos Square",
     "squareHelp": "Conecte Square para cobrar servicios con precio y enlaces de pago de expediente.",
     "squareConnect": "Conectar Square",
@@ -587,6 +587,9 @@
     "privacyContactTitle": "Contacto jurídico y de seguridad",
     "privacyContactEmail": "Correo jurídico o de seguridad",
     "privacyContactEmailHelp": "Obligatorio. Las solicitudes de supresión del portal del cliente se envían a esta dirección.",
+    "portalGoogleTitle": "Inicio de sesión del portal",
+    "portalGoogleLogin": "Permitir inicio de sesión con Google",
+    "portalGoogleLoginHelp": "Los clientes cuyo Gmail (o cuenta de Google) coincida con el correo de su expediente pueden abrir el portal sin contraseña. El inicio con contraseña sigue disponible.",
     "dpaTitle": "Addendum de tratamiento",
     "dpaHelp": "Un administrador del despacho debe aceptar este addendum para vincular a la firma. Ese clic es el contrato escrito. Una copia manuscrita o DocuSign es opcional.",
     "dpaAcceptedMeta": "Aceptado el {date} (versión {version}).",
@@ -1843,7 +1846,7 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacidad",
     "privacyTitle": "Política de privacidad",
-    "privacyUpdated": "Última actualización: 16 de agosto de 2026",
+    "privacyUpdated": "Última actualización: 17 de agosto de 2026",
     "privacyIntro": "Yuzu Immigration es un software de gestión de práctica operado por Yuzu Solutions Inc. para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa Yuzu Immigration — incluido el espacio de trabajo del consultor, los enlaces compartidos, el portal del cliente y las páginas públicas de reserva. El uso del servicio también se rige por nuestros Términos y condiciones.\n\nEsta política apoya la rendición de cuentas prevista por PIPEDA y por la Ley sobre la protección de los datos personales en el sector privado de Quebec (Ley 25). No es una certificación, ni asesoramiento jurídico, ni un contrato de representación con Yuzu Solutions Inc.",
     "backHome": "Volver al inicio",
     "consentTitle": "Cómo se usa su información",
@@ -1908,7 +1911,7 @@
       },
       "sharing": {
         "title": "9. Compartir y proveedores",
-        "body": "Usamos estos proveedores para operar Yuzu Immigration:\n• Supabase (Canadá) — base de datos, autenticación y archivos\n• Vercel — alojamiento de la aplicación, registros, y Web Analytics / Speed Insights opcionales\n• Resend — correo transaccional cuando el envío está configurado\n• Google — solo si un miembro del personal inicia sesión con Google, o conecta Google Calendar o Meet\n• Microsoft — solo si un consultor conecta Outlook o Teams\n• Zoom — solo si un consultor conecta Zoom\n• Square — solo si la firma conecta pagos\n\nHay una lista actualizada para descargar en esta página. Esos proveedores tratan la información que les enviamos para prestar su servicio. No divulgamos el contenido de expedientes a terceros para su marketing. Puede haber divulgación si lo exige la ley, para proteger derechos y seguridad, o según instrucciones de la firma.\n\nCuando un consultor conecta un calendario, ese proveedor recibe los datos de la cita que el producto escribe ahí (incluidos nombre, correo y teléfono)."
+        "body": "Usamos estos proveedores para operar Yuzu Immigration:\n• Supabase (Canadá) — base de datos, autenticación y archivos\n• Vercel — alojamiento de la aplicación, registros, y Web Analytics / Speed Insights opcionales\n• Resend — correo transaccional cuando el envío está configurado\n• Google — solamente si un miembro del personal inicia sesión con Google, la firma activa Google en el portal del cliente, o un consultor conecta Google Calendar o Meet\n• Microsoft — solo si un consultor conecta Outlook o Teams\n• Zoom — solo si un consultor conecta Zoom\n• Square — solo si la firma conecta pagos\n\nHay una lista actualizada para descargar en esta página. Esos proveedores tratan la información que les enviamos para prestar su servicio. No divulgamos el contenido de expedientes a terceros para su marketing. Puede haber divulgación si lo exige la ley, para proteger derechos y seguridad, o según instrucciones de la firma.\n\nCuando un consultor conecta un calendario, ese proveedor recibe los datos de la cita que el producto escribe ahí (incluidos nombre, correo y teléfono)."
       },
       "transfers": {
         "title": "10. Ubicación del tratamiento",
@@ -2682,6 +2685,11 @@
     "emailHint": "Use el mismo correo que en su expediente de inmigración.",
     "continueCta": "Continuar",
     "continuing": "Comprobando…",
+    "continueGoogle": "Continuar con Google",
+    "orEmail": "o usar el correo",
+    "orPassword": "o usar una contraseña",
+    "googleLegalTitle": "Aceptar para continuar",
+    "googleLegalBody": "Para abrir este portal con Google, acepte los términos y la política de privacidad.",
     "useAnotherEmail": "Usar otro correo",
     "loginCta": "Iniciar sesión",
     "loggingIn": "Iniciando sesión…",
@@ -2735,6 +2743,7 @@
       "sendFailed": "No se pudo enviar el correo. Inténtelo de nuevo.",
       "legalRequired": "Acepte los términos y la política de privacidad para continuar.",
       "serverConfig": "El portal no está disponible temporalmente. Inténtelo más tarde.",
+      "google": "El inicio de sesión con Google no está disponible para este correo. Use el correo de su expediente, o pregunte a su consultor.",
       "generic": "Algo salió mal. Inténtelo de nuevo."
     }
   },

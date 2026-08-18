@@ -2,7 +2,7 @@
 
 **Yuzu Solutions Inc.**  
 **Responsable :** Adrien Yvin — privacy@yuzu.solutions  
-**Dernière mise à jour :** 16 août 2026
+**Dernière mise à jour :** 17 août 2026
 
 Liste destinée aux cabinets qui préparent une EFVP ou une revue de fournisseurs.
 
@@ -12,7 +12,7 @@ Liste destinée aux cabinets qui préparent une EFVP ou une revue de fournisseur
 | Vercel | Hébergement de l’application et journaux | États-Unis et réseau mondial | Obligatoire pour l’hébergement |
 | Vercel Web Analytics et Speed Insights | Mesures d’usage et de performance | États-Unis | Facultatif — désactivé tant que l’utilisateur n’a pas consenti |
 | Resend | Courriel transactionnel | États-Unis | Lorsque l’envoi de courriel est configuré |
-| Google | Connexion du personnel, Agenda, Meet | États-Unis | Opt-in du personnel |
+| Google | Connexion du personnel, connexion Google facultative au portail client, Agenda, Meet | États-Unis | Opt-in du personnel ou du cabinet |
 | Microsoft | Outlook, Teams | États-Unis | Opt-in du personnel |
 | Zoom | Liens de réunion | États-Unis | Opt-in du personnel |
 | Square | Paiements des réservations tarifées | États-Unis | Opt-in du cabinet |

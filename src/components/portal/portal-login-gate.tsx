@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
+  completePortalGoogleAction,
   forgotPortalPasswordAction,
   identifyPortalAction,
   loginPortalAction,
@@ -12,6 +13,10 @@ import {
 } from "@/app/actions/portal-auth";
 import { portalAuthInitialState } from "@/app/actions/portal-state";
 import { LegalConsentFields } from "@/components/legal/legal-consent-fields";
+import {
+  PortalAuthDivider,
+  PortalGoogleSignInButton,
+} from "@/components/portal/portal-google-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Field,
@@ -24,12 +29,15 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Link } from "@/i18n/navigation";
+import { PORTAL_LEGAL_ACCEPT_COOKIE } from "@/lib/legal/acceptance";
 import type { PortalAccessState } from "@/lib/portal/session";
 import { cn } from "@/lib/utils";
 
 type GateView =
   | "identify"
   | "choose_org"
+  | "google_choose_org"
+  | "google_legal"
   | Exclude<PortalAccessState, "authenticated">;
 
 export function PortalLoginGate({
@@ -38,22 +46,53 @@ export function PortalLoginGate({
   token,
   organizationName,
   initialError,
+  googleLoginAvailable = false,
+  googleLoginForOrg = false,
+  googleStep,
+  googleOrganizations,
+  googlePersonId,
+  googleOrganizationId,
+  legalAccepted = false,
 }: {
   locale: string;
   mode: Exclude<PortalAccessState, "authenticated">;
   token?: string;
   organizationName?: string;
   initialError?: string;
+  googleLoginAvailable?: boolean;
+  googleLoginForOrg?: boolean;
+  googleStep?: "choose_org" | "needs_legal";
+  googleOrganizations?: { personId: string; organizationId: string; label: string }[];
+  googlePersonId?: string;
+  googleOrganizationId?: string;
+  legalAccepted?: boolean;
 }) {
   const t = useTranslations("portal");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [view, setView] = useState<GateView>(token ? mode : "identify");
+  const [orgGoogle, setOrgGoogle] = useState(googleLoginForOrg);
+  const [hasLegalAcceptance, setHasLegalAcceptance] = useState(legalAccepted);
+  const [view, setView] = useState<GateView>(
+    googleStep === "choose_org"
+      ? "google_choose_org"
+      : googleStep === "needs_legal"
+        ? "google_legal"
+        : token
+          ? mode
+          : "identify",
+  );
   const [email, setEmail] = useState("");
-  const [personId, setPersonId] = useState("");
-  const [organizationId, setOrganizationId] = useState("");
+  const [personId, setPersonId] = useState(
+    googlePersonId ?? googleOrganizations?.[0]?.personId ?? "",
+  );
+  const [organizationId, setOrganizationId] = useState(
+    googleOrganizationId ?? googleOrganizations?.[0]?.organizationId ?? "",
+  );
   const [orgName, setOrgName] = useState(organizationName ?? "");
-  const [accountKey, setAccountKey] = useState("");
+  const [accountKey, setAccountKey] = useState(() => {
+    const first = googleOrganizations?.[0];
+    return first ? `${first.personId}:${first.organizationId}` : "";
+  });
 
   const [identifyState, identifyAction, identifyPending] = useActionState(
     identifyPortalAction,
@@ -72,12 +111,19 @@ export function PortalLoginGate({
     portalAuthInitialState,
   );
 
+  const [googleState, googleAction, googlePending] = useActionState(
+    completePortalGoogleAction,
+    portalAuthInitialState,
+  );
+
   const activeState =
     view === "identify" || view === "choose_org"
       ? identifyState
-      : view === "needs_password_setup"
-        ? setupState
-        : loginState;
+      : view === "google_choose_org" || view === "google_legal"
+        ? googleState
+        : view === "needs_password_setup"
+          ? setupState
+          : loginState;
   const rawError = activeState.error ?? forgotState.error ?? initialError;
   const errorKey =
     (rawError === "needs_setup" && view === "needs_password_setup") ||
@@ -98,14 +144,25 @@ export function PortalLoginGate({
         send_failed: t("errors.sendFailed"),
         legal_required: t("errors.legalRequired"),
         server_config: t("errors.serverConfig"),
+        google: t("errors.google"),
         generic: t("errors.generic"),
       }[errorKey] ?? t("errors.generic")
     : null;
 
   useEffect(() => {
-    setView(token ? mode : "identify");
+    setView(
+      googleStep === "choose_org"
+        ? "google_choose_org"
+        : googleStep === "needs_legal"
+          ? "google_legal"
+          : token
+            ? mode
+            : "identify",
+    );
     setOrgName(organizationName ?? "");
-  }, [mode, token, organizationName]);
+    setOrgGoogle(googleLoginForOrg);
+    setHasLegalAcceptance(legalAccepted);
+  }, [mode, token, organizationName, googleStep, googleLoginForOrg, legalAccepted]);
 
   useEffect(() => {
     if (identifyState.message === "choose_org") {
@@ -122,12 +179,16 @@ export function PortalLoginGate({
       setPersonId(identifyState.personId ?? "");
       setOrganizationId(identifyState.organizationId ?? "");
       setOrgName(identifyState.organizationName ?? "");
+      setOrgGoogle(identifyState.googleLoginEnabled === true);
+      setHasLegalAcceptance(identifyState.legalAccepted === true);
     }
     if (identifyState.message === "needs_login") {
       setView("needs_password_login");
       setPersonId(identifyState.personId ?? "");
       setOrganizationId(identifyState.organizationId ?? "");
       setOrgName(identifyState.organizationName ?? "");
+      setOrgGoogle(identifyState.googleLoginEnabled === true);
+      setHasLegalAcceptance(identifyState.legalAccepted === true);
     }
   }, [identifyState]);
 
@@ -144,13 +205,32 @@ export function PortalLoginGate({
   }, [setupState.error]);
 
   useEffect(() => {
+    if (googleState.message === "google_choose_org") {
+      setView("google_choose_org");
+      const first = googleState.organizations?.[0];
+      if (first) {
+        setAccountKey(`${first.personId}:${first.organizationId}`);
+        setPersonId(first.personId);
+        setOrganizationId(first.organizationId);
+      }
+    }
+    if (googleState.message === "google_legal") {
+      setView("google_legal");
+      setPersonId(googleState.personId ?? "");
+      setOrganizationId(googleState.organizationId ?? "");
+      setOrgName(googleState.organizationName ?? "");
+    }
+  }, [googleState]);
+
+  useEffect(() => {
     if (
       setupState.message === "authenticated" ||
-      loginState.message === "authenticated"
+      loginState.message === "authenticated" ||
+      googleState.message === "authenticated"
     ) {
       window.location.replace(`/${locale}/portal/home`);
     }
-  }, [setupState.message, loginState.message, locale]);
+  }, [setupState.message, loginState.message, googleState.message, locale]);
 
   const identityFields = (
     <>
@@ -163,6 +243,39 @@ export function PortalLoginGate({
       ) : null}
     </>
   );
+
+  const legalReady = privacyAccepted && termsAccepted;
+  const googleNeedsNotices = !hasLegalAcceptance;
+
+  function markPortalLegalForOAuth() {
+    document.cookie = `${PORTAL_LEGAL_ACCEPT_COOKIE}=1; Path=/; Max-Age=600; SameSite=Lax`;
+  }
+
+  function renderGoogleButton({ showNotices = googleNeedsNotices } = {}) {
+    return (
+      <>
+        {showNotices ? (
+          <LegalConsentFields
+            privacyChecked={privacyAccepted}
+            termsChecked={termsAccepted}
+            onPrivacyChange={setPrivacyAccepted}
+            onTermsChange={setTermsAccepted}
+          />
+        ) : null}
+        <PortalGoogleSignInButton
+          locale={locale}
+          email={email || undefined}
+          personId={personId || undefined}
+          organizationId={organizationId || undefined}
+          token={token}
+          disabled={googleNeedsNotices && !legalReady}
+          onBeforeRedirect={
+            googleNeedsNotices && legalReady ? markPortalLegalForOAuth : undefined
+          }
+        />
+      </>
+    );
+  }
 
   if (forgotState.message === "email_sent") {
     return (
@@ -199,6 +312,12 @@ export function PortalLoginGate({
                 {view === "choose_org" ? t("chooseOrgBody") : t("loginBody")}
               </p>
             </div>
+            {view === "identify" && googleLoginAvailable ? (
+              <>
+                {renderGoogleButton()}
+                <PortalAuthDivider label={t("orEmail")} />
+              </>
+            ) : null}
             <FormStack
               action={identifyAction}
               onSubmit={(event) => {
@@ -288,6 +407,84 @@ export function PortalLoginGate({
               </button>
             ) : null}
           </>
+        ) : view === "google_choose_org" ? (
+          <>
+            <div className="space-y-1">
+              <h2 className="font-heading text-lg font-semibold text-brand">
+                {t("chooseOrgTitle")}
+              </h2>
+              <p className="text-sm text-muted-foreground">{t("chooseOrgBody")}</p>
+            </div>
+            <FormStack action={googleAction}>
+              <Field>
+                <FieldLabel htmlFor="portal-google-account" required>
+                  {t("account")}
+                </FieldLabel>
+                <NativeSelect
+                  id="portal-google-account"
+                  name="account"
+                  required
+                  value={accountKey}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setAccountKey(value);
+                    const [nextPerson, nextOrg] = value.split(":");
+                    setPersonId(nextPerson ?? "");
+                    setOrganizationId(nextOrg ?? "");
+                  }}
+                >
+                  {(googleState.organizations ?? googleOrganizations ?? []).map(
+                    (org) => {
+                      const value = `${org.personId}:${org.organizationId}`;
+                      return (
+                        <option key={value} value={value}>
+                          {org.label}
+                        </option>
+                      );
+                    },
+                  )}
+                </NativeSelect>
+              </Field>
+              <input type="hidden" name="personId" value={personId} />
+              <input type="hidden" name="organizationId" value={organizationId} />
+              <Button type="submit" className="w-full" disabled={googlePending}>
+                {googlePending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {googlePending ? t("continuing") : t("continueCta")}
+              </Button>
+            </FormStack>
+          </>
+        ) : view === "google_legal" ? (
+          <>
+            <div className="space-y-1">
+              <h2 className="font-heading text-lg font-semibold text-brand">
+                {t("googleLegalTitle")}
+              </h2>
+              <p className="text-sm text-muted-foreground">{t("googleLegalBody")}</p>
+            </div>
+            <FormStack action={googleAction}>
+              <input type="hidden" name="personId" value={personId} />
+              <input type="hidden" name="organizationId" value={organizationId} />
+              <LegalConsentFields
+                privacyChecked={privacyAccepted}
+                termsChecked={termsAccepted}
+                onPrivacyChange={setPrivacyAccepted}
+                onTermsChange={setTermsAccepted}
+                disabled={googlePending}
+              />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={googlePending || !privacyAccepted || !termsAccepted}
+              >
+                {googlePending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {googlePending ? t("continuing") : t("continueCta")}
+              </Button>
+            </FormStack>
+          </>
         ) : view === "needs_password_setup" ? (
           <>
             <div className="space-y-1">
@@ -297,6 +494,12 @@ export function PortalLoginGate({
               <p className="text-sm text-muted-foreground">{t("setupBody")}</p>
               <p className="text-xs text-muted-foreground">{t("passwordRules")}</p>
             </div>
+            {orgGoogle && googleLoginAvailable ? (
+              <>
+                {renderGoogleButton()}
+                <PortalAuthDivider label={t("orPassword")} />
+              </>
+            ) : null}
             <FormStack action={setupAction}>
               {identityFields}
               <Field>
@@ -327,13 +530,24 @@ export function PortalLoginGate({
                   hideLabel={t("hidePassword")}
                 />
               </Field>
-              <LegalConsentFields
-                privacyChecked={privacyAccepted}
-                termsChecked={termsAccepted}
-                onPrivacyChange={setPrivacyAccepted}
-                onTermsChange={setTermsAccepted}
-                disabled={setupPending}
-              />
+              {orgGoogle && googleLoginAvailable ? (
+                <>
+                  {privacyAccepted ? (
+                    <input type="hidden" name="privacyAccepted" value="on" />
+                  ) : null}
+                  {termsAccepted ? (
+                    <input type="hidden" name="termsAccepted" value="on" />
+                  ) : null}
+                </>
+              ) : (
+                <LegalConsentFields
+                  privacyChecked={privacyAccepted}
+                  termsChecked={termsAccepted}
+                  onPrivacyChange={setPrivacyAccepted}
+                  onTermsChange={setTermsAccepted}
+                  disabled={setupPending}
+                />
+              )}
               <Button
                 type="submit"
                 className="w-full"
@@ -354,6 +568,12 @@ export function PortalLoginGate({
               </h2>
               <p className="text-sm text-muted-foreground">{t("signInBody")}</p>
             </div>
+            {orgGoogle && googleLoginAvailable ? (
+              <>
+                {renderGoogleButton()}
+                <PortalAuthDivider label={t("orPassword")} />
+              </>
+            ) : null}
             <FormStack action={loginAction}>
               {identityFields}
               <Field>

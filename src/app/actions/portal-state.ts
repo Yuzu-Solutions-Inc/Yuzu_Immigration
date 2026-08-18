@@ -11,6 +11,8 @@ export type PortalAuthActionState = {
   organizationId?: string;
   organizationName?: string;
   organizations?: PortalOrgChoice[];
+  googleLoginEnabled?: boolean;
+  legalAccepted?: boolean;
 };
 
 export const portalAuthInitialState: PortalAuthActionState = {};

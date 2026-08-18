@@ -37,6 +37,8 @@ function asAccess(data: unknown): PortalAccessRow | null {
     is_active: row.is_active !== false,
     expires_at: (row.expires_at as string | null) ?? null,
     last_authenticated_at: (row.last_authenticated_at as string | null) ?? null,
+    google_sub: (row.google_sub as string | null) ?? null,
+    legal_accepted_at: (row.legal_accepted_at as string | null) ?? null,
   };
 }
 

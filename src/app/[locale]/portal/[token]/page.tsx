@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 
 import { PortalLoginGate } from "@/components/portal/portal-login-gate";
+import { portalGoogleConfigured } from "@/lib/google/portal-oauth";
 import {
   getPortalAccessState,
   getPortalSession,
@@ -33,6 +34,7 @@ export default async function PortalMagicLinkPage({
         locale={locale}
         mode="needs_password_login"
         initialError="invalid"
+        googleLoginAvailable={portalGoogleConfigured()}
       />
     );
   }
@@ -44,7 +46,7 @@ export default async function PortalMagicLinkPage({
   const admin = createServiceClient();
   const { data: org } = await admin
     .from("organizations")
-    .select("name")
+    .select("name, portal_google_login_enabled")
     .eq("id", resolved.access.organization_id)
     .maybeSingle();
 
@@ -58,6 +60,9 @@ export default async function PortalMagicLinkPage({
       }
       token={token}
       organizationName={String(org?.name ?? "")}
+      googleLoginAvailable={portalGoogleConfigured()}
+      googleLoginForOrg={org?.portal_google_login_enabled === true}
+      legalAccepted={Boolean(resolved.access.legal_accepted_at)}
     />
   );
 }

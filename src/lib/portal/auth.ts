@@ -29,6 +29,8 @@ export type PortalAccessRow = {
   is_active: boolean;
   expires_at: string | null;
   last_authenticated_at: string | null;
+  google_sub: string | null;
+  legal_accepted_at: string | null;
 };
 
 const VERIFY_FAIL_LIMIT = 10;
@@ -71,6 +73,8 @@ function asAccessRow(data: unknown): PortalAccessRow | null {
     is_active: row.is_active !== false,
     expires_at: (row.expires_at as string | null) ?? null,
     last_authenticated_at: (row.last_authenticated_at as string | null) ?? null,
+    google_sub: (row.google_sub as string | null) ?? null,
+    legal_accepted_at: (row.legal_accepted_at as string | null) ?? null,
   };
 }
 
@@ -97,6 +101,7 @@ export type PortalEmailMatch = {
   organizationId: string;
   organizationName: string;
   personLabel: string;
+  googleLoginEnabled: boolean;
 };
 
 export async function findPortalMatches(
@@ -128,15 +133,22 @@ export async function findPortalMatches(
   ];
   const { data: orgs } = await admin
     .from("organizations")
-    .select("id, name")
+    .select("id, name, portal_google_login_enabled")
     .in("id", orgIds);
-  const orgName = new Map(
-    (orgs ?? []).map((org) => [String(org.id), String(org.name ?? "")]),
+  const orgById = new Map(
+    (orgs ?? []).map((org) => [
+      String(org.id),
+      {
+        name: String(org.name ?? ""),
+        googleLoginEnabled: org.portal_google_login_enabled === true,
+      },
+    ]),
   );
 
   const matches: PortalEmailMatch[] = [];
   for (const row of rows) {
     const organizationId = String(row.organization_id);
+    const org = orgById.get(organizationId);
     const person = decryptPersonRow(
       {
         first_name: row.first_name as string,
@@ -147,11 +159,47 @@ export async function findPortalMatches(
     matches.push({
       personId: String(row.id),
       organizationId,
-      organizationName: orgName.get(organizationId) || "",
+      organizationName: org?.name || "",
       personLabel: `${person.first_name} ${person.last_name}`.trim(),
+      googleLoginEnabled: org?.googleLoginEnabled === true,
     });
   }
   return matches;
+}
+
+export async function labelPortalPerson(
+  personId: string,
+  organizationId: string,
+): Promise<PortalEmailMatch | null> {
+  const admin = createServiceClient();
+  const [{ data: person }, { data: org }] = await Promise.all([
+    admin
+      .from("people")
+      .select("id, organization_id, first_name, last_name")
+      .eq("id", personId)
+      .eq("organization_id", organizationId)
+      .maybeSingle(),
+    admin
+      .from("organizations")
+      .select("id, name, portal_google_login_enabled")
+      .eq("id", organizationId)
+      .maybeSingle(),
+  ]);
+  if (!person || !org) return null;
+  const decrypted = decryptPersonRow(
+    {
+      first_name: person.first_name as string,
+      last_name: person.last_name as string,
+    },
+    await getOrgDataKey(organizationId),
+  );
+  return {
+    personId,
+    organizationId,
+    organizationName: String(org.name ?? ""),
+    personLabel: `${decrypted.first_name} ${decrypted.last_name}`.trim(),
+    googleLoginEnabled: org.portal_google_login_enabled === true,
+  };
 }
 
 export async function openPortalAccount(
@@ -283,7 +331,7 @@ export async function resetPortalPassword(
 async function countAuthEvents(input: {
   organizationId?: string | null;
   accessHash?: string | null;
-  kind: "verify_fail" | "forgot_password" | "identify";
+  kind: "verify_fail" | "forgot_password" | "identify" | "google_oauth";
   ipHash?: string | null;
   sinceIso: string;
 }) {
@@ -309,7 +357,7 @@ async function countAuthEvents(input: {
 async function recordAuthEvent(input: {
   organizationId?: string | null;
   accessHash: string;
-  kind: "verify_fail" | "forgot_password" | "identify";
+  kind: "verify_fail" | "forgot_password" | "identify" | "google_oauth";
   ipHash?: string | null;
 }) {
   const admin = createServiceClient();
@@ -427,6 +475,29 @@ export async function recordPortalIdentifyAttempt(email: string) {
   await recordAuthEvent({
     accessHash: emailHash,
     kind: "identify",
+    ipHash: ip ? hashIp(ip) : null,
+  });
+}
+
+const GOOGLE_OAUTH_PER_IP_WINDOW = 20;
+
+export async function checkPortalGoogleOAuthRateLimit(
+  ipHash: string | null,
+): Promise<"ok" | "rate_limited"> {
+  if (!ipHash) return "ok";
+  const count = await countAuthEvents({
+    kind: "google_oauth",
+    ipHash,
+    sinceIso: agoIso(IDENTIFY_WINDOW_SEC),
+  });
+  return count >= GOOGLE_OAUTH_PER_IP_WINDOW ? "rate_limited" : "ok";
+}
+
+export async function recordPortalGoogleOAuthAttempt() {
+  const ip = await getRequestClientIp();
+  await recordAuthEvent({
+    accessHash: hashAccessId("google-oauth"),
+    kind: "google_oauth",
     ipHash: ip ? hashIp(ip) : null,
   });
 }

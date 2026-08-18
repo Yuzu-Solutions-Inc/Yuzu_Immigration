@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -18,7 +18,9 @@ import {
   FormStack,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { Switch } from "@/components/ui/switch";
 import {
   APP_LOCALES,
   LOCALE_LABELS,
@@ -32,6 +34,7 @@ export type OrgSettingsValues = {
   slug: string;
   defaultLocale: AppLocale;
   privacyContactEmail: string;
+  portalGoogleLoginEnabled: boolean;
 };
 
 export function OrganizationSettingsForm({
@@ -42,6 +45,9 @@ export function OrganizationSettingsForm({
   initialValues: OrgSettingsValues;
 }) {
   const t = useTranslations("settings");
+  const [googleLoginEnabled, setGoogleLoginEnabled] = useState(
+    initialValues.portalGoogleLoginEnabled,
+  );
   const [state, action, pending] = useActionState(
     updateOrganizationSettingsAction,
     initial,
@@ -128,6 +134,30 @@ export function OrganizationSettingsForm({
           />
           <FieldHint>{t("privacyContactEmailHelp")}</FieldHint>
         </Field>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="font-heading text-base font-semibold text-brand">
+          {t("portalGoogleTitle")}
+        </h3>
+        <input
+          type="hidden"
+          name="portalGoogleLoginEnabled"
+          value={googleLoginEnabled ? "on" : "off"}
+        />
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="portalGoogleLoginEnabled">
+              {t("portalGoogleLogin")}
+            </Label>
+            <FieldHint>{t("portalGoogleLoginHelp")}</FieldHint>
+          </div>
+          <Switch
+            id="portalGoogleLoginEnabled"
+            checked={googleLoginEnabled}
+            onCheckedChange={setGoogleLoginEnabled}
+          />
+        </div>
       </section>
 
       {error ? <FieldError>{error}</FieldError> : null}

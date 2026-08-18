@@ -87,6 +87,10 @@ export const organizations = pgTable("organizations", {
   wrappedDek: text("wrapped_dek"),
   /** Legal/security inbox for client portal deletion requests. */
   privacyContactEmail: text("privacy_contact_email"),
+  /** When true, clients can sign in to the portal with a verified Google account. */
+  portalGoogleLoginEnabled: boolean("portal_google_login_enabled")
+    .default(false)
+    .notNull(),
   /** In-product Firm DPA clickwrap (Law 25 written contract). */
   dpaAcceptedAt: timestamp("dpa_accepted_at", { withTimezone: true }),
   dpaVersion: text("dpa_version"),
@@ -398,6 +402,9 @@ export const customerPortalAccess = pgTable("customer_portal_access", {
   lastAuthenticatedAt: timestamp("last_authenticated_at", {
     withTimezone: true,
   }),
+  /** Google subject linked to this portal account. Unique per organization. */
+  googleSub: text("google_sub"),
+  legalAcceptedAt: timestamp("legal_accepted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

@@ -2,6 +2,8 @@ import type { User } from "@supabase/supabase-js";
 
 /** Set for 10 minutes when a consultant checks legal boxes before Google OAuth. */
 export const LEGAL_ACCEPT_COOKIE = "yuzu_legal_accept";
+/** Set for 10 minutes when a client checks legal boxes before portal Google OAuth. */
+export const PORTAL_LEGAL_ACCEPT_COOKIE = "yuzu_portal_legal_accept";
 
 export function hasAcceptedLegal(user: User | null | undefined): boolean {
   if (!user) return false;
