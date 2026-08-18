@@ -36,23 +36,46 @@
     },
     "showcases": {
       "eyebrow": "Dans le produit",
-      "title": "Les mêmes écrans que votre cabinet et vos clients utiliseront",
-      "subtitle": "Le calendrier montre la journée du cabinet. Les clients utilisent un portail pour déposer, payer et joindre l’appel — sur des pages conçues pour eux.",
-      "file": {
-        "title": "Un dossier d’immigration, pas une liasse d’outils",
-        "body": "Ouvrez un projet et menez tout l’engagement : participants, révision des documents, questionnaires IRCC, le portail client, appels, notes et liens de paiement Square."
-      },
+      "title": "Portail client, espace du représentant, réservation et tableau de bord",
+      "subtitle": "Le client remplit les formulaires et dépose les pièces. Votre cabinet révise le dossier. Les consultations se réservent et se paient. Le tableau de bord montre la prochaine action.",
       "client": {
-        "title": "Le client travaille dans un portail, pas un lien jetable",
-        "body": "Invitez les adultes du dossier au portail client. Ils créent un compte avec le courriel déjà au dossier, puis mettent à jour documents et questionnaires pour tout le monde. Factures et rendez-vous s’y trouvent aussi."
+        "title": "Portail client",
+        "body": "Le questionnaire est généré à partir des formulaires IMM du dossier — pas une collecte générique. Le client dépose ses pièces justificatives. Ces réponses produisent les PDF IMM remplis, prêts pour la révision professionnelle.",
+        "points": [
+          "Formulaire dynamique généré selon les formulaires IMM choisis pour le dossier",
+          "Le client ajoute ses documents dans le portail",
+          "PDF IMM remplis, prêts pour votre révision",
+          "Le client peut télécharger ses données ou demander leur suppression depuis Sécurité"
+        ]
+      },
+      "representative": {
+        "title": "Espace du représentant",
+        "body": "Suivez le dossier sur un seul écran : vérifiez les documents, demandez un nouveau dépôt, et révisez ou corrigez les réponses du client en direct. Demandez un paiement Square, prenez des notes et suivez les rendez-vous.",
+        "points": [
+          "Vérifiez les documents ou demandez un nouveau dépôt",
+          "Révisez et corrigez le questionnaire en direct",
+          "Demandez un paiement Square, prenez des notes et suivez les rendez-vous",
+          "Téléchargez les dossiers ou supprimez-les selon les besoins de la pratique"
+        ]
       },
       "booking": {
-        "title": "Les clients réservent une consultation sur votre page publique",
-        "body": "Ils choisissent un service, un jour et une heure. Les plages occupées de Google Calendar sont déjà bloquées. Après confirmation, ils peuvent payer avec Square et joindre l’appel sur Google Meet."
+        "title": "Calendrier et réservation",
+        "body": "Définissez vos plages hebdomadaires et les services payants ouverts à la réservation. Un client potentiel trouve un créneau, réserve et paie. Les rendez-vous se synchronisent avec Google Calendar ou Outlook.",
+        "points": [
+          "Disponibilités hebdomadaires et services payants réservables",
+          "Le client choisit une heure et paie sur Square Checkout",
+          "Synchronisation avec Google Calendar ou Outlook — un événement créé hors de l’application bloque automatiquement le créneau",
+          "Les réservations confirmées peuvent inclure un lien Google Meet, Teams ou Zoom"
+        ]
       },
-      "after": {
-        "title": "Ensuite, ils paient avec Square et joignent Google Meet",
-        "body": "Les services payants ouvrent Square Checkout. Quand Google Calendar est connecté, le rendez-vous inclut un lien Google Meet — sur la confirmation, dans le courriel, et sur le lien de gestion."
+      "dashboard": {
+        "title": "Tableau de bord",
+        "body": "Un accueil actionnable qui montre exactement ce que vous pouvez traiter — documents à réviser, factures impayées, dossiers bloqués et rendez-vous du jour. Les notifications gardent la prochaine étape devant vous.",
+        "points": [
+          "Voyez ce qui demande une action aujourd’hui, pas un mur de graphiques",
+          "Documents, paiements, questionnaires et rendez-vous dans une seule liste",
+          "Des notifications qui pointent vers la prochaine étape"
+        ]
       }
     },
     "featuresEyebrow": "Ce que vous obtenez",
@@ -184,9 +207,13 @@
       }
     },
     "securityEyebrow": "Sécurité, simplement",
-    "securityTitle": "Conçu pour des dossiers d’immigration sensibles",
-    "securitySubtitle": "Vos clients vous confient passeports, biographies et détails familiaux. Yuzu Immigration est conçu pour soutenir cette confiance avec des mesures claires et concrètes.",
+    "securityTitle": "Pas d’IA. Les numérisations de passeport restent dans votre pratique.",
+    "securitySubtitle": "Personne ne veut qu’une numérisation de passeport atterrisse dans le centre de données d’IA d’un autre pays. Yuzu Immigration n’utilise aucun service d’intelligence artificielle. Nous traitons vos données avec des flux d’automatisation et des règles logiques — des règles que votre cabinet contrôle — pas des modèles entraînés sur les dossiers clients.",
     "security": {
+      "noAi": {
+        "title": "Aucune IA dans le traitement",
+        "body": "Questionnaires, remplissage des PDF, réservations et révision des documents reposent sur de la logique logicielle. Nous n’envoyons pas les dossiers clients à des fournisseurs d’IA générative."
+      },
       "canada": {
         "title": "Données principales au Canada",
         "body": "Base de données, authentification et fichiers sur Supabase au Canada (AWS Canada Central)."

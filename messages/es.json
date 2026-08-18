@@ -36,23 +36,46 @@
     },
     "showcases": {
       "eyebrow": "Dentro del producto",
-      "title": "Las mismas pantallas que usarán su firma y sus clientes",
-      "subtitle": "El calendario muestra el día de la firma. Los clientes usan un portal para subir documentos, pagar y unirse a la llamada — en páginas hechas para ellos.",
-      "file": {
-        "title": "Un expediente de inmigración, no una carpeta de herramientas",
-        "body": "Abra un proyecto y gestione todo el encargo: participantes, revisión de documentos, cuestionarios IRCC, el portal del cliente, llamadas, notas y enlaces de pago de Square."
-      },
+      "title": "Portal del cliente, espacio del representante, reservas y panel",
+      "subtitle": "El cliente rellena formularios y sube documentos. Su firma revisa el expediente. Las consultas se reservan y se pagan. El panel muestra la siguiente acción.",
       "client": {
-        "title": "El cliente trabaja en un portal, no en un enlace de un solo uso",
-        "body": "Invite a los adultos del expediente al portal. Crean una cuenta con el correo que ya figura en el expediente y actualizan documentos y cuestionarios de todos. También ven facturas y citas."
+        "title": "Portal del cliente",
+        "body": "El cuestionario se genera a partir de los formularios IMM del expediente — no un intake genérico. El cliente sube documentos de apoyo. Esas respuestas producen PDF IMM rellenados, listos para la revisión profesional.",
+        "points": [
+          "Formulario dinámico generado según los formularios IMM elegidos para el expediente",
+          "El cliente añade documentos de apoyo en el portal",
+          "PDF IMM rellenados, listos para su revisión",
+          "El cliente puede descargar sus datos o solicitar su eliminación desde Seguridad"
+        ]
+      },
+      "representative": {
+        "title": "Espacio del representante",
+        "body": "Siga el expediente en una sola pantalla: verifique documentos, pida una nueva carga y revise o corrija las respuestas del cliente en vivo. Solicite pagos con Square, tome notas y haga el seguimiento de las reuniones.",
+        "points": [
+          "Verifique documentos o pida una nueva carga",
+          "Revise y corrija el cuestionario en vivo",
+          "Solicite pagos con Square, tome notas y haga el seguimiento de las reuniones",
+          "Descargue registros o elimínelos cuando lo exija su práctica"
+        ]
       },
       "booking": {
-        "title": "Los clientes reservan una consulta en su página pública",
-        "body": "Eligen un servicio, un día y una hora. Los horarios ocupados de Google Calendar ya están bloqueados. Tras confirmar, pueden pagar con Square y unirse en Google Meet."
+        "title": "Calendario y reservas",
+        "body": "Defina su disponibilidad semanal y los servicios de pago que se pueden reservar. Un posible cliente encuentra un hueco, reserva y paga. Las citas se sincronizan con Google Calendar o Outlook.",
+        "points": [
+          "Horario semanal y servicios de pago listos para reservar",
+          "El cliente elige una hora y paga en Square Checkout",
+          "Sincronización con Google Calendar o Outlook — un evento creado fuera de la aplicación bloquea ese horario automáticamente",
+          "Las reservas confirmadas pueden incluir un enlace de Google Meet, Teams o Zoom"
+        ]
       },
-      "after": {
-        "title": "Luego pagan con Square y se unen en Google Meet",
-        "body": "Los servicios de pago abren Square Checkout. Si Google Calendar está conectado, la cita incluye un enlace de Google Meet — en la confirmación, el correo y el enlace para gestionar la reserva."
+      "dashboard": {
+        "title": "Panel",
+        "body": "Una pantalla de inicio accionable que muestra exactamente en qué puede actuar: documentos por revisar, facturas impagadas, expedientes atascados y reuniones de hoy. Las notificaciones mantienen el siguiente paso delante de usted.",
+        "points": [
+          "Vea qué requiere atención hoy, no un muro de gráficos",
+          "Documentos, pagos, cuestionarios y reuniones en una sola lista",
+          "Notificaciones que apuntan al siguiente paso"
+        ]
       }
     },
     "featuresEyebrow": "Qué incluye",
@@ -184,9 +207,13 @@
       }
     },
     "securityEyebrow": "Seguridad, en claro",
-    "securityTitle": "Hecho para expedientes de inmigración sensibles",
-    "securitySubtitle": "Sus clientes le confían pasaportes, biografías y datos familiares. Diseñamos Yuzu Immigration para sostener esa confianza con salvaguardas claras y prácticas.",
+    "securityTitle": "Sin IA. Los escaneos de pasaporte se quedan en su práctica.",
+    "securitySubtitle": "Nadie quiere que el escaneo de un pasaporte acabe en el centro de datos de IA de otro país. Yuzu Immigration no usa ningún servicio de inteligencia artificial. Tratamos sus datos con flujos de automatización y reglas lógicas — reglas que controla su firma — no con modelos entrenados con expedientes de clientes.",
     "security": {
+      "noAi": {
+        "title": "Sin IA en el tratamiento",
+        "body": "Los cuestionarios, el relleno de PDF, las reservas y la revisión de documentos funcionan con lógica de software. No enviamos expedientes de clientes a proveedores de IA generativa."
+      },
       "canada": {
         "title": "Datos principales en Canadá",
         "body": "Base de datos, autenticación y archivos en Supabase en Canadá (AWS Canada Central)."

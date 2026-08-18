@@ -36,23 +36,46 @@
     },
     "showcases": {
       "eyebrow": "Inside the product",
-      "title": "The same screens your firm and clients will use",
-      "subtitle": "Your calendar shows the firm’s day. Clients use a portal to upload, pay, and join a call — on pages built for them, not a generic scheduling widget.",
-      "file": {
-        "title": "One immigration file, not a folder of tools",
-        "body": "Open a project and work the whole engagement: participants, document review, IRCC questionnaires, the client portal, scheduled calls, notes, and Square payment links."
-      },
+      "title": "Client portal, representative workspace, booking, and dashboard",
+      "subtitle": "Clients fill forms and upload documents. Your firm reviews the file. Prospective clients book and pay. The dashboard shows the next action.",
       "client": {
-        "title": "Clients work in a portal, not a one-off link",
-        "body": "Invite adults on the file to the client portal. They create an account with the email already on file, then update documents and questionnaires for everyone on the file. Invoices and appointments are there too."
+        "title": "Client portal",
+        "body": "The questionnaire is generated from the IMM forms on the file — not a generic intake. Clients upload supporting documents. Those answers produce filled IMM PDFs ready for professional review.",
+        "points": [
+          "Dynamic form generated from the IMM forms selected for the file",
+          "Clients add supporting documents in the portal",
+          "Filled IMM PDFs ready for your review",
+          "Clients can download their data or request deletion from Security"
+        ]
+      },
+      "representative": {
+        "title": "Representative workspace",
+        "body": "Track the file from one screen: verify documents, request a new submission, and review or correct the client’s answers live. Request Square payments, take notes, and track meetings.",
+        "points": [
+          "Verify documents or request a new upload",
+          "Review and correct the questionnaire live",
+          "Request Square payments, take notes, and track meetings",
+          "Download records or delete them when your practice needs it"
+        ]
       },
       "booking": {
-        "title": "Clients book a consultation on your public page",
-        "body": "They choose a service, a day, and a time. Busy hours from Google Calendar are already blocked. After they confirm, they can pay with Square and join on Google Meet."
+        "title": "Calendar and booking",
+        "body": "Set weekly availability and the paid services people can book. Prospective clients find a slot, book, and pay directly. Bookings sync with Google Calendar or Outlook.",
+        "points": [
+          "Weekly open hours and paid services ready to book",
+          "Clients pick a time and pay on Square Checkout",
+          "Sync with Google Calendar or Outlook — events created outside the app block those times automatically",
+          "Confirmed bookings can include a Google Meet, Teams, or Zoom link"
+        ]
       },
-      "after": {
-        "title": "Then they pay with Square and join on Google Meet",
-        "body": "Paid services open Square Checkout. When Google Calendar is connected, the appointment includes a Google Meet link — on the confirmation screen, in email, and when they manage the booking."
+      "dashboard": {
+        "title": "Dashboard",
+        "body": "An actionable home screen that shows exactly what you can act on — documents to review, unpaid invoices, stuck files, and meetings today. Notifications keep the next step in front of you.",
+        "points": [
+          "See what needs attention today, not a wall of charts",
+          "Documents, payments, questionnaires, and meetings in one list",
+          "Notifications that point to the next step"
+        ]
       }
     },
     "featuresEyebrow": "What you get",
@@ -184,9 +207,13 @@
       }
     },
     "securityEyebrow": "Security, simply",
-    "securityTitle": "Built for sensitive immigration files",
-    "securitySubtitle": "Clients trust you with passports, biographies, and family details. We designed Yuzu Immigration so your firm can meet that trust with clear, practical safeguards.",
+    "securityTitle": "No AI. Passport scans stay in your practice.",
+    "securitySubtitle": "Nobody wants a passport scan to land in another country’s AI datacenter. Yuzu Immigration does not use any AI service. We treat your data with automation workflows and logic gates — rules your firm controls — not models trained on client files.",
     "security": {
+      "noAi": {
+        "title": "No AI in the pipeline",
+        "body": "Questionnaires, PDF fill, booking, and document review run on software logic. We do not send client files to generative AI providers."
+      },
       "canada": {
         "title": "Primary data in Canada",
         "body": "Database, authentication, and file storage run on Supabase in Canada (AWS Canada Central)."

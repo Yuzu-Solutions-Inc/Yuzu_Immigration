@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Users,
   UsersRound,
+  Workflow,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
@@ -25,11 +26,10 @@ import { LegalLinks } from "@/components/legal/legal-links";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
   AppCalendarPreview,
+  AppHomePreview,
   AppProjectPreview,
-  BookingConfirmedPreview,
   ClientPortalPreview,
   PublicBookingPreview,
-  PublicPayPreview,
 } from "@/components/marketing/product-previews";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -100,6 +100,55 @@ const SECURITY_ICONS = {
   access: ShieldCheck,
   privacy: ScrollText,
 } as const;
+
+const SHOWCASE_KEYS = [
+  "client",
+  "representative",
+  "booking",
+  "dashboard",
+] as const;
+
+function ShowcaseCopy({
+  title,
+  body,
+  points,
+  align = "start",
+}: {
+  title: string;
+  body: string;
+  points: string[];
+  align?: "start" | "end";
+}) {
+  return (
+    <div
+      className={cn(
+        "space-y-3 lg:max-w-md",
+        align === "end" && "lg:justify-self-end",
+      )}
+    >
+      <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
+        {title}
+      </h3>
+      <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+        {body}
+      </p>
+      <ul className="space-y-2 pt-1">
+        {points.map((point) => (
+          <li
+            key={point}
+            className="flex gap-2.5 text-[15px] leading-relaxed text-muted-foreground"
+          >
+            <span
+              className="mt-[0.55rem] size-1.5 shrink-0 rounded-full bg-action"
+              aria-hidden
+            />
+            <span className="text-pretty">{point}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export async function LandingPage() {
   const t = await getTranslations("home");
@@ -256,7 +305,7 @@ export async function LandingPage() {
 
       <section className="relative z-10 border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl space-y-20 px-6">
-          <div className="max-w-2xl space-y-3">
+          <div className="max-w-3xl space-y-3">
             <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
               {t("showcases.eyebrow")}
             </p>
@@ -268,66 +317,52 @@ export async function LandingPage() {
             </p>
           </div>
 
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12">
-            <div className="pointer-events-none select-none">
-              <AppProjectPreview />
-            </div>
-            <div className="space-y-3 lg:max-w-md">
-              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
-                {t("showcases.file.title")}
-              </h3>
-              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                {t("showcases.file.body")}
-              </p>
-            </div>
-          </div>
+          {SHOWCASE_KEYS.map((key, index) => {
+            const previewFirst = index % 2 === 1;
+            const rawPoints = t.raw(`showcases.${key}.points`);
+            const points = Array.isArray(rawPoints)
+              ? rawPoints.filter((point): point is string => typeof point === "string")
+              : [];
+            const preview =
+              key === "client" ? (
+                <ClientPortalPreview />
+              ) : key === "representative" ? (
+                <AppProjectPreview />
+              ) : key === "booking" ? (
+                <PublicBookingPreview />
+              ) : (
+                <AppHomePreview tone="light" />
+              );
 
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12">
-            <div className="space-y-3 lg:max-w-md lg:justify-self-end">
-              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
-                {t("showcases.client.title")}
-              </h3>
-              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                {t("showcases.client.body")}
-              </p>
-            </div>
-            <div className="pointer-events-none order-first select-none lg:order-last">
-              <ClientPortalPreview />
-            </div>
-          </div>
-
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12">
-            <div className="pointer-events-none select-none">
-              <PublicBookingPreview />
-            </div>
-            <div className="space-y-3 lg:max-w-md">
-              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
-                {t("showcases.booking.title")}
-              </h3>
-              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                {t("showcases.booking.body")}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="max-w-2xl space-y-3">
-              <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
-                {t("showcases.after.title")}
-              </h3>
-              <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                {t("showcases.after.body")}
-              </p>
-            </div>
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="pointer-events-none select-none">
-                <PublicPayPreview />
+            return (
+              <div
+                key={key}
+                className={cn(
+                  "grid items-center gap-8 lg:gap-12",
+                  previewFirst
+                    ? "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]"
+                    : "lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]",
+                )}
+              >
+                <ShowcaseCopy
+                  title={t(`showcases.${key}.title`)}
+                  body={t(`showcases.${key}.body`)}
+                  points={points}
+                  align={previewFirst ? "start" : "end"}
+                />
+                <div
+                  className={cn(
+                    "pointer-events-none select-none",
+                    previewFirst
+                      ? "order-first"
+                      : "order-first lg:order-last",
+                  )}
+                >
+                  {preview}
+                </div>
               </div>
-              <div className="pointer-events-none select-none">
-                <BookingConfirmedPreview />
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </section>
 
@@ -458,7 +493,7 @@ export async function LandingPage() {
 
       <section className="border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-2xl space-y-3">
+          <div className="max-w-3xl space-y-3">
             <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
               {t("securityEyebrow")}
             </p>
@@ -467,6 +502,22 @@ export async function LandingPage() {
             </h2>
             <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
               {t("securitySubtitle")}
+            </p>
+          </div>
+
+          <div className="mt-12 space-y-3">
+            <div className="flex items-center gap-3">
+              <Workflow
+                className="size-5 text-success"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+              <h3 className="font-heading text-lg font-semibold text-brand">
+                {t("security.noAi.title")}
+              </h3>
+            </div>
+            <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
+              {t("security.noAi.body")}
             </p>
           </div>
 
