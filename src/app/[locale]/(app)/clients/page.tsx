@@ -1,6 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
+import {
+  listPageClassName,
+  listPageHeaderClassName,
+  listPageSubtitleClassName,
+  listPageTitleClassName,
+} from "@/components/layout/list-layout";
 import { PeopleList } from "@/components/people/people-list";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -12,7 +18,7 @@ import { cn } from "@/lib/utils";
 function NewPersonButton({ label }: { label: string }) {
   return (
     <Link
-      href="/people/new"
+      href="/clients/new"
       className={cn(
         buttonVariants({ size: "sm" }),
         "bg-action text-action-foreground hover:bg-action/90",
@@ -37,13 +43,13 @@ export default async function PeoplePage({
   const people = await listPeople();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="font-heading text-2xl font-semibold text-brand">
+    <div className={listPageClassName}>
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-2">
+        <div className={listPageHeaderClassName}>
+          <h1 className={listPageTitleClassName}>
             {t("title")}
           </h1>
-          <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
+          <p className={listPageSubtitleClassName}>{t("subtitle")}</p>
         </div>
         {canCreate ? <NewPersonButton label={t("new")} /> : null}
       </div>

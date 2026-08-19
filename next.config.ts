@@ -30,6 +30,20 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     "*": ["./assets/ircc/blanks/**"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/:locale/people",
+        destination: "/:locale/clients",
+        permanent: true,
+      },
+      {
+        source: "/:locale/people/:path*",
+        destination: "/:locale/clients/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

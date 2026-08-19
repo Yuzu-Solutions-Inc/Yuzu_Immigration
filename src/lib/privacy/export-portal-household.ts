@@ -278,7 +278,7 @@ export async function buildPortalHouseholdExport(input: {
   for (const person of people) {
     const slug = uniquePath(
       used,
-      `people/${safeSegment(`${person.last_name}_${person.first_name}`, person.id.slice(0, 8))}.json`,
+      `clients/${safeSegment(`${person.last_name}_${person.first_name}`, person.id.slice(0, 8))}.json`,
     );
     zip.file(
       slug,

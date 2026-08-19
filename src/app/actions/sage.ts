@@ -327,7 +327,7 @@ export async function syncSageClientsAction(
       gate.membership.organization.id,
     );
     revalidatePath(`/${locale}/settings/payments`);
-    revalidatePath(`/${locale}/people`);
+    revalidatePath(`/${locale}/clients`);
     return { message: "synced", linked: result.linked };
   } catch (error) {
     console.error("syncSageClientsAction:", error);

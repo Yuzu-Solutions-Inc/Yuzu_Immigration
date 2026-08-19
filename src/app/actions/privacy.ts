@@ -194,7 +194,7 @@ export async function destroyClosedProjectAction(
 
   revalidatePath(`/${parsed.data.locale}/projects/${project.id}`);
   revalidatePath(`/${parsed.data.locale}/projects`);
-  revalidatePath(`/${parsed.data.locale}/people`);
+  revalidatePath(`/${parsed.data.locale}/clients`);
   revalidatePath(`/${parsed.data.locale}/calendar`);
   revalidatePath(`/${parsed.data.locale}/settings/security`);
   return { message: "destroyed" };

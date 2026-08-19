@@ -18,7 +18,7 @@ export default async function NewPersonPage({
 
   const membership = await getPrimaryMembership();
   if (!canCreateRecords(membership?.role)) {
-    redirect(`/${locale}/people`);
+    redirect(`/${locale}/clients`);
   }
 
   const t = await getTranslations("people");
@@ -27,7 +27,7 @@ export default async function NewPersonPage({
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="space-y-1">
         <Link
-          href="/people"
+          href="/clients"
           className="text-sm font-medium text-action hover:underline"
         >
           ← {t("back")}

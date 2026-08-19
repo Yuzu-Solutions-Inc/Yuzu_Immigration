@@ -22,12 +22,20 @@ import {
 import { SurfaceCard } from "@/components/layout/surface-card";
 import {
   ListTableCard,
+  listFooterClassName,
   listMobileFiltersClassName,
-  listStackClassName,
+  listPageClassName,
+  listPageHeaderClassName,
+  listPageSubtitleClassName,
+  listPageTitleClassName,
+  listTableCardViewportClassName,
   listTableEdgeEndClassName,
   listTableEdgeStartClassName,
   listTableEmptyCellClassName,
   listTableHeadClassName,
+  listTableScrollClassName,
+  listTableStickyHeaderClassName,
+  listViewportStackClassName,
 } from "@/components/layout/list-layout";
 import { ServiceBookingFormButton } from "@/components/booking/service-booking-form";
 import { ServiceContractsButton } from "@/components/booking/service-contracts";
@@ -624,15 +632,15 @@ export function ServicesManager({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="font-heading text-2xl font-semibold text-brand">
+    <div className={listPageClassName}>
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-2">
+        <div className={listPageHeaderClassName}>
+          <h1 className={listPageTitleClassName}>
             {t("title")}
           </h1>
-          <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
+          <p className={listPageSubtitleClassName}>{t("subtitle")}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <ServiceContractsButton
             locale={locale}
             orgDefaultLocale={orgDefaultLocale}
@@ -676,8 +684,8 @@ export function ServicesManager({
           ) : null}
         </SurfaceCard>
       ) : (
-        <div className={listStackClassName}>
-          <div className={listMobileFiltersClassName}>
+        <div className={listViewportStackClassName}>
+          <div className={cn(listMobileFiltersClassName, "shrink-0")}>
             <Input
               type="search"
               value={titleQuery}
@@ -714,9 +722,10 @@ export function ServicesManager({
             </NativeSelect>
           </div>
 
-          <ListTableCard>
+          <ListTableCard className={listTableCardViewportClassName}>
+            <div className={listTableScrollClassName}>
             <Table>
-              <TableHeader>
+              <TableHeader className={listTableStickyHeaderClassName}>
                 <TableRow className="hover:bg-transparent">
                   <TableHead
                     className={cn(
@@ -893,9 +902,10 @@ export function ServicesManager({
                 )}
               </TableBody>
             </Table>
+            </div>
           </ListTableCard>
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className={listFooterClassName}>
             <p className="text-sm text-muted-foreground">
               {t("showingCount", {
                 shown: filteredSorted.length,

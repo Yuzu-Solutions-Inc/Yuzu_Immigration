@@ -21,14 +21,18 @@ import { setProjectsStatusAction } from "@/app/actions/projects";
 import { docsPercent, ProgressMeter } from "@/components/home/progress-meter";
 import {
   ListTableCard,
+  listFooterClassName,
   listMobileEmptyClassName,
   listMobileFiltersStackClassName,
   listMobileFiltersClassName,
   listMobileItemClassName,
-  listStackClassName,
+  listTableCardViewportClassName,
   listTableEdgeEndClassName,
   listTableEdgeStartClassName,
   listTableEmptyCellClassName,
+  listTableScrollClassName,
+  listTableStickyHeaderClassName,
+  listViewportStackClassName,
 } from "@/components/layout/list-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -329,7 +333,7 @@ export function ProjectsTable({
   }
 
   return (
-    <div className={listStackClassName}>
+    <div className={listViewportStackClassName}>
       {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}
@@ -437,9 +441,12 @@ export function ProjectsTable({
         )}
       </div>
 
-      <ListTableCard className="hidden md:block">
+      <ListTableCard
+        className={cn("hidden md:block", listTableCardViewportClassName)}
+      >
+        <div className={listTableScrollClassName}>
         <Table>
-          <TableHeader className="[&_tr:first-child]:border-b-0">
+          <TableHeader className={cn(listTableStickyHeaderClassName, "[&_tr:first-child]:border-b-0")}>
             <TableRow className="hover:bg-transparent">
               <TableHead className={cn("min-w-[12rem]", listTableEdgeStartClassName)}>
                 <SortButton
@@ -696,9 +703,10 @@ export function ProjectsTable({
             )}
           </TableBody>
         </Table>
+        </div>
       </ListTableCard>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className={listFooterClassName}>
         <p className="text-sm text-muted-foreground">
           {t("showingCount", {
             shown: filteredSorted.length,

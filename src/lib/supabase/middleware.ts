@@ -32,6 +32,12 @@ export async function updateSession(request: NextRequest) {
 
   const { locale, pathname } = stripLocale(request.nextUrl.pathname);
 
+  if (pathname === "/people" || pathname.startsWith("/people/")) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = `/${locale}${pathname.replace(/^\/people/, "/clients")}`;
+    return NextResponse.redirect(redirectUrl);
+  }
+
   const isAuthRoute = pathname === "/login";
   const isPasswordResetRoute = pathname === "/reset-password";
   const isProtectedRoute =
@@ -43,8 +49,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/legal/accept/") ||
     pathname === "/projects" ||
     pathname.startsWith("/projects/") ||
-    pathname === "/people" ||
-    pathname.startsWith("/people/") ||
+    pathname === "/clients" ||
+    pathname.startsWith("/clients/") ||
     pathname === "/calendar" ||
     pathname.startsWith("/calendar/") ||
     pathname === "/bookings" ||

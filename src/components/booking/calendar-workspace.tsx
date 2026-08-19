@@ -359,7 +359,7 @@ export function CalendarWorkspace({
         openRanges={openRanges}
         selectedAppointmentId={selectedAppointmentId}
         onSelectAppointment={setSelectedAppointmentId}
-        className="min-h-[18rem] flex-1 lg:min-h-0"
+        className="min-h-0 flex-1"
       />
 
       <div className="shrink-0">
@@ -422,7 +422,7 @@ export function CalendarWorkspace({
       className={cn(
         "flex flex-col gap-3 sm:gap-4",
         fillViewport
-          ? "h-[calc(100dvh-7.5rem)] min-h-[28rem] overflow-hidden sm:h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-4rem)] lg:gap-3"
+          ? "h-full min-h-0 flex-1 overflow-hidden lg:gap-3"
           : "min-h-0 lg:h-full lg:overflow-hidden lg:gap-3",
       )}
     >
@@ -462,14 +462,73 @@ export function CalendarWorkspace({
           </TabsList>
 
           {mobilePane === "month" ? (
-            <SurfaceCard className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+            <SurfaceCard className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
               {monthCalendar}
             </SurfaceCard>
           ) : (
-            <SurfaceCard className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3 sm:p-4">
+            <SurfaceCard className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3 sm:p-4">
               {dayHeader}
-              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-                {dayBody}
+              {fullDayBlock ? (
+                <p className="shrink-0 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+                  {dayAppointments.filter((row) => row.status !== "cancelled")
+                    .length > 0
+                    ? t("dayIsBlockedWithBookings")
+                    : t("dayIsBlocked")}
+                </p>
+              ) : null}
+              <DayTimeline
+                locale={locale}
+                canManage={canManage}
+                dateIso={selectedDateIso}
+                timeZone={timeZone}
+                appointments={dayAppointments}
+                blocked={dayBlocks}
+                googleBusy={dayGoogleBusy}
+                microsoftBusy={dayMicrosoftBusy}
+                openRanges={openRanges}
+                selectedAppointmentId={selectedAppointmentId}
+                onSelectAppointment={setSelectedAppointmentId}
+                compactChrome
+                className="min-h-0 flex-1"
+              />
+              <div className="max-h-[38%] min-h-0 shrink-0 overflow-y-auto">
+                {selectedAppointment ? (
+                  <AppointmentDetailCard
+                    locale={locale}
+                    canManage={canManage}
+                    pending={pending}
+                    timeZone={timeZone}
+                    row={selectedAppointment}
+                    formFields={formFields}
+                    hostNames={hostNames}
+                    onCancel={(id) => {
+                      startTransition(async () => {
+                        const result = await cancelAppointmentAction(
+                          id,
+                          locale,
+                        );
+                        if (result.error) {
+                          toast.error(t(`errors.${result.error}`));
+                        } else {
+                          toast.success(t("cancelled"));
+                          setSelectedAppointmentId(null);
+                        }
+                      });
+                    }}
+                    onRescheduled={(dateIso) => {
+                      selectDate(dateIso);
+                    }}
+                  />
+                ) : dayAppointments.filter((row) => row.status !== "cancelled")
+                    .length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    {t("noAppointments")}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {t("selectBookingHint")}
+                  </p>
+                )}
               </div>
             </SurfaceCard>
           )}

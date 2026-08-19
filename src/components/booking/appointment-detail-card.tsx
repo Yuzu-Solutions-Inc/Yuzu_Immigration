@@ -234,7 +234,7 @@ export function AppointmentDetailCard({
                 })}
                 {row.person_id ? (
                   <Link
-                    href={`/people/${row.person_id}`}
+                    href={`/clients/${row.person_id}`}
                     className="inline-flex font-medium text-action hover:underline"
                   >
                     {t("openPerson")}

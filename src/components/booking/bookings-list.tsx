@@ -31,12 +31,16 @@ import { BookingContractsButton } from "@/components/booking/booking-contracts-b
 import { SurfaceCard } from "@/components/layout/surface-card";
 import {
   ListTableCard,
+  listFooterClassName,
   listMobileFiltersClassName,
-  listStackClassName,
+  listTableCardViewportClassName,
   listTableEdgeEndClassName,
   listTableEdgeStartClassName,
   listTableEmptyCellClassName,
   listTableHeadClassName,
+  listTableScrollClassName,
+  listTableStickyHeaderClassName,
+  listViewportStackClassName,
 } from "@/components/layout/list-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -164,7 +168,7 @@ export function BookingsList({
   const [dateIso, setDateIso] = useState<string | null>(null);
   const [slotStart, setSlotStart] = useState<string | null>(null);
   const [guestQuery, setGuestQuery] = useState("");
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("upcoming");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [hostFilter, setHostFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">(
@@ -174,7 +178,7 @@ export function BookingsList({
     "all",
   );
   const [sortKey, setSortKey] = useState<SortKey>("starts_at");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [nowMs, setNowMs] = useState(() => Date.now());
   const deferredGuest = useDeferredValue(guestQuery);
 
@@ -290,7 +294,7 @@ export function BookingsList({
 
   const filtersActive = Boolean(
     guestQuery.trim() ||
-      timeFilter !== "all" ||
+      timeFilter !== "upcoming" ||
       serviceFilter !== "all" ||
       hostFilter !== "all" ||
       statusFilter !== "all" ||
@@ -303,7 +307,7 @@ export function BookingsList({
       return;
     }
     setSortKey(key);
-    setSortDir(key === "starts_at" ? "desc" : "asc");
+    setSortDir("asc");
   }
 
   function SortButton({
@@ -333,7 +337,7 @@ export function BookingsList({
 
   function clearFilters() {
     setGuestQuery("");
-    setTimeFilter("all");
+    setTimeFilter("upcoming");
     setServiceFilter("all");
     setHostFilter("all");
     setStatusFilter("all");
@@ -395,12 +399,7 @@ export function BookingsList({
   const actionColSpan = canManage ? 7 : 6;
 
   return (
-    <div
-      className={cn(
-        listStackClassName,
-        "lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:gap-3 lg:space-y-0",
-      )}
-    >
+    <div className={listViewportStackClassName}>
       <div className={cn(listMobileFiltersClassName, "shrink-0")}>
         <Input
           type="search"
@@ -474,10 +473,10 @@ export function BookingsList({
         </NativeSelect>
       </div>
 
-      <ListTableCard className="min-h-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
-        <div className="lg:min-h-0 lg:flex-1 lg:overflow-auto [&_[data-slot=table-container]]:overflow-visible">
+      <ListTableCard className={listTableCardViewportClassName}>
+        <div className={listTableScrollClassName}>
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-surface">
+          <TableHeader className={listTableStickyHeaderClassName}>
             <TableRow className="hover:bg-transparent">
               <TableHead
                 className={cn(
@@ -672,13 +671,13 @@ export function BookingsList({
                   {booking.personId ? (
                     <div className="min-w-0 space-y-0.5">
                       <Link
-                        href={`/people/${booking.personId}`}
+                        href={`/clients/${booking.personId}`}
                         className="block truncate text-sm font-medium text-action hover:underline"
                       >
                         {booking.guestName}
                       </Link>
                       <Link
-                        href={`/people/${booking.personId}`}
+                        href={`/clients/${booking.personId}`}
                         className="block truncate text-xs text-muted-foreground hover:text-action hover:underline"
                       >
                         {booking.guestEmail}
@@ -974,7 +973,7 @@ export function BookingsList({
         </DialogContent>
       </Dialog>
 
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+      <div className={listFooterClassName}>
         <p className="text-sm text-muted-foreground">
           {t("showingCount", {
             shown: filteredSorted.length,

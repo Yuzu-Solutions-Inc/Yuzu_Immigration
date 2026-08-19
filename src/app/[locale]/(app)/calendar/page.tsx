@@ -5,6 +5,7 @@ import {
   CalendarEmptyHint,
   CalendarWorkspace,
 } from "@/components/booking/calendar-workspace";
+import { fillPageClassName } from "@/components/layout/list-layout";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
@@ -69,19 +70,13 @@ export default async function CalendarPage({
   const showSetupHint = rules.length === 0 || services.length === 0;
 
   return (
-    <div
-      className={
-        showSetupHint
-          ? "flex flex-col gap-3 lg:h-[calc(100dvh-4rem)] lg:overflow-hidden"
-          : undefined
-      }
-    >
+    <div className={fillPageClassName}>
       {showSetupHint ? (
-        <div className="shrink-0">
+        <div className="shrink-0 pb-3">
           <CalendarEmptyHint hasServices={services.length > 0} />
         </div>
       ) : null}
-      <div className={showSetupHint ? "min-h-0 flex-1 lg:overflow-hidden" : undefined}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <CalendarWorkspace
           locale={locale}
           canManage={canManage}
@@ -94,7 +89,7 @@ export default async function CalendarPage({
           microsoftBusy={microsoftBusy}
           formFields={formFields}
           hostNames={hostNames}
-          fillViewport={!showSetupHint}
+          fillViewport
         />
       </div>
     </div>

@@ -143,11 +143,11 @@ export async function createPersonAction(
     });
   });
 
-  revalidatePath(`/${data.locale}/people`);
-  revalidatePath(`/${data.locale}/people/${created.id}`);
+  revalidatePath(`/${data.locale}/clients`);
+  revalidatePath(`/${data.locale}/clients/${created.id}`);
   revalidatePath(`/${data.locale}/home`);
   revalidatePath(`/${data.locale}/projects`);
-  redirect(`/${data.locale}/people/${created.id}`);
+  redirect(`/${data.locale}/clients/${created.id}`);
 }
 
 export async function updatePersonAction(
@@ -231,11 +231,11 @@ export async function updatePersonAction(
     });
   });
 
-  revalidatePath(`/${data.locale}/people/${data.personId}`);
-  revalidatePath(`/${data.locale}/people`);
+  revalidatePath(`/${data.locale}/clients/${data.personId}`);
+  revalidatePath(`/${data.locale}/clients`);
   revalidatePath(`/${data.locale}/home`);
   revalidatePath(`/${data.locale}/projects`);
-  redirect(`/${data.locale}/people/${data.personId}`);
+  redirect(`/${data.locale}/clients/${data.personId}`);
 }
 
 const deletePersonSchema = z.object({
@@ -314,12 +314,12 @@ export async function deletePersonAction(
     return { error: "delete_failed" };
   }
 
-  revalidatePath(`/${data.locale}/people`);
-  revalidatePath(`/${data.locale}/people/${data.personId}`);
+  revalidatePath(`/${data.locale}/clients`);
+  revalidatePath(`/${data.locale}/clients/${data.personId}`);
   revalidatePath(`/${data.locale}/home`);
   revalidatePath(`/${data.locale}/projects`);
   revalidatePath(`/${data.locale}/calendar`);
-  redirect(`/${data.locale}/people`);
+  redirect(`/${data.locale}/clients`);
 }
 
 function encryptNoteBodyOrEmpty(body: string, key: Buffer) {
@@ -420,7 +420,7 @@ export async function addPersonNoteAction(
         console.error("add person note (existing meeting):", updateError.message);
         return { error: "save_failed" };
       }
-      revalidatePath(`/${data.locale}/people/${data.personId}`);
+      revalidatePath(`/${data.locale}/clients/${data.personId}`);
       return { message: "saved" };
     }
 
@@ -434,7 +434,7 @@ export async function addPersonNoteAction(
     return { error: "save_failed" };
   }
 
-  revalidatePath(`/${data.locale}/people/${data.personId}`);
+  revalidatePath(`/${data.locale}/clients/${data.personId}`);
   return { message: "saved" };
 }
 
@@ -496,6 +496,6 @@ export async function updatePersonNoteAction(
     return { error: "save_failed" };
   }
 
-  revalidatePath(`/${data.locale}/people/${data.personId}`);
+  revalidatePath(`/${data.locale}/clients/${data.personId}`);
   return { message: "updated" };
 }

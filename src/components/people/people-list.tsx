@@ -7,15 +7,19 @@ import { useTranslations } from "next-intl";
 import { DeletePersonButton } from "@/components/people/delete-person-button";
 import {
   ListTableCard,
+  listFooterClassName,
   listMobileEmptyClassName,
   listMobileFiltersStackClassName,
   listMobileFiltersClassName,
   listMobileItemClassName,
-  listStackClassName,
+  listTableCardViewportClassName,
   listTableEdgeEndClassName,
   listTableEdgeStartClassName,
   listTableEmptyCellClassName,
   listTableHeadClassName,
+  listTableScrollClassName,
+  listTableStickyHeaderClassName,
+  listViewportStackClassName,
 } from "@/components/layout/list-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -185,7 +189,7 @@ export function PeopleList({
   }
 
   return (
-    <div className={listStackClassName}>
+    <div className={listViewportStackClassName}>
       <div className={listMobileFiltersStackClassName}>
         <div className={listMobileFiltersClassName}>
           <Input
@@ -242,7 +246,7 @@ export function PeopleList({
                 <li key={person.id}>
                   <div className={cn("flex items-start gap-2", listMobileItemClassName)}>
                     <Link
-                      href={`/people/${person.id}`}
+                      href={`/clients/${person.id}`}
                       className="min-w-0 flex-1 space-y-1"
                     >
                       <p className="font-medium text-brand">{fullName}</p>
@@ -269,9 +273,15 @@ export function PeopleList({
         )}
       </div>
 
-      <ListTableCard className="hidden md:block">
+      <ListTableCard
+        className={cn(
+          "hidden md:block",
+          listTableCardViewportClassName,
+        )}
+      >
+        <div className={listTableScrollClassName}>
         <Table>
-          <TableHeader>
+          <TableHeader className={listTableStickyHeaderClassName}>
             <TableRow className="hover:bg-transparent">
               <TableHead
                 className={cn(
@@ -385,12 +395,12 @@ export function PeopleList({
                     className="group cursor-pointer"
                     onClick={(event) => {
                       if (shouldIgnoreRowClick(event)) return;
-                      router.push(`/people/${person.id}`);
+                      router.push(`/clients/${person.id}`);
                     }}
                   >
                     <TableCell className={cn("whitespace-normal", listTableEdgeStartClassName)}>
                       <Link
-                        href={`/people/${person.id}`}
+                        href={`/clients/${person.id}`}
                         className="font-medium text-brand transition-colors hover:opacity-80"
                       >
                         {fullName}
@@ -424,9 +434,10 @@ export function PeopleList({
             )}
           </TableBody>
         </Table>
+        </div>
       </ListTableCard>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className={listFooterClassName}>
         <p className="text-sm text-muted-foreground">
           {t("showingCount", {
             shown: filteredSorted.length,

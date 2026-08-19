@@ -167,7 +167,7 @@ export async function buildProjectFileZip(
       person.id.slice(0, 8),
     );
     zip.file(
-      `${root}/people/${slug}.json`,
+      `${root}/clients/${slug}.json`,
       json({
         id: person.id,
         role: person.role,
@@ -349,7 +349,7 @@ export async function buildProjectFileZip(
       "",
       `This archive is a copy of the immigration file held in ${product.name}:`,
       "- project.json — file metadata, status history, representative",
-      "- people/ — identity and consultation notes for each person on the file",
+      "- clients/ — identity and consultation notes for each client on the file",
       "- forms/ — questionnaire answers, form checklist, and IRCC PDFs when they could be generated",
       "- documents/ — uploaded supporting files (decrypted)",
       "",

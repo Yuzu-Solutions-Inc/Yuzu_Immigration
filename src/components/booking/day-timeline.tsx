@@ -30,8 +30,9 @@ import { serviceTitle } from "@/lib/booking/service-i18n";
 import { cn } from "@/lib/utils";
 
 const HOURS = 24;
-const DEFAULT_HOUR_PX = 56;
-const MIN_HOUR_PX = 36;
+const DEFAULT_HOUR_PX = 48;
+const MIN_HOUR_PX = 32;
+const MAX_HOUR_PX = 64;
 const SNAP = 30;
 const DAY_MINUTES = HOURS * 60;
 /** Visible window: 09:00–17:00 (8 hours). Full day remains scrollable. */
@@ -92,6 +93,7 @@ export function DayTimeline({
   openRanges,
   selectedAppointmentId,
   onSelectAppointment,
+  compactChrome = false,
   className,
 }: {
   locale: string;
@@ -105,6 +107,7 @@ export function DayTimeline({
   openRanges: MinuteRange[];
   selectedAppointmentId: string | null;
   onSelectAppointment: (id: string | null) => void;
+  compactChrome?: boolean;
   className?: string;
 }) {
   const t = useTranslations("calendar");
@@ -146,9 +149,11 @@ export function DayTimeline({
     const syncHourPx = () => {
       const available = el.clientHeight;
       if (available <= 0) return;
-      const next = Math.max(
-        MIN_HOUR_PX,
-        Math.round(available / FOCUS_HOURS),
+      const viewportCap = Math.floor(window.innerHeight / FOCUS_HOURS);
+      const next = Math.min(
+        MAX_HOUR_PX,
+        viewportCap,
+        Math.max(MIN_HOUR_PX, Math.round(available / FOCUS_HOURS)),
       );
       setHourPx((prev) => (prev === next ? prev : next));
     };
@@ -226,14 +231,21 @@ export function DayTimeline({
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col gap-2", className)}>
-      <p className="shrink-0 text-xs text-muted-foreground">{t("timelineHint")}</p>
+      <p className={cn("shrink-0 text-xs text-muted-foreground", compactChrome && "hidden")}>
+        {t("timelineHint")}
+      </p>
       {canManage ? (
-        <p className="shrink-0 text-xs text-muted-foreground">
+        <p className={cn("shrink-0 text-xs text-muted-foreground", compactChrome && "sr-only")}>
           {dragEnabled ? t("timelineDragHelp") : t("timelineTouchHelp")}
         </p>
       ) : null}
 
-      <div className="flex shrink-0 flex-wrap gap-3 text-[11px] text-muted-foreground">
+      <div
+        className={cn(
+          "flex shrink-0 flex-wrap gap-3 text-[11px] text-muted-foreground",
+          compactChrome && "flex-nowrap gap-2 overflow-x-auto pb-0.5",
+        )}
+      >
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2.5 rounded-sm bg-emerald-100 ring-1 ring-success/60" />
           {t("legendOpen")}

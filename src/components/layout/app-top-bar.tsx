@@ -33,6 +33,7 @@ const CRUMB_KEYS = {
   home: "crumbHome",
   projects: "crumbProjects",
   people: "crumbPeople",
+  clients: "crumbPeople",
   calendar: "crumbCalendar",
   bookings: "crumbBookings",
   services: "crumbServices",
@@ -69,7 +70,7 @@ function useBreadcrumbs(t: ReturnType<typeof useTranslations<"topBar">>): Crumb[
     if (UUID_RE.test(seg)) {
       const parent = segments[i - 1];
       const label =
-        parent === "people"
+        parent === "clients" || parent === "people"
           ? t("crumbPerson")
           : parent === "projects" || parent === "templates"
             ? t("crumbProject")

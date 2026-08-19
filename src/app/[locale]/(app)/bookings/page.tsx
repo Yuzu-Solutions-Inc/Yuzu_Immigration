@@ -2,6 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { BookingsList } from "@/components/booking/bookings-list";
+import {
+  listPageClassName,
+  listPageHeaderClassName,
+  listPageSubtitleClassName,
+  listPageTitleClassName,
+} from "@/components/layout/list-layout";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { listOrgBookingsWithPayment } from "@/lib/booking/bookings-list";
@@ -32,12 +38,12 @@ export default async function BookingsPage({
   const t = await getTranslations("bookings");
 
   return (
-    <div className="flex flex-col gap-3 lg:h-[calc(100dvh-4rem)] lg:overflow-hidden lg:gap-3">
-      <div className="shrink-0 space-y-0.5 sm:space-y-1">
-        <h1 className="font-heading text-2xl font-semibold text-brand lg:text-xl">
+    <div className={listPageClassName}>
+      <div className={listPageHeaderClassName}>
+        <h1 className={listPageTitleClassName}>
           {t("title")}
         </h1>
-        <p className="hidden text-[15px] text-muted-foreground sm:block lg:text-sm">
+        <p className={listPageSubtitleClassName}>
           {t("subtitle")}
         </p>
       </div>

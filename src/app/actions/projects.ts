@@ -1121,7 +1121,7 @@ export async function updateProjectAction(
 
   revalidatePath(`/${data.locale}/projects/${projectId}`);
   revalidatePath(`/${data.locale}/projects`);
-  revalidatePath(`/${data.locale}/people`);
+  revalidatePath(`/${data.locale}/clients`);
   revalidatePath(`/${data.locale}/home`);
   redirect(`/${data.locale}/projects/${projectId}`);
 }
@@ -1452,7 +1452,7 @@ export async function deleteProjectAction(
   revalidatePath(`/${parsed.data.locale}/projects`);
   revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
   revalidatePath(`/${parsed.data.locale}/home`);
-  revalidatePath(`/${parsed.data.locale}/people`);
+  revalidatePath(`/${parsed.data.locale}/clients`);
   revalidatePath(`/${parsed.data.locale}/calendar`);
   redirect(`/${parsed.data.locale}/projects`);
 }

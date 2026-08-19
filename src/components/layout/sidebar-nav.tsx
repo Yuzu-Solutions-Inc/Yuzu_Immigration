@@ -43,7 +43,7 @@ const collapsedItemClass =
 const navItems = [
   { href: "/home", key: "home" as const, icon: Home },
   { href: "/projects", key: "projects" as const, icon: FolderKanban },
-  { href: "/people", key: "people" as const, icon: Users },
+  { href: "/clients", key: "people" as const, icon: Users },
   { href: "/calendar", key: "calendar" as const, icon: CalendarDays },
   { href: "/bookings", key: "bookings" as const, icon: ClipboardList },
   { href: "/services", key: "services" as const, icon: Briefcase },
@@ -67,7 +67,7 @@ function SidebarCreateLink({
   onNavigate,
   icon: Icon,
 }: {
-  href: "/projects/new" | "/people/new";
+  href: "/projects/new" | "/clients/new";
   label: string;
   collapsed: boolean;
   onNavigate?: () => void;
@@ -172,7 +172,7 @@ function SidebarBody({
               icon={Plus}
             />
             <SidebarCreateLink
-              href="/people/new"
+              href="/clients/new"
               label={newPersonLabel}
               collapsed={collapsed}
               onNavigate={onNavigate}
@@ -285,7 +285,7 @@ export function DesktopSidebar({
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-screen shrink-0 flex-col overflow-x-hidden overflow-y-auto bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex",
+        "hidden h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex",
         collapsed ? "w-16" : "w-60",
       )}
     >

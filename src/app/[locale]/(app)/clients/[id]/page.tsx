@@ -70,7 +70,7 @@ export default async function PersonDetailPage({
     <div className="space-y-6">
       <div className="space-y-3">
         <Link
-          href="/people"
+          href="/clients"
           className="text-sm font-medium text-action hover:underline"
         >
           ← {t("back")}
@@ -138,7 +138,7 @@ export default async function PersonDetailPage({
               <ExportPersonButton personId={person.id} />
             ) : null}
             <Link
-              href={`/people/${person.id}/edit`}
+              href={`/clients/${person.id}/edit`}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               {t("edit")}

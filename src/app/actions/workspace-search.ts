@@ -51,7 +51,7 @@ export async function searchWorkspaceAction(
     id: person.id,
     title: `${person.first_name} ${person.last_name}`.trim(),
     subtitle: person.email,
-    href: `/people/${person.id}`,
+    href: `/clients/${person.id}`,
   }));
 
   return [...projectHits, ...personHits].slice(0, 12);

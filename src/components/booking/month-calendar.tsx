@@ -63,7 +63,7 @@ export function MonthCalendar({
     <div
       className={cn(
         "flex flex-col gap-3",
-        fillHeight && "lg:h-full lg:min-h-0",
+        fillHeight && "h-full min-h-0",
       )}
     >
       <div className="flex shrink-0 items-center justify-between gap-3">
@@ -113,7 +113,7 @@ export function MonthCalendar({
       <div
         className={cn(
           "grid grid-cols-7 gap-1",
-          fillHeight && "lg:min-h-0 lg:flex-1",
+          fillHeight && "min-h-0 flex-1",
         )}
         style={
           fillHeight
@@ -151,10 +151,10 @@ export function MonthCalendar({
                 "relative flex flex-col items-center rounded-xl border px-1 text-sm transition-colors",
                 fillHeight
                   ? cn(
-                      "lg:h-full lg:min-h-0 lg:justify-center",
+                      "h-full min-h-0 justify-center",
                       compact
-                        ? "min-h-10 py-1 sm:min-h-11 lg:py-0.5"
-                        : "min-h-12 py-1.5 sm:min-h-16 sm:py-2 lg:py-1",
+                        ? "min-h-9 py-0.5 sm:min-h-11 lg:py-0.5"
+                        : "min-h-10 py-1 sm:min-h-16 sm:py-2 lg:py-1",
                     )
                   : compact
                     ? "min-h-10 py-1 sm:min-h-11"

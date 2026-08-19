@@ -23,7 +23,7 @@ export default async function EditPersonPage({
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="space-y-1">
         <Link
-          href={`/people/${person.id}`}
+          href={`/clients/${person.id}`}
           className="text-sm font-medium text-action hover:underline"
         >
           ← {t("backToPerson")}
