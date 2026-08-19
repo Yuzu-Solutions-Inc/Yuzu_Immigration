@@ -29,9 +29,11 @@
       "people": "Clients",
       "forms": "Formulaires IRCC",
       "documents": "Documents",
+      "contracts": "Contrats et signature",
       "calendar": "Google Calendar",
       "meet": "Google Meet",
       "square": "Square",
+      "sage": "Comptabilité Sage",
       "languages": "EN · FR · ES"
     },
     "showcases": {
@@ -60,10 +62,11 @@
       },
       "booking": {
         "title": "Calendrier et réservation",
-        "body": "Définissez vos plages hebdomadaires et les services payants ouverts à la réservation. Un client potentiel trouve un créneau, réserve et paie. Les rendez-vous se synchronisent avec Google Calendar ou Outlook.",
+        "body": "Définissez vos plages hebdomadaires et les services payants ouverts à la réservation. Un client potentiel trouve un créneau, réserve et paie. Les réservations peuvent envoyer un contrat en signature et se synchronisent avec Google Calendar ou Outlook.",
         "points": [
           "Disponibilités hebdomadaires et services payants réservables",
           "Le client choisit une heure et paie sur Square Checkout",
+          "Envoyez un mandat en signature électronique dès la réservation",
           "Synchronisation avec Google Calendar ou Outlook — un événement créé hors de l’application bloque automatiquement le créneau",
           "Les réservations confirmées peuvent inclure un lien Google Meet, Teams ou Zoom"
         ]
@@ -98,6 +101,10 @@
         "title": "Collecte et révision des documents",
         "body": "Demandez passeports, photos et pièces sur mesure. Le client dépose dans le portail; votre cabinet prévisualise, accepte ou renvoie un fichier avec un commentaire."
       },
+      "contracts": {
+        "title": "Modèles de documents et signature",
+        "body": "Rédigez ou importez vos mandats dans chaque langue desservie, insérez automatiquement les détails de la réservation, et envoyez-les en signature électronique dès qu’un client réserve. Le client tape ou dessine sa marque ; vous pouvez contresigner ou pré-signer."
+      },
       "share": {
         "title": "Portail client",
         "body": "Invitez les clients à un portail durable. Ils se connectent avec le courriel du dossier et un mot de passe traité côté serveur — jamais dans le navigateur. Documents, questionnaires, factures et rendez-vous restent au même endroit."
@@ -109,6 +116,10 @@
       "payments": {
         "title": "Paiements Square",
         "body": "Connectez Square pour encaisser les consultations à la réservation ou envoyer un lien de paiement sur un dossier. Le client paie sur Square Checkout. Les impayés apparaissent à l’accueil."
+      },
+      "sage": {
+        "title": "Comptabilité Sage",
+        "body": "Appariez les clients Sage par courriel, appliquez la bonne taxe de vente provinciale, et postez les factures lorsque les paiements Square sont reçus."
       },
       "team": {
         "title": "Espace cabinet",
@@ -128,11 +139,11 @@
       },
       "three": {
         "title": "Réservez, rencontrez, encaissez",
-        "body": "Les clients réservent sur votre page publique. Google Calendar bloque les plages occupées, Google Meet est joint au rendez-vous, et Square encaisse les honoraires."
+        "body": "Les clients réservent sur votre page publique. Le calendrier bloque les plages occupées, un lien de visio est joint, Square encaisse les honoraires, et un contrat peut partir en signature."
       },
       "four": {
         "title": "Préparez et clôturez",
-        "body": "Remplissez les PDF IRCC à partir des réponses déjà collectées, suivez le statut, et conservez ou détruisez les dossiers fermés selon les devoirs du cabinet."
+        "body": "Remplissez les PDF IRCC à partir des réponses déjà collectées, conservez les contrats signés avec le dossier, et conservez ou détruisez les dossiers fermés selon les devoirs du cabinet."
       }
     },
     "preview": {
@@ -163,8 +174,8 @@
     },
     "integrations": {
       "eyebrow": "Intégrations",
-      "title": "Calendrier, réunions et paiements dans les outils que vous utilisez déjà",
-      "subtitle": "Branchez les comptes que votre cabinet utilise déjà. Réservation, visio et paiements restent dans ces produits — Yuzu Immigration les coordonne autour du dossier d’immigration.",
+      "title": "Calendrier, réunions, paiements et comptabilité dans les outils que vous utilisez déjà",
+      "subtitle": "Branchez les comptes que votre cabinet utilise déjà. Réservation, visio, paiements et factures restent dans ces produits — Yuzu Immigration les coordonne autour du dossier d’immigration.",
       "beta": "Bêta",
       "groups": {
         "calendar": {
@@ -176,8 +187,8 @@
           "help": "Choisissez un outil de visio pour les liens de participation des rendez-vous confirmés."
         },
         "payment": {
-          "title": "Paiement",
-          "help": "Encaissez les honoraires à la réservation ou envoyez un lien de paiement sur un dossier."
+          "title": "Paiement et comptabilité",
+          "help": "Encaissez les honoraires à la réservation ou envoyez un lien de paiement sur un dossier. Connectez Sage pour poster les factures correspondantes."
         }
       },
       "calendar": {
@@ -203,6 +214,10 @@
       "square": {
         "title": "Square",
         "body": "Connectez Square pour facturer les consultations et envoyer des liens de paiement sur un projet. Le client paie sur Square. Vous voyez les impayés à l’accueil jusqu’au règlement."
+      },
+      "sage": {
+        "title": "Comptabilité Sage",
+        "body": "Connectez Sage Business Cloud Accounting pour apparier les clients par courriel, appliquer la bonne taxe de vente canadienne et poster les factures lorsque les paiements Square sont reçus."
       }
     },
     "securityEyebrow": "Sécurité, simplement",

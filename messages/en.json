@@ -62,10 +62,11 @@
       },
       "booking": {
         "title": "Calendar and booking",
-        "body": "Set weekly availability and the paid services people can book. Prospective clients find a slot, book, and pay directly. Bookings sync with Google Calendar or Outlook.",
+        "body": "Set weekly availability and the paid services people can book. Prospective clients find a slot, book, and pay directly. Bookings can send a contract for signature and sync with Google Calendar or Outlook.",
         "points": [
           "Weekly open hours and paid services ready to book",
           "Clients pick a time and pay on Square Checkout",
+          "Send a retainer for electronic signature when they book",
           "Sync with Google Calendar or Outlook — events created outside the app block those times automatically",
           "Confirmed bookings can include a Google Meet, Teams, or Zoom link"
         ]

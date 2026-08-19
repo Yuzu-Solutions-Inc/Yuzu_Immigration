@@ -18,7 +18,7 @@
   "home": {
     "audience": "Para consultores y abogados de inmigración",
     "title": "Gestione su práctica de inmigración en un espacio seguro",
-    "subtitle": "Clientes, expedientes, cuestionarios IRCC, documentos, Google Calendar y Meet, pagos Square y portales — pensado para inmigración canadiense, no un CRM genérico.",
+    "subtitle": "Clientes, expedientes, cuestionarios IRCC, documentos, contratos firmados, Google Calendar y Meet, pagos Square, contabilidad Sage y portales — pensado para inmigración canadiense, no un CRM genérico.",
     "cta": "Empezar gratis — fase de prueba",
     "secondaryCta": "Iniciar sesión",
     "ctaNote": "Gratis durante la fase de prueba abierta. Sin tarjeta de crédito.",
@@ -29,9 +29,11 @@
       "people": "Clientes",
       "forms": "Formularios IRCC",
       "documents": "Documentos",
+      "contracts": "Contratos y firma",
       "calendar": "Google Calendar",
       "meet": "Google Meet",
       "square": "Square",
+      "sage": "Contabilidad Sage",
       "languages": "EN · FR · ES"
     },
     "showcases": {
@@ -60,10 +62,11 @@
       },
       "booking": {
         "title": "Calendario y reservas",
-        "body": "Defina su disponibilidad semanal y los servicios de pago que se pueden reservar. Un posible cliente encuentra un hueco, reserva y paga. Las citas se sincronizan con Google Calendar o Outlook.",
+        "body": "Defina su disponibilidad semanal y los servicios de pago que se pueden reservar. Un posible cliente encuentra un hueco, reserva y paga. Las reservas pueden enviar un contrato a firma y se sincronizan con Google Calendar o Outlook.",
         "points": [
           "Horario semanal y servicios de pago listos para reservar",
           "El cliente elige una hora y paga en Square Checkout",
+          "Envíe un mandato a firma electrónica al reservar",
           "Sincronización con Google Calendar o Outlook — un evento creado fuera de la aplicación bloquea ese horario automáticamente",
           "Las reservas confirmadas pueden incluir un enlace de Google Meet, Teams o Zoom"
         ]
@@ -98,6 +101,10 @@
         "title": "Recogida y revisión de documentos",
         "body": "Pida pasaportes, fotos y archivos a medida. El cliente sube en el portal; su firma previsualiza, aprueba o devuelve un archivo con un comentario."
       },
+      "contracts": {
+        "title": "Plantillas de documentos y firma",
+        "body": "Redacte o cargue mandatos en cada idioma que atienda, inserte automáticamente los datos de la reserva y envíelos a firma electrónica cuando un cliente reserve. El cliente escribe o dibuja su marca; usted puede refrendar o prefirmar."
+      },
       "share": {
         "title": "Portal del cliente",
         "body": "Invite a los clientes a un portal duradero. Inician sesión con el correo del expediente y una contraseña tratada en el servidor — nunca en el navegador. Documentos, cuestionarios, facturas y citas quedan en un solo lugar."
@@ -109,6 +116,10 @@
       "payments": {
         "title": "Pagos con Square",
         "body": "Conecte Square para cobrar consultas al reservar o enviar un enlace de pago en un expediente. El cliente paga en Square Checkout. Los impagos aparecen en el inicio."
+      },
+      "sage": {
+        "title": "Contabilidad Sage",
+        "body": "Empareje clientes de Sage por correo, aplique el impuesto de ventas provincial correcto y registre facturas cuando se completen los pagos de Square."
       },
       "team": {
         "title": "Espacio de la firma",
@@ -128,11 +139,11 @@
       },
       "three": {
         "title": "Reserve, reúnase y cobre",
-        "body": "Los clientes reservan en su página pública. Google Calendar bloquea el tiempo ocupado, Google Meet se adjunta a la cita y Square cobra el honorario."
+        "body": "Los clientes reservan en su página pública. El calendario bloquea el tiempo ocupado, se adjunta un enlace de videollamada, Square cobra el honorario y un contrato puede enviarse a firma."
       },
       "four": {
         "title": "Prepare y cierre",
-        "body": "Rellene los PDF de IRCC con las respuestas ya recogidas, mantenga el estado visible y conserve o destruya expedientes cerrados según las obligaciones de su firma."
+        "body": "Rellene los PDF de IRCC con las respuestas ya recogidas, conserve los contratos firmados con el expediente y conserve o destruya expedientes cerrados según las obligaciones de su firma."
       }
     },
     "preview": {
@@ -163,8 +174,8 @@
     },
     "integrations": {
       "eyebrow": "Integraciones",
-      "title": "Calendario, reuniones y pagos en las herramientas que ya usa",
-      "subtitle": "Conecte las cuentas que su firma ya usa. Reservas, videollamadas y pagos siguen en esos productos — Yuzu Immigration los coordina en torno al expediente de inmigración.",
+      "title": "Calendario, reuniones, pagos y contabilidad en las herramientas que ya usa",
+      "subtitle": "Conecte las cuentas que su firma ya usa. Reservas, videollamadas, pagos y facturas siguen en esos productos — Yuzu Immigration los coordina en torno al expediente de inmigración.",
       "beta": "Beta",
       "groups": {
         "calendar": {
@@ -176,8 +187,8 @@
           "help": "Elija una herramienta de videollamada para los enlaces de las reservas confirmadas."
         },
         "payment": {
-          "title": "Pago",
-          "help": "Cobre honorarios al reservar o envíe un enlace de pago en un expediente."
+          "title": "Pago y contabilidad",
+          "help": "Cobre honorarios al reservar o envíe un enlace de pago en un expediente. Conecte Sage para registrar las facturas correspondientes."
         }
       },
       "calendar": {
@@ -203,6 +214,10 @@
       "square": {
         "title": "Square",
         "body": "Conecte Square para cobrar consultas y enviar enlaces de pago en un proyecto. El cliente paga en Square. Usted ve los impagos en el inicio hasta que paguen."
+      },
+      "sage": {
+        "title": "Contabilidad Sage",
+        "body": "Conecte Sage Business Cloud Accounting para emparejar clientes por correo, aplicar el impuesto de ventas canadiense correcto y registrar facturas cuando se completen los pagos de Square."
       }
     },
     "securityEyebrow": "Seguridad, en claro",

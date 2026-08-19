@@ -2,11 +2,13 @@ import {
   CalendarDays,
   CreditCard,
   FileCheck,
+  FilePen,
   FileStack,
   FolderKanban,
   Link2,
   LockKeyhole,
   MapPin,
+  Receipt,
   ScrollText,
   ShieldCheck,
   Users,
@@ -20,6 +22,7 @@ import { GoogleCalendarLogo } from "@/components/brand/google-calendar-logo";
 import { GoogleMeetLogo } from "@/components/brand/google-meet-logo";
 import { MicrosoftTeamsLogo } from "@/components/brand/microsoft-teams-logo";
 import { OutlookCalendarLogo } from "@/components/brand/outlook-calendar-logo";
+import { SageLogo } from "@/components/brand/sage-logo";
 import { SquareLogo } from "@/components/brand/square-logo";
 import { ZoomLogo } from "@/components/brand/zoom-logo";
 import { LegalLinks } from "@/components/legal/legal-links";
@@ -40,9 +43,11 @@ const CAPABILITY_KEYS = [
   "people",
   "forms",
   "documents",
+  "contracts",
   "calendar",
   "meet",
   "square",
+  "sage",
   "languages",
 ] as const;
 
@@ -51,9 +56,11 @@ const FEATURE_KEYS = [
   "people",
   "forms",
   "documents",
+  "contracts",
   "share",
   "booking",
   "payments",
+  "sage",
   "team",
 ] as const;
 
@@ -62,11 +69,15 @@ const FEATURE_ICONS = {
   people: Users,
   forms: FileStack,
   documents: FileCheck,
+  contracts: FilePen,
   share: Link2,
   booking: CalendarDays,
   payments: CreditCard,
+  sage: Receipt,
   team: UsersRound,
 } as const;
+
+const FEATURE_BETA = new Set<(typeof FEATURE_KEYS)[number]>(["sage"]);
 
 const INTEGRATION_GROUPS = [
   {
@@ -86,7 +97,10 @@ const INTEGRATION_GROUPS = [
   },
   {
     key: "payment",
-    items: [{ key: "square", Logo: SquareLogo, beta: false }],
+    items: [
+      { key: "square", Logo: SquareLogo, beta: false },
+      { key: "sage", Logo: SageLogo, beta: true },
+    ],
   },
 ] as const;
 
@@ -448,9 +462,16 @@ export async function LandingPage() {
                       strokeWidth={1.75}
                       aria-hidden
                     />
-                    <h3 className="font-heading text-base font-semibold text-brand">
-                      {t(`features.${key}.title`)}
-                    </h3>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <h3 className="font-heading text-base font-semibold text-brand">
+                        {t(`features.${key}.title`)}
+                      </h3>
+                      {FEATURE_BETA.has(key) ? (
+                        <span className="inline-flex h-5 shrink-0 items-center rounded-full border border-border bg-secondary px-2 text-[11px] font-medium text-muted-foreground">
+                          {t("integrations.beta")}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
                     {t(`features.${key}.body`)}
