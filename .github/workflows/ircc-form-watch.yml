@@ -37,7 +37,7 @@ jobs:
           file_pattern: src/lib/ircc/form-validation-status.json
       - name: Open or update tracking issue
         if: steps.validate.outcome == 'failure'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require("fs");
