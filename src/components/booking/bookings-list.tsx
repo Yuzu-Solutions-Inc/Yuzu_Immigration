@@ -226,7 +226,9 @@ export function BookingsList({
         if (!haystack.includes(guestQ)) return false;
       }
       if (timeFilter === "upcoming") {
-        if (new Date(booking.startsAt).getTime() < now) return false;
+        if (zonedDateIso(new Date(booking.startsAt), timezone) < todayIso) {
+          return false;
+        }
       } else if (timeFilter === "past") {
         if (new Date(booking.startsAt).getTime() >= now) return false;
       } else if (timeFilter === "today") {
