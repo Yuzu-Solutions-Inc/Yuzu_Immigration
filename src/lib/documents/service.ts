@@ -197,7 +197,16 @@ export async function ensureProjectDocumentsSeeded(
   }
 }
 
-export async function listShareDocumentRequests(
+export function personDisplayName(input: {
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+}) {
+  const name = `${input.first_name ?? ""} ${input.last_name ?? ""}`.trim();
+  return name || input.email || "";
+}
+
+export async function listClientDocumentRequests(
   admin: SupabaseClient,
   projectId: string,
 ): Promise<DocumentRequestWithFile[]> {
@@ -217,20 +226,20 @@ export async function listShareDocumentRequests(
     ]);
 
   if (reqError) {
-    console.error("listShareDocumentRequests:", reqError.message);
+    console.error("listClientDocumentRequests:", reqError.message);
     throw new Error(reqError.message);
   }
   if (fileError) {
-    console.error("listShareDocumentFiles:", fileError.message);
+    console.error("listProjectDocumentFiles:", fileError.message);
     throw new Error(fileError.message);
   }
 
-  type ShareFileMeta = Omit<DocumentFileRow, "storage_path"> & {
+  type FileMeta = Omit<DocumentFileRow, "storage_path"> & {
     storage_path?: string;
   };
 
   const filesByRequest = new Map(
-    ((files ?? []) as ShareFileMeta[]).map((f) => [f.request_id, f]),
+    ((files ?? []) as FileMeta[]).map((f) => [f.request_id, f]),
   );
 
   const orgId = ((requests ?? [])[0] as DocumentRequestRow | undefined)
@@ -265,7 +274,7 @@ export async function storeEncryptedDocument(input: {
   plaintext: Buffer;
   originalFilename: string;
   contentType: string;
-  uploadedVia: "share_link" | "staff" | "portal";
+  uploadedVia: "staff" | "portal";
   client?: SupabaseClient;
 }) {
   const admin = input.client ?? createServiceClient();

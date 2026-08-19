@@ -245,7 +245,7 @@ export async function buildPortalHouseholdExport(input: {
       "Included: identity, questionnaire answers, uploaded documents,",
       "appointments, and payment records.",
       "Omitted: internal consultant notes; encryption keys; lookup hashes;",
-      "portal passwords; share-link and payment tokens; storage paths.",
+      "portal passwords; payment tokens; storage paths.",
       "",
       "It does not include internal consultant notes.",
       `Closed files are typically retained for ${CLOSED_FILE_RETENTION_YEARS} years under College of`,

@@ -122,13 +122,6 @@ export type PersonDataExportPayload = {
     created_at: string;
     note: string;
   }>;
-  shareLinks: Array<{
-    project_id: string;
-    expires_at: string;
-    revoked_at: string | null;
-    created_at: string;
-    last_accessed_at: string | null;
-  }>;
   bookingInvites: Array<{
     id: string;
     project_id: string;
@@ -178,7 +171,7 @@ const OMISSIONS = [
   "Encryption keys, wrapped org DEKs, and ciphertext blobs",
   "Lookup / search hashes (email_lookup_hash, portal_email_hash, search_name)",
   "Portal access codes and access tokens",
-  "Share-link, booking-invite, payment, and manage tokens (hash or encrypted)",
+  "Booking-invite, payment, and manage tokens (hash or encrypted)",
   "Storage paths and encryption algorithm identifiers for uploaded files",
   "Portal password secrets",
   "Binary document content (filenames and metadata only; use full file export for binaries)",
@@ -392,13 +385,6 @@ export async function buildPersonDataExport(input: {
     questionnaire_submitted_at: string | null;
     updated_at: string;
   };
-  type ShareLinkRow = {
-    project_id: string;
-    expires_at: string;
-    revoked_at: string | null;
-    created_at: string;
-    last_accessed_at: string | null;
-  };
   type FormRow = {
     id: string;
     project_id: string;
@@ -413,11 +399,10 @@ export async function buildPersonDataExport(input: {
   };
 
   let answers: AnswersRow[] = [];
-  let links: ShareLinkRow[] = [];
   let scopedForms: FormRow[] = [];
 
   if (projectIds.length > 0) {
-    const [answersResult, shareLinksResult, scopedFormsResult] =
+    const [answersResult, scopedFormsResult] =
       await Promise.all([
         supabase
           .from("project_form_answers")
@@ -426,14 +411,6 @@ export async function buildPersonDataExport(input: {
           )
           .eq("organization_id", input.organizationId)
           .in("project_id", projectIds),
-        supabase
-          .from("form_share_links")
-          .select(
-            "project_id, expires_at, revoked_at, created_at, last_accessed_at",
-          )
-          .eq("organization_id", input.organizationId)
-          .in("project_id", projectIds)
-          .order("created_at", { ascending: false }),
         supabase
           .from("project_forms")
           .select(
@@ -445,7 +422,6 @@ export async function buildPersonDataExport(input: {
           .order("sort_order", { ascending: true }),
       ]);
     answers = (answersResult.data ?? []) as AnswersRow[];
-    links = (shareLinksResult.data ?? []) as ShareLinkRow[];
     scopedForms = (scopedFormsResult.data ?? []) as FormRow[];
   }
 
@@ -567,7 +543,6 @@ export async function buildPersonDataExport(input: {
       ),
       note: "Document ciphertext is stored encrypted; binary content omitted from this JSON package. Use the full file export for decrypted binaries.",
     })),
-    shareLinks: links,
     bookingInvites: (bookingInvites ?? []).map((row) => ({
       id: row.id as string,
       project_id: row.project_id as string,

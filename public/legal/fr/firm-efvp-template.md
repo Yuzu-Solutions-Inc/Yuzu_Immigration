@@ -13,7 +13,7 @@
 
 ## 1. Projet
 
-Nous adoptons Yuzu Immigration comme système de gestion de pratique (dossiers, questionnaires, formulaires, documents, liens de partage, portail, calendrier, réservation publique).
+Nous adoptons Yuzu Immigration comme système de gestion de pratique (dossiers, questionnaires, formulaires, documents, portail, calendrier, réservation publique).
 
 ☐ Nouveau système ☐ Remplacement de [outil] ☐ Changement majeur : ______________
 
@@ -56,7 +56,7 @@ Pour chaque case, nous acceptons que des renseignements (p. ex. nom, courriel, t
 | Risque | Mesure |
 |---|---|
 | Trop de personnel voit les dossiers | Rôles admin / consultant / adjoint ; partage des projets au besoin seulement |
-| Fuite d’un lien de partage | Pas de publication publique ; expiration / régénération ; mot de passe client |
+| Fuite d’un compte portail | Invitations envoyées seulement au courriel du client au dossier ; mot de passe défini par le client ou connexion Google |
 | Surcollecte | Seulement ce qui est nécessaire au mandat |
 | Mineurs | Autorisation parentale / tuteur avant toute collecte concernant un enfant de moins de 14 ans |
 | Conservation | Fermer les dossiers dans le produit (délai de six ans) ; détruire ensuite lorsque les fins sont atteintes |

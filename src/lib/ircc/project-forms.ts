@@ -1,7 +1,4 @@
 import { compareParticipantRole } from "@/lib/crm/programs";
-import { generateShareToken, hashShareToken } from "@/lib/ircc/share-token";
-
-export { generateShareToken, hashShareToken };
 import { isGrantedStatus } from "@/lib/crm/statuses";
 import type { ProgramFamily } from "@/db/schema";
 import {
@@ -50,8 +47,6 @@ import {
 } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 
-export const SHARE_LINK_TTL_DAYS = 30;
-
 /** Questionnaire keys that belong on the project bag (IMM 5409 etc.). */
 export const PROJECT_SCOPED_ANSWER_KEYS: string[] = [
   ...CANONICAL_FIELDS.filter(
@@ -93,24 +88,6 @@ export type ProjectFormAnswersRow = {
   current_section: string | null;
   created_at: string;
   updated_at: string;
-};
-
-export type FormShareLinkRow = {
-  id: string;
-  organization_id: string;
-  project_id: string;
-  token_hash: string;
-  token_encrypted?: string | null;
-  expires_at: string;
-  revoked_at: string | null;
-  created_by: string | null;
-  last_accessed_at: string | null;
-  created_at: string;
-};
-
-export type ActiveShareLink = {
-  expires_at: string;
-  canReveal: boolean;
 };
 
 export type ProjectPersonBrief = {
@@ -795,73 +772,6 @@ export async function removeProjectForm(input: {
   await refreshProjectProgress(input.organizationId, input.projectId, supabase);
 }
 
-export async function getActiveShareLink(
-  projectId: string,
-): Promise<ActiveShareLink | null> {
-  const supabase = await createClient();
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from("form_share_links")
-    .select("expires_at, token_encrypted")
-    .eq("project_id", projectId)
-    .is("revoked_at", null)
-    .gt("expires_at", now)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) {
-    console.error("getActiveShareLink:", error.message);
-    return null;
-  }
-  if (!data) return null;
-  return {
-    expires_at: data.expires_at as string,
-    canReveal: Boolean(data.token_encrypted),
-  };
-}
-
-/** Resolve a client share token via service role (no staff session). */
-export async function resolveShareToken(token: string): Promise<{
-  organizationId: string;
-  projectId: string;
-  linkId: string;
-  expiresAt: string;
-} | null> {
-  const hash = hashShareToken(token);
-  const admin = createServiceClient();
-  const { data, error } = await admin
-    .from("form_share_links")
-    .select("id, organization_id, project_id, expires_at, revoked_at")
-    .eq("token_hash", hash)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  if (data.revoked_at) return null;
-  if (new Date(data.expires_at as string).getTime() < Date.now()) return null;
-
-  const { data: project, error: projectError } = await admin
-    .from("immigration_projects")
-    .select("status")
-    .eq("id", data.project_id)
-    .maybeSingle();
-
-  if (projectError || !project || isGrantedStatus(project.status as string)) {
-    return null;
-  }
-
-  await admin
-    .from("form_share_links")
-    .update({ last_accessed_at: new Date().toISOString() })
-    .eq("id", data.id);
-
-  return {
-    organizationId: data.organization_id as string,
-    projectId: data.project_id as string,
-    linkId: data.id as string,
-    expiresAt: data.expires_at as string,
-  };
-}
-
 function injectPersonContact(
   answers: FlatAnswers,
   person: ProjectPersonBrief | undefined,
@@ -876,54 +786,6 @@ function injectPersonContact(
     // phone stays on people table only when present via answers
   }
   return next;
-}
-
-export async function loadShareGateContext(token: string) {
-  try {
-    const resolved = await resolveShareToken(token);
-    if (!resolved) return null;
-
-    const { getShareAccessState, toResolvedShareLink } = await import(
-      "@/lib/ircc/share-auth"
-    );
-    const full = toResolvedShareLink(resolved, token);
-    const access = await getShareAccessState(full);
-
-    const admin = createServiceClient();
-    const [projectRes, orgRes] = await Promise.all([
-      admin
-        .from("immigration_projects")
-        .select("title, organization_id")
-        .eq("id", resolved.projectId)
-        .maybeSingle(),
-      admin
-        .from("organizations")
-        .select("name")
-        .eq("id", resolved.organizationId)
-        .maybeSingle(),
-    ]);
-
-    if (!projectRes.data) return null;
-
-    const key = await getOrgDataKey(resolved.organizationId);
-    const project = decryptProjectRow(
-      projectRes.data as { title: string; organization_id: string },
-      key,
-    );
-
-    return {
-      organizationId: resolved.organizationId,
-      projectId: resolved.projectId,
-      linkId: resolved.linkId,
-      expiresAt: resolved.expiresAt,
-      access,
-      projectTitle: project.title,
-      organizationName: String(orgRes.data?.name ?? ""),
-    };
-  } catch (err) {
-    console.error("loadShareGateContext:", err);
-    return null;
-  }
 }
 
 export async function loadProjectFillContext(input: {
@@ -1054,142 +916,6 @@ export async function loadProjectFillContext(input: {
   }
 }
 
-export async function loadShareContext(
-  token: string,
-  options?: { skipPasswordGate?: boolean },
-) {
-  try {
-    const resolved = await resolveShareToken(token);
-    if (!resolved) return null;
-
-    if (!options?.skipPasswordGate) {
-      const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
-      try {
-        await assertShareAuthenticated(token);
-      } catch {
-        return null;
-      }
-    }
-
-    const admin = createServiceClient();
-  const [projectRes, formsRes, answersRes, orgRes, people] = await Promise.all([
-    admin
-      .from("immigration_projects")
-      .select(
-        "id, title, program_family, organization_id, form_language, representative_user_id",
-      )
-      .eq("id", resolved.projectId)
-      .maybeSingle(),
-    admin
-      .from("project_forms")
-      .select("*")
-      .eq("project_id", resolved.projectId)
-      .order("sort_order", { ascending: true }),
-    admin
-      .from("project_form_answers")
-      .select("*")
-      .eq("project_id", resolved.projectId)
-      .maybeSingle(),
-    admin
-      .from("organizations")
-      .select("id, name")
-      .eq("id", resolved.organizationId)
-      .maybeSingle(),
-    listActiveProjectPeople(admin, resolved.projectId),
-  ]);
-
-  const loadError =
-    projectRes.error || formsRes.error || answersRes.error || orgRes.error;
-  if (loadError) {
-    console.error("loadShareContext:", loadError.message);
-    return null;
-  }
-
-  if (!projectRes.data) return null;
-
-  const project = decryptProjectRow(
-    projectRes.data as {
-      id: string;
-      title: string;
-      program_family: string;
-      organization_id: string;
-      form_language: string | null;
-      representative_user_id: string | null;
-    },
-    await getOrgDataKey(resolved.organizationId),
-  );
-  const principal = people.find((p) => p.role === "principal") ?? people[0];
-  const forms = sortFormsPrincipalFirst(
-    (formsRes.data ?? []) as ProjectFormRow[],
-    people,
-  );
-  const store = normalizeAnswersStore(
-    decryptAnswersValue(
-      answersRes.data?.answers,
-      await getOrgDataKey(resolved.organizationId),
-    ),
-    {
-      principalPersonId: principal?.id,
-    },
-  );
-
-  const repUserId = project.representative_user_id as string | null;
-  const { data: repProfile } = repUserId
-    ? await admin
-        .from("profiles")
-        .select(PROFILE_REP_SELECT)
-        .eq("id", repUserId)
-        .maybeSingle()
-    : { data: null };
-
-  const peopleWithAnswers = people.map((person) => {
-    const formCodes = forms
-      .filter(
-        (f: ProjectFormRow) =>
-          f.person_id === person.id ||
-          (person.role === "principal" && !f.person_id),
-      )
-      .map((f: ProjectFormRow) => f.form_code as string);
-
-    const merged = withProjectFormLanguage(
-      mergeAccountRepIntoAnswers(
-        injectPersonContact(
-          {
-            ...store.byPerson[person.id],
-            ...(person.role === "principal" ? store.project : {}),
-          },
-          person,
-        ),
-        repProfile,
-      ),
-      project.form_language,
-    );
-
-    return {
-      ...person,
-      formCodes,
-      answers: merged,
-    };
-  });
-
-  return {
-    ...resolved,
-    project,
-    forms,
-    answersStore: store,
-    people: peopleWithAnswers,
-    currentSection:
-      (answersRes.data?.current_section as string | null) ?? null,
-    questionnaireSubmittedAt:
-      (answersRes.data?.questionnaire_submitted_at as string | null) ?? null,
-    organization: orgRes.data,
-  };
-  } catch (err) {
-    console.error("loadShareContext unexpected:", err);
-    return null;
-  }
-}
-
 export async function saveProjectAnswers(input: {
   organizationId: string;
   projectId: string;
@@ -1299,31 +1025,6 @@ export async function saveProjectAnswers(input: {
   await refreshProjectProgress(input.organizationId, input.projectId, admin);
 }
 
-export async function saveShareAnswers(input: {
-  token: string;
-  personId: string;
-  answers: Record<string, unknown>;
-  currentSection?: string | null;
-}) {
-  const { assertShareAuthenticated } = await import("@/lib/ircc/share-auth");
-  let resolved;
-  try {
-    resolved = await assertShareAuthenticated(input.token);
-  } catch (err) {
-    if (err instanceof Error && err.message === "auth_required") {
-      throw new Error("auth_required");
-    }
-    throw new Error("expired");
-  }
-  await saveProjectAnswers({
-    organizationId: resolved.organizationId,
-    projectId: resolved.projectId,
-    personId: input.personId,
-    answers: input.answers,
-    currentSection: input.currentSection,
-  });
-}
-
 export async function submitProjectQuestionnaire(input: {
   organizationId: string;
   projectId: string;
@@ -1384,66 +1085,6 @@ export async function submitProjectQuestionnaire(input: {
   await notifyFormsSubmitted({
     organizationId: input.organizationId,
     projectId: input.projectId,
-  });
-
-  return { submittedAt };
-}
-
-export async function submitShareQuestionnaire(input: {
-  token: string;
-  personId?: string;
-  answers?: Record<string, unknown>;
-  currentSection?: string | null;
-}): Promise<{ submittedAt: string }> {
-  if (input.personId && input.answers) {
-    await saveShareAnswers({
-      token: input.token,
-      personId: input.personId,
-      answers: input.answers,
-      currentSection: input.currentSection,
-    });
-  }
-
-  const ctx = await loadShareContext(input.token);
-  if (!ctx) throw new Error("expired");
-
-  const incomplete = ctx.people.filter((person) => {
-    const { filled, total } = questionnaireFillCounts(
-      person.formCodes,
-      person.answers,
-    );
-    if (total === 0) return false;
-    return filled < total;
-  });
-  if (incomplete.length > 0) {
-    throw new Error("incomplete");
-  }
-
-  const admin = createServiceClient();
-  const submittedAt = new Date().toISOString();
-  const { error, data } = await admin
-    .from("project_form_answers")
-    .update({
-      questionnaire_submitted_at: submittedAt,
-      updated_at: submittedAt,
-    })
-    .eq("project_id", ctx.projectId)
-    .eq("organization_id", ctx.organizationId)
-    .select("id")
-    .maybeSingle();
-
-  if (error || !data) {
-    console.error(
-      "submitShareQuestionnaire:",
-      error?.message ?? "no answers row",
-    );
-    throw new Error("submit_failed");
-  }
-
-  const { notifyFormsSubmitted } = await import("@/lib/notifications/emit");
-  await notifyFormsSubmitted({
-    organizationId: ctx.organizationId,
-    projectId: ctx.projectId,
   });
 
   return { submittedAt };

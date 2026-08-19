@@ -789,7 +789,7 @@ export function ModularQuestionnaire({
         save_failed: t("errors.saveFailed"),
         granted: t("errors.granted"),
         expired: t("errors.expired"),
-        auth_required: t("shareAuth.errors.authRequired"),
+        auth_required: t("errors.auth_required"),
       }[code] ?? t("errors.generic")
     );
   }

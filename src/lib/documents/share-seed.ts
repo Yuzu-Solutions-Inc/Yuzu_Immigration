@@ -1,8 +1,8 @@
 import { defaultDocumentsForProgram } from "@/lib/documents/catalog";
 import { createServiceClient } from "@/lib/supabase/admin";
 
-/** Seed passport/photo defaults for share-token clients (service role). */
-export async function seedShareDocumentDefaults(input: {
+/** Seed passport/photo defaults for portal clients (service role). */
+export async function seedProjectDocumentDefaults(input: {
   organizationId: string;
   projectId: string;
   programFamily: string;
@@ -17,7 +17,7 @@ export async function seedShareDocumentDefaults(input: {
     .eq("project_id", input.projectId);
 
   if (error) {
-    console.error("seedShareDocumentDefaults:", error.message);
+    console.error("seedProjectDocumentDefaults:", error.message);
     return;
   }
 
@@ -48,6 +48,6 @@ export async function seedShareDocumentDefaults(input: {
     .from("project_document_requests")
     .insert(inserts);
   if (insertError) {
-    console.error("seedShareDocumentDefaults insert:", insertError.message);
+    console.error("seedProjectDocumentDefaults insert:", insertError.message);
   }
 }

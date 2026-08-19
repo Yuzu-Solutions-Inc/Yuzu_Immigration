@@ -142,7 +142,6 @@
       "urlHome": "app.yuzu.solutions/en/home",
       "urlProject": "app.yuzu.solutions/en/projects/chen-family",
       "urlCalendar": "app.yuzu.solutions/en/calendar",
-      "urlFill": "yuzu.solutions/en/fill/chen-family",
       "urlPortal": "yuzu.solutions/en/portal/home",
       "urlBook": "yuzu.solutions/en/book/north-star",
       "urlPay": "yuzu.solutions/en/pay/consultation",
@@ -224,7 +223,7 @@
       },
       "access": {
         "title": "Your firm’s data stays yours",
-        "body": "Access is scoped to each organization. Public booking and share links use unguessable tokens with rate limits and expiry where configured."
+        "body": "Access is scoped to each organization. Public booking pages use unguessable tokens with rate limits and expiry where configured."
       },
       "privacy": {
         "title": "Privacy you can explain",
@@ -793,7 +792,7 @@
     "delete": "Delete",
     "deleteAria": "Delete {title}",
     "deleting": "Deleting…",
-    "deleteConfirm": "Delete {title}? This permanently erases the file, documents, answers, and share links. Clients with no other file at the firm are erased too, including their bookings. This cannot be undone.",
+    "deleteConfirm": "Delete {title}? This permanently erases the file, documents, and answers. Clients with no other file at the firm are erased too, including their bookings. This cannot be undone.",
     "shareWithAssistants": "Share with assistants",
     "shareHelp": "Assistants only see projects you share with them, plus the participants on those files.",
     "noAssistants": "No assistants in this organization yet. Invite one from Organization settings.",
@@ -1132,61 +1131,6 @@
       "inProgress": "In progress",
       "completed": "Completed"
     },
-    "shareTitle": "Client link",
-    "shareHelp": "Secure link for the client to upload documents and fill the questionnaire. Expires in 30 days. On first visit the client sets a password. Answers and uploads stay if the link is replaced.",
-    "shareActive": "A link is active until {date}.",
-    "shareActiveShort": "Until {date}",
-    "shareInactive": "No active link",
-    "shareCopy": "Send this link to your client.",
-    "shareCopyButton": "Copy link",
-    "shareCopied": "Link copied",
-    "shareShowLink": "Show link",
-    "shareShowing": "Loading…",
-    "shareShowUnavailable": "Generate a new link to copy it.",
-    "createShareLink": "Create link",
-    "newShareLink": "New link",
-    "revokeShareLink": "Revoke",
-    "shareRevoking": "Revoking…",
-    "shareRevoked": "Link revoked",
-    "shareAuth": {
-      "setupTitle": "Create your password",
-      "setupBody": "Set a password to protect this link. You will need it each time you return.",
-      "passwordRules": "At least 8 characters, including at least one uppercase letter, at least one number, and at least one symbol.",
-      "showPassword": "Show password",
-      "hidePassword": "Hide password",
-      "password": "Password",
-      "confirm": "Confirm password",
-      "setupCta": "Save password",
-      "settingUp": "Saving…",
-      "loginTitle": "Enter your password",
-      "loginBody": "This file is protected. Enter the password you created for this link.",
-      "loginCta": "Continue",
-      "loggingIn": "Checking…",
-      "forgotBody": "Forgot your password? We will revoke this link and email a new one to the principal applicant’s email on file. Your forms and documents will not be lost.",
-      "forgotCta": "Email me a new link",
-      "forgotSending": "Sending…",
-      "forgotSuccess": "New link sent by email.",
-      "forgotSuccessTitle": "Check your email",
-      "forgotSuccessBody": "We sent a new secure link to the email on file for the principal applicant. Open that link to set a new password. Your answers and uploads are still saved.",
-      "privacyConsent": "I agree that this firm may collect my personal information and documents through this secure link to manage my immigration file, as described in the",
-      "privacyPolicy": "privacy policy",
-      "errors": {
-        "invalid": "This link is not valid. Ask your consultant for help.",
-        "mismatch": "Passwords do not match.",
-        "weakPassword": "Use at least 8 characters, including at least one uppercase letter, at least one number, and at least one symbol.",
-        "wrongPassword": "Incorrect password. Try again.",
-        "rateLimited": "Too many attempts. Wait a few minutes and try again.",
-        "noEmail": "No email is on file for the principal applicant. Contact your consultant.",
-        "emailNotConfigured": "Email could not be sent. Contact your consultant for a new link.",
-        "sendFailed": "Could not send a new link. Try again or contact your consultant.",
-        "alreadySet": "A password is already set for this link.",
-        "authRequired": "Enter your password to continue.",
-        "serverConfig": "Server configuration error. Contact your consultant.",
-        "privacyRequired": "Accept the privacy notice to continue.",
-        "legalRequired": "Accept the Terms and Conditions and Privacy Policy to continue."
-      }
-    },
-    "sharing": "Creating…",
     "generateTitle": "Generate IRCC PDFs",
     "generateHelp": "Fills certified government forms from answers asked once.",
     "generate": "Download filled PDFs",
@@ -1210,7 +1154,6 @@
     "clientEyebrow": "Secure questionnaire",
     "clientLede": "Answer for each person on the file, then submit when everyone is 100% complete so your consultant is notified.",
     "clientAnswerLanguage": "All answers must be filled in {language} — the language selected for this file.",
-    "clientExpires": "This link works until {date}.",
     "clientSubmitLabel": "Send to consultant",
     "clientSubmit": "Submit questionnaire",
     "clientSubmitAgain": "Submit again",
@@ -1220,8 +1163,6 @@
     "clientSubmitDoneHint": "Submitted. You can submit again after making changes.",
     "clientSubmitSuccess": "Submitted. Your consultant has been notified.",
     "clientAlreadySubmitted": "Last submitted {date}.",
-    "linkExpiredTitle": "This link has expired",
-    "linkExpiredBody": "Ask your consultant for a new link. Your answers are kept on file.",
     "personTabsLabel": "Whose answers?",
     "personTabsHelp": "You are filling IRCC details for {name}. Click another person to switch.",
     "personTabsHelpSingle": "You are filling IRCC details for {name}.",
@@ -1626,12 +1567,10 @@
       "addFailed": "Could not add that form.",
       "removeFailed": "Could not remove that form.",
       "personRequired": "Choose who this form belongs to.",
-      "shareFailed": "Could not update the share link.",
-      "shareUnrecoverable": "This link can’t be shown again. Generate a new one to copy it.",
       "copyFailed": "Could not copy. Select the link and copy it manually.",
       "generateFailed": "Could not generate PDFs. Complete more answers and try again.",
-      "expired": "This link has expired. Ask your consultant for a new one.",
-      "auth_required": "Enter your password to continue.",
+      "expired": "Your session expired. Sign in to the portal again.",
+      "auth_required": "Sign in to the portal to continue.",
       "incomplete": "Finish every person to 100% before submitting.",
       "submitFailed": "Could not submit. Try again.",
       "granted": "This project was granted. Documents and forms are locked until you change the status.",
@@ -1765,6 +1704,7 @@
     "scopeProject": "Whole file",
     "upload": "Upload",
     "replace": "Replace upload",
+    "preparing": "Preparing photo…",
     "uploading": "Uploading…",
     "uploaded": "Document uploaded securely.",
     "chooseFile": "Choose file",
@@ -1775,22 +1715,9 @@
     "statusApproved": "Approved by your consultant",
     "statusSelected": "Selected — not uploaded yet",
     "justUploaded": "Just saved",
-    "clientEyebrow": "Secure client link",
+    "clientEyebrow": "Client portal",
     "clientLede": "Upload the requested documents and complete the questionnaire for your file.",
-    "clientFormats": "Accepted: PDF, JPEG, PNG, WebP, HEIC. Max {maxMb} MB per file. Files are encrypted at rest.",
-    "landingDocumentsTitle": "Upload documents",
-    "landingDocumentsBody": "Passport, photo, and any other files your consultant requested.",
-    "landingDocumentsCta": "{uploaded} of {total} uploaded",
-    "landingFormsTitle": "Fill questionnaire",
-    "landingFormsBody": "Answer once — your consultant uses this to complete IRCC forms.",
-    "landingFormsCta": "Continue to forms",
-    "backToLanding": "Back to options",
-    "shareNavLabel": "File sections",
-    "shareTabs": {
-      "label": "File sections",
-      "documents": "Documents",
-      "forms": "Forms"
-    },
+    "clientFormats": "Accepted: PDF, JPEG, PNG, WebP, HEIC. Max {maxMb} MB per file. Photos may be reduced for upload. Files are encrypted at rest.",
     "keys": {
       "passport": "Passport",
       "photo": "Photo"
@@ -1826,7 +1753,7 @@
     },
     "errors": {
       "invalid": "Check the form and try again.",
-      "expired": "This link has expired. Ask your consultant for a new one.",
+      "expired": "Your session expired. Sign in to the portal again.",
       "fileTooLarge": "File is too large. Maximum size is {maxMb} MB.",
       "fileType": "Unsupported file type. Use PDF, JPEG, PNG, WebP, or HEIC.",
       "uploadFailed": "Upload failed. Try again.",
@@ -1840,6 +1767,11 @@
       "granted": "This project was granted. Documents and forms are locked until you change the status.",
       "previewUnsupported": "This file type can’t be previewed in the browser. Download it to open.",
       "generic": "Something went wrong."
+    },
+    "clientTabs": {
+      "label": "File sections",
+      "documents": "Documents",
+      "forms": "Forms"
     }
   },
   "privacy": {
@@ -1848,7 +1780,7 @@
     "closedAt": "File closed",
     "retainUntil": "Retain until",
     "destroyedOn": "File destroyed on {date}",
-    "destroyHelp": "This permanently erases documents, questionnaire answers, share links, and — if these clients have no other file at the firm — their records, notes, portal access, and bookings. Type DESTROY to confirm.",
+    "destroyHelp": "This permanently erases documents, questionnaire answers, and — if these clients have no other file at the firm — their records, notes, portal access, and bookings. Type DESTROY to confirm.",
     "destroyConfirmLabel": "Type DESTROY to confirm",
     "destroyNote": "Optional note",
     "destroy": "Destroy file",
@@ -1876,7 +1808,7 @@
     "privacyLink": "Privacy",
     "privacyTitle": "Privacy Policy",
     "privacyUpdated": "Last updated: 17 August 2026",
-    "privacyIntro": "Yuzu Immigration is practice-management software operated by Yuzu Solutions Inc. for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use Yuzu Immigration — including the consultant workspace, client share links, the client portal, and public booking pages. Use of the service is also governed by our Terms and Conditions.\n\nThis policy supports accountability under the federal Personal Information Protection and Electronic Documents Act (PIPEDA) and Québec’s Act respecting the protection of personal information in the private sector (Law 25). It is not a certification, not legal advice, and not a retainer with Yuzu Solutions Inc. for immigration services.",
+    "privacyIntro": "Yuzu Immigration is practice-management software operated by Yuzu Solutions Inc. for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use Yuzu Immigration — including the consultant workspace, the client portal, and public booking pages. Use of the service is also governed by our Terms and Conditions.\n\nThis policy supports accountability under the federal Personal Information Protection and Electronic Documents Act (PIPEDA) and Québec’s Act respecting the protection of personal information in the private sector (Law 25). It is not a certification, not legal advice, and not a retainer with Yuzu Solutions Inc. for immigration services.",
     "backHome": "Back to home",
     "consentTitle": "How your information is used",
     "consentSummary": "Your personal information and documents are shared so this firm can prepare and manage your immigration file in Yuzu Immigration.",
@@ -1916,7 +1848,7 @@
       },
       "purposes": {
         "title": "3. Purposes",
-        "body": "We process personal information to:\n• Provide the CRM, questionnaires, form preparation, document intake, share links, client portal, calendar, and public booking features\n• Authenticate staff and, where a firm enables it, client portal access\n• Send appointment confirmations, change/cancel links, and reminder emails the firm configures\n• Sync busy times and bookings with a consultant’s Google Calendar or Outlook calendar when that consultant connects it, and create a Google Meet, Microsoft Teams, or Zoom join link when that meeting tool is selected\n• Maintain security, prevent booking abuse, keep audit records, and operate the service\n• Meet legal obligations that apply to Yuzu Solutions Inc. as a service provider and as an enterprise\n\nWe do not sell personal information. We do not use client file contents for advertising. We do not use personal information for new purposes without notice and, where the law requires, a new consent."
+        "body": "We process personal information to:\n• Provide the CRM, questionnaires, form preparation, document intake, client portal, calendar, and public booking features\n• Authenticate staff and, where a firm enables it, client portal access\n• Send appointment confirmations, change/cancel links, and reminder emails the firm configures\n• Sync busy times and bookings with a consultant’s Google Calendar or Outlook calendar when that consultant connects it, and create a Google Meet, Microsoft Teams, or Zoom join link when that meeting tool is selected\n• Maintain security, prevent booking abuse, keep audit records, and operate the service\n• Meet legal obligations that apply to Yuzu Solutions Inc. as a service provider and as an enterprise\n\nWe do not sell personal information. We do not use client file contents for advertising. We do not use personal information for new purposes without notice and, where the law requires, a new consent."
       },
       "collection": {
         "title": "4. What we collect",
@@ -1924,7 +1856,7 @@
       },
       "legalBasis": {
         "title": "5. Consent and notice",
-        "body": "Firms are responsible for obtaining valid consent from clients where required — including express consent for sensitive information and, in Québec, parental or guardian authorization before collecting information about a child under 14 — and for explaining their own retainers and privacy practices.\n\nStaff must accept this Privacy Policy and the Terms and Conditions when they create a Yuzu Immigration account. Client share links require both checkboxes when the client first sets a password for the link. The client portal requires both checkboxes when the client first creates a password or first signs in with Google. Public booking requires both checkboxes before a booking can be submitted. Checking those boxes is consent to the processing described here for that account, file, or appointment, subject to the firm’s instructions and applicable law. Those checkboxes are not pre-checked.\n\nCalendar, meeting, and payment tools are off until a staff member or the firm connects them. Connecting them is an instruction to communicate related details to that provider. Optional product analytics are off until you accept them in the cookie banner.\n\nYou may refuse by not creating an account, not using the link, or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
+        "body": "Firms are responsible for obtaining valid consent from clients where required — including express consent for sensitive information and, in Québec, parental or guardian authorization before collecting information about a child under 14 — and for explaining their own retainers and privacy practices.\n\nStaff must accept this Privacy Policy and the Terms and Conditions when they create a Yuzu Immigration account. The client portal requires both checkboxes when the client first creates a password or first signs in with Google. Public booking requires both checkboxes before a booking can be submitted. Checking those boxes is consent to the processing described here for that account, file, or appointment, subject to the firm’s instructions and applicable law. Those checkboxes are not pre-checked.\n\nCalendar, meeting, and payment tools are off until a staff member or the firm connects them. Connecting them is an instruction to communicate related details to that provider. Optional product analytics are off until you accept them in the cookie banner.\n\nYou may refuse by not creating an account, not using the link, or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
       },
       "governance": {
         "title": "6. Governance",
@@ -1932,11 +1864,11 @@
       },
       "safeguards": {
         "title": "7. Safeguards",
-        "body": "We apply safeguards proportionate to the sensitivity of immigration files, including:\n• Encryption in transit (TLS)\n• Infrastructure encryption at rest for the database, authentication, and file storage\n• Application-level AES-256-GCM for uploaded client documents and for many client fields (names, emails, phones, notes, questionnaire answers, booking guest details, and similar), using a separate encryption key per firm\n• Some operational fields are stored without that application-level encryption (for example preferred language, immigration-status labels, appointment times, and security audit metadata)\n• Access controls scoped to each firm; assistants only see projects they are shared on (highest confidentiality by default for that role)\n• Database service-role privileges restricted to server-only paths\n• Public booking and share links identified by unguessable tokens; booking rate limits use hashed email and IP\n• Staff passwords handled by Supabase Auth; client portal passwords stored in a private schema and verified only on the server; optional Google sign-in for the client portal is verified on the server and does not create a staff account\n\nYuzu personnel who hold the platform wrap key can technically decrypt firm keys in order to operate, restore, or secure the service, or to comply with law. We limit that access operationally. No method of transmission or storage is perfectly secure. You use the service understanding that residual risk."
+        "body": "We apply safeguards proportionate to the sensitivity of immigration files, including:\n• Encryption in transit (TLS)\n• Infrastructure encryption at rest for the database, authentication, and file storage\n• Application-level AES-256-GCM for uploaded client documents and for many client fields (names, emails, phones, notes, questionnaire answers, booking guest details, and similar), using a separate encryption key per firm\n• Some operational fields are stored without that application-level encryption (for example preferred language, immigration-status labels, appointment times, and security audit metadata)\n• Access controls scoped to each firm; assistants only see projects they are shared on (highest confidentiality by default for that role)\n• Database service-role privileges restricted to server-only paths\n• Public booking pages identified by unguessable tokens; booking rate limits use hashed email and IP\n• Staff passwords handled by Supabase Auth; client portal passwords stored in a private schema and verified only on the server; optional Google sign-in for the client portal is verified on the server and does not create a staff account\n\nYuzu personnel who hold the platform wrap key can technically decrypt firm keys in order to operate, restore, or secure the service, or to comply with law. We limit that access operationally. No method of transmission or storage is perfectly secure. You use the service understanding that residual risk."
       },
       "retention": {
         "title": "8. Retention and destruction",
-        "body": "Client and project records remain while the firm’s workspace is active. When a file is closed, the product sets a retain-until date of six years after closure to support typical College of Immigration and Citizenship Consultants closed-file duties. That professional retention is a documented purpose. A client may ask the firm to delete their information (including from the client portal Security page). The firm generally cannot destroy a closed file until those six years have passed. When purposes are fulfilled, Québec Law 25 requires destruction or anonymization.\n\nDeleting a person or a project from the workspace erases that record’s personal information in the application: identity and contact fields, notes, uploaded documents, questionnaire answers, share links, portal access, and linked bookings (including an attempt to delete the matching Google Calendar or Outlook event and any Zoom or Teams meeting created for it). Disconnecting Zoom from Settings deletes that staff member’s Zoom OAuth tokens from Yuzu Immigration. People who remain on another file at the firm are kept. After the retain-until date, a firm administrator can destroy a closed file the same way. A placeholder project row and an encrypted destruction-register entry (client name and service summary) are kept for the firm’s professional record. Security audit rows for that file or person are kept as a record that the action occurred, with IP address, user agent, and event metadata removed.\n\nHashed booking abuse events are deleted after about 14 days, and are also removed for an erased person’s email.\n\nEmails already sent, copies of calendar events or meetings held by Google, Microsoft, or Zoom, and database backups or point-in-time recovery copies can outlive an application delete until those copies expire. Firms remain responsible for their professional retention and secure-destruction duties."
+        "body": "Client and project records remain while the firm’s workspace is active. When a file is closed, the product sets a retain-until date of six years after closure to support typical College of Immigration and Citizenship Consultants closed-file duties. That professional retention is a documented purpose. A client may ask the firm to delete their information (including from the client portal Security page). The firm generally cannot destroy a closed file until those six years have passed. When purposes are fulfilled, Québec Law 25 requires destruction or anonymization.\n\nDeleting a person or a project from the workspace erases that record’s personal information in the application: identity and contact fields, notes, uploaded documents, questionnaire answers, portal access, and linked bookings (including an attempt to delete the matching Google Calendar or Outlook event and any Zoom or Teams meeting created for it). Disconnecting Zoom from Settings deletes that staff member’s Zoom OAuth tokens from Yuzu Immigration. People who remain on another file at the firm are kept. After the retain-until date, a firm administrator can destroy a closed file the same way. A placeholder project row and an encrypted destruction-register entry (client name and service summary) are kept for the firm’s professional record. Security audit rows for that file or person are kept as a record that the action occurred, with IP address, user agent, and event metadata removed.\n\nHashed booking abuse events are deleted after about 14 days, and are also removed for an erased person’s email.\n\nEmails already sent, copies of calendar events or meetings held by Google, Microsoft, or Zoom, and database backups or point-in-time recovery copies can outlive an application delete until those copies expire. Firms remain responsible for their professional retention and secure-destruction duties."
       },
       "sharing": {
         "title": "9. Sharing and service providers",
@@ -1978,15 +1910,15 @@
     "termsSections": {
       "agreement": {
         "title": "1. Agreement",
-        "body": "By creating an account, joining a firm workspace, setting a password on a client share link, or submitting a public booking, you agree to these Terms and Conditions and to the Privacy Policy.\n\nIf you do not agree, do not use Yuzu Immigration. If you accept on behalf of a consulting firm, you confirm that you have authority to bind that firm. These terms are a contract of adhesion for some users; we have tried to write them in clear language. External documents (including the Privacy Policy and the Firm Data Processing Addendum) are brought to your attention by these terms and by in-product links and checkboxes. A firm administrator accepts the addendum when creating the workspace, or later in Settings. That clickwrap is the written processor contract. A countersigned copy is optional."
+        "body": "By creating an account, joining a firm workspace, signing in to the client portal, or submitting a public booking, you agree to these Terms and Conditions and to the Privacy Policy.\n\nIf you do not agree, do not use Yuzu Immigration. If you accept on behalf of a consulting firm, you confirm that you have authority to bind that firm. These terms are a contract of adhesion for some users; we have tried to write them in clear language. External documents (including the Privacy Policy and the Firm Data Processing Addendum) are brought to your attention by these terms and by in-product links and checkboxes. A firm administrator accepts the addendum when creating the workspace, or later in Settings. That clickwrap is the written processor contract. A countersigned copy is optional."
       },
       "parties": {
         "title": "2. Who these terms apply to",
-        "body": "Yuzu Solutions Inc. operates Yuzu Immigration.\n\nA “firm” is the consulting organization that holds a workspace. “Staff” are the firm’s users (admins, consultants, and assistants).\n\nA “client” or “guest” is someone who uses a firm’s share link, portal access, or public booking page. Clients have a relationship with the firm, not a professional retainer with Yuzu Solutions Inc.\n\nSections that impose professional, indemnity, or payment duties on a “firm” apply to firms and staff acting for them. They do not impose those duties on clients or guests, except the acceptable-use and accuracy rules that apply to everyone."
+        "body": "Yuzu Solutions Inc. operates Yuzu Immigration.\n\nA “firm” is the consulting organization that holds a workspace. “Staff” are the firm’s users (admins, consultants, and assistants).\n\nA “client” or “guest” is someone who uses a firm’s client portal or public booking page. Clients have a relationship with the firm, not a professional retainer with Yuzu Solutions Inc.\n\nSections that impose professional, indemnity, or payment duties on a “firm” apply to firms and staff acting for them. They do not impose those duties on clients or guests, except the acceptable-use and accuracy rules that apply to everyone."
       },
       "service": {
         "title": "3. The service",
-        "body": "Yuzu Immigration is software for practice management: client records, questionnaires, form preparation, document intake, share links, calendar, and public booking.\n\nYuzu Solutions Inc. provides the software. Features may change. We may add, change, or remove functions with reasonable notice when practical. We do not warrant that a particular form edition, government portal, or third-party API will remain available."
+        "body": "Yuzu Immigration is software for practice management: client records, questionnaires, form preparation, document intake, client portal, calendar, and public booking.\n\nYuzu Solutions Inc. provides the software. Features may change. We may add, change, or remove functions with reasonable notice when practical. We do not warrant that a particular form edition, government portal, or third-party API will remain available."
       },
       "noProfessionalRelationship": {
         "title": "4. No immigration advice or professional relationship",
@@ -1994,7 +1926,7 @@
       },
       "accounts": {
         "title": "5. Accounts and credentials",
-        "body": "Staff accounts are for people authorized by a firm. You must provide accurate information, keep credentials confidential, and tell the firm promptly if you lose access. The firm is responsible for who it invites and which role it assigns.\n\nClients create a password on a share link to protect that link. That password is not a staff account. Guests who book an appointment create a client record in the firm’s workspace.\n\nWe may suspend an account that we reasonably believe is used without authorization, in breach of these terms, or in a way that risks the security of the service or other users. The firm remains responsible for activity under its staff accounts."
+        "body": "Staff accounts are for people authorized by a firm. You must provide accurate information, keep credentials confidential, and tell the firm promptly if you lose access. The firm is responsible for who it invites and which role it assigns.\n\nClients create a portal password or sign in with Google. That is not a staff account. Guests who book an appointment create a client record in the firm’s workspace.\n\nWe may suspend an account that we reasonably believe is used without authorization, in breach of these terms, or in a way that risks the security of the service or other users. The firm remains responsible for activity under its staff accounts."
       },
       "firmDuties": {
         "title": "6. Firm responsibilities and instructions",
@@ -2002,11 +1934,11 @@
       },
       "clientUse": {
         "title": "7. Client and guest use",
-        "body": "If you open a firm’s share link or book through a firm’s page, you are giving information to that firm so it can manage your file or appointment. Yuzu Solutions Inc. hosts and processes that information to operate the product. You are not hiring Yuzu Solutions Inc.\n\nYou must only submit information you are authorized to provide. Do not share a share-link password except as the firm instructs. Booking pages and share links are identified by unguessable tokens; do not post them publicly.\n\nQuestions about your immigration file, appointment, or the firm’s fees should go to the firm. Optional product analytics are described in the Privacy Policy and are off unless you accept them."
+        "body": "If you sign in to a firm’s client portal or book through a firm’s page, you are giving information to that firm so it can manage your file or appointment. Yuzu Solutions Inc. hosts and processes that information to operate the product. You are not hiring Yuzu Solutions Inc.\n\nYou must only submit information you are authorized to provide. Do not share a portal password except as the firm instructs. Booking pages are identified by unguessable tokens; do not post them publicly.\n\nQuestions about your immigration file, appointment, or the firm’s fees should go to the firm. Optional product analytics are described in the Privacy Policy and are off unless you accept them."
       },
       "acceptableUse": {
         "title": "8. Acceptable use",
-        "body": "You may not:\n• Probe, disrupt, or overload the service, or try to bypass security or access controls\n• Use another person’s account or a share link without authorization\n• Upload malware or content you do not have the right to share\n• Use the product to send spam or to mislead IRCC, MIFI, or any government authority\n• Resell or sublicense the software except as Yuzu Solutions Inc. agrees in writing\n\nWe may investigate suspected misuse and cooperate with a firm or with law enforcement where the law requires. We may remove or disable content that we reasonably believe is unlawful or threatens the security of the service."
+        "body": "You may not:\n• Probe, disrupt, or overload the service, or try to bypass security or access controls\n• Use another person’s account or portal access without authorization\n• Upload malware or content you do not have the right to share\n• Use the product to send spam or to mislead IRCC, MIFI, or any government authority\n• Resell or sublicense the software except as Yuzu Solutions Inc. agrees in writing\n\nWe may investigate suspected misuse and cooperate with a firm or with law enforcement where the law requires. We may remove or disable content that we reasonably believe is unlawful or threatens the security of the service."
       },
       "fees": {
         "title": "9. Fees",
@@ -2038,7 +1970,7 @@
       },
       "consumerRights": {
         "title": "16. Mandatory consumer and privacy rights",
-        "body": "Nothing in these terms takes away rights that a mandatory law grants to a consumer, including under the Québec Consumer Protection Act, or rights that PIPEDA or Québec Law 25 grant to an individual and that cannot be waived.\n\nIf you are a consumer dealing with a firm through booking or a share link, the firm’s own cancellation, refund, and professional rules apply to that engagement. These terms do not make Yuzu Solutions Inc. the seller of the consultation."
+        "body": "Nothing in these terms takes away rights that a mandatory law grants to a consumer, including under the Québec Consumer Protection Act, or rights that PIPEDA or Québec Law 25 grant to an individual and that cannot be waived.\n\nIf you are a consumer dealing with a firm through booking or the client portal, the firm’s own cancellation, refund, and professional rules apply to that engagement. These terms do not make Yuzu Solutions Inc. the seller of the consultation."
       },
       "termination": {
         "title": "17. Suspension and termination",
@@ -2383,6 +2315,39 @@
     "deleted": "Service deleted",
     "archived": "Service archived because it has existing bookings.",
     "automations": "Emails",
+    "contracts": "Contracts",
+    "contractsTitle": "Service contracts",
+    "contractsSubtitle": "Upload a document, insert booking variables, and send it for electronic signature when a client books.",
+    "contractsEmpty": "No contracts yet. Add one, then assign it to services.",
+    "newContract": "Add contract",
+    "newContractTitle": "New contract",
+    "editContractTitle": "Edit contract",
+    "contractEditorSubtitle": "Write or upload the document, then click a variable to insert it. Signature blocks collect a typed or drawn mark plus a consent record.",
+    "contractTitle": "Contract name",
+    "contractAssignHelp": "This contract is filled from the booking and sent for signature when a client books one of these services.",
+    "contractSendOnBooking": "Send when booked",
+    "contractRequireConsultant": "Consultant countersigns",
+    "contractSendHelp": "When send is on, the filled contract is emailed after a booking. The client signs first; the consultant signs next if countersignature is on.",
+    "contractRequireConsultantHelp": "When on, you countersign after the client. Turn on pre-sign below to apply your saved signature automatically.",
+    "contractSignature": "Your signature",
+    "contractSignatureHelp": "Used when you countersign. Type, draw, or upload a PNG. Pre-sign applies this mark to every new booking contract.",
+    "contractPresignAll": "Pre-sign all contracts",
+    "contractPresignHelp": "Apply your saved signature as soon as a contract is sent. The client still signs; the envelope completes after they do.",
+    "contractSignatureSave": "Save signature",
+    "contractSignatureSaved": "Signature saved",
+    "contractDocument": "Document",
+    "contractUpload": "Upload Word or text",
+    "contractImporting": "Importing…",
+    "contractUploadHelp": "Upload a .docx or .txt file, or write in the editor. Use {{variables}} for booking and form answers. PDF letterhead is not editable here.",
+    "contractImported": "Document imported",
+    "contractCreate": "Create contract",
+    "contractSave": "Save contract",
+    "contractCreated": "Contract created",
+    "contractSaved": "Contract saved",
+    "contractDeleted": "Contract deleted",
+    "contractArchived": "This contract has been used, so it was deactivated instead of deleted.",
+    "contractDeleteConfirm": "Remove this contract template? If it already has signed copies it will be deactivated instead.",
+    "contractNoServices": "No services assigned",
     "bookingForm": "Forms",
     "bookingFormTitle": "Booking forms",
     "formsSubtitle": "Questions clients answer when they book. Assign each form to one or more services. Each service can use only one form.",
@@ -2572,8 +2537,10 @@
       "duplicate_key": "That variable name is already used on this form.",
       "too_many_fields": "This form already has the maximum number of extra questions.",
       "invalid_upload": "Could not read that file. Use a Word (.docx) or text file.",
+      "empty_document": "That Word file had no readable text. Save it as .docx and try again.",
       "file_too_large": "That file is too large. Use a file under 5 MB.",
       "unsupported_file": "Use a Word (.docx), .txt, or .html file. Older .doc files are not supported.",
+      "signature_required": "Add a typed, drawn, or uploaded signature before turning on pre-sign.",
       "not_found": "That record was not found.",
       "closed": "This contract is no longer open for signature.",
       "waiting": "Another signer must finish first.",
@@ -2582,43 +2549,8 @@
       "name_mismatch": "The typed name must match the name on this booking.",
       "invalid_signature": "Draw your signature in the box, then try again.",
       "already_signed": "This contract is already signed.",
-      "expired": "This signature link has expired.",
-      "empty_document": "That Word file had no readable text. Save it as .docx and try again.",
-      "signature_required": "Add a typed, drawn, or uploaded signature before turning on pre-sign."
-    },
-    "contracts": "Contracts",
-    "contractsTitle": "Service contracts",
-    "contractsSubtitle": "Upload a document, insert booking variables, and send it for electronic signature when a client books.",
-    "contractsEmpty": "No contracts yet. Add one, then assign it to services.",
-    "newContract": "Add contract",
-    "newContractTitle": "New contract",
-    "editContractTitle": "Edit contract",
-    "contractEditorSubtitle": "Write or upload the document, then click a variable to insert it. Signature blocks collect a typed or drawn mark plus a consent record.",
-    "contractTitle": "Contract name",
-    "contractAssignHelp": "This contract is filled from the booking and sent for signature when a client books one of these services.",
-    "contractSendOnBooking": "Send when booked",
-    "contractRequireConsultant": "Consultant countersigns",
-    "contractSendHelp": "When send is on, the filled contract is emailed after a booking. The client signs first; the consultant signs next if countersignature is on.",
-    "contractDocument": "Document",
-    "contractUpload": "Upload Word or text",
-    "contractImporting": "Importing…",
-    "contractUploadHelp": "Upload a .docx or .txt file, or write in the editor. Use {{variables}} for booking and form answers. PDF letterhead is not editable here.",
-    "contractImported": "Document imported",
-    "contractCreate": "Create contract",
-    "contractSave": "Save contract",
-    "contractCreated": "Contract created",
-    "contractSaved": "Contract saved",
-    "contractDeleted": "Contract deleted",
-    "contractArchived": "This contract has been used, so it was deactivated instead of deleted.",
-    "contractDeleteConfirm": "Remove this contract template? If it already has signed copies it will be deactivated instead.",
-    "contractNoServices": "No services assigned",
-    "contractRequireConsultantHelp": "When on, you countersign after the client. Turn on pre-sign below to apply your saved signature automatically.",
-    "contractSignature": "Your signature",
-    "contractSignatureHelp": "Used when you countersign. Type, draw, or upload a PNG. Pre-sign applies this mark to every new booking contract.",
-    "contractPresignAll": "Pre-sign all contracts",
-    "contractPresignHelp": "Apply your saved signature as soon as a contract is sent. The client still signs; the envelope completes after they do.",
-    "contractSignatureSave": "Save signature",
-    "contractSignatureSaved": "Signature saved"
+      "expired": "This signature link has expired."
+    }
   },
   "booking": {
     "title": "Book an appointment",
@@ -2865,14 +2797,6 @@
     "retention": "College of Immigration and Citizenship Consultants closed-file rules typically require keeping a closed file for {years} years after closure. Do not destroy the file until that hold (and any other legal duty) has ended. Reply to the client with next steps.",
     "footer": "This message was sent by Yuzu Immigration because a client used Security in the portal."
   },
-  "shareLinkEmail": {
-    "resetSubject": "{org}: your new secure client link",
-    "resetHeading": "New secure link",
-    "resetGreeting": "Hi {name},",
-    "resetIntro": "Here is a new link to access your file for {project}. You will set a new password the first time you open it.",
-    "resetCta": "Open secure link",
-    "resetExpiry": "This link works until {date}."
-  },
   "documentEmail": {
     "rejectionSubject": "{org}: please re-upload {document}",
     "rejectionHeading": "Document needs changes",
@@ -2928,6 +2852,58 @@
     "callInviteCta": "Pick a time",
     "callInviteExpiry": "This link books one meeting and expires on {date}."
   },
+  "contractEmail": {
+    "subject": "Please sign: {title}",
+    "heading": "Signature requested",
+    "consultantHeading": "Your countersignature is needed",
+    "greeting": "Hi {name},",
+    "intro": "{org} sent you a contract to review and sign electronically.",
+    "consultantIntro": "The client has signed. Please countersign this contract for {org}.",
+    "cta": "Review and sign",
+    "footer": "This link is unique to you. If you were not expecting this, you can ignore the email.",
+    "completedSubject": "Signed copy: {title}",
+    "completedHeading": "Contract completed",
+    "completedIntro": "All required signatures are complete. A signed PDF for {org} is attached.",
+    "completedFooter": "Keep this copy with your records. The document hash is recorded in the certificate pages at the end of the PDF."
+  },
+  "signContract": {
+    "unavailableTitle": "Link unavailable",
+    "unavailableBody": "This signature link is invalid or has expired.",
+    "hashLabel": "Document hash",
+    "waiting": "You will be able to sign after the previous signer finishes.",
+    "alreadySigned": "You have already signed this document.",
+    "expired": "This signature link has expired.",
+    "voided": "This contract was voided.",
+    "declined": "This contract was declined.",
+    "declinedToast": "You declined to sign.",
+    "signedThanks": "Thank you. The next signer will be notified.",
+    "completedThanks": "Thank you. A signed copy will be emailed to you.",
+    "signAs": "Sign as {name}",
+    "typeName": "Type",
+    "drawName": "Draw",
+    "uploadName": "Upload",
+    "legalName": "Legal name",
+    "legalNameHint": "Must match the name on the booking.",
+    "drawHint": "Draw your signature, then type your legal name below.",
+    "uploadHint": "Upload a PNG of your handwritten signature.",
+    "clearDraw": "Clear",
+    "consent": "I have read this document and agree to sign it electronically. This electronic signature is the legal equivalent of my handwritten signature.",
+    "sign": "Sign",
+    "signing": "Signing…",
+    "decline": "Decline",
+    "errors": {
+      "invalid": "Check the form and try again.",
+      "not_found": "This signature link is invalid.",
+      "closed": "This contract is no longer open for signature.",
+      "waiting": "Another signer must finish first.",
+      "consent_required": "Confirm you agree to sign electronically.",
+      "name_required": "Type your legal name to sign.",
+      "name_mismatch": "The typed name must match the name on this booking.",
+      "invalid_signature": "Draw your signature in the box, then try again.",
+      "already_signed": "This contract is already signed.",
+      "expired": "This signature link has expired."
+    }
+  },
   "bookings": {
     "title": "Bookings",
     "subtitle": "Upcoming and past appointments with payment status.",
@@ -2946,6 +2922,32 @@
     "cancelled": "Appointment cancelled",
     "modified": "Appointment updated",
     "sendReminder": "Send reminder",
+    "contracts": "Contracts",
+    "contractsTitle": "Contracts",
+    "contractsSubtitle": "Filled from the booking form and signed electronically.",
+    "contractsEmpty": "No contracts on this booking yet.",
+    "sendContracts": "Send assigned contracts",
+    "contractsSent": "Signature request sent",
+    "contractsNoneDue": "No new contracts to send for this service.",
+    "downloadSigned": "Download signed PDF",
+    "resendContract": "Resend link",
+    "contractResent": "Signature link sent again",
+    "voidContract": "Void",
+    "voidContractConfirm": "Void this signature request? The client will not be able to sign it.",
+    "contractVoided": "Contract voided",
+    "signAsConsultant": "Sign as consultant",
+    "consultantSignName": "Your legal name",
+    "consultantSignHint": "Must match the consultant name on the booking. The client is {name}.",
+    "contractSigned": "Contract signed",
+    "contractStatus": {
+      "sent": "Sent",
+      "viewed": "Viewed",
+      "partially_signed": "Partially signed",
+      "completed": "Completed",
+      "declined": "Declined",
+      "expired": "Expired",
+      "voided": "Voided"
+    },
     "reminderSent": "Payment reminder sent",
     "filterAll": "All",
     "filterGuest": "Guest",
@@ -2981,7 +2983,7 @@
       "invalid": "Could not update this booking.",
       "unauthorized": "Sign in to continue.",
       "forbidden": "You do not have permission.",
-      "not_found": "Booking not found.",
+      "not_found": "That record was not found.",
       "not_unpaid": "This booking is already paid or does not need payment.",
       "no_payment": "No payment link is available.",
       "save_failed": "Could not save changes.",
@@ -2994,32 +2996,6 @@
       "invalid_signature": "Draw your signature, then try again.",
       "already_signed": "This contract is already signed.",
       "expired": "This signature link has expired."
-    },
-    "contracts": "Contracts",
-    "contractsTitle": "Contracts",
-    "contractsSubtitle": "Filled from the booking form and signed electronically.",
-    "contractsEmpty": "No contracts on this booking yet.",
-    "sendContracts": "Send assigned contracts",
-    "contractsSent": "Signature request sent",
-    "contractsNoneDue": "No new contracts to send for this service.",
-    "downloadSigned": "Download signed PDF",
-    "resendContract": "Resend link",
-    "contractResent": "Signature link sent again",
-    "voidContract": "Void",
-    "voidContractConfirm": "Void this signature request? The client will not be able to sign it.",
-    "contractVoided": "Contract voided",
-    "signAsConsultant": "Sign as consultant",
-    "consultantSignName": "Your legal name",
-    "consultantSignHint": "Must match the consultant name on the booking. The client is {name}.",
-    "contractSigned": "Contract signed",
-    "contractStatus": {
-      "sent": "Sent",
-      "viewed": "Viewed",
-      "partially_signed": "Partially signed",
-      "completed": "Completed",
-      "declined": "Declined",
-      "expired": "Expired",
-      "voided": "Voided"
     }
   },
   "projectCall": {
@@ -3111,7 +3087,29 @@
     "expiredBody": "This payment link has expired. Ask your consultant for a new one.",
     "unavailableTitle": "Link unavailable",
     "unavailableBody": "This payment link is invalid or no longer available.",
-    "firmFallback": "Consulting firm"
+    "firmFallback": "Consulting firm",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "total": "Total",
+    "addressHelp": "Add the billing address so we can apply the correct sales tax. It is saved as the main address on your Sage client.",
+    "addressLine1": "Street address",
+    "addressLine2": "Apt, suite (optional)",
+    "city": "City",
+    "postalCode": "Postal code",
+    "country": "Country",
+    "province": "Province or territory",
+    "provincePlaceholder": "Select a province",
+    "region": "State or region",
+    "continueToPay": "Continue to payment",
+    "preparing": "Preparing checkout…",
+    "errors": {
+      "invalid": "Check the address and try again.",
+      "region_required": "Select a province so we can calculate tax.",
+      "address_required": "A billing address is required to calculate tax.",
+      "unavailable": "This payment link is no longer available.",
+      "expired": "This payment link has expired.",
+      "create_failed": "Could not start checkout. Try again."
+    }
   },
   "bookingManage": {
     "title": "Manage your appointment",
@@ -3159,57 +3157,5 @@
       "cancel_window": "Cancellations must be made earlier before the appointment.",
       "save_failed": "Could not save. Try again."
     }
-  },
-  "contractEmail": {
-    "subject": "Please sign: {title}",
-    "heading": "Signature requested",
-    "consultantHeading": "Your countersignature is needed",
-    "greeting": "Hi {name},",
-    "intro": "{org} sent you a contract to review and sign electronically.",
-    "consultantIntro": "The client has signed. Please countersign this contract for {org}.",
-    "cta": "Review and sign",
-    "footer": "This link is unique to you. If you were not expecting this, you can ignore the email.",
-    "completedSubject": "Signed copy: {title}",
-    "completedHeading": "Contract completed",
-    "completedIntro": "All required signatures are complete. A signed PDF for {org} is attached.",
-    "completedFooter": "Keep this copy with your records. The document hash is recorded in the certificate pages at the end of the PDF."
-  },
-  "signContract": {
-    "unavailableTitle": "Link unavailable",
-    "unavailableBody": "This signature link is invalid or has expired.",
-    "hashLabel": "Document hash",
-    "waiting": "You will be able to sign after the previous signer finishes.",
-    "alreadySigned": "You have already signed this document.",
-    "expired": "This signature link has expired.",
-    "voided": "This contract was voided.",
-    "declined": "This contract was declined.",
-    "declinedToast": "You declined to sign.",
-    "signedThanks": "Thank you. The next signer will be notified.",
-    "completedThanks": "Thank you. A signed copy will be emailed to you.",
-    "signAs": "Sign as {name}",
-    "typeName": "Type",
-    "drawName": "Draw",
-    "legalName": "Legal name",
-    "legalNameHint": "Must match the name on the booking.",
-    "drawHint": "Draw your signature, then type your legal name below.",
-    "clearDraw": "Clear",
-    "consent": "I have read this document and agree to sign it electronically. This electronic signature is the legal equivalent of my handwritten signature.",
-    "sign": "Sign",
-    "signing": "Signing…",
-    "decline": "Decline",
-    "errors": {
-      "invalid": "Check the form and try again.",
-      "not_found": "This signature link is invalid.",
-      "closed": "This contract is no longer open for signature.",
-      "waiting": "Another signer must finish first.",
-      "consent_required": "Confirm you agree to sign electronically.",
-      "name_required": "Type your legal name to sign.",
-      "name_mismatch": "The typed name must match the name on this booking.",
-      "invalid_signature": "Draw your signature in the box, then try again.",
-      "already_signed": "This contract is already signed.",
-      "expired": "This signature link has expired."
-    },
-    "uploadName": "Upload",
-    "uploadHint": "Upload a PNG of your handwritten signature."
   }
 }

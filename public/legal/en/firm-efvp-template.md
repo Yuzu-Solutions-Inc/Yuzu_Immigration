@@ -13,7 +13,7 @@
 
 ## 1. Project
 
-We are adopting Yuzu Immigration as our practice-management system (client records, questionnaires, form fill, documents, share links, portal, calendar, public booking).
+We are adopting Yuzu Immigration as our practice-management system (client records, questionnaires, form fill, documents, portal, calendar, public booking).
 
 ☐ New system ☐ Replacement of [prior tool] ☐ Major change: ______________
 
@@ -58,7 +58,7 @@ For each box checked, we accept that personal information (for example guest nam
 | Risk | Our measure |
 |---|---|
 | Too many staff can open files | We will assign admin / consultant / assistant roles and share projects with assistants only when needed |
-| Share-link leakage | We will not post links publicly; we will expire/regenerate links; clients will set a password |
+| Portal account leakage | We will send portal invitations only to the client’s email on file; clients set their own password or use Google sign-in |
 | Over-collection | We will only request documents and answers needed for the mandate |
 | Minors | Parental / guardian authorization before collecting information about a child under 14 |
 | Retention | We will close files in the product so the six-year hold starts; after that we will destroy when purposes are fulfilled |

@@ -3,11 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  downloadShareDocumentAction,
-  uploadShareDocumentAction,
-  type DocumentsActionState,
-} from "@/app/actions/documents";
+import { type DocumentsActionState } from "@/app/actions/documents";
 import {
   downloadPortalDocumentAction,
   uploadPortalDocumentAction,
@@ -24,6 +20,7 @@ import {
   DOCUMENT_ALLOWED_MIME_TYPES,
   DOCUMENT_MAX_BYTES,
 } from "@/lib/documents/catalog";
+import { compressClientDocument } from "@/lib/documents/compress-image";
 import type { DocumentRequestWithFile } from "@/lib/documents/service";
 import { cn } from "@/lib/utils";
 
@@ -56,20 +53,18 @@ function documentPill(
 }
 
 export function ClientDocumentsUpload({
-  token,
   projectId,
   people,
   requests,
 }: {
-  token?: string;
-  projectId?: string;
+  projectId: string;
   people: Array<{ id: string; displayName: string; role: string }>;
   requests: DocumentRequestWithFile[];
 }) {
   const t = useTranslations("documents");
   const tf = useTranslations("forms");
   const [state, action, pending] = useActionState(
-    projectId ? uploadPortalDocumentAction : uploadShareDocumentAction,
+    uploadPortalDocumentAction,
     initial,
   );
   const [localRequests, setLocalRequests] = useState(requests);
@@ -78,9 +73,11 @@ export function ClientDocumentsUpload({
   >({});
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [successRequestId, setSuccessRequestId] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const pendingUploadRef = useRef<{ requestId: string; file: File } | null>(
     null,
   );
+  const submitLockRef = useRef(false);
 
   const accept = DOCUMENT_ALLOWED_MIME_TYPES.join(",");
   const maxMb = Math.round(DOCUMENT_MAX_BYTES / (1024 * 1024));
@@ -125,7 +122,7 @@ export function ClientDocumentsUpload({
                   content_type: file.type,
                   byte_size: file.size,
                   encryption_alg: "aes-256-gcm",
-                  uploaded_via: "share_link",
+                  uploaded_via: "portal",
                   created_at: new Date().toISOString(),
                 },
               }
@@ -135,11 +132,13 @@ export function ClientDocumentsUpload({
       setSelectedFiles((prev) => ({ ...prev, [requestId]: null }));
       setSuccessRequestId(requestId);
       setActiveRequestId(null);
+      submitLockRef.current = false;
       return;
     }
 
     if (state.error) {
       pendingUploadRef.current = null;
+      submitLockRef.current = false;
       setActiveRequestId(null);
     }
   }, [state]);
@@ -154,23 +153,30 @@ export function ClientDocumentsUpload({
     setSelectedFiles((prev) => ({ ...prev, [requestId]: null }));
   }
 
-  function onSubmit(requestId: string, formData: FormData) {
+  async function onSubmit(requestId: string, formData: FormData) {
     const selected = selectedFiles[requestId];
-    if (!selected) return;
-    pendingUploadRef.current = { requestId, file: selected };
+    if (!selected || submitLockRef.current) return;
+    submitLockRef.current = true;
     setActiveRequestId(requestId);
     setSuccessRequestId(null);
-    if (projectId) formData.set("projectId", projectId);
-    if (token) formData.set("token", token);
+    setPreparing(true);
+    let file = selected;
+    try {
+      file = await compressClientDocument(selected);
+    } catch {
+      file = selected;
+    } finally {
+      setPreparing(false);
+    }
+    pendingUploadRef.current = { requestId, file };
+    formData.set("projectId", projectId);
     formData.set("requestId", requestId);
-    formData.set("file", selected);
+    formData.set("file", file);
     action(formData);
   }
 
   function fetchFile(requestId: string) {
-    return projectId
-      ? downloadPortalDocumentAction(projectId, requestId)
-      : downloadShareDocumentAction(token ?? "", requestId);
+    return downloadPortalDocumentAction(projectId, requestId);
   }
 
   const error =
@@ -178,7 +184,7 @@ export function ClientDocumentsUpload({
     ({
       invalid: t("errors.invalid"),
       expired: t("errors.expired"),
-      auth_required: tf("shareAuth.errors.authRequired"),
+      auth_required: tf("errors.auth_required"),
       file_too_large: t("errors.fileTooLarge", { maxMb }),
       file_type: t("errors.fileType"),
       upload_failed: t("errors.uploadFailed"),
@@ -207,7 +213,9 @@ export function ClientDocumentsUpload({
             const person = peopleById.get(row.person_id);
             const pill = documentPill(row, t);
             const selected = selectedFiles[row.id] ?? null;
-            const isUploading = pending && activeRequestId === row.id;
+            const uploadBusy = preparing || pending;
+            const isThisUpload = uploadBusy && activeRequestId === row.id;
+            const isPreparing = isThisUpload && preparing;
             const justUploaded = successRequestId === row.id;
             const hasUploaded = Boolean(row.file);
             const isApproved = row.status === "accepted";
@@ -257,11 +265,14 @@ export function ClientDocumentsUpload({
                       <form
                         action={(fd) => onSubmit(row.id, fd)}
                         className="flex shrink-0 items-center gap-1.5"
+                        aria-busy={isThisUpload}
                       >
                         <label
                           className={cn(
                             buttonVariants({ variant: "outline", size: "xs" }),
-                            "cursor-pointer",
+                            uploadBusy
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer",
                           )}
                         >
                           {t("chooseFile")}
@@ -269,6 +280,7 @@ export function ClientDocumentsUpload({
                             type="file"
                             accept={accept}
                             className="sr-only"
+                            disabled={uploadBusy}
                             onChange={(e) => {
                               onFileChange(row.id, e.target.files);
                               e.target.value = "";
@@ -283,18 +295,20 @@ export function ClientDocumentsUpload({
                             >
                               {selected.name}
                             </span>
-                            <Button type="submit" size="xs" disabled={isUploading}>
-                              {isUploading
-                                ? t("uploading")
-                                : hasUploaded
-                                  ? t("replace")
-                                  : t("upload")}
+                            <Button type="submit" size="xs" disabled={uploadBusy}>
+                              {isPreparing
+                                ? t("preparing")
+                                : isThisUpload
+                                  ? t("uploading")
+                                  : hasUploaded
+                                    ? t("replace")
+                                    : t("upload")}
                             </Button>
                             <Button
                               type="button"
                               variant="ghost"
                               size="xs"
-                              disabled={isUploading}
+                              disabled={uploadBusy}
                               onClick={() => clearSelection(row.id)}
                             >
                               {t("clearSelection")}

@@ -35,4 +35,4 @@ Signature : ______________________ Date : ______________
 
 ---
 
-Yuzu Immigration exige déjà l’acceptation de sa politique et de ses conditions sur les liens de partage et la réservation. **Cela ne remplace pas** le consentement de votre relation professionnelle. Conservez ce formulaire au dossier.
+Yuzu Immigration exige déjà l’acceptation de sa politique et de ses conditions sur le portail client et la réservation. **Cela ne remplace pas** le consentement de votre relation professionnelle. Conservez ce formulaire au dossier.

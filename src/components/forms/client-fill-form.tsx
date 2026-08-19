@@ -3,11 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  saveShareAnswersAction,
-  submitShareQuestionnaireAction,
-  type FormsActionState,
-} from "@/app/actions/forms";
+import { type FormsActionState } from "@/app/actions/forms";
 import {
   savePortalAnswersAction,
   submitPortalQuestionnaireAction,
@@ -21,27 +17,24 @@ import type { ProjectFormLanguage } from "@/lib/ircc/form-language";
 const initial: FormsActionState = {};
 
 export function ClientFillForm({
-  token,
   projectId,
   people,
   formLanguage,
   initialSubmittedAt,
 }: {
-  token?: string;
-  projectId?: string;
+  projectId: string;
   people: QuestionnairePerson[];
   formLanguage: ProjectFormLanguage;
   initialSubmittedAt?: string | null;
 }) {
   const t = useTranslations("forms");
   const tp = useTranslations("projects");
-  const portal = Boolean(projectId);
   const [saveState, saveAction, savePending] = useActionState(
-    portal ? savePortalAnswersAction : saveShareAnswersAction,
+    savePortalAnswersAction,
     initial,
   );
   const [submitState, submitAction, submitPending] = useActionState(
-    portal ? submitPortalQuestionnaireAction : submitShareQuestionnaireAction,
+    submitPortalQuestionnaireAction,
     initial,
   );
   const [localPeople, setLocalPeople] = useState(people);
@@ -68,8 +61,7 @@ export function ClientFillForm({
       prev.map((p) => (p.id === personId ? { ...p, answers } : p)),
     );
     const fd = new FormData();
-    if (projectId) fd.set("projectId", projectId);
-    if (token) fd.set("token", token);
+    fd.set("projectId", projectId);
     fd.set("personId", personId);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(answers));
@@ -85,8 +77,7 @@ export function ClientFillForm({
       prev.map((p) => (p.id === personId ? { ...p, answers } : p)),
     );
     const fd = new FormData();
-    if (projectId) fd.set("projectId", projectId);
-    if (token) fd.set("token", token);
+    fd.set("projectId", projectId);
     fd.set("personId", personId);
     fd.set("currentSection", section);
     fd.set("answers", JSON.stringify(answers));
@@ -100,7 +91,7 @@ export function ClientFillForm({
     ({
       invalid: t("errors.invalid"),
       expired: t("errors.expired"),
-      auth_required: t("shareAuth.errors.authRequired"),
+      auth_required: t("errors.auth_required"),
       save_failed: t("errors.saveFailed"),
       incomplete: t("errors.incomplete"),
       submit_failed: t("errors.submitFailed"),

@@ -112,14 +112,6 @@ export async function buildProjectFileZip(
   );
   const projectNotes = await listProjectNotes(projectId);
 
-  const supabase = await createClient();
-  const { data: shareLinks } = await supabase
-    .from("form_share_links")
-    .select("id, expires_at, revoked_at, created_at, last_accessed_at")
-    .eq("project_id", projectId)
-    .eq("organization_id", project.organization_id)
-    .order("created_at", { ascending: false });
-
   const principal = people.find((p) => p.role === "principal") ?? people[0];
   const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
     principalPersonId: principal?.id,
@@ -163,12 +155,6 @@ export async function buildProjectFileZip(
         status: row.status,
         status_at: row.status_at,
         created_at: row.created_at,
-      })),
-      shareLinks: (shareLinks ?? []).map((link) => ({
-        expires_at: link.expires_at,
-        revoked_at: link.revoked_at,
-        created_at: link.created_at,
-        last_accessed_at: link.last_accessed_at,
       })),
     }),
   );
@@ -218,6 +204,7 @@ export async function buildProjectFileZip(
   );
   zip.file(`${root}/forms/answers.json`, json(store));
 
+  const supabase = await createClient();
   const { data: repProfile } = project.representative_user_id
     ? await supabase
         .from("profiles")

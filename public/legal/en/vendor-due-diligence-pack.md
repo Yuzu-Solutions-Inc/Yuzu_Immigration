@@ -17,7 +17,7 @@ Give this document to your privacy officer or counsel when completing a Law 25 E
 ## 2. Data map (simplified)
 
 ```
-Client / guest → share link, portal, or booking page → Yuzu app (Vercel)
+Client / guest → portal or booking page → Yuzu app (Vercel)
                                               ↓
                          Encrypted fields & files → Supabase (AWS Montréal)
                                               ↓
@@ -38,7 +38,7 @@ Not in product: biometric matching.
 - Per-firm AES-256-GCM for documents and many client fields  
 - RLS tenant isolation; assistants see only shared projects  
 - Service-role key server-only  
-- Unguessable share/booking tokens; share-link passwords  
+- Unguessable booking tokens; portal passwords  
 - Audit log and destruction register for firm admins  
 - Analytics opt-in only  
 

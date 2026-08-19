@@ -37,4 +37,4 @@ Signature: ______________________ Date: ______________
 
 ## Short in-product notice (already used by Yuzu)
 
-Yuzu Immigration already requires clients to accept Yuzu’s Privacy Policy and Terms on share links and booking. **That does not replace** this firm-level consent for your professional relationship. Keep this form in the paper or PDF retainer file.
+Yuzu Immigration already requires clients to accept Yuzu’s Privacy Policy and Terms on the client portal and booking. **That does not replace** this firm-level consent for your professional relationship. Keep this form in the paper or PDF retainer file.

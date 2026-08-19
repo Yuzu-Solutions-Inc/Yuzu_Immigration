@@ -20,7 +20,6 @@ import {
   statusChanged,
 } from "@/lib/crm/status-history";
 import { isTerminalStatus, isGrantedStatus } from "@/lib/crm/statuses";
-import { revokeAllShareLinksForProject } from "@/lib/ircc/share-links";
 import { computeRetainUntil } from "@/lib/privacy/retention";
 import { eraseProjectPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
@@ -842,13 +841,6 @@ export async function updateProjectAction(
     return { error: "update_failed" };
   }
 
-  if (
-    isGrantedStatus(status) &&
-    !isGrantedStatus(existingProject.status as string)
-  ) {
-    await revokeAllShareLinksForProject(supabase, projectId, orgId);
-  }
-
   const { toIrccFormLanguage } = await import("@/lib/ircc/form-language");
   const { mergeAccountRepIntoAnswers, PROFILE_REP_SELECT } = await import(
     "@/lib/ircc/account-rep"
@@ -1217,13 +1209,6 @@ async function applyProjectStatuses(params: {
         statusAt,
         changedBy: user?.id ?? null,
       });
-    }
-
-    if (
-      isGrantedStatus(status) &&
-      !isGrantedStatus(existing.status as string)
-    ) {
-      await revokeAllShareLinksForProject(supabase, projectId, orgId);
     }
 
     updated += 1;

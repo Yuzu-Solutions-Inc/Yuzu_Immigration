@@ -472,28 +472,6 @@ export const projectFormAnswers = pgTable("project_form_answers", {
     .notNull(),
 });
 
-export const formShareLinks = pgTable("form_share_links", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  projectId: uuid("project_id")
-    .notNull()
-    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
-  tokenHash: text("token_hash").notNull().unique(),
-  /** Org-DEK encrypted token so staff can recopy a still-valid link. */
-  tokenEncrypted: text("token_encrypted"),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  revokedAt: timestamp("revoked_at", { withTimezone: true }),
-  createdBy: uuid("created_by").references(() => profiles.id, {
-    onDelete: "set null",
-  }),
-  lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
 export const documentRequestStatusEnum = pgEnum("document_request_status", [
   "requested",
   "uploaded",
@@ -604,7 +582,7 @@ export const projectDocumentFiles = pgTable("project_document_files", {
   contentType: text("content_type").notNull(),
   byteSize: integer("byte_size").notNull(),
   encryptionAlg: text("encryption_alg").notNull().default("aes-256-gcm"),
-  uploadedVia: text("uploaded_via").notNull().default("share_link"),
+  uploadedVia: text("uploaded_via").notNull().default("portal"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -1451,19 +1429,6 @@ export const staffNotifications = pgTable("staff_notifications", {
 
 const privateSchema = pgSchema("private");
 
-export const shareLinkAuthEvents = pgTable("share_link_auth_events", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  tokenHash: text("token_hash").notNull(),
-  kind: text("kind").notNull(),
-  ipHash: text("ip_hash"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
 export const portalAuthEvents = pgTable("portal_auth_events", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id").references(() => organizations.id, {
@@ -1476,20 +1441,6 @@ export const portalAuthEvents = pgTable("portal_auth_events", {
     .defaultNow()
     .notNull(),
 });
-
-/** bcrypt hashes — never exposed to anon/authenticated Data API. */
-export const formShareLinkSecrets = privateSchema.table(
-  "form_share_link_secrets",
-  {
-    shareLinkId: uuid("share_link_id")
-      .primaryKey()
-      .references(() => formShareLinks.id, { onDelete: "cascade" }),
-    passwordHash: text("password_hash").notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-);
 
 /** bcrypt hashes — never exposed to anon/authenticated Data API. */
 export const customerPortalSecrets = privateSchema.table(

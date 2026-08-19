@@ -1065,17 +1065,10 @@ export async function AppProjectPreview() {
 }
 
 export async function ClientFillPreview() {
-  const locale = await getLocale();
-  const [t, tDocs, tForms] = await Promise.all([
+  const [t, tDocs] = await Promise.all([
     getTranslations("home"),
     getTranslations("documents"),
-    getTranslations("forms"),
   ]);
-
-  const expires = new Date("2026-09-12").toLocaleDateString(
-    locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
-    { year: "numeric", month: "short", day: "numeric" },
-  );
 
   const rows = [
     {
@@ -1105,7 +1098,7 @@ export async function ClientFillPreview() {
   ];
 
   return (
-    <ProductChrome url={t("preview.urlFill")} tone="light" innerHeight={520}>
+    <ProductChrome url={t("preview.urlPortal")} tone="light" innerHeight={520}>
       <div className="flex min-w-0 flex-1 flex-col bg-canvas">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-8 py-8">
           <div className="space-y-2">
@@ -1115,14 +1108,11 @@ export async function ClientFillPreview() {
             <h1 className="font-heading text-2xl font-semibold text-brand">
               {t("preview.projectChen")}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {tForms("clientExpires", { date: expires })}
-            </p>
           </div>
 
           <div className="flex gap-1">
-            <TabChip label={tDocs("shareTabs.documents")} active />
-            <TabChip label={tDocs("shareTabs.forms")} />
+            <TabChip label={tDocs("clientTabs.documents")} active />
+            <TabChip label={tDocs("clientTabs.forms")} />
           </div>
 
           <p className="text-sm text-muted-foreground">{tDocs("clientLede")}</p>

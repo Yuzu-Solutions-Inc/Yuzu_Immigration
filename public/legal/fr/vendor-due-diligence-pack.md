@@ -17,7 +17,7 @@ Remettez ce document à votre responsable de la protection des renseignements pe
 ## 2. Schéma des données (simplifié)
 
 ```
-Client / personne qui réserve → lien de partage, portail ou réservation → appli Yuzu (Vercel)
+Client / personne qui réserve → portail ou réservation → appli Yuzu (Vercel)
                                               ↓
                     Champs et fichiers chiffrés → Supabase (AWS Montréal)
                                               ↓
@@ -38,7 +38,7 @@ Absent du produit : appariement biométrique.
 - AES-256-GCM par cabinet pour documents et de nombreux champs  
 - Isolation RLS ; adjoints : dossiers partagés seulement  
 - Clé service_role côté serveur seulement  
-- Jetons difficiles à deviner ; mot de passe sur les liens de partage  
+- Jetons de réservation difficiles à deviner ; mot de passe du portail  
 - Journal d’audit et registre de destruction  
 - Analytique sur consentement seulement  
 

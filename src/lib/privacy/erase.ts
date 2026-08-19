@@ -460,7 +460,7 @@ async function eraseOrphanPeople(input: {
 }
 
 /**
- * Erase a project file: storage, documents, answers, share links, forms.
+ * Erase a project file: storage, documents, answers, forms.
  * Optionally keep a wiped tombstone row (CICC closed-file destruction).
  * People who have no remaining files at the firm are erased too.
  */
@@ -513,11 +513,6 @@ export async function eraseProjectPersonalData(input: {
     .eq("project_id", projectId);
   await admin
     .from("project_document_requests")
-    .delete()
-    .eq("organization_id", organizationId)
-    .eq("project_id", projectId);
-  await admin
-    .from("form_share_links")
     .delete()
     .eq("organization_id", organizationId)
     .eq("project_id", projectId);

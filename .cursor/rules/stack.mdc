@@ -23,10 +23,9 @@ Follow `.cursor/rules/design-system.mdc` for every UI/form/email change. Tokens 
 - `project_participants` — people linked to a project with roles; soft-unlink via `left_at`
 - `project_forms` — IRCC forms on a project to-do (seeded by program; IMM 5476 always included)
 - `project_form_answers` — ask-once questionnaire answers (jsonb) per project
-- `form_share_links` — hashed client tokens, 30-day expiry; regenerate without losing answers
 - `customer_portal_access` — portal access_code + access_token on a person; passwords in `private.customer_portal_secrets`
 - Portal login verification is **server-only** via `verify_customer_portal_login` (service_role). Never call from the browser.
-- Client form fill via `/[locale]/fill/[token]` uses service role after token hash lookup.
+- Client form fill and document upload via `/[locale]/portal` after portal session.
 - `booking_settings` + `booking_availability_rules` — firm timezone, booking window (X days ahead), recurring weekly open hours.
 - `booking_services` — bookable consultation types (title, description, duration, price).
 - `booking_appointments` — public bookings; guest PII org-DEK encrypted. Public page `/[locale]/book/[token]` uses service role after token hash lookup.

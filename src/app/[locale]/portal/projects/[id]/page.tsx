@@ -5,10 +5,10 @@ import { redirect } from "@/i18n/navigation";
 import { ClientDocumentsUpload } from "@/components/documents/client-documents-upload";
 import { ClientFillForm } from "@/components/forms/client-fill-form";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
-import { ShareFillTabs } from "@/components/forms/share-fill-tabs";
+import { ClientFillTabs } from "@/components/forms/client-fill-tabs";
 import { Link } from "@/i18n/navigation";
-import { seedShareDocumentDefaults } from "@/lib/documents/share-seed";
-import { listShareDocumentRequests } from "@/lib/documents/service";
+import { seedProjectDocumentDefaults } from "@/lib/documents/share-seed";
+import { listClientDocumentRequests } from "@/lib/documents/service";
 import { toProjectFormLanguage } from "@/lib/ircc/form-language";
 import { loadProjectFillContext } from "@/lib/ircc/project-forms";
 import {
@@ -44,7 +44,7 @@ export default async function PortalProjectPage({
   if (!ctx) notFound();
 
   try {
-    await seedShareDocumentDefaults({
+    await seedProjectDocumentDefaults({
       organizationId: ctx.organizationId,
       projectId: ctx.projectId,
       programFamily: String(ctx.project.program_family ?? "other"),
@@ -54,7 +54,7 @@ export default async function PortalProjectPage({
     console.error("PortalProjectPage seed:", err);
   }
 
-  const requests = await listShareDocumentRequests(
+  const requests = await listClientDocumentRequests(
     createServiceClient(),
     ctx.projectId,
   );
@@ -91,7 +91,7 @@ export default async function PortalProjectPage({
       </header>
 
       <section className="border-t border-border pt-6">
-        <ShareFillTabs
+        <ClientFillTabs
           panels={{
             documents: (
               <ClientDocumentsUpload

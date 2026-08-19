@@ -12,7 +12,7 @@ function isLocalhostUrl(url: string) {
 }
 
 /**
- * Public site origin for share links / redirects.
+ * Public site origin for portal invites, booking links, and redirects.
  * Prefer a non-localhost NEXT_PUBLIC_APP_URL, then the current request host,
  * then Vercel URL, then localhost for local dev.
  *

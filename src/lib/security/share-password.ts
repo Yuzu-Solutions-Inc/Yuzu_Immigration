@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Client share-link password: 8+ chars, 1 upper, 1 digit, 1 symbol. */
+/** Client portal password: 8+ chars, 1 upper, 1 digit, 1 symbol. */
 export const shareLinkPasswordSchema = z
   .string()
   .min(8, "min_length")

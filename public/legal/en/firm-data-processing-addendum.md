@@ -8,7 +8,7 @@
 
 ## 1. Subject matter and duration
 
-Yuzu Solutions Inc. processes personal information that the Firm or the Firm’s clients and booking guests enter into or upload to Yuzu Immigration (identity and contact data, language, immigration questionnaires, supporting documents, notes, bookings, portal/share-link activity, and calendar or meeting details when a consultant connects those tools) **only** to provide the SaaS, for security, and as the law requires.
+Yuzu Solutions Inc. processes personal information that the Firm or the Firm’s clients and booking guests enter into or upload to Yuzu Immigration (identity and contact data, language, immigration questionnaires, supporting documents, notes, bookings, portal activity, and calendar or meeting details when a consultant connects those tools) **only** to provide the SaaS, for security, and as the law requires.
 
 This addendum lasts for the term of the Firm’s use of the service and until deletion or return of the information, subject to backups and legal holds.
 
@@ -49,7 +49,7 @@ The Firm will:
 1. Ensure a lawful basis and valid consent for client and guest personal information, including sensitive information.  
 2. Configure roles so only authorized staff open files.  
 3. Not instruct Yuzu to process information unlawfully.  
-4. Notify Yuzu Solutions Inc. promptly of incidents involving Firm credentials, misdirected share links, or suspected unauthorized access.  
+4. Notify Yuzu Solutions Inc. promptly of incidents involving Firm credentials, misdirected portal invitations, or suspected unauthorized access.  
 5. Use destroy and export tools in line with College and privacy duties.  
 6. Be responsible for content it or its clients submit and for immigration advice and filings.
 

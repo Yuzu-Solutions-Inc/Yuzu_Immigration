@@ -8,7 +8,7 @@
 
 ## 1. Objet et durée
 
-Yuzu Solutions Inc. traite les renseignements personnels saisis ou téléversés dans Yuzu Immigration par le cabinet, ses clients et les personnes qui réservent (identité, coordonnées, langue, questionnaires, documents, notes, rendez-vous, activité du portail ou des liens de partage, et détails d’agenda ou de réunion lorsqu’un consultant connecte ces outils) **uniquement** pour fournir le logiciel, pour la sécurité, et lorsque la loi l’exige.
+Yuzu Solutions Inc. traite les renseignements personnels saisis ou téléversés dans Yuzu Immigration par le cabinet, ses clients et les personnes qui réservent (identité, coordonnées, langue, questionnaires, documents, notes, rendez-vous, activité du portail, et détails d’agenda ou de réunion lorsqu’un consultant connecte ces outils) **uniquement** pour fournir le logiciel, pour la sécurité, et lorsque la loi l’exige.
 
 Le présent avenant dure pendant l’utilisation du service et jusqu’à la suppression ou la restitution, sous réserve des sauvegardes et des conservations légales.
 
@@ -47,7 +47,7 @@ Le cabinet reconnaît que :
 1. Assurer une base licite et un consentement valable, y compris pour les renseignements sensibles.  
 2. Configurer les rôles pour que seuls les membres autorisés ouvrent les dossiers.  
 3. Ne pas donner d’instruction illégale.  
-4. Aviser rapidement Yuzu Solutions Inc. d’un incident lié aux identifiants du cabinet, à un lien de partage mal dirigé ou à un accès non autorisé.  
+4. Aviser rapidement Yuzu Solutions Inc. d’un incident lié aux identifiants du cabinet, à une invitation au portail mal dirigée ou à un accès non autorisé.  
 5. Utiliser les outils de destruction et d’export conformément aux devoirs du Collège et au droit de la vie privée.  
 6. Être responsable du contenu soumis et des conseils ou dépôts en immigration.
 

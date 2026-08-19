@@ -8,45 +8,19 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getProjectParticipants, requireOrganizationId } from "@/lib/crm/queries";
 import {
   assertProjectModifiable,
-  isProjectModificationBlocked,
-  loadProjectStatusById,
 } from "@/lib/crm/project-lock";
 import {
   CLIENT_DOCUMENTS_BUCKET,
-  DOCUMENT_MAX_BYTES,
-  guessMimeFromFilename,
-  isAllowedDocumentMime,
-  sanitizeUploadFilename,
 } from "@/lib/documents/catalog";
 import {
   downloadDecryptedDocument,
   ensureProjectDocumentsSeeded,
   listProjectDocumentRequests,
-  listShareDocumentRequests,
-  storeEncryptedDocument,
+  personDisplayName,
 } from "@/lib/documents/service";
-import { personDisplayName } from "@/lib/documents/share-url";
 import { sendDocumentRejectionEmail } from "@/lib/email/document-rejection";
-import { assertShareAuthenticated } from "@/lib/ircc/share-auth";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { portalBaseUrl } from "@/lib/portal/auth";
-
-async function resolveShareForDocuments(token: string) {
-  try {
-    const full = await assertShareAuthenticated(token);
-    return {
-      organizationId: full.organizationId,
-      projectId: full.projectId,
-      linkId: full.linkId,
-      expiresAt: full.expiresAt,
-    };
-  } catch (err) {
-    if (err instanceof Error && err.message === "auth_required") {
-      return { error: "auth_required" as const };
-    }
-    return null;
-  }
-}
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
   decryptDocumentRequestRow,
@@ -637,208 +611,5 @@ export async function downloadAllProjectDocumentsAction(
     base64: Buffer.from(bytes).toString("base64"),
     filename: `documents-${projectId.slice(0, 8)}.zip`,
     contentType: "application/zip",
-  };
-}
-
-export async function downloadShareDocumentAction(
-  token: string,
-  requestId: string,
-): Promise<
-  | {
-      ok: true;
-      base64: string;
-      filename: string;
-      contentType: string;
-    }
-  | { ok: false; error: string }
-> {
-  if (!token || !uuid.safeParse(requestId).success) {
-    return { ok: false, error: "invalid" };
-  }
-
-  const resolved = await resolveShareForDocuments(token);
-  if (!resolved) return { ok: false, error: "expired" };
-  if ("error" in resolved) {
-    return { ok: false, error: resolved.error ?? "expired" };
-  }
-
-  const admin = createServiceClient();
-  const { data: file, error } = await admin
-    .from("project_document_files")
-    .select("*")
-    .eq("request_id", requestId)
-    .eq("project_id", resolved.projectId)
-    .eq("organization_id", resolved.organizationId)
-    .maybeSingle();
-
-  if (error || !file) {
-    return { ok: false, error: "not_found" };
-  }
-
-  try {
-    const result = await downloadDecryptedDocument({
-      organizationId: resolved.organizationId,
-      storagePath: file.storage_path as string,
-      contentType: file.content_type as string,
-      originalFilename: decryptFilename(
-        file.original_filename as string,
-        await getOrgDataKey(resolved.organizationId),
-      ),
-    });
-    await recordAuditEvent({
-      organizationId: resolved.organizationId,
-      actorKind: "share_link",
-      action: "document.download_share",
-      resourceType: "project_document_file",
-      resourceId: String(file.id),
-      metadata: {
-        requestId,
-        projectId: resolved.projectId,
-        shareLinkId: resolved.linkId,
-      },
-    });
-    return {
-      ok: true,
-      base64: result.buffer.toString("base64"),
-      filename: result.filename,
-      contentType: result.contentType,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("downloadShareDocumentAction:", err);
-    if (message === "decrypt_failed") {
-      return { ok: false, error: "decrypt_failed" };
-    }
-    return { ok: false, error: "download_failed" };
-  }
-}
-
-export async function uploadShareDocumentAction(
-  _prev: DocumentsActionState,
-  formData: FormData,
-): Promise<DocumentsActionState> {
-  const token = String(formData.get("token") || "");
-  const requestId = String(formData.get("requestId") || "");
-  const file = formData.get("file");
-
-  const isBlob =
-    typeof Blob !== "undefined" &&
-    file instanceof Blob &&
-    typeof (file as Blob).arrayBuffer === "function";
-  if (!token || !uuid.safeParse(requestId).success || !isBlob) {
-    return { error: "invalid" };
-  }
-
-  const blob = file as Blob & { name?: string };
-  if (blob.size <= 0 || blob.size > DOCUMENT_MAX_BYTES) {
-    return { error: "file_too_large" };
-  }
-
-  const filename =
-    typeof blob.name === "string" && blob.name.trim()
-      ? blob.name
-      : "document";
-  const contentType =
-    (blob.type && isAllowedDocumentMime(blob.type) && blob.type) ||
-    guessMimeFromFilename(filename) ||
-    "";
-  if (!isAllowedDocumentMime(contentType)) {
-    return { error: "file_type" };
-  }
-
-  const resolved = await resolveShareForDocuments(token);
-  if (!resolved) return { error: "expired" };
-  if ("error" in resolved) return { error: resolved.error };
-
-  let admin;
-  try {
-    admin = createServiceClient();
-  } catch (err) {
-    console.error("uploadShareDocumentAction admin:", err);
-    return { error: "server_config" };
-  }
-
-  const { data: request, error: reqError } = await admin
-    .from("project_document_requests")
-    .select("*")
-    .eq("id", requestId)
-    .eq("project_id", resolved.projectId)
-    .eq("organization_id", resolved.organizationId)
-    .maybeSingle();
-
-  if (reqError || !request) {
-    return { error: "invalid" };
-  }
-
-  const projectStatus = await loadProjectStatusById(admin, resolved.projectId);
-  if (isProjectModificationBlocked(projectStatus)) {
-    return { error: "granted" };
-  }
-
-  if (request.status === "accepted") {
-    return { error: "locked" };
-  }
-
-  const plaintext = Buffer.from(await blob.arrayBuffer());
-  if (plaintext.length > DOCUMENT_MAX_BYTES) {
-    return { error: "file_too_large" };
-  }
-
-  try {
-    await storeEncryptedDocument({
-      organizationId: resolved.organizationId,
-      projectId: resolved.projectId,
-      personId: request.person_id as string,
-      requestId: request.id as string,
-      plaintext,
-      originalFilename: sanitizeUploadFilename(filename),
-      contentType,
-      uploadedVia: "share_link",
-      client: admin,
-    });
-    const { notifyDocumentsUploaded } = await import(
-      "@/lib/notifications/emit"
-    );
-    await notifyDocumentsUploaded({
-      organizationId: resolved.organizationId,
-      projectId: resolved.projectId,
-    });
-    await recordAuditEvent({
-      organizationId: resolved.organizationId,
-      actorKind: "share_link",
-      action: "document.upload_share",
-      resourceType: "project_document_request",
-      resourceId: requestId,
-      metadata: {
-        projectId: resolved.projectId,
-        personId: request.person_id,
-        byteSize: plaintext.length,
-        contentType,
-      },
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("uploadShareDocumentAction:", message);
-    if (
-      message === "missing_encryption_key" ||
-      message === "invalid_encryption_key"
-    ) {
-      return { error: "server_config" };
-    }
-    return { error: "upload_failed" };
-  }
-
-  return { message: "uploaded" };
-}
-
-export async function loadShareDocumentsAction(token: string) {
-  const resolved = await resolveShareForDocuments(token);
-  if (!resolved || "error" in resolved) return null;
-  const admin = createServiceClient();
-  const requests = await listShareDocumentRequests(admin, resolved.projectId);
-  return {
-    projectId: resolved.projectId,
-    expiresAt: resolved.expiresAt,
-    requests,
   };
 }

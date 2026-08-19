@@ -8,26 +8,26 @@ import { cn } from "@/lib/utils";
 
 const TAB_VALUES = ["documents", "forms"] as const;
 
-export type ShareFillTab = (typeof TAB_VALUES)[number];
+export type ClientFillTab = (typeof TAB_VALUES)[number];
 
-function isShareFillTab(value: string): value is ShareFillTab {
+function isClientFillTab(value: string): value is ClientFillTab {
   return (TAB_VALUES as readonly string[]).includes(value);
 }
 
-export function ShareFillTabs({
+export function ClientFillTabs({
   panels,
   className,
 }: {
-  panels: Record<ShareFillTab, ReactNode>;
+  panels: Record<ClientFillTab, ReactNode>;
   className?: string;
 }) {
-  const t = useTranslations("documents.shareTabs");
-  const [tab, setTab] = useState<ShareFillTab>("documents");
+  const t = useTranslations("documents.clientTabs");
+  const [tab, setTab] = useState<ClientFillTab>("documents");
 
   useEffect(() => {
     const syncFromHash = () => {
       const hash = window.location.hash.replace(/^#/, "");
-      if (isShareFillTab(hash)) setTab(hash);
+      if (isClientFillTab(hash)) setTab(hash);
     };
 
     syncFromHash();
@@ -39,7 +39,7 @@ export function ShareFillTabs({
     <Tabs
       value={tab}
       onValueChange={(value) => {
-        if (isShareFillTab(value)) {
+        if (isClientFillTab(value)) {
           setTab(value);
           window.location.hash = value;
         }
