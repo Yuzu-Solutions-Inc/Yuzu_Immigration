@@ -35,6 +35,10 @@ export type PersonRow = {
   preferred_locale: string;
   immigration_status: PersonImmigrationStatus;
   status_expires_at: string | null;
+  sage_contact_id?: string | null;
+  sage_has_main_address?: boolean;
+  sage_address_country?: string | null;
+  sage_address_region?: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

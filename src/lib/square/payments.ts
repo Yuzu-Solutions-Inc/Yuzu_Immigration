@@ -29,6 +29,13 @@ export type PaymentRequestRow = {
   source: "booking" | "project";
   status: string;
   amount_cents: number;
+  tax_cents: number;
+  tax_percent: number | string | null;
+  tax_label: string | null;
+  tax_country: string | null;
+  tax_region: string | null;
+  sage_tax_rate_id: string | null;
+  sage_invoice_id: string | null;
   currency: string;
   description: string;
   project_id: string | null;
@@ -41,6 +48,7 @@ export type PaymentRequestRow = {
   paid_at: string | null;
   refunded_at: string | null;
   created_at: string;
+  expires_at?: string | null;
 };
 
 export async function createCheckoutPaymentRequest(input: {
@@ -75,6 +83,10 @@ export async function createCheckoutPaymentRequest(input: {
   ).toISOString();
 
   const dek = await getOrgDataKey(input.organizationId);
+  const { getOrgSageConnection } = await import("@/lib/sage/client");
+  const sageConnection = await getOrgSageConnection(input.organizationId);
+  const deferSquareLink = Boolean(sageConnection);
+
   const { data: payment, error } = await admin
     .from("payment_requests")
     .insert({
@@ -98,6 +110,14 @@ export async function createCheckoutPaymentRequest(input: {
   if (error || !payment) {
     console.error("create payment request:", error?.message);
     throw new Error("payment_create_failed");
+  }
+
+  if (deferSquareLink) {
+    return {
+      payment: payment as PaymentRequestRow,
+      token,
+      checkoutUrl: redirectUrl,
+    };
   }
 
   try {
@@ -150,7 +170,7 @@ export async function loadPaymentByToken(token: string) {
   const { data, error } = await admin
     .from("payment_requests")
     .select(
-      "id, organization_id, source, status, amount_cents, currency, description, project_id, person_id, appointment_id, checkout_url, square_order_id, square_payment_id, paid_at, created_at, expires_at",
+      "id, organization_id, source, status, amount_cents, tax_cents, tax_percent, tax_label, tax_country, tax_region, sage_tax_rate_id, sage_invoice_id, currency, description, project_id, person_id, appointment_id, checkout_url, square_order_id, square_payment_id, paid_at, created_at, expires_at",
     )
     .eq("token_hash", hashBookingToken(token))
     .maybeSingle();
@@ -225,6 +245,16 @@ export async function markPaymentPaid(input: {
   const row = payment as PaymentRequestRow;
   if (row.source === "booking" && row.appointment_id) {
     await confirmPaidBookingAppointment(row);
+  }
+  if (row.person_id) {
+    try {
+      const { createSageInvoiceForPayment } = await import(
+        "@/lib/sage/checkout"
+      );
+      await createSageInvoiceForPayment(row);
+    } catch (error) {
+      console.error("sage invoice after payment:", error);
+    }
   }
 
   return row;
@@ -429,7 +459,7 @@ export async function settlePaymentOnBookingCancel(input: {
   const { data, error } = await admin
     .from("payment_requests")
     .select(
-      "id, organization_id, source, status, amount_cents, currency, description, project_id, person_id, appointment_id, checkout_url, square_order_id, square_payment_id, square_refund_id, paid_at, refunded_at, created_at",
+      "id, organization_id, source, status, amount_cents, tax_cents, currency, description, project_id, person_id, appointment_id, checkout_url, square_order_id, square_payment_id, square_refund_id, paid_at, refunded_at, created_at",
     )
     .eq("appointment_id", input.appointmentId)
     .eq("organization_id", input.organizationId)
@@ -478,8 +508,9 @@ export async function settlePaymentOnBookingCancel(input: {
     if (!connection) throw new Error("square_not_connected");
 
     const policy = normalizeSquareCancelRefundPolicy(connection);
+    const chargedCents = payment.amount_cents + (payment.tax_cents ?? 0);
     const { refundCents } = computeCancelRefundAmounts(
-      payment.amount_cents,
+      chargedCents,
       policy,
       input.startsAt,
     );

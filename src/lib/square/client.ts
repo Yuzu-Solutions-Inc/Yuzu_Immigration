@@ -165,6 +165,10 @@ export type CreateSquarePaymentLinkInput = {
   paymentNote: string;
   redirectUrl: string;
   buyerEmail?: string | null;
+  tax?: {
+    name: string;
+    percentage: number;
+  } | null;
 };
 
 export type CreateSquarePaymentLinkResult = {
@@ -179,26 +183,63 @@ export async function createSquarePaymentLink(
   const accessToken = await getValidSquareAccessToken(input.connection);
   if (!accessToken) throw new Error("square_token_unavailable");
 
-  const body = {
-    idempotency_key: randomUUID(),
-    description: input.name.slice(0, 4096),
-    quick_pay: {
-      name: input.name.slice(0, 255),
-      price_money: {
-        amount: input.amountCents,
-        currency: input.currency.toUpperCase(),
-      },
-      location_id: input.connection.location_id,
-    },
-    checkout_options: {
-      redirect_url: input.redirectUrl,
-      ask_for_shipping_address: false,
-    },
-    pre_populated_data: input.buyerEmail
-      ? { buyer_email: input.buyerEmail }
-      : undefined,
-    payment_note: input.paymentNote.slice(0, 500),
-  };
+  const taxPercent = input.tax?.percentage ?? 0;
+  const useOrderTax = Boolean(input.tax && taxPercent > 0);
+
+  const body = useOrderTax
+    ? {
+        idempotency_key: randomUUID(),
+        description: input.name.slice(0, 4096),
+        order: {
+          location_id: input.connection.location_id,
+          line_items: [
+            {
+              name: input.name.slice(0, 255),
+              quantity: "1",
+              base_price_money: {
+                amount: input.amountCents,
+                currency: input.currency.toUpperCase(),
+              },
+            },
+          ],
+          taxes: [
+            {
+              uid: "sales-tax",
+              name: input.tax?.name.slice(0, 255) || "Tax",
+              percentage: String(taxPercent),
+              scope: "ORDER",
+            },
+          ],
+        },
+        checkout_options: {
+          redirect_url: input.redirectUrl,
+          ask_for_shipping_address: false,
+        },
+        pre_populated_data: input.buyerEmail
+          ? { buyer_email: input.buyerEmail }
+          : undefined,
+        payment_note: input.paymentNote.slice(0, 500),
+      }
+    : {
+        idempotency_key: randomUUID(),
+        description: input.name.slice(0, 4096),
+        quick_pay: {
+          name: input.name.slice(0, 255),
+          price_money: {
+            amount: input.amountCents,
+            currency: input.currency.toUpperCase(),
+          },
+          location_id: input.connection.location_id,
+        },
+        checkout_options: {
+          redirect_url: input.redirectUrl,
+          ask_for_shipping_address: false,
+        },
+        pre_populated_data: input.buyerEmail
+          ? { buyer_email: input.buyerEmail }
+          : undefined,
+        payment_note: input.paymentNote.slice(0, 500),
+      };
 
   const result = await squareFetch(accessToken, "/v2/online-checkout/payment-links", {
     method: "POST",

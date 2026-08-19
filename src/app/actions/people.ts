@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -132,6 +133,16 @@ export async function createPersonAction(
     return { error: "create_failed" };
   }
 
+  after(async () => {
+    const { linkOrCreateSageContactForPerson } = await import(
+      "@/lib/sage/sync-people"
+    );
+    await linkOrCreateSageContactForPerson({
+      organizationId: orgId,
+      personId: created.id,
+    });
+  });
+
   revalidatePath(`/${data.locale}/people`);
   revalidatePath(`/${data.locale}/people/${created.id}`);
   revalidatePath(`/${data.locale}/home`);
@@ -209,6 +220,16 @@ export async function updatePersonAction(
     console.error("update person:", updateError.message);
     return { error: "update_failed" };
   }
+
+  after(async () => {
+    const { linkOrCreateSageContactForPerson } = await import(
+      "@/lib/sage/sync-people"
+    );
+    await linkOrCreateSageContactForPerson({
+      organizationId: orgId,
+      personId: data.personId,
+    });
+  });
 
   revalidatePath(`/${data.locale}/people/${data.personId}`);
   revalidatePath(`/${data.locale}/people`);

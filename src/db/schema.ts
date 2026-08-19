@@ -4,6 +4,7 @@ import {
   date,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgSchema,
   pgTable,
@@ -195,6 +196,10 @@ export const people = pgTable("people", {
     .notNull()
     .default("none"),
   statusExpiresAt: date("status_expires_at"),
+  sageContactId: text("sage_contact_id"),
+  sageHasMainAddress: boolean("sage_has_main_address").notNull().default(false),
+  sageAddressCountry: text("sage_address_country"),
+  sageAddressRegion: text("sage_address_region"),
   createdBy: uuid("created_by").references(() => profiles.id, {
     onDelete: "set null",
   }),
@@ -1212,6 +1217,51 @@ export const squareConnections = pgTable("square_connections", {
     .notNull(),
 });
 
+/** One Sage Business Cloud Accounting company per firm. Tokens in private.sage_secrets. */
+export const sageConnections = pgTable("sage_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" })
+    .unique(),
+  connectedBy: uuid("connected_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  businessId: text("business_id").notNull(),
+  businessName: text("business_name"),
+  countryId: text("country_id"),
+  currency: text("currency").notNull().default("CAD"),
+  customerContactTypeId: text("customer_contact_type_id"),
+  defaultLedgerAccountId: text("default_ledger_account_id"),
+  defaultLedgerAccountName: text("default_ledger_account_name"),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Sage tax rate to use for a country (+ optional region/province). */
+export const sageTaxMappings = pgTable("sage_tax_mappings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  countryCode: text("country_code").notNull(),
+  regionCode: text("region_code"),
+  sageTaxRateId: text("sage_tax_rate_id").notNull(),
+  sageTaxRateName: text("sage_tax_rate_name"),
+  percentage: numeric("percentage").notNull().default("0"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 /** Checkout charges for bookings and ad-hoc project invoices. */
 export const paymentRequests = pgTable(
   "payment_requests",
@@ -1245,6 +1295,13 @@ export const paymentRequests = pgTable(
     squarePaymentId: text("square_payment_id"),
     squareRefundId: text("square_refund_id"),
     checkoutUrl: text("checkout_url"),
+    taxCents: integer("tax_cents").notNull().default(0),
+    taxPercent: numeric("tax_percent"),
+    taxLabel: text("tax_label"),
+    taxCountry: text("tax_country"),
+    taxRegion: text("tax_region"),
+    sageTaxRateId: text("sage_tax_rate_id"),
+    sageInvoiceId: text("sage_invoice_id"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     refundedAt: timestamp("refunded_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
@@ -1495,6 +1552,21 @@ export const microsoftCalendarSecrets = privateSchema.table(
       .notNull(),
   },
 );
+
+/** Sage OAuth tokens — service_role only. */
+export const sageSecrets = privateSchema.table("sage_secrets", {
+  connectionId: uuid("connection_id")
+    .primaryKey()
+    .references(() => sageConnections.id, { onDelete: "cascade" }),
+  refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+  accessTokenEncrypted: text("access_token_encrypted").notNull(),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", {
+    withTimezone: true,
+  }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 /** Square OAuth tokens — service_role only. */
 export const squareSecrets = privateSchema.table("square_secrets", {

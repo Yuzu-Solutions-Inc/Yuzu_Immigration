@@ -119,6 +119,18 @@ export default async function PersonDetailPage({
                     : ""}
                 </dd>
               </div>
+              <div>
+                <dt className="inline font-medium text-brand/70">
+                  {t("sageAddress")}:{" "}
+                </dt>
+                <dd className="inline">
+                  {person.sage_contact_id
+                    ? person.sage_has_main_address
+                      ? t("sageAddressYes")
+                      : t("sageAddressNo")
+                    : t("sageNotLinked")}
+                </dd>
+              </div>
             </dl>
           </div>
           <div className="flex flex-wrap items-center gap-2">
