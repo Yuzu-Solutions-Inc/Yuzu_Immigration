@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, ScanEye, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -17,15 +17,17 @@ import {
   type ProjectDocumentViewerItem,
 } from "@/components/documents/project-document-viewer";
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   StatusPill,
   type StatusPillTone,
 } from "@/components/ui/status-pill";
+import { Link } from "@/i18n/navigation";
 import { triggerBrowserDownload } from "@/lib/documents/browser-file";
 import type { DocumentRequestWithFile } from "@/lib/documents/service";
 import { sortDocumentsForViewer } from "@/lib/documents/viewer-order";
+import { cn } from "@/lib/utils";
 
 const initial: DocumentsActionState = {};
 
@@ -138,6 +140,9 @@ export function ProjectDocumentsPanel({
 
   const showPerson = people.length > 1;
   const uploadedCount = viewerRows.length;
+  const toReviewCount = requests.filter(
+    (row) => row.status === "uploaded" && row.file,
+  ).length;
 
   function openViewerAt(requestId?: string) {
     const index = requestId
@@ -166,17 +171,28 @@ export function ProjectDocumentsPanel({
           <h2 className="font-heading text-lg font-semibold text-brand">
             {t("title")}
           </h2>
-          {uploadedCount > 0 ? (
+          {uploadedCount > 0 || toReviewCount > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => openViewerAt()}
-              >
-                <Eye className="size-4" />
-                <span className="ml-1.5">{t("viewAll")}</span>
-              </Button>
+              {toReviewCount > 0 ? (
+                <Link
+                  href={`/projects/review?project=${projectId}`}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                >
+                  <ScanEye className="size-4" />
+                  <span className="ml-1.5">{t("review.reviewAll")}</span>
+                </Link>
+              ) : null}
+              {uploadedCount > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openViewerAt()}
+                >
+                  <Eye className="size-4" />
+                  <span className="ml-1.5">{t("viewAll")}</span>
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"

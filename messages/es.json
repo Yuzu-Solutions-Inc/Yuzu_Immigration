@@ -372,8 +372,6 @@
       "formsReadyHint": "Cuestionario enviado",
       "todayBookings": "Citas de hoy",
       "weekBookings": "{count, plural, one {# esta semana} other {# esta semana}}",
-      "statusExpiring": "Estatus por vencer",
-      "statusExpiringHint": "Próximos 30 días",
       "unpaid": "Impagos",
       "unpaidHint": "Reservas y facturas",
       "unpaidCount": "{count, plural, one {# factura} other {# facturas}}",
@@ -409,13 +407,11 @@
       "unknownService": "Consulta",
       "next": "Siguiente",
       "unpaid": "Impago",
+      "now": "Ahora",
+      "laterHeading": "Más tarde esta semana",
+      "durationMinutes": "{minutes} min",
       "todayCount": "{count, plural, one {# hoy} other {# hoy}}",
       "weekCount": "{count, plural, one {# esta semana} other {# esta semana}}"
-    },
-    "expiries": {
-      "title": "Estatus por vencer",
-      "viewPeople": "Clientes",
-      "empty": "No hay vencimientos de estatus en los próximos 60 días."
     },
     "caseload": {
       "title": "Carga de trabajo",
@@ -487,6 +483,7 @@
     "crumbTemplates": "Plantillas",
     "crumbPerson": "Cliente",
     "crumbProject": "Proyecto",
+    "crumbReview": "Revisión",
     "crumbDetail": "Detalles",
     "searchLabel": "Buscar proyectos y clientes",
     "searchPlaceholder": "Buscar proyectos o clientes…",
@@ -1856,7 +1853,16 @@
       "emailFailed": "El documento fue rechazado, pero no se pudo enviar el correo.",
       "notReviewable": "Este documento no está listo para revisión.",
       "rejectionNote": "Rechazado: {comment}",
-      "clientDenied": "Suba el archivo de nuevo"
+      "clientDenied": "Suba el archivo de nuevo",
+      "projectLabel": "Proyecto",
+      "projectOption": "{title} ({count})",
+      "openProject": "Abrir proyecto",
+      "queueTitle": "Revisar documentos",
+      "queueHelp": "Apruebe o rechace cada archivo. Cambie de proyecto cuando quiera: siguiente sigue con todos los que aún esperan.",
+      "queueEmpty": "No hay documentos pendientes de revisión.",
+      "queueEmptyCta": "Volver al inicio",
+      "reviewAll": "Revisar archivos",
+      "done": "Listo"
     },
     "errors": {
       "invalid": "Revise el formulario e inténtelo de nuevo.",

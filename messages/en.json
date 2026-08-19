@@ -372,8 +372,6 @@
       "formsReadyHint": "Questionnaire submitted",
       "todayBookings": "Bookings today",
       "weekBookings": "{count, plural, one {# this week} other {# this week}}",
-      "statusExpiring": "Status expiring",
-      "statusExpiringHint": "Next 30 days",
       "unpaid": "Unpaid",
       "unpaidHint": "Bookings and invoices",
       "unpaidCount": "{count, plural, one {# invoice} other {# invoices}}",
@@ -409,13 +407,11 @@
       "unknownService": "Consultation",
       "next": "Up next",
       "unpaid": "Unpaid",
+      "now": "Now",
+      "laterHeading": "Later this week",
+      "durationMinutes": "{minutes} min",
       "todayCount": "{count, plural, one {# today} other {# today}}",
       "weekCount": "{count, plural, one {# this week} other {# this week}}"
-    },
-    "expiries": {
-      "title": "Status expiries",
-      "viewPeople": "Clients",
-      "empty": "No status expiries in the next 60 days."
     },
     "caseload": {
       "title": "Caseload",
@@ -488,6 +484,7 @@
     "crumbTemplates": "Templates",
     "crumbPerson": "Client",
     "crumbProject": "Project",
+    "crumbReview": "Review",
     "crumbDetail": "Details",
     "searchLabel": "Search projects and clients",
     "searchPlaceholder": "Search projects or clients…",
@@ -1856,7 +1853,16 @@
       "emailFailed": "The document was denied but the email could not be sent.",
       "notReviewable": "This document is not ready for review.",
       "rejectionNote": "Denied: {comment}",
-      "clientDenied": "Please upload again"
+      "clientDenied": "Please upload again",
+      "projectLabel": "Project",
+      "projectOption": "{title} ({count})",
+      "openProject": "Open project",
+      "queueTitle": "Review documents",
+      "queueHelp": "Approve or deny each upload. Switch project anytime — next keeps going through every file still waiting.",
+      "queueEmpty": "No documents waiting for review.",
+      "queueEmptyCta": "Back to home",
+      "reviewAll": "Review uploads",
+      "done": "Done"
     },
     "errors": {
       "invalid": "Check the form and try again.",

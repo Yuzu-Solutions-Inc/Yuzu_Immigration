@@ -1,8 +1,7 @@
-import type { PersonImmigrationStatus, ProjectStatus } from "@/db/schema";
+import type { ProjectStatus } from "@/db/schema";
 import {
   listProjects,
   requireOrganizationId,
-  type PersonRow,
   type ProjectRow,
 } from "@/lib/crm/queries";
 import { isTerminalStatus, PROJECT_STATUSES } from "@/lib/crm/statuses";
@@ -14,10 +13,7 @@ import {
 import type { BookingAppointmentRow } from "@/lib/booking/types";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import { createClient } from "@/lib/supabase/server";
-import {
-  decryptBookingGuestRow,
-  decryptPersonRow,
-} from "@/lib/security/client-pii";
+import { decryptBookingGuestRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { daysUntilIso } from "@/lib/crm/dates";
 import {
@@ -69,15 +65,6 @@ export type DashboardAppointment = {
   status: BookingAppointmentRow["status"];
 };
 
-export type StatusExpiryItem = {
-  id: string;
-  name: string;
-  immigrationStatus: PersonImmigrationStatus;
-  expiresAt: string;
-  days: number;
-  href: string;
-};
-
 export type BookingModuleSummary = {
   timezone: string;
   enabled: boolean;
@@ -104,7 +91,6 @@ export type HomeDashboard = {
   projectsByStatus: ChartDatum[];
   attention: AttentionRow[];
   appointments: DashboardAppointment[];
-  statusExpiries: StatusExpiryItem[];
 };
 
 const EMPTY: HomeDashboard = {
@@ -131,7 +117,6 @@ const EMPTY: HomeDashboard = {
   projectsByStatus: [],
   attention: [],
   appointments: [],
-  statusExpiries: [],
 };
 
 const ATTENTION_RANK: Record<AttentionKind, number> = {
@@ -143,7 +128,7 @@ const ATTENTION_RANK: Record<AttentionKind, number> = {
   due_soon: 5,
 };
 
-const ATTENTION_LIMIT = 12;
+const ATTENTION_LIMIT = 40;
 
 function isReadyToSubmit(stats: ProjectProgress) {
   if (stats.formPercent < 100 || stats.docsToReview > 0) return false;
@@ -215,7 +200,6 @@ export async function getHomeDashboard(
     settingsResult,
     servicesResult,
     rulesResult,
-    peopleExpiryResult,
   ] = await Promise.all([
     listProjects(),
     supabase
@@ -236,14 +220,6 @@ export async function getHomeDashboard(
       .from("booking_availability_rules")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId),
-    supabase
-      .from("people")
-      .select("*")
-      .eq("organization_id", orgId)
-      .not("status_expires_at", "is", null)
-      .neq("immigration_status", "none")
-      .order("status_expires_at", { ascending: true })
-      .limit(8),
   ]);
 
   if (peopleCountResult.error) {
@@ -257,12 +233,6 @@ export async function getHomeDashboard(
   }
   if (rulesResult.error) {
     console.error("getHomeDashboard rules:", rulesResult.error.message);
-  }
-  if (peopleExpiryResult.error) {
-    console.error(
-      "getHomeDashboard status expiries:",
-      peopleExpiryResult.error.message,
-    );
   }
 
   const timezone =
@@ -532,6 +502,12 @@ export async function getHomeDashboard(
   const attention = [...rows.values()]
     .map((row) => ({
       ...row,
+      href:
+        row.alerts.length > 0 &&
+        row.alerts.every((alert) => alert.kind === "docs_review") &&
+        row.id.startsWith("project:")
+          ? `/projects/review?project=${row.id.slice("project:".length)}`
+          : row.href,
       alerts: [...row.alerts].sort(
         (a, b) => ATTENTION_RANK[a.kind] - ATTENTION_RANK[b.kind],
       ),
@@ -558,25 +534,6 @@ export async function getHomeDashboard(
     if (day === todayIso) todayCount += 1;
     if (day >= todayIso && day <= rangeEndIso) next7Count += 1;
   }
-
-  const statusExpiries: StatusExpiryItem[] = (
-    (peopleExpiryResult.data ?? []) as PersonRow[]
-  )
-    .map((raw) => {
-      const row = decryptPersonRow(raw, key);
-      if (!row.status_expires_at) return null;
-      const expiresAt = row.status_expires_at.slice(0, 10);
-      return {
-        id: row.id,
-        name: `${row.first_name} ${row.last_name}`.trim(),
-        immigrationStatus: row.immigration_status,
-        expiresAt,
-        days: daysUntilIso(expiresAt, now),
-        href: `/people/${row.id}`,
-      };
-    })
-    .filter((row): row is StatusExpiryItem => row != null && row.days <= 60)
-    .slice(0, 5);
 
   const peopleCount = peopleCountResult.count ?? 0;
   const unpaidAlerts = attention.flatMap((row) =>
@@ -627,8 +584,7 @@ export async function getHomeDashboard(
       needsSetup,
     },
     projectsByStatus,
-    attention: attention.slice(0, ATTENTION_LIMIT),
+    attention,
     appointments,
-    statusExpiries,
   };
 }

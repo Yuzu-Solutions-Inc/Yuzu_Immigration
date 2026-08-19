@@ -135,19 +135,36 @@ const EMPTY_PROGRESS: ProjectProgress = {
   docsToReview: 0,
 };
 
-function DocsToReviewIcon({ count }: { count: number }) {
+function DocsToReviewIcon({
+  count,
+  href,
+}: {
+  count: number;
+  href?: string;
+}) {
   const t = useTranslations("projects");
   if (count <= 0) return null;
 
   const label = t("docsToReviewIcon", { count });
-  return (
+  const icon = (
     <span
-      title={label}
-      aria-label={label}
+      title={href ? undefined : label}
+      aria-label={href ? undefined : label}
       className="inline-flex shrink-0 items-center rounded-md bg-action/10 p-1 text-action"
     >
       <ScanEye className="size-3.5" aria-hidden />
     </span>
+  );
+  if (!href) return icon;
+  return (
+    <Link
+      href={href}
+      title={label}
+      aria-label={label}
+      className="inline-flex shrink-0 items-center rounded-md bg-action/10 p-1 text-action hover:bg-action/15"
+    >
+      <ScanEye className="size-3.5" aria-hidden />
+    </Link>
   );
 }
 
@@ -603,7 +620,10 @@ export function ProjectsTable({
                         >
                           {project.title}
                         </Link>
-                        <DocsToReviewIcon count={progress.docsToReview} />
+                        <DocsToReviewIcon
+                          count={progress.docsToReview}
+                          href={`/projects/review?project=${project.id}`}
+                        />
                       </div>
                       {project.jurisdiction !== "federal" ? (
                         <p className="text-xs text-muted-foreground">

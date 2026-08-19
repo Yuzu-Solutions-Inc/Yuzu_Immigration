@@ -1,18 +1,9 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { StatusPill, type StatusPillTone } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/navigation";
 import type {
   AttentionAlert,
@@ -22,13 +13,13 @@ import type {
 import { formatPriceCents } from "@/lib/booking/slots";
 import { cn } from "@/lib/utils";
 
-const KIND_TONE: Record<AttentionKind, StatusPillTone> = {
-  overdue: "destructive",
-  docs_review: "action",
-  questionnaire: "action",
-  unpaid: "action",
-  stuck: "muted",
-  due_soon: "muted",
+const KIND_DOT: Record<AttentionKind, string> = {
+  overdue: "bg-destructive",
+  docs_review: "bg-action",
+  questionnaire: "bg-action",
+  unpaid: "bg-action",
+  stuck: "bg-muted-foreground",
+  due_soon: "bg-muted-foreground",
 };
 
 const FILTER_KINDS: AttentionKind[] = [
@@ -84,11 +75,24 @@ function rowMeta(
   return null;
 }
 
-function pillLabel(
-  alert: AttentionAlert,
+function secondaryDetail(
+  alerts: AttentionAlert[],
+  primaryKind: AttentionKind,
   t: ReturnType<typeof useTranslations<"appHome">>,
 ) {
-  return t(`attention.kinds.${alert.kind}`);
+  const others = alerts.filter((alert) => alert.kind !== primaryKind);
+  if (others.length === 0) return null;
+  return others
+    .map((alert) => {
+      if (alert.kind === "docs_review" && alert.count != null) {
+        return t("attention.docsCount", { count: alert.count });
+      }
+      if (alert.kind === "unpaid" && alert.amountCents != null) {
+        return t(`attention.kinds.${alert.kind}`);
+      }
+      return t(`attention.kinds.${alert.kind}`);
+    })
+    .join(" · ");
 }
 
 export function AttentionList({
@@ -109,6 +113,20 @@ export function AttentionList({
     [rows],
   );
 
+  const kindCounts = useMemo(() => {
+    const counts = {} as Record<AttentionKind, number>;
+    for (const kind of FILTER_KINDS) counts[kind] = 0;
+    for (const row of rows) {
+      const seen = new Set<AttentionKind>();
+      for (const alert of row.alerts) {
+        if (seen.has(alert.kind)) continue;
+        seen.add(alert.kind);
+        counts[alert.kind] += 1;
+      }
+    }
+    return counts;
+  }, [rows]);
+
   const visible = useMemo(() => {
     if (filter === "all") return rows;
     return rows.filter((row) =>
@@ -116,56 +134,65 @@ export function AttentionList({
     );
   }, [filter, rows]);
 
-  const filterLabel =
-    filter === "all"
-      ? t("attention.filterAll")
-      : t(`attention.kinds.${filter}`);
+  const groups = useMemo(() => {
+    if (filter !== "all") {
+      return [{ kind: filter, rows: visible }];
+    }
+    const buckets = new Map<AttentionKind, AttentionRow[]>();
+    for (const kind of FILTER_KINDS) buckets.set(kind, []);
+    for (const row of visible) {
+      const primary = row.alerts[0]?.kind ?? "due_soon";
+      buckets.get(primary)?.push(row);
+    }
+    return FILTER_KINDS.map((kind) => ({
+      kind,
+      rows: buckets.get(kind) ?? [],
+    })).filter((group) => group.rows.length > 0);
+  }, [filter, visible]);
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <h2 className="font-heading text-sm font-semibold text-brand">
           {t("attention.title")}
-        </h2>
-        <div className="flex items-center gap-2">
-          {presentKinds.length > 0 ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "xs" }),
-                  "gap-1",
-                )}
-                aria-label={t("attention.filter")}
-              >
-                {filterLabel}
-                <ChevronDown className="size-3.5 opacity-60" aria-hidden />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-40">
-                <DropdownMenuRadioGroup
-                  value={filter}
-                  onValueChange={(value) => setFilter(value as FilterValue)}
-                >
-                  <DropdownMenuRadioItem value="all">
-                    {t("attention.filterAll")}
-                  </DropdownMenuRadioItem>
-                  {presentKinds.map((kind) => (
-                    <DropdownMenuRadioItem key={kind} value={kind}>
-                      {t(`attention.kinds.${kind}`)}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          {rows.length > 0 ? (
+            <span className="ml-1.5 font-medium text-muted-foreground tabular-nums">
+              {rows.length}
+            </span>
           ) : null}
-          <Link
-            href="/projects"
-            className="shrink-0 text-xs font-medium text-action hover:underline"
-          >
-            {t("viewAllProjects")}
-          </Link>
-        </div>
+        </h2>
+        <Link
+          href="/projects"
+          className="shrink-0 text-xs font-medium text-action hover:underline"
+        >
+          {t("viewAllProjects")}
+        </Link>
       </div>
-      <div>
+      {presentKinds.length > 1 ? (
+        <div
+          role="toolbar"
+          aria-label={t("attention.filter")}
+          className="-mx-1 flex shrink-0 gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <FilterChip
+            active={filter === "all"}
+            label={t("attention.filterAll")}
+            count={rows.length}
+            onClick={() => setFilter("all")}
+          />
+          {presentKinds.map((kind) => (
+            <FilterChip
+              key={kind}
+              active={filter === kind}
+              label={t(`attention.kinds.${kind}`)}
+              count={kindCounts[kind]}
+              dotClass={KIND_DOT[kind]}
+              onClick={() => setFilter(kind)}
+            />
+          ))}
+        </div>
+      ) : null}
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("attention.empty")}</p>
         ) : visible.length === 0 ? (
@@ -173,47 +200,102 @@ export function AttentionList({
             {t("attention.filterEmpty")}
           </p>
         ) : (
-          <ul className="divide-y divide-border">
-            {visible.map((row) => {
-              const meta = rowMeta(row, locale, t);
+          <div className="flex flex-col gap-3">
+            {groups.map((group) => {
+              const showHeader = filter === "all" && groups.length > 1;
               return (
-                <li key={row.id}>
-                  <Link
-                    href={row.href}
-                    className="flex items-center justify-between gap-3 py-2.5 transition-colors hover:bg-muted/40"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      <p className="min-w-0 truncate text-sm font-medium text-brand">
-                        {row.title}
-                      </p>
-                      <span className="flex min-w-0 flex-wrap items-center gap-1">
-                        {row.alerts.map((alert) => (
-                          <StatusPill
-                            key={alert.kind}
-                            label={pillLabel(alert, t)}
-                            tone={KIND_TONE[alert.kind]}
-                            className="px-2 py-0 text-[10px]"
-                          />
-                        ))}
-                      </span>
-                    </div>
-                    {meta ? (
-                      <p
+                <section key={group.kind} className="min-w-0">
+                  {showHeader ? (
+                    <h3 className="sticky top-0 z-10 bg-surface py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                      <span
                         className={cn(
-                          "shrink-0 text-right text-xs font-medium",
-                          meta.className,
+                          "mr-1.5 inline-block size-1.5 rounded-full align-middle",
+                          KIND_DOT[group.kind],
                         )}
-                      >
-                        {meta.text}
-                      </p>
-                    ) : null}
-                  </Link>
-                </li>
+                        aria-hidden
+                      />
+                      {t(`attention.kinds.${group.kind}`)}
+                      <span className="ml-1 font-medium tabular-nums">
+                        {group.rows.length}
+                      </span>
+                    </h3>
+                  ) : null}
+                  <ul>
+                    {group.rows.map((row) => {
+                      const meta = rowMeta(row, locale, t);
+                      const primary = row.alerts[0]?.kind ?? group.kind;
+                      const detail = secondaryDetail(row.alerts, primary, t);
+                      return (
+                        <li key={row.id}>
+                          <Link
+                            href={row.href}
+                            className="-mx-1 flex items-start justify-between gap-3 rounded-lg px-1 py-2 transition-colors hover:bg-muted/40"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-brand">
+                                {row.title}
+                              </p>
+                              {detail ? (
+                                <p className="truncate text-[11px] text-muted-foreground">
+                                  {detail}
+                                </p>
+                              ) : null}
+                            </div>
+                            {meta ? (
+                              <p
+                                className={cn(
+                                  "shrink-0 pt-0.5 text-right text-xs font-medium",
+                                  meta.className,
+                                )}
+                              >
+                                {meta.text}
+                              </p>
+                            ) : null}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
     </div>
+  );
+}
+
+function FilterChip({
+  active,
+  label,
+  count,
+  dotClass,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  count: number;
+  dotClass?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        buttonVariants({ variant: "ghost", size: "xs" }),
+        "gap-1.5",
+        active
+          ? "bg-action/10 text-action hover:bg-action/15 hover:text-action"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {dotClass ? (
+        <span className={cn("size-1.5 rounded-full", dotClass)} aria-hidden />
+      ) : null}
+      {label}
+      <span className="tabular-nums opacity-70">{count}</span>
+    </button>
   );
 }

@@ -413,6 +413,9 @@ export async function reviewDocumentRequestAction(
   await refreshProjectProgress(orgId, projectId, supabase);
 
   revalidatePath(`/${locale}/projects/${projectId}`);
+  revalidatePath(`/${locale}/projects/review`);
+  revalidatePath(`/${locale}/projects`);
+  revalidatePath(`/${locale}/home`);
   return { message: "reviewed" };
 }
 

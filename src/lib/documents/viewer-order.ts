@@ -8,6 +8,28 @@ const VIEWER_STATUS_ORDER: Record<DocumentRequestStatus, number> = {
   requested: 3,
 };
 
+/** Next uploaded file after `fromIndex`, wrapping if earlier files remain. */
+export function nextPendingReviewRequestId(
+  items: Array<{ requestId: string; status: DocumentRequestStatus }>,
+  fromIndex: number,
+  skipRequestId?: string,
+): string | null {
+  const isPending = (item: {
+    requestId: string;
+    status: DocumentRequestStatus;
+  }) => item.status === "uploaded" && item.requestId !== skipRequestId;
+
+  for (let i = fromIndex + 1; i < items.length; i++) {
+    const item = items[i];
+    if (item && isPending(item)) return item.requestId;
+  }
+  for (let i = 0; i < fromIndex; i++) {
+    const item = items[i];
+    if (item && isPending(item)) return item.requestId;
+  }
+  return null;
+}
+
 /** Submitted first, then denied, then approved — only rows with a file. */
 export function sortDocumentsForViewer(
   requests: DocumentRequestWithFile[],

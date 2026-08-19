@@ -372,8 +372,6 @@
       "formsReadyHint": "Questionnaire soumis",
       "todayBookings": "Rendez-vous aujourd’hui",
       "weekBookings": "{count, plural, one {# cette semaine} other {# cette semaine}}",
-      "statusExpiring": "Statuts qui expirent",
-      "statusExpiringHint": "30 prochains jours",
       "unpaid": "Impayés",
       "unpaidHint": "Réservations et factures",
       "unpaidCount": "{count, plural, one {# facture} other {# factures}}",
@@ -409,13 +407,11 @@
       "unknownService": "Consultation",
       "next": "À venir",
       "unpaid": "Impayé",
+      "now": "Maintenant",
+      "laterHeading": "Plus tard cette semaine",
+      "durationMinutes": "{minutes} min",
       "todayCount": "{count, plural, one {# aujourd’hui} other {# aujourd’hui}}",
       "weekCount": "{count, plural, one {# cette semaine} other {# cette semaine}}"
-    },
-    "expiries": {
-      "title": "Statuts qui expirent",
-      "viewPeople": "Clients",
-      "empty": "Aucune expiration de statut dans les 60 prochains jours."
     },
     "caseload": {
       "title": "Dossiers",
@@ -487,6 +483,7 @@
     "crumbTemplates": "Modèles",
     "crumbPerson": "Client",
     "crumbProject": "Projet",
+    "crumbReview": "Révision",
     "crumbDetail": "Détails",
     "searchLabel": "Rechercher projets et clients",
     "searchPlaceholder": "Rechercher un projet ou un client…",
@@ -1856,7 +1853,16 @@
       "emailFailed": "Le document a été refusé, mais le courriel n’a pas pu être envoyé.",
       "notReviewable": "Ce document n’est pas prêt pour la révision.",
       "rejectionNote": "Refusé : {comment}",
-      "clientDenied": "Veuillez téléverser à nouveau"
+      "clientDenied": "Veuillez téléverser à nouveau",
+      "projectLabel": "Projet",
+      "projectOption": "{title} ({count})",
+      "openProject": "Ouvrir le projet",
+      "queueTitle": "Réviser les documents",
+      "queueHelp": "Approuvez ou refusez chaque téléversement. Changez de projet à tout moment — suivant continue avec tous les fichiers encore en attente.",
+      "queueEmpty": "Aucun document en attente de révision.",
+      "queueEmptyCta": "Retour à l’accueil",
+      "reviewAll": "Réviser les fichiers",
+      "done": "Terminé"
     },
     "errors": {
       "invalid": "Vérifiez le formulaire et réessayez.",

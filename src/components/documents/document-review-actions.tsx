@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -43,14 +43,16 @@ export function DocumentReviewActions({
     reviewDocumentRequestAction,
     initial,
   );
+  const handledState = useRef<DocumentsActionState | null>(null);
 
   useEffect(() => {
-    if (state.message === "reviewed") {
-      setDenyOpen(false);
-      setComment("");
-      onReviewed?.();
-    }
-  }, [state.message, onReviewed]);
+    if (state.message !== "reviewed") return;
+    if (handledState.current === state) return;
+    handledState.current = state;
+    setDenyOpen(false);
+    setComment("");
+    onReviewed?.();
+  }, [state, onReviewed]);
 
   const canApprove = status === "uploaded";
   const canDeny = status === "uploaded" || status === "accepted";
