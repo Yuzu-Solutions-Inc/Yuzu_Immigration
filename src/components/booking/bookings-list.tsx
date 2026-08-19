@@ -7,8 +7,15 @@ import {
   CalendarClock,
   Mail,
   Trash2,
+  Video,
 } from "lucide-react";
-import { useDeferredValue, useMemo, useState, useTransition } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -32,7 +39,7 @@ import {
   listTableHeadClassName,
 } from "@/components/layout/list-layout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +64,7 @@ import { formatPriceCents } from "@/lib/booking/slots";
 import {
   formatDateInZone,
   formatTimeInZone,
+  intlLocale,
   zonedCivilToUtc,
   zonedDateIso,
 } from "@/lib/booking/timezone";
@@ -93,6 +101,22 @@ type SortKey =
   | "status"
   | "payment";
 type SortDir = "asc" | "desc";
+
+const JOIN_WINDOW_MS = 60 * 60 * 1000;
+
+function meetingJoinUrl(booking: BookingListItem, now: number) {
+  if (booking.status === "cancelled" || booking.status === "no_show") {
+    return null;
+  }
+  const url = booking.meetJoinUrl;
+  if (!url?.startsWith("https://")) return null;
+  const start = Date.parse(booking.startsAt);
+  if (!Number.isFinite(start)) return null;
+  if (now < start - JOIN_WINDOW_MS || now > start + JOIN_WINDOW_MS) {
+    return null;
+  }
+  return url;
+}
 
 function statusLabel(
   t: ReturnType<typeof useTranslations<"bookings">>,
@@ -151,7 +175,13 @@ export function BookingsList({
   );
   const [sortKey, setSortKey] = useState<SortKey>("starts_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const deferredGuest = useDeferredValue(guestQuery);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowMs(Date.now()), 15_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const serviceOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -365,8 +395,13 @@ export function BookingsList({
   const actionColSpan = canManage ? 7 : 6;
 
   return (
-    <div className={listStackClassName}>
-      <div className={listMobileFiltersClassName}>
+    <div
+      className={cn(
+        listStackClassName,
+        "lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:gap-3 lg:space-y-0",
+      )}
+    >
+      <div className={cn(listMobileFiltersClassName, "shrink-0")}>
         <Input
           type="search"
           value={guestQuery}
@@ -439,13 +474,14 @@ export function BookingsList({
         </NativeSelect>
       </div>
 
-      <ListTableCard>
+      <ListTableCard className="min-h-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
+        <div className="lg:min-h-0 lg:flex-1 lg:overflow-auto [&_[data-slot=table-container]]:overflow-visible">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-surface">
             <TableRow className="hover:bg-transparent">
               <TableHead
                 className={cn(
-                  "min-w-[10.5rem]",
+                  "min-w-[8rem]",
                   listTableHeadClassName,
                   listTableEdgeStartClassName,
                 )}
@@ -465,7 +501,7 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[12rem]", listTableHeadClassName)}>
+              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="guest" label={t("colGuest")} />
                   <Input
@@ -478,7 +514,7 @@ export function BookingsList({
                   />
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
+              <TableHead className={cn("min-w-[8.5rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="service" label={t("colService")} />
                   <NativeSelect
@@ -496,7 +532,7 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[9rem]", listTableHeadClassName)}>
+              <TableHead className={cn("min-w-[7.5rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="host" label={t("colHost")} />
                   <NativeSelect
@@ -514,7 +550,7 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[10.5rem]", listTableHeadClassName)}>
+              <TableHead className={cn("min-w-[8.5rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <SortButton column="status" label={t("colStatus")} />
                   <NativeSelect
@@ -536,9 +572,8 @@ export function BookingsList({
               </TableHead>
               <TableHead
                 className={cn(
-                  "min-w-[11rem]",
+                  "min-w-[8.5rem]",
                   listTableHeadClassName,
-                  !canManage && listTableEdgeEndClassName,
                 )}
               >
                 <div className="flex min-w-0 flex-col gap-1.5">
@@ -592,21 +627,48 @@ export function BookingsList({
             const unpaid =
               booking.status === "pending_payment" &&
               booking.paymentStatus === "pending";
+            const start = new Date(booking.startsAt);
+            const joinUrl = meetingJoinUrl(booking, nowMs);
 
             return (
-              <TableRow key={booking.id} className="group align-top">
+              <TableRow key={booking.id} className="group">
                 <TableCell
                   className={cn(
-                    "text-sm whitespace-normal",
+                    "whitespace-normal",
                     listTableEdgeStartClassName,
                   )}
                 >
-                  {new Date(booking.startsAt).toLocaleString(locale, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="min-w-0 leading-tight">
+                      <div className="text-sm font-medium text-brand">
+                        {new Intl.DateTimeFormat(intlLocale(locale), {
+                          timeZone: timezone,
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        }).format(start)}
+                      </div>
+                      <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">
+                        {formatTimeInZone(start, timezone, locale)}
+                      </div>
+                    </div>
+                    {joinUrl ? (
+                      <a
+                        href={joinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          buttonVariants({ size: "xs" }),
+                          "bg-action text-action-foreground hover:bg-action/90",
+                        )}
+                      >
+                        <Video className="size-3.5" aria-hidden />
+                        {t("joinMeet")}
+                      </a>
+                    ) : null}
+                  </div>
                 </TableCell>
-                <TableCell className="max-w-[14rem] whitespace-normal">
+                <TableCell className="max-w-[12rem] whitespace-normal">
                   {booking.personId ? (
                     <div className="min-w-0 space-y-0.5">
                       <Link
@@ -633,10 +695,10 @@ export function BookingsList({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="max-w-[12rem] truncate text-sm">
+                <TableCell className="max-w-[10rem] truncate text-sm">
                   {booking.serviceTitle}
                 </TableCell>
-                <TableCell className="max-w-[10rem] truncate text-sm">
+                <TableCell className="max-w-[8rem] truncate text-sm">
                   {booking.hostName}
                 </TableCell>
                 <TableCell className="whitespace-normal">
@@ -692,7 +754,7 @@ export function BookingsList({
                 {canManage ? (
                   <TableCell className={cn("whitespace-normal", listTableEdgeEndClassName)}>
                     {actionable ? (
-                      <div className="flex justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1">
                         <BookingContractsButton
                           locale={locale}
                           appointmentId={booking.id}
@@ -782,6 +844,7 @@ export function BookingsList({
             )}
           </TableBody>
         </Table>
+        </div>
       </ListTableCard>
 
       <Dialog
@@ -911,7 +974,7 @@ export function BookingsList({
         </DialogContent>
       </Dialog>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {t("showingCount", {
             shown: filteredSorted.length,

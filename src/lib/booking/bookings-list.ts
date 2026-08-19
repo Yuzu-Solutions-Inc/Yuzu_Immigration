@@ -19,6 +19,7 @@ export type BookingListItem = {
   guestEmail: string;
   serviceTitle: string;
   hostName: string;
+  meetJoinUrl: string | null;
   paymentStatus: string | null;
   paymentAmountCents: number | null;
   paymentCurrency: string | null;
@@ -37,7 +38,7 @@ export async function listOrgBookingsWithPayment(
   const { data, error } = await supabase
     .from("booking_appointments")
     .select(
-      "id, person_id, starts_at, ends_at, status, guest_name, guest_email, host_user_id, service_id, service:booking_services(title, translations)",
+      "id, person_id, starts_at, ends_at, status, guest_name, guest_email, host_user_id, service_id, meet_join_url, service:booking_services(title, translations)",
     )
     .eq("organization_id", organizationId)
     .order("starts_at", { ascending: false })
@@ -130,6 +131,7 @@ export async function listOrgBookingsWithPayment(
       guestEmail: guest.guest_email,
       serviceTitle: resolvedTitle,
       hostName: hostName.get(row.host_user_id as string) ?? "—",
+      meetJoinUrl: (row.meet_join_url as string | null) ?? null,
       paymentStatus: (payment?.status as string | null) ?? null,
       paymentAmountCents: (payment?.amount_cents as number | null) ?? null,
       paymentCurrency: (payment?.currency as string | null) ?? null,

@@ -3031,6 +3031,7 @@
     "colPayment": "Payment",
     "openPayLink": "Open payment link",
     "colActions": "Actions",
+    "joinMeet": "Join meeting",
     "modify": "Modify",
     "cancel": "Cancel",
     "cancelConfirm": "Cancel this appointment? The guest will be notified.",

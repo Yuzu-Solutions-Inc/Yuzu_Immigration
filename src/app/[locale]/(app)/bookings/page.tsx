@@ -32,12 +32,14 @@ export default async function BookingsPage({
   const t = await getTranslations("bookings");
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="font-heading text-2xl font-semibold text-brand">
+    <div className="flex flex-col gap-3 lg:h-[calc(100dvh-4rem)] lg:overflow-hidden lg:gap-3">
+      <div className="shrink-0 space-y-0.5 sm:space-y-1">
+        <h1 className="font-heading text-2xl font-semibold text-brand lg:text-xl">
           {t("title")}
         </h1>
-        <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
+        <p className="hidden text-[15px] text-muted-foreground sm:block lg:text-sm">
+          {t("subtitle")}
+        </p>
       </div>
       <BookingsList
         locale={locale}

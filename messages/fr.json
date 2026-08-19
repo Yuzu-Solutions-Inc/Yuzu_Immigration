@@ -3156,6 +3156,7 @@
       "refunded": "Remboursé"
     },
     "colActions": "Actions",
+    "joinMeet": "Rejoindre",
     "modify": "Modifier",
     "cancel": "Annuler",
     "cancelConfirm": "Annuler ce rendez-vous ? Le client sera notifié.",
