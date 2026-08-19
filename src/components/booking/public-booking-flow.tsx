@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -99,6 +99,8 @@ export function PublicBookingFlow({
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [chosePayLater, setChosePayLater] = useState(false);
+  const [editingAfterNotice, setEditingAfterNotice] = useState(false);
+  const bookingFormRef = useRef<HTMLFormElement>(null);
 
   const host = payload.hosts.find((row) => row.userId === hostUserId) ?? null;
   const service = payload.services.find((row) => row.id === serviceId) ?? null;
@@ -144,15 +146,29 @@ export function PublicBookingFlow({
       !isReservedBookingFieldKey(field.field_key),
   );
   const warningEmail = state.guestEmail ?? guestEmail;
-  const showExistingNotice =
-    state.message === "existing_booking" || state.error === "too_many_bookings";
-  const atBookingCap = state.error === "too_many_bookings";
+  const existingNoticeKind =
+    state.error === "too_many_bookings"
+      ? "cap"
+      : state.message === "existing_booking"
+        ? "existing"
+        : null;
+  const showExistingNotice = existingNoticeKind !== null && !editingAfterNotice;
+  const atBookingCap = existingNoticeKind === "cap";
 
   useEffect(() => {
     if (pending || state.error !== "slot_taken") return;
     setStep("schedule");
     setSlotStart(null);
   }, [pending, state.error]);
+
+  useEffect(() => {
+    if (pending) return;
+    if (state.message === "existing_booking" || state.error === "too_many_bookings") {
+      setEditingAfterNotice(false);
+      setStep("details");
+      window.scrollTo(0, 0);
+    }
+  }, [pending, state.message, state.error]);
 
   useEffect(() => {
     if (!firstAvailableDay) return;
@@ -597,7 +613,7 @@ export function PublicBookingFlow({
 
       <div
         className={cn(
-          "flex min-h-0 flex-1 flex-col",
+          "relative flex min-h-0 flex-1 flex-col",
           step !== "details" && "hidden",
         )}
         inert={step !== "details"}
@@ -607,49 +623,74 @@ export function PublicBookingFlow({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setStep("schedule")}
+            onClick={() => {
+              if (showExistingNotice) {
+                setEditingAfterNotice(true);
+                return;
+              }
+              setStep("schedule");
+            }}
           >
             <ChevronLeft data-icon="inline-start" />
             {t("back")}
           </Button>
           <div className="min-w-0 pt-0.5">
-            <h2 className="font-heading text-lg font-semibold text-brand">
-              {t("yourDetails")}
-            </h2>
-            {selectedWhen && service ? (
+            {showExistingNotice ? (
               <p className="truncate text-sm text-muted-foreground">
                 {host ? `${host.name} · ` : null}
-                {serviceLabel} · {selectedWhen}
+                {serviceLabel}
+                {selectedWhen ? ` · ${selectedWhen}` : null}
               </p>
-            ) : null}
+            ) : (
+              <>
+                <h2 className="font-heading text-lg font-semibold text-brand">
+                  {t("yourDetails")}
+                </h2>
+                {selectedWhen && service ? (
+                  <p className="truncate text-sm text-muted-foreground">
+                    {host ? `${host.name} · ` : null}
+                    {serviceLabel} · {selectedWhen}
+                  </p>
+                ) : null}
+              </>
+            )}
           </div>
         </div>
 
         {selectedSlot && service ? (
-          <div className="min-h-0 flex-1 overflow-y-auto pb-4">
-            <div className="mx-auto w-full max-w-lg space-y-4">
-              {state.error && !atBookingCap && state.error !== "slot_taken" ? (
-                <p className="text-sm text-destructive">
-                  {t(`errors.${state.error}`)}
-                </p>
-              ) : null}
-              {showExistingNotice ? (
-                <div className="space-y-3 rounded-xl border border-amber-100 bg-warning-bg p-4">
-                  <p className="text-sm font-medium text-brand">
-                    {atBookingCap ? t("tooManyTitle") : t("existingTitle")}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {atBookingCap ? t("tooManyBody") : t("existingBody")}
-                  </p>
+          <>
+            {showExistingNotice ? (
+              <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto pb-4">
+                <div
+                  role="alert"
+                  className="mx-auto flex w-full max-w-lg flex-col gap-4 rounded-xl border border-amber-100 bg-warning-bg p-5 sm:p-6"
+                >
+                  <div className="space-y-2">
+                    <h2 className="font-heading text-xl font-semibold text-brand">
+                      {atBookingCap ? t("tooManyTitle") : t("existingTitle")}
+                    </h2>
+                    {warningEmail ? (
+                      <p className="text-sm font-medium text-brand">
+                        {t("existingAppliesTo", { email: warningEmail })}
+                      </p>
+                    ) : null}
+                    <p className="text-sm text-muted-foreground">
+                      {atBookingCap ? t("tooManyBody") : t("existingBody")}
+                    </p>
+                  </div>
                   <form action={linksAction} className="space-y-2">
                     <input type="hidden" name="token" value={payload.token} />
                     <input type="hidden" name="locale" value={locale} />
-                    <input type="hidden" name="guestEmail" value={warningEmail} />
+                    <input
+                      type="hidden"
+                      name="guestEmail"
+                      value={warningEmail}
+                    />
                     <Button
                       type="submit"
                       variant="outline"
                       disabled={linksPending || pending || !warningEmail}
-                      className="w-full sm:w-auto"
+                      className="w-full"
                     >
                       {linksPending ? t("sendingLinks") : t("sendLinks")}
                     </Button>
@@ -669,150 +710,203 @@ export function PublicBookingFlow({
                       </p>
                     ) : null}
                   </form>
-                </div>
-              ) : null}
-              <form action={formAction} className="space-y-4">
-                <input type="hidden" name="token" value={payload.token} />
-                <input type="hidden" name="locale" value={locale} />
-                <input type="hidden" name="hostUserId" value={host?.userId ?? ""} />
-                <input type="hidden" name="serviceId" value={service.id} />
-                <input type="hidden" name="startsAt" value={selectedSlot.startsAt} />
-                <input type="hidden" name="endsAt" value={selectedSlot.endsAt} />
-                {showExistingNotice &&
-                !atBookingCap &&
-                guestEmail.trim().toLowerCase() ===
-                  warningEmail.trim().toLowerCase() ? (
-                  <input type="hidden" name="confirmAnother" value="on" />
-                ) : null}
-                <FieldGrid>
-                  <Field>
-                    <FieldLabel htmlFor="guestFirstName" required>
-                      {t("firstName")}
-                    </FieldLabel>
-                    <Input
-                      id="guestFirstName"
-                      name="guestFirstName"
-                      required
-                      autoComplete="given-name"
-                      value={guestFirstName}
-                      onChange={(event) => setGuestFirstName(event.target.value)}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="guestLastName" required>
-                      {t("lastName")}
-                    </FieldLabel>
-                    <Input
-                      id="guestLastName"
-                      name="guestLastName"
-                      required
-                      autoComplete="family-name"
-                      value={guestLastName}
-                      onChange={(event) => setGuestLastName(event.target.value)}
-                    />
-                  </Field>
-                </FieldGrid>
-                <Field>
-                  <FieldLabel htmlFor="guestPreferredLocale" required>
-                    {t("preferredLanguage")}
-                  </FieldLabel>
-                  <NativeSelect
-                    id="guestPreferredLocale"
-                    name="guestPreferredLocale"
-                    required
-                    value={guestPreferredLocale}
-                    onChange={(event) =>
-                      setGuestPreferredLocale(event.target.value)
-                    }
-                  >
-                    {APP_LOCALES.map((code) => (
-                      <option key={code} value={code}>
-                        {LOCALE_LABELS[code]}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </Field>
-                <FieldGrid>
-                  <Field>
-                    <FieldLabel htmlFor="guestEmail" required>
-                      {t("email")}
-                    </FieldLabel>
-                    <Input
-                      id="guestEmail"
-                      name="guestEmail"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={guestEmail}
-                      onChange={(event) => setGuestEmail(event.target.value)}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="guestPhone" required>
-                      {t("phone")}
-                    </FieldLabel>
-                    <Input
-                      id="guestPhone"
-                      name="guestPhone"
-                      type="tel"
-                      required
-                      autoComplete="tel"
-                      value={guestPhone}
-                      onChange={(event) => setGuestPhone(event.target.value)}
-                    />
-                  </Field>
-                </FieldGrid>
-                {serviceFields.map((field) => (
-                  <PublicCustomField key={field.id} field={field} locale={locale} />
-                ))}
-                <LegalConsentFields
-                  privacyChecked={privacyAccepted}
-                  termsChecked={termsAccepted}
-                  onPrivacyChange={setPrivacyAccepted}
-                  onTermsChange={setTermsAccepted}
-                  disabled={pending}
-                  privacyLabel={
+                  {atBookingCap ? null : (
                     <>
-                      {t("privacyConsent")}{" "}
-                      <Link
-                        href="/privacy"
-                        className="text-action underline-offset-2 hover:underline"
+                      <p className="text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {t("existingOr")}
+                      </p>
+                      <Button
+                        type="button"
+                        disabled={pending || linksPending}
+                        className="w-full"
+                        onClick={() => bookingFormRef.current?.requestSubmit()}
                       >
-                        {t("privacyPolicy")}
-                      </Link>
-                      .
+                        {pending ? t("booking") : t("bookAnyway")}
+                      </Button>
                     </>
-                  }
-                />
-                {service.price_cents > 0 && payload.cancelPolicy ? (
-                  <CancelPolicyNotice
-                    policy={payload.cancelPolicy}
-                    locale={locale}
-                    currency={service.currency}
-                    paidAmountCents={service.price_cents}
-                  />
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            <div
+              className={cn(
+                "min-h-0 flex-1 overflow-y-auto pb-4",
+                showExistingNotice &&
+                  "pointer-events-none absolute h-px w-px overflow-hidden opacity-0",
+              )}
+              aria-hidden={showExistingNotice}
+            >
+              <div className="mx-auto w-full max-w-lg space-y-4">
+                {state.error &&
+                !atBookingCap &&
+                state.error !== "slot_taken" &&
+                !showExistingNotice ? (
+                  <p className="text-sm text-destructive">
+                    {t(`errors.${state.error}`)}
+                  </p>
                 ) : null}
-                {atBookingCap ? null : (
-                  <Button
-                    type="submit"
-                    disabled={
-                      pending ||
-                      linksPending ||
-                      !privacyAccepted ||
-                      !termsAccepted
+                <form
+                  id="public-booking-form"
+                  ref={bookingFormRef}
+                  action={formAction}
+                  className="space-y-4"
+                >
+                  <input type="hidden" name="token" value={payload.token} />
+                  <input type="hidden" name="locale" value={locale} />
+                  <input
+                    type="hidden"
+                    name="hostUserId"
+                    value={host?.userId ?? ""}
+                  />
+                  <input type="hidden" name="serviceId" value={service.id} />
+                  <input
+                    type="hidden"
+                    name="startsAt"
+                    value={selectedSlot.startsAt}
+                  />
+                  <input
+                    type="hidden"
+                    name="endsAt"
+                    value={selectedSlot.endsAt}
+                  />
+                  {showExistingNotice && !atBookingCap ? (
+                    <input type="hidden" name="confirmAnother" value="on" />
+                  ) : null}
+                  <FieldGrid>
+                    <Field>
+                      <FieldLabel htmlFor="guestFirstName" required>
+                        {t("firstName")}
+                      </FieldLabel>
+                      <Input
+                        id="guestFirstName"
+                        name="guestFirstName"
+                        required
+                        autoComplete="given-name"
+                        value={guestFirstName}
+                        onChange={(event) =>
+                          setGuestFirstName(event.target.value)
+                        }
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="guestLastName" required>
+                        {t("lastName")}
+                      </FieldLabel>
+                      <Input
+                        id="guestLastName"
+                        name="guestLastName"
+                        required
+                        autoComplete="family-name"
+                        value={guestLastName}
+                        onChange={(event) =>
+                          setGuestLastName(event.target.value)
+                        }
+                      />
+                    </Field>
+                  </FieldGrid>
+                  <Field>
+                    <FieldLabel htmlFor="guestPreferredLocale" required>
+                      {t("preferredLanguage")}
+                    </FieldLabel>
+                    <NativeSelect
+                      id="guestPreferredLocale"
+                      name="guestPreferredLocale"
+                      required
+                      value={guestPreferredLocale}
+                      onChange={(event) =>
+                        setGuestPreferredLocale(event.target.value)
+                      }
+                    >
+                      {APP_LOCALES.map((code) => (
+                        <option key={code} value={code}>
+                          {LOCALE_LABELS[code]}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </Field>
+                  <FieldGrid>
+                    <Field>
+                      <FieldLabel htmlFor="guestEmail" required>
+                        {t("email")}
+                      </FieldLabel>
+                      <Input
+                        id="guestEmail"
+                        name="guestEmail"
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={guestEmail}
+                        onChange={(event) => setGuestEmail(event.target.value)}
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="guestPhone" required>
+                        {t("phone")}
+                      </FieldLabel>
+                      <Input
+                        id="guestPhone"
+                        name="guestPhone"
+                        type="tel"
+                        required
+                        autoComplete="tel"
+                        value={guestPhone}
+                        onChange={(event) => setGuestPhone(event.target.value)}
+                      />
+                    </Field>
+                  </FieldGrid>
+                  {serviceFields.map((field) => (
+                    <PublicCustomField
+                      key={field.id}
+                      field={field}
+                      locale={locale}
+                    />
+                  ))}
+                  <LegalConsentFields
+                    privacyChecked={privacyAccepted}
+                    termsChecked={termsAccepted}
+                    onPrivacyChange={setPrivacyAccepted}
+                    onTermsChange={setTermsAccepted}
+                    disabled={pending}
+                    privacyLabel={
+                      <>
+                        {t("privacyConsent")}{" "}
+                        <Link
+                          href="/privacy"
+                          className="text-action underline-offset-2 hover:underline"
+                        >
+                          {t("privacyPolicy")}
+                        </Link>
+                        .
+                      </>
                     }
-                    className="w-full"
-                  >
-                    {pending
-                      ? t("booking")
-                      : showExistingNotice
-                        ? t("bookAnyway")
-                        : t("confirm")}
-                  </Button>
-                )}
-              </form>
+                  />
+                  {service.price_cents > 0 && payload.cancelPolicy ? (
+                    <CancelPolicyNotice
+                      policy={payload.cancelPolicy}
+                      locale={locale}
+                      currency={service.currency}
+                      paidAmountCents={service.price_cents}
+                    />
+                  ) : null}
+                  {showExistingNotice ? null : (
+                    <Button
+                      type="submit"
+                      disabled={
+                        pending ||
+                        linksPending ||
+                        !privacyAccepted ||
+                        !termsAccepted
+                      }
+                      className="w-full"
+                    >
+                      {pending ? t("booking") : t("confirm")}
+                    </Button>
+                  )}
+                </form>
+              </div>
             </div>
-          </div>
+          </>
         ) : null}
       </div>
     </div>
