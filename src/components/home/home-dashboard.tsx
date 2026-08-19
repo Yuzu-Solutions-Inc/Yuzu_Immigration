@@ -220,7 +220,7 @@ export async function HomeDashboardView({
               emphasize={kpis.docsToReview > 0}
             />
             <KpiCard
-              href="/bookings"
+              href="/bookings?payment=pending"
               className="lg:col-span-3"
               label={t("tiles.unpaid")}
               value={kpis.pendingPayments}

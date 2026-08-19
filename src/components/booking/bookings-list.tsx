@@ -98,6 +98,14 @@ type PaymentStatusFilter =
   | "none"
   | (typeof PAYMENT_STATUSES)[number];
 type TimeFilter = "all" | "upcoming" | "past" | "today";
+
+function parsePaymentFilter(value: string | undefined): PaymentStatusFilter {
+  if (value === "all" || value === "none") return value;
+  if (value && (PAYMENT_STATUSES as readonly string[]).includes(value)) {
+    return value as PaymentStatusFilter;
+  }
+  return "all";
+}
 type SortKey =
   | "starts_at"
   | "guest"
@@ -147,11 +155,13 @@ export function BookingsList({
   canManage,
   timezone,
   bookings,
+  initialPayment,
 }: {
   locale: string;
   canManage: boolean;
   timezone: string;
   bookings: BookingListItem[];
+  initialPayment?: string;
 }) {
   const t = useTranslations("bookings");
   const tc = useTranslations("calendar");
@@ -163,14 +173,17 @@ export function BookingsList({
   const [dateIso, setDateIso] = useState<string | null>(null);
   const [slotStart, setSlotStart] = useState<string | null>(null);
   const [guestQuery, setGuestQuery] = useState("");
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("upcoming");
+  const startingPayment = parsePaymentFilter(initialPayment);
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>(
+    startingPayment === "pending" ? "all" : "upcoming",
+  );
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [hostFilter, setHostFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">(
     "all",
   );
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatusFilter>(
-    "all",
+    startingPayment,
   );
   const [sortKey, setSortKey] = useState<SortKey>("starts_at");
   const [sortDir, setSortDir] = useState<SortDir>("asc");

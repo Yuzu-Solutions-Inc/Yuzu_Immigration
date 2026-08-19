@@ -16,10 +16,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function BookingsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ payment?: string }>;
 }) {
   const { locale: localeParam } = await params;
+  const { payment } = await searchParams;
   setRequestLocale(localeParam);
   const locale = toAppLocale(localeParam);
 
@@ -52,6 +55,7 @@ export default async function BookingsPage({
         canManage={canCreateRecords(membership.role)}
         timezone={settings?.timezone ?? "America/Toronto"}
         bookings={bookings}
+        initialPayment={payment}
       />
     </div>
   );
