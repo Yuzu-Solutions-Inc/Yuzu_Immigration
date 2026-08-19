@@ -37,6 +37,7 @@ const CRUMB_KEYS = {
   calendar: "crumbCalendar",
   bookings: "crumbBookings",
   services: "crumbServices",
+  inbox: "crumbInbox",
   settings: "crumbSettings",
   account: "crumbAccount",
   organization: "crumbOrganization",
@@ -277,6 +278,9 @@ function notificationBody(
     const count =
       typeof row.metadata.count === "number" ? row.metadata.count : 1;
     return t("notifyFormCert", { count });
+  }
+  if (row.kind === "inbound_email") {
+    return t("notifyInboundEmail");
   }
   return row.body ?? "";
 }

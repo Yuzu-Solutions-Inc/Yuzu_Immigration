@@ -113,11 +113,14 @@ async function loadHostPresign(
 async function sendSignerEmail(input: {
   locale: string;
   organizationName: string;
+  organizationId: string;
   to: string;
   signerName: string;
   contractTitle: string;
   signUrl: string;
   role: "client" | "consultant";
+  envelopeId: string;
+  replyToUserId?: string | null;
 }) {
   const { sendContractSignatureRequestEmail } = await import(
     "@/lib/email/contract-signature"
@@ -367,11 +370,14 @@ export async function issueContractsForAppointment(appointmentId: string) {
     await sendSignerEmail({
       locale,
       organizationName,
+      organizationId: appointment.organization_id as string,
       to: guest.guest_email,
       signerName: guest.guest_name,
       contractTitle: template.title as string,
       signUrl: signUrl(origin, locale, clientToken),
       role: "client",
+      envelopeId: envelope.id as string,
+      replyToUserId: appointment.host_user_id as string,
     });
     issued += 1;
   }
@@ -490,15 +496,27 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
     "@/lib/email/contract-signature"
   );
   const locale = toAppLocale(envelope.locale as string);
+  const { data: appointment } = envelope.appointment_id
+    ? await admin
+        .from("booking_appointments")
+        .select("host_user_id")
+        .eq("id", envelope.appointment_id)
+        .maybeSingle()
+    : { data: null };
+  const hostUserId = (appointment?.host_user_id as string | null) ?? null;
   for (const signer of decryptedSigners) {
     if (!signer.email?.includes("@")) continue;
     await sendContractCompletedEmail({
       locale,
       organizationName: org?.name ?? product.name,
+      organizationId: envelope.organization_id as string,
       to: signer.email,
       signerName: signer.full_name,
       contractTitle: envelope.title as string,
       pdfBytes: pdf.bytes,
+      envelopeId,
+      replyToUserId: hostUserId,
+      role: signer.role === "consultant" ? "consultant" : "client",
     });
   }
 }
@@ -546,11 +564,13 @@ export async function notifyNextSigner(envelopeId: string) {
   await sendSignerEmail({
     locale,
     organizationName: org?.name ?? product.name,
+    organizationId: envelope.organization_id as string,
     to: signer.email ?? "",
     signerName: signer.full_name ?? "",
     contractTitle: envelope.title as string,
     signUrl: signUrl(origin, locale, token),
     role: "consultant",
+    envelopeId,
   });
   await appendContractAudit({
     organizationId: envelope.organization_id as string,

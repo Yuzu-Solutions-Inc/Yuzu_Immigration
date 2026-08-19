@@ -12,7 +12,7 @@ export type StaffNotificationRow = {
   organization_id: string;
   user_id: string;
   project_id: string | null;
-  kind: "documents_uploaded" | "forms_complete" | "form_certification";
+  kind: "documents_uploaded" | "forms_complete" | "form_certification" | "inbound_email";
   title: string;
   body: string | null;
   href: string | null;

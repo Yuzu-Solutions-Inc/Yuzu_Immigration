@@ -5,13 +5,25 @@ import { getOrgDataKey } from "@/lib/security/org-data-key";
 export type StaffNotificationKind =
   | "documents_uploaded"
   | "forms_complete"
-  | "form_certification";
+  | "form_certification"
+  | "inbound_email";
 
 async function recipientUserIds(input: {
   organizationId: string;
   projectId?: string | null;
 }): Promise<string[]> {
   const admin = createServiceClient();
+  if (input.projectId) {
+    const { data: project } = await admin
+      .from("immigration_projects")
+      .select("representative_user_id")
+      .eq("id", input.projectId)
+      .eq("organization_id", input.organizationId)
+      .maybeSingle();
+    const representative = project?.representative_user_id as string | null;
+    if (representative) return [representative];
+  }
+
   const { data: members, error } = await admin
     .from("organization_members")
     .select("user_id")
@@ -173,5 +185,44 @@ export async function notifyFormCertification(input: {
     if (error) console.error("notifyFormCertification:", error.message);
   } catch (err) {
     console.error("notifyFormCertification:", err);
+  }
+}
+
+export async function notifyInboundEmail(input: {
+  organizationId: string;
+  projectId: string | null;
+  messageId: string;
+  unknownSender: boolean;
+}): Promise<void> {
+  try {
+    const admin = createServiceClient();
+    const recipients = await recipientUserIds(input);
+    if (recipients.length === 0) return;
+
+    const title = input.projectId
+      ? await projectTitle(input.organizationId, input.projectId)
+      : "Inbox";
+    const href = input.projectId
+      ? `/projects/${input.projectId}`
+      : "/inbox";
+    const rows = recipients.map((userId) => ({
+      organization_id: input.organizationId,
+      user_id: userId,
+      project_id: input.projectId,
+      kind: "inbound_email" as const,
+      title,
+      body: input.unknownSender ? "New email (unknown sender)" : "New email",
+      href,
+      metadata: {
+        projectId: input.projectId,
+        projectTitle: title,
+        messageId: input.messageId,
+        unknownSender: input.unknownSender,
+      },
+    }));
+    const { error } = await admin.from("staff_notifications").insert(rows);
+    if (error) console.error("notifyInboundEmail:", error.message);
+  } catch (err) {
+    console.error("notifyInboundEmail:", err);
   }
 }

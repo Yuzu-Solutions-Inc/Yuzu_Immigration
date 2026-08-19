@@ -1118,6 +1118,7 @@ export type FutureGuestAppointmentMatch = {
   guestEmail: string;
   serviceTitle: string;
   hostName: string;
+  hostUserId: string;
   meetJoinUrl: string | null;
 };
 
@@ -1205,6 +1206,7 @@ export async function listFutureGuestAppointmentsByEmail(input: {
     guestEmail: row.guestEmail,
     serviceTitle: serviceTitleById.get(row.serviceId) ?? "Service",
     hostName: hostName.get(row.hostUserId) ?? row.hostUserId,
+    hostUserId: row.hostUserId,
     meetJoinUrl: row.meetJoinUrl,
   }));
 }

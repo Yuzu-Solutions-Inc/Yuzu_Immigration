@@ -128,6 +128,7 @@ export type ProjectRow = {
   organization_program_id: string | null;
   form_language: "en" | "fr";
   representative_user_id: string | null;
+  inbound_local_part?: string | null;
   created_by: string | null;
   opened_at: string;
   closed_at: string | null;

@@ -16,6 +16,7 @@ import {
 import { ProjectDetailTabs } from "@/components/projects/project-detail-tabs";
 import { ProjectHomeTab } from "@/components/projects/project-home-tab";
 import { ProjectNotesSection } from "@/components/projects/project-notes-section";
+import { InboundMailThread } from "@/components/email/inbound-thread";
 import { ProjectParticipantsList } from "@/components/projects/project-participants-list";
 import { ProjectPaymentsCard } from "@/components/projects/project-payments-card";
 import { ProjectScheduleCallCard } from "@/components/projects/project-schedule-call-card";
@@ -34,6 +35,8 @@ import {
   getProjectStatusHistory,
   listProjectNotes,
 } from "@/lib/crm/queries";
+import { inboundAddressForLocalPart } from "@/lib/email/inbound-address";
+import { listProjectInboundMessages } from "@/lib/email/inbound-queries";
 import { computeProjectProgressFromDetail } from "@/lib/crm/progress";
 import { isChildParticipantRole } from "@/lib/crm/programs";
 import {
@@ -95,6 +98,7 @@ export default async function ProjectDetailPage({
     projectPayments,
     squareConnection,
     appBaseUrl,
+    inboundMessages,
   ] = await Promise.all([
     getProjectParticipants(id),
     getProjectStatusHistory(id),
@@ -116,9 +120,11 @@ export default async function ProjectDetailPage({
     listProjectPaymentLinks(id),
     getOrgSquareConnection(project.organization_id),
     getAppBaseUrl(),
+    listProjectInboundMessages(id),
   ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
+  const tDocs = await getTranslations("documents");
   const formLocale = locale === "fr" ? "fr" : "en";
   const principal = participants.find((p) => p.role === "principal");
   const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
@@ -338,6 +344,22 @@ export default async function ProjectDetailPage({
           ),
           communication: (
             <>
+              <InboundMailThread
+                locale={locale}
+                messages={inboundMessages}
+                inboundAddress={inboundAddressForLocalPart(
+                  project.inbound_local_part ?? "",
+                )}
+                canWrite={canCreate}
+                showReply
+                documentRequests={documentRequests.map((row) => ({
+                  id: row.id,
+                  label:
+                    row.doc_key === "custom"
+                      ? (row.custom_label ?? tDocs("customFallback"))
+                      : tDocs(`keys.${row.doc_key}`),
+                }))}
+              />
               <ProjectScheduleCallCard
                 locale={locale}
                 projectId={project.id}

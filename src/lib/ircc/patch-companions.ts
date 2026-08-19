@@ -112,7 +112,13 @@ export type PatchImm5476Options = {
 };
 
 export function ymd(a: Pick<CompanionAnswers, "dobYear" | "dobMonth" | "dobDay">): string {
-  return `${a.dobYear}-${a.dobMonth.padStart(2, "0")}-${a.dobDay.padStart(2, "0")}`;
+  const year = String(a.dobYear ?? "");
+  if (!year) return "";
+  const month = String(a.dobMonth ?? "").padStart(2, "0");
+  const day = String(a.dobDay ?? "").padStart(2, "0");
+  return [year, month !== "00" ? month : "", day !== "00" ? day : ""]
+    .filter(Boolean)
+    .join("-");
 }
 
 export function todayYmd(): string {

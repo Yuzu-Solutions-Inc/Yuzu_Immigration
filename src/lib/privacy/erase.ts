@@ -78,6 +78,56 @@ async function listStorageUnderPrefix(
   return paths;
 }
 
+async function eraseInboundMail(
+  admin: AdminClient,
+  organizationId: string,
+  filter: { personId: string } | { projectId: string },
+) {
+  let query = admin
+    .from("inbound_messages")
+    .select("id")
+    .eq("organization_id", organizationId);
+  query =
+    "personId" in filter
+      ? query.eq("person_id", filter.personId)
+      : query.eq("project_id", filter.projectId);
+  const { data: messages } = await query;
+  const messageIds = (messages ?? []).map((row) => row.id as string);
+  if (messageIds.length === 0) return;
+
+  const { data: attachments } = await admin
+    .from("inbound_attachments")
+    .select("storage_path")
+    .eq("organization_id", organizationId)
+    .in("message_id", messageIds);
+  const listed: string[] = [];
+  if ("projectId" in filter) {
+    listed.push(
+      ...(await listStorageUnderPrefix(
+        admin,
+        `${organizationId}/inbound/${filter.projectId}`,
+      )),
+    );
+  }
+  for (const id of messageIds) {
+    listed.push(
+      ...(await listStorageUnderPrefix(
+        admin,
+        `${organizationId}/inbound/${id}`,
+      )),
+    );
+  }
+  await removeStoragePaths(admin, [
+    ...(attachments ?? []).map((row) => row.storage_path as string),
+    ...listed,
+  ]);
+  await admin
+    .from("inbound_messages")
+    .delete()
+    .eq("organization_id", organizationId)
+    .in("id", messageIds);
+}
+
 async function scrubAuditForResource(
   admin: AdminClient,
   organizationId: string,
@@ -372,6 +422,7 @@ export async function erasePersonPersonalData(input: {
     .delete()
     .eq("organization_id", organizationId)
     .eq("person_id", personId);
+  await eraseInboundMail(admin, organizationId, { personId });
   await admin
     .from("customer_portal_access")
     .delete()
@@ -536,6 +587,7 @@ export async function eraseProjectPersonalData(input: {
     .delete()
     .eq("organization_id", organizationId)
     .eq("project_id", projectId);
+  await eraseInboundMail(admin, organizationId, { projectId });
   await admin
     .from("project_booking_invites")
     .delete()

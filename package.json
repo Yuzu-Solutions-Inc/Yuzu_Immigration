@@ -17,7 +17,8 @@
     "ircc:validate:local": "npx tsx scripts/validate-ircc-forms.ts --local",
     "ircc:verify-fill": "npx tsx scripts/verify-ircc-fill.ts",
     "legal:pdf": "node scripts/build-legal-pdfs.mjs",
-    "security:controls": "npx tsx scripts/continuous-controls.ts"
+    "security:controls": "npx tsx scripts/continuous-controls.ts",
+    "postinstall": "node scripts/copy-pdfjs-assets.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -38,6 +39,7 @@
     "next-themes": "^0.4.6",
     "pako": "^3.0.1",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.2.108",
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",

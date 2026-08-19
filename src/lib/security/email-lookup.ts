@@ -65,6 +65,13 @@ export function hashPortalEmail(email: string, appKey: Buffer) {
     .digest("hex");
 }
 
+/** Platform-wide bounce/complaint lookup. Never store the plaintext address. */
+export function hashEmailSuppression(email: string, appKey: Buffer) {
+  return createHmac("sha256", appKey)
+    .update(`email-suppression:${normalizeGuestEmail(email)}`)
+    .digest("hex");
+}
+
 export function personLookupWrite(
   organizationId: string,
   input: { first_name: string; last_name: string; email?: string | null },

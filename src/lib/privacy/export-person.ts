@@ -9,6 +9,8 @@ import {
   decryptBookingGuestRow,
   decryptDocumentFileRow,
   decryptDocumentRequestRow,
+  decryptInboundFilename,
+  decryptInboundMessageRow,
   decryptNoteBody,
   decryptPersonRow,
   decryptProjectRow,
@@ -151,6 +153,21 @@ export type PersonDataExportPayload = {
     created_at: string;
     updated_at: string;
   }>;
+  emails: Array<{
+    id: string;
+    project_id: string | null;
+    direction: string;
+    from_email: string;
+    subject: string;
+    body_text: string;
+    received_at: string;
+    attachments: Array<{
+      id: string;
+      filename: string;
+      content_type: string;
+      byte_size: number;
+    }>;
+  }>;
   payments: Array<{
     id: string;
     source: string;
@@ -220,6 +237,7 @@ export async function buildPersonDataExport(input: {
     { data: personForms },
     { data: appointments },
     { data: bookingInvites },
+    { data: inboundRows },
   ] = await Promise.all([
     supabase
       .from("person_notes")
@@ -281,6 +299,14 @@ export async function buildPersonDataExport(input: {
       .eq("person_id", input.personId)
       .eq("organization_id", input.organizationId)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("inbound_messages")
+      .select(
+        "id, project_id, direction, from_email, subject, body_text, received_at",
+      )
+      .eq("person_id", input.personId)
+      .eq("organization_id", input.organizationId)
+      .order("received_at", { ascending: true }),
   ]);
 
   const participationRows = (participants ?? []) as Array<{
@@ -326,6 +352,37 @@ export async function buildPersonDataExport(input: {
       row.person_id === input.personId ||
       (row.project_id != null && projectIdSet.has(row.project_id)),
   );
+
+  const inboundIds = (inboundRows ?? []).map((row) => row.id as string);
+  const { data: inboundAttRows } =
+    inboundIds.length > 0
+      ? await supabase
+          .from("inbound_attachments")
+          .select("id, message_id, filename, content_type, byte_size")
+          .eq("organization_id", input.organizationId)
+          .in("message_id", inboundIds)
+      : { data: [] as Array<Record<string, unknown>> };
+
+  const attachmentsByMessage = new Map<
+    string,
+    Array<{
+      id: string;
+      filename: string;
+      content_type: string;
+      byte_size: number;
+    }>
+  >();
+  for (const row of inboundAttRows ?? []) {
+    const messageId = row.message_id as string;
+    const list = attachmentsByMessage.get(messageId) ?? [];
+    list.push({
+      id: row.id as string,
+      filename: decryptInboundFilename(row.filename as string, key),
+      content_type: row.content_type as string,
+      byte_size: row.byte_size as number,
+    });
+    attachmentsByMessage.set(messageId, list);
+  }
 
   const principalByProject = new Map<string, string>();
   if (projectIds.length > 0) {
@@ -582,6 +639,26 @@ export async function buildPersonDataExport(input: {
         privacy_accepted_at: row.privacy_accepted_at as string,
         created_at: row.created_at as string,
         updated_at: row.updated_at as string,
+      };
+    }),
+    emails: (inboundRows ?? []).map((row) => {
+      const decrypted = decryptInboundMessageRow(
+        row as {
+          from_email: string;
+          subject: string;
+          body_text: string;
+        },
+        key,
+      );
+      return {
+        id: row.id as string,
+        project_id: (row.project_id as string | null) ?? null,
+        direction: row.direction as string,
+        from_email: decrypted.from_email,
+        subject: decrypted.subject,
+        body_text: decrypted.body_text,
+        received_at: row.received_at as string,
+        attachments: attachmentsByMessage.get(row.id as string) ?? [],
       };
     }),
     payments: payments.map((row) => ({

@@ -25,8 +25,8 @@ function licFromOfficialLabels(
   }
 }
 
-export function resolveCountryLic(value: string): string {
-  const raw = value.trim();
+export function resolveCountryLic(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim();
   if (!raw) return "";
   if (/^\d{3}$/.test(raw)) return raw;
   const map = countryCodes as Record<string, string>;
@@ -51,8 +51,8 @@ export function resolveCountryLic(value: string): string {
   );
 }
 
-export function resolveLanguageLic(value: string): string {
-  const raw = value.trim();
+export function resolveLanguageLic(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim();
   if (!raw) return "";
   if (/^\d{3}$/.test(raw)) return raw;
   const map = languageCodes as Record<string, string>;
@@ -71,10 +71,10 @@ export function resolveLanguageLic(value: string): string {
 
 /** Label for text-only IRCC fields (family info, representative address). */
 export function countryDisplayName(
-  value: string,
+  value: string | null | undefined,
   lang: "e" | "f" = "e",
 ): string {
-  const raw = value.trim();
+  const raw = String(value ?? "").trim();
   if (!raw) return "";
   const primary = (lang === "f" ? countriesFr : countriesEn) as Record<
     string,

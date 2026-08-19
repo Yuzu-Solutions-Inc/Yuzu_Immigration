@@ -35,6 +35,9 @@ yarn-error.log*
 .env.*
 !.env.example
 
+# PDF.js viewer assets (copied from pdfjs-dist on install)
+/public/pdfjs/
+
 # vercel
 .vercel
 

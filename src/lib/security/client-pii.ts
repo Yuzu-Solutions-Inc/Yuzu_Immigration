@@ -31,6 +31,12 @@ export const PII_AAD = {
     consultantNote: "project_document_requests.consultant_note",
     rejectionComment: "project_document_requests.rejection_comment",
   },
+  inbound: {
+    fromEmail: "inbound_messages.from_email",
+    subject: "inbound_messages.subject",
+    bodyText: "inbound_messages.body_text",
+    filename: "inbound_attachments.filename",
+  },
   destruction: {
     clientName: "file_destruction_register.client_name",
     serviceSummary: "file_destruction_register.service_summary",
@@ -234,6 +240,51 @@ export function decryptFilename(
   key: Buffer,
 ): string {
   return decryptFieldMaybe(name, PII_AAD.documents.originalFilename, key) ?? "";
+}
+
+export function encryptInboundMessageWrite(
+  input: { from_email: string; subject: string; body_text: string },
+  key: Buffer,
+) {
+  return {
+    from_email: encryptField(input.from_email, PII_AAD.inbound.fromEmail, key),
+    subject: encryptField(input.subject, PII_AAD.inbound.subject, key),
+    body_text: encryptField(input.body_text, PII_AAD.inbound.bodyText, key),
+  };
+}
+
+export function decryptInboundMessageRow<
+  T extends { from_email?: string | null; subject?: string | null; body_text?: string | null },
+>(row: T, key: Buffer): T {
+  return {
+    ...row,
+    from_email: decryptFieldMaybe(
+      row.from_email,
+      PII_AAD.inbound.fromEmail,
+      key,
+    ) as T["from_email"],
+    subject: decryptFieldMaybe(
+      row.subject,
+      PII_AAD.inbound.subject,
+      key,
+    ) as T["subject"],
+    body_text: decryptFieldMaybe(
+      row.body_text,
+      PII_AAD.inbound.bodyText,
+      key,
+    ) as T["body_text"],
+  };
+}
+
+export function encryptInboundFilename(name: string, key: Buffer): string {
+  return encryptField(name, PII_AAD.inbound.filename, key);
+}
+
+export function decryptInboundFilename(
+  name: string | null | undefined,
+  key: Buffer,
+): string {
+  return decryptFieldMaybe(name, PII_AAD.inbound.filename, key) ?? "";
 }
 
 export function encryptDocumentRequestWrite(

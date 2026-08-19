@@ -1,7 +1,8 @@
 import { createTranslator } from "next-intl";
 
 import { email } from "@/lib/design-tokens";
-import { sendResendEmail } from "@/lib/email/resend";
+import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
+import { projectInboundAddress } from "@/lib/email/inbound-address";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -29,10 +30,14 @@ export async function sendProjectCallInviteEmail(input: {
   to: string;
   guestName: string;
   organizationName: string;
+  organizationId?: string | null;
   hostName: string;
+  hostUserId?: string | null;
   projectTitle: string;
+  projectId: string;
   bookUrl: string;
   expiresAt: string;
+  inviteId: string;
 }) {
   const locale = toAppLocale(input.locale);
   const t = translator(locale);
@@ -78,12 +83,19 @@ export async function sendProjectCallInviteEmail(input: {
     t("callInviteExpiry", { date: expires }),
   ].join("\n");
 
+  const replyTo = await projectInboundAddress(input.projectId);
   return sendResendEmail({
     to: input.to,
     subject,
     html,
     text,
+    kind: "project-call-invite",
+    idempotencyKey: emailIdempotencyKey("project-call-invite", input.inviteId),
     organizationName: input.organizationName,
+    organizationId: input.organizationId,
     locale,
+    includeDoNotReply: false,
+    replyTo: replyTo ?? undefined,
+    replyToUserId: replyTo ? undefined : input.hostUserId,
   });
 }

@@ -8,11 +8,12 @@ const FRAME_ANCESTORS = "frame-ancestors 'none'";
 
 const CSP_REPORT_ONLY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
+  "font-src 'self' data: blob:",
   "connect-src 'self' https: wss:",
+  "worker-src 'self'",
   "frame-src https://accounts.google.com https://login.microsoftonline.com https://js.squareup.com https://web.squarecdn.com",
   FRAME_ANCESTORS,
   "base-uri 'self'",
@@ -22,6 +23,7 @@ const CSP_REPORT_ONLY = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["pdfjs-dist"],
   experimental: {
     serverActions: {
       bodySizeLimit: "6mb",

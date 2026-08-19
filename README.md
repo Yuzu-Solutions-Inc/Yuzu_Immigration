@@ -50,7 +50,9 @@ Staff Google **sign-in** is separate from **Calendar sync**. Each staff member c
 - Outlook / Teams: Entra ID app with `Calendars.ReadWrite` and `OnlineMeetings.ReadWrite`, `MICROSOFT_CALENDAR_CLIENT_ID` / `MICROSOFT_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/microsoft-calendar/callback`.
 - Zoom: Zoom Marketplace General app with meeting write/update/delete and user read scopes, `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`, redirect `{APP_URL}/auth/zoom/callback`.
 
-Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` (a verified domain, e.g. `Permit OS <bookings@yourdomain.com>`).
+Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` on a verified **subdomain** (e.g. `Permit OS <bookings@mail.yourdomain.com>`). Point the Resend webhook to `/api/resend/webhook` and set `RESEND_WEBHOOK_SECRET` so bounces and spam complaints are recorded.
+
+Inbound client mail uses the same subdomain with **Receiving** enabled (MX priority 10, lowest number — do not put MX on the firm’s existing Google/Microsoft domain). Set `INBOUND_MAIL_DOMAIN` and subscribe `email.received` to `{APP_URL}/api/resend/inbound`. Each project gets an opaque address; unmatched mail lands in the firm inbox for staff to assign.
 
 ## Repo
 

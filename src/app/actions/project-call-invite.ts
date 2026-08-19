@@ -213,10 +213,14 @@ export async function sendProjectCallInviteAction(
     to: person.email.trim(),
     guestName,
     organizationName,
+    organizationId: orgId,
     hostName,
+    hostUserId,
     projectTitle,
+    projectId: parsed.data.projectId,
     bookUrl,
     expiresAt,
+    inviteId: invite.id,
   });
 
   if (!sent.sent) {
@@ -388,7 +392,10 @@ export async function submitProjectCallBookingAction(
       to: ctx.guestEmail,
       guestName,
       organizationName: ctx.organizationName,
+      organizationId: ctx.organizationId,
       hostName: ctx.host.name,
+      hostUserId: ctx.host.userId,
+      appointmentId: appointment.id,
       serviceTitle: localizedTitle,
       startsAt: parsed.data.startsAt,
       timezone: ctx.settings.timezone,

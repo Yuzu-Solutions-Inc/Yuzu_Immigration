@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { DeletePersonButton } from "@/components/people/delete-person-button";
 import { PersonNotesSection } from "@/components/people/person-notes-section";
+import { InboundMailThread } from "@/components/email/inbound-thread";
 import { PersonPortalCard } from "@/components/people/person-portal-card";
 import { ExportPersonButton } from "@/components/privacy/retention-export";
 import { SurfaceCard } from "@/components/layout/surface-card";
@@ -18,6 +19,7 @@ import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getBookingSettings } from "@/lib/booking/queries";
 import { getPerson, getPersonProjects, listPersonMeetings } from "@/lib/crm/queries";
+import { listPersonInboundMessages } from "@/lib/email/inbound-queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { portalBaseUrl } from "@/lib/portal/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -42,7 +44,7 @@ export default async function PersonDetailPage({
     createdBy: person.created_by,
     actorUserId: user?.id,
   });
-  const [projects, meetings, portalAccess, baseUrl, bookingSettings] =
+  const [projects, meetings, portalAccess, baseUrl, bookingSettings, inboundMessages] =
     await Promise.all([
       getPersonProjects(id),
       listPersonMeetings(id, locale),
@@ -60,6 +62,7 @@ export default async function PersonDetailPage({
       })(),
       getAppBaseUrl(),
       getBookingSettings(),
+      listPersonInboundMessages(id),
     ]);
   const t = await getTranslations("people");
   const ti = await getTranslations("immigrationStatus");
@@ -218,6 +221,13 @@ export default async function PersonDetailPage({
           }
         />
       ) : null}
+
+      <InboundMailThread
+        locale={locale}
+        messages={inboundMessages}
+        canWrite={canCreate}
+        showReply={false}
+      />
 
       <PersonNotesSection
         locale={locale}

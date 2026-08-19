@@ -3,7 +3,7 @@ import { createTranslator } from "next-intl";
 import { isSafeManageUrl } from "@/lib/booking/manage-url";
 import { formatDateTimeInZone } from "@/lib/booking/timezone";
 import { email } from "@/lib/design-tokens";
-import { sendResendEmail } from "@/lib/email/resend";
+import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -79,7 +79,10 @@ export async function sendBookingConfirmationEmail(input: {
   to: string;
   guestName: string;
   organizationName: string;
+  organizationId?: string | null;
   hostName: string;
+  hostUserId?: string | null;
+  appointmentId: string;
   serviceTitle: string;
   startsAt: string;
   timezone: string;
@@ -166,8 +169,21 @@ export async function sendBookingConfirmationEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      kind:
+        input.variant === "updated"
+          ? "booking-updated"
+          : pendingPayment
+            ? "booking-pending-payment"
+            : "booking-confirmation",
+      idempotencyKey: emailIdempotencyKey(
+        pendingPayment ? "booking-pending-payment" : "booking-confirmation",
+        input.appointmentId,
+        input.variant === "updated" ? input.startsAt : "current",
+      ),
       organizationName: input.organizationName,
+      organizationId: input.organizationId,
       locale: input.locale,
+      replyToUserId: input.hostUserId,
     });
   } catch (error) {
     console.error("booking confirmation email:", error);
@@ -179,7 +195,10 @@ export async function sendBookingPaymentReceivedEmail(input: {
   to: string;
   guestName: string;
   organizationName: string;
+  organizationId?: string | null;
   hostName: string;
+  hostUserId?: string | null;
+  appointmentId: string;
   serviceTitle: string;
   startsAt: string;
   timezone: string;
@@ -226,8 +245,15 @@ export async function sendBookingPaymentReceivedEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      kind: "booking-payment-received",
+      idempotencyKey: emailIdempotencyKey(
+        "booking-payment-received",
+        input.appointmentId,
+      ),
       organizationName: input.organizationName,
+      organizationId: input.organizationId,
       locale: input.locale,
+      replyToUserId: input.hostUserId,
     });
   } catch (error) {
     console.error("booking payment received email:", error);
@@ -239,7 +265,10 @@ export async function sendBookingPaymentReminderEmail(input: {
   to: string;
   guestName: string;
   organizationName: string;
+  organizationId?: string | null;
   hostName: string;
+  hostUserId?: string | null;
+  appointmentId: string;
   serviceTitle: string;
   startsAt: string;
   timezone: string;
@@ -294,8 +323,17 @@ export async function sendBookingPaymentReminderEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      kind: "booking-payment-reminder",
+      idempotencyKey: emailIdempotencyKey(
+        "booking-payment-reminder",
+        input.appointmentId,
+        input.daysBefore,
+        input.startsAt,
+      ),
       organizationName: input.organizationName,
+      organizationId: input.organizationId,
       locale: input.locale,
+      replyToUserId: input.hostUserId,
     });
   } catch (error) {
     console.error("booking payment reminder email:", error);
@@ -307,7 +345,10 @@ export async function sendBookingCancelledEmail(input: {
   to: string;
   guestName: string;
   organizationName: string;
+  organizationId?: string | null;
   hostName: string;
+  hostUserId?: string | null;
+  appointmentId: string;
   serviceTitle: string;
   startsAt: string;
   timezone: string;
@@ -365,8 +406,16 @@ export async function sendBookingCancelledEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      kind: "booking-cancelled",
+      idempotencyKey: emailIdempotencyKey(
+        "booking-cancelled",
+        input.appointmentId,
+        input.cancelledBy ?? "guest",
+      ),
       organizationName: input.organizationName,
+      organizationId: input.organizationId,
       locale: input.locale,
+      replyToUserId: input.hostUserId,
     });
   } catch (error) {
     console.error("booking cancelled email:", error);
@@ -378,6 +427,8 @@ export async function sendBookingManageLinksEmail(input: {
   to: string;
   guestName: string;
   organizationName: string;
+  organizationId?: string | null;
+  replyToUserId?: string | null;
   timezone: string;
   appointments: {
     serviceTitle: string;
@@ -447,8 +498,16 @@ export async function sendBookingManageLinksEmail(input: {
       subject,
       html,
       text: textLines.join("\n"),
+      kind: "booking-manage-links",
+      idempotencyKey: emailIdempotencyKey(
+        "booking-manage-links",
+        input.organizationId ?? input.to,
+        input.appointments[0]?.startsAt ?? new Date().toISOString(),
+      ),
       organizationName: input.organizationName,
+      organizationId: input.organizationId,
       locale: input.locale,
+      replyToUserId: input.replyToUserId,
     });
   } catch (error) {
     console.error("booking manage links email:", error);

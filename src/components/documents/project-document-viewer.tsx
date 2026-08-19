@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { DocumentReviewActions } from "@/components/documents/document-review-actions";
+import { PdfReader } from "@/components/pdf/pdf-reader";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -302,7 +303,7 @@ export function ProjectDocumentViewer({
   ) : null;
 
   const previewPane = (
-    <div className="relative min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-canvas">
+    <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-canvas">
       {pending && !preview ? (
         <div className="flex h-[min(70vh,40rem)] items-center justify-center">
           <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -315,17 +316,18 @@ export function ProjectDocumentViewer({
       ) : null}
       {preview ? (
         preview.contentType === "application/pdf" ? (
-          <iframe
-            title={preview.filename}
-            src={preview.url}
-            className="h-[min(70vh,40rem)] w-full"
+          <PdfReader
+            key={current?.requestId ?? preview.filename}
+            dataBase64={preview.base64}
           />
         ) : (
-          <img
-            src={preview.url}
-            alt={preview.filename}
-            className="mx-auto max-h-[min(70vh,40rem)] w-auto max-w-full object-contain p-2"
-          />
+          <div className="h-[min(70vh,40rem)] overflow-auto">
+            <img
+              src={preview.url}
+              alt={preview.filename}
+              className="mx-auto max-h-[min(70vh,40rem)] w-auto max-w-full object-contain p-2"
+            />
+          </div>
         )
       ) : null}
     </div>

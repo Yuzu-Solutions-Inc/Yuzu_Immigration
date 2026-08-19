@@ -1,7 +1,8 @@
 import { createTranslator } from "next-intl";
 
 import { email } from "@/lib/design-tokens";
-import { sendResendEmail } from "@/lib/email/resend";
+import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
+import { projectInboundAddress } from "@/lib/email/inbound-address";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -29,6 +30,8 @@ export async function sendDocumentRejectionEmail(input: {
   to: string;
   clientName: string;
   organizationName: string;
+  organizationId?: string | null;
+  projectId: string;
   projectTitle: string;
   documentName: string;
   comment: string;
@@ -79,12 +82,23 @@ export async function sendDocumentRejectionEmail(input: {
     input.shareUrl ?? t("rejectionNoLink"),
   ].join("\n");
 
+  const replyTo = await projectInboundAddress(input.projectId);
   return sendResendEmail({
     to: input.to,
     subject,
     html,
     text,
+    kind: "document-rejection",
+    idempotencyKey: emailIdempotencyKey(
+      "document-rejection",
+      input.projectId,
+      input.documentName,
+      new Date().toISOString().slice(0, 16),
+    ),
     organizationName: input.organizationName,
+    organizationId: input.organizationId,
     locale,
+    includeDoNotReply: false,
+    replyTo: replyTo ?? undefined,
   });
 }

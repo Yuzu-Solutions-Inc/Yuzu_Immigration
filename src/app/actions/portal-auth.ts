@@ -353,6 +353,8 @@ export async function forgotPortalPasswordAction(
     to: email,
     clientName,
     organizationName: String(org?.name ?? ""),
+    organizationId: access.organization_id,
+    personId: access.person_id,
     portalUrl: url,
     reset: true,
   });

@@ -11,8 +11,8 @@ import {
   buildFilledForm5710,
 } from "./imm5710";
 
-function esc(value: string): string {
-  return value
+function esc(value: string | null | undefined): string {
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");

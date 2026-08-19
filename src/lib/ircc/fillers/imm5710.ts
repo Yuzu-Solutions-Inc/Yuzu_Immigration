@@ -145,15 +145,17 @@ export type Imm5710Answers = {
   inlandVariant?: "work" | "study" | "visit";
 };
 
-function esc(value: string): string {
-  return value
+function esc(value: string | null | undefined): string {
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
-function asciiSafe(value: string): string {
-  return value.normalize("NFC").replace(/[\u0000-\u001F\u007F]/g, "");
+function asciiSafe(value: string | null | undefined): string {
+  return String(value ?? "")
+    .normalize("NFC")
+    .replace(/[\u0000-\u001F\u007F]/g, "");
 }
 
 function openTag(tag: string, value: string): string {
@@ -188,8 +190,8 @@ function fillNested(xml: string, outer: string, value: string, after = ""): stri
   return head + tail.slice(0, pos) + filled + tail.slice(pos + empty.length);
 }
 
-function resolveProvinceLic(value: string): string {
-  const raw = (value || "").trim().toUpperCase();
+function resolveProvinceLic(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim().toUpperCase();
   if (!raw) return "";
   if (/^\d{2}$/.test(raw)) return raw;
   if (PROVINCE_LIC[raw]) return PROVINCE_LIC[raw];
@@ -217,8 +219,13 @@ function datesXml(
   );
 }
 
-function phoneDigits(phone: string): string {
-  return phone.replace(/\D/g, "");
+function phoneDigits(phone: string | null | undefined): string {
+  return String(phone ?? "").replace(/\D/g, "");
+}
+
+function pad2(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim();
+  return raw ? raw.padStart(2, "0") : "";
 }
 
 function normalizeJob(job: JobRow): JobRow {
@@ -228,14 +235,14 @@ function normalizeJob(job: JobRow): JobRow {
     try { provinceState = resolveProvinceLic(job.provinceState); } catch { /* keep text */ }
   }
   let toYear = job.toYear?.trim() || undefined;
-  let toMonth = job.toMonth?.trim() ? job.toMonth.padStart(2, "0") : undefined;
+  let toMonth = job.toMonth?.trim() ? pad2(job.toMonth) : undefined;
   if (!toYear || !toMonth || Number(toMonth) < 1 || Number(toMonth) > 12) {
     toYear = undefined;
     toMonth = undefined;
   }
   return {
-    fromYear: job.fromYear,
-    fromMonth: job.fromMonth.padStart(2, "0"),
+    fromYear: job.fromYear ?? "",
+    fromMonth: pad2(job.fromMonth),
     toYear,
     toMonth,
     occupation: asciiSafe(job.occupation),
@@ -256,8 +263,8 @@ export function normalize5710Answers(a: Imm5710Answers): Imm5710Answers {
     placeBirthCity: asciiSafe(a.placeBirthCity),
     placeBirthCountry: resolveCountryLic(a.placeBirthCountry),
     citizenship: resolveCountryLic(a.citizenship),
-    currentCountry: a.currentCountry ? resolveCountryLic(a.currentCountry) : "511",
-    country: resolveCountryLic(a.country || "Canada"),
+    currentCountry: a.currentCountry ? resolveCountryLic(a.currentCountry) : "",
+    country: a.country ? resolveCountryLic(a.country) : "",
     previousCor: yn(a.previousCor, "N"),
     sameAsCor: yn(a.sameAsCor, "Y"),
     previouslyMarried: yn(a.previouslyMarried, "N"),
@@ -331,7 +338,7 @@ export function buildFilledForm5710(template: string, raw: Imm5710Answers): stri
   xml = fillEmpty(xml, "PlaceBirthCountry", a.placeBirthCountry, "><pob\n>");
   xml = fillNested(xml, "Citizenship", a.citizenship);
 
-  xml = fillEmpty(xml, "Country", a.currentCountry || "511", "><CurrentCOR\n><Row2\n>");
+    xml = fillEmpty(xml, "Country", a.currentCountry, "><CurrentCOR\n><Row2\n>");
   xml = fillEmpty(xml, "Status", a.currentStatus, "><CurrentCOR\n><Row2\n>");
   if (a.corOther) xml = fillEmpty(xml, "Other", a.corOther, "><CurrentCOR\n><Row2\n>");
   if (a.corFromYear && a.corToYear) {

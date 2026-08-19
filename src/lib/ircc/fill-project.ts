@@ -267,6 +267,20 @@ function buildPrimaryPayload(
   return merged;
 }
 
+/** Replace nullish leaves so incomplete previews fill instead of throwing. */
+function blanksForPreview(value: unknown): unknown {
+  if (value === undefined || value === null) return "";
+  if (Array.isArray(value)) return value.map(blanksForPreview);
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      out[key] = blanksForPreview(nested);
+    }
+    return out;
+  }
+  return value;
+}
+
 export async function fillProjectForms(input: {
   formCodes?: string[];
   answers?: Record<string, unknown>;
@@ -312,7 +326,14 @@ export async function fillProjectForms(input: {
 
     try {
       let bytes: Uint8Array;
-      const payload = buildPrimaryPayload(answers);
+      const payload = (
+        preview
+          ? blanksForPreview(buildPrimaryPayload(answers))
+          : buildPrimaryPayload(answers)
+      ) as Record<string, unknown>;
+      const companion = (
+        preview ? blanksForPreview(answers) : answers
+      ) as typeof answers;
       const blank = code.startsWith("imm")
         ? await loadBlankPdf(code, lang)
         : new Uint8Array();
@@ -354,7 +375,7 @@ export async function fillProjectForms(input: {
       } else if (code === "imm5257sch1") {
         bytes = await fillImm5257Sch1Pdf(blank, payload as never, lang);
       } else {
-        bytes = await fillCompanion(code, lang, answers);
+        bytes = await fillCompanion(code, lang, companion);
       }
 
       const who = [answers.familyName, answers.givenName]

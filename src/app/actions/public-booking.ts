@@ -396,7 +396,10 @@ export async function submitPublicBookingAction(
             to: guestEmail,
             guestName,
             organizationName: ctx.organizationName,
+            organizationId: ctx.organizationId,
             hostName: host.name,
+            hostUserId: host.userId,
+            appointmentId: appointment.id,
             serviceTitle: localizedTitle,
             startsAt: parsed.data.startsAt,
             timezone: ctx.settings.timezone,
@@ -477,7 +480,10 @@ export async function submitPublicBookingAction(
       to: guestEmail,
       guestName,
       organizationName: ctx.organizationName,
+      organizationId: ctx.organizationId,
       hostName: host.name,
+      hostUserId: host.userId,
+      appointmentId: appointment.id,
       serviceTitle: localizedTitle,
       startsAt: parsed.data.startsAt,
       timezone: ctx.settings.timezone,
@@ -573,6 +579,9 @@ export async function sendPublicBookingManageLinksAction(
     });
   }
 
+  const hostIds = [...new Set(existing.map((row) => row.hostUserId))];
+  const uniqueHost = hostIds.length === 1 ? hostIds[0]! : null;
+
   after(async () => {
     const { sendBookingManageLinksEmail } = await import(
       "@/lib/email/booking-confirmation"
@@ -582,6 +591,8 @@ export async function sendPublicBookingManageLinksAction(
       to: guestEmail,
       guestName: existing[0]?.guestName || guestEmail,
       organizationName: ctx.organizationName,
+      organizationId: ctx.organizationId,
+      replyToUserId: uniqueHost,
       timezone: ctx.settings.timezone,
       appointments,
     });

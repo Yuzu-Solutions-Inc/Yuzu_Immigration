@@ -1,7 +1,7 @@
 import { createTranslator } from "next-intl";
 
 import { emailStyle } from "@/lib/email/styles";
-import { sendResendEmail } from "@/lib/email/resend";
+import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { CLOSED_FILE_RETENTION_YEARS } from "@/lib/privacy/retention";
 import { dictionaries } from "@/lib/i18n/dictionaries";
@@ -85,6 +85,12 @@ export async function sendPortalDeletionRequestEmail(input: {
     subject: t("subject", { org: input.organizationName, name: input.clientName }),
     html,
     text,
+    kind: "portal-deletion-request",
+    idempotencyKey: emailIdempotencyKey(
+      "portal-deletion-request",
+      input.personId,
+      new Date().toISOString().slice(0, 16),
+    ),
     organizationName: input.organizationName,
     locale,
     includeDoNotReply: false,

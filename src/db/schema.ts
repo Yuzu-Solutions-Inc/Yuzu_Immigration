@@ -96,6 +96,8 @@ export const organizations = pgTable("organizations", {
   dpaAcceptedAt: timestamp("dpa_accepted_at", { withTimezone: true }),
   dpaVersion: text("dpa_version"),
   dpaAcceptedBy: uuid("dpa_accepted_by"),
+  /** Opaque Resend receiving local-part for unmatched firm mail. */
+  inboundLocalPart: text("inbound_local_part").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -274,6 +276,8 @@ export const immigrationProjects = pgTable("immigration_projects", {
     () => profiles.id,
     { onDelete: "set null" },
   ),
+  /** Opaque Resend receiving local-part for this file. */
+  inboundLocalPart: text("inbound_local_part").notNull(),
   createdBy: uuid("created_by").references(() => profiles.id, {
     onDelete: "set null",
   }),
@@ -310,6 +314,66 @@ export const projectNotes = pgTable("project_notes", {
     .defaultNow()
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const inboundMessages = pgTable("inbound_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").references(() => immigrationProjects.id, {
+    onDelete: "cascade",
+  }),
+  personId: uuid("person_id").references(() => people.id, {
+    onDelete: "set null",
+  }),
+  assignmentStatus: text("assignment_status")
+    .$type<"project" | "person" | "unassigned">()
+    .notNull(),
+  direction: text("direction").$type<"inbound" | "outbound">().notNull(),
+  unknownSender: boolean("unknown_sender").notNull().default(false),
+  resendEmailId: text("resend_email_id"),
+  fromEmailLookupHash: text("from_email_lookup_hash"),
+  fromEmail: text("from_email").notNull(),
+  toAddress: text("to_address").notNull(),
+  toLocalPart: text("to_local_part").notNull(),
+  subject: text("subject").notNull(),
+  bodyText: text("body_text").notNull(),
+  rfcMessageId: text("rfc_message_id"),
+  inReplyTo: text("in_reply_to"),
+  receivedAt: timestamp("received_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const inboundAttachments = pgTable("inbound_attachments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  messageId: uuid("message_id")
+    .notNull()
+    .references(() => inboundMessages.id, { onDelete: "cascade" }),
+  filename: text("filename").notNull(),
+  contentType: text("content_type").notNull(),
+  byteSize: integer("byte_size").notNull(),
+  storagePath: text("storage_path").notNull(),
+  encryptionAlg: text("encryption_alg").notNull().default("aes-256-gcm"),
+  skipped: boolean("skipped").notNull().default(false),
+  skipReason: text("skip_reason"),
+  filedRequestId: uuid("filed_request_id").references(
+    (): AnyPgColumn => projectDocumentRequests.id,
+    { onDelete: "set null" },
+  ),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
@@ -558,7 +622,7 @@ export const projectDocumentFiles = pgTable("project_document_files", {
   contentType: text("content_type").notNull(),
   byteSize: integer("byte_size").notNull(),
   encryptionAlg: text("encryption_alg").notNull().default("aes-256-gcm"),
-  uploadedVia: text("uploaded_via").notNull().default("portal"),
+  uploadedVia: text("uploaded_via").notNull().default("portal"), // portal | staff | email
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -1565,6 +1629,38 @@ export const zoomSecrets = privateSchema.table("zoom_secrets", {
   accessTokenExpiresAt: timestamp("access_token_expires_at", {
     withTimezone: true,
   }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Resend send log. Recipient is HMAC-hashed; service_role only. */
+export const outboundEmails = pgTable("outbound_emails", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, {
+    onDelete: "set null",
+  }),
+  kind: text("kind").notNull(),
+  idempotencyKey: text("idempotency_key").notNull().unique(),
+  resendEmailId: text("resend_email_id"),
+  toHash: text("to_hash").notNull(),
+  status: text("status").notNull().default("sent"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Hard-bounce and spam-complaint suppressions. Hash only. */
+export const emailSuppressions = pgTable("email_suppressions", {
+  emailHash: text("email_hash").primaryKey(),
+  reason: text("reason").notNull(),
+  resendEmailId: text("resend_email_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

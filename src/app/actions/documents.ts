@@ -379,6 +379,8 @@ export async function reviewDocumentRequestAction(
         to: recipientEmail,
         clientName: personDisplayName(decryptedPerson ?? {}),
         organizationName: organization?.name || "Your consultant",
+        organizationId: orgId,
+        projectId,
         projectTitle: decryptedProject?.title || "Your file",
         documentName,
         comment,

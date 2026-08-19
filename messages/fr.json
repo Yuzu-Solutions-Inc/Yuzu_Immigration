@@ -15,6 +15,13 @@
     "errorHome": "Retour à l’accueil",
     "errorReference": "Référence : {digest}"
   },
+  "pdfReader": {
+    "zoomOut": "Réduire",
+    "zoomIn": "Agrandir",
+    "pageOf": "Page {current} sur {total}",
+    "loading": "Ouverture du PDF…",
+    "error": "Ce PDF n’a pas pu s’afficher ici. Téléchargez-le et ouvrez-le dans Adobe Acrobat."
+  },
   "home": {
     "audience": "Pour les consultants et avocats en immigration",
     "title": "Gérez votre pratique d’immigration dans un espace sécurisé",

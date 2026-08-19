@@ -76,6 +76,8 @@ async function sendInvite(input: {
     to: email,
     clientName: `${person.first_name} ${person.last_name}`.trim() || email,
     organizationName: String(org?.name ?? ""),
+    organizationId: input.organizationId,
+    personId: input.personId,
     portalUrl: url,
     reset: input.reset,
   });

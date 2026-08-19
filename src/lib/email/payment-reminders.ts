@@ -165,8 +165,11 @@ export async function processDuePaymentReminders(now = new Date()) {
         guestName: guest.guest_name,
         organizationName:
           orgName.get(appointment.organization_id as string) ?? "Firm",
+        organizationId: appointment.organization_id as string,
         hostName:
           hostById.get(appointment.host_user_id as string) ?? "Consultant",
+        hostUserId: appointment.host_user_id as string,
+        appointmentId: appointment.id as string,
         serviceTitle: serviceTitle(service, locale) || "Consultation",
         startsAt: appointment.starts_at as string,
         timezone: timeZone,

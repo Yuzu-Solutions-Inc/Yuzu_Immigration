@@ -10,6 +10,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import { previewProjectFormPdfAction } from "@/app/actions/forms";
+import { PdfReader } from "@/components/pdf/pdf-reader";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +20,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  base64ToBlob,
   triggerBrowserDownload,
   type DocumentFilePayload,
 } from "@/lib/documents/browser-file";
@@ -48,9 +48,7 @@ export function ProjectFormPdfViewer({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [preview, setPreview] = useState<
-    (DocumentFilePayload & { url: string }) | null
-  >(null);
+  const [preview, setPreview] = useState<DocumentFilePayload | null>(null);
 
   const currentId = open ? (activeId ?? startFormId) : null;
   const index = useMemo(() => {
@@ -64,12 +62,6 @@ export function ProjectFormPdfViewer({
   useEffect(() => {
     setActiveId(null);
   }, [startFormId]);
-
-  useEffect(() => {
-    return () => {
-      if (preview?.url) URL.revokeObjectURL(preview.url);
-    };
-  }, [preview?.url]);
 
   useEffect(() => {
     if (!open || !currentId) return;
@@ -86,16 +78,10 @@ export function ProjectFormPdfViewer({
           setPreview(null);
           return;
         }
-        const blob = base64ToBlob(result.base64, result.contentType);
-        const url = URL.createObjectURL(blob);
-        setPreview((prev) => {
-          if (prev?.url) URL.revokeObjectURL(prev.url);
-          return {
-            base64: result.base64,
-            filename: result.filename,
-            contentType: result.contentType,
-            url,
-          };
+        setPreview({
+          base64: result.base64,
+          filename: result.filename,
+          contentType: result.contentType,
         });
         setWarnings(result.warnings);
       } catch {
@@ -112,7 +98,6 @@ export function ProjectFormPdfViewer({
   }, [open, currentId, projectId]);
 
   function closeViewer() {
-    if (preview?.url) URL.revokeObjectURL(preview.url);
     setPreview(null);
     setActiveId(null);
     setError(null);
@@ -159,7 +144,7 @@ export function ProjectFormPdfViewer({
 
         <p className="text-xs text-muted-foreground">{t("viewDraftHint")}</p>
 
-        <div className="relative min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-canvas">
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-canvas">
           {pending && !preview ? (
             <div className="flex h-[min(70vh,40rem)] items-center justify-center">
               <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -171,10 +156,9 @@ export function ProjectFormPdfViewer({
             </p>
           ) : null}
           {preview ? (
-            <iframe
-              title={preview.filename}
-              src={preview.url}
-              className="h-[min(70vh,40rem)] w-full"
+            <PdfReader
+              key={currentId ?? preview.filename}
+              dataBase64={preview.base64}
             />
           ) : null}
           {pending && preview ? (

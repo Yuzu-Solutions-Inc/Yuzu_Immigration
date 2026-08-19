@@ -235,8 +235,8 @@ export async function fillXfaDatasetsIncremental(
   return out;
 }
 
-export function xmlEscape(value: string): string {
-  return value
+export function xmlEscape(value: string | null | undefined): string {
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
@@ -316,10 +316,7 @@ export function setNthEmptyTag(xml: string, tag: string, value: string, n: numbe
   const selfClosing = new RegExp(`<${tag}\\n/>`, "g");
   return xml.replace(selfClosing, (match) => {
     if (count++ === n) {
-      const safe = value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+      const safe = xmlEscape(value);
       return `<${tag}\n>${safe}</${tag}\n>`;
     }
     return match;

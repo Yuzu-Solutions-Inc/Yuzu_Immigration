@@ -5,6 +5,7 @@ import { Download, Eye, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { DocumentReviewActions } from "@/components/documents/document-review-actions";
+import { PdfReader } from "@/components/pdf/pdf-reader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -170,20 +171,17 @@ export function DocumentFileActions({
             </DialogDescription>
           </DialogHeader>
           {preview ? (
-            <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-canvas">
+            <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-canvas">
               {preview.contentType === "application/pdf" ? (
-                <iframe
-                  title={preview.filename}
-                  src={preview.url}
-                  className="h-[min(70vh,40rem)] w-full"
-                />
+                <PdfReader dataBase64={preview.base64} />
               ) : (
-                // Object URL blob — not a static asset for next/image
-                <img
-                  src={preview.url}
-                  alt={preview.filename}
-                  className="mx-auto max-h-[min(70vh,40rem)] w-auto max-w-full object-contain p-2"
-                />
+                <div className="h-[min(70vh,40rem)] overflow-auto">
+                  <img
+                    src={preview.url}
+                    alt={preview.filename}
+                    className="mx-auto max-h-[min(70vh,40rem)] w-auto max-w-full object-contain p-2"
+                  />
+                </div>
               )}
             </div>
           ) : null}

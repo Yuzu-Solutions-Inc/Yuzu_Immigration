@@ -1,7 +1,7 @@
 import { createTranslator } from "next-intl";
 
 import { emailStyle } from "@/lib/email/styles";
-import { sendResendEmail } from "@/lib/email/resend";
+import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -38,11 +38,14 @@ function wrap(htmlInner: string) {
 export async function sendContractSignatureRequestEmail(input: {
   locale: string;
   organizationName: string;
+  organizationId?: string | null;
   to: string;
   signerName: string;
   contractTitle: string;
   signUrl: string;
   role: "client" | "consultant";
+  envelopeId: string;
+  replyToUserId?: string | null;
 }) {
   if (!input.to.includes("@")) return { sent: false as const };
   const locale = toAppLocale(input.locale);
@@ -76,18 +79,31 @@ export async function sendContractSignatureRequestEmail(input: {
     subject: t("subject", { title: input.contractTitle }),
     html,
     text,
+    kind: "contract-signature-request",
+    idempotencyKey: emailIdempotencyKey(
+      "contract-signature-request",
+      input.envelopeId,
+      input.role,
+      input.signUrl.slice(-24),
+    ),
     organizationName: input.organizationName,
+    organizationId: input.organizationId,
     locale,
+    replyToUserId: input.role === "client" ? input.replyToUserId : null,
   });
 }
 
 export async function sendContractCompletedEmail(input: {
   locale: string;
   organizationName: string;
+  organizationId?: string | null;
   to: string;
   signerName: string;
   contractTitle: string;
   pdfBytes: Uint8Array;
+  envelopeId: string;
+  replyToUserId?: string | null;
+  role?: "client" | "consultant";
 }) {
   if (!input.to.includes("@")) return { sent: false as const };
   const locale = toAppLocale(input.locale);
@@ -111,8 +127,16 @@ export async function sendContractCompletedEmail(input: {
       input.contractTitle,
       t("completedFooter"),
     ].join("\n\n"),
+    kind: "contract-completed",
+    idempotencyKey: emailIdempotencyKey(
+      "contract-completed",
+      input.envelopeId,
+      input.to,
+    ),
     organizationName: input.organizationName,
+    organizationId: input.organizationId,
     locale,
+    replyToUserId: input.role === "consultant" ? null : input.replyToUserId,
     attachments: [
       {
         filename,

@@ -15,6 +15,13 @@
     "errorHome": "Volver al inicio",
     "errorReference": "Referencia: {digest}"
   },
+  "pdfReader": {
+    "zoomOut": "Alejar",
+    "zoomIn": "Acercar",
+    "pageOf": "Página {current} de {total}",
+    "loading": "Abriendo el PDF…",
+    "error": "No se pudo mostrar este PDF aquí. Descárguelo y ábralo en Adobe Acrobat."
+  },
   "home": {
     "audience": "Para consultores y abogados de inmigración",
     "title": "Gestione su práctica de inmigración en un espacio seguro",

@@ -222,8 +222,8 @@ function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function esc(value: string): string {
-  return value
+function esc(value: string | null | undefined): string {
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -232,8 +232,8 @@ function esc(value: string): string {
 }
 
 /** Strip accents / characters IRCC open-text validators often reject. */
-function asciiSafe(value: string): string {
-  return value
+function asciiSafe(value: string | null | undefined): string {
+  return String(value ?? "")
     .normalize("NFC")
     .replace(/[\u0000-\u001F\u007F]/g, "");
 }
@@ -307,21 +307,26 @@ function resolveCityLic(value: string): string {
   return asciiSafe(raw);
 }
 
-function phoneDigits(phone: string): string {
-  return phone.replace(/\D/g, "");
+function phoneDigits(phone: string | null | undefined): string {
+  return String(phone ?? "").replace(/\D/g, "");
+}
+
+function pad2(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim();
+  return raw ? raw.padStart(2, "0") : "";
 }
 
 function normalizeCorRow(row: CorRow): CorRow {
   return {
     country: resolveCountryLic(row.country),
-    status: row.status,
+    status: row.status ?? "",
     other: row.other ? asciiSafe(row.other) : undefined,
-    fromYear: row.fromYear,
-    fromMonth: row.fromMonth.padStart(2, "0"),
-    fromDay: row.fromDay.padStart(2, "0"),
-    toYear: row.toYear,
-    toMonth: row.toMonth.padStart(2, "0"),
-    toDay: row.toDay.padStart(2, "0"),
+    fromYear: row.fromYear ?? "",
+    fromMonth: pad2(row.fromMonth),
+    fromDay: pad2(row.fromDay),
+    toYear: row.toYear ?? "",
+    toMonth: pad2(row.toMonth),
+    toDay: pad2(row.toDay),
   };
 }
 
@@ -371,7 +376,7 @@ function normalizeJob(job: JobRow): JobRow {
       provinceState = asciiSafe(job.provinceState);
     }
   }
-  const fromMonth = job.fromMonth.padStart(2, "0");
+  const fromMonth = pad2(job.fromMonth);
   let toYear = job.toYear?.trim() || undefined;
   let toMonth = job.toMonth?.trim() ? job.toMonth.padStart(2, "0") : undefined;
   const toMonthNum = toMonth ? Number(toMonth) : NaN;
@@ -437,12 +442,12 @@ export function normalizeAnswers(a: Imm1294Answers): Imm1294Answers {
         ...a.prevSpouse,
         familyName: asciiSafe(a.prevSpouse.familyName),
         givenName: asciiSafe(a.prevSpouse.givenName),
-        fromMonth: a.prevSpouse.fromMonth.padStart(2, "0"),
-        fromDay: a.prevSpouse.fromDay.padStart(2, "0"),
-        toMonth: a.prevSpouse.toMonth.padStart(2, "0"),
-        toDay: a.prevSpouse.toDay.padStart(2, "0"),
-        dobMonth: a.prevSpouse.dobMonth.padStart(2, "0"),
-        dobDay: a.prevSpouse.dobDay.padStart(2, "0"),
+        fromMonth: pad2(a.prevSpouse.fromMonth),
+        fromDay: pad2(a.prevSpouse.fromDay),
+        toMonth: pad2(a.prevSpouse.toMonth),
+        toDay: pad2(a.prevSpouse.toDay),
+        dobMonth: pad2(a.prevSpouse.dobMonth),
+        dobDay: pad2(a.prevSpouse.dobDay),
       }
       : undefined,
     hasAlias,
@@ -502,8 +507,8 @@ export function normalizeAnswers(a: Imm1294Answers): Imm1294Answers {
         school: asciiSafe(a.educationRow.school),
         city: asciiSafe(a.educationRow.city),
         country: resolveCountryLic(a.educationRow.country),
-        fromMonth: a.educationRow.fromMonth.padStart(2, "0"),
-        toMonth: a.educationRow.toMonth.padStart(2, "0"),
+        fromMonth: pad2(a.educationRow.fromMonth),
+        toMonth: pad2(a.educationRow.toMonth),
         provinceState: a.educationRow.provinceState
           ? asciiSafe(a.educationRow.provinceState)
           : undefined,

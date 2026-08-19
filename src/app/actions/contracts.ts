@@ -354,14 +354,24 @@ export async function resendContractSignerAction(
   const { sendContractSignatureRequestEmail } = await import(
     "@/lib/email/contract-signature"
   );
+  const { data: appointment } = envelope.appointment_id
+    ? await admin
+        .from("booking_appointments")
+        .select("host_user_id")
+        .eq("id", envelope.appointment_id)
+        .maybeSingle()
+    : { data: null };
   await sendContractSignatureRequestEmail({
     locale: signLocale,
     organizationName: auth.membership.organization.name,
+    organizationId: envelope.organization_id,
     to: signer.email ?? "",
     signerName: signer.full_name ?? "",
     contractTitle: envelope.title,
     signUrl: `${origin.replace(/\/$/, "")}/${signLocale}/sign/${encodeURIComponent(token)}`,
     role: next.role,
+    envelopeId,
+    replyToUserId: (appointment?.host_user_id as string | null) ?? null,
   });
   await appendContractAudit({
     organizationId: envelope.organization_id,

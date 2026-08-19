@@ -3,7 +3,7 @@ import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { email } from "@/lib/design-tokens";
 import { product } from "@/lib/brand/product";
-import { sendResendEmail } from "@/lib/email/resend";
+import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
 import {
   automationVariablesFor,
   isAutomationDue,
@@ -302,12 +302,25 @@ export async function processDueBookingAutomations(now = new Date()) {
             subject: prepared.subject,
             html: prepared.html,
             text: prepared.text,
+            kind: "booking-automation",
+            idempotencyKey: emailIdempotencyKey(
+              "booking-automation",
+              automation.id,
+              appointment.id,
+              daysBefore,
+              appointment.starts_at,
+            ),
             organizationName:
               orgName.get(appointment.organization_id) ?? product.name,
+            organizationId: appointment.organization_id,
             locale: prepared.emailLocale,
             includeDoNotReply: automation.include_do_not_reply !== false,
+            replyToUserId:
+              automation.include_do_not_reply === false
+                ? appointment.host_user_id
+                : null,
           });
-          if (!result.sent) allSent = false;
+          if (!result.sent && result.reason !== "suppressed") allSent = false;
         }
         if (!allSent) {
           await admin

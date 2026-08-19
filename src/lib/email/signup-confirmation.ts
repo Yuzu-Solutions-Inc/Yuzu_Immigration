@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 
 import { product } from "@/lib/brand/product";
 import { emailStyle } from "@/lib/email/styles";
-import { sendResendEmail } from "@/lib/email/resend";
+import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -70,5 +70,11 @@ export async function sendSignupConfirmationEmail(input: {
     subject: t("subject"),
     html,
     text,
+    kind: "signup-confirmation",
+    idempotencyKey: emailIdempotencyKey(
+      "signup-confirmation",
+      input.to,
+      input.confirmUrl.slice(-32),
+    ),
   });
 }

@@ -67,15 +67,20 @@ export type Imm1295Answers = Omit<
   lcpNoPersons?: string;
 };
 
-function esc(value: string): string {
-  return value
+function esc(value: string | null | undefined): string {
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
-function isoDate(y: string, m: string, d: string): string {
-  return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+function isoDate(
+  y: string | null | undefined,
+  m: string | null | undefined,
+  d: string | null | undefined,
+): string {
+  if (!y) return "";
+  return [y, m, d].filter(Boolean).join("-");
 }
 
 function resolveWorkPermitType(raw: string): WorkPermitTypeLic {
@@ -120,15 +125,17 @@ function toImm1294Shim(a: Imm1295Answers): Imm1294Answers {
   };
 }
 
-function resolveProvinceLic(value: string): string {
-  const raw = value.trim().toUpperCase();
+function resolveProvinceLic(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim().toUpperCase();
+  if (!raw) return "";
   if (/^\d{2}$/.test(raw)) return raw;
   if (PROVINCE_LIC[raw]) return PROVINCE_LIC[raw];
-  return value.trim();
+  return raw;
 }
 
-function resolveCityLic(value: string): string {
-  const raw = value.trim();
+function resolveCityLic(value: string | null | undefined): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
   if (/^\d+$/.test(raw)) return raw;
   const { aliases, labels } = cityCodes as {
     aliases: Record<string, string>;

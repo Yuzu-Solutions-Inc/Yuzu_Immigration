@@ -64,7 +64,11 @@ export type ResidentialAddress = {
   aptUnit?: string;
 };
 
-export function isoDate(y: string, m: string, d: string): string {
+export function isoDate(
+  y?: string | null,
+  m?: string | null,
+  d?: string | null,
+): string {
   return [y, m, d].filter(Boolean).join("-");
 }
 

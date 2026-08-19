@@ -14,7 +14,7 @@ A control **passes** only when its automated test is green. Logging (`security_a
 | CC-04 | AES-256-GCM with 16-byte auth tags | same | PR + daily |
 | CC-05 | Zoom / Google / Microsoft / Square / Sage tokens persist via private RPCs | same | PR + daily |
 | CC-06 | Vercel crons require `CRON_SECRET` (timing-safe Bearer) | same | PR + daily |
-| CC-07 | Square / Google / Microsoft webhooks verify signature or channel token | same | PR + daily |
+| CC-07 | Square / Google / Microsoft / Resend webhooks verify signature or channel token | same | PR + daily |
 | CC-08 | No live secrets in git or `.env.example` | same | PR + daily |
 | CC-09 | `X-Frame-Options: DENY`, `nosniff`, `frame-ancestors 'none'` | same | PR + daily |
 | CC-10 | `verify_customer_portal_login` is server-only | same | PR + daily |

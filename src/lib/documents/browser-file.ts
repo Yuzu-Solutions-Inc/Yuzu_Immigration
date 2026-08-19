@@ -4,11 +4,15 @@ export type DocumentFilePayload = {
   contentType: string;
 };
 
-export function base64ToBlob(base64: string, contentType: string): Blob {
+export function base64ToBytes(base64: string): Uint8Array {
   const bin = atob(base64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new Blob([bytes], { type: contentType });
+  return bytes;
+}
+
+export function base64ToBlob(base64: string, contentType: string): Blob {
+  return new Blob([base64ToBytes(base64)], { type: contentType });
 }
 
 export function isBrowserPreviewable(contentType: string): boolean {

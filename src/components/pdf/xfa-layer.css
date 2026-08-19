@@ -1,0 +1,273 @@
+/* PDF.js XFA overlay (from pdfjs-dist/web/pdf_viewer.css). Scoped to the in-app reader. */
+
+.yuzu-pdf-reader {
+  --xfa-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+  --xfa-focus-outline: auto;
+}
+
+@media screen and (forced-colors: active) {
+  .yuzu-pdf-reader {
+    --xfa-focus-outline: 2px solid CanvasText;
+  }
+  .yuzu-pdf-reader .xfaLayer *:required {
+    outline: 1.5px solid selectedItem;
+  }
+}
+
+.yuzu-pdf-page {
+  position: relative;
+  overflow: hidden;
+  margin-inline: auto;
+  margin-bottom: 0.75rem;
+  background: #fff;
+  box-shadow: var(--shadow-elevated);
+}
+
+.yuzu-pdf-page canvas {
+  display: block;
+}
+
+.yuzu-pdf-reader .xfaLayer {
+  color-scheme: only light;
+  background-color: transparent;
+  position: absolute;
+  text-align: initial;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  line-height: 1.2;
+}
+
+.yuzu-pdf-reader .xfaLayer .highlight {
+  margin: -1px;
+  padding: 1px;
+  background-color: rgb(239 203 237);
+  border-radius: 4px;
+}
+
+.yuzu-pdf-reader .xfaPage {
+  overflow: hidden;
+  position: relative;
+}
+
+.yuzu-pdf-reader .xfaContentarea {
+  position: absolute;
+}
+
+.yuzu-pdf-reader .xfaPrintOnly {
+  display: none;
+}
+
+.yuzu-pdf-reader .xfaLayer * {
+  color: inherit;
+  font: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  font-kerning: inherit;
+  letter-spacing: -0.01px;
+  text-align: inherit;
+  text-decoration: inherit;
+  box-sizing: border-box;
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+  line-height: inherit;
+}
+
+.yuzu-pdf-reader .xfaLayer *:required {
+  outline: 1.5px solid red;
+}
+
+.yuzu-pdf-reader .xfaLayer a {
+  color: blue;
+  pointer-events: auto;
+}
+
+.yuzu-pdf-reader .xfaRich li {
+  margin-left: 3em;
+}
+
+.yuzu-pdf-reader .xfaFont {
+  color: black;
+  font-weight: normal;
+  font-kerning: none;
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0;
+  text-decoration: none;
+  vertical-align: 0;
+}
+
+.yuzu-pdf-reader .xfaCaption {
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.yuzu-pdf-reader .xfaCaptionForCheckButton {
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+
+.yuzu-pdf-reader .xfaLabel {
+  height: 100%;
+  width: 100%;
+}
+
+.yuzu-pdf-reader .xfaLeft {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.yuzu-pdf-reader .xfaRight {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+}
+
+.yuzu-pdf-reader :is(.xfaLeft, .xfaRight) > :is(.xfaCaption, .xfaCaptionForCheckButton) {
+  max-height: 100%;
+}
+
+.yuzu-pdf-reader .xfaTop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.yuzu-pdf-reader .xfaBottom {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+.yuzu-pdf-reader :is(.xfaTop, .xfaBottom) > :is(.xfaCaption, .xfaCaptionForCheckButton) {
+  width: 100%;
+}
+
+.yuzu-pdf-reader .xfaBorder {
+  background-color: transparent;
+  position: absolute;
+  pointer-events: none;
+}
+
+.yuzu-pdf-reader .xfaWrapped {
+  width: 100%;
+  height: 100%;
+}
+
+.yuzu-pdf-reader .xfaTextfield,
+.yuzu-pdf-reader .xfaSelect {
+  height: 100%;
+  width: 100%;
+  flex: 1 1 auto;
+  border: none;
+  resize: none;
+  background-image: var(--xfa-unfocused-field-background);
+}
+
+.yuzu-pdf-reader .xfaSelect {
+  padding-inline: 2px;
+}
+
+.yuzu-pdf-reader :is(.xfaTop, .xfaBottom) > :is(.xfaTextfield, .xfaSelect) {
+  flex: 0 1 auto;
+}
+
+.yuzu-pdf-reader .xfaButton {
+  width: 100%;
+  height: 100%;
+  border: none;
+  text-align: center;
+}
+
+.yuzu-pdf-reader .xfaLink {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.yuzu-pdf-reader .xfaCheckbox,
+.yuzu-pdf-reader .xfaRadio {
+  width: 100%;
+  height: 100%;
+  flex: 0 0 auto;
+  border: none;
+}
+
+.yuzu-pdf-reader .xfaRich {
+  white-space: pre-wrap;
+  width: 100%;
+  height: 100%;
+}
+
+.yuzu-pdf-reader .xfaImage {
+  object-position: left top;
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
+.yuzu-pdf-reader .xfaLrTb,
+.yuzu-pdf-reader .xfaRlTb,
+.yuzu-pdf-reader .xfaTb {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.yuzu-pdf-reader .xfaLr {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.yuzu-pdf-reader .xfaRl {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+}
+
+.yuzu-pdf-reader .xfaTb > div {
+  justify-content: left;
+}
+
+.yuzu-pdf-reader .xfaPosition,
+.yuzu-pdf-reader .xfaArea {
+  position: relative;
+}
+
+.yuzu-pdf-reader .xfaValignMiddle {
+  display: flex;
+  align-items: center;
+}
+
+.yuzu-pdf-reader .xfaTable {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.yuzu-pdf-reader .xfaTable .xfaRow {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.yuzu-pdf-reader .xfaTable .xfaRlRow {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+  flex: 1;
+}
+
+.yuzu-pdf-reader .xfaTable .xfaRlRow > div {
+  flex: 1;
+}
+
+.yuzu-pdf-reader :is(.xfaNonInteractive, .xfaDisabled, .xfaReadOnly) :is(input, textarea) {
+  background: initial;
+}
