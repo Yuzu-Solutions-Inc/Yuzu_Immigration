@@ -25,7 +25,10 @@ import {
 } from "./work-patchers";
 import { fillXfaDatasetsIncremental, type FormMeta } from "./xfa-incremental";
 import { fillImm1294Pdf, type Imm1294Answers } from "./fillers/imm1294";
-import { validateAnswers } from "./fillers/imm1294-validate";
+import {
+  coerceAnswersForPreview,
+  validateAnswers,
+} from "./fillers/imm1294-validate";
 import { fillImm1295Pdf } from "./fillers/imm1295";
 import { fillImm5257Pdf } from "./fillers/imm5257";
 import { fillImm5257Sch1Pdf } from "./fillers/imm5257sch1";
@@ -269,6 +272,8 @@ export async function fillProjectForms(input: {
   answers?: Record<string, unknown>;
   /** Preferred: one entry per project_forms row with person-specific answers. */
   instances?: FillFormInstance[];
+  /** Fill whatever answers exist; skip filing-quality gates and fall back to the blank PDF. */
+  preview?: boolean;
 }): Promise<FillResult> {
   const instances: FillFormInstance[] =
     input.instances ??
@@ -278,6 +283,7 @@ export async function fillProjectForms(input: {
       projectFormCodes: input.formCodes,
     }));
 
+  const preview = Boolean(input.preview);
   const warnings: string[] = [];
   const out: FilledForm[] = [];
   const usedNames = new Set<string>();
@@ -291,13 +297,13 @@ export async function fillProjectForms(input: {
     const lang = answers.formLanguage;
     const label = `${answers.familyName || "form"} ${answers.givenName || ""}`.trim();
 
-    if (!answers.familyName || !answers.givenName) {
+    if (!preview && (!answers.familyName || !answers.givenName)) {
       warnings.push(
         `${code}${label ? ` (${label})` : ""}: enter family name and given name.`,
       );
       continue;
     }
-    if (!answers.dobYear || !answers.dobMonth || !answers.dobDay) {
+    if (!preview && (!answers.dobYear || !answers.dobMonth || !answers.dobDay)) {
       warnings.push(
         `${code} (${answers.familyName}): enter date of birth before generating.`,
       );
@@ -312,16 +318,29 @@ export async function fillProjectForms(input: {
         : new Uint8Array();
       if (code === "imm1294") {
         const validated = validateAnswers(payload);
-        if (!validated.ok) {
-          warnings.push(`IMM 1294 skipped: ${validated.error}`);
-          continue;
-        }
         const meta = metaFor(code, lang);
-        bytes = await fillImm1294Pdf(blank, validated.answers as Imm1294Answers, {
+        const crypto = {
           fileKeyHex: meta.fileKeyHex,
           datasetsObj: meta.datasetsObj,
           datasetsGen: meta.datasetsGen,
-        });
+        };
+        if (validated.ok) {
+          bytes = await fillImm1294Pdf(
+            blank,
+            validated.answers as Imm1294Answers,
+            crypto,
+          );
+        } else if (preview) {
+          warnings.push(`IMM 1294 preview is incomplete: ${validated.error}`);
+          bytes = await fillImm1294Pdf(
+            blank,
+            coerceAnswersForPreview(payload),
+            crypto,
+          );
+        } else {
+          warnings.push(`IMM 1294 skipped: ${validated.error}`);
+          continue;
+        }
       } else if (code === "imm1295") {
         bytes = await fillImm1295Pdf(blank, payload as never, lang);
       } else if (code === "imm5709") {
@@ -338,7 +357,10 @@ export async function fillProjectForms(input: {
         bytes = await fillCompanion(code, lang, answers);
       }
 
-      let filename = `${code}${lang}_${answers.familyName}_${answers.givenName}.pdf`
+      const who = [answers.familyName, answers.givenName]
+        .filter(Boolean)
+        .join("_");
+      let filename = (who ? `${code}${lang}_${who}.pdf` : `${code}${lang}.pdf`)
         .replace(/[^\w.\-]+/g, "_");
       if (usedNames.has(filename)) {
         const suffix = (instance.personId ?? instance.id ?? out.length)
@@ -356,9 +378,28 @@ export async function fillProjectForms(input: {
         bytes,
       });
     } catch (error) {
-      warnings.push(
-        `${code}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      if (preview) {
+        try {
+          const blank = await loadBlankPdf(code, lang);
+          const filename = `${code}${lang}.pdf`.replace(/[^\w.\-]+/g, "_");
+          warnings.push(`${code}: showing blank form (${message})`);
+          out.push({
+            code,
+            formId: instance.id,
+            personId: instance.personId,
+            filename: usedNames.has(filename)
+              ? filename.replace(/\.pdf$/, `_${out.length}.pdf`)
+              : filename,
+            bytes: blank,
+          });
+          usedNames.add(filename);
+          continue;
+        } catch {
+          // fall through to the regular warning
+        }
+      }
+      warnings.push(`${code}: ${message}`);
     }
   }
 

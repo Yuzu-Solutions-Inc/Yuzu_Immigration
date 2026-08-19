@@ -1,4 +1,4 @@
-import type { Imm1294Answers } from "./imm1294";
+import type { Imm1294Answers, JobRow } from "./imm1294";
 
 const EMAIL_MAX_LENGTH = 254;
 const TEXT_MAX = 120;
@@ -633,4 +633,157 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
   };
 
   return { ok: true, answers };
+}
+
+function previewJobs(raw: Record<string, unknown>): JobRow[] {
+  const rows = Array.isArray(raw.jobs) ? raw.jobs : [];
+  const out: JobRow[] = [];
+  for (const row of rows) {
+    if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+    const r = row as Record<string, unknown>;
+    const occupation = cleanText(r.occupation);
+    if (!occupation) continue;
+    const fromYear = optionalYear(r.fromYear);
+    if (!fromYear) continue;
+    out.push({
+      fromYear,
+      fromMonth: optionalMonth(r.fromMonth) || "01",
+      toYear: optionalYear(r.toYear),
+      toMonth: optionalMonth(r.toMonth),
+      occupation,
+      employer: cleanText(r.employer),
+      city: cleanText(r.city),
+      country: cleanText(r.country),
+      provinceState: cleanText(r.provinceState, 40) || undefined,
+    });
+  }
+  return out;
+}
+
+/**
+ * Best-effort IMM 1294 answers for on-screen preview. Empty fields stay blank;
+ * this is not a filing-quality payload.
+ */
+export function coerceAnswersForPreview(
+  raw: Record<string, unknown>,
+): Imm1294Answers {
+  const sexRaw = cleanText(raw.sex, 20);
+  const communicate = cleanText(raw.ableToCommunicate, 20);
+  const fundsRaw = cleanText(raw.funds, 20);
+  const maritalStatus = MARITAL_VALUES.has(cleanText(raw.maritalStatus, 2))
+    ? cleanText(raw.maritalStatus, 2)
+    : "02";
+  const currentStatus = STATUS_VALUES.has(cleanText(raw.currentStatus, 2))
+    ? cleanText(raw.currentStatus, 2)
+    : "";
+  const schoolProvince = PROVINCE_VALUES.has(
+    cleanText(raw.schoolProvince, 2).toUpperCase(),
+  )
+    ? cleanText(raw.schoolProvince, 2).toUpperCase()
+    : "";
+
+  return {
+    email: cleanText(raw.email, EMAIL_MAX_LENGTH).toLowerCase(),
+    familyName: cleanText(raw.familyName),
+    givenName: cleanText(raw.givenName),
+    sex: (SEX_VALUES.has(sexRaw) ? sexRaw : "Unknown") as Imm1294Answers["sex"],
+    dobYear: digits(raw.dobYear, 4),
+    dobMonth: optionalMonth(raw.dobMonth) || "",
+    dobDay: optionalDay(raw.dobDay) || "",
+    placeBirthCity: cleanText(raw.placeBirthCity),
+    placeBirthCountry: cleanText(raw.placeBirthCountry),
+    citizenship: cleanText(raw.citizenship),
+    maritalStatus,
+    spouseFamilyName: cleanText(raw.spouseFamilyName) || undefined,
+    spouseGivenName: cleanText(raw.spouseGivenName) || undefined,
+    marriageYear: optionalYear(raw.marriageYear),
+    marriageMonth: optionalMonth(raw.marriageMonth),
+    marriageDay: optionalDay(raw.marriageDay),
+    currentCountry: cleanText(raw.currentCountry),
+    currentStatus,
+    corFromYear: optionalYear(raw.corFromYear),
+    corFromMonth: optionalMonth(raw.corFromMonth),
+    corFromDay: optionalDay(raw.corFromDay),
+    corToYear: optionalYear(raw.corToYear),
+    corToMonth: optionalMonth(raw.corToMonth),
+    corToDay: optionalDay(raw.corToDay),
+    corOther: cleanText(raw.corOther, 80) || undefined,
+    previousCor: parseYn(raw.previousCor, "N"),
+    sameAsCor: parseYn(raw.sameAsCor, "Y"),
+    previouslyMarried: parseYn(raw.previouslyMarried, "N"),
+    hasAlias: parseYn(raw.hasAlias, "N"),
+    aliasFamilyName: cleanText(raw.aliasFamilyName) || undefined,
+    aliasGivenName: cleanText(raw.aliasGivenName) || undefined,
+    hasNatId: parseYn(raw.hasNatId, "N"),
+    natIdNumber: cleanText(raw.natIdNumber, 40) || undefined,
+    natIdCountry: cleanText(raw.natIdCountry) || undefined,
+    hasUsCard: parseYn(raw.hasUsCard, "N"),
+    usCardNumber: cleanText(raw.usCardNumber, 40) || undefined,
+    passportNumber: cleanText(raw.passportNumber, 40),
+    passportCountry: cleanText(raw.passportCountry),
+    passportIssueYear: optionalYear(raw.passportIssueYear) || "",
+    passportIssueMonth: optionalMonth(raw.passportIssueMonth) || "",
+    passportIssueDay: optionalDay(raw.passportIssueDay) || "",
+    passportExpiryYear: optionalYear(raw.passportExpiryYear) || "",
+    passportExpiryMonth: optionalMonth(raw.passportExpiryMonth) || "",
+    passportExpiryDay: optionalDay(raw.passportExpiryDay) || "",
+    nativeLang: cleanText(raw.nativeLang),
+    ableToCommunicate: (COMMUNICATE_VALUES.has(communicate)
+      ? communicate
+      : "English") as Imm1294Answers["ableToCommunicate"],
+    preferredLang:
+      cleanText(raw.preferredLang, 20) === "French" ? "French" : "English",
+    langTest: parseYn(raw.langTest, "N"),
+    streetNum: cleanText(raw.streetNum, 20),
+    streetName: cleanText(raw.streetName),
+    city: cleanText(raw.city),
+    country: cleanText(raw.country),
+    provinceState: cleanText(raw.provinceState, 40),
+    postalCode: cleanText(raw.postalCode, 20),
+    sameAsMailing: parseYn(raw.sameAsMailing, "Y"),
+    aptUnit: cleanText(raw.aptUnit, 20) || undefined,
+    phone: cleanText(raw.phone, 40),
+    phoneType: cleanText(raw.phoneType, 2) || "02",
+    phoneCountryCode: digits(raw.phoneCountryCode, 4),
+    schoolName: cleanText(raw.schoolName),
+    studyLevel: cleanText(raw.studyLevel, 2),
+    fieldOfStudy: cleanText(raw.fieldOfStudy ?? raw.program, 2),
+    schoolProvince,
+    schoolCity: cleanText(raw.schoolCity),
+    schoolAddress: cleanText(raw.schoolAddress),
+    dli: cleanText(raw.dli, 40),
+    studyFromYear: optionalYear(raw.studyFromYear) || "",
+    studyFromMonth: optionalMonth(raw.studyFromMonth) || "",
+    studyFromDay: optionalDay(raw.studyFromDay) || "",
+    studyToYear: optionalYear(raw.studyToYear) || "",
+    studyToMonth: optionalMonth(raw.studyToMonth) || "",
+    studyToDay: optionalDay(raw.studyToDay) || "",
+    tuitionAmount: cleanText(raw.tuitionAmount, 20),
+    roomBoard: cleanText(raw.roomBoard, 20) || undefined,
+    otherStudyCosts: cleanText(raw.otherStudyCosts, 20) || undefined,
+    availableFunds: cleanText(raw.availableFunds ?? raw.tuitionAmount, 20),
+    funds: (FUNDS_VALUES.has(fundsRaw)
+      ? fundsRaw
+      : "Myself") as Imm1294Answers["funds"],
+    fundsOtherPerson: cleanText(raw.fundsOtherPerson) || undefined,
+    caqNumber: cleanText(raw.caqNumber, 40) || undefined,
+    palNumber: cleanText(raw.palNumber, 40) || undefined,
+    educationIndicator: parseYn(raw.educationIndicator, "N"),
+    jobs: previewJobs(raw),
+    bgTb: parseYn(raw.bgTb, "N"),
+    bgDisorder: parseYn(raw.bgDisorder, "N"),
+    bgMedicalDetails: cleanText(raw.bgMedicalDetails, 500) || undefined,
+    bgOverstay: parseYn(raw.bgOverstay, "N"),
+    bgRefused: parseYn(raw.bgRefused, "N"),
+    bgClaimAsylum: parseYn(raw.bgClaimAsylum, "N"),
+    bgRefusedDetails: cleanText(raw.bgRefusedDetails, 500) || undefined,
+    bgCrime: parseYn(raw.bgCrime, "N"),
+    bgCrimeDetails: cleanText(raw.bgCrimeDetails, 500) || undefined,
+    bgMilitary: parseYn(raw.bgMilitary, "N"),
+    bgMilitaryDetails: cleanText(raw.bgMilitaryDetails, 500) || undefined,
+    bgViolence: parseYn(raw.bgViolence, "N"),
+    bgWitness: parseYn(raw.bgWitness, "N"),
+    cicContactConsent: parseYn(raw.cicContactConsent, "N"),
+    serviceIn: cleanText(raw.serviceIn, 20) === "French" ? "French" : "English",
+  };
 }

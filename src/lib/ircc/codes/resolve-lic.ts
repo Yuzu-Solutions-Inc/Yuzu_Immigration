@@ -27,6 +27,7 @@ function licFromOfficialLabels(
 
 export function resolveCountryLic(value: string): string {
   const raw = value.trim();
+  if (!raw) return "";
   if (/^\d{3}$/.test(raw)) return raw;
   const map = countryCodes as Record<string, string>;
   if (map[raw]) return map[raw];
@@ -52,6 +53,7 @@ export function resolveCountryLic(value: string): string {
 
 export function resolveLanguageLic(value: string): string {
   const raw = value.trim();
+  if (!raw) return "";
   if (/^\d{3}$/.test(raw)) return raw;
   const map = languageCodes as Record<string, string>;
   if (map[raw]) return map[raw];

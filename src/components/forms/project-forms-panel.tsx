@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Download, Loader2, Trash2 } from "lucide-react";
+import { Download, Eye, Loader2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -15,6 +15,7 @@ import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
+import { ProjectFormPdfViewer } from "@/components/forms/project-form-pdf-viewer";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -87,6 +88,7 @@ export function ProjectFormsPanel({
   );
   const [genPending, startGen] = useTransition();
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+  const [viewingFormId, setViewingFormId] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [genWarnings, setGenWarnings] = useState<string[]>([]);
   const addable = addableFormsForProgram(programFamily);
@@ -134,6 +136,23 @@ export function ProjectFormsPanel({
       }
     });
   }
+
+  const viewerItems = useMemo(
+    () =>
+      forms.map((form) => {
+        const assignee = form.person_id
+          ? peopleById.get(form.person_id)
+          : null;
+        return {
+          id: form.id,
+          title: formTitle(form.form_code as FormCode, locale),
+          subtitle: assignee
+            ? assignee.displayName
+            : t("projectScoped"),
+        };
+      }),
+    [forms, peopleById, locale, t],
+  );
 
   return (
     <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
@@ -193,7 +212,20 @@ export function ProjectFormsPanel({
                           : ` · ${t("projectScoped")}`}
                       </p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[[data-downloading]]:opacity-100">
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[[data-downloading]]:opacity-100 lg:has-[[data-viewing]]:opacity-100">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        data-viewing={
+                          viewingFormId === form.id ? "" : undefined
+                        }
+                        onClick={() => setViewingFormId(form.id)}
+                        aria-label={t("view")}
+                        title={t("view")}
+                      >
+                        <Eye className="size-4" />
+                      </Button>
                       {ready ? (
                         <Button
                           type="button"
@@ -346,7 +378,16 @@ export function ProjectFormsPanel({
           </li>
           ) : null}
         </ul>
-      </SurfaceCard>
+      <ProjectFormPdfViewer
+        open={Boolean(viewingFormId)}
+        onOpenChange={(next) => {
+          if (!next) setViewingFormId(null);
+        }}
+        items={viewerItems}
+        startFormId={viewingFormId}
+        projectId={projectId}
+      />
+    </SurfaceCard>
   );
 }
 

@@ -9,7 +9,11 @@ import {
   mergePersonQuestionnaireSave,
   normalizeAnswersStore,
 } from "@/lib/ircc/answers-store";
-import { fillProjectForms, zipFilledForms } from "@/lib/ircc/fill-project";
+import {
+  fillProjectForms,
+  zipFilledForms,
+  type FillFormInstance,
+} from "@/lib/ircc/fill-project";
 import { withProjectFormLanguage } from "@/lib/ircc/form-language";
 import {
   mergeAccountRepIntoAnswers,
@@ -245,11 +249,7 @@ export async function saveProjectAnswersAction(
   return { message: "saved" };
 }
 
-export async function generateProjectPdfsAction(
-  projectId: string,
-  locale: string,
-  formIdOrCode?: string,
-): Promise<
+type PdfActionResult =
   | {
       ok: true;
       base64: string;
@@ -257,7 +257,19 @@ export async function generateProjectPdfsAction(
       contentType: string;
       warnings: string[];
     }
+  | { ok: false; error: string };
+
+async function prepareProjectFormFill(
+  projectId: string,
+  formIdOrCode?: string,
+): Promise<
   | { ok: false; error: string }
+  | {
+      ok: true;
+      orgId: string;
+      selected: { id: string; form_code: string; person_id: string | null }[];
+      instances: FillFormInstance[];
+    }
 > {
   if (!z.string().uuid().safeParse(projectId).success) {
     return { ok: false, error: "invalid" };
@@ -301,39 +313,53 @@ export async function generateProjectPdfsAction(
     }
   }
 
+  const repUserId = project?.representative_user_id as string | null;
+  const { data: repProfile } = repUserId
+    ? await supabase
+        .from("profiles")
+        .select(PROFILE_REP_SELECT)
+        .eq("id", repUserId)
+        .maybeSingle()
+    : { data: null };
+
+  const principal = people.find((p) => p.role === "principal") ?? people[0];
+  const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+    principalPersonId: principal?.id,
+  });
+  const projectFormCodes = forms.map((f) => f.form_code);
+
+  const instances = selected.map((form) => {
+    const person = people.find((p) => p.id === form.person_id);
+    const raw = answersForPersonFill(store, form.person_id);
+    if (person?.email) raw.email = person.email;
+    const answers = withProjectFormLanguage(
+      mergeAccountRepIntoAnswers(raw, repProfile),
+      project?.form_language,
+    );
+    return {
+      id: form.id,
+      code: form.form_code,
+      personId: form.person_id,
+      answers,
+      projectFormCodes,
+    };
+  });
+
+  return { ok: true, orgId, selected, instances };
+}
+
+export async function generateProjectPdfsAction(
+  projectId: string,
+  locale: string,
+  formIdOrCode?: string,
+): Promise<PdfActionResult> {
+  const prep = await prepareProjectFormFill(projectId, formIdOrCode);
+  if (!prep.ok) return prep;
+
+  const { orgId, selected, instances } = prep;
+  const supabase = await createClient();
+
   try {
-    const repUserId = project?.representative_user_id as string | null;
-    const { data: repProfile } = repUserId
-      ? await supabase
-          .from("profiles")
-          .select(PROFILE_REP_SELECT)
-          .eq("id", repUserId)
-          .maybeSingle()
-      : { data: null };
-
-    const principal = people.find((p) => p.role === "principal") ?? people[0];
-    const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
-      principalPersonId: principal?.id,
-    });
-    const projectFormCodes = forms.map((f) => f.form_code);
-
-    const instances = selected.map((form) => {
-      const person = people.find((p) => p.id === form.person_id);
-      const raw = answersForPersonFill(store, form.person_id);
-      if (person?.email) raw.email = person.email;
-      const answers = withProjectFormLanguage(
-        mergeAccountRepIntoAnswers(raw, repProfile),
-        project?.form_language,
-      );
-      return {
-        id: form.id,
-        code: form.form_code,
-        personId: form.person_id,
-        answers,
-        projectFormCodes,
-      };
-    });
-
     const result = await fillProjectForms({ instances });
 
     const generatedIds = result.forms
@@ -376,6 +402,43 @@ export async function generateProjectPdfsAction(
     };
   } catch (error) {
     console.error("generate PDFs:", error);
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "generate_failed",
+    };
+  }
+}
+
+/** Filled IRCC PDF for on-screen preview. Does not mark the form as generated. */
+export async function previewProjectFormPdfAction(
+  projectId: string,
+  formId: string,
+): Promise<PdfActionResult> {
+  if (!z.string().uuid().safeParse(formId).success) {
+    return { ok: false, error: "invalid" };
+  }
+
+  const prep = await prepareProjectFormFill(projectId, formId);
+  if (!prep.ok) return prep;
+
+  try {
+    const result = await fillProjectForms({
+      instances: prep.instances,
+      preview: true,
+    });
+    const form = result.forms[0];
+    if (!form) {
+      return { ok: false, error: result.warnings[0] || "generate_failed" };
+    }
+    return {
+      ok: true,
+      base64: Buffer.from(form.bytes).toString("base64"),
+      filename: form.filename,
+      contentType: "application/pdf",
+      warnings: result.warnings,
+    };
+  } catch (error) {
+    console.error("preview PDF:", error);
     return {
       ok: false,
       error: error instanceof Error ? error.message : "generate_failed",
