@@ -31,7 +31,7 @@ jobs:
         run: npm run ircc:validate
       - name: Record validation status
         if: always()
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: Record IRCC form validation status.
           file_pattern: src/lib/ircc/form-validation-status.json
