@@ -226,32 +226,25 @@ function PreviewKpi({
 }
 
 function AttentionRow({
-  kinds,
   title,
+  detail,
   meta,
   metaClass,
 }: {
-  kinds: { label: string; tone: StatusPillTone }[];
   title: string;
+  detail?: string;
   meta: string;
   metaClass: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2.5">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <p className="min-w-0 truncate text-sm font-medium text-brand">{title}</p>
-        <span className="flex min-w-0 flex-wrap items-center gap-1">
-          {kinds.map((kind) => (
-            <StatusPill
-              key={kind.label}
-              label={kind.label}
-              tone={kind.tone}
-              className="px-2 py-0 text-[10px]"
-            />
-          ))}
-        </span>
+    <div className="flex items-start justify-between gap-3 py-2">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-brand">{title}</p>
+        {detail ? (
+          <p className="truncate text-[11px] text-muted-foreground">{detail}</p>
+        ) : null}
       </div>
-      <p className={cn("shrink-0 text-right text-xs font-medium", metaClass)}>
+      <p className={cn("shrink-0 pt-0.5 text-right text-xs font-medium", metaClass)}>
         {meta}
       </p>
     </div>
@@ -281,13 +274,11 @@ export async function AppHomePreview({
   tone?: "dark" | "light";
 }) {
   const locale = await getLocale();
-  const [t, tApp, tNav, tTop, tProj, tImm, tAuth] = await Promise.all([
+  const [t, tApp, tNav, tTop, tAuth] = await Promise.all([
     getTranslations("home"),
     getTranslations("appHome"),
     getTranslations("nav"),
     getTranslations("topBar"),
-    getTranslations("projects"),
-    getTranslations("immigrationStatus"),
     getTranslations("auth"),
   ]);
 
