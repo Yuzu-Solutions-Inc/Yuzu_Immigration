@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
+import { product } from "@/lib/brand/product";
 import { bookingManageUrls } from "@/lib/booking/manage-url";
 import { loadManageBookingContext } from "@/lib/booking/queries";
 import { isSlotStillOpen } from "@/lib/booking/slots";
@@ -136,7 +137,7 @@ export async function reschedulePublicBookingAction(
       microsoftEventId: ctx.microsoftEventId,
       conferenceId: ctx.conferenceId,
       title: `${ctx.serviceTitle} — ${ctx.guestName}`,
-      description: `Booked via Yuzu Immigration\n${ctx.guestName}\n${ctx.guestEmail}`,
+      description: `Booked via ${product.name}\n${ctx.guestName}\n${ctx.guestEmail}`,
       startsAt: parsed.data.startsAt,
       endsAt: parsed.data.endsAt,
       location: ctx.meetJoinUrl ?? undefined,

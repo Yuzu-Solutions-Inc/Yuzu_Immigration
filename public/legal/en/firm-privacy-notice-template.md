@@ -8,7 +8,7 @@ Use this in retainers, your website, or a handout. Replace bracketed text. **You
 
 ## 1. Who we are
 
-[Firm name] provides Canadian immigration consulting / legal services. We use **Yuzu Immigration**, software operated by **Yuzu Solutions Inc.**, to keep your file, questionnaires, documents, appointments, and messages.
+[Firm name] provides Canadian immigration consulting / legal services. We use **%PRODUCT_NAME%**, software operated by **Yuzu Solutions Inc.**, to keep your file, questionnaires, documents, appointments, and messages.
 
 Yuzu Solutions Inc. is not your consultant. Questions about your file, fees, or immigration advice go to us. Platform privacy questions can also be sent to Yuzu’s Privacy Officer, Adrien Yvin, privacy@yuzu.solutions.
 
@@ -46,4 +46,4 @@ If a confidentiality incident creates a risk of serious injury (Québec) or a re
 
 ## 8. More detail
 
-Yuzu’s public policy: [your locale]/privacy on the Yuzu Immigration site, or ask us for a copy.
+Yuzu’s public policy: [your locale]/privacy on the %PRODUCT_NAME% site, or ask us for a copy.

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { getAppBaseUrl } from "@/lib/app-url";
+import { product } from "@/lib/brand/product";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import {
@@ -218,7 +219,7 @@ export async function issueContractsForAppointment(appointmentId: string) {
       "en",
   );
   const timeZone = settingsRes.data?.timezone ?? "America/Toronto";
-  const organizationName = orgRes.data?.name ?? "Yuzu Immigration";
+  const organizationName = orgRes.data?.name ?? product.name;
   const consultantName =
     hostRes.data?.full_name?.trim() || hostRes.data?.email || "Consultant";
   const consultantEmail = hostRes.data?.email ?? "";
@@ -445,7 +446,7 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
   const completedAt = new Date().toISOString();
   const pdf = await buildContractPdf({
     title: envelope.title as string,
-    organizationName: org?.name ?? "Yuzu Immigration",
+    organizationName: org?.name ?? product.name,
     filledHtml,
     filledSha256: envelope.filled_sha256 as string,
     envelopeId,
@@ -493,7 +494,7 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
     if (!signer.email?.includes("@")) continue;
     await sendContractCompletedEmail({
       locale,
-      organizationName: org?.name ?? "Yuzu Immigration",
+      organizationName: org?.name ?? product.name,
       to: signer.email,
       signerName: signer.full_name,
       contractTitle: envelope.title as string,
@@ -544,7 +545,7 @@ export async function notifyNextSigner(envelopeId: string) {
   const locale = toAppLocale(envelope.locale as string);
   await sendSignerEmail({
     locale,
-    organizationName: org?.name ?? "Yuzu Immigration",
+    organizationName: org?.name ?? product.name,
     to: signer.email ?? "",
     signerName: signer.full_name ?? "",
     contractTitle: envelope.title as string,

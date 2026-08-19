@@ -1,6 +1,6 @@
 # Registre de destruction des dossiers (copie papier)
 
-Yuzu Immigration tient déjà un registre chiffré sous **Paramètres → Sécurité**. Utilisez cette feuille pour une copie papier ou hors ligne (audit du Collège).
+%PRODUCT_NAME% tient déjà un registre chiffré sous **Paramètres → Sécurité**. Utilisez cette feuille pour une copie papier ou hors ligne (audit du Collège).
 
 **Cabinet :** ________________________________
 

@@ -1,7 +1,7 @@
-# Dossier de diligence — Yuzu Immigration
+# Dossier de diligence — %PRODUCT_NAME%
 
 **Fournisseur :** Yuzu Solutions Inc.  
-**Produit :** Yuzu Immigration  
+**Produit :** %PRODUCT_NAME%  
 **Responsable :** Adrien Yvin — privacy@yuzu.solutions  
 **Date :** 16 août 2026  
 

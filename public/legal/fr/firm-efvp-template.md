@@ -1,6 +1,6 @@
 # Modèle d’évaluation des facteurs relatifs à la vie privée (EFVP) — cabinet
 
-**Pour :** les cabinets qui utilisent Yuzu Immigration  
+**Pour :** les cabinets qui utilisent %PRODUCT_NAME%  
 **Pourquoi :** la Loi 25 exige une EFVP avant d’acquérir, de développer ou de refondre un système d’information impliquant des renseignements personnels, et avant de communiquer des renseignements hors Québec.  
 **Dossier fournisseur :** lire d’abord `vendor-due-diligence-pack.pdf` et `yuzu-subprocessors.pdf`.  
 **Ceci est un modèle, pas un avis juridique.**
@@ -9,11 +9,11 @@
 **Personne responsable de la protection des renseignements personnels :** ________________________________  
 **Courriel :** ________________________________  
 **Date :** ______________  
-**Produit évalué :** Yuzu Immigration, exploité par Yuzu Solutions Inc.
+**Produit évalué :** %PRODUCT_NAME%, exploité par Yuzu Solutions Inc.
 
 ## 1. Projet
 
-Nous adoptons Yuzu Immigration comme système de gestion de pratique (dossiers, questionnaires, formulaires, documents, portail, calendrier, réservation publique).
+Nous adoptons %PRODUCT_NAME% comme système de gestion de pratique (dossiers, questionnaires, formulaires, documents, portail, calendrier, réservation publique).
 
 ☐ Nouveau système ☐ Remplacement de [outil] ☐ Changement majeur : ______________
 

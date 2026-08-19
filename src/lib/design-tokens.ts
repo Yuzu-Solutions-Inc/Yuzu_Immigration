@@ -1,5 +1,5 @@
 /**
- * Yuzu Immigration design tokens (TypeScript).
+ * Product design tokens (TypeScript).
  * Use these for email HTML and any non-CSS surfaces that cannot read CSS variables.
  * Keep in sync with `src/styles/tokens.css`.
  */

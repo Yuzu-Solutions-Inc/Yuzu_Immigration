@@ -1,6 +1,6 @@
 # File destruction register (paper backup)
 
-Yuzu Immigration already stores an encrypted destruction register under **Settings → Security**. Use this sheet if you also need a paper or offline College audit copy.
+%PRODUCT_NAME% already stores an encrypted destruction register under **Settings → Security**. Use this sheet if you also need a paper or offline College audit copy.
 
 **Firm:** ________________________________
 

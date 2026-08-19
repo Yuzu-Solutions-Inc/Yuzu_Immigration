@@ -1,7 +1,7 @@
 /*
- * Yuzu Immigration design system — primitive + semantic tokens.
- * Values match the product palette (graphite / indigo / emerald / amber)
- * used before the official Yuzu brand trial. Prefer semantic aliases in UI.
+ * Product design system — primitive + semantic tokens.
+ * Values match the product palette (graphite / indigo / emerald / amber).
+ * Prefer semantic aliases in UI.
  */
 
 :root {

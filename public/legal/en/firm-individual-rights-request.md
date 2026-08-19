@@ -34,4 +34,4 @@ Describe how the firm verified identity (do not copy ID numbers into this form i
 
 Handler: ________________________________ Date: ______________
 
-In Yuzu Immigration: person JSON export and project ZIP are available to firm admins. Destruction of a closed file after the retain-until date is under Settings and the project page (typed DESTROY confirmation).
+In %PRODUCT_NAME%: person JSON export and project ZIP are available to firm admins. Destruction of a closed file after the retain-until date is under Settings and the project page (typed DESTROY confirmation).

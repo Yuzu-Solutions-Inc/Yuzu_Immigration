@@ -1,6 +1,7 @@
 import { after } from "next/server";
 
 import { getAppBaseUrl } from "@/lib/app-url";
+import { product } from "@/lib/brand/product";
 import { bookingManageUrls } from "@/lib/booking/manage-url";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { decryptBookingGuestRow } from "@/lib/security/client-pii";
@@ -346,7 +347,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
       hostUserId: appointment.host_user_id as string,
       appointmentId: appointment.id as string,
       title: `${resolvedServiceTitle} — ${guest.guest_name}`,
-      description: `Booked via Yuzu Immigration\n${guest.guest_name}\n${guest.guest_email}\n${guest.guest_phone ?? ""}`,
+      description: `Booked via ${product.name}\n${guest.guest_name}\n${guest.guest_email}\n${guest.guest_phone ?? ""}`,
       startsAt: appointment.starts_at as string,
       endsAt: appointment.ends_at as string,
     });

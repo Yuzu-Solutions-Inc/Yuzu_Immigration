@@ -4,11 +4,9 @@ import { emailStyle } from "@/lib/email/styles";
 import { sendResendEmail } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { CLOSED_FILE_RETENTION_YEARS } from "@/lib/privacy/retention";
-import en from "../../../messages/en.json";
-import es from "../../../messages/es.json";
-import fr from "../../../messages/fr.json";
+import { dictionaries } from "@/lib/i18n/dictionaries";
 
-const messagesByLocale = { en, fr, es } as const;
+const messagesByLocale = dictionaries;
 
 function escapeHtml(value: string) {
   return value

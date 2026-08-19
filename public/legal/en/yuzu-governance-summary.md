@@ -1,6 +1,6 @@
 # Governance of personal information — public summary
 
-**Yuzu Solutions Inc.** — operator of Yuzu Immigration  
+**Yuzu Solutions Inc.** — operator of %PRODUCT_NAME%  
 **Privacy Officer:** Adrien Yvin — privacy@yuzu.solutions  
 **Last updated:** 16 August 2026
 
@@ -17,7 +17,7 @@ Immigration files can include names, contact details, passports, questionnaires,
 
 ## Main rules we follow
 
-1. Collect and use information only for operating Yuzu Immigration and the purposes in the Privacy Policy. We do not sell personal information.  
+1. Collect and use information only for operating %PRODUCT_NAME% and the purposes in the Privacy Policy. We do not sell personal information.  
 2. Limit access inside each firm; Admin and Case Manager roles control workspace administration versus caseload work.  
 3. Encrypt data in transit. Keep the database, auth, and files in Canada (Montréal region). Encrypt many client fields and documents with a key per firm.  
 4. Keep optional tools (Google, Microsoft, Zoom, Square, product analytics) **off** until someone opts in.  

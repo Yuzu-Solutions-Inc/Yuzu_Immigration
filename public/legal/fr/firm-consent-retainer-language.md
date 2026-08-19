@@ -11,7 +11,7 @@
 
 ☐ Je consens à ce que [cabinet] recueille, utilise et conserve mes renseignements personnels — y compris des renseignements **sensibles** (pièces d’identité, historique d’immigration, réponses aux questionnaires) — pour fournir les services du mandat, me joindre, prendre rendez-vous et respecter les devoirs professionnels et légaux.
 
-☐ Je consens à ce que ces renseignements soient inscrits dans **Yuzu Immigration** (Yuzu Solutions Inc.), avec conservation principale au Canada, et traités par les fournisseurs techniques décrits dans l’avis de confidentialité du cabinet.
+☐ Je consens à ce que ces renseignements soient inscrits dans **%PRODUCT_NAME%** (Yuzu Solutions Inc.), avec conservation principale au Canada, et traités par les fournisseurs techniques décrits dans l’avis de confidentialité du cabinet.
 
 ## B. Famille / enfants (le cas échéant)
 
@@ -35,4 +35,4 @@ Signature : ______________________ Date : ______________
 
 ---
 
-Yuzu Immigration exige déjà l’acceptation de sa politique et de ses conditions sur le portail client et la réservation. **Cela ne remplace pas** le consentement de votre relation professionnelle. Conservez ce formulaire au dossier.
+%PRODUCT_NAME% exige déjà l’acceptation de sa politique et de ses conditions sur le portail client et la réservation. **Cela ne remplace pas** le consentement de votre relation professionnelle. Conservez ce formulaire au dossier.

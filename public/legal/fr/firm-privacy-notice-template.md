@@ -8,7 +8,7 @@
 
 ## 1. Qui nous sommes
 
-[Cabinet] offre des services de consultation / d’avocature en immigration canadienne. Nous utilisons **Yuzu Immigration**, logiciel exploité par **Yuzu Solutions Inc.**, pour tenir votre dossier, questionnaires, documents, rendez-vous et messages.
+[Cabinet] offre des services de consultation / d’avocature en immigration canadienne. Nous utilisons **%PRODUCT_NAME%**, logiciel exploité par **Yuzu Solutions Inc.**, pour tenir votre dossier, questionnaires, documents, rendez-vous et messages.
 
 Yuzu Solutions Inc. n’est pas votre consultant. Les questions sur votre dossier, vos honoraires ou les conseils vont à nous. Les questions sur la plateforme peuvent aussi être envoyées au responsable chez Yuzu, Adrien Yvin, privacy@yuzu.solutions.
 
@@ -46,4 +46,4 @@ En cas de risque de préjudice sérieux (Québec) ou de risque réel de préjudi
 
 ## 8. Plus de détails
 
-Politique publique de Yuzu : `/fr/privacy` sur le site Yuzu Immigration.
+Politique publique de Yuzu : `/fr/privacy` sur le site %PRODUCT_NAME%.

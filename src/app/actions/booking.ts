@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
+import { product } from "@/lib/brand/product";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
@@ -917,7 +918,7 @@ export async function rescheduleAppointmentAction(input: {
       microsoftEventId: ctx.microsoftEventId,
       conferenceId: ctx.conferenceId,
       title: `${ctx.serviceTitle} — ${ctx.guestName}`,
-      description: `Booked via Yuzu Immigration\n${ctx.guestName}\n${ctx.guestEmail}`,
+      description: `Booked via ${product.name}\n${ctx.guestName}\n${ctx.guestEmail}`,
       startsAt: parsed.data.startsAt,
       endsAt: parsed.data.endsAt,
       location: ctx.meetJoinUrl ?? undefined,

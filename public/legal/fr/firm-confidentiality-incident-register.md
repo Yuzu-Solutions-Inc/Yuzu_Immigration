@@ -10,6 +10,6 @@ Tenez ce registre pour **tous** les incidents, y compris ceux qui ne sont pas d�
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | INC- |  |  |  |  |  |  |  |  |  |  |  |
 
-Si l’incident implique Yuzu Immigration, écrivez à privacy@yuzu.solutions le jour même.
+Si l’incident implique %PRODUCT_NAME%, écrivez à privacy@yuzu.solutions le jour même.
 
 Journal d’audit du produit : Paramètres → Sécurité.

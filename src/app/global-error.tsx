@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { StatusPage } from "@/components/status/status-page";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { product } from "@/lib/brand/product";
 import { fontClassName } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,7 @@ export default function GlobalError({
             <a
               href="/en"
               className="inline-flex w-fit transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label="Yuzu Immigration"
+              aria-label={product.name}
             >
               <BrandLogo href={null} size="sm" />
             </a>

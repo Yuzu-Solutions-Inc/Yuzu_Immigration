@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
+import { product } from "@/lib/brand/product";
+
 export const preferredRegion = "iad1";
 
 export const metadata: Metadata = {
-  title: "Yuzu Immigration",
-  description: "Canadian immigration consultant CRM by Yuzu Solutions",
+  title: product.name,
+  description: product.tagline,
 };
 
 export default function RootLayout({

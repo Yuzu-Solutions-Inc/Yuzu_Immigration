@@ -1,5 +1,5 @@
 ---
-description: Yuzu Immigration stack and architecture conventions
+description: Permit OS stack and architecture conventions
 alwaysApply: true
 ---
 
@@ -44,4 +44,4 @@ Follow `.cursor/rules/design-system.mdc` for every UI/form/email change. Tokens 
 - `messages/` — locale JSON dictionaries
 
 ## Product context
-Canadian immigration consultant CRM (Yuzu Immigration / Yuzu Solutions). Prefer bilingual UX and firm multi-tenancy with RLS. Primary create flow is one-screen **New project** with inline people.
+Canadian immigration consultant CRM (Permit OS, operated by Yuzu Solutions). Prefer bilingual UX and firm multi-tenancy with RLS. Primary create flow is one-screen **New project** with inline people.

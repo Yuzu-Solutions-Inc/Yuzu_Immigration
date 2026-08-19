@@ -1,4 +1,4 @@
-# Yuzu Immigration
+# Permit OS
 
 Canadian immigration consultant CRM by Yuzu Solutions.
 
@@ -50,7 +50,7 @@ Staff Google **sign-in** is separate from **Calendar sync**. Each staff member c
 - Outlook / Teams: Entra ID app with `Calendars.ReadWrite` and `OnlineMeetings.ReadWrite`, `MICROSOFT_CALENDAR_CLIENT_ID` / `MICROSOFT_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/microsoft-calendar/callback`.
 - Zoom: Zoom Marketplace General app with meeting write/update/delete and user read scopes, `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`, redirect `{APP_URL}/auth/zoom/callback`.
 
-Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` (a verified domain, e.g. `Yuzu Immigration <bookings@yourdomain.com>`).
+Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` (a verified domain, e.g. `Permit OS <bookings@yourdomain.com>`).
 
 ## Repo
 

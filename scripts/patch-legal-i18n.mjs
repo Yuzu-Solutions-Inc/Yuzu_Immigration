@@ -32,7 +32,7 @@ const downloads = {
       },
       efvp: {
         label: "Firm privacy impact assessment (EFVP)",
-        hint: "Template for adopting Yuzu Immigration and extra-Québec tools.",
+        hint: "Template for adopting %PRODUCT_NAME% and extra-Québec tools.",
       },
       privacyNotice: {
         label: "Privacy notice for your clients",
@@ -84,7 +84,7 @@ const downloads = {
       },
       efvp: {
         label: "EFVP du cabinet",
-        hint: "Modèle pour l’adoption de Yuzu Immigration et des outils hors Québec.",
+        hint: "Modèle pour l’adoption de %PRODUCT_NAME% et des outils hors Québec.",
       },
       privacyNotice: {
         label: "Avis de confidentialité pour vos clients",
@@ -136,7 +136,7 @@ const downloads = {
       },
       efvp: {
         label: "Evaluación de impacto de privacidad del despacho",
-        hint: "Plantilla para adoptar Yuzu Immigration y herramientas fuera de Quebec.",
+        hint: "Plantilla para adoptar %PRODUCT_NAME% y herramientas fuera de Quebec.",
       },
       privacyNotice: {
         label: "Aviso de privacidad para sus clientes",
@@ -168,19 +168,19 @@ const downloads = {
 
 const analyticsConsent = {
   en: {
-    body: "We use essential cookies to run Yuzu Immigration. Optional product analytics (Vercel) help us operate the service and may be processed outside Québec, including in the United States. They are off unless you accept. They are not used for advertising.",
+    body: "We use essential cookies to run %PRODUCT_NAME%. Optional product analytics (Vercel) help us operate the service and may be processed outside Québec, including in the United States. They are off unless you accept. They are not used for advertising.",
     privacyLink: "Privacy policy",
     accept: "Accept analytics",
     refuse: "Refuse",
   },
   fr: {
-    body: "Nous utilisons des témoins essentiels pour faire fonctionner Yuzu Immigration. L’analytique facultative (Vercel) nous aide à exploiter le service et peut être traitée hors Québec, y compris aux États-Unis. Elle est désactivée tant que vous n’acceptez pas. Elle ne sert pas à la publicité.",
+    body: "Nous utilisons des témoins essentiels pour faire fonctionner %PRODUCT_NAME%. L’analytique facultative (Vercel) nous aide à exploiter le service et peut être traitée hors Québec, y compris aux États-Unis. Elle est désactivée tant que vous n’acceptez pas. Elle ne sert pas à la publicité.",
     privacyLink: "Politique de confidentialité",
     accept: "Accepter l’analytique",
     refuse: "Refuser",
   },
   es: {
-    body: "Usamos cookies esenciales para operar Yuzu Immigration. La analítica opcional (Vercel) nos ayuda a operar el servicio y puede tratarse fuera de Quebec, incluso en Estados Unidos. Está desactivada salvo que usted acepte. No se usa para publicidad.",
+    body: "Usamos cookies esenciales para operar %PRODUCT_NAME%. La analítica opcional (Vercel) nos ayuda a operar el servicio y puede tratarse fuera de Quebec, incluso en Estados Unidos. Está desactivada salvo que usted acepte. No se usa para publicidad.",
     privacyLink: "Política de privacidad",
     accept: "Aceptar analítica",
     refuse: "Rechazar",

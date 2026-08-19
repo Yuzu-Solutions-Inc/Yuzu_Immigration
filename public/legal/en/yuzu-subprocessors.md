@@ -1,4 +1,4 @@
-# Subprocessors — Yuzu Immigration
+# Subprocessors — %PRODUCT_NAME%
 
 **Yuzu Solutions Inc.**  
 **Privacy Officer:** Adrien Yvin — privacy@yuzu.solutions  

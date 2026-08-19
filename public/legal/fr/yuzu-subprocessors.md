@@ -1,4 +1,4 @@
-# Sous-traitants — Yuzu Immigration
+# Sous-traitants — %PRODUCT_NAME%
 
 **Yuzu Solutions Inc.**  
 **Responsable :** Adrien Yvin — privacy@yuzu.solutions  

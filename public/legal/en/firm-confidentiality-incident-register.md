@@ -10,6 +10,6 @@ Keep this register for **all** incidents, including those you do not report to t
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | INC- |  |  |  |  |  |  |  |  |  |  |  |
 
-If the incident involves Yuzu Immigration itself (platform, portal, vendor), email privacy@yuzu.solutions the same day and keep this row.
+If the incident involves %PRODUCT_NAME% itself (platform, portal, vendor), email privacy@yuzu.solutions the same day and keep this row.
 
-Product audit log: Settings → Security in Yuzu Immigration.
+Product audit log: Settings → Security in %PRODUCT_NAME%.

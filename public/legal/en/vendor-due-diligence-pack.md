@@ -1,7 +1,7 @@
-# Vendor due-diligence pack — Yuzu Immigration
+# Vendor due-diligence pack — %PRODUCT_NAME%
 
 **Vendor:** Yuzu Solutions Inc.  
-**Product:** Yuzu Immigration  
+**Product:** %PRODUCT_NAME%  
 **Privacy Officer:** Adrien Yvin — privacy@yuzu.solutions  
 **Date:** 16 August 2026  
 

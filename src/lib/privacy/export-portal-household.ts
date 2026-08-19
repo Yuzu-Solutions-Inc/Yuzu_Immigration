@@ -1,5 +1,7 @@
 import JSZip from "jszip";
 
+import { product } from "@/lib/brand/product";
+
 import { downloadDecryptedDocument } from "@/lib/documents/service";
 import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
 import { CLOSED_FILE_RETENTION_YEARS } from "@/lib/privacy/retention";
@@ -235,7 +237,7 @@ export async function buildPortalHouseholdExport(input: {
   zip.file(
     "README.txt",
     [
-      "Yuzu Immigration — client portal data export",
+      `${product.name} — client portal data export`,
       `Exported at: ${new Date().toISOString()}`,
       "",
       "This archive contains your personal information and the information of",

@@ -11,7 +11,7 @@ Insert into your service agreement or a standalone consent form. Have counsel ad
 
 ☐ I consent to [Firm name] collecting, using, and storing my personal information — including **sensitive** information such as identity documents, immigration history, and questionnaire answers — to provide the services described in the retainer, to contact me, to book appointments, and to meet professional and legal duties.
 
-☐ I consent to this information being entered into **Yuzu Immigration** (Yuzu Solutions Inc.), with primary storage in Canada, and to the technical providers described in the firm’s privacy notice (hosting, email, and any calendar or payment tool the firm uses).
+☐ I consent to this information being entered into **%PRODUCT_NAME%** (Yuzu Solutions Inc.), with primary storage in Canada, and to the technical providers described in the firm’s privacy notice (hosting, email, and any calendar or payment tool the firm uses).
 
 ## B. Family members / children (if applicable)
 
@@ -37,4 +37,4 @@ Signature: ______________________ Date: ______________
 
 ## Short in-product notice (already used by Yuzu)
 
-Yuzu Immigration already requires clients to accept Yuzu’s Privacy Policy and Terms on the client portal and booking. **That does not replace** this firm-level consent for your professional relationship. Keep this form in the paper or PDF retainer file.
+%PRODUCT_NAME% already requires clients to accept Yuzu’s Privacy Policy and Terms on the client portal and booking. **That does not replace** this firm-level consent for your professional relationship. Keep this form in the paper or PDF retainer file.

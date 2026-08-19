@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
+import { product } from "@/lib/brand/product";
 import { bookingManageUrls } from "@/lib/booking/manage-url";
 import {
   ensureProjectCallService,
@@ -162,7 +163,7 @@ export async function sendProjectCallInviteAction(
     .select("name")
     .eq("id", orgId)
     .maybeSingle();
-  const organizationName = org?.name || "Yuzu Immigration";
+  const organizationName = org?.name || product.name;
   const projectTitle = decryptProjectRow(
     { id: project.id as string, title: project.title as string },
     dek,
@@ -369,7 +370,7 @@ export async function submitProjectCallBookingAction(
     hostUserId: ctx.host.userId,
     appointmentId: appointment.id,
     title: `${localizedTitle} — ${guestName}`,
-    description: `Project call via Yuzu Immigration\n${guestName}\n${ctx.guestEmail}\nProject: ${ctx.projectTitle}`,
+    description: `Project call via ${product.name}\n${guestName}\n${ctx.guestEmail}\nProject: ${ctx.projectTitle}`,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
   });

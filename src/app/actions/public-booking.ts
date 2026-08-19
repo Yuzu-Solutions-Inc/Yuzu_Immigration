@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
+import { product } from "@/lib/brand/product";
 import {
   checkManageLinksRateLimit,
   checkPublicBookRateLimit,
@@ -377,7 +378,7 @@ export async function submitPublicBookingAction(
           hostUserId: host.userId,
           appointmentId: appointment.id,
           title: `${localizedTitle} — ${guestName}`,
-          description: `Booked via Yuzu Immigration (payment pending)\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
+          description: `Booked via ${product.name} (payment pending)\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
           startsAt: parsed.data.startsAt,
           endsAt: parsed.data.endsAt,
         });
@@ -458,7 +459,7 @@ export async function submitPublicBookingAction(
     hostUserId: host.userId,
     appointmentId: appointment.id,
     title: `${localizedTitle} — ${guestName}`,
-    description: `Booked via Yuzu Immigration\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
+    description: `Booked via ${product.name}\n${guestName}\n${guestEmail}\n${parsed.data.guestPhone}`,
     startsAt: parsed.data.startsAt,
     endsAt: parsed.data.endsAt,
   });

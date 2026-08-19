@@ -1,14 +1,14 @@
 # Avenant relatif au traitement des données (cabinet)
 
 **Statut :** version 2026-08-16. L’exécution par défaut est un clic dans le produit par un administrateur du cabinet (création de l’espace ou Réglages). Une contre-signature manuscrite ou DocuSign est facultative. Faites réviser le texte par un conseiller juridique.  
-**Parties :** le **cabinet** (responsable du traitement des renseignements clients) et **Yuzu Solutions Inc.** (sous-traitant / fournisseur de services), exploitant de Yuzu Immigration.  
+**Parties :** le **cabinet** (responsable du traitement des renseignements clients) et **Yuzu Solutions Inc.** (sous-traitant / fournisseur de services), exploitant de %PRODUCT_NAME%.  
 **Cadre :** LPRPDE ; *Loi sur la protection des renseignements personnels dans le secteur privé* du Québec (Loi 25) ; devoirs de gestion des dossiers du Collège.
 
 **Responsable chez le sous-traitant :** Adrien Yvin — privacy@yuzu.solutions
 
 ## 1. Objet et durée
 
-Yuzu Solutions Inc. traite les renseignements personnels saisis ou téléversés dans Yuzu Immigration par le cabinet, ses clients et les personnes qui réservent (identité, coordonnées, langue, questionnaires, documents, notes, rendez-vous, activité du portail, et détails d’agenda ou de réunion lorsqu’un consultant connecte ces outils) **uniquement** pour fournir le logiciel, pour la sécurité, et lorsque la loi l’exige.
+Yuzu Solutions Inc. traite les renseignements personnels saisis ou téléversés dans %PRODUCT_NAME% par le cabinet, ses clients et les personnes qui réservent (identité, coordonnées, langue, questionnaires, documents, notes, rendez-vous, activité du portail, et détails d’agenda ou de réunion lorsqu’un consultant connecte ces outils) **uniquement** pour fournir le logiciel, pour la sécurité, et lorsque la loi l’exige.
 
 Le présent avenant dure pendant l’utilisation du service et jusqu’à la suppression ou la restitution, sous réserve des sauvegardes et des conservations légales.
 
@@ -65,7 +65,7 @@ Le présent avenant est régi par les lois du Québec et les lois fédérales du
 
 ## 9. Conclusion
 
-Le présent avenant est un contrat écrit. Il est conclu lorsqu’un administrateur du cabinet (1) ouvre cet avenant, (2) confirme qu’il a le pouvoir de lier le cabinet, et (3) accepte cette version, à la création de l’espace ou plus tard dans Réglages. Yuzu Immigration consigne l’identifiant de l’administrateur, l’horodatage et la version de l’avenant (`2026-08-16`).
+Le présent avenant est un contrat écrit. Il est conclu lorsqu’un administrateur du cabinet (1) ouvre cet avenant, (2) confirme qu’il a le pouvoir de lier le cabinet, et (3) accepte cette version, à la création de l’espace ou plus tard dans Réglages. %PRODUCT_NAME% consigne l’identifiant de l’administrateur, l’horodatage et la version de l’avenant (`2026-08-16`).
 
 Une contre-signature manuscrite ou électronique est facultative. Si le cabinet veut une copie contresignée, téléchargez cet avenant et envoyez-le à privacy@yuzu.solutions.
 

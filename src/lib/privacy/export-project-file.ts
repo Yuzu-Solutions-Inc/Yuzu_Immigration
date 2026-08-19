@@ -1,5 +1,7 @@
 import JSZip from "jszip";
 
+import { product } from "@/lib/brand/product";
+
 import { isFormCode } from "@/lib/ircc/catalog";
 import {
   answersForPersonFill,
@@ -326,7 +328,7 @@ export async function buildProjectFileZip(
     `${root}/manifest.json`,
     json({
       formatVersion: 1,
-      product: "Yuzu Immigration",
+      product: product.name,
       exportedAt: new Date().toISOString(),
       projectId: project.id,
       title: project.title,
@@ -341,11 +343,11 @@ export async function buildProjectFileZip(
   zip.file(
     `${root}/README.txt`,
     [
-      "Yuzu Immigration — full file export",
+      `${product.name} — full file export`,
       `Exported: ${new Date().toISOString()}`,
       `Project: ${project.title}`,
       "",
-      "This archive is a copy of the immigration file held in Yuzu Immigration:",
+      `This archive is a copy of the immigration file held in ${product.name}:`,
       "- project.json — file metadata, status history, representative",
       "- people/ — identity and consultation notes for each person on the file",
       "- forms/ — questionnaire answers, form checklist, and IRCC PDFs when they could be generated",

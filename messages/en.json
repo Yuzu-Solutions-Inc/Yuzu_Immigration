@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Yuzu Immigration",
+    "name": "%PRODUCT_NAME%",
     "tagline": "CRM for Canadian immigration consultants and lawyers"
   },
   "statusPages": {
@@ -175,7 +175,7 @@
     "integrations": {
       "eyebrow": "Integrations",
       "title": "Calendar, meetings, payments, and accounting in the tools you already use",
-      "subtitle": "Connect the accounts your firm already uses. Booking, video calls, payments, and invoices stay in those products — Yuzu Immigration coordinates them around the immigration file.",
+      "subtitle": "Connect the accounts your firm already uses. Booking, video calls, payments, and invoices stay in those products — %PRODUCT_NAME% coordinates them around the immigration file.",
       "beta": "Beta",
       "groups": {
         "calendar": {
@@ -222,7 +222,7 @@
     },
     "securityEyebrow": "Security, simply",
     "securityTitle": "No AI. Passport scans stay in your practice.",
-    "securitySubtitle": "Nobody wants a passport scan to land in another country’s AI datacenter. Yuzu Immigration does not use any AI service. We treat your data with automation workflows and logic gates — rules your firm controls — not models trained on client files.",
+    "securitySubtitle": "Nobody wants a passport scan to land in another country’s AI datacenter. %PRODUCT_NAME% does not use any AI service. We treat your data with automation workflows and logic gates — rules your firm controls — not models trained on client files.",
     "security": {
       "noAi": {
         "title": "No AI in the pipeline",
@@ -246,14 +246,14 @@
       }
     },
     "securityCta": "Read the privacy policy",
-    "finalTitle": "Try Yuzu Immigration free while we’re in open testing",
+    "finalTitle": "Try %PRODUCT_NAME% free while we’re in open testing",
     "finalSubtitle": "Set up your firm workspace in minutes and see whether it fits how you already practice.",
     "finalCta": "Create a free account",
     "finalNote": "Free during the open testing phase.",
     "footerTagline": "Practice software for Canadian immigration consultants and lawyers. Operated by Yuzu Solutions."
   },
   "auth": {
-    "title": "Sign in to Yuzu Immigration",
+    "title": "Sign in to %PRODUCT_NAME%",
     "subtitle": "Access your organization workspace.",
     "continueGoogle": "Continue with Google",
     "orEmail": "or use email",
@@ -1856,16 +1856,16 @@
     "privacyLink": "Privacy",
     "privacyTitle": "Privacy Policy",
     "privacyUpdated": "Last updated: 19 August 2026",
-    "privacyIntro": "Yuzu Immigration is practice-management software operated by Yuzu Solutions Inc. for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use Yuzu Immigration — including the consultant workspace, the client portal, and public booking pages. Use of the service is also governed by our Terms and Conditions.\n\nThis policy supports accountability under the federal Personal Information Protection and Electronic Documents Act (PIPEDA) and Québec’s Act respecting the protection of personal information in the private sector (Law 25). It is not a certification, not legal advice, and not a retainer with Yuzu Solutions Inc. for immigration services.",
+    "privacyIntro": "%PRODUCT_NAME% is practice-management software operated by Yuzu Solutions Inc. for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use %PRODUCT_NAME% — including the consultant workspace, the client portal, and public booking pages. Use of the service is also governed by our Terms and Conditions.\n\nThis policy supports accountability under the federal Personal Information Protection and Electronic Documents Act (PIPEDA) and Québec’s Act respecting the protection of personal information in the private sector (Law 25). It is not a certification, not legal advice, and not a retainer with Yuzu Solutions Inc. for immigration services.",
     "backHome": "Back to home",
     "consentTitle": "How your information is used",
-    "consentSummary": "Your personal information and documents are shared so this firm can prepare and manage your immigration file in Yuzu Immigration.",
+    "consentSummary": "Your personal information and documents are shared so this firm can prepare and manage your immigration file in %PRODUCT_NAME%.",
     "viewPrivacyPolicy": "View full privacy policy",
     "viewTerms": "View terms and conditions",
     "termsLink": "Terms",
     "termsTitle": "Terms and Conditions",
     "termsUpdated": "Last updated: 19 August 2026",
-    "termsIntro": "These terms govern use of Yuzu Immigration, practice-management software operated by Yuzu Solutions Inc. They apply to consulting firms and their staff, and to clients and booking guests who use a firm’s links.\n\nThey are not legal advice. They are not a retainer, engagement, or professional relationship with Yuzu Solutions Inc. for immigration consulting, representation, or legal services. Immigration services are provided solely by the consulting firm you deal with.",
+    "termsIntro": "These terms govern use of %PRODUCT_NAME%, practice-management software operated by Yuzu Solutions Inc. They apply to consulting firms and their staff, and to clients and booking guests who use a firm’s links.\n\nThey are not legal advice. They are not a retainer, engagement, or professional relationship with Yuzu Solutions Inc. for immigration consulting, representation, or legal services. Immigration services are provided solely by the consulting firm you deal with.",
     "termsName": "Terms and Conditions",
     "privacyName": "Privacy Policy",
     "agreeTerms": "I have read and agree to the",
@@ -1880,15 +1880,15 @@
     "dpaCountersignHelp": "If your firm needs a wet-ink or DocuSign copy, download the addendum and email it to privacy@yuzu.solutions.",
     "legalRequired": "Accept the Terms and Conditions and Privacy Policy to continue.",
     "acceptTitle": "Accept to continue",
-    "acceptSubtitle": "To create your Yuzu Immigration account, you must agree to both documents.",
+    "acceptSubtitle": "To create your %PRODUCT_NAME% account, you must agree to both documents.",
     "acceptCta": "Agree and continue",
     "accepting": "Saving…",
     "acceptFailed": "Could not save your acceptance. Try again.",
-    "consentBody": "By continuing, you provide personal information — which may include sensitive identity, immigration, family, and document information — so this consulting firm can prepare and manage your immigration file or appointment in Yuzu Immigration. Primary records are stored in Canada. Uploaded files and many identity fields are encrypted. The firm’s staff can open the file in their workspace. Yuzu Solutions Inc. processes it to operate the platform, including with vendors that may be outside Québec, as described in the Privacy Policy. Optional analytics are off unless you accept them.",
+    "consentBody": "By continuing, you provide personal information — which may include sensitive identity, immigration, family, and document information — so this consulting firm can prepare and manage your immigration file or appointment in %PRODUCT_NAME%. Primary records are stored in Canada. Uploaded files and many identity fields are encrypted. The firm’s staff can open the file in their workspace. Yuzu Solutions Inc. processes it to operate the platform, including with vendors that may be outside Québec, as described in the Privacy Policy. Optional analytics are off unless you accept them.",
     "sections": {
       "controller": {
         "title": "1. Who is responsible",
-        "body": "Your consulting firm (the organization with a Yuzu Immigration workspace) decides why and how client personal information is processed for its immigration services. That firm is the organization responsible for the client file.\n\nYuzu Solutions Inc. operates the software and processes client and booking-guest information on the firm’s instructions as a service provider. Yuzu Solutions Inc. is responsible for staff-account information it uses to run the service (name, email, authentication identifiers, and similar operational data).\n\nIf you book an appointment or complete a form through a firm’s link, you are giving information to that firm. Yuzu Solutions Inc. hosts and processes it so the firm can use the software. Questions about immigration advice, retainers, fees, or how the firm uses your file should go to the firm — not to Yuzu Solutions Inc. as your representative."
+        "body": "Your consulting firm (the organization with a %PRODUCT_NAME% workspace) decides why and how client personal information is processed for its immigration services. That firm is the organization responsible for the client file.\n\nYuzu Solutions Inc. operates the software and processes client and booking-guest information on the firm’s instructions as a service provider. Yuzu Solutions Inc. is responsible for staff-account information it uses to run the service (name, email, authentication identifiers, and similar operational data).\n\nIf you book an appointment or complete a form through a firm’s link, you are giving information to that firm. Yuzu Solutions Inc. hosts and processes it so the firm can use the software. Questions about immigration advice, retainers, fees, or how the firm uses your file should go to the firm — not to Yuzu Solutions Inc. as your representative."
       },
       "officer": {
         "title": "2. Privacy officer",
@@ -1904,7 +1904,7 @@
       },
       "legalBasis": {
         "title": "5. Consent and notice",
-        "body": "Firms are responsible for obtaining valid consent from clients where required — including express consent for sensitive information and, in Québec, parental or guardian authorization before collecting information about a child under 14 — and for explaining their own retainers and privacy practices.\n\nStaff must accept this Privacy Policy and the Terms and Conditions when they create a Yuzu Immigration account. The client portal requires both checkboxes when the client first creates a password or first signs in with Google. Public booking requires both checkboxes before a booking can be submitted. Checking those boxes is consent to the processing described here for that account, file, or appointment, subject to the firm’s instructions and applicable law. Those checkboxes are not pre-checked.\n\nCalendar, meeting, and payment tools are off until a staff member or the firm connects them. Connecting them is an instruction to communicate related details to that provider. Optional product analytics are off until you accept them in the cookie banner.\n\nYou may refuse by not creating an account, not using the link, or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
+        "body": "Firms are responsible for obtaining valid consent from clients where required — including express consent for sensitive information and, in Québec, parental or guardian authorization before collecting information about a child under 14 — and for explaining their own retainers and privacy practices.\n\nStaff must accept this Privacy Policy and the Terms and Conditions when they create a %PRODUCT_NAME% account. The client portal requires both checkboxes when the client first creates a password or first signs in with Google. Public booking requires both checkboxes before a booking can be submitted. Checking those boxes is consent to the processing described here for that account, file, or appointment, subject to the firm’s instructions and applicable law. Those checkboxes are not pre-checked.\n\nCalendar, meeting, and payment tools are off until a staff member or the firm connects them. Connecting them is an instruction to communicate related details to that provider. Optional product analytics are off until you accept them in the cookie banner.\n\nYou may refuse by not creating an account, not using the link, or not booking. You may ask the firm to withdraw consent or delete information, subject to professional retention rules. Some processing (security logs and legal retention) may continue where the law allows."
       },
       "governance": {
         "title": "6. Governance",
@@ -1916,11 +1916,11 @@
       },
       "retention": {
         "title": "8. Retention and destruction",
-        "body": "Client and project records remain while the firm’s workspace is active. When a file is closed, the product sets a retain-until date of six years after closure to support typical College of Immigration and Citizenship Consultants closed-file duties. That professional retention is a documented purpose. A client may ask the firm to delete their information (including from the client portal Security page). The firm generally cannot destroy a closed file until those six years have passed. When purposes are fulfilled, Québec Law 25 requires destruction or anonymization.\n\nDeleting a person or a project from the workspace erases that record’s personal information in the application: identity and contact fields, notes, uploaded documents, questionnaire answers, portal access, and linked bookings (including an attempt to delete the matching Google Calendar or Outlook event and any Zoom or Teams meeting created for it). Disconnecting Zoom from Settings deletes that staff member’s Zoom OAuth tokens from Yuzu Immigration. People who remain on another file at the firm are kept. After the retain-until date, a firm administrator can destroy a closed file the same way. A placeholder project row and an encrypted destruction-register entry (client name and service summary) are kept for the firm’s professional record. Security audit rows for that file or person are kept as a record that the action occurred, with IP address, user agent, and event metadata removed.\n\nHashed booking abuse events are deleted after about 14 days, and are also removed for an erased person’s email.\n\nEmails already sent, copies of calendar events or meetings held by Google, Microsoft, or Zoom, and database backups or point-in-time recovery copies can outlive an application delete until those copies expire. Firms remain responsible for their professional retention and secure-destruction duties."
+        "body": "Client and project records remain while the firm’s workspace is active. When a file is closed, the product sets a retain-until date of six years after closure to support typical College of Immigration and Citizenship Consultants closed-file duties. That professional retention is a documented purpose. A client may ask the firm to delete their information (including from the client portal Security page). The firm generally cannot destroy a closed file until those six years have passed. When purposes are fulfilled, Québec Law 25 requires destruction or anonymization.\n\nDeleting a person or a project from the workspace erases that record’s personal information in the application: identity and contact fields, notes, uploaded documents, questionnaire answers, portal access, and linked bookings (including an attempt to delete the matching Google Calendar or Outlook event and any Zoom or Teams meeting created for it). Disconnecting Zoom from Settings deletes that staff member’s Zoom OAuth tokens from %PRODUCT_NAME%. People who remain on another file at the firm are kept. After the retain-until date, a firm administrator can destroy a closed file the same way. A placeholder project row and an encrypted destruction-register entry (client name and service summary) are kept for the firm’s professional record. Security audit rows for that file or person are kept as a record that the action occurred, with IP address, user agent, and event metadata removed.\n\nHashed booking abuse events are deleted after about 14 days, and are also removed for an erased person’s email.\n\nEmails already sent, copies of calendar events or meetings held by Google, Microsoft, or Zoom, and database backups or point-in-time recovery copies can outlive an application delete until those copies expire. Firms remain responsible for their professional retention and secure-destruction duties."
       },
       "sharing": {
         "title": "9. Sharing and service providers",
-        "body": "We use these providers to run Yuzu Immigration:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, logs, and optional Web Analytics and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, a firm enables Google sign-in on the client portal, or a consultant connects Google Calendar or Google Meet\n• Microsoft — only if a consultant connects Outlook Calendar or Microsoft Teams\n• Zoom — only if a consultant connects Zoom\n• Square — only if the firm connects payments for priced bookings\n\nA current list is available for download from this page. Those providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects a calendar, that provider receives the booking details the product writes there (including guest name, email, and phone), and we receive busy times and event titles from that calendar. When Zoom is connected, Zoom receives the meeting title and start/end time on that consultant’s Zoom account and returns a join URL."
+        "body": "We use these providers to run %PRODUCT_NAME%:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, logs, and optional Web Analytics and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, a firm enables Google sign-in on the client portal, or a consultant connects Google Calendar or Google Meet\n• Microsoft — only if a consultant connects Outlook Calendar or Microsoft Teams\n• Zoom — only if a consultant connects Zoom\n• Square — only if the firm connects payments for priced bookings\n\nA current list is available for download from this page. Those providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects a calendar, that provider receives the booking details the product writes there (including guest name, email, and phone), and we receive busy times and event titles from that calendar. When Zoom is connected, Zoom receives the meeting title and start/end time on that consultant’s Zoom account and returns a join URL."
       },
       "transfers": {
         "title": "10. Location of processing",
@@ -1944,7 +1944,7 @@
       },
       "automated": {
         "title": "15. Automated decisions",
-        "body": "Yuzu Immigration does not make a decision based exclusively on automated processing of personal information that produces legal effects or similarly significant effects concerning a person. Form fill is a drafting aid. Licensed staff must review every form and filing. If that changes, we will say so in this policy and offer the information the law requires."
+        "body": "%PRODUCT_NAME% does not make a decision based exclusively on automated processing of personal information that produces legal effects or similarly significant effects concerning a person. Form fill is a drafting aid. Licensed staff must review every form and filing. If that changes, we will say so in this policy and offer the information the law requires."
       },
       "changes": {
         "title": "16. Changes to this policy",
@@ -1958,15 +1958,15 @@
     "termsSections": {
       "agreement": {
         "title": "1. Agreement",
-        "body": "By creating an account, joining a firm workspace, signing in to the client portal, or submitting a public booking, you agree to these Terms and Conditions and to the Privacy Policy.\n\nIf you do not agree, do not use Yuzu Immigration. If you accept on behalf of a consulting firm, you confirm that you have authority to bind that firm. These terms are a contract of adhesion for some users; we have tried to write them in clear language. External documents (including the Privacy Policy and the Firm Data Processing Addendum) are brought to your attention by these terms and by in-product links and checkboxes. A firm administrator accepts the addendum when creating the workspace, or later in Settings. That clickwrap is the written processor contract. A countersigned copy is optional."
+        "body": "By creating an account, joining a firm workspace, signing in to the client portal, or submitting a public booking, you agree to these Terms and Conditions and to the Privacy Policy.\n\nIf you do not agree, do not use %PRODUCT_NAME%. If you accept on behalf of a consulting firm, you confirm that you have authority to bind that firm. These terms are a contract of adhesion for some users; we have tried to write them in clear language. External documents (including the Privacy Policy and the Firm Data Processing Addendum) are brought to your attention by these terms and by in-product links and checkboxes. A firm administrator accepts the addendum when creating the workspace, or later in Settings. That clickwrap is the written processor contract. A countersigned copy is optional."
       },
       "parties": {
         "title": "2. Who these terms apply to",
-        "body": "Yuzu Solutions Inc. operates Yuzu Immigration.\n\nA “firm” is the consulting organization that holds a workspace. “Staff” are the firm’s users (admins and case managers).\n\nA “client” or “guest” is someone who uses a firm’s client portal or public booking page. Clients have a relationship with the firm, not a professional retainer with Yuzu Solutions Inc.\n\nSections that impose professional, indemnity, or payment duties on a “firm” apply to firms and staff acting for them. They do not impose those duties on clients or guests, except the acceptable-use and accuracy rules that apply to everyone."
+        "body": "Yuzu Solutions Inc. operates %PRODUCT_NAME%.\n\nA “firm” is the consulting organization that holds a workspace. “Staff” are the firm’s users (admins and case managers).\n\nA “client” or “guest” is someone who uses a firm’s client portal or public booking page. Clients have a relationship with the firm, not a professional retainer with Yuzu Solutions Inc.\n\nSections that impose professional, indemnity, or payment duties on a “firm” apply to firms and staff acting for them. They do not impose those duties on clients or guests, except the acceptable-use and accuracy rules that apply to everyone."
       },
       "service": {
         "title": "3. The service",
-        "body": "Yuzu Immigration is software for practice management: client records, questionnaires, form preparation, document intake, client portal, calendar, and public booking.\n\nYuzu Solutions Inc. provides the software. Features may change. We may add, change, or remove functions with reasonable notice when practical. We do not warrant that a particular form edition, government portal, or third-party API will remain available."
+        "body": "%PRODUCT_NAME% is software for practice management: client records, questionnaires, form preparation, document intake, client portal, calendar, and public booking.\n\nYuzu Solutions Inc. provides the software. Features may change. We may add, change, or remove functions with reasonable notice when practical. We do not warrant that a particular form edition, government portal, or third-party API will remain available."
       },
       "noProfessionalRelationship": {
         "title": "4. No immigration advice or professional relationship",
@@ -1994,7 +1994,7 @@
       },
       "ip": {
         "title": "10. Intellectual property",
-        "body": "Yuzu Solutions Inc. and its licensors own Yuzu Immigration, including the software, design, and documentation. These terms do not transfer ownership.\n\nThe firm and its clients keep their rights in the content they submit (questionnaires, documents, notes, and similar). The firm grants Yuzu Solutions Inc. a limited licence to host, process, and display that content solely to provide the service, including through subprocessors.\n\nIRCC and MIFI forms remain the property of those authorities. The product helps fill them; it does not replace official instructions."
+        "body": "Yuzu Solutions Inc. and its licensors own %PRODUCT_NAME%, including the software, design, and documentation. These terms do not transfer ownership.\n\nThe firm and its clients keep their rights in the content they submit (questionnaires, documents, notes, and similar). The firm grants Yuzu Solutions Inc. a limited licence to host, process, and display that content solely to provide the service, including through subprocessors.\n\nIRCC and MIFI forms remain the property of those authorities. The product helps fill them; it does not replace official instructions."
       },
       "privacy": {
         "title": "11. Privacy",
@@ -2069,7 +2069,7 @@
         },
         "efvp": {
           "label": "Firm privacy impact assessment (EFVP)",
-          "hint": "Template for adopting Yuzu Immigration and extra-Québec tools."
+          "hint": "Template for adopting %PRODUCT_NAME% and extra-Québec tools."
         },
         "privacyNotice": {
           "label": "Privacy notice for your clients",
@@ -2098,7 +2098,7 @@
       }
     },
     "analyticsConsent": {
-      "body": "We use essential cookies to run Yuzu Immigration. Optional product analytics (Vercel) help us operate the service and may be processed outside Québec, including in the United States. They are off unless you accept. They are not used for advertising.",
+      "body": "We use essential cookies to run %PRODUCT_NAME%. Optional product analytics (Vercel) help us operate the service and may be processed outside Québec, including in the United States. They are off unless you accept. They are not used for advertising.",
       "privacyLink": "Privacy policy",
       "accept": "Accept analytics",
       "refuse": "Refuse"
@@ -2646,7 +2646,7 @@
     },
     "passportCountry": "Passport country",
     "passportNumber": "Passport number",
-    "privacyConsent": "I agree that this firm may collect my name, contact details, preferred language, and any extra answers I provide to schedule this appointment, email me about it, save a client record in their Yuzu Immigration workspace, and—if they use a connected calendar—add the appointment (including my name, email, and phone) to that calendar, as described in the",
+    "privacyConsent": "I agree that this firm may collect my name, contact details, preferred language, and any extra answers I provide to schedule this appointment, email me about it, save a client record in their %PRODUCT_NAME% workspace, and—if they use a connected calendar—add the appointment (including my name, email, and phone) to that calendar, as described in the",
     "privacyPolicy": "privacy policy",
     "confirm": "Confirm booking",
     "booking": "Booking…",
@@ -2812,19 +2812,19 @@
     }
   },
   "authEmail": {
-    "subject": "Verify your Yuzu Immigration account",
+    "subject": "Verify your %PRODUCT_NAME% account",
     "heading": "Verify your email",
     "greeting": "Hi {name},",
     "greetingGeneric": "Hi,",
-    "intro": "Confirm this email address to finish creating your Yuzu Immigration account.",
+    "intro": "Confirm this email address to finish creating your %PRODUCT_NAME% account.",
     "cta": "Verify email",
     "footer": "If you did not create this account, you can ignore this email."
   },
   "passwordResetEmail": {
-    "subject": "Reset your Yuzu Immigration password",
+    "subject": "Reset your %PRODUCT_NAME% password",
     "heading": "Reset your password",
     "greetingGeneric": "Hi,",
-    "intro": "Use this link to choose a new password for your Yuzu Immigration account.",
+    "intro": "Use this link to choose a new password for your %PRODUCT_NAME% account.",
     "cta": "Choose a new password",
     "footer": "If you did not ask to reset your password, you can ignore this email."
   },
@@ -2851,7 +2851,7 @@
     "noNote": "(none)",
     "noEmail": "(no email on file)",
     "retention": "College of Immigration and Citizenship Consultants closed-file rules typically require keeping a closed file for {years} years after closure. Do not destroy the file until that hold (and any other legal duty) has ended. Reply to the client with next steps.",
-    "footer": "This message was sent by Yuzu Immigration because a client used Security in the portal."
+    "footer": "This message was sent by %PRODUCT_NAME% because a client used Security in the portal."
   },
   "documentEmail": {
     "rejectionSubject": "{org}: please re-upload {document}",

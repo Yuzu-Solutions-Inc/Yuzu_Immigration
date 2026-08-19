@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Yuzu Immigration",
+    "name": "%PRODUCT_NAME%",
     "tagline": "CRM pour consultants et avocats en immigration canadienne"
   },
   "statusPages": {
@@ -175,7 +175,7 @@
     "integrations": {
       "eyebrow": "Intégrations",
       "title": "Calendrier, réunions, paiements et comptabilité dans les outils que vous utilisez déjà",
-      "subtitle": "Branchez les comptes que votre cabinet utilise déjà. Réservation, visio, paiements et factures restent dans ces produits — Yuzu Immigration les coordonne autour du dossier d’immigration.",
+      "subtitle": "Branchez les comptes que votre cabinet utilise déjà. Réservation, visio, paiements et factures restent dans ces produits — %PRODUCT_NAME% les coordonne autour du dossier d’immigration.",
       "beta": "Bêta",
       "groups": {
         "calendar": {
@@ -222,7 +222,7 @@
     },
     "securityEyebrow": "Sécurité, simplement",
     "securityTitle": "Pas d’IA. Les numérisations de passeport restent dans votre pratique.",
-    "securitySubtitle": "Personne ne veut qu’une numérisation de passeport atterrisse dans le centre de données d’IA d’un autre pays. Yuzu Immigration n’utilise aucun service d’intelligence artificielle. Nous traitons vos données avec des flux d’automatisation et des règles logiques — des règles que votre cabinet contrôle — pas des modèles entraînés sur les dossiers clients.",
+    "securitySubtitle": "Personne ne veut qu’une numérisation de passeport atterrisse dans le centre de données d’IA d’un autre pays. %PRODUCT_NAME% n’utilise aucun service d’intelligence artificielle. Nous traitons vos données avec des flux d’automatisation et des règles logiques — des règles que votre cabinet contrôle — pas des modèles entraînés sur les dossiers clients.",
     "security": {
       "noAi": {
         "title": "Aucune IA dans le traitement",
@@ -246,14 +246,14 @@
       }
     },
     "securityCta": "Lire la politique de confidentialité",
-    "finalTitle": "Essayez Yuzu Immigration gratuitement pendant la phase de test",
+    "finalTitle": "Essayez %PRODUCT_NAME% gratuitement pendant la phase de test",
     "finalSubtitle": "Créez l’espace de votre cabinet en quelques minutes et voyez s’il s’adapte à votre pratique.",
     "finalCta": "Créer un compte gratuit",
     "finalNote": "Gratuit pendant la phase de test ouverte.",
     "footerTagline": "Logiciel de pratique pour consultants et avocats en immigration canadienne. Exploité par Yuzu Solutions."
   },
   "auth": {
-    "title": "Connexion à Yuzu Immigration",
+    "title": "Connexion à %PRODUCT_NAME%",
     "subtitle": "Accédez à l’espace de votre organisation.",
     "continueGoogle": "Continuer avec Google",
     "orEmail": "ou utiliser l’e-mail",
@@ -1856,16 +1856,16 @@
     "privacyLink": "Confidentialité",
     "privacyTitle": "Politique de confidentialité",
     "privacyUpdated": "Dernière mise à jour : 19 août 2026",
-    "privacyIntro": "Yuzu Immigration est un logiciel de gestion de pratique exploité par Yuzu Solutions Inc. pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez Yuzu Immigration — y compris l’espace de travail du cabinet, le portail client et les pages de réservation publiques. L’utilisation du service est aussi régie par nos conditions générales.\n\nCette politique appuie l’obligation de rendre compte prévue par la LPRPDE et par la Loi sur la protection des renseignements personnels dans le secteur privé du Québec (Loi 25). Elle ne constitue ni une certification, ni un avis juridique, ni un mandat d’immigration avec Yuzu Solutions Inc.",
+    "privacyIntro": "%PRODUCT_NAME% est un logiciel de gestion de pratique exploité par Yuzu Solutions Inc. pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez %PRODUCT_NAME% — y compris l’espace de travail du cabinet, le portail client et les pages de réservation publiques. L’utilisation du service est aussi régie par nos conditions générales.\n\nCette politique appuie l’obligation de rendre compte prévue par la LPRPDE et par la Loi sur la protection des renseignements personnels dans le secteur privé du Québec (Loi 25). Elle ne constitue ni une certification, ni un avis juridique, ni un mandat d’immigration avec Yuzu Solutions Inc.",
     "backHome": "Retour à l’accueil",
     "consentTitle": "Utilisation de vos renseignements",
-    "consentSummary": "Vos renseignements personnels et documents sont partagés afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans Yuzu Immigration.",
+    "consentSummary": "Vos renseignements personnels et documents sont partagés afin que ce cabinet puisse préparer et gérer votre dossier d’immigration dans %PRODUCT_NAME%.",
     "viewPrivacyPolicy": "Voir la politique de confidentialité complète",
     "viewTerms": "Voir les conditions générales",
     "termsLink": "Conditions",
     "termsTitle": "Conditions générales",
     "termsUpdated": "Dernière mise à jour : 19 août 2026",
-    "termsIntro": "Ces conditions régissent l’utilisation de Yuzu Immigration, logiciel de gestion de pratique exploité par Yuzu Solutions Inc. Elles s’appliquent aux cabinets et à leur personnel, ainsi qu’aux clients et aux personnes qui réservent via les liens d’un cabinet.\n\nElles ne constituent pas un avis juridique. Elles ne créent pas de mandat, d’engagement ni de relation professionnelle avec Yuzu Solutions Inc. pour des services de consultation, de représentation ou des services juridiques en immigration. Les services d’immigration sont fournis uniquement par le cabinet avec lequel vous transigez.",
+    "termsIntro": "Ces conditions régissent l’utilisation de %PRODUCT_NAME%, logiciel de gestion de pratique exploité par Yuzu Solutions Inc. Elles s’appliquent aux cabinets et à leur personnel, ainsi qu’aux clients et aux personnes qui réservent via les liens d’un cabinet.\n\nElles ne constituent pas un avis juridique. Elles ne créent pas de mandat, d’engagement ni de relation professionnelle avec Yuzu Solutions Inc. pour des services de consultation, de représentation ou des services juridiques en immigration. Les services d’immigration sont fournis uniquement par le cabinet avec lequel vous transigez.",
     "termsName": "Conditions générales",
     "privacyName": "Politique de confidentialité",
     "agreeTerms": "J’ai lu et j’accepte les",
@@ -1880,15 +1880,15 @@
     "dpaCountersignHelp": "Si votre cabinet a besoin d’une copie manuscrite ou DocuSign, téléchargez l’avenant et envoyez-le à privacy@yuzu.solutions.",
     "legalRequired": "Acceptez les conditions générales et la politique de confidentialité pour continuer.",
     "acceptTitle": "Accepter pour continuer",
-    "acceptSubtitle": "Pour créer votre compte Yuzu Immigration, vous devez accepter les deux documents.",
+    "acceptSubtitle": "Pour créer votre compte %PRODUCT_NAME%, vous devez accepter les deux documents.",
     "acceptCta": "Accepter et continuer",
     "accepting": "Enregistrement…",
     "acceptFailed": "Impossible d’enregistrer votre acceptation. Réessayez.",
-    "consentBody": "En continuant, vous fournissez des renseignements personnels — qui peuvent inclure des renseignements sensibles d’identité, d’immigration, de famille et de documents — afin que ce cabinet puisse préparer et gérer votre dossier ou rendez-vous dans Yuzu Immigration. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier. Yuzu Solutions Inc. les traite pour exploiter la plateforme, y compris avec des fournisseurs pouvant être hors Québec, comme le décrit la politique de confidentialité. L’analytique facultative est désactivée tant que vous ne l’acceptez pas.",
+    "consentBody": "En continuant, vous fournissez des renseignements personnels — qui peuvent inclure des renseignements sensibles d’identité, d’immigration, de famille et de documents — afin que ce cabinet puisse préparer et gérer votre dossier ou rendez-vous dans %PRODUCT_NAME%. Les dossiers principaux sont hébergés au Canada. Les fichiers téléversés et plusieurs champs d’identité sont chiffrés. Le personnel du cabinet peut ouvrir le dossier. Yuzu Solutions Inc. les traite pour exploiter la plateforme, y compris avec des fournisseurs pouvant être hors Québec, comme le décrit la politique de confidentialité. L’analytique facultative est désactivée tant que vous ne l’acceptez pas.",
     "sections": {
       "controller": {
         "title": "1. Responsables",
-        "body": "Votre cabinet (l’organisation qui a un espace Yuzu Immigration) décide pourquoi et comment les renseignements personnels des clients sont traités pour ses services d’immigration. Ce cabinet est l’organisation responsable du dossier client.\n\nYuzu Solutions Inc. exploite le logiciel et traite les renseignements des clients et des personnes qui réservent selon les instructions du cabinet, à titre de fournisseur de services. Yuzu Solutions Inc. est responsable des renseignements de compte du personnel qu’elle utilise pour exploiter le service (nom, courriel, identifiants d’authentification et données opérationnelles similaires).\n\nSi vous prenez rendez-vous ou remplissez un formulaire via le lien d’un cabinet, vous communiquez des renseignements à ce cabinet. Yuzu Solutions Inc. les héberge et les traite pour que le cabinet puisse utiliser le logiciel. Les questions sur les conseils d’immigration, les mandats, les honoraires ou l’utilisation de votre dossier par le cabinet doivent être adressées au cabinet — et non à Yuzu Solutions Inc. comme représentant."
+        "body": "Votre cabinet (l’organisation qui a un espace %PRODUCT_NAME%) décide pourquoi et comment les renseignements personnels des clients sont traités pour ses services d’immigration. Ce cabinet est l’organisation responsable du dossier client.\n\nYuzu Solutions Inc. exploite le logiciel et traite les renseignements des clients et des personnes qui réservent selon les instructions du cabinet, à titre de fournisseur de services. Yuzu Solutions Inc. est responsable des renseignements de compte du personnel qu’elle utilise pour exploiter le service (nom, courriel, identifiants d’authentification et données opérationnelles similaires).\n\nSi vous prenez rendez-vous ou remplissez un formulaire via le lien d’un cabinet, vous communiquez des renseignements à ce cabinet. Yuzu Solutions Inc. les héberge et les traite pour que le cabinet puisse utiliser le logiciel. Les questions sur les conseils d’immigration, les mandats, les honoraires ou l’utilisation de votre dossier par le cabinet doivent être adressées au cabinet — et non à Yuzu Solutions Inc. comme représentant."
       },
       "officer": {
         "title": "2. Responsable de la protection des renseignements personnels",
@@ -1920,7 +1920,7 @@
       },
       "sharing": {
         "title": "9. Communication et fournisseurs",
-        "body": "Nous utilisons ces fournisseurs pour exploiter Yuzu Immigration :\n• Supabase (Canada) — base de données, authentification et fichiers\n• Vercel — hébergement applicatif, journaux, et Web Analytics / Speed Insights facultatifs\n• Resend — courriel transactionnel lorsque l’envoi est configuré\n• Google — seulement si un membre du personnel se connecte avec Google, si un cabinet active Google sur le portail client, ou si un consultant connecte Google Agenda ou Meet\n• Microsoft — seulement si un consultant connecte Outlook ou Teams\n• Zoom — seulement si un consultant connecte Zoom\n• Square — seulement si le cabinet connecte les paiements\n\nUne liste à jour peut être téléchargée depuis cette page. Ces fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet.\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone)."
+        "body": "Nous utilisons ces fournisseurs pour exploiter %PRODUCT_NAME% :\n• Supabase (Canada) — base de données, authentification et fichiers\n• Vercel — hébergement applicatif, journaux, et Web Analytics / Speed Insights facultatifs\n• Resend — courriel transactionnel lorsque l’envoi est configuré\n• Google — seulement si un membre du personnel se connecte avec Google, si un cabinet active Google sur le portail client, ou si un consultant connecte Google Agenda ou Meet\n• Microsoft — seulement si un consultant connecte Outlook ou Teams\n• Zoom — seulement si un consultant connecte Zoom\n• Square — seulement si le cabinet connecte les paiements\n\nUne liste à jour peut être téléchargée depuis cette page. Ces fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet.\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone)."
       },
       "transfers": {
         "title": "10. Lieu de traitement",
@@ -1944,7 +1944,7 @@
       },
       "automated": {
         "title": "15. Décisions automatisées",
-        "body": "Yuzu Immigration ne prend pas de décision fondée exclusivement sur un traitement automatisé de renseignements personnels qui produit des effets juridiques ou des effets semblables significatifs à l’égard d’une personne. Le remplissage de formulaires est une aide à la rédaction. Le personnel titulaire de permis doit réviser chaque formulaire et chaque dépôt. Si cela change, nous le dirons dans cette politique et fournirons les informations exigées par la loi."
+        "body": "%PRODUCT_NAME% ne prend pas de décision fondée exclusivement sur un traitement automatisé de renseignements personnels qui produit des effets juridiques ou des effets semblables significatifs à l’égard d’une personne. Le remplissage de formulaires est une aide à la rédaction. Le personnel titulaire de permis doit réviser chaque formulaire et chaque dépôt. Si cela change, nous le dirons dans cette politique et fournirons les informations exigées par la loi."
       },
       "changes": {
         "title": "16. Modifications de cette politique",
@@ -1958,15 +1958,15 @@
     "termsSections": {
       "agreement": {
         "title": "1. Entente",
-        "body": "En créant un compte, en rejoignant l’espace d’un cabinet, en ouvrant une session sur le portail client, ou en soumettant une réservation publique, vous acceptez les présentes conditions générales et la politique de confidentialité.\n\nSi vous n’êtes pas d’accord, n’utilisez pas Yuzu Immigration. Si vous acceptez au nom d’un cabinet, vous confirmez avoir le pouvoir de lier ce cabinet. Pour certains utilisateurs, il s’agit d’un contrat d’adhésion ; nous avons cherché un langage clair. Les documents externes (politique de confidentialité et avenant de traitement) sont portés à votre attention par ces conditions, les liens et les cases à cocher du produit. Un administrateur du cabinet accepte l’avenant à la création de l’espace, ou plus tard dans Réglages. Ce clic constitue le contrat écrit de sous-traitance. Une copie contresignée est facultative."
+        "body": "En créant un compte, en rejoignant l’espace d’un cabinet, en ouvrant une session sur le portail client, ou en soumettant une réservation publique, vous acceptez les présentes conditions générales et la politique de confidentialité.\n\nSi vous n’êtes pas d’accord, n’utilisez pas %PRODUCT_NAME%. Si vous acceptez au nom d’un cabinet, vous confirmez avoir le pouvoir de lier ce cabinet. Pour certains utilisateurs, il s’agit d’un contrat d’adhésion ; nous avons cherché un langage clair. Les documents externes (politique de confidentialité et avenant de traitement) sont portés à votre attention par ces conditions, les liens et les cases à cocher du produit. Un administrateur du cabinet accepte l’avenant à la création de l’espace, ou plus tard dans Réglages. Ce clic constitue le contrat écrit de sous-traitance. Une copie contresignée est facultative."
       },
       "parties": {
         "title": "2. À qui s’appliquent ces conditions",
-        "body": "Yuzu Solutions Inc. exploite Yuzu Immigration.\n\nUn « cabinet » est l’organisation qui détient un espace de travail. Le « personnel » désigne les utilisateurs du cabinet (administrateurs et gestionnaires de cas).\n\nUn « client » ou une « personne qui réserve » utilise le portail ou la page de réservation publique d’un cabinet. Le client a une relation avec le cabinet, et non un mandat professionnel avec Yuzu Solutions Inc.\n\nLes articles qui imposent des devoirs professionnels, d’indemnisation ou de paiement à un « cabinet » s’appliquent aux cabinets et à leur personnel. Ils n’imposent pas ces devoirs aux clients, sauf les règles d’utilisation acceptable et d’exactitude qui s’appliquent à tous."
+        "body": "Yuzu Solutions Inc. exploite %PRODUCT_NAME%.\n\nUn « cabinet » est l’organisation qui détient un espace de travail. Le « personnel » désigne les utilisateurs du cabinet (administrateurs et gestionnaires de cas).\n\nUn « client » ou une « personne qui réserve » utilise le portail ou la page de réservation publique d’un cabinet. Le client a une relation avec le cabinet, et non un mandat professionnel avec Yuzu Solutions Inc.\n\nLes articles qui imposent des devoirs professionnels, d’indemnisation ou de paiement à un « cabinet » s’appliquent aux cabinets et à leur personnel. Ils n’imposent pas ces devoirs aux clients, sauf les règles d’utilisation acceptable et d’exactitude qui s’appliquent à tous."
       },
       "service": {
         "title": "3. Le service",
-        "body": "Yuzu Immigration est un logiciel de gestion de pratique : dossiers clients, questionnaires, préparation de formulaires, dépôt de documents, portail client, calendrier et réservation publique.\n\nYuzu Solutions Inc. fournit le logiciel. Les fonctions peuvent changer. Nous pouvons en ajouter, modifier ou retirer, avec un préavis raisonnable lorsque c’est possible. Nous ne garantissons pas qu’une édition de formulaire, un portail gouvernemental ou une API tierce demeurera disponible."
+        "body": "%PRODUCT_NAME% est un logiciel de gestion de pratique : dossiers clients, questionnaires, préparation de formulaires, dépôt de documents, portail client, calendrier et réservation publique.\n\nYuzu Solutions Inc. fournit le logiciel. Les fonctions peuvent changer. Nous pouvons en ajouter, modifier ou retirer, avec un préavis raisonnable lorsque c’est possible. Nous ne garantissons pas qu’une édition de formulaire, un portail gouvernemental ou une API tierce demeurera disponible."
       },
       "noProfessionalRelationship": {
         "title": "4. Aucun conseil d’immigration ni relation professionnelle",
@@ -1994,7 +1994,7 @@
       },
       "ip": {
         "title": "10. Propriété intellectuelle",
-        "body": "Yuzu Solutions Inc. et ses concédants de licence détiennent Yuzu Immigration, y compris le logiciel, le design et la documentation. Ces conditions ne transfèrent aucun droit de propriété.\n\nLe cabinet et ses clients conservent leurs droits sur le contenu qu’ils soumettent. Le cabinet accorde à Yuzu Solutions Inc. une licence limitée pour héberger, traiter et afficher ce contenu uniquement afin de fournir le service, y compris via des sous-traitants.\n\nLes formulaires IRCC et MIFI restent la propriété de ces autorités. Le produit aide à les remplir ; il ne remplace pas les instructions officielles."
+        "body": "Yuzu Solutions Inc. et ses concédants de licence détiennent %PRODUCT_NAME%, y compris le logiciel, le design et la documentation. Ces conditions ne transfèrent aucun droit de propriété.\n\nLe cabinet et ses clients conservent leurs droits sur le contenu qu’ils soumettent. Le cabinet accorde à Yuzu Solutions Inc. une licence limitée pour héberger, traiter et afficher ce contenu uniquement afin de fournir le service, y compris via des sous-traitants.\n\nLes formulaires IRCC et MIFI restent la propriété de ces autorités. Le produit aide à les remplir ; il ne remplace pas les instructions officielles."
       },
       "privacy": {
         "title": "11. Confidentialité",
@@ -2069,7 +2069,7 @@
         },
         "efvp": {
           "label": "EFVP du cabinet",
-          "hint": "Modèle pour l’adoption de Yuzu Immigration et des outils hors Québec."
+          "hint": "Modèle pour l’adoption de %PRODUCT_NAME% et des outils hors Québec."
         },
         "privacyNotice": {
           "label": "Avis de confidentialité pour vos clients",
@@ -2098,7 +2098,7 @@
       }
     },
     "analyticsConsent": {
-      "body": "Nous utilisons des témoins essentiels pour faire fonctionner Yuzu Immigration. L’analytique facultative (Vercel) nous aide à exploiter le service et peut être traitée hors Québec, y compris aux États-Unis. Elle est désactivée tant que vous n’acceptez pas. Elle ne sert pas à la publicité.",
+      "body": "Nous utilisons des témoins essentiels pour faire fonctionner %PRODUCT_NAME%. L’analytique facultative (Vercel) nous aide à exploiter le service et peut être traitée hors Québec, y compris aux États-Unis. Elle est désactivée tant que vous n’acceptez pas. Elle ne sert pas à la publicité.",
       "privacyLink": "Politique de confidentialité",
       "accept": "Accepter l’analytique",
       "refuse": "Refuser"
@@ -2646,7 +2646,7 @@
     },
     "passportCountry": "Pays du passeport",
     "passportNumber": "Numéro de passeport",
-    "privacyConsent": "J’accepte que ce cabinet recueille mon nom, mes coordonnées, ma langue préférée et toute réponse supplémentaire que je fournis afin de planifier ce rendez-vous, de m’écrire à ce sujet, d’enregistrer une fiche client dans son espace Yuzu Immigration et — s’il utilise un agenda connecté — d’y ajouter le rendez-vous (y compris mon nom, courriel et téléphone), conformément à la",
+    "privacyConsent": "J’accepte que ce cabinet recueille mon nom, mes coordonnées, ma langue préférée et toute réponse supplémentaire que je fournis afin de planifier ce rendez-vous, de m’écrire à ce sujet, d’enregistrer une fiche client dans son espace %PRODUCT_NAME% et — s’il utilise un agenda connecté — d’y ajouter le rendez-vous (y compris mon nom, courriel et téléphone), conformément à la",
     "privacyPolicy": "politique de confidentialité",
     "confirm": "Confirmer le rendez-vous",
     "booking": "Réservation…",
@@ -2812,19 +2812,19 @@
     }
   },
   "authEmail": {
-    "subject": "Vérifiez votre compte Yuzu Immigration",
+    "subject": "Vérifiez votre compte %PRODUCT_NAME%",
     "heading": "Vérifiez votre e-mail",
     "greeting": "Bonjour {name},",
     "greetingGeneric": "Bonjour,",
-    "intro": "Confirmez cette adresse e-mail pour terminer la création de votre compte Yuzu Immigration.",
+    "intro": "Confirmez cette adresse e-mail pour terminer la création de votre compte %PRODUCT_NAME%.",
     "cta": "Vérifier l’e-mail",
     "footer": "Si vous n’avez pas créé ce compte, vous pouvez ignorer ce message."
   },
   "passwordResetEmail": {
-    "subject": "Réinitialisez votre mot de passe Yuzu Immigration",
+    "subject": "Réinitialisez votre mot de passe %PRODUCT_NAME%",
     "heading": "Réinitialiser le mot de passe",
     "greetingGeneric": "Bonjour,",
-    "intro": "Utilisez ce lien pour choisir un nouveau mot de passe pour votre compte Yuzu Immigration.",
+    "intro": "Utilisez ce lien pour choisir un nouveau mot de passe pour votre compte %PRODUCT_NAME%.",
     "cta": "Choisir un nouveau mot de passe",
     "footer": "Si vous n’avez pas demandé cette réinitialisation, vous pouvez ignorer ce message."
   },
@@ -2851,7 +2851,7 @@
     "noNote": "(aucun)",
     "noEmail": "(aucun courriel au dossier)",
     "retention": "Les règles du Collège des consultants en immigration et en citoyenneté exigent généralement de conserver un dossier fermé pendant {years} ans après la fermeture. Ne détruisez pas le dossier avant la fin de ce délai (et de toute autre obligation légale). Répondez au client pour la suite.",
-    "footer": "Ce message a été envoyé par Yuzu Immigration parce qu’un client a utilisé Sécurité dans le portail."
+    "footer": "Ce message a été envoyé par %PRODUCT_NAME% parce qu’un client a utilisé Sécurité dans le portail."
   },
   "documentEmail": {
     "rejectionSubject": "{org} : veuillez téléverser à nouveau {document}",

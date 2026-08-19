@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { hashBookingToken } from "@/lib/booking/token";
+import { product } from "@/lib/brand/product";
 import {
   CONTRACT_CONSENT_VERSION,
   isPngSignatureDataUrl,
@@ -161,7 +162,7 @@ export async function loadPublicSignPayload(
     signerId: signerRow.id as string,
     role: signerRow.role as "client" | "consultant",
     title: envelope.title as string,
-    organizationName: org?.name ?? "Yuzu Immigration",
+    organizationName: org?.name ?? product.name,
     filledHtml: decryptContractFilledHtml(envelope.filled_html as string, dek),
     filledSha256: envelope.filled_sha256 as string,
     locale: envelope.locale as string,

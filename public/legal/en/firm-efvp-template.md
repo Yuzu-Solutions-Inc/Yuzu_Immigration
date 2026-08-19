@@ -1,6 +1,6 @@
 # Firm privacy impact assessment (EFVP) template
 
-**For:** consulting firms that use Yuzu Immigration  
+**For:** consulting firms that use %PRODUCT_NAME%  
 **Why:** Québec Law 25 requires an EFVP before acquiring, developing, or overhauling an information system that involves personal information, and before communicating personal information outside Québec.  
 **Vendor pack:** read `vendor-due-diligence-pack.pdf` and `yuzu-subprocessors.pdf` first.  
 **This is a template, not legal advice.** Complete it for **your** firm. Keep the signed copy in your privacy file. You may send a high-level copy to Yuzu Solutions Inc. at privacy@yuzu.solutions if you wish; you are not required to.
@@ -9,11 +9,11 @@
 **Person in charge of personal information:** ________________________________  
 **Email:** ________________________________  
 **Date:** ______________  
-**Product assessed:** Yuzu Immigration, operated by Yuzu Solutions Inc.
+**Product assessed:** %PRODUCT_NAME%, operated by Yuzu Solutions Inc.
 
 ## 1. Project
 
-We are adopting Yuzu Immigration as our practice-management system (client records, questionnaires, form fill, documents, portal, calendar, public booking).
+We are adopting %PRODUCT_NAME% as our practice-management system (client records, questionnaires, form fill, documents, portal, calendar, public booking).
 
 ☐ New system ☐ Replacement of [prior tool] ☐ Major change: ______________
 

@@ -1,13 +1,12 @@
 import { createTranslator } from "next-intl";
 
+import { product } from "@/lib/brand/product";
 import { emailStyle } from "@/lib/email/styles";
 import { sendResendEmail } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
-import en from "../../../messages/en.json";
-import es from "../../../messages/es.json";
-import fr from "../../../messages/fr.json";
+import { dictionaries } from "@/lib/i18n/dictionaries";
 
-const messagesByLocale = { en, fr, es } as const;
+const messagesByLocale = dictionaries;
 
 function escapeHtml(value: string) {
   return value
@@ -42,7 +41,7 @@ export async function sendSignupConfirmationEmail(input: {
 <html>
 <body style="${emailStyle.body}">
   <div style="${emailStyle.cardCompact}">
-    <p style="${emailStyle.eyebrowStrong}">Yuzu Immigration</p>
+    <p style="${emailStyle.eyebrowStrong}">${escapeHtml(product.name)}</p>
     <h1 style="${emailStyle.heading}">${escapeHtml(t("heading"))}</h1>
     <p style="${emailStyle.mutedTight}">${escapeHtml(greeting)}</p>
     <p style="${emailStyle.muted}">${escapeHtml(t("intro"))}</p>

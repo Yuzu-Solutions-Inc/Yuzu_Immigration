@@ -2,6 +2,7 @@ import { decryptBookingFormAnswers, decryptBookingGuestRow } from "@/lib/securit
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { email } from "@/lib/design-tokens";
+import { product } from "@/lib/brand/product";
 import { sendResendEmail } from "@/lib/email/resend";
 import {
   automationVariablesFor,
@@ -250,7 +251,7 @@ export async function processDueBookingAutomations(now = new Date()) {
             consultantName: host?.name ?? appointment.host_user_id,
             consultantEmail: host?.email ?? "",
             organizationName:
-              orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
+              orgName.get(appointment.organization_id) ?? product.name,
             startsAt,
             durationMinutes: service.duration_minutes,
             meetJoinUrl: appointment.meet_join_url,
@@ -302,7 +303,7 @@ export async function processDueBookingAutomations(now = new Date()) {
             html: prepared.html,
             text: prepared.text,
             organizationName:
-              orgName.get(appointment.organization_id) ?? "Yuzu Immigration",
+              orgName.get(appointment.organization_id) ?? product.name,
             locale: prepared.emailLocale,
             includeDoNotReply: automation.include_do_not_reply !== false,
           });

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { applyProductCopy } from "@/lib/brand/apply-product-copy";
 import { legalPackLocale } from "@/lib/legal/downloads";
 
 function stripInlineMarkdown(text: string) {
@@ -63,5 +64,5 @@ export async function loadFirmDpaMarkdown(locale: string) {
     pack,
     "firm-data-processing-addendum.md",
   );
-  return readFile(file, "utf8");
+  return applyProductCopy(await readFile(file, "utf8"));
 }

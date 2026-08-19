@@ -50,4 +50,5 @@ next-env.d.ts
 /marketing/
 
 # Local brand explorations (not product source)
-/logo-ideas-mycanadianpermit.html
+/logo-ideas/
+/logo-ideas*.html

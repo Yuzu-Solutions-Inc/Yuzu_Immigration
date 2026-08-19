@@ -1,14 +1,14 @@
 # Firm Data Processing Addendum
 
 **Status:** Version 2026-08-16. Default execution is in-product clickwrap by a firm administrator (workspace creation or Settings). A wet-ink or DocuSign countersignature is optional. Have counsel review before relying on it.  
-**Parties:** the consulting **Firm** (controller of client personal information) and **Yuzu Solutions Inc.** (processor / service provider), operator of Yuzu Immigration.  
+**Parties:** the consulting **Firm** (controller of client personal information) and **Yuzu Solutions Inc.** (processor / service provider), operator of %PRODUCT_NAME%.  
 **Aligned with:** PIPEDA; Québec *Act respecting the protection of personal information in the private sector* (Law 25); CICC file-management duties.
 
 **Privacy Officer (processor):** Adrien Yvin — privacy@yuzu.solutions
 
 ## 1. Subject matter and duration
 
-Yuzu Solutions Inc. processes personal information that the Firm or the Firm’s clients and booking guests enter into or upload to Yuzu Immigration (identity and contact data, language, immigration questionnaires, supporting documents, notes, bookings, portal activity, and calendar or meeting details when a consultant connects those tools) **only** to provide the SaaS, for security, and as the law requires.
+Yuzu Solutions Inc. processes personal information that the Firm or the Firm’s clients and booking guests enter into or upload to %PRODUCT_NAME% (identity and contact data, language, immigration questionnaires, supporting documents, notes, bookings, portal activity, and calendar or meeting details when a consultant connects those tools) **only** to provide the SaaS, for security, and as the law requires.
 
 This addendum lasts for the term of the Firm’s use of the service and until deletion or return of the information, subject to backups and legal holds.
 
@@ -67,7 +67,7 @@ This addendum is governed by the laws of Québec and the federal laws of Canada 
 
 ## 9. Execution
 
-This addendum is a written contract. It is executed when a firm administrator (1) opens this addendum, (2) confirms authority to bind the Firm, and (3) agrees to this version, at workspace creation or later in Settings. Yuzu Immigration records the administrator’s user id, the timestamp, and the addendum version (`2026-08-16`).
+This addendum is a written contract. It is executed when a firm administrator (1) opens this addendum, (2) confirms authority to bind the Firm, and (3) agrees to this version, at workspace creation or later in Settings. %PRODUCT_NAME% records the administrator’s user id, the timestamp, and the addendum version (`2026-08-16`).
 
 A wet-ink or electronic countersignature is optional. If the Firm wants a countersigned copy, download this addendum and send it to privacy@yuzu.solutions.
 

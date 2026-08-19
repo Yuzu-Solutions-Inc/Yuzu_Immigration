@@ -4,9 +4,12 @@
  * public/legal/{en,fr}/*.md. Edit the .md files, then rerun this script.
  *
  *   npm run legal:pdf
+ *
+ * `%PRODUCT_NAME%` in the markdown is expanded from `src/lib/brand/product.ts`.
  */
 import { spawn } from "node:child_process";
-import { readdir } from "node:fs/promises";
+import { copyFile, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,6 +23,18 @@ const FOOTERS = {
   en: "Yuzu Solutions Inc. — consulting firm pack",
   fr: "Yuzu Solutions Inc. — dossier cabinets",
 };
+
+function readProductName(source) {
+  const match = source.match(/^\s*name:\s*"([^"]+)"/m);
+  if (!match) {
+    throw new Error("Could not read product.name from src/lib/brand/product.ts");
+  }
+  return match[1];
+}
+
+function applyProductCopy(text, productName) {
+  return text.replaceAll("%PRODUCT_NAME%", productName);
+}
 
 function pdfOptions(footerLabel) {
   return {
@@ -47,7 +62,7 @@ function run(command, args, cwd) {
   });
 }
 
-async function buildLocale(locale) {
+async function buildLocale(locale, productName) {
   const dir = path.join(root, "public/legal", locale);
   const files = (await readdir(dir))
     .filter((name) => name.endsWith(".md"))
@@ -56,30 +71,48 @@ async function buildLocale(locale) {
     throw new Error(`No markdown templates in ${dir}`);
   }
 
+  const work = await mkdtemp(path.join(os.tmpdir(), `permit-os-legal-${locale}-`));
+  for (const name of files) {
+    const source = await readFile(path.join(dir, name), "utf8");
+    await writeFile(path.join(work, name), applyProductCopy(source, productName));
+  }
+
   const footer = FOOTERS[locale] ?? FOOTERS.en;
   console.log(`Building ${files.length} PDFs in public/legal/${locale}/`);
-  await run(
-    "npx",
-    [
-      "--yes",
-      "md-to-pdf",
-      ...files,
-      "--stylesheet",
-      stylesheet,
-      "--launch-options",
-      JSON.stringify({
-        executablePath: chrome,
-        args: ["--no-sandbox"],
-      }),
-      "--pdf-options",
-      JSON.stringify(pdfOptions(footer)),
-    ],
-    dir,
-  );
+  try {
+    await run(
+      "npx",
+      [
+        "--yes",
+        "md-to-pdf",
+        ...files,
+        "--stylesheet",
+        stylesheet,
+        "--launch-options",
+        JSON.stringify({
+          executablePath: chrome,
+          args: ["--no-sandbox"],
+        }),
+        "--pdf-options",
+        JSON.stringify(pdfOptions(footer)),
+      ],
+      work,
+    );
+    for (const name of files) {
+      const pdfName = name.replace(/\.md$/i, ".pdf");
+      await copyFile(path.join(work, pdfName), path.join(dir, pdfName));
+    }
+  } finally {
+    await rm(work, { recursive: true, force: true });
+  }
 }
 
+const productName = readProductName(
+  await readFile(path.join(root, "src/lib/brand/product.ts"), "utf8"),
+);
+
 for (const locale of ["en", "fr"]) {
-  await buildLocale(locale);
+  await buildLocale(locale, productName);
 }
 
 console.log("Done. Markdown templates were left in place.");
