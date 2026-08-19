@@ -57,7 +57,7 @@ For each box checked, we accept that personal information (for example guest nam
 
 | Risk | Our measure |
 |---|---|
-| Too many staff can open files | We will assign admin / consultant / assistant roles and share projects with assistants only when needed |
+| Too many staff can open files | We will assign Admin and Case Manager roles so only staff who need the file work it |
 | Portal account leakage | We will send portal invitations only to the client’s email on file; clients set their own password or use Google sign-in |
 | Over-collection | We will only request documents and answers needed for the mandate |
 | Minors | Parental / guardian authorization before collecting information about a child under 14 |

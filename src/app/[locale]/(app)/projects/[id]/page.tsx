@@ -13,7 +13,6 @@ import {
   ExportProjectFileButton,
   ProjectRetentionPanel,
 } from "@/components/privacy/retention-export";
-import { ProjectAssistantShare } from "@/components/projects/project-assistant-share";
 import { ProjectDetailTabs } from "@/components/projects/project-detail-tabs";
 import { ProjectHomeTab } from "@/components/projects/project-home-tab";
 import { ProjectNotesSection } from "@/components/projects/project-notes-section";
@@ -27,15 +26,12 @@ import { Link } from "@/i18n/navigation";
 import {
   canAdministerOrg,
   canCreateRecords,
-  canShareProjects,
 } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import {
   getProject,
   getProjectParticipants,
   getProjectStatusHistory,
-  listOrgMembers,
-  listProjectAssistantUserIds,
   listProjectNotes,
 } from "@/lib/crm/queries";
 import { computeProjectProgressFromDetail } from "@/lib/crm/progress";
@@ -73,7 +69,6 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   const membership = await getPrimaryMembership();
-  const canShare = canShareProjects(membership?.role);
   const canCreate = canCreateRecords(membership?.role);
 
   await ensureProjectFormsSeeded(
@@ -93,8 +88,6 @@ export default async function ProjectDetailPage({
     forms,
     answersRow,
     documentRequests,
-    members,
-    assistantIds,
     notes,
     meetings,
     callInvites,
@@ -108,8 +101,6 @@ export default async function ProjectDetailPage({
     listProjectForms(id),
     getProjectFormAnswers(id),
     listProjectDocumentRequests(id),
-    canShare ? listOrgMembers() : Promise.resolve([]),
-    canShare ? listProjectAssistantUserIds(id) : Promise.resolve([]),
     listProjectNotes(id),
     listProjectMeetingHistory(id, locale),
     listProjectCallInvites(id),
@@ -289,21 +280,6 @@ export default async function ProjectDetailPage({
           destroyedAt={project.destroyed_at}
           canAdminister={canAdministerOrg(membership?.role)}
         />
-
-        {canShare ? (
-          <ProjectAssistantShare
-            locale={locale}
-            projectId={project.id}
-            assistants={members
-              .filter((m) => m.role === "assistant")
-              .map((m) => ({
-                user_id: m.user_id,
-                full_name: m.profile.full_name,
-                email: m.profile.email,
-              }))}
-            selectedUserIds={assistantIds}
-          />
-        ) : null}
       </header>
 
       <section className="border-t border-border pt-6">

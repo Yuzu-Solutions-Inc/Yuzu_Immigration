@@ -112,7 +112,7 @@
       },
       "team": {
         "title": "Firm workspace",
-        "body": "Each consulting firm is its own tenant. Invite admins, consultants, and assistants. Work in English, French, or Spanish — including the client-facing flows they use."
+        "body": "Each consulting firm is its own tenant. Invite admins and case managers. Work in English, French, or Spanish — including the client-facing flows they use."
       }
     },
     "howEyebrow": "How it works",
@@ -302,8 +302,7 @@
   },
   "orgRoles": {
     "admin": "Admin",
-    "consultant": "Consultant",
-    "assistant": "Assistant"
+    "case_manager": "Case Manager"
   },
   "invite": {
     "title": "Join {org}",
@@ -675,7 +674,7 @@
     "save": "Save changes",
     "saving": "Saving…",
     "saved": "Saved.",
-    "teamHelp": "Invite staff by email and assign Admin, Consultant, or Assistant.",
+    "teamHelp": "Invite staff by email and assign Admin or Case Manager.",
     "inviteEmail": "Email",
     "inviteRole": "Role",
     "inviteSend": "Send invite",
@@ -828,11 +827,6 @@
     "deleteAria": "Delete {title}",
     "deleting": "Deleting…",
     "deleteConfirm": "Delete {title}? This permanently erases the file, documents, and answers. Clients with no other file at the firm are erased too, including their bookings. This cannot be undone.",
-    "shareWithAssistants": "Share with assistants",
-    "shareHelp": "Assistants only see projects you share with them, plus the participants on those files.",
-    "noAssistants": "No assistants in this organization yet. Invite one from Organization settings.",
-    "shareSave": "Save sharing",
-    "shareSaved": "Sharing updated.",
     "status": "Status",
     "statusAt": "Status date",
     "statusAtHelp": "Defaults to today when you change status — adjust if needed.",
@@ -1846,7 +1840,7 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacy",
     "privacyTitle": "Privacy Policy",
-    "privacyUpdated": "Last updated: 17 August 2026",
+    "privacyUpdated": "Last updated: 19 August 2026",
     "privacyIntro": "Yuzu Immigration is practice-management software operated by Yuzu Solutions Inc. for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use Yuzu Immigration — including the consultant workspace, the client portal, and public booking pages. Use of the service is also governed by our Terms and Conditions.\n\nThis policy supports accountability under the federal Personal Information Protection and Electronic Documents Act (PIPEDA) and Québec’s Act respecting the protection of personal information in the private sector (Law 25). It is not a certification, not legal advice, and not a retainer with Yuzu Solutions Inc. for immigration services.",
     "backHome": "Back to home",
     "consentTitle": "How your information is used",
@@ -1855,7 +1849,7 @@
     "viewTerms": "View terms and conditions",
     "termsLink": "Terms",
     "termsTitle": "Terms and Conditions",
-    "termsUpdated": "Last updated: 16 August 2026",
+    "termsUpdated": "Last updated: 19 August 2026",
     "termsIntro": "These terms govern use of Yuzu Immigration, practice-management software operated by Yuzu Solutions Inc. They apply to consulting firms and their staff, and to clients and booking guests who use a firm’s links.\n\nThey are not legal advice. They are not a retainer, engagement, or professional relationship with Yuzu Solutions Inc. for immigration consulting, representation, or legal services. Immigration services are provided solely by the consulting firm you deal with.",
     "termsName": "Terms and Conditions",
     "privacyName": "Privacy Policy",
@@ -1903,7 +1897,7 @@
       },
       "safeguards": {
         "title": "7. Safeguards",
-        "body": "We apply safeguards proportionate to the sensitivity of immigration files, including:\n• Encryption in transit (TLS)\n• Infrastructure encryption at rest for the database, authentication, and file storage\n• Application-level AES-256-GCM for uploaded client documents and for many client fields (names, emails, phones, notes, questionnaire answers, booking guest details, and similar), using a separate encryption key per firm\n• Some operational fields are stored without that application-level encryption (for example preferred language, immigration-status labels, appointment times, and security audit metadata)\n• Access controls scoped to each firm; assistants only see projects they are shared on (highest confidentiality by default for that role)\n• Database service-role privileges restricted to server-only paths\n• Public booking pages identified by unguessable tokens; booking rate limits use hashed email and IP\n• Staff passwords handled by Supabase Auth; client portal passwords stored in a private schema and verified only on the server; optional Google sign-in for the client portal is verified on the server and does not create a staff account\n\nYuzu personnel who hold the platform wrap key can technically decrypt firm keys in order to operate, restore, or secure the service, or to comply with law. We limit that access operationally. No method of transmission or storage is perfectly secure. You use the service understanding that residual risk."
+        "body": "We apply safeguards proportionate to the sensitivity of immigration files, including:\n• Encryption in transit (TLS)\n• Infrastructure encryption at rest for the database, authentication, and file storage\n• Application-level AES-256-GCM for uploaded client documents and for many client fields (names, emails, phones, notes, questionnaire answers, booking guest details, and similar), using a separate encryption key per firm\n• Some operational fields are stored without that application-level encryption (for example preferred language, immigration-status labels, appointment times, and security audit metadata)\n• Access controls scoped to each firm; Admin and Case Manager roles control who can administer the workspace versus work the caseload\n• Database service-role privileges restricted to server-only paths\n• Public booking pages identified by unguessable tokens; booking rate limits use hashed email and IP\n• Staff passwords handled by Supabase Auth; client portal passwords stored in a private schema and verified only on the server; optional Google sign-in for the client portal is verified on the server and does not create a staff account\n\nYuzu personnel who hold the platform wrap key can technically decrypt firm keys in order to operate, restore, or secure the service, or to comply with law. We limit that access operationally. No method of transmission or storage is perfectly secure. You use the service understanding that residual risk."
       },
       "retention": {
         "title": "8. Retention and destruction",
@@ -1953,7 +1947,7 @@
       },
       "parties": {
         "title": "2. Who these terms apply to",
-        "body": "Yuzu Solutions Inc. operates Yuzu Immigration.\n\nA “firm” is the consulting organization that holds a workspace. “Staff” are the firm’s users (admins, consultants, and assistants).\n\nA “client” or “guest” is someone who uses a firm’s client portal or public booking page. Clients have a relationship with the firm, not a professional retainer with Yuzu Solutions Inc.\n\nSections that impose professional, indemnity, or payment duties on a “firm” apply to firms and staff acting for them. They do not impose those duties on clients or guests, except the acceptable-use and accuracy rules that apply to everyone."
+        "body": "Yuzu Solutions Inc. operates Yuzu Immigration.\n\nA “firm” is the consulting organization that holds a workspace. “Staff” are the firm’s users (admins and case managers).\n\nA “client” or “guest” is someone who uses a firm’s client portal or public booking page. Clients have a relationship with the firm, not a professional retainer with Yuzu Solutions Inc.\n\nSections that impose professional, indemnity, or payment duties on a “firm” apply to firms and staff acting for them. They do not impose those duties on clients or guests, except the acceptable-use and accuracy rules that apply to everyone."
       },
       "service": {
         "title": "3. The service",

@@ -18,7 +18,7 @@ Les dossiers peuvent comprendre des noms, coordonnées, passeports, questionnair
 ## Règles principales
 
 1. Collecte et utilisation limitées à l’exploitation de Yuzu Immigration et aux fins de la politique de confidentialité. Pas de vente de renseignements personnels.  
-2. Accès limité dans chaque cabinet ; les adjoints ne voient que les dossiers partagés.  
+2. Accès limité dans chaque cabinet ; les rôles Admin et Gestionnaire de cas distinguent l’administration de l’espace et le travail des dossiers.  
 3. Chiffrement en transit. Base de données, authentification et fichiers au Canada (région de Montréal). Chiffrement applicatif de nombreux champs et documents, clé par cabinet.  
 4. Outils facultatifs (Google, Microsoft, Zoom, Square, analytique) **désactivés** tant que personne n’y consent.  
 5. Conservation des dossiers fermés six ans par défaut (Collège), puis destruction sécurisée.  

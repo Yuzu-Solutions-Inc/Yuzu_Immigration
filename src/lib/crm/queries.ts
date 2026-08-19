@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import type { OrgRole } from "@/lib/auth/rbac";
-import { isOrgRole } from "@/lib/auth/rbac";
+import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
 import type {
   BookingAppointmentStatus,
   ParticipantRole,
@@ -503,7 +503,7 @@ export async function listOrgMembers(): Promise<OrgMemberRow[]> {
       return {
         id: m.id as string,
         user_id: m.user_id as string,
-        role: isOrgRole(m.role) ? m.role : "consultant",
+        role: isOrgRole(m.role) ? m.role : DEFAULT_ORG_ROLE,
         profile,
       };
     })
@@ -838,27 +838,6 @@ export async function listPendingInvitations(): Promise<PendingInvitationRow[]> 
 
   return ((data ?? []) as PendingInvitationRow[]).map((row) => ({
     ...row,
-    role: isOrgRole(row.role) ? row.role : "consultant",
+    role: isOrgRole(row.role) ? row.role : DEFAULT_ORG_ROLE,
   }));
-}
-
-export async function listProjectAssistantUserIds(
-  projectId: string,
-): Promise<string[]> {
-  const orgId = await requireOrganizationId();
-  if (!orgId) return [];
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("project_staff_access")
-    .select("user_id")
-    .eq("organization_id", orgId)
-    .eq("project_id", projectId);
-
-  if (error) {
-    console.error("listProjectAssistantUserIds:", error.message);
-    return [];
-  }
-
-  return (data ?? []).map((row) => row.user_id as string);
 }

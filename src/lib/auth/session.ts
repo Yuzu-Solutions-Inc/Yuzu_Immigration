@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/auth/active-org";
 import type { OrgRole } from "@/lib/auth/rbac";
-import { isOrgRole } from "@/lib/auth/rbac";
+import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 
 export type OrgMembership = {
@@ -76,7 +76,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
 
       return {
         id: row.id as string,
-        role: isOrgRole(row.role) ? row.role : "consultant",
+        role: isOrgRole(row.role) ? row.role : DEFAULT_ORG_ROLE,
         organization: {
           id: organization.id as string,
           name: organization.name as string,

@@ -14,7 +14,7 @@ async function recipientUserIds(input: {
   const admin = createServiceClient();
   const { data: members, error } = await admin
     .from("organization_members")
-    .select("user_id, role")
+    .select("user_id")
     .eq("organization_id", input.organizationId);
 
   if (error) {
@@ -24,25 +24,7 @@ async function recipientUserIds(input: {
 
   const ids = new Set<string>();
   for (const row of members ?? []) {
-    const role = row.role as string;
-    if (role === "admin" || role === "consultant") {
-      ids.add(row.user_id as string);
-    }
-  }
-
-  if (input.projectId) {
-    const { data: access, error: accessError } = await admin
-      .from("project_staff_access")
-      .select("user_id")
-      .eq("project_id", input.projectId)
-      .eq("organization_id", input.organizationId);
-    if (accessError) {
-      console.error("notification recipients access:", accessError.message);
-    } else {
-      for (const row of access ?? []) {
-        ids.add(row.user_id as string);
-      }
-    }
+    ids.add(row.user_id as string);
   }
 
   return [...ids];

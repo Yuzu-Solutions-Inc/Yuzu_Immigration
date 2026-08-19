@@ -112,7 +112,7 @@
       },
       "team": {
         "title": "Espacio de la firma",
-        "body": "Cada firma es su propio inquilino. Invite administradores, consultores y asistentes. Trabaje en inglés, francés o español — también en los flujos orientados al cliente."
+        "body": "Cada firma es su propio inquilino. Invite administradores y gestores de casos. Trabaje en inglés, francés o español — también en los flujos orientados al cliente."
       }
     },
     "howEyebrow": "Cómo funciona",
@@ -302,8 +302,7 @@
   },
   "orgRoles": {
     "admin": "Admin",
-    "consultant": "Consultor",
-    "assistant": "Asistente"
+    "case_manager": "Gestor de casos"
   },
   "invite": {
     "title": "Unirse a {org}",
@@ -675,7 +674,7 @@
     "save": "Guardar cambios",
     "saving": "Guardando…",
     "saved": "Guardado.",
-    "teamHelp": "Invita al personal por correo y asigna Admin, Consultor o Asistente.",
+    "teamHelp": "Invita al personal por correo y asigna Admin o Gestor de casos.",
     "inviteEmail": "Correo",
     "inviteRole": "Rol",
     "inviteSend": "Enviar invitación",
@@ -828,11 +827,6 @@
     "deleteAria": "Eliminar {title}",
     "deleting": "Eliminando…",
     "deleteConfirm": "¿Eliminar {title}? Esta acción borra de forma permanente el expediente, los documentos y las respuestas. Los clientes sin otro expediente en la firma también se borran, incluidas sus citas. Esta acción no se puede deshacer.",
-    "shareWithAssistants": "Compartir con asistentes",
-    "shareHelp": "Los asistentes solo ven los proyectos que compartes con ellos y los participantes de esos expedientes.",
-    "noAssistants": "Aún no hay asistentes en esta organización. Invita uno en Ajustes de organización.",
-    "shareSave": "Guardar uso compartido",
-    "shareSaved": "Uso compartido actualizado.",
     "status": "Status",
     "statusAt": "Status date",
     "statusAtHelp": "Defaults to today when you change status — adjust if needed.",
@@ -1846,7 +1840,7 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacidad",
     "privacyTitle": "Política de privacidad",
-    "privacyUpdated": "Última actualización: 17 de agosto de 2026",
+    "privacyUpdated": "Última actualización: 19 de agosto de 2026",
     "privacyIntro": "Yuzu Immigration es un software de gestión de práctica operado por Yuzu Solutions Inc. para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa Yuzu Immigration — incluido el espacio de trabajo del consultor, el portal del cliente y las páginas públicas de reserva. El uso del servicio también se rige por nuestros Términos y condiciones.\n\nEsta política apoya la rendición de cuentas prevista por PIPEDA y por la Ley sobre la protección de los datos personales en el sector privado de Quebec (Ley 25). No es una certificación, ni asesoramiento jurídico, ni un contrato de representación con Yuzu Solutions Inc.",
     "backHome": "Volver al inicio",
     "consentTitle": "Cómo se usa su información",
@@ -1855,7 +1849,7 @@
     "viewTerms": "Ver los términos y condiciones",
     "termsLink": "Términos",
     "termsTitle": "Términos y condiciones",
-    "termsUpdated": "Última actualización: 16 de agosto de 2026",
+    "termsUpdated": "Última actualización: 19 de agosto de 2026",
     "termsIntro": "Estos términos rigen el uso de Yuzu Immigration, software de gestión de práctica operado por Yuzu Solutions Inc. Aplican a las firmas consultoras y su personal, y a los clientes y personas que reservan mediante los enlaces de una firma.\n\nNo son asesoramiento jurídico. No son un mandato, encargo ni relación profesional con Yuzu Solutions Inc. para consulta, representación o servicios jurídicos de inmigración. Los servicios de inmigración los presta únicamente la firma con la que usted trata.",
     "termsName": "Términos y condiciones",
     "privacyName": "Política de privacidad",
@@ -1903,7 +1897,7 @@
       },
       "safeguards": {
         "title": "7. Medidas de seguridad",
-        "body": "Aplicamos salvaguardas proporcionales a la sensibilidad de los expedientes de inmigración, incluyendo:\n• Cifrado en tránsito (TLS)\n• Cifrado en reposo de infraestructura para la base de datos, la autenticación y el almacenamiento de archivos\n• AES-256-GCM a nivel de aplicación para documentos del cliente y para muchos campos, con una clave distinta por firma\n• Algunos campos operativos no tienen ese cifrado de aplicación (por ejemplo idioma preferido, etiquetas de estatus, horarios de cita y metadatos de auditoría)\n• Controles de acceso limitados a cada firma; los asistentes solo ven los proyectos que se les comparten (máxima confidencialidad por defecto para ese rol)\n• Privilegios service_role restringidos a rutas de servidor\n• Enlaces identificados con tokens difíciles de adivinar; límites de frecuencia con hash de correo e IP\n• Contraseñas del personal gestionadas por Supabase Auth; contraseñas del portal verificadas solo en el servidor\n\nEl personal de Yuzu que posee la clave de envoltura de la plataforma puede, en la práctica, descifrar las claves de las firmas para operar, restaurar o asegurar el servicio, o para cumplir la ley. Limitamos ese acceso operativamente. Ningún método es perfectamente seguro. Usted usa el servicio comprendiendo ese riesgo residual."
+        "body": "Aplicamos salvaguardas proporcionales a la sensibilidad de los expedientes de inmigración, incluyendo:\n• Cifrado en tránsito (TLS)\n• Cifrado en reposo de infraestructura para la base de datos, la autenticación y el almacenamiento de archivos\n• AES-256-GCM a nivel de aplicación para documentos del cliente y para muchos campos, con una clave distinta por firma\n• Algunos campos operativos no tienen ese cifrado de aplicación (por ejemplo idioma preferido, etiquetas de estatus, horarios de cita y metadatos de auditoría)\n• Controles de acceso limitados a cada firma; los roles Admin y Gestor de casos controlan quién administra el espacio y quién trabaja los expedientes\n• Privilegios service_role restringidos a rutas de servidor\n• Enlaces identificados con tokens difíciles de adivinar; límites de frecuencia con hash de correo e IP\n• Contraseñas del personal gestionadas por Supabase Auth; contraseñas del portal verificadas solo en el servidor\n\nEl personal de Yuzu que posee la clave de envoltura de la plataforma puede, en la práctica, descifrar las claves de las firmas para operar, restaurar o asegurar el servicio, o para cumplir la ley. Limitamos ese acceso operativamente. Ningún método es perfectamente seguro. Usted usa el servicio comprendiendo ese riesgo residual."
       },
       "retention": {
         "title": "8. Conservación y destrucción",
@@ -1953,7 +1947,7 @@
       },
       "parties": {
         "title": "2. A quién aplican estos términos",
-        "body": "Yuzu Solutions Inc. opera Yuzu Immigration.\n\nUna «firma» es la organización consultora que tiene un espacio de trabajo. El «personal» son los usuarios de la firma (administradores, consultores y asistentes).\n\nUn «cliente» o «invitado» usa el enlace compartido, el portal o la página pública de reserva de una firma. El cliente tiene relación con la firma, no un contrato profesional con Yuzu Solutions Inc.\n\nLas cláusulas que imponen deberes profesionales, de indemnización o de pago a una «firma» aplican a las firmas y a su personal. No imponen esos deberes a los clientes, salvo las reglas de uso aceptable y exactitud que aplican a todos."
+        "body": "Yuzu Solutions Inc. opera Yuzu Immigration.\n\nUna «firma» es la organización consultora que tiene un espacio de trabajo. El «personal» son los usuarios de la firma (administradores y gestores de casos).\n\nUn «cliente» o «invitado» usa el enlace compartido, el portal o la página pública de reserva de una firma. El cliente tiene relación con la firma, no un contrato profesional con Yuzu Solutions Inc.\n\nLas cláusulas que imponen deberes profesionales, de indemnización o de pago a una «firma» aplican a las firmas y a su personal. No imponen esos deberes a los clientes, salvo las reglas de uso aceptable y exactitud que aplican a todos."
       },
       "service": {
         "title": "3. El servicio",

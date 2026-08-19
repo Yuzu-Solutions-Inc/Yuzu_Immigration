@@ -55,7 +55,7 @@ Pour chaque case, nous acceptons que des renseignements (p. ex. nom, courriel, t
 
 | Risque | Mesure |
 |---|---|
-| Trop de personnel voit les dossiers | Rôles admin / consultant / adjoint ; partage des projets au besoin seulement |
+| Trop de personnel voit les dossiers | Rôles Admin et Gestionnaire de cas ; seuls les membres qui en ont besoin travaillent le dossier |
 | Fuite d’un compte portail | Invitations envoyées seulement au courriel du client au dossier ; mot de passe défini par le client ou connexion Google |
 | Surcollecte | Seulement ce qui est nécessaire au mandat |
 | Mineurs | Autorisation parentale / tuteur avant toute collecte concernant un enfant de moins de 14 ans |

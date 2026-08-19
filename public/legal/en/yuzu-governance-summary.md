@@ -18,7 +18,7 @@ Immigration files can include names, contact details, passports, questionnaires,
 ## Main rules we follow
 
 1. Collect and use information only for operating Yuzu Immigration and the purposes in the Privacy Policy. We do not sell personal information.  
-2. Limit access inside each firm; assistants see only files shared with them.  
+2. Limit access inside each firm; Admin and Case Manager roles control workspace administration versus caseload work.  
 3. Encrypt data in transit. Keep the database, auth, and files in Canada (Montréal region). Encrypt many client fields and documents with a key per firm.  
 4. Keep optional tools (Google, Microsoft, Zoom, Square, product analytics) **off** until someone opts in.  
 5. Retain closed files by default for six years to support typical College rules, then allow secure destruction.  

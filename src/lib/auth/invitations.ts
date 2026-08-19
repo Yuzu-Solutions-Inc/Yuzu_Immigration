@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import type { OrgRole } from "@/lib/auth/rbac";
+import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
 import { getSessionUser } from "@/lib/auth/session";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -44,7 +45,7 @@ async function addMembership(input: {
     {
       organization_id: input.organizationId,
       user_id: input.userId,
-      role: input.role,
+      role: isOrgRole(input.role) ? input.role : DEFAULT_ORG_ROLE,
     },
     { onConflict: "organization_id,user_id", ignoreDuplicates: true },
   );
@@ -176,6 +177,7 @@ export async function getInvitationByToken(token: string) {
 
   return {
     ...(data as InvitationRow),
+    role: isOrgRole(data.role) ? data.role : DEFAULT_ORG_ROLE,
     organizationName: (org?.name as string | undefined) ?? null,
   };
 }

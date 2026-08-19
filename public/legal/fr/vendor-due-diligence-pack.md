@@ -36,7 +36,7 @@ Absent du produit : appariement biométrique.
 - TLS  
 - Chiffrement d’infrastructure au repos (Supabase)  
 - AES-256-GCM par cabinet pour documents et de nombreux champs  
-- Isolation RLS ; adjoints : dossiers partagés seulement  
+- Isolation RLS ; accès du personnel limité au cabinet  
 - Clé service_role côté serveur seulement  
 - Jetons de réservation difficiles à deviner ; mot de passe du portail  
 - Journal d’audit et registre de destruction  

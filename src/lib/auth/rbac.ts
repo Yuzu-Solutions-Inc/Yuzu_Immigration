@@ -1,6 +1,8 @@
-export const ORG_ROLES = ["admin", "consultant", "assistant"] as const;
+export const ORG_ROLES = ["admin", "case_manager"] as const;
 
 export type OrgRole = (typeof ORG_ROLES)[number];
+
+export const DEFAULT_ORG_ROLE: OrgRole = "case_manager";
 
 export function isOrgRole(value: unknown): value is OrgRole {
   return (
@@ -12,13 +14,9 @@ export function isAdmin(role: OrgRole | null | undefined): boolean {
   return role === "admin";
 }
 
-/** Admin and consultant: full org caseload, can create records. */
+/** Admin and case manager: full org caseload, can create records. */
 export function canCreateRecords(role: OrgRole | null | undefined): boolean {
-  return role === "admin" || role === "consultant";
-}
-
-export function canShareProjects(role: OrgRole | null | undefined): boolean {
-  return role === "admin" || role === "consultant";
+  return role === "admin" || role === "case_manager";
 }
 
 /** Org settings, invites, retention destroy, audit log. */
@@ -32,7 +30,7 @@ export function canDeleteRecord(input: {
   actorUserId: string | null | undefined;
 }): boolean {
   if (isAdmin(input.role)) return true;
-  if (input.role === "consultant" && input.createdBy && input.actorUserId) {
+  if (input.role === "case_manager" && input.createdBy && input.actorUserId) {
     return input.createdBy === input.actorUserId;
   }
   return false;

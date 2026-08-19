@@ -4,10 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
-import {
-  canAdministerOrg,
-  canShareProjects,
-} from "@/lib/auth/rbac";
+import { canAdministerOrg } from "@/lib/auth/rbac";
 import {
   INVITE_TTL_DAYS,
   hashInviteToken,
@@ -25,7 +22,7 @@ export type TeamActionState = {
   inviteUrl?: string;
 };
 
-const roleSchema = z.enum(["admin", "consultant", "assistant"]);
+const roleSchema = z.enum(["admin", "case_manager"]);
 
 export async function inviteOrgMemberAction(
   _prev: TeamActionState,
@@ -318,101 +315,4 @@ export async function removeOrgMemberAction(
 
   revalidatePath(`/${parsed.data.locale}/settings/team`);
   return { message: "removed" };
-}
-
-export async function setProjectAssistantAccessAction(
-  _prev: TeamActionState,
-  formData: FormData,
-): Promise<TeamActionState> {
-  const parsed = z
-    .object({
-      locale: z.enum(["en", "fr", "es"]).default("en"),
-      projectId: z.string().uuid(),
-      userIds: z.array(z.string().uuid()),
-    })
-    .safeParse({
-      locale: formData.get("locale") || "en",
-      projectId: String(formData.get("projectId") || ""),
-      userIds: formData.getAll("userId").map(String),
-    });
-
-  if (!parsed.success) return { error: "invalid" };
-
-  const membership = await getPrimaryMembership();
-  if (!membership || !canShareProjects(membership.role)) {
-    return { error: "forbidden" };
-  }
-
-  const orgId = membership.organization.id;
-  const supabase = await createClient();
-  const { data: project } = await supabase
-    .from("immigration_projects")
-    .select("id")
-    .eq("id", parsed.data.projectId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-
-  if (!project) return { error: "not_found" };
-
-  const { data: assistants } = await supabase
-    .from("organization_members")
-    .select("user_id")
-    .eq("organization_id", orgId)
-    .eq("role", "assistant");
-
-  const allowed = new Set((assistants ?? []).map((a) => a.user_id as string));
-  const nextIds = parsed.data.userIds.filter((id) => allowed.has(id));
-
-  const { data: existing } = await supabase
-    .from("project_staff_access")
-    .select("id, user_id")
-    .eq("project_id", parsed.data.projectId)
-    .eq("organization_id", orgId);
-
-  const existingIds = new Set((existing ?? []).map((r) => r.user_id as string));
-  const nextSet = new Set(nextIds);
-
-  const toRemove = (existing ?? []).filter(
-    (row) => !nextSet.has(row.user_id as string),
-  );
-  const toAdd = nextIds.filter((id) => !existingIds.has(id));
-
-  if (toRemove.length > 0) {
-    await supabase
-      .from("project_staff_access")
-      .delete()
-      .in(
-        "id",
-        toRemove.map((r) => r.id as string),
-      );
-  }
-
-  const user = await getSessionUser();
-  if (toAdd.length > 0) {
-    const { error } = await supabase.from("project_staff_access").insert(
-      toAdd.map((userId) => ({
-        organization_id: orgId,
-        project_id: parsed.data.projectId,
-        user_id: userId,
-        granted_by: user?.id ?? null,
-      })),
-    );
-    if (error) {
-      console.error("share project:", error.message);
-      return { error: "save_failed" };
-    }
-  }
-
-  await recordAuditEvent({
-    organizationId: orgId,
-    actorUserId: user?.id,
-    actorKind: "staff",
-    action: "project.share_assistants",
-    resourceType: "immigration_project",
-    resourceId: parsed.data.projectId,
-    metadata: { userIds: nextIds },
-  });
-
-  revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
-  return { message: "shared" };
 }

@@ -112,7 +112,7 @@
       },
       "team": {
         "title": "Espace cabinet",
-        "body": "Chaque cabinet a son propre locataire. Invitez des admins, consultants et assistants. Travaillez en français, anglais ou espagnol — y compris les parcours clients."
+        "body": "Chaque cabinet a son propre locataire. Invitez des admins et des gestionnaires de cas. Travaillez en français, anglais ou espagnol — y compris les parcours clients."
       }
     },
     "howEyebrow": "Comment ça marche",
@@ -302,8 +302,7 @@
   },
   "orgRoles": {
     "admin": "Admin",
-    "consultant": "Consultant",
-    "assistant": "Adjoint"
+    "case_manager": "Gestionnaire de cas"
   },
   "invite": {
     "title": "Rejoindre {org}",
@@ -675,7 +674,7 @@
     "save": "Enregistrer",
     "saving": "Enregistrement…",
     "saved": "Enregistré.",
-    "teamHelp": "Invitez le personnel par courriel et attribuez Admin, Consultant ou Adjoint.",
+    "teamHelp": "Invitez le personnel par courriel et attribuez Admin ou Gestionnaire de cas.",
     "inviteEmail": "Courriel",
     "inviteRole": "Rôle",
     "inviteSend": "Envoyer l’invitation",
@@ -828,11 +827,6 @@
     "deleteAria": "Supprimer {title}",
     "deleting": "Suppression…",
     "deleteConfirm": "Supprimer {title} ? Cette action efface définitivement le dossier, les documents et les réponses. Les clients sans autre dossier au cabinet sont aussi effacés, y compris leurs rendez-vous. Cette action est irréversible.",
-    "shareWithAssistants": "Partager avec les adjoints",
-    "shareHelp": "Les adjoints ne voient que les projets que vous partagez avec eux, ainsi que les participants de ces dossiers.",
-    "noAssistants": "Aucun adjoint dans cette organisation. Invitez-en un dans les paramètres de l’organisation.",
-    "shareSave": "Enregistrer le partage",
-    "shareSaved": "Partage mis à jour.",
     "status": "Statut",
     "statusAt": "Date du statut",
     "statusAtHelp": "Par défaut aujourd’hui quand vous changez le statut — ajustez au besoin.",
@@ -1846,7 +1840,7 @@
     "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI).",
     "privacyLink": "Confidentialité",
     "privacyTitle": "Politique de confidentialité",
-    "privacyUpdated": "Dernière mise à jour : 17 août 2026",
+    "privacyUpdated": "Dernière mise à jour : 19 août 2026",
     "privacyIntro": "Yuzu Immigration est un logiciel de gestion de pratique exploité par Yuzu Solutions Inc. pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez Yuzu Immigration — y compris l’espace de travail du cabinet, le portail client et les pages de réservation publiques. L’utilisation du service est aussi régie par nos conditions générales.\n\nCette politique appuie l’obligation de rendre compte prévue par la LPRPDE et par la Loi sur la protection des renseignements personnels dans le secteur privé du Québec (Loi 25). Elle ne constitue ni une certification, ni un avis juridique, ni un mandat d’immigration avec Yuzu Solutions Inc.",
     "backHome": "Retour à l’accueil",
     "consentTitle": "Utilisation de vos renseignements",
@@ -1855,7 +1849,7 @@
     "viewTerms": "Voir les conditions générales",
     "termsLink": "Conditions",
     "termsTitle": "Conditions générales",
-    "termsUpdated": "Dernière mise à jour : 16 août 2026",
+    "termsUpdated": "Dernière mise à jour : 19 août 2026",
     "termsIntro": "Ces conditions régissent l’utilisation de Yuzu Immigration, logiciel de gestion de pratique exploité par Yuzu Solutions Inc. Elles s’appliquent aux cabinets et à leur personnel, ainsi qu’aux clients et aux personnes qui réservent via les liens d’un cabinet.\n\nElles ne constituent pas un avis juridique. Elles ne créent pas de mandat, d’engagement ni de relation professionnelle avec Yuzu Solutions Inc. pour des services de consultation, de représentation ou des services juridiques en immigration. Les services d’immigration sont fournis uniquement par le cabinet avec lequel vous transigez.",
     "termsName": "Conditions générales",
     "privacyName": "Politique de confidentialité",
@@ -1903,7 +1897,7 @@
       },
       "safeguards": {
         "title": "7. Mesures de protection",
-        "body": "Nous appliquons des mesures proportionnées à la sensibilité des dossiers d’immigration, notamment :\n• Chiffrement en transit (TLS)\n• Chiffrement au repos côté infrastructure pour la base de données, l’authentification et le stockage de fichiers\n• AES-256-GCM au niveau applicatif pour les documents clients et pour plusieurs champs, avec une clé distincte par cabinet\n• Certains champs opérationnels ne reçoivent pas ce chiffrement applicatif (par exemple la langue préférée, les libellés de statut, les horaires de rendez-vous et les métadonnées d’audit)\n• Contrôles d’accès limités à chaque cabinet ; les adjoints ne voient que les dossiers qui leur sont partagés (paramètres de plus haute confidentialité par défaut pour ce rôle)\n• Privilèges service_role limités à des chemins serveur\n• Liens identifiés par des jetons difficiles à deviner ; limites de débit par hachage du courriel et de l’IP\n• Mots de passe du personnel gérés par Supabase Auth ; mots de passe du portail vérifiés seulement côté serveur\n\nLe personnel Yuzu qui détient la clé d’enveloppe de la plateforme peut techniquement déchiffrer les clés des cabinets pour exploiter, restaurer ou sécuriser le service, ou pour respecter la loi. Nous limitons cet accès sur le plan opérationnel. Aucune méthode n’est parfaitement sûre. Vous utilisez le service en comprenant ce risque résiduel."
+        "body": "Nous appliquons des mesures proportionnées à la sensibilité des dossiers d’immigration, notamment :\n• Chiffrement en transit (TLS)\n• Chiffrement au repos côté infrastructure pour la base de données, l’authentification et le stockage de fichiers\n• AES-256-GCM au niveau applicatif pour les documents clients et pour plusieurs champs, avec une clé distincte par cabinet\n• Certains champs opérationnels ne reçoivent pas ce chiffrement applicatif (par exemple la langue préférée, les libellés de statut, les horaires de rendez-vous et les métadonnées d’audit)\n• Contrôles d’accès limités à chaque cabinet ; les rôles Admin et Gestionnaire de cas déterminent qui administre l’espace et qui travaille les dossiers\n• Privilèges service_role limités à des chemins serveur\n• Liens identifiés par des jetons difficiles à deviner ; limites de débit par hachage du courriel et de l’IP\n• Mots de passe du personnel gérés par Supabase Auth ; mots de passe du portail vérifiés seulement côté serveur\n\nLe personnel Yuzu qui détient la clé d’enveloppe de la plateforme peut techniquement déchiffrer les clés des cabinets pour exploiter, restaurer ou sécuriser le service, ou pour respecter la loi. Nous limitons cet accès sur le plan opérationnel. Aucune méthode n’est parfaitement sûre. Vous utilisez le service en comprenant ce risque résiduel."
       },
       "retention": {
         "title": "8. Conservation et destruction",
@@ -1953,7 +1947,7 @@
       },
       "parties": {
         "title": "2. À qui s’appliquent ces conditions",
-        "body": "Yuzu Solutions Inc. exploite Yuzu Immigration.\n\nUn « cabinet » est l’organisation qui détient un espace de travail. Le « personnel » désigne les utilisateurs du cabinet (administrateurs, consultants et adjoints).\n\nUn « client » ou une « personne qui réserve » utilise le portail ou la page de réservation publique d’un cabinet. Le client a une relation avec le cabinet, et non un mandat professionnel avec Yuzu Solutions Inc.\n\nLes articles qui imposent des devoirs professionnels, d’indemnisation ou de paiement à un « cabinet » s’appliquent aux cabinets et à leur personnel. Ils n’imposent pas ces devoirs aux clients, sauf les règles d’utilisation acceptable et d’exactitude qui s’appliquent à tous."
+        "body": "Yuzu Solutions Inc. exploite Yuzu Immigration.\n\nUn « cabinet » est l’organisation qui détient un espace de travail. Le « personnel » désigne les utilisateurs du cabinet (administrateurs et gestionnaires de cas).\n\nUn « client » ou une « personne qui réserve » utilise le portail ou la page de réservation publique d’un cabinet. Le client a une relation avec le cabinet, et non un mandat professionnel avec Yuzu Solutions Inc.\n\nLes articles qui imposent des devoirs professionnels, d’indemnisation ou de paiement à un « cabinet » s’appliquent aux cabinets et à leur personnel. Ils n’imposent pas ces devoirs aux clients, sauf les règles d’utilisation acceptable et d’exactitude qui s’appliquent à tous."
       },
       "service": {
         "title": "3. Le service",

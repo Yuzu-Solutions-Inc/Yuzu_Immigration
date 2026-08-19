@@ -21,8 +21,7 @@ import { sql } from "drizzle-orm";
 
 export const orgMemberRoleEnum = pgEnum("org_member_role", [
   "admin",
-  "consultant",
-  "assistant",
+  "case_manager",
 ]);
 
 export const projectStatusEnum = pgEnum("project_status", [
@@ -144,7 +143,7 @@ export const organizationMembers = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
-    role: orgMemberRoleEnum("role").notNull().default("consultant"),
+    role: orgMemberRoleEnum("role").notNull().default("case_manager"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -318,30 +317,6 @@ export const projectNotes = pgTable("project_notes", {
     .defaultNow()
     .notNull(),
 });
-
-/** Assistants only see projects they are shared on. */
-export const projectStaffAccess = pgTable(
-  "project_staff_access",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    organizationId: uuid("organization_id")
-      .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => immigrationProjects.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => profiles.id, { onDelete: "cascade" }),
-    grantedBy: uuid("granted_by").references(() => profiles.id, {
-      onDelete: "set null",
-    }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => [unique().on(table.projectId, table.userId)],
-);
 
 export const projectStatusHistory = pgTable("project_status_history", {
   id: uuid("id").defaultRandom().primaryKey(),

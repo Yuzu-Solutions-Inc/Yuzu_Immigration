@@ -527,11 +527,6 @@ export async function eraseProjectPersonalData(input: {
     .eq("organization_id", organizationId)
     .eq("project_id", projectId);
   await admin
-    .from("project_staff_access")
-    .delete()
-    .eq("organization_id", organizationId)
-    .eq("project_id", projectId);
-  await admin
     .from("project_status_history")
     .delete()
     .eq("organization_id", organizationId)

@@ -36,7 +36,7 @@ Not in product: biometric matching.
 - TLS in transit  
 - Infrastructure encryption at rest (Supabase)  
 - Per-firm AES-256-GCM for documents and many client fields  
-- RLS tenant isolation; assistants see only shared projects  
+- RLS tenant isolation; staff access is scoped to the firm  
 - Service-role key server-only  
 - Unguessable booking tokens; portal passwords  
 - Audit log and destruction register for firm admins  
