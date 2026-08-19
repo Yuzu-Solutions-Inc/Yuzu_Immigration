@@ -41,8 +41,22 @@ export function personSearchName(firstName: string, lastName: string) {
   return normalizeSearchText(`${firstName} ${lastName}`);
 }
 
-export function projectSearchTitle(title: string) {
-  return normalizeSearchText(title);
+/** Case-insensitive substring match on decrypted text. Empty query matches all. */
+export function matchesSearchQuery(haystack: string, query: string) {
+  const needle = normalizeSearchText(query);
+  if (!needle) return true;
+  return normalizeSearchText(haystack).includes(needle);
+}
+
+export function comparePersonSearchName(
+  a: { first_name: string; last_name: string },
+  b: { first_name: string; last_name: string },
+) {
+  return personSearchName(a.first_name, a.last_name).localeCompare(
+    personSearchName(b.first_name, b.last_name),
+    "en",
+    { sensitivity: "base" },
+  );
 }
 
 export function hashPortalEmail(email: string, appKey: Buffer) {
@@ -66,7 +80,6 @@ export function personLookupWrite(
       ? hashEmailLookup(organizationId, email, orgKey)
       : null,
     portal_email_hash: portalEmailHash,
-    search_name: personSearchName(input.first_name, input.last_name),
   };
 }
 
@@ -78,10 +91,6 @@ export function appointmentLookupWrite(
   return {
     email_lookup_hash: hashEmailLookup(organizationId, email, orgKey),
   };
-}
-
-export function escapeIlike(value: string) {
-  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
 }
 
 export function looksLikeEmail(query: string) {

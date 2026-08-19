@@ -12,13 +12,10 @@ async function main() {
   const {
     decryptBookingGuestRow,
     decryptPersonRow,
-    decryptProjectRow,
   } = await import("../src/lib/security/client-pii");
-  const {
-    appointmentLookupWrite,
-    personLookupWrite,
-    projectSearchTitle,
-  } = await import("../src/lib/security/email-lookup");
+  const { appointmentLookupWrite, personLookupWrite } = await import(
+    "../src/lib/security/email-lookup"
+  );
   const { refreshProjectProgress } = await import("../src/lib/crm/progress");
 
   const admin = createServiceClient();
@@ -74,19 +71,12 @@ async function main() {
 
   const { data: projects, error: projectError } = await admin
     .from("immigration_projects")
-    .select("id, organization_id, title");
+    .select("id, organization_id");
   if (projectError) throw new Error(projectError.message);
 
   let projectsUpdated = 0;
   for (const row of projects ?? []) {
     const orgId = row.organization_id as string;
-    const key = await loadOrCreateOrgDataKey(orgId);
-    const project = decryptProjectRow({ title: row.title as string }, key);
-    const { error } = await admin
-      .from("immigration_projects")
-      .update({ search_title: projectSearchTitle(project.title ?? "") })
-      .eq("id", row.id as string);
-    if (error) throw new Error(error.message);
     await refreshProjectProgress(orgId, row.id as string, admin);
     projectsUpdated += 1;
   }

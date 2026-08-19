@@ -169,7 +169,7 @@ export type PersonDataExportPayload = {
 
 const OMISSIONS = [
   "Encryption keys, wrapped org DEKs, and ciphertext blobs",
-  "Lookup / search hashes (email_lookup_hash, portal_email_hash, search_name)",
+  "Lookup hashes (email_lookup_hash, portal_email_hash)",
   "Portal access codes and access tokens",
   "Booking-invite, payment, and manage tokens (hash or encrypted)",
   "Storage paths and encryption algorithm identifiers for uploaded files",

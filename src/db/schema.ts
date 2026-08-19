@@ -187,8 +187,6 @@ export const people = pgTable("people", {
   emailLookupHash: text("email_lookup_hash"),
   /** Platform HMAC of normalized email for portal signup whitelist (same email can match many orgs). */
   portalEmailHash: text("portal_email_hash"),
-  /** Lowercased first+last for CRM search. Ciphertext remains the source of truth. */
-  searchName: text("search_name"),
   phone: text("phone"),
   preferredLocale: text("preferred_locale").default("en").notNull(),
   immigrationStatus: personImmigrationStatusEnum("immigration_status")
@@ -249,8 +247,6 @@ export const immigrationProjects = pgTable("immigration_projects", {
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  /** Lowercased title for CRM search. Encrypted title remains the source of truth. */
-  searchTitle: text("search_title"),
   docsDone: integer("docs_done").notNull().default(0),
   docsTotal: integer("docs_total").notNull().default(0),
   docsToReview: integer("docs_to_review").notNull().default(0),

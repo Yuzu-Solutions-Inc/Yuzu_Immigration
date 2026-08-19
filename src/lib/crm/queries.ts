@@ -18,9 +18,10 @@ import {
   decryptProjectRow,
 } from "@/lib/security/client-pii";
 import {
-  escapeIlike,
+  comparePersonSearchName,
   hashEmailLookup,
   looksLikeEmail,
+  matchesSearchQuery,
 } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { sortByPrincipalFirst } from "@/lib/crm/programs";
@@ -157,6 +158,36 @@ export async function requireOrganizationId() {
   return membership.organization.id;
 }
 
+const ORG_LIST_SCAN_CAP = 5000;
+const ORG_LIST_PAGE_SIZE = 1000;
+
+async function fetchOrgRows<T>(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: "people" | "immigration_projects",
+  orgId: string,
+  columns: string,
+): Promise<{ rows: T[]; error: string | null }> {
+  const rows: T[] = [];
+  let from = 0;
+  while (rows.length < ORG_LIST_SCAN_CAP) {
+    const to = Math.min(from + ORG_LIST_PAGE_SIZE, ORG_LIST_SCAN_CAP) - 1;
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .eq("organization_id", orgId)
+      .order("id", { ascending: true })
+      .range(from, to);
+    if (error) {
+      return { rows: [], error: error.message };
+    }
+    const page = (data ?? []) as T[];
+    rows.push(...page);
+    if (page.length < to - from + 1) break;
+    from += ORG_LIST_PAGE_SIZE;
+  }
+  return { rows, error: null };
+}
+
 export async function listPeople(
   query?: string,
   options?: { limit?: number },
@@ -166,32 +197,48 @@ export async function listPeople(
 
   const supabase = await createClient();
   const key = await getOrgDataKey(orgId);
-  const limit = options?.limit ?? 100;
+  const limit = options?.limit ?? ORG_LIST_SCAN_CAP;
   const q = query?.trim() ?? "";
 
-  let request = supabase
-    .from("people")
-    .select("*")
-    .eq("organization_id", orgId)
-    .limit(limit);
-
   if (q && looksLikeEmail(q)) {
-    request = request.eq("email_lookup_hash", hashEmailLookup(orgId, q, key));
-  } else if (q) {
-    request = request.ilike("search_name", `%${escapeIlike(q)}%`);
+    const { data, error } = await supabase
+      .from("people")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("email_lookup_hash", hashEmailLookup(orgId, q, key))
+      .limit(limit);
+    if (error) {
+      console.error("listPeople:", error.message);
+      return [];
+    }
+    return ((data ?? []) as PersonRow[])
+      .map((row) => decryptPersonRow(row, key))
+      .sort(comparePersonSearchName);
   }
 
-  const { data, error } = await request.order("search_name", {
-    ascending: true,
-    nullsFirst: false,
-  });
-
+  const { rows, error } = await fetchOrgRows<PersonRow>(
+    supabase,
+    "people",
+    orgId,
+    "*",
+  );
   if (error) {
-    console.error("listPeople:", error.message);
+    console.error("listPeople:", error);
     return [];
   }
 
-  return ((data ?? []) as PersonRow[]).map((row) => decryptPersonRow(row, key));
+  return rows
+    .map((row) => decryptPersonRow(row, key))
+    .filter((person) =>
+      q
+        ? matchesSearchQuery(
+            `${person.first_name} ${person.last_name}`,
+            q,
+          )
+        : true,
+    )
+    .sort(comparePersonSearchName)
+    .slice(0, limit);
 }
 
 export async function listUpcomingStatusExpiries(
@@ -603,26 +650,36 @@ export async function searchProjects(
   if (!q) return [];
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("immigration_projects")
-    .select("id, title, status")
-    .eq("organization_id", orgId)
-    .ilike("search_title", `%${escapeIlike(q)}%`)
-    .order("opened_at", { ascending: false })
-    .limit(limit);
-
+  const { rows, error } = await fetchOrgRows<{
+    id: string;
+    title: string;
+    status: ProjectStatus;
+    opened_at: string;
+  }>(supabase, "immigration_projects", orgId, "id, title, status, opened_at");
   if (error) {
-    console.error("searchProjects:", error.message);
+    console.error("searchProjects:", error);
     return [];
   }
 
   const key = await getOrgDataKey(orgId);
-  return ((data ?? []) as Array<Pick<ProjectRow, "id" | "title" | "status">>).map(
-    (row) => ({
+  return rows
+    .map((row) => ({
       ...decryptProjectRow(row, key),
+      opened_at: row.opened_at,
+    }))
+    .filter((project) => matchesSearchQuery(project.title, q))
+    .sort((a, b) => {
+      const byOpened = b.opened_at.localeCompare(a.opened_at);
+      if (byOpened !== 0) return byOpened;
+      return b.id.localeCompare(a.id);
+    })
+    .slice(0, limit)
+    .map((project) => ({
+      id: project.id,
+      title: project.title,
+      status: project.status,
       organization_program_name: null,
-    }),
-  );
+    }));
 }
 
 export async function getProject(projectId: string): Promise<ProjectRow | null> {

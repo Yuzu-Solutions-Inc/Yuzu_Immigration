@@ -32,7 +32,7 @@ import {
   encryptProjectNoteBody,
   encryptProjectWrite,
 } from "@/lib/security/client-pii";
-import { personLookupWrite, projectSearchTitle } from "@/lib/security/email-lookup";
+import { personLookupWrite } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
@@ -476,7 +476,6 @@ export async function createProjectAction(
         },
         await getOrgDataKey(orgId),
       ),
-      search_title: projectSearchTitle(title),
       status: "new",
       status_at: statusAt,
       submit_before: submitBefore,
@@ -821,7 +820,6 @@ export async function updateProjectAction(
         },
         await getOrgDataKey(orgId),
       ),
-      search_title: projectSearchTitle(title),
       status,
       status_at: statusAt,
       submit_before: data.submitBefore || null,
