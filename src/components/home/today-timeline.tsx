@@ -65,40 +65,35 @@ export function TodayTimeline({
   return (
     <ol className="relative">
       <span
-        className="absolute top-2 bottom-2 left-[3.25rem] w-px bg-border"
+        className="pointer-events-none absolute top-3 bottom-3 left-[calc(3.25rem+0.5rem+0.5rem)] w-px -translate-x-1/2 bg-border"
         aria-hidden
       />
-      {slots.map((slot, index) => {
+      {slots.map((slot) => {
         if (slot.type === "now") {
           return (
-            <li
-              key="now"
-              className="relative grid grid-cols-[3.25rem_1rem_minmax(0,1fr)] items-center gap-x-2 py-2"
-            >
-              <p className="text-right text-[10px] font-semibold tracking-wide text-destructive uppercase">
+            <li key="now" className="flex items-center gap-2 py-2">
+              <p className="w-[3.25rem] shrink-0 text-right text-[10px] font-semibold tracking-wide text-destructive uppercase">
                 {nowLabel}
               </p>
-              <span className="relative z-10 flex justify-center">
+              <span className="relative z-10 flex w-4 shrink-0 justify-center">
                 <span className="size-2.5 rounded-full bg-destructive ring-4 ring-surface" />
               </span>
-              <span className="h-px bg-destructive/30" aria-hidden />
+              <span className="h-px min-w-0 flex-1 bg-destructive/30" aria-hidden />
             </li>
           );
         }
 
         const { item } = slot;
-        const isLast = index === slots.length - 1;
         return (
           <li key={item.id}>
             <Link
               href={item.href}
               className={cn(
-                "relative grid grid-cols-[3.25rem_1rem_minmax(0,1fr)] gap-x-2 rounded-lg py-2 pr-1 transition-colors hover:bg-muted/40",
+                "flex gap-2 rounded-lg py-2 pr-1 transition-colors hover:bg-muted/40",
                 item.past && "opacity-55",
-                isLast && "pb-1",
               )}
             >
-              <div className="pt-0.5 text-right">
+              <div className="w-[3.25rem] shrink-0 pt-0.5 text-right">
                 <p className="text-sm font-medium text-brand tabular-nums">
                   {item.startLabel}
                 </p>
@@ -106,7 +101,7 @@ export function TodayTimeline({
                   {item.endLabel}
                 </p>
               </div>
-              <span className="relative z-10 flex justify-center pt-1.5">
+              <span className="relative z-10 flex w-4 shrink-0 justify-center pt-1.5">
                 <span
                   className={cn(
                     "size-2.5 rounded-full ring-4 ring-surface",
@@ -119,7 +114,7 @@ export function TodayTimeline({
                   aria-hidden
                 />
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate text-sm font-medium text-brand">
                     {item.label}

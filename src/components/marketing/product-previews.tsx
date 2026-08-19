@@ -23,7 +23,7 @@ import { CaseloadBar } from "@/components/home/caseload-bar";
 import { docsPercent, ProgressMeter } from "@/components/home/progress-meter";
 import { ProductChrome } from "@/components/marketing/product-chrome";
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { StatusPill, type StatusPillTone } from "@/components/ui/status-pill";
+import { StatusPill } from "@/components/ui/status-pill";
 import { buttonVariants } from "@/components/ui/button";
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
@@ -366,82 +366,79 @@ export async function AppHomePreview({
           </div>
 
           <div className="grid min-h-0 flex-1 grid-cols-12 gap-2.5">
-            <SurfaceCard className="col-span-5 flex min-h-0 flex-col gap-2.5 p-4">
-              <div className="flex items-center justify-between gap-2">
+            <SurfaceCard className="col-span-5 flex min-h-0 flex-col gap-2.5 overflow-hidden p-4">
+              <div className="flex shrink-0 items-center justify-between gap-2">
                 <h2 className="font-heading text-sm font-semibold text-brand">
                   {tApp("attention.title")}
+                  <span className="ml-1.5 font-medium text-muted-foreground tabular-nums">
+                    4
+                  </span>
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-7 items-center rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold">
-                    {tApp("attention.filterAll")}
-                  </span>
-                  <span className="text-xs font-medium text-action">
-                    {tApp("viewAllProjects")}
-                  </span>
-                </div>
+                <span className="text-xs font-medium text-action">
+                  {tApp("viewAllProjects")}
+                </span>
               </div>
-              <div className="divide-y divide-border">
-                <AttentionRow
-                  kinds={[
-                    {
-                      label: tApp("attention.kinds.docs_review"),
-                      tone: "action",
-                    },
-                    {
-                      label: tApp("attention.kinds.stuck"),
-                      tone: "muted",
-                    },
-                  ]}
-                  title={t("preview.projectChen")}
-                  meta={tApp("attention.docsCount", { count: 3 })}
-                  metaClass="text-brand"
-                />
-                <AttentionRow
-                  kinds={[
-                    {
-                      label: tApp("attention.kinds.overdue"),
-                      tone: "destructive",
-                    },
-                    {
-                      label: tApp("attention.kinds.docs_review"),
-                      tone: "action",
-                    },
-                  ]}
-                  title={t("preview.projectDubois")}
-                  meta={tApp("timing.overdue", { days: 4 })}
-                  metaClass="text-destructive"
-                />
-                <AttentionRow
-                  kinds={[
-                    {
-                      label: tApp("attention.kinds.questionnaire"),
-                      tone: "action",
-                    },
-                    {
-                      label: tApp("attention.kinds.unpaid"),
-                      tone: "action",
-                    },
-                  ]}
-                  title={t("preview.projectOkonkwo")}
-                  meta={t("preview.unpaidAmount")}
-                  metaClass="text-brand"
-                />
-                <AttentionRow
-                  kinds={[
-                    {
-                      label: tApp("attention.kinds.due_soon"),
-                      tone: "muted",
-                    },
-                  ]}
-                  title={t("preview.guestPriya")}
-                  meta={tApp("timing.inDays", { days: 6 })}
-                  metaClass="text-muted-foreground"
-                />
+              <div className="flex shrink-0 gap-1">
+                <span className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-action/10 px-2.5 text-xs font-semibold text-action">
+                  {tApp("attention.filterAll")}
+                  <span className="tabular-nums opacity-70">4</span>
+                </span>
+                <span className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-destructive" />
+                  {tApp("attention.kinds.overdue")}
+                  <span className="tabular-nums opacity-70">1</span>
+                </span>
+                <span className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-action" />
+                  {tApp("attention.kinds.docs_review")}
+                  <span className="tabular-nums opacity-70">2</span>
+                </span>
+              </div>
+              <div className="min-h-0 flex-1 overflow-hidden">
+                <section>
+                  <h3 className="py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    <span className="mr-1.5 inline-block size-1.5 rounded-full bg-destructive align-middle" />
+                    {tApp("attention.kinds.overdue")}
+                    <span className="ml-1 font-medium tabular-nums">1</span>
+                  </h3>
+                  <AttentionRow
+                    title={t("preview.projectDubois")}
+                    detail={tApp("attention.kinds.docs_review")}
+                    meta={tApp("timing.overdue", { days: 4 })}
+                    metaClass="text-destructive"
+                  />
+                </section>
+                <section>
+                  <h3 className="py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    <span className="mr-1.5 inline-block size-1.5 rounded-full bg-action align-middle" />
+                    {tApp("attention.kinds.docs_review")}
+                    <span className="ml-1 font-medium tabular-nums">1</span>
+                  </h3>
+                  <AttentionRow
+                    title={t("preview.projectChen")}
+                    detail={tApp("attention.kinds.stuck")}
+                    meta={tApp("attention.docsCount", { count: 3 })}
+                    metaClass="text-brand"
+                  />
+                </section>
+                <section>
+                  <h3 className="py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    <span className="mr-1.5 inline-block size-1.5 rounded-full bg-action align-middle" />
+                    {tApp("attention.kinds.questionnaire")}
+                    <span className="ml-1 font-medium tabular-nums">1</span>
+                  </h3>
+                  <AttentionRow
+                    title={t("preview.projectOkonkwo")}
+                    detail={tApp("attention.kinds.unpaid")}
+                    meta={t("preview.unpaidAmount")}
+                    metaClass="text-brand"
+                  />
+                </section>
               </div>
             </SurfaceCard>
 
-            <SurfaceCard className="col-span-4 flex min-h-0 flex-col gap-2.5 p-4">
-              <div className="flex items-center justify-between gap-2">
+            <SurfaceCard className="col-span-7 flex min-h-0 flex-col gap-2.5 overflow-hidden p-4">
+              <div className="flex shrink-0 items-center justify-between gap-2">
                 <div className="min-w-0">
                   <h2 className="font-heading text-sm font-semibold text-brand">
                     {tApp("appointments.title")}
@@ -456,97 +453,96 @@ export async function AppHomePreview({
                   {tApp("appointments.viewCalendar")}
                 </span>
               </div>
-              <div className="relative h-14 overflow-hidden rounded-lg bg-canvas">
-                {["08", "10", "12", "14", "16", "18"].map((hour, i) => (
-                  <div
-                    key={hour}
-                    className="absolute inset-y-0 border-l border-border/70"
-                    style={{ left: `${(i / 5) * 100}%` }}
-                  >
-                    <span className="absolute top-0.5 left-1 text-[9px] tabular-nums text-muted-foreground">
-                      {hour}
+              <div className="min-h-0 flex-1 overflow-hidden">
+                <h3 className="pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  {tApp("timing.today")}
+                </h3>
+                <div className="relative">
+                  <span className="absolute top-2 bottom-2 left-[calc(3.25rem+0.5rem+0.5rem)] w-px -translate-x-1/2 bg-border" />
+                  <div className="relative grid grid-cols-[3.25rem_1rem_minmax(0,1fr)] gap-x-2 py-2">
+                    <div className="pt-0.5 text-right">
+                      <p className="text-sm font-medium text-brand tabular-nums">
+                        10:00
+                      </p>
+                      <p className="text-[11px] text-muted-foreground tabular-nums">
+                        10:30
+                      </p>
+                    </div>
+                    <span className="relative z-10 flex justify-center pt-1.5">
+                      <span className="size-2.5 rounded-full bg-action ring-4 ring-surface" />
                     </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-medium text-brand">
+                          {t("preview.guestPriya")}
+                        </p>
+                        <StatusPill
+                          label={tApp("appointments.next")}
+                          tone="action"
+                          className="px-2 py-0 text-[10px]"
+                        />
+                      </div>
+                      <p className="truncate text-[12px] text-muted-foreground">
+                        {t("preview.serviceConsult")}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {tApp("appointments.durationMinutes", { minutes: 30 })}
+                      </p>
+                    </div>
                   </div>
-                ))}
-                <div className="absolute top-5 bottom-1.5 left-[18%] w-[22%] overflow-hidden rounded-md bg-action/15 px-1.5 py-0.5 text-[10px] leading-tight font-medium text-action">
-                  <span className="block truncate">{t("preview.guestPriya")}</span>
+                  <div className="relative grid grid-cols-[3.25rem_1rem_minmax(0,1fr)] items-center gap-x-2 py-2">
+                    <p className="text-right text-[10px] font-semibold tracking-wide text-destructive uppercase">
+                      {tApp("appointments.now")}
+                    </p>
+                    <span className="relative z-10 flex justify-center">
+                      <span className="size-2.5 rounded-full bg-destructive ring-4 ring-surface" />
+                    </span>
+                    <span className="h-px bg-destructive/30" />
+                  </div>
+                  <div className="relative grid grid-cols-[3.25rem_1rem_minmax(0,1fr)] gap-x-2 py-2">
+                    <div className="pt-0.5 text-right">
+                      <p className="text-sm font-medium text-brand tabular-nums">
+                        14:30
+                      </p>
+                      <p className="text-[11px] text-muted-foreground tabular-nums">
+                        15:15
+                      </p>
+                    </div>
+                    <span className="relative z-10 flex justify-center pt-1.5">
+                      <span className="size-2.5 rounded-full bg-brand ring-4 ring-surface" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-brand">
+                        {t("preview.guestLucas")}
+                      </p>
+                      <p className="truncate text-[12px] text-muted-foreground">
+                        {t("preview.servicePgwp")}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {tApp("appointments.durationMinutes", { minutes: 45 })}
+                        {" · "}
+                        {tApp("appointments.unpaid")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute top-5 bottom-1.5 left-[52%] w-[24%] overflow-hidden rounded-md bg-action/10 px-1.5 py-0.5 text-[10px] leading-tight font-medium text-action ring-1 ring-inset ring-action/30">
-                  <span className="block truncate">{t("preview.guestLucas")}</span>
-                </div>
-                <div className="absolute inset-y-0 left-[38%] z-10 w-px bg-destructive" />
-              </div>
-              <div className="divide-y divide-border">
-                <div className="flex items-start justify-between gap-3 py-2">
+                <h3 className="pt-3 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  {tApp("appointments.laterHeading")}
+                </h3>
+                <div className="flex items-start justify-between gap-3 py-1.5">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-brand">
-                      {t("preview.guestPriya")}
+                      {t("preview.personAmina")}
                     </p>
                     <p className="truncate text-[11px] text-muted-foreground">
                       {t("preview.serviceConsult")}
+                      {" · "}
+                      {tApp("appointments.durationMinutes", { minutes: 30 })}
                     </p>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-medium text-brand">10:00</p>
-                    <p className="text-[11px] font-medium text-action">
-                      {tApp("timing.today")}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start justify-between gap-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-brand">
-                      {t("preview.guestLucas")}
-                    </p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {t("preview.servicePgwp")}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-medium text-brand">14:30</p>
-                    <p className="text-[11px] font-medium text-action">
-                      {tApp("timing.today")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </SurfaceCard>
-
-            <SurfaceCard className="col-span-3 flex min-h-0 flex-col gap-2.5 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="font-heading text-sm font-semibold text-brand">
-                  {tApp("expiries.title")}
-                </h2>
-                <span className="text-xs font-medium text-action">
-                  {tApp("expiries.viewPeople")}
-                </span>
-              </div>
-              <div className="divide-y divide-border">
-                <div className="flex items-center justify-between gap-2 py-2">
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-brand">
-                      {t("preview.personAmina")}
-                    </span>
-                    <span className="block truncate text-[11px] text-muted-foreground">
-                      {tImm("worker")}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                    {tApp("timing.inDays", { days: 12 })}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 py-2">
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-brand">
-                      {t("preview.guestLucas")}
-                    </span>
-                    <span className="block truncate text-[11px] text-muted-foreground">
-                      {tImm("student")}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                    {tApp("timing.inDays", { days: 21 })}
-                  </span>
+                  <p className="shrink-0 text-sm font-medium text-brand tabular-nums">
+                    09:00
+                  </p>
                 </div>
               </div>
             </SurfaceCard>

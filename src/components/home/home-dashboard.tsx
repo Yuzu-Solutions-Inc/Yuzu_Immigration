@@ -259,7 +259,7 @@ export async function HomeDashboardView({
               <AttentionList rows={dashboard.attention} locale={locale} />
             </SurfaceCard>
 
-            <SurfaceCard className="flex min-h-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-7">
+            <SurfaceCard className="flex max-h-[min(32rem,70dvh)] min-h-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-7 lg:max-h-none">
               <div className="flex shrink-0 items-center justify-between gap-2">
                 <div className="min-w-0">
                   <h2 className="font-heading text-sm font-semibold text-brand">

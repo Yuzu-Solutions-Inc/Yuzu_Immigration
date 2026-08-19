@@ -283,6 +283,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         buttonVariants({ variant: "ghost", size: "xs" }),
         "gap-1.5",
