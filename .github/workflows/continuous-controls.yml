@@ -1,0 +1,138 @@
+name: Continuous controls
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # 08:00 America/Toronto
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: continuous-controls-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  app-controls:
+    name: App control tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Run app control tests
+        run: npm run security:controls
+
+  sast:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Semgrep
+        run: pip install --quiet semgrep
+      - name: Scan application source
+        run: |
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/typescript \
+            --config p/nextjs \
+            --error \
+            --metrics off \
+            --exclude node_modules \
+            --exclude .next \
+            --exclude docs \
+            src
+
+  dependencies:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: npm audit (high and critical, production)
+        run: npm audit --omit=dev --audit-level=high
+
+  types:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Ensure next-env.d.ts
+        run: |
+          if [ ! -f next-env.d.ts ]; then
+            printf '%s\n' \
+              '/// <reference types="next" />' \
+              '/// <reference types="next/image-types/global" />' \
+              > next-env.d.ts
+          fi
+      - name: Typecheck
+        run: npx tsc --noEmit --pretty false -p tsconfig.ci.json
+
+  notify:
+    name: Alert on scheduled failure
+    if: ${{ always() && github.event_name == 'schedule' && (needs.app-controls.result == 'failure' || needs.sast.result == 'failure' || needs.dependencies.result == 'failure' || needs.types.result == 'failure') }}
+    needs: [app-controls, sast, dependencies, types]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "Continuous control monitoring failed";
+            const body = [
+              "A scheduled continuous-controls run failed.",
+              "",
+              `- App controls: ${{ needs.app-controls.result }}`,
+              `- Semgrep: ${{ needs.sast.result }}`,
+              `- Dependency audit: ${{ needs.dependencies.result }}`,
+              `- TypeScript: ${{ needs.types.result }}`,
+              "",
+              `Workflow: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              "",
+              "Remediate the failing control, then re-run **Continuous controls**.",
+            ].join("\n");
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 30,
+            });
+            const existing = open.find((issue) => issue.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+              });
+            }

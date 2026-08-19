@@ -16,7 +16,8 @@
     "ircc:validate": "npx tsx scripts/validate-ircc-forms.ts",
     "ircc:validate:local": "npx tsx scripts/validate-ircc-forms.ts --local",
     "ircc:verify-fill": "npx tsx scripts/verify-ircc-fill.ts",
-    "legal:pdf": "node scripts/build-legal-pdfs.mjs"
+    "legal:pdf": "node scripts/build-legal-pdfs.mjs",
+    "security:controls": "npx tsx scripts/continuous-controls.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
