@@ -1,3 +1,5 @@
+import type { AppLocale } from "@/lib/i18n/locales";
+
 const ALLOWED_TAGS = new Set([
   "p",
   "br",
@@ -98,13 +100,28 @@ export function fillContractHtml(
   );
 }
 
-export function defaultContractBodyHtml() {
-  return sanitizeContractHtml(`<p>This agreement is between {{organization_name}} (“the firm”) and {{customer_name}} (“the client”).</p>
+export function defaultContractBodyHtml(locale: AppLocale = "en") {
+  const bodies: Record<AppLocale, string> = {
+    en: `<p>This agreement is between {{organization_name}} (“the firm”) and {{customer_name}} (“the client”).</p>
 <p>Service: {{service_name}}</p>
 <p>Appointment: {{datetime}} ({{timezone}})</p>
 <p>By signing below, the client confirms they have read this document and agree to sign it electronically. This electronic signature has the same legal effect as a handwritten signature under applicable Canadian electronic commerce law.</p>
 <div data-sign="client">Client signature</div>
-<div data-sign="consultant">Consultant signature</div>`);
+<div data-sign="consultant">Consultant signature</div>`,
+    fr: `<p>Cette entente est conclue entre {{organization_name}} (« le cabinet ») et {{customer_name}} (« le client »).</p>
+<p>Service : {{service_name}}</p>
+<p>Rendez-vous : {{datetime}} ({{timezone}})</p>
+<p>En signant ci-dessous, le client confirme avoir lu ce document et accepte de le signer électroniquement. Cette signature électronique a le même effet qu’une signature manuscrite en vertu du droit canadien applicable du commerce électronique.</p>
+<div data-sign="client">Signature du client</div>
+<div data-sign="consultant">Signature du consultant</div>`,
+    es: `<p>Este acuerdo se celebra entre {{organization_name}} («la firma») y {{customer_name}} («el cliente»).</p>
+<p>Servicio: {{service_name}}</p>
+<p>Cita: {{datetime}} ({{timezone}})</p>
+<p>Al firmar abajo, el cliente confirma que ha leído este documento y acepta firmarlo electrónicamente. Esta firma electrónica tiene el mismo efecto que una firma manuscrita según la legislación canadiense aplicable de comercio electrónico.</p>
+<div data-sign="client">Firma del cliente</div>
+<div data-sign="consultant">Firma del consultor</div>`,
+  };
+  return sanitizeContractHtml(bodies[locale] ?? bodies.en);
 }
 
 export function extractContractVariableKeys(html: string): string[] {

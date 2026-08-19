@@ -23,10 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldHint, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { extraAutomationVariables } from "@/lib/booking/form-fields";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import {
@@ -36,10 +42,14 @@ import {
 } from "@/lib/contracts/docx";
 import { defaultContractBodyHtml, sanitizeContractHtml } from "@/lib/contracts/html";
 import {
+  hasContractCopy,
+  parseContractTranslations,
+} from "@/lib/contracts/translations";
+import {
+  CONTRACT_BUILTIN_VARIABLES,
   MAX_CONTRACT_HTML_CHARS,
   MAX_CONTRACT_UPLOAD_BYTES,
 } from "@/lib/contracts/types";
-import { contractVariableCatalog } from "@/lib/contracts/variables";
 import type {
   ContractTemplateRow,
   StaffContractSignature,
@@ -48,11 +58,55 @@ import type {
   BookingFormFieldRow,
   BookingServiceRow,
 } from "@/lib/booking/types";
+import {
+  APP_LOCALES,
+  LOCALE_LABELS,
+  isAppLocale,
+  type AppLocale,
+} from "@/lib/i18n/locales";
 
 const initialState: ContractActionState = {};
 
 const HEADER_SWITCH_CLASS =
   "h-7 w-12 shrink-0 data-[size=default]:h-7 data-[size=default]:w-12 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-checked:translate-x-5";
+
+const EDITOR_CLASS =
+  "min-h-[320px] rounded-xl border border-input bg-surface px-6 py-5 text-sm leading-relaxed shadow-elevated outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&_[data-var]]:mx-0.5 [&_[data-var]]:inline-flex [&_[data-var]]:rounded-md [&_[data-var]]:bg-muted [&_[data-var]]:px-1.5 [&_[data-var]]:py-0.5 [&_[data-var]]:font-mono [&_[data-var]]:text-xs [&_[data-var]]:text-brand [&_[data-sign]]:my-4 [&_[data-sign]]:rounded-xl [&_[data-sign]]:border [&_[data-sign]]:border-dashed [&_[data-sign]]:border-border [&_[data-sign]]:px-4 [&_[data-sign]]:py-6 [&_[data-sign]]:text-xs [&_[data-sign]]:text-muted-foreground";
+
+const EMPTY_BODY = "<p></p>";
+
+const SIGNATURE_LABELS: Record<AppLocale, { client: string; consultant: string }> =
+  {
+    en: { client: "Client signature", consultant: "Consultant signature" },
+    fr: { client: "Signature du client", consultant: "Signature du consultant" },
+    es: { client: "Firma del cliente", consultant: "Firma del consultor" },
+  };
+
+function emptyCopies(): Record<AppLocale, string> {
+  return { en: EMPTY_BODY, fr: EMPTY_BODY, es: EMPTY_BODY };
+}
+
+function initialCopies(
+  template: ContractTemplateRow | undefined,
+  orgDefaultLocale: AppLocale,
+) {
+  const copies = emptyCopies();
+  if (!template) {
+    copies[orgDefaultLocale] = defaultContractBodyHtml(orgDefaultLocale);
+    return copies;
+  }
+  const translations = parseContractTranslations(template.translations);
+  for (const code of APP_LOCALES) {
+    if (translations[code]) copies[code] = translations[code]!;
+  }
+  if (!hasContractCopy(copies[orgDefaultLocale]) && template.body_html) {
+    copies[orgDefaultLocale] = template.body_html;
+  }
+  if (!hasContractCopy(copies[orgDefaultLocale])) {
+    copies[orgDefaultLocale] = defaultContractBodyHtml(orgDefaultLocale);
+  }
+  return copies;
+}
 
 function insertAtCursor(root: HTMLElement, html: string) {
   root.focus();
@@ -80,44 +134,19 @@ function insertAtCursor(root: HTMLElement, html: string) {
   }
 }
 
-function variableChip(key: string) {
+function variableChip(key: string, locale: AppLocale) {
   if (key === "signature_client") {
-    return `<div data-sign="client">Client signature</div>`;
+    return `<div data-sign="client">${SIGNATURE_LABELS[locale].client}</div>`;
   }
   if (key === "signature_consultant") {
-    return `<div data-sign="consultant">Consultant signature</div>`;
+    return `<div data-sign="consultant">${SIGNATURE_LABELS[locale].consultant}</div>`;
   }
   return `<span data-var="${key}" contenteditable="false">{{${key}}}</span>`;
 }
 
-function ActiveHeaderSwitch({
-  id,
-  checked,
-  onCheckedChange,
-  label,
-}: {
-  id: string;
-  checked: boolean;
-  onCheckedChange: (value: boolean) => void;
-  label: string;
-}) {
-  return (
-    <div className="flex shrink-0 items-center gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5">
-      <Label htmlFor={id} className="text-sm font-semibold text-brand">
-        {label}
-      </Label>
-      <Switch
-        id={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        className={HEADER_SWITCH_CLASS}
-      />
-    </div>
-  );
-}
-
 function ContractEditor({
   locale,
+  orgDefaultLocale,
   services,
   formFields,
   template,
@@ -125,6 +154,7 @@ function ContractEditor({
   onCancel,
 }: {
   locale: string;
+  orgDefaultLocale: AppLocale;
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   template?: ContractTemplateRow;
@@ -132,7 +162,9 @@ function ContractEditor({
   onCancel: () => void;
 }) {
   const t = useTranslations("services");
-  const editorRef = useRef<HTMLDivElement>(null);
+  const editorRefs = useRef<Partial<Record<AppLocale, HTMLDivElement | null>>>({});
+  const seeded = useRef<Set<AppLocale>>(new Set());
+  const lastLocale = useRef<AppLocale>(orgDefaultLocale);
   const fileRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(template?.title ?? "");
   const [serviceIds, setServiceIds] = useState<string[]>(
@@ -144,15 +176,14 @@ function ContractEditor({
   const [sendOnBooking, setSendOnBooking] = useState(
     template?.send_on_booking ?? true,
   );
-  const [html, setHtml] = useState(
-    template?.body_html || defaultContractBodyHtml(),
+  const [copies, setCopies] = useState<Record<AppLocale, string>>(() =>
+    initialCopies(template, orgDefaultLocale),
   );
   const [importing, setImporting] = useState(false);
   const [state, formAction, pending] = useActionState(
     saveContractTemplateAction,
     initialState,
   );
-  const seeded = useRef(false);
 
   useEffect(() => {
     if (state.message === "created" || state.message === "saved") {
@@ -165,33 +196,61 @@ function ContractEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  useEffect(() => {
-    if (seeded.current || !editorRef.current) return;
-    editorRef.current.innerHTML = html;
-    seeded.current = true;
-  }, [html]);
-
-  const formFieldsForServices = useMemo(() => {
+  const extraVariables = useMemo(() => {
     const formIds = new Set(
       services
         .filter((service) => serviceIds.includes(service.id) && service.form_id)
         .map((service) => service.form_id as string),
     );
-    return formFields
-      .filter((field) => formIds.has(field.form_id))
-      .flatMap((field) => {
-        const extras = extraAutomationVariables({ [field.field_key]: "" });
-        return [field.field_key, ...Object.keys(extras)];
-      });
+    const seen = new Set<string>();
+    const fields: BookingFormFieldRow[] = [];
+    for (const field of formFields) {
+      if (!formIds.has(field.form_id) || seen.has(field.field_key)) continue;
+      seen.add(field.field_key);
+      fields.push(field);
+      for (const extraKey of Object.keys(
+        extraAutomationVariables({ [field.field_key]: "" }),
+      )) {
+        if (seen.has(extraKey)) continue;
+        seen.add(extraKey);
+        fields.push({ ...field, field_key: extraKey, id: `${field.id}:${extraKey}` });
+      }
+    }
+    return fields;
   }, [formFields, serviceIds, services]);
 
-  const catalog = useMemo(
-    () => contractVariableCatalog(formFieldsForServices),
-    [formFieldsForServices],
-  );
+  function snapshotCopies() {
+    const next = { ...copies };
+    for (const code of APP_LOCALES) {
+      const el = editorRefs.current[code];
+      if (el) next[code] = el.innerHTML;
+    }
+    setCopies(next);
+    return next;
+  }
 
-  function syncHtml() {
-    if (editorRef.current) setHtml(editorRef.current.innerHTML);
+  function bindEditor(code: AppLocale) {
+    return (el: HTMLDivElement | null) => {
+      editorRefs.current[code] = el;
+      if (el && !seeded.current.has(code)) {
+        el.innerHTML = copies[code];
+        seeded.current.add(code);
+      }
+    };
+  }
+
+  function syncHtml(code: AppLocale) {
+    const el = editorRefs.current[code];
+    if (!el) return;
+    setCopies((prev) => ({ ...prev, [code]: el.innerHTML }));
+  }
+
+  function insertVariable(key: string) {
+    const code = lastLocale.current;
+    const editor = editorRefs.current[code];
+    if (!editor) return;
+    insertAtCursor(editor, variableChip(key, code));
+    syncHtml(code);
   }
 
   async function importDocument(file: File) {
@@ -222,11 +281,11 @@ function ContractEditor({
         toast.error(t("errors.file_too_large"));
         return;
       }
-      if (editorRef.current) {
-        editorRef.current.innerHTML = next;
-        setHtml(next);
-        toast.success(t("contractImported"));
-      }
+      const code = lastLocale.current;
+      const editor = editorRefs.current[code];
+      if (editor) editor.innerHTML = next;
+      setCopies((prev) => ({ ...prev, [code]: next }));
+      toast.success(t("contractImported"));
     } catch (err) {
       const code = err instanceof Error ? err.message : "";
       if (code === "empty_document" || code === "unsupported_file") {
@@ -239,11 +298,25 @@ function ContractEditor({
     }
   }
 
+  async function submitAction(formData: FormData) {
+    const next = snapshotCopies();
+    formData.set("translations", JSON.stringify(next));
+    formData.set("bodyHtml", next[orgDefaultLocale] ?? "");
+    return formAction(formData);
+  }
+
+  const defaultCopyReady = hasContractCopy(copies[orgDefaultLocale]);
+
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={submitAction} className="min-w-0 space-y-5">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="templateId" value={template?.id ?? ""} />
-      <input type="hidden" name="bodyHtml" value={html} />
+      <input type="hidden" name="bodyHtml" value={copies[orgDefaultLocale]} />
+      <input
+        type="hidden"
+        name="translations"
+        value={JSON.stringify(copies)}
+      />
       <input type="hidden" name="serviceIds" value={JSON.stringify(serviceIds)} />
       <input
         type="hidden"
@@ -271,128 +344,212 @@ function ContractEditor({
         />
       </Field>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">{t("formAssignServices")}</p>
-        <p className="text-xs text-muted-foreground">{t("contractAssignHelp")}</p>
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <div>
+          <h3 className="text-sm font-semibold text-brand">
+            {t("automationServices")}
+          </h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("contractAssignHelp")}
+          </p>
+        </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {services.map((service) => {
             const checked = serviceIds.includes(service.id);
             return (
               <label
                 key={service.id}
-                className="flex min-w-0 items-start gap-2 rounded-xl border border-border px-3 py-2 text-sm"
+                className="flex min-w-0 items-start gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm"
               >
                 <input
                   type="checkbox"
                   checked={checked}
                   onChange={(event) => {
                     if (event.target.checked) {
-                      setServiceIds([...serviceIds, service.id]);
+                      setServiceIds((prev) => [...prev, service.id]);
                     } else {
-                      setServiceIds(serviceIds.filter((id) => id !== service.id));
+                      setServiceIds((prev) =>
+                        prev.filter((id) => id !== service.id),
+                      );
                     }
                   }}
                   className="mt-0.5 size-4 shrink-0 rounded border-input"
                 />
                 <span className="min-w-0 truncate font-medium">
-                  {serviceTitle(service, locale)}
+                  {serviceTitle(service, locale, orgDefaultLocale)}
                 </span>
               </label>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
-          <div className="min-w-0 space-y-0.5">
-            <Label htmlFor="contract-send" className="text-sm font-medium">
-              {t("contractSendOnBooking")}
-            </Label>
-            <p className="text-xs text-muted-foreground">{t("contractSendHelp")}</p>
-          </div>
-          <Switch
-            id="contract-send"
-            checked={sendOnBooking}
-            onCheckedChange={setSendOnBooking}
-          />
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <div>
+          <h3 className="text-sm font-semibold text-brand">
+            {t("contractDocument")}
+          </h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("contractCopyHelp", {
+              language: LOCALE_LABELS[orgDefaultLocale],
+            })}
+          </p>
         </div>
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
-          <div className="min-w-0 space-y-0.5">
-            <Label htmlFor="contract-countersign" className="text-sm font-medium">
-              {t("contractRequireConsultant")}
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              {t("contractRequireConsultantHelp")}
-            </p>
-          </div>
-          <Switch
-            id="contract-countersign"
-            checked={requireConsultant}
-            onCheckedChange={setRequireConsultant}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium">{t("contractDocument")}</p>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".docx,.txt,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              event.currentTarget.value = "";
-              if (file) void importDocument(file);
-            }}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={importing}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload className="size-4" />
-            {importing ? t("contractImporting") : t("contractUpload")}
-          </Button>
-        </div>
-        <FieldHint>{t("contractUploadHelp")}</FieldHint>
-        <div className="flex flex-wrap gap-1.5">
-          {catalog.map((item) => (
-            <button
-              key={`${item.kind}-${item.key}`}
-              type="button"
-              className="rounded-lg border border-border bg-surface px-2 py-1 font-mono text-xs text-brand hover:bg-muted"
-              onClick={() => {
-                if (editorRef.current) {
-                  insertAtCursor(editorRef.current, variableChip(item.key));
-                  syncHtml();
-                }
-              }}
-            >
-              {`{{${item.key}}}`}
-            </button>
-          ))}
-        </div>
-        <div
-          ref={editorRef}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={syncHtml}
-          onBlur={syncHtml}
-          className="min-h-[320px] rounded-xl border border-input bg-surface px-6 py-5 text-sm leading-relaxed shadow-elevated outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&_[data-var]]:mx-0.5 [&_[data-var]]:inline-flex [&_[data-var]]:rounded-md [&_[data-var]]:bg-muted [&_[data-var]]:px-1.5 [&_[data-var]]:py-0.5 [&_[data-var]]:font-mono [&_[data-var]]:text-xs [&_[data-var]]:text-brand [&_[data-sign]]:my-4 [&_[data-sign]]:rounded-xl [&_[data-sign]]:border [&_[data-sign]]:border-dashed [&_[data-sign]]:border-border [&_[data-sign]]:px-4 [&_[data-sign]]:py-6 [&_[data-sign]]:text-xs [&_[data-sign]]:text-muted-foreground"
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".docx,.txt,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = "";
+            if (file) void importDocument(file);
+          }}
         />
-      </div>
+        <Tabs
+          defaultValue={orgDefaultLocale}
+          onValueChange={(value) => {
+            if (isAppLocale(String(value))) lastLocale.current = value;
+          }}
+        >
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <TabsList variant="line" className="min-w-0 flex-1">
+              {APP_LOCALES.map((code) => (
+                <TabsTrigger key={code} value={code}>
+                  {LOCALE_LABELS[code]}
+                  {code === orgDefaultLocale ? (
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                      {t("automationDefaultLang")}
+                    </span>
+                  ) : null}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={importing}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Upload className="size-4" />
+              {importing ? t("contractImporting") : t("contractUpload")}
+            </Button>
+          </div>
+          {APP_LOCALES.map((code) => (
+            <TabsContent
+              key={code}
+              value={code}
+              keepMounted
+              className="space-y-3 pt-3"
+            >
+              <Field>
+                <FieldLabel
+                  htmlFor={`contract-body-${code}`}
+                  required={code === orgDefaultLocale}
+                >
+                  {t("contractDocument")}
+                </FieldLabel>
+                <div
+                  ref={bindEditor(code)}
+                  id={`contract-body-${code}`}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onFocus={() => {
+                    lastLocale.current = code;
+                  }}
+                  onInput={() => syncHtml(code)}
+                  onBlur={() => syncHtml(code)}
+                  className={EDITOR_CLASS}
+                />
+              </Field>
+              <p className="text-xs text-muted-foreground">
+                {t("contractUploadHelp")}
+              </p>
+            </TabsContent>
+          ))}
+        </Tabs>
+        <div className="space-y-2 border-t border-border/80 pt-3">
+          <p className="text-xs font-medium text-muted-foreground">
+            {t("automationVariables")}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {CONTRACT_BUILTIN_VARIABLES.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
+                onClick={() => insertVariable(name)}
+              >
+                {t.has(`variables.${name}`) ? t(`variables.${name}`) : name}
+              </button>
+            ))}
+            {extraVariables.map((field) => (
+              <button
+                key={field.id}
+                type="button"
+                className="rounded-full border border-action/30 bg-action/5 px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
+                onClick={() => insertVariable(field.field_key)}
+              >
+                {field.label}
+              </button>
+            ))}
+            {(["signature_client", "signature_consultant"] as const).map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="rounded-full border border-action/30 bg-action/5 px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
+                onClick={() => insertVariable(name)}
+              >
+                {t(`variables.${name}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+        <h3 className="text-sm font-semibold text-brand">
+          {t("automationOptionsSection")}
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <div className="min-w-0 space-y-0.5">
+              <Label htmlFor="contract-send" className="text-sm font-medium">
+                {t("contractSendOnBooking")}
+              </Label>
+              <p className="text-xs text-muted-foreground">{t("contractSendHelp")}</p>
+            </div>
+            <Switch
+              id="contract-send"
+              checked={sendOnBooking}
+              onCheckedChange={setSendOnBooking}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <div className="min-w-0 space-y-0.5">
+              <Label htmlFor="contract-countersign" className="text-sm font-medium">
+                {t("contractRequireConsultant")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("contractRequireConsultantHelp")}
+              </p>
+            </div>
+            <Switch
+              id="contract-countersign"
+              checked={requireConsultant}
+              onCheckedChange={setRequireConsultant}
+            />
+          </div>
+        </div>
+      </section>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          {t("formFieldBack")}
+          {t("automationBack")}
         </Button>
-        <Button type="submit" disabled={pending || serviceIds.length === 0}>
-          {pending ? t("saving") : template ? t("contractSave") : t("contractCreate")}
+        <Button type="submit" disabled={pending || serviceIds.length === 0 || !defaultCopyReady}>
+          {pending ? t("saving") : template ? t("save") : t("contractCreate")}
         </Button>
       </DialogFooter>
     </form>
@@ -425,7 +582,7 @@ function StaffSignaturePanel({
   }, [signature]);
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+    <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
       <div>
         <h3 className="text-sm font-semibold text-brand">{t("contractSignature")}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -480,12 +637,13 @@ function StaffSignaturePanel({
       >
         {pending ? t("saving") : t("contractSignatureSave")}
       </Button>
-    </div>
+    </section>
   );
 }
 
 export function ServiceContractsButton({
   locale,
+  orgDefaultLocale,
   services,
   formFields,
   templates,
@@ -493,6 +651,7 @@ export function ServiceContractsButton({
   canManage,
 }: {
   locale: string;
+  orgDefaultLocale: AppLocale;
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   templates: ContractTemplateRow[];
@@ -500,20 +659,26 @@ export function ServiceContractsButton({
   canManage: boolean;
 }) {
   const t = useTranslations("services");
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ContractTemplateRow | null>(null);
-  const [isActive, setIsActive] = useState(true);
-  const [activePending, startActive] = useTransition();
+  const [formActive, setFormActive] = useState(true);
+  const serviceTitleById = useMemo(
+    () =>
+      new Map(
+        services.map((service) => [
+          service.id,
+          serviceTitle(service, locale, orgDefaultLocale),
+        ]),
+      ),
+    [locale, orgDefaultLocale, services],
+  );
 
-  function closeEditor() {
+  function closeForm() {
     setCreating(false);
     setEditing(null);
-    setIsActive(true);
+    setFormActive(true);
   }
-
-  const editingOpen = creating || Boolean(editing);
 
   return (
     <>
@@ -522,19 +687,20 @@ export function ServiceContractsButton({
         variant="outline"
         size="sm"
         onClick={() => {
-          closeEditor();
+          closeForm();
           setOpen(true);
         }}
       >
         <FileText className="size-4" />
         {t("contracts")}
-        {templates.length > 0 ? ` (${templates.length})` : null}
+        {templates.length > 0 ? ` (${templates.length})` : ""}
       </Button>
+
       <Dialog
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
-          if (!next) closeEditor();
+          if (!next) closeForm();
         }}
       >
         <DialogContent
@@ -543,37 +709,49 @@ export function ServiceContractsButton({
         >
           <DialogHeader>
             <div className="flex items-start justify-between gap-4 pr-8">
-              {editingOpen ? (
-                <ActiveHeaderSwitch
-                  id="contract-is-active-header"
-                  checked={isActive}
-                  onCheckedChange={setIsActive}
-                  label={t("active")}
-                />
-              ) : null}
               <div className="min-w-0 space-y-2">
                 <DialogTitle>
-                  {creating
-                    ? t("newContractTitle")
-                    : editing
+                  {creating || editing
+                    ? editing
                       ? t("editContractTitle")
-                      : t("contractsTitle")}
+                      : t("newContractTitle")
+                    : t("contractsTitle")}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingOpen ? t("contractEditorSubtitle") : t("contractsSubtitle")}
+                  {creating || editing
+                    ? t("contractEditorSubtitle")
+                    : t("contractsSubtitle")}
                 </DialogDescription>
               </div>
+              {creating || editing ? (
+                <div className="flex shrink-0 items-center gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5">
+                  <Label
+                    htmlFor="contract-active-header"
+                    className="text-sm font-semibold text-brand"
+                  >
+                    {t("automationActive")}
+                  </Label>
+                  <Switch
+                    id="contract-active-header"
+                    checked={formActive}
+                    onCheckedChange={setFormActive}
+                    className={HEADER_SWITCH_CLASS}
+                  />
+                </div>
+              ) : null}
             </div>
           </DialogHeader>
+
           <div className="min-h-0 overflow-x-hidden overflow-y-auto pr-1">
-            {editingOpen ? (
+            {creating || editing ? (
               <ContractEditor
                 locale={locale}
+                orgDefaultLocale={orgDefaultLocale}
                 services={services}
                 formFields={formFields}
                 template={editing ?? undefined}
-                isActive={isActive}
-                onCancel={closeEditor}
+                isActive={formActive}
+                onCancel={closeForm}
               />
             ) : (
               <div className="space-y-4">
@@ -587,93 +765,93 @@ export function ServiceContractsButton({
                 ) : (
                   <ul className="space-y-2">
                     {templates.map((template) => {
-                      const assigned = services.filter((service) =>
-                        template.service_ids.includes(service.id),
-                      );
+                      const names = template.service_ids
+                        .map((id) => serviceTitleById.get(id))
+                        .filter(Boolean);
                       return (
                         <li
                           key={template.id}
-                          className="flex flex-wrap items-center gap-3 rounded-xl border border-border px-3 py-2"
+                          className="rounded-xl border border-border px-3 py-2"
                         >
-                          {canManage ? (
-                            <ActiveHeaderSwitch
-                              id={`contract-active-${template.id}`}
-                              checked={template.is_active}
-                              onCheckedChange={(value) => {
-                                startActive(async () => {
-                                  const result = await setContractTemplateActiveAction(
-                                    template.id,
-                                    value,
-                                    locale,
-                                  );
-                                  if (result.error) {
-                                    toast.error(t(`errors.${result.error}`));
-                                    return;
-                                  }
-                                  router.refresh();
-                                });
-                              }}
-                              label={t("active")}
-                            />
-                          ) : null}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium">{template.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {assigned.length === 0
-                                ? t("contractNoServices")
-                                : assigned
-                                    .map((service) => serviceTitle(service, locale))
-                                    .join(", ")}
-                              {template.is_active ? "" : ` · ${t("inactive")}`}
-                            </p>
-                          </div>
-                          {canManage ? (
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                disabled={activePending}
-                                onClick={() => {
-                                  setIsActive(template.is_active);
-                                  setCreating(false);
-                                  setEditing(template);
-                                }}
-                                aria-label={t("editContractTitle")}
-                              >
-                                <Pencil className="size-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-destructive hover:bg-destructive/10"
-                                onClick={async () => {
-                                  if (!window.confirm(t("contractDeleteConfirm"))) {
-                                    return;
-                                  }
-                                  const result = await deleteContractTemplateAction(
-                                    template.id,
-                                    locale,
-                                  );
-                                  if (result.error) {
-                                    toast.error(t(`errors.${result.error}`));
-                                    return;
-                                  }
-                                  toast.success(
-                                    t(
-                                      result.message === "archived"
-                                        ? "contractArchived"
-                                        : "contractDeleted",
-                                    ),
-                                  );
-                                }}
-                                aria-label={t("delete")}
-                              >
-                                <Trash2 className="size-4" />
-                              </Button>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-brand">
+                                {template.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {names.length === 0
+                                  ? t("noneAssigned")
+                                  : names.join(", ")}
+                              </p>
                             </div>
-                          ) : null}
+                            {canManage ? (
+                              <div className="flex shrink-0 items-center gap-1">
+                                <Switch
+                                  checked={template.is_active}
+                                  aria-label={
+                                    template.is_active
+                                      ? t("automationActive")
+                                      : t("automationPaused")
+                                  }
+                                  onCheckedChange={async (checked) => {
+                                    const result =
+                                      await setContractTemplateActiveAction(
+                                        template.id,
+                                        checked,
+                                        locale,
+                                      );
+                                    if (result.error) {
+                                      toast.error(t(`errors.${result.error}`));
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setFormActive(template.is_active);
+                                    setEditing(template);
+                                  }}
+                                >
+                                  <Pencil className="size-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (!window.confirm(t("contractDeleteConfirm"))) {
+                                      return;
+                                    }
+                                    const result = await deleteContractTemplateAction(
+                                      template.id,
+                                      locale,
+                                    );
+                                    if (result.error) {
+                                      toast.error(t(`errors.${result.error}`));
+                                    } else {
+                                      toast.success(
+                                        t(
+                                          result.message === "archived"
+                                            ? "contractArchived"
+                                            : "contractDeleted",
+                                        ),
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="shrink-0 text-xs text-muted-foreground">
+                                {template.is_active
+                                  ? t("automationActive")
+                                  : t("automationPaused")}
+                              </span>
+                            )}
+                          </div>
                         </li>
                       );
                     })}
@@ -683,9 +861,10 @@ export function ServiceContractsButton({
                   <Button
                     type="button"
                     size="sm"
+                    disabled={services.length === 0}
                     onClick={() => {
                       setEditing(null);
-                      setIsActive(true);
+                      setFormActive(true);
                       setCreating(true);
                     }}
                   >

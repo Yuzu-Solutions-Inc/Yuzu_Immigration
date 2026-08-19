@@ -11,6 +11,7 @@ import {
 } from "@/lib/contracts/types";
 import { fillContractHtml } from "@/lib/contracts/html";
 import { buildContractPdf } from "@/lib/contracts/pdf";
+import { pickContractBody } from "@/lib/contracts/translations";
 import { contractMergeVariables } from "@/lib/contracts/variables";
 import { encryptDocument } from "@/lib/documents/crypto";
 import { toAppLocale } from "@/lib/i18n/locales";
@@ -221,29 +222,35 @@ export async function issueContractsForAppointment(appointmentId: string) {
   const consultantName =
     hostRes.data?.full_name?.trim() || hostRes.data?.email || "Consultant";
   const consultantEmail = hostRes.data?.email ?? "";
-  const resolvedServiceTitle = serviceTitle(serviceRes.data, locale);
-  const vars = contractMergeVariables({
-    locale,
-    timeZone,
-    customerName: guest.guest_name,
-    customerEmail: guest.guest_email,
-    customerPhone: guest.guest_phone,
-    customerAddress: guest.guest_address,
-    serviceName: resolvedServiceTitle,
-    consultantName,
-    consultantEmail,
-    organizationName,
-    startsAt: new Date(appointment.starts_at as string),
-    durationMinutes: serviceRes.data?.duration_minutes ?? 30,
-    meetJoinUrl: appointment.meet_join_url as string | null,
-    formAnswers,
-  });
-
   const origin = await getAppBaseUrl();
   let issued = 0;
+  const orgDefaultLocale = orgRes.data?.default_locale ?? "en";
 
   for (const template of toIssue) {
-    const filledHtml = fillContractHtml(template.body_html as string, vars);
+    const picked = pickContractBody({
+      translations: template.translations,
+      fallbackHtml: String(template.body_html ?? ""),
+      preferredLocale: locale,
+      orgDefaultLocale,
+    });
+    const resolvedServiceTitle = serviceTitle(serviceRes.data, picked.locale);
+    const vars = contractMergeVariables({
+      locale: picked.locale,
+      timeZone,
+      customerName: guest.guest_name,
+      customerEmail: guest.guest_email,
+      customerPhone: guest.guest_phone,
+      customerAddress: guest.guest_address,
+      serviceName: resolvedServiceTitle,
+      consultantName,
+      consultantEmail,
+      organizationName,
+      startsAt: new Date(appointment.starts_at as string),
+      durationMinutes: serviceRes.data?.duration_minutes ?? 30,
+      meetJoinUrl: appointment.meet_join_url as string | null,
+      formAnswers,
+    });
+    const filledHtml = fillContractHtml(picked.html, vars);
     const filledSha256 = sha256Hex(filledHtml);
     const expiresAt = new Date(
       Date.now() + CONTRACT_EXPIRES_DAYS * 86_400_000,

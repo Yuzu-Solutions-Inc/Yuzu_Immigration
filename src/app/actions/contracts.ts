@@ -8,6 +8,11 @@ import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { defaultContractBodyHtml, sanitizeContractHtml } from "@/lib/contracts/html";
 import { docxBufferToHtml, plainTextToHtml } from "@/lib/contracts/docx";
+import {
+  hasContractCopy,
+  parseContractTranslations,
+  type ContractTranslations,
+} from "@/lib/contracts/translations";
 import { MAX_CONTRACT_HTML_CHARS, MAX_CONTRACT_UPLOAD_BYTES, isPngSignatureDataUrl } from "@/lib/contracts/types";
 import { applyContractSignature } from "@/lib/contracts/sign";
 import {
@@ -20,7 +25,7 @@ import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { getAppBaseUrl } from "@/lib/app-url";
-import { toAppLocale } from "@/lib/i18n/locales";
+import { APP_LOCALES, toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 
 export type ContractActionState = {
   error?: string;
@@ -53,12 +58,48 @@ const saveSchema = z.object({
   locale: localeSchema,
   templateId: z.string().uuid().optional().or(z.literal("")),
   title: z.string().trim().min(1).max(120),
-  bodyHtml: z.string().trim().min(1).max(MAX_CONTRACT_HTML_CHARS),
+  bodyHtml: z.string().max(MAX_CONTRACT_HTML_CHARS).optional(),
+  translations: z.string().max(MAX_CONTRACT_HTML_CHARS * 4),
   serviceIds: z.array(z.string().uuid()).min(1).max(50),
   requireConsultantSignature: z.boolean(),
   sendOnBooking: z.boolean(),
   isActive: z.boolean(),
 });
+
+function resolveContractTranslations(
+  raw: string,
+  orgDefault: AppLocale,
+  fallbackHtml: string,
+):
+  | { ok: true; translations: ContractTranslations; bodyHtml: string }
+  | { ok: false; error: "invalid" | "missing_default_locale" } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, error: "invalid" };
+  }
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    for (const locale of APP_LOCALES) {
+      const entry = (parsed as Record<string, unknown>)[locale];
+      if (typeof entry !== "string" && entry != null && typeof entry !== "object") {
+        return { ok: false, error: "invalid" };
+      }
+    }
+  }
+  const translations = parseContractTranslations(parsed);
+  if (
+    !hasContractCopy(translations[orgDefault]) &&
+    hasContractCopy(fallbackHtml)
+  ) {
+    translations[orgDefault] = sanitizeContractHtml(fallbackHtml);
+  }
+  const bodyHtml = translations[orgDefault];
+  if (!hasContractCopy(bodyHtml) || !bodyHtml) {
+    return { ok: false, error: "missing_default_locale" };
+  }
+  return { ok: true, translations, bodyHtml };
+}
 
 export async function parseContractUploadAction(
   _prev: ContractActionState,
@@ -110,6 +151,7 @@ export async function saveContractTemplateAction(
     templateId: String(formData.get("templateId") || ""),
     title: String(formData.get("title") || ""),
     bodyHtml: String(formData.get("bodyHtml") || ""),
+    translations: String(formData.get("translations") || "{}"),
     serviceIds: parseServiceIds(String(formData.get("serviceIds") || "[]")),
     requireConsultantSignature: formData.get("requireConsultantSignature") === "on",
     sendOnBooking: formData.get("sendOnBooking") !== "off",
@@ -117,7 +159,15 @@ export async function saveContractTemplateAction(
   });
   if (!parsed.success) return { error: "invalid" };
 
-  const bodyHtml = sanitizeContractHtml(parsed.data.bodyHtml);
+  const orgDefault = auth.membership.organization.defaultLocale;
+  const copy = resolveContractTranslations(
+    parsed.data.translations,
+    orgDefault,
+    parsed.data.bodyHtml ?? "",
+  );
+  if (!copy.ok) return { error: copy.error };
+
+  const bodyHtml = copy.bodyHtml;
   const supabase = await createClient();
   const orgId = auth.membership.organization.id;
   const user = await getSessionUser();
@@ -130,6 +180,7 @@ export async function saveContractTemplateAction(
       .update({
         title: parsed.data.title,
         body_html: bodyHtml,
+        translations: copy.translations,
         require_consultant_signature: parsed.data.requireConsultantSignature,
         send_on_booking: parsed.data.sendOnBooking,
         is_active: parsed.data.isActive,
@@ -147,7 +198,8 @@ export async function saveContractTemplateAction(
       .insert({
         organization_id: orgId,
         title: parsed.data.title,
-        body_html: bodyHtml || defaultContractBodyHtml(),
+        body_html: bodyHtml || defaultContractBodyHtml(orgDefault),
+        translations: copy.translations,
         require_consultant_signature: parsed.data.requireConsultantSignature,
         send_on_booking: parsed.data.sendOnBooking,
         is_active: parsed.data.isActive,

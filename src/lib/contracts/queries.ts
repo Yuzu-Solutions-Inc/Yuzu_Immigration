@@ -37,7 +37,13 @@ export async function listContractTemplates(): Promise<ContractTemplateRow[]> {
     serviceIdsByTemplate.set(link.template_id, list);
   }
   return (data ?? []).map((row) => ({
-    ...(row as Omit<ContractTemplateRow, "service_ids">),
+    ...(row as Omit<ContractTemplateRow, "service_ids" | "translations">),
+    translations:
+      row.translations &&
+      typeof row.translations === "object" &&
+      !Array.isArray(row.translations)
+        ? (row.translations as ContractTemplateRow["translations"])
+        : {},
     service_ids: serviceIdsByTemplate.get(row.id as string) ?? [],
   }));
 }

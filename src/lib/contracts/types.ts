@@ -4,6 +4,7 @@ import type {
   ContractSignerRole,
   ContractSignerStatus,
 } from "@/db/schema";
+import type { ContractTranslations } from "@/lib/contracts/translations";
 
 export const CONTRACT_ENVELOPES_BUCKET = "contract-envelopes";
 export const CONTRACT_CONSENT_VERSION = "yuzu-esign-v1";
@@ -40,6 +41,7 @@ export type ContractTemplateRow = {
   organization_id: string;
   title: string;
   body_html: string;
+  translations: ContractTranslations;
   require_consultant_signature: boolean;
   send_on_booking: boolean;
   is_active: boolean;

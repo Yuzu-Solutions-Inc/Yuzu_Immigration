@@ -18,7 +18,7 @@
   "home": {
     "audience": "For immigration consultants and lawyers",
     "title": "Run your immigration practice in one secure workspace",
-    "subtitle": "Clients, files, IRCC questionnaires, documents, Google Calendar and Meet, Square payments, and portals — built for Canadian immigration work, not generic CRM.",
+    "subtitle": "Clients, files, IRCC questionnaires, documents, signed contracts, Google Calendar and Meet, Square payments, Sage Accounting, and portals — built for Canadian immigration work, not generic CRM.",
     "cta": "Start free — open testing",
     "secondaryCta": "Sign in",
     "ctaNote": "Free during open testing. No credit card required.",
@@ -29,9 +29,11 @@
       "people": "Clients",
       "forms": "IRCC forms",
       "documents": "Documents",
+      "contracts": "Contracts & signing",
       "calendar": "Google Calendar",
       "meet": "Google Meet",
       "square": "Square",
+      "sage": "Sage Accounting",
       "languages": "EN · FR · ES"
     },
     "showcases": {
@@ -98,6 +100,10 @@
         "title": "Document collection and review",
         "body": "Ask for passports, photos, and custom files. Clients upload in the portal; your firm previews, approves, or sends a file back with a comment."
       },
+      "contracts": {
+        "title": "Document templates and signing",
+        "body": "Write or upload retainers in each language you serve, insert booking details automatically, and send them for electronic signature when a client books. Clients type or draw a mark; you can countersign or pre-sign."
+      },
       "share": {
         "title": "Client portal",
         "body": "Invite clients to a lasting portal. They sign in with the email on their file and a password handled on the server — never in the browser. Documents, questionnaires, invoices, and appointments stay in one place."
@@ -109,6 +115,10 @@
       "payments": {
         "title": "Square payments",
         "body": "Connect Square to collect consultation fees at booking or send a payment link on a file. Clients pay on Square Checkout. Unpaid bookings surface on the home screen."
+      },
+      "sage": {
+        "title": "Sage Accounting",
+        "body": "Match clients to Sage by email, apply the correct provincial sales tax, and post invoices when Square payments complete."
       },
       "team": {
         "title": "Firm workspace",
@@ -128,11 +138,11 @@
       },
       "three": {
         "title": "Book, meet, and get paid",
-        "body": "Clients book on your public page. Google Calendar blocks busy time, Google Meet is attached to the appointment, and Square collects the fee."
+        "body": "Clients book on your public page. Calendar blocks busy time, a meeting link is attached, Square collects the fee, and a contract can go out for signature."
       },
       "four": {
         "title": "Prepare and close",
-        "body": "Fill IRCC PDFs from answers already collected, keep status visible, and retain or destroy closed files to match your firm’s duties."
+        "body": "Fill IRCC PDFs from answers already collected, keep signed contracts with the file, and retain or destroy closed files to match your firm’s duties."
       }
     },
     "preview": {
@@ -163,8 +173,8 @@
     },
     "integrations": {
       "eyebrow": "Integrations",
-      "title": "Calendar, meetings, and payments in the tools you already use",
-      "subtitle": "Connect the accounts your firm already uses. Booking, video calls, and payments stay in those products — Yuzu Immigration coordinates them around the immigration file.",
+      "title": "Calendar, meetings, payments, and accounting in the tools you already use",
+      "subtitle": "Connect the accounts your firm already uses. Booking, video calls, payments, and invoices stay in those products — Yuzu Immigration coordinates them around the immigration file.",
       "beta": "Beta",
       "groups": {
         "calendar": {
@@ -176,8 +186,8 @@
           "help": "Choose one meeting tool for join links on confirmed bookings."
         },
         "payment": {
-          "title": "Payment",
-          "help": "Collect consultation fees at booking or send a payment link on a file."
+          "title": "Payments and accounting",
+          "help": "Collect consultation fees at booking or send a payment link on a file. Connect Sage to post matching tax invoices."
         }
       },
       "calendar": {
@@ -203,6 +213,10 @@
       "square": {
         "title": "Square",
         "body": "Connect Square to charge consultation services and send payment links on a project. Clients check out on Square. You see unpaid bookings on home until they pay."
+      },
+      "sage": {
+        "title": "Sage Accounting",
+        "body": "Connect Sage Business Cloud Accounting to match clients by email, apply the right Canadian sales tax, and post invoices when Square payments complete."
       }
     },
     "securityEyebrow": "Security, simply",
@@ -2350,12 +2364,12 @@
     "automations": "Emails",
     "contracts": "Contracts",
     "contractsTitle": "Service contracts",
-    "contractsSubtitle": "Upload a document, insert booking variables, and send it for electronic signature when a client books.",
+    "contractsSubtitle": "Upload a document in each language you serve, insert booking variables, and send it for electronic signature when a client books.",
     "contractsEmpty": "No contracts yet. Add one, then assign it to services.",
     "newContract": "Add contract",
     "newContractTitle": "New contract",
     "editContractTitle": "Edit contract",
-    "contractEditorSubtitle": "Write or upload the document, then click a variable to insert it. Signature blocks collect a typed or drawn mark plus a consent record.",
+    "contractEditorSubtitle": "Write or upload the document in each language you serve, then click a variable to insert it. Signature blocks collect a typed or drawn mark plus a consent record.",
     "contractTitle": "Contract name",
     "contractAssignHelp": "This contract is filled from the booking and sent for signature when a client books one of these services.",
     "contractSendOnBooking": "Send when booked",
@@ -2369,9 +2383,10 @@
     "contractSignatureSave": "Save signature",
     "contractSignatureSaved": "Signature saved",
     "contractDocument": "Document",
+    "contractCopyHelp": "The {language} version is required (your firm’s default language). Other languages are optional. If a client books in a language without a document, we send the default.",
     "contractUpload": "Upload Word or text",
     "contractImporting": "Importing…",
-    "contractUploadHelp": "Upload a .docx or .txt file, or write in the editor. Use {{variables}} for booking and form answers. PDF letterhead is not editable here.",
+    "contractUploadHelp": "Upload a .docx or .txt file into the language you are editing, or write in the editor. Use {{variables}} for booking and form answers. PDF letterhead is not editable here.",
     "contractImported": "Document imported",
     "contractCreate": "Create contract",
     "contractSave": "Save contract",
@@ -2554,12 +2569,17 @@
       "datetime": "Date and time",
       "timezone": "Timezone",
       "duration": "Duration (min)",
-      "meet_link": "Google Meet link"
+      "meet_link": "Google Meet link",
+      "customer_phone": "Customer phone",
+      "customer_address": "Customer address",
+      "signed_date": "Signed date",
+      "signature_client": "Client signature",
+      "signature_consultant": "Consultant signature"
     },
     "errors": {
       "invalid": "Check the title, duration, and price.",
       "invalid_recipients": "Add at least one valid recipient.",
-      "missing_default_locale": "Write the reminder in your firm’s default language.",
+      "missing_default_locale": "Add the version in your firm’s default language.",
       "incomplete_translation": "Each language needs both a subject and a message, or leave both blank.",
       "unauthorized": "Sign in to continue.",
       "forbidden": "You do not have permission to manage services.",

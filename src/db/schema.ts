@@ -918,6 +918,7 @@ export const contractTemplates = pgTable("contract_templates", {
     .references(() => organizations.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   bodyHtml: text("body_html").notNull(),
+  translations: jsonb("translations").notNull().default({}),
   requireConsultantSignature: boolean("require_consultant_signature")
     .notNull()
     .default(true),

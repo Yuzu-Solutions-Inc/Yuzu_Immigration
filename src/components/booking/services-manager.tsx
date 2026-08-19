@@ -635,6 +635,7 @@ export function ServicesManager({
         <div className="flex flex-wrap gap-2">
           <ServiceContractsButton
             locale={locale}
+            orgDefaultLocale={orgDefaultLocale}
             services={services}
             formFields={formFields}
             templates={templates}
