@@ -6,9 +6,9 @@ import { CaseloadBar } from "@/components/home/caseload-bar";
 import { TodayTimeline } from "@/components/home/today-timeline";
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { StatusPill } from "@/components/ui/status-pill";
 import { Link } from "@/i18n/navigation";
 import type { DashboardAppointment, HomeDashboard } from "@/lib/crm/dashboard";
+import { meetingJoinUrl } from "@/lib/booking/join-window";
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
   formatDateInZone,
@@ -137,9 +137,7 @@ export async function HomeDashboardView({
     (item) => zonedDateIso(new Date(item.startsAt), booking.timezone) > todayIso,
   );
   const laterByDay = groupByDay(laterAppointments, booking.timezone);
-  const nextAppointment =
-    todayAppointments.find((item) => new Date(item.startsAt) >= now) ??
-    laterAppointments[0];
+  const joinLabel = t("appointments.joinNow");
 
   const unpaidHint =
     kpis.pendingAmountCents > 0
@@ -153,7 +151,7 @@ export async function HomeDashboardView({
         : t("tiles.unpaidHint");
 
   return (
-    <div className="flex flex-col gap-3 lg:h-[calc(100dvh-5rem)] lg:overflow-hidden">
+    <div className="flex min-w-0 flex-col gap-3 lg:h-[calc(100dvh-5rem)] lg:overflow-hidden">
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-2">
         <div className="min-w-0 space-y-0.5">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
@@ -254,18 +252,18 @@ export async function HomeDashboardView({
             </div>
           ) : null}
 
-          <div className="grid min-h-0 items-stretch gap-2.5 lg:grid-cols-12 lg:flex-1 lg:overflow-hidden">
-            <SurfaceCard className="flex max-h-[min(24rem,55dvh)] min-h-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-5 lg:max-h-none">
+          <div className="grid min-h-0 min-w-0 items-stretch gap-2.5 lg:grid-cols-12 lg:flex-1 lg:overflow-hidden">
+            <SurfaceCard className="flex max-h-[min(24rem,55dvh)] min-h-0 min-w-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-5 lg:max-h-none">
               <AttentionList rows={dashboard.attention} locale={locale} />
             </SurfaceCard>
 
-            <SurfaceCard className="flex max-h-[min(32rem,70dvh)] min-h-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-7 lg:max-h-none">
-              <div className="flex shrink-0 items-center justify-between gap-2">
+            <SurfaceCard className="flex max-h-[min(32rem,70dvh)] min-h-0 min-w-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-7 lg:max-h-none">
+              <div className="flex shrink-0 items-baseline justify-between gap-2">
                 <div className="min-w-0">
                   <h2 className="font-heading text-sm font-semibold text-brand">
                     {t("appointments.title")}
                   </h2>
-                  <p className="text-[11px] text-muted-foreground tabular-nums">
+                  <p className="text-xs text-muted-foreground tabular-nums">
                     {t("appointments.todayCount", {
                       count: booking.todayCount,
                     })}
@@ -282,16 +280,16 @@ export async function HomeDashboardView({
                   {t("appointments.viewCalendar")}
                 </Link>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
                 {todayAppointments.length === 0 &&
                 laterAppointments.length === 0 ? (
                   <p className="pt-2.5 text-sm text-muted-foreground">
                     {t("appointments.empty")}
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-4 pt-2.5">
+                  <div className="flex min-w-0 flex-col gap-5 pt-3">
                     <section className="min-w-0">
-                      <h3 className="pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                      <h3 className="pb-1.5 text-xs font-semibold text-brand">
                         {t("timing.today")}
                       </h3>
                       <TodayTimeline
@@ -299,13 +297,18 @@ export async function HomeDashboardView({
                         nowLabel={t("appointments.now")}
                         empty={t("appointments.emptyToday")}
                         unpaidLabel={t("appointments.unpaid")}
-                        nextLabel={t("appointments.next")}
                         durationLabel={(minutes) =>
                           t("appointments.durationMinutes", { minutes })
                         }
                         items={todayAppointments.map((item) => {
                           const start = new Date(item.startsAt);
                           const parts = zonedParts(start, booking.timezone);
+                          const joinUrl = meetingJoinUrl({
+                            url: item.meetJoinUrl,
+                            startsAt: item.startsAt,
+                            endsAt: item.endsAt,
+                            status: item.status,
+                          });
                           return {
                             id: item.id,
                             startLabel: formatTimeInZone(
@@ -325,67 +328,78 @@ export async function HomeDashboardView({
                               item.serviceTitle ??
                               t("appointments.unknownService"),
                             href: "/bookings",
+                            joinUrl,
+                            joinLabel,
                             unpaid: item.status === "pending_payment",
                             past: new Date(item.endsAt) <= now,
-                            next: item.id === nextAppointment?.id,
                           };
                         })}
                       />
                     </section>
                     {laterByDay.length > 0 ? (
                       <section className="min-w-0">
-                        <h3 className="pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                        <h3 className="border-b border-border/70 pb-1 text-[11px] font-medium text-muted-foreground">
                           {t("appointments.laterHeading")}
                         </h3>
-                        <ul className="divide-y divide-border">
+                        <ul className="min-w-0">
                           {laterByDay.map((group) => (
-                            <li key={group.day} className="py-2">
-                              <p className="pb-1 text-[11px] font-medium text-muted-foreground">
+                            <li key={group.day} className="min-w-0 pt-2.5">
+                              <p className="pb-1 text-xs font-medium text-muted-foreground">
                                 {formatWeekdayDate(group.day, locale)}
                               </p>
-                              <ul className="flex flex-col gap-1">
+                              <ul className="min-w-0">
                                 {group.items.map((item) => {
-                                  const isNext =
-                                    item.id === nextAppointment?.id;
+                                  const joinUrl = meetingJoinUrl({
+                                    url: item.meetJoinUrl,
+                                    startsAt: item.startsAt,
+                                    endsAt: item.endsAt,
+                                    status: item.status,
+                                  });
                                   return (
-                                    <li key={item.id}>
-                                      <Link
-                                        href="/bookings"
-                                        className="-mx-1 flex items-start justify-between gap-3 rounded-lg px-1 py-1.5 transition-colors hover:bg-muted/40"
-                                      >
-                                        <div className="min-w-0">
-                                          <div className="flex items-center gap-2">
-                                            <p className="truncate text-sm font-medium text-brand">
-                                              {item.guestName}
-                                            </p>
-                                            {isNext ? (
-                                              <StatusPill
-                                                label={t("appointments.next")}
-                                                tone="action"
-                                                className="px-2 py-0 text-[10px]"
-                                              />
-                                            ) : null}
-                                          </div>
-                                          <p className="truncate text-[11px] text-muted-foreground">
-                                            {item.serviceTitle ??
-                                              t("appointments.unknownService")}
-                                            {" · "}
-                                            {t("appointments.durationMinutes", {
-                                              minutes:
-                                                appointmentDurationMinutes(
-                                                  item,
-                                                ),
-                                            })}
-                                          </p>
-                                        </div>
-                                        <p className="shrink-0 pt-0.5 text-sm font-medium text-brand tabular-nums">
+                                    <li key={item.id} className="min-w-0">
+                                      <div className="flex min-w-0 items-start gap-3 py-1.5">
+                                        <p className="w-[5.25rem] shrink-0 pt-0.5 text-right text-[13px] font-semibold text-brand tabular-nums">
                                           {formatTimeInZone(
                                             new Date(item.startsAt),
                                             booking.timezone,
                                             locale,
                                           )}
                                         </p>
-                                      </Link>
+                                        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                                          <Link
+                                            href="/bookings"
+                                            className="min-w-0 flex-1 rounded-md hover:bg-muted/40"
+                                          >
+                                            <p className="truncate text-sm font-semibold text-brand">
+                                              {item.guestName}
+                                            </p>
+                                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                              {item.serviceTitle ??
+                                                t("appointments.unknownService")}
+                                              {" · "}
+                                              {t(
+                                                "appointments.durationMinutes",
+                                                {
+                                                  minutes:
+                                                    appointmentDurationMinutes(
+                                                      item,
+                                                    ),
+                                                },
+                                              )}
+                                            </p>
+                                          </Link>
+                                          {joinUrl ? (
+                                            <a
+                                              href={joinUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="shrink-0 text-xs font-semibold text-action hover:underline"
+                                            >
+                                              {joinLabel}
+                                            </a>
+                                          ) : null}
+                                        </div>
+                                      </div>
                                     </li>
                                   );
                                 })}

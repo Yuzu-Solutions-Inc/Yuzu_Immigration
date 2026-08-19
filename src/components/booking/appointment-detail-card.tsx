@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, ChevronDown, ChevronUp, ExternalLink, X } from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronUp, ExternalLink, Video, X } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -11,8 +11,9 @@ import {
   type RescheduleSlotOption,
 } from "@/app/actions/booking";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { meetingJoinUrl } from "@/lib/booking/join-window";
 import { formatPriceCents } from "@/lib/booking/slots";
 import type {
   BookingAppointmentRow,
@@ -67,6 +68,17 @@ export function AppointmentDetailCard({
   }, [row.id]);
 
   const formEntries = Object.entries(row.form_answers ?? {});
+  const joinNowUrl = meetingJoinUrl({
+    url: row.meet_join_url,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    status: row.status,
+  });
+  const meetUrl =
+    !joinNowUrl && row.meet_join_url?.startsWith("https://")
+      ? row.meet_join_url
+      : null;
+
   const hasExtraDetails =
     Boolean(row.guest_address?.trim()) ||
     formEntries.length > 0 ||
@@ -140,12 +152,28 @@ export function AppointmentDetailCard({
                 : null}
             </p>
           </div>
-          <Badge
-            variant={row.status === "confirmed" ? "default" : "secondary"}
-            className="shrink-0"
-          >
-            {t(`status.${row.status}`)}
-          </Badge>
+          <div className="flex shrink-0 items-center gap-2">
+            {joinNowUrl ? (
+              <a
+                href={joinNowUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ size: "xs" }),
+                  "bg-action text-action-foreground hover:bg-action/90",
+                )}
+              >
+                <Video className="size-3.5" aria-hidden />
+                {t("joinNow")}
+              </a>
+            ) : null}
+            <Badge
+              variant={row.status === "confirmed" ? "default" : "secondary"}
+              className="shrink-0"
+            >
+              {t(`status.${row.status}`)}
+            </Badge>
+          </div>
         </div>
 
         <div className="rounded-lg border border-border/80 bg-surface px-3 py-2">
@@ -172,13 +200,13 @@ export function AppointmentDetailCard({
               <span className="truncate">{row.guest_phone}</span>
             </>
           ) : null}
-          {row.meet_join_url?.startsWith("https://") ? (
+          {meetUrl ? (
             <>
               <span className="text-border" aria-hidden>
                 ·
               </span>
               <a
-                href={row.meet_join_url}
+                href={meetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 font-medium text-action hover:underline"

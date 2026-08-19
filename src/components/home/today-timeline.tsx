@@ -1,5 +1,7 @@
+import { Video } from "lucide-react";
+
+import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { StatusPill } from "@/components/ui/status-pill";
 import { cn } from "@/lib/utils";
 
 export type TodayTimelineItem = {
@@ -11,9 +13,10 @@ export type TodayTimelineItem = {
   label: string;
   service: string;
   href: string;
+  joinUrl?: string | null;
+  joinLabel?: string;
   unpaid?: boolean;
   past?: boolean;
-  next?: boolean;
 };
 
 type Slot =
@@ -45,7 +48,6 @@ export function TodayTimeline({
   nowLabel,
   empty,
   unpaidLabel,
-  nextLabel,
   durationLabel,
 }: {
   items: TodayTimelineItem[];
@@ -53,7 +55,6 @@ export function TodayTimeline({
   nowLabel: string;
   empty: string;
   unpaidLabel: string;
-  nextLabel: string;
   durationLabel: (minutes: number) => string;
 }) {
   if (items.length === 0) {
@@ -63,16 +64,16 @@ export function TodayTimeline({
   const slots = timelineSlots(items, nowMinutes);
 
   return (
-    <ol className="relative">
+    <ol className="relative min-w-0">
       <span
-        className="pointer-events-none absolute top-3 bottom-3 left-[calc(3.25rem+0.5rem+0.5rem)] w-px -translate-x-1/2 bg-border"
+        className="pointer-events-none absolute top-3 bottom-3 left-[calc(5.25rem+0.5rem+0.5rem)] w-px -translate-x-1/2 bg-border"
         aria-hidden
       />
       {slots.map((slot) => {
         if (slot.type === "now") {
           return (
-            <li key="now" className="flex items-center gap-2 py-2">
-              <p className="w-[3.25rem] shrink-0 text-right text-[10px] font-semibold tracking-wide text-destructive uppercase">
+            <li key="now" className="flex min-w-0 items-center gap-2 py-2">
+              <p className="w-[5.25rem] shrink-0 text-right text-[10px] font-semibold tracking-wide text-destructive uppercase">
                 {nowLabel}
               </p>
               <span className="relative z-10 flex w-4 shrink-0 justify-center">
@@ -84,17 +85,24 @@ export function TodayTimeline({
         }
 
         const { item } = slot;
+        const detail = [
+          item.service,
+          durationLabel(item.durationMinutes),
+          item.unpaid ? unpaidLabel : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
         return (
-          <li key={item.id}>
-            <Link
-              href={item.href}
+          <li key={item.id} className="min-w-0">
+            <div
               className={cn(
-                "flex gap-2 rounded-lg py-2 pr-1 transition-colors hover:bg-muted/40",
+                "flex min-w-0 gap-2 rounded-lg py-2",
                 item.past && "opacity-55",
               )}
             >
-              <div className="w-[3.25rem] shrink-0 pt-0.5 text-right">
-                <p className="text-sm font-medium text-brand tabular-nums">
+              <div className="w-[5.25rem] shrink-0 pt-0.5 text-right">
+                <p className="text-[13px] font-semibold text-brand tabular-nums">
                   {item.startLabel}
                 </p>
                 <p className="text-[11px] text-muted-foreground tabular-nums">
@@ -105,7 +113,7 @@ export function TodayTimeline({
                 <span
                   className={cn(
                     "size-2.5 rounded-full ring-4 ring-surface",
-                    item.next
+                    item.joinUrl
                       ? "bg-action"
                       : item.past
                         ? "bg-muted-foreground/40"
@@ -114,28 +122,31 @@ export function TodayTimeline({
                   aria-hidden
                 />
               </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium text-brand">
+              <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                <Link href={item.href} className="min-w-0 flex-1 rounded-md hover:bg-muted/40">
+                  <p className="truncate text-sm font-semibold text-brand">
                     {item.label}
                   </p>
-                  {item.next ? (
-                    <StatusPill
-                      label={nextLabel}
-                      tone="action"
-                      className="px-2 py-0 text-[10px]"
-                    />
-                  ) : null}
-                </div>
-                <p className="truncate text-[12px] text-muted-foreground">
-                  {item.service}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {durationLabel(item.durationMinutes)}
-                  {item.unpaid ? ` · ${unpaidLabel}` : null}
-                </p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {detail}
+                  </p>
+                </Link>
+                {item.joinUrl && item.joinLabel ? (
+                  <a
+                    href={item.joinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      buttonVariants({ size: "xs" }),
+                      "shrink-0 bg-action text-action-foreground hover:bg-action/90",
+                    )}
+                  >
+                    <Video className="size-3.5" aria-hidden />
+                    {item.joinLabel}
+                  </a>
+                ) : null}
               </div>
-            </Link>
+            </div>
           </li>
         );
       })}

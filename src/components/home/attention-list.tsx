@@ -87,9 +87,6 @@ function secondaryDetail(
       if (alert.kind === "docs_review" && alert.count != null) {
         return t("attention.docsCount", { count: alert.count });
       }
-      if (alert.kind === "unpaid" && alert.amountCents != null) {
-        return t(`attention.kinds.${alert.kind}`);
-      }
       return t(`attention.kinds.${alert.kind}`);
     })
     .join(" · ");
@@ -151,12 +148,12 @@ export function AttentionList({
   }, [filter, visible]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
-      <div className="flex shrink-0 items-center justify-between gap-2">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5">
+      <div className="flex shrink-0 items-baseline justify-between gap-2">
         <h2 className="font-heading text-sm font-semibold text-brand">
           {t("attention.title")}
           {rows.length > 0 ? (
-            <span className="ml-1.5 font-medium text-muted-foreground tabular-nums">
+            <span className="ml-1.5 text-xs font-medium text-muted-foreground tabular-nums">
               {rows.length}
             </span>
           ) : null}
@@ -172,7 +169,7 @@ export function AttentionList({
         <div
           role="toolbar"
           aria-label={t("attention.filter")}
-          className="-mx-1 flex shrink-0 gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex shrink-0 flex-wrap gap-1"
         >
           <FilterChip
             active={filter === "all"}
@@ -192,7 +189,7 @@ export function AttentionList({
           ))}
         </div>
       ) : null}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("attention.empty")}</p>
         ) : visible.length === 0 ? (
@@ -200,13 +197,16 @@ export function AttentionList({
             {t("attention.filterEmpty")}
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
-            {groups.map((group) => {
+          <div className="flex min-w-0 flex-col">
+            {groups.map((group, index) => {
               const showHeader = filter === "all" && groups.length > 1;
               return (
-                <section key={group.kind} className="min-w-0">
+                <section
+                  key={group.kind}
+                  className={cn("min-w-0", index > 0 && "mt-3")}
+                >
                   {showHeader ? (
-                    <h3 className="sticky top-0 z-10 bg-surface py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    <h3 className="sticky top-0 z-10 border-b border-border/70 bg-surface pb-1 text-[11px] font-medium text-muted-foreground">
                       <span
                         className={cn(
                           "mr-1.5 inline-block size-1.5 rounded-full align-middle",
@@ -215,28 +215,25 @@ export function AttentionList({
                         aria-hidden
                       />
                       {t(`attention.kinds.${group.kind}`)}
-                      <span className="ml-1 font-medium tabular-nums">
-                        {group.rows.length}
-                      </span>
                     </h3>
                   ) : null}
-                  <ul>
+                  <ul className="min-w-0">
                     {group.rows.map((row) => {
                       const meta = rowMeta(row, locale, t);
                       const primary = row.alerts[0]?.kind ?? group.kind;
                       const detail = secondaryDetail(row.alerts, primary, t);
                       return (
-                        <li key={row.id}>
+                        <li key={row.id} className="min-w-0">
                           <Link
                             href={row.href}
-                            className="-mx-1 flex items-start justify-between gap-3 rounded-lg px-1 py-2 transition-colors hover:bg-muted/40"
+                            className="flex min-w-0 items-start justify-between gap-3 py-2 transition-colors hover:bg-muted/40"
                           >
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-brand">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-brand">
                                 {row.title}
                               </p>
                               {detail ? (
-                                <p className="truncate text-[11px] text-muted-foreground">
+                                <p className="mt-0.5 truncate text-xs text-muted-foreground">
                                   {detail}
                                 </p>
                               ) : null}
@@ -244,7 +241,7 @@ export function AttentionList({
                             {meta ? (
                               <p
                                 className={cn(
-                                  "shrink-0 pt-0.5 text-right text-xs font-medium",
+                                  "shrink-0 pt-0.5 text-xs tabular-nums",
                                   meta.className,
                                 )}
                               >
@@ -286,7 +283,7 @@ function FilterChip({
       aria-pressed={active}
       className={cn(
         buttonVariants({ variant: "ghost", size: "xs" }),
-        "gap-1.5",
+        "max-w-full gap-1",
         active
           ? "bg-action/10 text-action hover:bg-action/15 hover:text-action"
           : "text-muted-foreground hover:text-foreground",
@@ -295,7 +292,7 @@ function FilterChip({
       {dotClass ? (
         <span className={cn("size-1.5 rounded-full", dotClass)} aria-hidden />
       ) : null}
-      {label}
+      <span>{label}</span>
       <span className="tabular-nums opacity-70">{count}</span>
     </button>
   );

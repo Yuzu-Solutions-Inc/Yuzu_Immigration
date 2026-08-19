@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
 import type { BookingListItem } from "@/lib/booking/bookings-list";
+import { meetingJoinUrl as joinUrlInWindow } from "@/lib/booking/join-window";
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
   formatDateInZone,
@@ -106,20 +107,14 @@ type SortKey =
   | "payment";
 type SortDir = "asc" | "desc";
 
-const JOIN_WINDOW_MS = 60 * 60 * 1000;
-
 function meetingJoinUrl(booking: BookingListItem, now: number) {
-  if (booking.status === "cancelled" || booking.status === "no_show") {
-    return null;
-  }
-  const url = booking.meetJoinUrl;
-  if (!url?.startsWith("https://")) return null;
-  const start = Date.parse(booking.startsAt);
-  if (!Number.isFinite(start)) return null;
-  if (now < start - JOIN_WINDOW_MS || now > start + JOIN_WINDOW_MS) {
-    return null;
-  }
-  return url;
+  return joinUrlInWindow({
+    url: booking.meetJoinUrl,
+    startsAt: booking.startsAt,
+    endsAt: booking.endsAt,
+    status: booking.status,
+    now,
+  });
 }
 
 function statusLabel(
@@ -662,7 +657,7 @@ export function BookingsList({
                         )}
                       >
                         <Video className="size-3.5" aria-hidden />
-                        {t("joinMeet")}
+                        {t("joinNow")}
                       </a>
                     ) : null}
                   </div>

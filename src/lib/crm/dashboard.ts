@@ -63,6 +63,7 @@ export type DashboardAppointment = {
   startsAt: string;
   endsAt: string;
   status: BookingAppointmentRow["status"];
+  meetJoinUrl: string | null;
 };
 
 export type BookingModuleSummary = {
@@ -470,6 +471,7 @@ export async function getHomeDashboard(
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       status: row.status,
+      meetJoinUrl: row.meet_join_url,
     };
   };
 
