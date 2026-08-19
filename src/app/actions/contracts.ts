@@ -8,13 +8,13 @@ import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { defaultContractBodyHtml, sanitizeContractHtml } from "@/lib/contracts/html";
 import { docxBufferToHtml, plainTextToHtml } from "@/lib/contracts/docx";
-import { MAX_CONTRACT_HTML_CHARS, MAX_CONTRACT_UPLOAD_BYTES } from "@/lib/contracts/types";
+import { MAX_CONTRACT_HTML_CHARS, MAX_CONTRACT_UPLOAD_BYTES, isPngSignatureDataUrl } from "@/lib/contracts/types";
 import { applyContractSignature } from "@/lib/contracts/sign";
 import {
   appendContractAudit,
   issueContractsForAppointment,
 } from "@/lib/contracts/issue";
-import { encryptContractSignatureWrite } from "@/lib/security/client-pii";
+import { encryptContractSignatureWrite, encryptStaffContractSignatureWrite } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
@@ -70,13 +70,13 @@ export async function parseContractUploadAction(
   if (!(file instanceof File) || file.size < 1) return { error: "invalid_upload" };
   if (file.size > MAX_CONTRACT_UPLOAD_BYTES) return { error: "file_too_large" };
   const name = file.name.toLowerCase();
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const buffer = await file.arrayBuffer();
   try {
     if (name.endsWith(".docx")) {
       return { html: await docxBufferToHtml(buffer), message: "imported" };
     }
     if (name.endsWith(".txt") || name.endsWith(".html") || name.endsWith(".htm")) {
-      const text = buffer.toString("utf8");
+      const text = new TextDecoder("utf-8").decode(buffer);
       return {
         html: name.endsWith(".txt")
           ? plainTextToHtml(text)
@@ -86,6 +86,14 @@ export async function parseContractUploadAction(
     }
     return { error: "unsupported_file" };
   } catch (err) {
+    const code = err instanceof Error ? err.message : "";
+    if (
+      code === "unsupported_file" ||
+      code === "empty_document" ||
+      code === "invalid_docx"
+    ) {
+      return { error: code === "invalid_docx" ? "invalid_upload" : code };
+    }
     console.error("parse contract upload:", err);
     return { error: "invalid_upload" };
   }
@@ -369,4 +377,86 @@ export async function staffSignContractAction(
   if (result.error) return { error: result.error };
   revalidatePath(`/${toAppLocale(locale)}/bookings`);
   return { message: result.message };
+}
+
+export async function setContractTemplateActiveAction(
+  templateId: string,
+  isActive: boolean,
+  locale: string,
+): Promise<ContractActionState> {
+  const auth = await requireManager();
+  if (!auth.ok) return { error: auth.error };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("contract_templates")
+    .update({
+      is_active: isActive,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", templateId)
+    .eq("organization_id", auth.membership.organization.id);
+  if (error) {
+    console.error("set contract active:", error.message);
+    return { error: "save_failed" };
+  }
+  revalidatePath(`/${toAppLocale(locale)}/services`);
+  return { message: "saved" };
+}
+
+export async function saveStaffContractSignatureAction(
+  input: {
+    locale: string;
+    presignAll: boolean;
+    kind: "typed" | "drawn";
+    typedName: string;
+    image: string | null;
+  },
+): Promise<ContractActionState> {
+  const auth = await requireManager();
+  if (!auth.ok) return { error: auth.error };
+  const user = await getSessionUser();
+  if (!user) return { error: "unauthorized" };
+  const typedName = input.typedName.trim();
+  if (typedName.length < 2) return { error: "name_required" };
+  if (input.kind === "drawn" && !isPngSignatureDataUrl(input.image)) {
+    return { error: "invalid_signature" };
+  }
+  if (input.presignAll && input.kind === "typed" && typedName.length < 2) {
+    return { error: "signature_required" };
+  }
+  const dek = await getOrgDataKey(auth.membership.organization.id);
+  const sealed = encryptStaffContractSignatureWrite(
+    {
+      signature_text: typedName,
+      signature_image: input.kind === "drawn" ? input.image : null,
+    },
+    dek,
+  );
+  const supabase = await createClient();
+  const { error } = await supabase.from("staff_contract_signatures").upsert(
+    {
+      organization_id: auth.membership.organization.id,
+      user_id: user.id,
+      presign_all: input.presignAll,
+      signature_kind: input.kind,
+      signature_text: sealed.signature_text,
+      signature_image: sealed.signature_image,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "organization_id,user_id" },
+  );
+  if (error) {
+    console.error("save staff signature:", error.message);
+    return { error: "save_failed" };
+  }
+  await recordAuditEvent({
+    organizationId: auth.membership.organization.id,
+    actorUserId: user.id,
+    actorKind: "staff",
+    action: "contract.staff_signature.update",
+    resourceType: "staff_contract_signature",
+    resourceId: user.id,
+  });
+  revalidatePath(`/${toAppLocale(input.locale)}/services`);
+  return { message: "signature_saved" };
 }

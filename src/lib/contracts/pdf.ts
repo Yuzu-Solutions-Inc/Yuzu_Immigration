@@ -173,7 +173,7 @@ async function drawSignature(
   const label = role === "client" ? "Client" : "Consultant";
   if (signer?.status === "signed") {
     const png = parsePngDataUrl(signer.signature_image);
-    if (png && signer.signature_kind === "drawn") {
+    if (png) {
       try {
         const image = await pager.doc.embedPng(png);
         const width = Math.min(220, image.width);

@@ -14,6 +14,7 @@ import {
   unique,
   uniqueIndex,
   uuid,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -1074,6 +1075,29 @@ export const contractAuditEvents = pgTable("contract_audit_events", {
     .defaultNow()
     .notNull(),
 });
+
+/** Saved consultant signature used to pre-sign booking contracts. */
+export const staffContractSignatures = pgTable(
+  "staff_contract_signatures",
+  {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    presignAll: boolean("presign_all").notNull().default(false),
+    signatureKind: contractSignatureKindEnum("signature_kind"),
+    signatureText: text("signature_text"),
+    signatureImage: text("signature_image"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.userId] }),
+  ],
+);
 
 /** Single-use “schedule a call” links emailed from a project file. */
 export const projectBookingInvites = pgTable("project_booking_invites", {

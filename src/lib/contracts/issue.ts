@@ -4,8 +4,10 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import {
+  CONTRACT_CONSENT_VERSION,
   CONTRACT_ENVELOPES_BUCKET,
   CONTRACT_EXPIRES_DAYS,
+  isPngSignatureDataUrl,
 } from "@/lib/contracts/types";
 import { fillContractHtml } from "@/lib/contracts/html";
 import { buildContractPdf } from "@/lib/contracts/pdf";
@@ -18,6 +20,7 @@ import {
   decryptContractFilledHtml,
   decryptContractSignatureFields,
   decryptContractSignerRow,
+  decryptStaffContractSignature,
   encryptContractFilledHtml,
   encryptContractSignerWrite,
   encryptContractSignatureWrite,
@@ -73,6 +76,36 @@ export async function appendContractAudit(input: {
 
 function signUrl(origin: string, locale: string, token: string) {
   return `${origin.replace(/\/$/, "")}/${locale}/sign/${encodeURIComponent(token)}`;
+}
+
+async function loadHostPresign(
+  organizationId: string,
+  userId: string,
+  consultantName: string,
+  dek: Buffer,
+) {
+  const admin = createServiceClient();
+  const { data } = await admin
+    .from("staff_contract_signatures")
+    .select("presign_all, signature_kind, signature_text, signature_image")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!data?.presign_all || !data.signature_kind) return null;
+  const decrypted = decryptStaffContractSignature(data, dek);
+  const typedName = (decrypted.signature_text ?? "").trim();
+  if (typedName.length < 2 || !namesMatch(typedName, consultantName)) {
+    return null;
+  }
+  if (data.signature_kind === "drawn") {
+    if (!isPngSignatureDataUrl(decrypted.signature_image)) return null;
+    return {
+      kind: "drawn" as const,
+      typedName,
+      image: decrypted.signature_image as string,
+    };
+  }
+  return { kind: "typed" as const, typedName, image: null as string | null };
 }
 
 async function sendSignerEmail(input: {
@@ -264,13 +297,35 @@ export async function issueContractsForAppointment(appointmentId: string) {
         { full_name: consultantName, email: consultantEmail || "none@invalid" },
         dek,
       );
+      const presign = await loadHostPresign(
+        appointment.organization_id as string,
+        appointment.host_user_id as string,
+        consultantName,
+        dek,
+      );
+      const sealed = presign
+        ? encryptContractSignatureWrite(
+            {
+              signature_text: presign.typedName,
+              signature_image: presign.image,
+            },
+            dek,
+          )
+        : null;
+      const now = new Date().toISOString();
       signers.push({
         organization_id: appointment.organization_id,
         envelope_id: envelope.id,
         role: "consultant",
         sort_order: 1,
         ...consultantPii,
-        status: "pending",
+        status: presign ? "signed" : "pending",
+        signed_at: presign ? now : null,
+        signature_kind: presign?.kind ?? null,
+        signature_text: sealed?.signature_text ?? null,
+        signature_image: sealed?.signature_image ?? null,
+        consent_accepted_at: presign ? now : null,
+        consent_version: presign ? CONTRACT_CONSENT_VERSION : null,
       });
     }
 
@@ -289,6 +344,17 @@ export async function issueContractsForAppointment(appointmentId: string) {
       eventType: "sent",
       metadata: { templateId: template.id },
     });
+    if (
+      template.require_consultant_signature &&
+      signers.some((row) => row.role === "consultant" && row.status === "signed")
+    ) {
+      await appendContractAudit({
+        organizationId: appointment.organization_id as string,
+        envelopeId: envelope.id,
+        eventType: "presigned",
+        metadata: { templateId: template.id, role: "consultant" },
+      });
+    }
 
     await sendSignerEmail({
       locale,

@@ -107,6 +107,19 @@ export type ContractAuditEventRow = {
   created_at: string;
 };
 
+export function isPngSignatureDataUrl(value: string | null | undefined) {
+  if (!value) return false;
+  if (!value.startsWith("data:image/png;base64,")) return false;
+  return value.length <= MAX_SIGNATURE_IMAGE_CHARS;
+}
+
+export type StaffContractSignature = {
+  presignAll: boolean;
+  kind: ContractSignatureKind | null;
+  typedName: string;
+  image: string | null;
+};
+
 export type ContractEnvelopeSummary = {
   id: string;
   appointment_id: string;

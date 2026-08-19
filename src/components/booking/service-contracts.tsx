@@ -2,15 +2,18 @@
 
 import { FileText, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
   deleteContractTemplateAction,
-  parseContractUploadAction,
   saveContractTemplateAction,
+  saveStaffContractSignatureAction,
+  setContractTemplateActiveAction,
   type ContractActionState,
 } from "@/app/actions/contracts";
+import { SignatureCapture, type SignatureCaptureKind } from "@/components/contracts/signature-capture";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,15 +29,30 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { extraAutomationVariables } from "@/lib/booking/form-fields";
 import { serviceTitle } from "@/lib/booking/service-i18n";
+import {
+  docxBufferToHtml,
+  isLegacyWordDoc,
+  plainTextToHtml,
+} from "@/lib/contracts/docx";
 import { defaultContractBodyHtml, sanitizeContractHtml } from "@/lib/contracts/html";
+import {
+  MAX_CONTRACT_HTML_CHARS,
+  MAX_CONTRACT_UPLOAD_BYTES,
+} from "@/lib/contracts/types";
 import { contractVariableCatalog } from "@/lib/contracts/variables";
-import type { ContractTemplateRow } from "@/lib/contracts/types";
+import type {
+  ContractTemplateRow,
+  StaffContractSignature,
+} from "@/lib/contracts/types";
 import type {
   BookingFormFieldRow,
   BookingServiceRow,
 } from "@/lib/booking/types";
 
 const initialState: ContractActionState = {};
+
+const HEADER_SWITCH_CLASS =
+  "h-7 w-12 shrink-0 data-[size=default]:h-7 data-[size=default]:w-12 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-checked:translate-x-5";
 
 function insertAtCursor(root: HTMLElement, html: string) {
   root.focus();
@@ -72,17 +90,45 @@ function variableChip(key: string) {
   return `<span data-var="${key}" contenteditable="false">{{${key}}}</span>`;
 }
 
+function ActiveHeaderSwitch({
+  id,
+  checked,
+  onCheckedChange,
+  label,
+}: {
+  id: string;
+  checked: boolean;
+  onCheckedChange: (value: boolean) => void;
+  label: string;
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-3 rounded-xl border border-border bg-surface px-3.5 py-2.5">
+      <Label htmlFor={id} className="text-sm font-semibold text-brand">
+        {label}
+      </Label>
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        className={HEADER_SWITCH_CLASS}
+      />
+    </div>
+  );
+}
+
 function ContractEditor({
   locale,
   services,
   formFields,
   template,
+  isActive,
   onCancel,
 }: {
   locale: string;
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   template?: ContractTemplateRow;
+  isActive: boolean;
   onCancel: () => void;
 }) {
   const t = useTranslations("services");
@@ -98,15 +144,14 @@ function ContractEditor({
   const [sendOnBooking, setSendOnBooking] = useState(
     template?.send_on_booking ?? true,
   );
-  const [isActive, setIsActive] = useState(template?.is_active ?? true);
   const [html, setHtml] = useState(
     template?.body_html || defaultContractBodyHtml(),
   );
+  const [importing, setImporting] = useState(false);
   const [state, formAction, pending] = useActionState(
     saveContractTemplateAction,
     initialState,
   );
-  const [uploadPending, startUpload] = useTransition();
   const seeded = useRef(false);
 
   useEffect(() => {
@@ -147,6 +192,51 @@ function ContractEditor({
 
   function syncHtml() {
     if (editorRef.current) setHtml(editorRef.current.innerHTML);
+  }
+
+  async function importDocument(file: File) {
+    if (file.size > MAX_CONTRACT_UPLOAD_BYTES) {
+      toast.error(t("errors.file_too_large"));
+      return;
+    }
+    const name = file.name.toLowerCase();
+    setImporting(true);
+    try {
+      let next = "";
+      if (name.endsWith(".docx")) {
+        const buffer = await file.arrayBuffer();
+        if (isLegacyWordDoc(buffer)) {
+          toast.error(t("errors.unsupported_file"));
+          return;
+        }
+        next = await docxBufferToHtml(buffer);
+      } else if (name.endsWith(".txt")) {
+        next = plainTextToHtml(await file.text());
+      } else if (name.endsWith(".html") || name.endsWith(".htm")) {
+        next = sanitizeContractHtml(await file.text());
+      } else {
+        toast.error(t("errors.unsupported_file"));
+        return;
+      }
+      if (next.length > MAX_CONTRACT_HTML_CHARS) {
+        toast.error(t("errors.file_too_large"));
+        return;
+      }
+      if (editorRef.current) {
+        editorRef.current.innerHTML = next;
+        setHtml(next);
+        toast.success(t("contractImported"));
+      }
+    } catch (err) {
+      const code = err instanceof Error ? err.message : "";
+      if (code === "empty_document" || code === "unsupported_file") {
+        toast.error(t(`errors.${code}`));
+        return;
+      }
+      toast.error(t("errors.invalid_upload"));
+    } finally {
+      setImporting(false);
+    }
   }
 
   return (
@@ -213,74 +303,60 @@ function ContractEditor({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+          <div className="min-w-0 space-y-0.5">
+            <Label htmlFor="contract-send" className="text-sm font-medium">
+              {t("contractSendOnBooking")}
+            </Label>
+            <p className="text-xs text-muted-foreground">{t("contractSendHelp")}</p>
+          </div>
           <Switch
             id="contract-send"
             checked={sendOnBooking}
             onCheckedChange={setSendOnBooking}
           />
-          <Label htmlFor="contract-send">{t("contractSendOnBooking")}</Label>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+          <div className="min-w-0 space-y-0.5">
+            <Label htmlFor="contract-countersign" className="text-sm font-medium">
+              {t("contractRequireConsultant")}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {t("contractRequireConsultantHelp")}
+            </p>
+          </div>
           <Switch
             id="contract-countersign"
             checked={requireConsultant}
             onCheckedChange={setRequireConsultant}
           />
-          <Label htmlFor="contract-countersign">
-            {t("contractRequireConsultant")}
-          </Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch
-            id="contract-active"
-            checked={isActive}
-            onCheckedChange={setIsActive}
-          />
-          <Label htmlFor="contract-active">{t("active")}</Label>
         </div>
       </div>
-      <FieldHint>{t("contractSendHelp")}</FieldHint>
 
       <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium">{t("contractDocument")}</p>
           <input
             ref={fileRef}
             type="file"
-            accept=".docx,.txt,.html,.htm"
+            accept=".docx,.txt,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="hidden"
             onChange={(event) => {
               const file = event.currentTarget.files?.[0];
               event.currentTarget.value = "";
-              if (!file) return;
-              const data = new FormData();
-              data.set("file", file);
-              startUpload(async () => {
-                const result = await parseContractUploadAction({}, data);
-                if (result.error) {
-                  toast.error(t(`errors.${result.error}`));
-                  return;
-                }
-                if (result.html && editorRef.current) {
-                  const next = sanitizeContractHtml(result.html);
-                  editorRef.current.innerHTML = next;
-                  setHtml(next);
-                  toast.success(t("contractImported"));
-                }
-              });
+              if (file) void importDocument(file);
             }}
           />
           <Button
             type="button"
             variant="outline"
             size="sm"
-            disabled={uploadPending}
+            disabled={importing}
             onClick={() => fileRef.current?.click()}
           >
             <Upload className="size-4" />
-            {uploadPending ? t("contractImporting") : t("contractUpload")}
+            {importing ? t("contractImporting") : t("contractUpload")}
           </Button>
         </div>
         <FieldHint>{t("contractUploadHelp")}</FieldHint>
@@ -323,28 +399,121 @@ function ContractEditor({
   );
 }
 
+function StaffSignaturePanel({
+  locale,
+  signature,
+}: {
+  locale: string;
+  signature: StaffContractSignature;
+}) {
+  const t = useTranslations("services");
+  const tSign = useTranslations("signContract");
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [presignAll, setPresignAll] = useState(signature.presignAll);
+  const [kind, setKind] = useState<SignatureCaptureKind>(
+    signature.image ? "uploaded" : "typed",
+  );
+  const [typedName, setTypedName] = useState(signature.typedName);
+  const [image, setImage] = useState(signature.image ?? "");
+
+  useEffect(() => {
+    setPresignAll(signature.presignAll);
+    setKind(signature.image ? "uploaded" : "typed");
+    setTypedName(signature.typedName);
+    setImage(signature.image ?? "");
+  }, [signature]);
+
+  return (
+    <div className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
+      <div>
+        <h3 className="text-sm font-semibold text-brand">{t("contractSignature")}</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {t("contractSignatureHelp")}
+        </p>
+      </div>
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+        <div className="min-w-0 space-y-0.5">
+          <Label htmlFor="contract-presign-all" className="text-sm font-medium">
+            {t("contractPresignAll")}
+          </Label>
+          <p className="text-xs text-muted-foreground">{t("contractPresignHelp")}</p>
+        </div>
+        <Switch
+          id="contract-presign-all"
+          checked={presignAll}
+          onCheckedChange={setPresignAll}
+        />
+      </div>
+      <SignatureCapture
+        kind={kind}
+        onKindChange={setKind}
+        typedName={typedName}
+        onTypedNameChange={setTypedName}
+        image={image}
+        onImageChange={setImage}
+        nameHint={tSign("legalNameHint")}
+        onError={(key) => toast.error(t(`errors.${key}`))}
+      />
+      <Button
+        type="button"
+        size="sm"
+        disabled={pending}
+        onClick={() => {
+          startTransition(async () => {
+            const storedKind = kind === "typed" ? "typed" : "drawn";
+            const result = await saveStaffContractSignatureAction({
+              locale,
+              presignAll,
+              kind: storedKind,
+              typedName,
+              image: storedKind === "drawn" ? image : null,
+            });
+            if (result.error) {
+              toast.error(t(`errors.${result.error}`));
+              return;
+            }
+            toast.success(t("contractSignatureSaved"));
+            router.refresh();
+          });
+        }}
+      >
+        {pending ? t("saving") : t("contractSignatureSave")}
+      </Button>
+    </div>
+  );
+}
+
 export function ServiceContractsButton({
   locale,
   services,
   formFields,
   templates,
+  signature,
   canManage,
 }: {
   locale: string;
   services: BookingServiceRow[];
   formFields: BookingFormFieldRow[];
   templates: ContractTemplateRow[];
+  signature: StaffContractSignature;
   canManage: boolean;
 }) {
   const t = useTranslations("services");
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ContractTemplateRow | null>(null);
+  const [isActive, setIsActive] = useState(true);
+  const [activePending, startActive] = useTransition();
 
   function closeEditor() {
     setCreating(false);
     setEditing(null);
+    setIsActive(true);
   }
+
+  const editingOpen = creating || Boolean(editing);
 
   return (
     <>
@@ -373,30 +542,44 @@ export function ServiceContractsButton({
           showCloseButton
         >
           <DialogHeader>
-            <DialogTitle>
-              {creating || editing
-                ? editing
-                  ? t("editContractTitle")
-                  : t("newContractTitle")
-                : t("contractsTitle")}
-            </DialogTitle>
-            <DialogDescription>
-              {creating || editing
-                ? t("contractEditorSubtitle")
-                : t("contractsSubtitle")}
-            </DialogDescription>
+            <div className="flex items-start justify-between gap-4 pr-8">
+              {editingOpen ? (
+                <ActiveHeaderSwitch
+                  id="contract-is-active-header"
+                  checked={isActive}
+                  onCheckedChange={setIsActive}
+                  label={t("active")}
+                />
+              ) : null}
+              <div className="min-w-0 space-y-2">
+                <DialogTitle>
+                  {creating
+                    ? t("newContractTitle")
+                    : editing
+                      ? t("editContractTitle")
+                      : t("contractsTitle")}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingOpen ? t("contractEditorSubtitle") : t("contractsSubtitle")}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           <div className="min-h-0 overflow-x-hidden overflow-y-auto pr-1">
-            {creating || editing ? (
+            {editingOpen ? (
               <ContractEditor
                 locale={locale}
                 services={services}
                 formFields={formFields}
                 template={editing ?? undefined}
+                isActive={isActive}
                 onCancel={closeEditor}
               />
             ) : (
               <div className="space-y-4">
+                {canManage ? (
+                  <StaffSignaturePanel locale={locale} signature={signature} />
+                ) : null}
                 {templates.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     {t("contractsEmpty")}
@@ -410,9 +593,30 @@ export function ServiceContractsButton({
                       return (
                         <li
                           key={template.id}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-3 py-2"
+                          className="flex flex-wrap items-center gap-3 rounded-xl border border-border px-3 py-2"
                         >
-                          <div className="min-w-0">
+                          {canManage ? (
+                            <ActiveHeaderSwitch
+                              id={`contract-active-${template.id}`}
+                              checked={template.is_active}
+                              onCheckedChange={(value) => {
+                                startActive(async () => {
+                                  const result = await setContractTemplateActiveAction(
+                                    template.id,
+                                    value,
+                                    locale,
+                                  );
+                                  if (result.error) {
+                                    toast.error(t(`errors.${result.error}`));
+                                    return;
+                                  }
+                                  router.refresh();
+                                });
+                              }}
+                              label={t("active")}
+                            />
+                          ) : null}
+                          <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">{template.title}</p>
                             <p className="text-xs text-muted-foreground">
                               {assigned.length === 0
@@ -429,7 +633,12 @@ export function ServiceContractsButton({
                                 type="button"
                                 variant="ghost"
                                 size="icon-sm"
-                                onClick={() => setEditing(template)}
+                                disabled={activePending}
+                                onClick={() => {
+                                  setIsActive(template.is_active);
+                                  setCreating(false);
+                                  setEditing(template);
+                                }}
                                 aria-label={t("editContractTitle")}
                               >
                                 <Pencil className="size-4" />
@@ -476,6 +685,7 @@ export function ServiceContractsButton({
                     size="sm"
                     onClick={() => {
                       setEditing(null);
+                      setIsActive(true);
                       setCreating(true);
                     }}
                   >

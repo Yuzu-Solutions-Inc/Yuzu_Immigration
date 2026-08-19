@@ -68,7 +68,7 @@ import type {
   BookingServiceRow,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
-import type { ContractTemplateRow } from "@/lib/contracts/types";
+import type { ContractTemplateRow, StaffContractSignature } from "@/lib/contracts/types";
 import {
   APP_LOCALES,
   LOCALE_LABELS,
@@ -464,6 +464,7 @@ export function ServicesManager({
   automations,
   formFields,
   templates,
+  signature,
 }: {
   locale: string;
   orgDefaultLocale: AppLocale;
@@ -473,6 +474,7 @@ export function ServicesManager({
   automations: ServiceEmailAutomationRow[];
   formFields: BookingFormFieldRow[];
   templates: ContractTemplateRow[];
+  signature: StaffContractSignature;
 }) {
   const t = useTranslations("services");
   const router = useRouter();
@@ -636,6 +638,7 @@ export function ServicesManager({
             services={services}
             formFields={formFields}
             templates={templates}
+            signature={signature}
             canManage={canManage}
           />
           <ServiceBookingFormButton

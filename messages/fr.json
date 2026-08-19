@@ -2568,7 +2568,7 @@
       "too_many_fields": "Ce formulaire a déjà le nombre maximal de questions supplémentaires.",
       "invalid_upload": "Impossible de lire ce fichier. Utilisez un fichier Word (.docx) ou texte.",
       "file_too_large": "Ce fichier est trop volumineux. Maximum 5 Mo.",
-      "unsupported_file": "Utilisez un fichier Word (.docx), .txt ou .html.",
+      "unsupported_file": "Utilisez un fichier Word (.docx), .txt ou .html. Les anciens fichiers .doc ne sont pas pris en charge.",
       "not_found": "Enregistrement introuvable.",
       "closed": "Ce contrat n’est plus ouvert à la signature.",
       "waiting": "Un autre signataire doit d’abord terminer.",
@@ -2577,7 +2577,9 @@
       "name_mismatch": "Le nom saisi doit correspondre au nom de la réservation.",
       "invalid_signature": "Dessinez votre signature dans la case, puis réessayez.",
       "already_signed": "Ce contrat est déjà signé.",
-      "expired": "Ce lien de signature a expiré."
+      "expired": "Ce lien de signature a expiré.",
+      "empty_document": "Ce fichier Word ne contenait pas de texte lisible. Enregistrez-le en .docx puis réessayez.",
+      "signature_required": "Ajoutez une signature tapée, dessinée ou téléversée avant d’activer la pré-signature."
     },
     "allowPayLater": "Autoriser le paiement plus tard",
     "allowPayLaterHelp": "Si activé, le client peut réserver maintenant et payer avant le rendez-vous. Sinon, le paiement est requis pour confirmer.",
@@ -2609,7 +2611,14 @@
     "contractDeleted": "Contrat supprimé",
     "contractArchived": "Ce contrat a déjà été utilisé, il a donc été désactivé plutôt que supprimé.",
     "contractDeleteConfirm": "Retirer ce modèle ? S’il a déjà des copies signées, il sera désactivé.",
-    "contractNoServices": "Aucun service assigné"
+    "contractNoServices": "Aucun service assigné",
+    "contractRequireConsultantHelp": "Si c’est activé, vous contre-signez après le client. Activez la pré-signature ci-dessous pour appliquer automatiquement votre signature enregistrée.",
+    "contractSignature": "Votre signature",
+    "contractSignatureHelp": "Utilisée pour la contre-signature. Tapez, dessinez ou téléversez un PNG. La pré-signature applique cette marque à chaque nouveau contrat.",
+    "contractPresignAll": "Pré-signer tous les contrats",
+    "contractPresignHelp": "Applique votre signature enregistrée dès l’envoi du contrat. Le client signe toujours ; l’enveloppe se termine ensuite.",
+    "contractSignatureSave": "Enregistrer la signature",
+    "contractSignatureSaved": "Signature enregistrée"
   },
   "booking": {
     "title": "Prendre rendez-vous",
@@ -3183,7 +3192,7 @@
     "legalName": "Nom légal",
     "legalNameHint": "Doit correspondre au nom de la réservation.",
     "drawHint": "Dessinez votre signature, puis tapez votre nom légal.",
-    "clearDraw": "Effacer le dessin",
+    "clearDraw": "Effacer",
     "consent": "J’ai lu ce document et j’accepte de le signer électroniquement. Cette signature électronique a la même valeur qu’une signature manuscrite.",
     "sign": "Signer",
     "signing": "Signature…",
@@ -3199,6 +3208,8 @@
       "invalid_signature": "Dessinez votre signature dans la case, puis réessayez.",
       "already_signed": "Ce contrat est déjà signé.",
       "expired": "Ce lien de signature a expiré."
-    }
+    },
+    "uploadName": "Téléverser",
+    "uploadHint": "Téléversez un PNG de votre signature manuscrite."
   }
 }

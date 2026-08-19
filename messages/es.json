@@ -2567,7 +2567,7 @@
       "too_many_fields": "Este formulario ya tiene el número máximo de preguntas extra.",
       "invalid_upload": "No se pudo leer ese archivo. Use Word (.docx) o texto.",
       "file_too_large": "Ese archivo es demasiado grande. Máximo 5 MB.",
-      "unsupported_file": "Use un archivo Word (.docx), .txt o .html.",
+      "unsupported_file": "Use un archivo Word (.docx), .txt o .html. Los archivos .doc antiguos no son compatibles.",
       "not_found": "No se encontró ese registro.",
       "closed": "Este contrato ya no está abierto para firma.",
       "waiting": "Otro firmante debe terminar primero.",
@@ -2576,7 +2576,9 @@
       "name_mismatch": "El nombre escrito debe coincidir con el de la reserva.",
       "invalid_signature": "Dibuje su firma en el recuadro e inténtelo de nuevo.",
       "already_signed": "Este contrato ya está firmado.",
-      "expired": "Este enlace de firma ha caducado."
+      "expired": "Este enlace de firma ha caducado.",
+      "empty_document": "Ese archivo Word no tenía texto legible. Guárdelo como .docx e inténtelo de nuevo.",
+      "signature_required": "Añada una firma escrita, dibujada o subida antes de activar la prefirma."
     },
     "allowPayLater": "Permitir pagar después",
     "allowPayLaterHelp": "Si está activado, el cliente puede reservar ahora y pagar antes de la cita. Si no, el pago es obligatorio para confirmar.",
@@ -2608,7 +2610,14 @@
     "contractDeleted": "Contrato eliminado",
     "contractArchived": "Este contrato ya se usó, así que se desactivó en lugar de eliminarse.",
     "contractDeleteConfirm": "¿Quitar esta plantilla? Si ya tiene copias firmadas, se desactivará.",
-    "contractNoServices": "Sin servicios asignados"
+    "contractNoServices": "Sin servicios asignados",
+    "contractRequireConsultantHelp": "Si está activo, usted contrafirma después del cliente. Active la prefirma abajo para aplicar automáticamente su firma guardada.",
+    "contractSignature": "Su firma",
+    "contractSignatureHelp": "Se usa al contrafirmar. Escriba, dibuje o suba un PNG. La prefirma aplica esta marca a cada contrato nuevo.",
+    "contractPresignAll": "Prefirmar todos los contratos",
+    "contractPresignHelp": "Aplica su firma guardada en cuanto se envía el contrato. El cliente sigue firmando; el sobre se completa después.",
+    "contractSignatureSave": "Guardar firma",
+    "contractSignatureSaved": "Firma guardada"
   },
   "booking": {
     "title": "Reservar una cita",
@@ -3182,7 +3191,7 @@
     "legalName": "Nombre legal",
     "legalNameHint": "Debe coincidir con el nombre de la reserva.",
     "drawHint": "Dibuje su firma y escriba su nombre legal.",
-    "clearDraw": "Borrar dibujo",
+    "clearDraw": "Borrar",
     "consent": "He leído este documento y acepto firmarlo electrónicamente. Esta firma electrónica tiene el mismo efecto que una firma manuscrita.",
     "sign": "Firmar",
     "signing": "Firmando…",
@@ -3198,6 +3207,8 @@
       "invalid_signature": "Dibuje su firma en el recuadro e inténtelo de nuevo.",
       "already_signed": "Este contrato ya está firmado.",
       "expired": "Este enlace de firma ha caducado."
-    }
+    },
+    "uploadName": "Subir",
+    "uploadHint": "Suba un PNG de su firma manuscrita."
   }
 }

@@ -56,6 +56,8 @@ export const PII_AAD = {
     signatureText: "contract_signers.signature_text",
     signatureImage: "contract_signers.signature_image",
     token: "contract_signers.token_encrypted",
+    staffSignatureText: "staff_contract_signatures.signature_text",
+    staffSignatureImage: "staff_contract_signatures.signature_image",
   },
 } as const;
 
@@ -508,6 +510,48 @@ export function decryptContractSignatureFields<
     signature_image: decryptFieldMaybe(
       row.signature_image,
       PII_AAD.contracts.signatureImage,
+      key,
+    ) as T["signature_image"],
+  };
+}
+
+export function encryptStaffContractSignatureWrite(
+  input: {
+    signature_text?: string | null;
+    signature_image?: string | null;
+  },
+  key: Buffer,
+) {
+  return {
+    signature_text: encryptOptionalField(
+      input.signature_text,
+      PII_AAD.contracts.staffSignatureText,
+      key,
+    ),
+    signature_image: encryptOptionalField(
+      input.signature_image,
+      PII_AAD.contracts.staffSignatureImage,
+      key,
+    ),
+  };
+}
+
+export function decryptStaffContractSignature<
+  T extends {
+    signature_text?: string | null;
+    signature_image?: string | null;
+  },
+>(row: T, key: Buffer): T {
+  return {
+    ...row,
+    signature_text: decryptFieldMaybe(
+      row.signature_text,
+      PII_AAD.contracts.staffSignatureText,
+      key,
+    ) as T["signature_text"],
+    signature_image: decryptFieldMaybe(
+      row.signature_image,
+      PII_AAD.contracts.staffSignatureImage,
       key,
     ) as T["signature_image"],
   };

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { hashBookingToken } from "@/lib/booking/token";
 import {
   CONTRACT_CONSENT_VERSION,
-  MAX_SIGNATURE_IMAGE_CHARS,
+  isPngSignatureDataUrl,
   type ContractEnvelopeRow,
   type ContractSignerRow,
 } from "@/lib/contracts/types";
@@ -178,10 +178,7 @@ export async function loadPublicSignPayload(
 }
 
 function validDrawnSignature(image: string | null | undefined) {
-  if (!image) return false;
-  if (!image.startsWith("data:image/png;base64,")) return false;
-  if (image.length > MAX_SIGNATURE_IMAGE_CHARS) return false;
-  return true;
+  return isPngSignatureDataUrl(image);
 }
 
 export async function applyContractSignature(input: {

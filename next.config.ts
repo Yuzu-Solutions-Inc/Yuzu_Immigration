@@ -22,6 +22,11 @@ const CSP_REPORT_ONLY = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
+  },
   outputFileTracingExcludes: {
     "*": ["./assets/ircc/blanks/**"],
   },

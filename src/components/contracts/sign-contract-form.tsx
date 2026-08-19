@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -8,9 +8,8 @@ import {
   signContractPublicAction,
   type SignContractState,
 } from "@/app/actions/sign-contract";
+import { SignatureCapture, type SignatureCaptureKind } from "@/components/contracts/signature-capture";
 import { Button } from "@/components/ui/button";
-import { Field, FieldHint, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import type { PublicSignPayload } from "@/lib/contracts/sign";
 
 const initialState: SignContractState = {};
@@ -23,9 +22,7 @@ export function SignContractForm({
   payload: PublicSignPayload;
 }) {
   const t = useTranslations("signContract");
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
-  const [kind, setKind] = useState<"typed" | "drawn">("typed");
+  const [kind, setKind] = useState<SignatureCaptureKind>("typed");
   const [typedName, setTypedName] = useState(payload.signerName);
   const [consent, setConsent] = useState(false);
   const [image, setImage] = useState("");
@@ -39,22 +36,6 @@ export function SignContractForm({
     if (state.message === "declined") toast.message(t("declinedToast"));
   }, [state, t]);
 
-  function point(event: React.PointerEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
-      y: ((event.clientY - rect.top) / rect.height) * canvas.height,
-    };
-  }
-
-  function exportCanvas() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    setImage(canvas.toDataURL("image/png"));
-  }
-
   const closed =
     payload.alreadySigned ||
     payload.completed ||
@@ -62,6 +43,8 @@ export function SignContractForm({
     payload.expired ||
     payload.voided ||
     payload.waitingOnPrevious;
+
+  const storedKind = kind === "typed" ? "typed" : "drawn";
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10">
@@ -107,93 +90,20 @@ export function SignContractForm({
       {!closed && !state.message ? (
         <form action={formAction} className="space-y-4 rounded-xl border border-border bg-surface p-4">
           <input type="hidden" name="token" value={token} />
-          <input type="hidden" name="kind" value={kind} />
+          <input type="hidden" name="kind" value={storedKind} />
           <input type="hidden" name="image" value={image} />
+          <input type="hidden" name="typedName" value={typedName} />
           <p className="text-sm font-medium">{t("signAs", { name: payload.signerName })}</p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant={kind === "typed" ? "default" : "outline"}
-              onClick={() => setKind("typed")}
-            >
-              {t("typeName")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={kind === "drawn" ? "default" : "outline"}
-              onClick={() => setKind("drawn")}
-            >
-              {t("drawName")}
-            </Button>
-          </div>
-          <Field>
-            <FieldLabel htmlFor="typed-name" required>
-              {t("legalName")}
-            </FieldLabel>
-            <Input
-              id="typed-name"
-              name="typedName"
-              value={typedName}
-              onChange={(event) => setTypedName(event.target.value)}
-              required
-              maxLength={120}
-            />
-            <FieldHint>{t("legalNameHint")}</FieldHint>
-          </Field>
-          {kind === "drawn" ? (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">{t("drawHint")}</p>
-              <canvas
-                ref={canvasRef}
-                width={640}
-                height={180}
-                className="h-36 w-full touch-none rounded-xl border border-input bg-canvas"
-                onPointerDown={(event) => {
-                  drawing.current = true;
-                  const ctx = canvasRef.current?.getContext("2d");
-                  if (!ctx) return;
-                  const { x, y } = point(event);
-                  ctx.strokeStyle = "#1f2a26";
-                  ctx.lineWidth = 2.2;
-                  ctx.lineCap = "round";
-                  ctx.beginPath();
-                  ctx.moveTo(x, y);
-                }}
-                onPointerMove={(event) => {
-                  if (!drawing.current) return;
-                  const ctx = canvasRef.current?.getContext("2d");
-                  if (!ctx) return;
-                  const { x, y } = point(event);
-                  ctx.lineTo(x, y);
-                  ctx.stroke();
-                }}
-                onPointerUp={() => {
-                  drawing.current = false;
-                  exportCanvas();
-                }}
-                onPointerLeave={() => {
-                  drawing.current = false;
-                  exportCanvas();
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const canvas = canvasRef.current;
-                  const ctx = canvas?.getContext("2d");
-                  if (!canvas || !ctx) return;
-                  ctx.clearRect(0, 0, canvas.width, canvas.height);
-                  setImage("");
-                }}
-              >
-                {t("clearDraw")}
-              </Button>
-            </div>
-          ) : null}
+          <SignatureCapture
+            kind={kind}
+            onKindChange={setKind}
+            typedName={typedName}
+            onTypedNameChange={setTypedName}
+            image={image}
+            onImageChange={setImage}
+            nameHint={t("legalNameHint")}
+            onError={(key) => toast.error(t(`errors.${key}`))}
+          />
           <label className="flex items-start gap-2 text-sm">
             <input
               type="checkbox"

@@ -2573,7 +2573,7 @@
       "too_many_fields": "This form already has the maximum number of extra questions.",
       "invalid_upload": "Could not read that file. Use a Word (.docx) or text file.",
       "file_too_large": "That file is too large. Use a file under 5 MB.",
-      "unsupported_file": "Use a Word (.docx), .txt, or .html file.",
+      "unsupported_file": "Use a Word (.docx), .txt, or .html file. Older .doc files are not supported.",
       "not_found": "That record was not found.",
       "closed": "This contract is no longer open for signature.",
       "waiting": "Another signer must finish first.",
@@ -2582,7 +2582,9 @@
       "name_mismatch": "The typed name must match the name on this booking.",
       "invalid_signature": "Draw your signature in the box, then try again.",
       "already_signed": "This contract is already signed.",
-      "expired": "This signature link has expired."
+      "expired": "This signature link has expired.",
+      "empty_document": "That Word file had no readable text. Save it as .docx and try again.",
+      "signature_required": "Add a typed, drawn, or uploaded signature before turning on pre-sign."
     },
     "contracts": "Contracts",
     "contractsTitle": "Service contracts",
@@ -2609,7 +2611,14 @@
     "contractDeleted": "Contract deleted",
     "contractArchived": "This contract has been used, so it was deactivated instead of deleted.",
     "contractDeleteConfirm": "Remove this contract template? If it already has signed copies it will be deactivated instead.",
-    "contractNoServices": "No services assigned"
+    "contractNoServices": "No services assigned",
+    "contractRequireConsultantHelp": "When on, you countersign after the client. Turn on pre-sign below to apply your saved signature automatically.",
+    "contractSignature": "Your signature",
+    "contractSignatureHelp": "Used when you countersign. Type, draw, or upload a PNG. Pre-sign applies this mark to every new booking contract.",
+    "contractPresignAll": "Pre-sign all contracts",
+    "contractPresignHelp": "Apply your saved signature as soon as a contract is sent. The client still signs; the envelope completes after they do.",
+    "contractSignatureSave": "Save signature",
+    "contractSignatureSaved": "Signature saved"
   },
   "booking": {
     "title": "Book an appointment",
@@ -3183,7 +3192,7 @@
     "legalName": "Legal name",
     "legalNameHint": "Must match the name on the booking.",
     "drawHint": "Draw your signature, then type your legal name below.",
-    "clearDraw": "Clear drawing",
+    "clearDraw": "Clear",
     "consent": "I have read this document and agree to sign it electronically. This electronic signature is the legal equivalent of my handwritten signature.",
     "sign": "Sign",
     "signing": "Signing…",
@@ -3199,6 +3208,8 @@
       "invalid_signature": "Draw your signature in the box, then try again.",
       "already_signed": "This contract is already signed.",
       "expired": "This signature link has expired."
-    }
+    },
+    "uploadName": "Upload",
+    "uploadHint": "Upload a PNG of your handwritten signature."
   }
 }
