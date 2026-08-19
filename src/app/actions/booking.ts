@@ -699,6 +699,11 @@ export async function cancelAppointmentAction(
     return { error: "save_failed" };
   }
 
+  const { voidOpenContractsForAppointment } = await import(
+    "@/lib/contracts/issue"
+  );
+  await voidOpenContractsForAppointment(appointmentId);
+
   const { settlePaymentOnBookingCancel } = await import(
     "@/lib/square/payments"
   );

@@ -4,6 +4,7 @@ import { ServicesManager } from "@/components/booking/services-manager";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { listBookingForms, listBookingServices, listServiceEmailAutomations, listServiceFormFields } from "@/lib/booking/queries";
+import { listContractTemplates } from "@/lib/contracts/queries";
 
 export default async function ServicesPage({
   params,
@@ -14,11 +15,12 @@ export default async function ServicesPage({
   setRequestLocale(locale);
 
   const membership = await getPrimaryMembership();
-  const [services, forms, automations, formFields] = await Promise.all([
+  const [services, forms, automations, formFields, templates] = await Promise.all([
     listBookingServices(),
     listBookingForms(),
     listServiceEmailAutomations(),
     listServiceFormFields(),
+    listContractTemplates(),
   ]);
 
   return (
@@ -30,6 +32,7 @@ export default async function ServicesPage({
       forms={forms}
       automations={automations}
       formFields={formFields}
+      templates={templates}
     />
   );
 }

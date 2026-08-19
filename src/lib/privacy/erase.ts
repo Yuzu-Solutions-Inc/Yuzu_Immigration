@@ -187,6 +187,26 @@ async function erasePersonBookings(
   }
 
   const ids = appointments.map((row) => row.id as string);
+  const { data: contractFiles } = await admin
+    .from("contract_envelopes")
+    .select("signed_pdf_storage_path")
+    .eq("organization_id", organizationId)
+    .in("appointment_id", ids);
+  const contractPaths = (contractFiles ?? [])
+    .map((row) => row.signed_pdf_storage_path as string | null)
+    .filter((path): path is string => Boolean(path));
+  if (contractPaths.length > 0) {
+    const { CONTRACT_ENVELOPES_BUCKET } = await import(
+      "@/lib/contracts/types"
+    );
+    const { error: storageError } = await admin.storage
+      .from(CONTRACT_ENVELOPES_BUCKET)
+      .remove(contractPaths);
+    if (storageError) {
+      console.error("erase contract pdfs:", storageError.message);
+    }
+  }
+
   const { error } = await admin
     .from("booking_appointments")
     .delete()

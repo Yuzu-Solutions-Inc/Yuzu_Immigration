@@ -30,6 +30,7 @@ import {
   listTableHeadClassName,
 } from "@/components/layout/list-layout";
 import { ServiceBookingFormButton } from "@/components/booking/service-booking-form";
+import { ServiceContractsButton } from "@/components/booking/service-contracts";
 import { ServiceEmailAutomationsButton } from "@/components/booking/service-email-automations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ import type {
   BookingServiceRow,
   ServiceEmailAutomationRow,
 } from "@/lib/booking/types";
+import type { ContractTemplateRow } from "@/lib/contracts/types";
 import {
   APP_LOCALES,
   LOCALE_LABELS,
@@ -461,6 +463,7 @@ export function ServicesManager({
   forms,
   automations,
   formFields,
+  templates,
 }: {
   locale: string;
   orgDefaultLocale: AppLocale;
@@ -469,6 +472,7 @@ export function ServicesManager({
   forms: BookingFormRow[];
   automations: ServiceEmailAutomationRow[];
   formFields: BookingFormFieldRow[];
+  templates: ContractTemplateRow[];
 }) {
   const t = useTranslations("services");
   const router = useRouter();
@@ -627,6 +631,13 @@ export function ServicesManager({
           <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ServiceContractsButton
+            locale={locale}
+            services={services}
+            formFields={formFields}
+            templates={templates}
+            canManage={canManage}
+          />
           <ServiceBookingFormButton
             locale={locale}
             services={services}

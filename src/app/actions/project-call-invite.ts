@@ -379,6 +379,9 @@ export async function submitProjectCallBookingAction(
     const { sendBookingConfirmationEmail } = await import(
       "@/lib/email/booking-confirmation"
     );
+    const { issueContractsForAppointment } = await import(
+      "@/lib/contracts/issue"
+    );
     await sendBookingConfirmationEmail({
       locale: preferredLocale,
       to: ctx.guestEmail,
@@ -392,6 +395,7 @@ export async function submitProjectCallBookingAction(
       manageUrl: urls.manageUrl,
       cancelUrl: urls.cancelUrl,
     });
+    await issueContractsForAppointment(appointment.id);
   });
 
   return {

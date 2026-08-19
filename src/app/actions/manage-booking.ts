@@ -227,6 +227,11 @@ export async function cancelPublicBookingAction(
     return { error: "save_failed" };
   }
 
+  const { voidOpenContractsForAppointment } = await import(
+    "@/lib/contracts/issue"
+  );
+  await voidOpenContractsForAppointment(ctx.appointmentId);
+
   const { settlePaymentOnBookingCancel } = await import(
     "@/lib/square/payments"
   );

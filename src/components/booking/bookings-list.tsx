@@ -20,6 +20,7 @@ import {
   type RescheduleSlotOption,
 } from "@/app/actions/booking";
 import { sendBookingPaymentReminderAction } from "@/app/actions/booking-payment-reminder";
+import { BookingContractsButton } from "@/components/booking/booking-contracts-button";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import {
   ListTableCard,
@@ -692,6 +693,12 @@ export function BookingsList({
                   <TableCell className={cn("whitespace-normal", listTableEdgeEndClassName)}>
                     {actionable ? (
                       <div className="flex justify-end gap-1">
+                        <BookingContractsButton
+                          locale={locale}
+                          appointmentId={booking.id}
+                          guestName={booking.guestName}
+                          contracts={booking.contracts}
+                        />
                         <Button
                           type="button"
                           variant="ghost"
@@ -758,7 +765,14 @@ export function BookingsList({
                         ) : null}
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <div className="flex justify-end">
+                        <BookingContractsButton
+                          locale={locale}
+                          appointmentId={booking.id}
+                          guestName={booking.guestName}
+                          contracts={booking.contracts}
+                        />
+                      </div>
                     )}
                   </TableCell>
                 ) : null}

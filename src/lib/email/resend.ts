@@ -87,6 +87,7 @@ export async function sendResendEmail(input: {
   locale?: string;
   includeDoNotReply?: boolean;
   replyTo?: string;
+  attachments?: { filename: string; content: string }[];
 }) {
   const config = emailConfigured();
   if (!config) return { sent: false as const, reason: "not_configured" as const };
@@ -113,6 +114,7 @@ export async function sendResendEmail(input: {
   };
   if (input.replyTo) body.reply_to = input.replyTo;
   else if (sender?.replyTo) body.reply_to = sender.replyTo;
+  if (input.attachments?.length) body.attachments = input.attachments;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

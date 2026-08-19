@@ -49,6 +49,14 @@ export const PII_AAD = {
     guestAddress: "booking_appointments.guest_address",
     formAnswers: "booking_appointments.form_answers",
   },
+  contracts: {
+    filledHtml: "contract_envelopes.filled_html",
+    signerName: "contract_signers.full_name",
+    signerEmail: "contract_signers.email",
+    signatureText: "contract_signers.signature_text",
+    signatureImage: "contract_signers.signature_image",
+    token: "contract_signers.token_encrypted",
+  },
 } as const;
 
 type PersonPii = {
@@ -416,6 +424,93 @@ export function decryptBookingFormAnswers(
     if (typeof itemValue === "string") out[itemKey] = itemValue;
   }
   return out;
+}
+
+export function encryptContractFilledHtml(html: string, key: Buffer) {
+  return encryptField(html, PII_AAD.contracts.filledHtml, key);
+}
+
+export function decryptContractFilledHtml(
+  value: string | null | undefined,
+  key: Buffer,
+) {
+  return decryptFieldMaybe(value, PII_AAD.contracts.filledHtml, key) ?? "";
+}
+
+export function encryptContractSignerWrite(
+  input: { full_name: string; email: string },
+  key: Buffer,
+) {
+  return {
+    full_name: encryptField(input.full_name, PII_AAD.contracts.signerName, key),
+    email: encryptField(input.email, PII_AAD.contracts.signerEmail, key),
+  };
+}
+
+export function decryptContractSignerRow<
+  T extends { full_name?: string | null; email?: string | null },
+>(row: T, key: Buffer): T {
+  return {
+    ...row,
+    full_name: decryptFieldMaybe(
+      row.full_name,
+      PII_AAD.contracts.signerName,
+      key,
+    ) as T["full_name"],
+    email: decryptFieldMaybe(
+      row.email,
+      PII_AAD.contracts.signerEmail,
+      key,
+    ) as T["email"],
+  };
+}
+
+export function encryptContractSignatureWrite(
+  input: {
+    signature_text?: string | null;
+    signature_image?: string | null;
+    token?: string | null;
+  },
+  key: Buffer,
+) {
+  return {
+    signature_text: encryptOptionalField(
+      input.signature_text,
+      PII_AAD.contracts.signatureText,
+      key,
+    ),
+    signature_image: encryptOptionalField(
+      input.signature_image,
+      PII_AAD.contracts.signatureImage,
+      key,
+    ),
+    token_encrypted: encryptOptionalField(
+      input.token,
+      PII_AAD.contracts.token,
+      key,
+    ),
+  };
+}
+
+export function decryptContractSignatureFields<
+  T extends {
+    signature_text?: string | null;
+    signature_image?: string | null;
+  },
+>(row: T, key: Buffer): T {
+  return {
+    ...row,
+    signature_text: decryptFieldMaybe(
+      row.signature_text,
+      PII_AAD.contracts.signatureText,
+      key,
+    ) as T["signature_text"],
+    signature_image: decryptFieldMaybe(
+      row.signature_image,
+      PII_AAD.contracts.signatureImage,
+      key,
+    ) as T["signature_image"],
+  };
 }
 
 export function fieldNeedsSeal(value: string | null | undefined): boolean {

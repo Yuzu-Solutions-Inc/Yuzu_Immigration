@@ -370,6 +370,10 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
         cancelUrl,
       });
     }
+    const { issueContractsForAppointment } = await import(
+      "@/lib/contracts/issue"
+    );
+    await issueContractsForAppointment(appointment.id as string);
   });
 }
 

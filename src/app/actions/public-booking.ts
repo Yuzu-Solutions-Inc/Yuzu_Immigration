@@ -387,6 +387,9 @@ export async function submitPublicBookingAction(
           const { sendBookingConfirmationEmail } = await import(
             "@/lib/email/booking-confirmation"
           );
+          const { issueContractsForAppointment } = await import(
+            "@/lib/contracts/issue"
+          );
           await sendBookingConfirmationEmail({
             locale: preferredLocale,
             to: guestEmail,
@@ -402,6 +405,7 @@ export async function submitPublicBookingAction(
             payUrl,
             variant: "pending_payment",
           });
+          await issueContractsForAppointment(appointment.id);
         });
 
         return {
@@ -464,6 +468,9 @@ export async function submitPublicBookingAction(
     const { sendBookingConfirmationEmail } = await import(
       "@/lib/email/booking-confirmation"
     );
+    const { issueContractsForAppointment } = await import(
+      "@/lib/contracts/issue"
+    );
     await sendBookingConfirmationEmail({
       locale: preferredLocale,
       to: guestEmail,
@@ -477,6 +484,7 @@ export async function submitPublicBookingAction(
       manageUrl: urls.manageUrl,
       cancelUrl: urls.cancelUrl,
     });
+    await issueContractsForAppointment(appointment.id);
   });
 
   return {

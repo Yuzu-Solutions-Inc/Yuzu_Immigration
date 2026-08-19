@@ -689,6 +689,33 @@ export const bookingFormFieldTypeEnum = pgEnum("booking_form_field_type", [
   "passport",
 ]);
 
+export const contractEnvelopeStatusEnum = pgEnum("contract_envelope_status", [
+  "sent",
+  "viewed",
+  "partially_signed",
+  "completed",
+  "declined",
+  "expired",
+  "voided",
+]);
+
+export const contractSignerRoleEnum = pgEnum("contract_signer_role", [
+  "client",
+  "consultant",
+]);
+
+export const contractSignerStatusEnum = pgEnum("contract_signer_status", [
+  "pending",
+  "viewed",
+  "signed",
+  "declined",
+]);
+
+export const contractSignatureKindEnum = pgEnum("contract_signature_kind", [
+  "typed",
+  "drawn",
+]);
+
 /** Per-org public booking page (hashed token + encrypted plaintext for recopy). */
 export const bookingSettings = pgTable("booking_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -924,6 +951,129 @@ export const bookingAppointments = pgTable("booking_appointments", {
     table.manageTokenHash,
   ),
 ]);
+
+export const contractTemplates = pgTable("contract_templates", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  requireConsultantSignature: boolean("require_consultant_signature")
+    .notNull()
+    .default(true),
+  sendOnBooking: boolean("send_on_booking").notNull().default(true),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const contractTemplateServices = pgTable(
+  "contract_template_services",
+  {
+    templateId: uuid("template_id")
+      .notNull()
+      .references(() => contractTemplates.id, { onDelete: "cascade" }),
+    serviceId: uuid("service_id")
+      .notNull()
+      .references(() => bookingServices.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+  },
+  (table) => [unique().on(table.templateId, table.serviceId)],
+);
+
+export const contractEnvelopes = pgTable("contract_envelopes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  templateId: uuid("template_id")
+    .notNull()
+    .references(() => contractTemplates.id, { onDelete: "restrict" }),
+  appointmentId: uuid("appointment_id")
+    .notNull()
+    .references(() => bookingAppointments.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  filledHtml: text("filled_html").notNull(),
+  filledSha256: text("filled_sha256").notNull(),
+  signedPdfStoragePath: text("signed_pdf_storage_path"),
+  signedPdfSha256: text("signed_pdf_sha256"),
+  status: contractEnvelopeStatusEnum("status").notNull().default("sent"),
+  locale: text("locale").notNull().default("en"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  declinedAt: timestamp("declined_at", { withTimezone: true }),
+  voidedAt: timestamp("voided_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const contractSigners = pgTable("contract_signers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  envelopeId: uuid("envelope_id")
+    .notNull()
+    .references(() => contractEnvelopes.id, { onDelete: "cascade" }),
+  role: contractSignerRoleEnum("role").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash"),
+  tokenEncrypted: text("token_encrypted"),
+  status: contractSignerStatusEnum("status").notNull().default("pending"),
+  signedAt: timestamp("signed_at", { withTimezone: true }),
+  declinedAt: timestamp("declined_at", { withTimezone: true }),
+  viewedAt: timestamp("viewed_at", { withTimezone: true }),
+  signatureKind: contractSignatureKindEnum("signature_kind"),
+  signatureText: text("signature_text"),
+  signatureImage: text("signature_image"),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  consentAcceptedAt: timestamp("consent_accepted_at", { withTimezone: true }),
+  consentVersion: text("consent_version"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const contractAuditEvents = pgTable("contract_audit_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  envelopeId: uuid("envelope_id")
+    .notNull()
+    .references(() => contractEnvelopes.id, { onDelete: "cascade" }),
+  signerId: uuid("signer_id").references(() => contractSigners.id, {
+    onDelete: "set null",
+  }),
+  eventType: text("event_type").notNull(),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  metadata: jsonb("metadata").notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 /** Single-use “schedule a call” links emailed from a project file. */
 export const projectBookingInvites = pgTable("project_booking_invites", {
@@ -1418,3 +1568,11 @@ export type BookingFormFieldType =
   (typeof bookingFormFieldTypeEnum.enumValues)[number];
 export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number];
 export type PaymentSource = (typeof paymentSourceEnum.enumValues)[number];
+export type ContractEnvelopeStatus =
+  (typeof contractEnvelopeStatusEnum.enumValues)[number];
+export type ContractSignerRole =
+  (typeof contractSignerRoleEnum.enumValues)[number];
+export type ContractSignerStatus =
+  (typeof contractSignerStatusEnum.enumValues)[number];
+export type ContractSignatureKind =
+  (typeof contractSignatureKindEnum.enumValues)[number];

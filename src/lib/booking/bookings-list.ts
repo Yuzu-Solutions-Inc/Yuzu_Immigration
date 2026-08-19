@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { decryptPaymentToken } from "@/lib/square/payments";
 import { serviceTitle } from "@/lib/booking/service-i18n";
+import { listContractSummariesForAppointments } from "@/lib/contracts/queries";
+import type { ContractEnvelopeSummary } from "@/lib/contracts/types";
 
 export type BookingListItem = {
   id: string;
@@ -21,6 +23,7 @@ export type BookingListItem = {
   paymentAmountCents: number | null;
   paymentCurrency: string | null;
   payUrl: string | null;
+  contracts: ContractEnvelopeSummary[];
 };
 
 export async function listOrgBookingsWithPayment(
@@ -79,6 +82,16 @@ export async function listOrgBookingsWithPayment(
   const dek = await getOrgDataKey(organizationId);
   const { getAppBaseUrl } = await import("@/lib/app-url");
   const origin = await getAppBaseUrl();
+  const contracts = await listContractSummariesForAppointments(
+    organizationId,
+    appointmentIds,
+  );
+  const contractsByAppointment = new Map<string, ContractEnvelopeSummary[]>();
+  for (const row of contracts) {
+    const list = contractsByAppointment.get(row.appointment_id) ?? [];
+    list.push(row);
+    contractsByAppointment.set(row.appointment_id, list);
+  }
 
   return rows.map((row) => {
     const guest = decryptBookingGuestRow(
@@ -121,6 +134,7 @@ export async function listOrgBookingsWithPayment(
       paymentAmountCents: (payment?.amount_cents as number | null) ?? null,
       paymentCurrency: (payment?.currency as string | null) ?? null,
       payUrl,
+      contracts: contractsByAppointment.get(row.id as string) ?? [],
     };
   });
 }
