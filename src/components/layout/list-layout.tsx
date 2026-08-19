@@ -12,7 +12,7 @@ export const listStackClassName = "min-w-0 space-y-3";
 
 /** Fill the dashboard main pane. Phone lists still grow and scroll the main column. */
 export const listPageClassName =
-  "flex min-h-0 flex-col gap-3 lg:h-full lg:overflow-hidden";
+  "flex min-h-0 flex-col gap-3 lg:min-h-0 lg:flex-1 lg:overflow-hidden";
 
 /** Calendar (and similar) must fill the pane on every breakpoint so inner boards can scroll. */
 export const fillPageClassName =

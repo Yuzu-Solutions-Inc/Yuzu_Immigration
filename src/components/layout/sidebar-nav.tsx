@@ -285,7 +285,7 @@ export function DesktopSidebar({
   return (
     <aside
       className={cn(
-        "hidden h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex",
+        "sticky top-0 hidden h-dvh max-h-dvh shrink-0 flex-col overflow-x-hidden overflow-y-auto bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex",
         collapsed ? "w-16" : "w-60",
       )}
     >
