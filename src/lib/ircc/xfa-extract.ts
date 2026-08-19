@@ -162,31 +162,14 @@ export type ExtractedLovs = {
   decodedStreams: number;
 };
 
-export async function extractXfaLovs(
-  pdf: Uint8Array,
-  fileKeyHex: string,
-): Promise<ExtractedLovs> {
-  const fileKey = hexToBytes(fileKeyHex);
-  const latin = new TextDecoder("latin1").decode(pdf);
-  const objNums = new Set<number>();
-  for (const m of latin.matchAll(/(\d+) 0 obj/g)) objNums.add(Number(m[1]));
-  const lists = new Map<string, Array<{ lic: string; label: string }>>();
-  const fields: Array<{ name: string; values: string[]; texts: string[] }> = [];
-  let decodedStreams = 0;
-  for (const n of [...objNums].sort((a, b) => a - b)) {
-    const xml = await tryDecode(pdf, fileKey, n);
-    if (!xml) continue;
-    decodedStreams += 1;
-    const lovs = extractEmbeddedLovs(xml);
-    for (const [tag, items] of lovs) {
-      if (!lists.has(tag) || items.length > (lists.get(tag)?.length ?? 0)) {
-        lists.set(tag, items);
-      }
-    }
-    if (xml.includes("<items")) fields.push(...extractChoiceBlocks(xml));
-  }
-  return { lists, fields, decodedStreams };
-}
+export type ExtractLovOptions = {
+  /** Decrypt this object first (usually datasets — rarely has LOVs). */
+  preferObj?: number;
+  /** Stop once each name-group has a matching list or field. */
+  neededGroups?: string[][];
+  /** Cap decoded streams when scanning for LOVs (ignored if no groups). */
+  maxDecodedStreams?: number;
+};
 
 export function licsFor(
   extracted: ExtractedLovs,
@@ -203,4 +186,72 @@ export function licsFor(
     }
   }
   return null;
+}
+
+function mergeLovsFromXml(extracted: ExtractedLovs, xml: string) {
+  const lovs = extractEmbeddedLovs(xml);
+  for (const [tag, items] of lovs) {
+    const current = extracted.lists.get(tag);
+    if (!current || items.length > current.length) {
+      extracted.lists.set(tag, items);
+    }
+  }
+  if (xml.includes("<items")) {
+    extracted.fields.push(...extractChoiceBlocks(xml));
+  }
+}
+
+function groupsSatisfied(
+  extracted: ExtractedLovs,
+  groups: string[][] | undefined,
+): boolean {
+  if (!groups?.length) return false;
+  return groups.every((names) => licsFor(extracted, names) !== null);
+}
+
+export async function extractXfaLovs(
+  pdf: Uint8Array,
+  fileKeyHex: string,
+  options?: ExtractLovOptions,
+): Promise<ExtractedLovs> {
+  const fileKey = hexToBytes(fileKeyHex);
+  const latin = new TextDecoder("latin1").decode(pdf);
+  const objNums = new Set<number>();
+  for (const m of latin.matchAll(/(\d+) 0 obj/g)) objNums.add(Number(m[1]));
+
+  const sized: Array<{ n: number; size: number }> = [];
+  for (const n of objNums) {
+    const span = findStreamSpan(pdf, n);
+    if (!span) continue;
+    sized.push({ n, size: span.streamEnd - span.streamStart });
+  }
+  sized.sort((a, b) => b.size - a.size);
+
+  const ordered: number[] = [];
+  if (options?.preferObj != null) {
+    const pref = sized.find((s) => s.n === options.preferObj);
+    if (pref) ordered.push(pref.n);
+  }
+  for (const s of sized) {
+    if (!ordered.includes(s.n)) ordered.push(s.n);
+  }
+
+  const extracted: ExtractedLovs = {
+    lists: new Map(),
+    fields: [],
+    decodedStreams: 0,
+  };
+  const cap =
+    options?.maxDecodedStreams ??
+    (options?.neededGroups?.length ? 32 : Number.POSITIVE_INFINITY);
+
+  for (const n of ordered) {
+    if (extracted.decodedStreams >= cap) break;
+    const xml = await tryDecode(pdf, fileKey, n);
+    if (!xml) continue;
+    extracted.decodedStreams += 1;
+    mergeLovsFromXml(extracted, xml);
+    if (groupsSatisfied(extracted, options?.neededGroups)) break;
+  }
+  return extracted;
 }

@@ -1383,12 +1383,23 @@
       "caqExpiry": "CAQ expiry",
       "palNumber": "Provincial attestation letter (PAL) number",
       "palExpiry": "PAL expiry",
+      "roomBoard": "Room and board (CAD)",
+      "otherStudyCosts": "Other study costs (CAD)",
+      "studentId": "Student number",
+      "studyNeedsWorkPermit": "Do you also need a work permit?",
+      "studyWorkPermitType": "Work permit type",
+      "visaType": "Type of visa requested",
       "visitPurpose": "Purpose of visit",
       "visitPurposeOther": "Other purpose (describe)",
       "visitFrom": "Intended stay from",
       "visitTo": "Intended stay to",
       "visitHostName": "Host / person you will visit",
       "visitHostRelationship": "Relationship to host",
+      "visitHostAddress": "Host address in Canada",
+      "visitHost2Name": "Second host (optional)",
+      "visitHost2Relationship": "Relationship to second host",
+      "visitHost2Address": "Second host address in Canada",
+      "visitFundsAmount": "Funds available for this visit (CAD)",
       "visitFunds": "Who pays for this visit?",
       "visitorApplyExtend": "Extending my stay as a visitor",
       "visitorApplyRestore": "Restoring my visitor status",
@@ -1412,8 +1423,8 @@
       "lcpElderly": "Care for an elderly person",
       "lcpOther": "Other caregiving",
       "lcpNoPersons": "Number of persons in care",
-      "applyingExtend": "Extending my stay as a worker",
-      "applyingRestore": "Restoring my status as a worker",
+      "applyingExtend": "Extending my stay",
+      "applyingRestore": "Restoring my status",
       "applyingNewEmployer": "Getting a new employer / work location",
       "applyingTrp": "Applying for a temporary resident permit",
       "origEntryDate": "Original entry date",
@@ -1441,6 +1452,9 @@
       "bgViolence": "Witnessed or participated in war crimes / violence?",
       "bgWitness": "Member of an organization using violence?",
       "cicContactConsent": "May IRCC contact your doctor / school / employer?",
+      "hasMembership": "Have you been a member of an organization?",
+      "heldGovPosition": "Have you held a government position?",
+      "traveledOtherCountry": "Have you traveled to a country other than your country of citizenship or current residence?",
       "commonLawCity": "City where you live together",
       "commonLawProvince": "Province / state where you live together",
       "commonLawCountry": "Country where you live together",
@@ -1560,6 +1574,9 @@
       "visitStudy": "Study",
       "visitWork": "Work",
       "visitOther": "Other",
+      "visaVisitor": "Visitor visa",
+      "visaSuper": "Super Visa",
+      "visaTransit": "Transit visa",
       "relSon": "Son",
       "relDaughter": "Daughter",
       "relStepSon": "Step-son",
@@ -1592,7 +1609,7 @@
       "previouslyMarriedHelp": "Include dissolved marriages and common-law unions.",
       "childrenHelp": "Include biological, adopted, and step-children.",
       "siblingsHelp": "Include half- and step-siblings, whether they live with you or not.",
-      "siblingsRowsHelp": "Add each sibling on their own row (maximum 3 on this page).",
+      "siblingsRowsHelp": "Add each sibling on their own row (maximum 7 on IMM 5645).",
       "dliHelp": "Starts with O followed by digits — from your school’s offer letter.",
       "caqHelp": "Required for most study programs in Quebec.",
       "palHelp": "Provincial attestation letter when required by your province.",
@@ -1603,7 +1620,15 @@
       "previousCorRowsHelp": "List up to two previous countries of residence.",
       "jobsHelp": "List up to three jobs or activities, newest first. Leave end blank if current.",
       "educationRowsHelp": "List prior schools. At least one row when you answer Yes.",
-      "childrenRowsHelp": "One row per child."
+      "childrenRowsHelp": "One row per child.",
+      "studyWorkPermitHelp": "Answer Yes if you also need to work while studying in Canada.",
+      "membershipOrgHelp": "Political, social, youth, or student organizations — not routine clubs.",
+      "previousTravelHelp": "List trips of more than a few days to other countries.",
+      "militaryRowsHelp": "One row per period of service.",
+      "warCrimesRowsHelp": "Describe each event or location.",
+      "membershipRowsHelp": "One row per organization.",
+      "govPositionRowsHelp": "One row per government position.",
+      "previousTravelRowsHelp": "One row per country visited."
     },
     "placeholders": {
       "ifApplicable": "If applicable"
@@ -1640,9 +1665,11 @@
       "studyProgram": "Program",
       "studyFunding": "Tuition and funds",
       "studyPal": "Provincial attestation",
+      "studyWorkPermit": "Work while studying",
       "visitPurposeGroup": "Purpose of visit",
       "visitStay": "Dates of stay",
       "visitHost": "Host in Canada",
+      "visitHost2": "Second host (optional)",
       "visitInland": "Current stay in Canada",
       "workJob": "Employer and job",
       "workLocation": "Work location and dates",
@@ -1655,6 +1682,7 @@
       "bgCrime": "Criminal history",
       "bgMilitary": "Military service",
       "bgSecurity": "Violence and witness",
+      "bgSchedule1": "Schedule 1 — additional background",
       "spouse": "Spouse / partner",
       "prevSpouse": "Previous spouse / partner",
       "parent1": "Parent 1",
@@ -1687,8 +1715,33 @@
       },
       "siblings": {
         "title": "Brothers and sisters",
-        "help": "Include half- and step-siblings.",
+        "help": "Include half- and step-siblings (up to 7 on IMM 5645).",
         "add": "Add sibling"
+      },
+      "militaryServiceRows": {
+        "title": "Military / militia / civil defence",
+        "help": "List each period of service (maximum 4).",
+        "add": "Add service"
+      },
+      "warCrimesRows": {
+        "title": "War crimes / violence details",
+        "help": "List each event or location (maximum 3).",
+        "add": "Add event"
+      },
+      "membershipRows": {
+        "title": "Organizations",
+        "help": "List each organization (maximum 4).",
+        "add": "Add organization"
+      },
+      "governmentPositionRows": {
+        "title": "Government positions",
+        "help": "List each position (maximum 4).",
+        "add": "Add position"
+      },
+      "previousTravelRows": {
+        "title": "Previous travel",
+        "help": "List each country visited (maximum 4).",
+        "add": "Add trip"
       },
       "columns": {
         "colCountry": "Country",
@@ -1712,7 +1765,13 @@
         "colAccompanying": "Accompanying?",
         "colAddress": "Address",
         "colMaritalStatus": "Marital status",
-        "colPhone": "Phone"
+        "colPhone": "Phone",
+        "colDetails": "Details",
+        "colOrganization": "Organization",
+        "colPosition": "Position / activities",
+        "colLevel": "Level of government",
+        "colDepartment": "Department / branch",
+        "colPurpose": "Purpose of travel"
       }
     },
     "addRow": "Add row",

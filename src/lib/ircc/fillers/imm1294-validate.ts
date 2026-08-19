@@ -129,8 +129,6 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
     ["dli", cleanText(raw.dli, 40)],
     ["tuitionAmount", cleanText(raw.tuitionAmount, 20)],
     ["availableFunds", cleanText(raw.availableFunds ?? raw.tuitionAmount, 20)],
-    ["occupation", cleanText(raw.occupation) || "Student"],
-    ["employer", cleanText(raw.employer) || cleanText(raw.schoolName)],
   ];
 
   for (const [key, value] of required) {
@@ -161,8 +159,8 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
     return { ok: false, error: "Enter valid study start and end dates." };
   }
 
-  const occupationFromYear = digits(raw.occupationFromYear, 4) || "2022";
-  const occupationFromMonth = digits(raw.occupationFromMonth, 2).padStart(2, "0") || "09";
+  const occupationFromYear = optionalYear(raw.occupationFromYear);
+  const occupationFromMonth = optionalMonth(raw.occupationFromMonth);
 
   const previousCor = parseYn(raw.previousCor, "N");
   const sameAsCor = parseYn(raw.sameAsCor, "Y");
@@ -316,9 +314,16 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
   }
 
   if (educationIndicator === "Y") {
-    const err = need(true, "prior school", cleanText(raw.eduSchool)) ||
-      need(true, "prior field of study", cleanText(raw.eduField)) ||
-      need(true, "prior school country", cleanText(raw.eduCountry));
+    const row = (
+      raw.educationRow && typeof raw.educationRow === "object"
+        ? (raw.educationRow as Record<string, unknown>)
+        : Array.isArray(raw.educationRows)
+          ? (raw.educationRows[0] as Record<string, unknown> | undefined)
+          : undefined
+    ) ?? {};
+    const err = need(true, "prior school", cleanText(row.school || raw.eduSchool)) ||
+      need(true, "prior field of study", cleanText(row.fieldOfStudy || raw.eduField)) ||
+      need(true, "prior school country", cleanText(row.country || raw.eduCountry));
     if (err) return { ok: false, error: err };
   }
 
@@ -373,17 +378,19 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
   const flatJobs: JobIn[] = jobsFromArray.length
     ? jobsFromArray
     : [
-      {
-        fromYear: occupationFromYear,
-        fromMonth: occupationFromMonth,
-        toYear: raw.occupationToYear,
-        toMonth: raw.occupationToMonth,
-        occupation: required[21][1],
-        employer: required[22][1],
-        city: cleanText(raw.occupationCity) || required[11][1],
-        country: cleanText(raw.occupationCountry) || required[5][1],
-        provinceState: cleanText(raw.occupationProvince, 40) || undefined,
-      },
+      ...(cleanText(raw.occupation)
+        ? [{
+          fromYear: occupationFromYear,
+          fromMonth: occupationFromMonth,
+          toYear: raw.occupationToYear,
+          toMonth: raw.occupationToMonth,
+          occupation: raw.occupation,
+          employer: raw.employer,
+          city: raw.occupationCity || raw.city,
+          country: raw.occupationCountry || raw.currentCountry,
+          provinceState: raw.occupationProvince,
+        }]
+        : []),
       ...(cleanText(raw.job2Occupation)
         ? [{
           fromYear: raw.job2FromYear,
@@ -415,14 +422,14 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
   const jobs = [];
   for (let i = 0; i < flatJobs.length; i++) {
     const row = flatJobs[i];
-    const occupation = cleanText(row.occupation) || (i === 0 ? required[21][1] : "");
+    const occupation = cleanText(row.occupation);
     if (!occupation && i > 0) continue;
     if (!occupation) {
-      return { ok: false, error: "Missing required field: occupation" };
+      continue;
     }
-    const fromYear = optionalYear(row.fromYear) || (i === 0 ? occupationFromYear : "");
+    const fromYear = optionalYear(row.fromYear) || (i === 0 ? occupationFromYear : undefined);
     const fromMonth = optionalMonth(row.fromMonth) ||
-      (i === 0 ? (occupationFromMonth || undefined) : undefined) ||
+      (i === 0 ? occupationFromMonth : undefined) ||
       "01";
     if (!fromYear) {
       return { ok: false, error: `Job ${i + 1}: enter a start year.` };
@@ -435,7 +442,7 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
       toYear: to.year,
       toMonth: to.month,
       occupation,
-      employer: cleanText(row.employer) || (i === 0 ? required[22][1] : "Employer"),
+      employer: cleanText(row.employer) || "Employer",
       city: cleanText(row.city) || required[11][1],
       country: cleanText(row.country) || required[5][1],
       provinceState: cleanText(row.provinceState, 40) || undefined,
@@ -538,6 +545,7 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
     provinceState: cleanText(raw.provinceState, 40),
     postalCode: required[13][1],
     sameAsMailing,
+    aptUnit: cleanText(raw.aptUnit, 20) || undefined,
     residential: sameAsMailing === "N"
       ? {
         streetNum: cleanText(raw.resStreetNum, 20) || "1",
@@ -566,6 +574,8 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
     studyToMonth,
     studyToDay,
     tuitionAmount: required[19][1],
+    roomBoard: cleanText(raw.roomBoard, 20) || undefined,
+    otherStudyCosts: cleanText(raw.otherStudyCosts, 20) || undefined,
     availableFunds: required[20][1],
     funds: funds as Imm1294Answers["funds"],
     fundsOtherPerson: cleanText(raw.fundsOtherPerson) || undefined,
@@ -579,17 +589,30 @@ export function validateAnswers(raw: Record<string, unknown>): { ok: true; answe
     palExpiryDay: optionalDay(raw.palExpiryDay),
     educationIndicator,
     educationRow: educationIndicator === "Y"
-      ? {
-        fromYear: digits(raw.eduFromYear, 4) || "2018",
-        fromMonth: digits(raw.eduFromMonth, 2).padStart(2, "0") || "09",
-        toYear: digits(raw.eduToYear, 4) || "2022",
-        toMonth: digits(raw.eduToMonth, 2).padStart(2, "0") || "06",
-        fieldOfStudy: cleanText(raw.eduField),
-        school: cleanText(raw.eduSchool),
-        city: cleanText(raw.eduCity) || required[11][1],
-        country: cleanText(raw.eduCountry),
-        provinceState: cleanText(raw.eduProvince, 40) || undefined,
-      }
+      ? (() => {
+        const row = (
+          raw.educationRow && typeof raw.educationRow === "object"
+            ? (raw.educationRow as Record<string, unknown>)
+            : Array.isArray(raw.educationRows)
+              ? (raw.educationRows[0] as Record<string, unknown> | undefined)
+              : undefined
+        ) ?? {};
+        const from = String(row.from || "");
+        const to = String(row.to || "");
+        const fromIso = /^(\d{4})-(\d{2})/.exec(from);
+        const toIso = /^(\d{4})-(\d{2})/.exec(to);
+        return {
+          fromYear: digits(row.fromYear ?? fromIso?.[1] ?? raw.eduFromYear, 4),
+          fromMonth: (optionalMonth(row.fromMonth ?? fromIso?.[2] ?? raw.eduFromMonth) || "09"),
+          toYear: digits(row.toYear ?? toIso?.[1] ?? raw.eduToYear, 4),
+          toMonth: (optionalMonth(row.toMonth ?? toIso?.[2] ?? raw.eduToMonth) || "06"),
+          fieldOfStudy: cleanText(row.fieldOfStudy || raw.eduField),
+          school: cleanText(row.school || raw.eduSchool),
+          city: cleanText(row.city || raw.eduCity) || required[11][1],
+          country: cleanText(row.country || raw.eduCountry),
+          provinceState: cleanText(row.provinceState || raw.eduProvince, 40) || undefined,
+        };
+      })()
       : undefined,
     jobs,
     bgTb,

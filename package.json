@@ -15,6 +15,7 @@
     "scale:backfill": "npx tsx scripts/backfill-scale-lookups.ts",
     "ircc:validate": "npx tsx scripts/validate-ircc-forms.ts",
     "ircc:validate:local": "npx tsx scripts/validate-ircc-forms.ts --local",
+    "ircc:verify-fill": "npx tsx scripts/verify-ircc-fill.ts",
     "legal:pdf": "node scripts/build-legal-pdfs.mjs"
   },
   "dependencies": {

@@ -25,6 +25,8 @@ export type FormValidationFile = {
   datesOnly?: boolean;
   errorCount: number;
   warningCount: number;
+  errors?: string[];
+  warnings?: string[];
   forms: Record<
     string,
     {
@@ -89,14 +91,6 @@ const VISA_BY_FORM: Record<FormCode, PermitKitFamily[]> = {
   imm5409: ["study_permit", "work_permit", "visitor"],
 };
 
-const REVISION_ALIAS: Partial<Record<FormCode, string>> = {
-  imm5257sch1: "imm5257",
-};
-
-function revisionKey(code: FormCode): string {
-  return REVISION_ALIAS[code] ?? code;
-}
-
 export function formatImmCode(code: string): string {
   const rest = code.replace(/^imm/i, "").toUpperCase();
   if (rest.endsWith("SCH1")) {
@@ -123,9 +117,8 @@ export function getFormVersionRows(): FormVersionRow[] {
   const pins = revisions.forms as Record<string, { irccUpdated: string }>;
 
   return ALL_FORM_CODES.filter((code) => code in IRCC_FORMS).map((code) => {
-    const pinKey = revisionKey(code);
-    const published = pins[pinKey]?.irccUpdated ?? null;
-    const check = status?.forms[code] ?? status?.forms[pinKey];
+    const published = pins[code]?.irccUpdated ?? null;
+    const check = status?.forms[code];
     let validation: FormVersionRow["validation"] = "pending";
     if (check) validation = check.passed ? "passed" : "failed";
     else if (status && published) {

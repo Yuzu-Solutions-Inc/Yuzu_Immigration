@@ -27,6 +27,9 @@ import { fillXfaDatasetsIncremental, type FormMeta } from "./xfa-incremental";
 import { fillImm1294Pdf, type Imm1294Answers } from "./fillers/imm1294";
 import { validateAnswers } from "./fillers/imm1294-validate";
 import { fillImm1295Pdf } from "./fillers/imm1295";
+import { fillImm5257Pdf } from "./fillers/imm5257";
+import { fillImm5257Sch1Pdf } from "./fillers/imm5257sch1";
+import { fillImm5708Pdf } from "./fillers/imm5708";
 import { fillImm5709Pdf } from "./fillers/imm5709";
 import { fillImm5710Pdf } from "./fillers/imm5710";
 
@@ -209,7 +212,6 @@ function buildPrimaryPayload(
   answers: ReturnType<typeof toCompanionAnswers>,
 ): Record<string, unknown> {
   const lang = answers.formLanguage === "f" ? "French" : "English";
-  const year = String(new Date().getFullYear());
   const fallbacks: Record<string, unknown> = {
     serviceIn: lang,
     preferredLang: lang,
@@ -245,37 +247,19 @@ function buildPrimaryPayload(
     }
   }
 
-  if (!merged.occupation) {
-    merged.occupation = answers.jobTitle || "Student";
+  if (!merged.occupation && answers.jobTitle) {
+    merged.occupation = answers.jobTitle;
   }
-  if (!merged.employer) {
-    merged.employer = answers.employerName || answers.schoolName || "N/A";
+  if (!merged.employer && answers.employerName) {
+    merged.employer = answers.employerName;
   }
-  if (!merged.passportCountry) {
-    merged.passportCountry = answers.citizenship || "Unknown";
-  }
-  if (!merged.schoolProvince && answers.provinceState) {
-    merged.schoolProvince = answers.provinceState;
-  }
-  if (!merged.schoolCity && answers.city) {
-    merged.schoolCity = answers.city;
+  if (!merged.passportCountry && answers.citizenship) {
+    merged.passportCountry = answers.citizenship;
   }
   if (!merged.currentCountry && answers.country) {
     merged.currentCountry = answers.country;
   }
   if (!Array.isArray(merged.jobs)) merged.jobs = [];
-  if ((merged.jobs as unknown[]).length === 0) {
-    merged.jobs = [
-      {
-        fromYear: year,
-        fromMonth: "01",
-        occupation: String(merged.occupation || "Student"),
-        employer: String(merged.employer || "N/A"),
-        city: String(merged.city || answers.city || "Unknown"),
-        country: String(merged.country || answers.country || "Unknown"),
-      },
-    ];
-  }
 
   return merged;
 }
@@ -322,27 +306,34 @@ export async function fillProjectForms(input: {
 
     try {
       let bytes: Uint8Array;
+      const payload = buildPrimaryPayload(answers);
+      const blank = code.startsWith("imm")
+        ? await loadBlankPdf(code, lang)
+        : new Uint8Array();
       if (code === "imm1294") {
-        const payload = buildPrimaryPayload(answers);
         const validated = validateAnswers(payload);
         if (!validated.ok) {
           warnings.push(`IMM 1294 skipped: ${validated.error}`);
           continue;
         }
-        const blank = await loadBlankPdf(code, lang);
-        bytes = await fillImm1294Pdf(blank, validated.answers as Imm1294Answers);
+        const meta = metaFor(code, lang);
+        bytes = await fillImm1294Pdf(blank, validated.answers as Imm1294Answers, {
+          fileKeyHex: meta.fileKeyHex,
+          datasetsObj: meta.datasetsObj,
+          datasetsGen: meta.datasetsGen,
+        });
       } else if (code === "imm1295") {
-        const payload = buildPrimaryPayload(answers);
-        const blank = await loadBlankPdf(code, lang);
-        bytes = await fillImm1295Pdf(blank, payload as never);
+        bytes = await fillImm1295Pdf(blank, payload as never, lang);
       } else if (code === "imm5709") {
-        const payload = buildPrimaryPayload(answers);
-        const blank = await loadBlankPdf(code, lang);
-        bytes = await fillImm5709Pdf(blank, payload as never);
+        bytes = await fillImm5709Pdf(blank, payload as never, lang);
       } else if (code === "imm5710") {
-        const payload = buildPrimaryPayload(answers);
-        const blank = await loadBlankPdf(code, lang);
-        bytes = await fillImm5710Pdf(blank, payload as never);
+        bytes = await fillImm5710Pdf(blank, payload as never, lang);
+      } else if (code === "imm5257") {
+        bytes = await fillImm5257Pdf(blank, payload as never, lang);
+      } else if (code === "imm5708") {
+        bytes = await fillImm5708Pdf(blank, payload as never, lang);
+      } else if (code === "imm5257sch1") {
+        bytes = await fillImm5257Sch1Pdf(blank, payload as never, lang);
       } else {
         bytes = await fillCompanion(code, lang, answers);
       }

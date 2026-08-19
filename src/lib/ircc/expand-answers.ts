@@ -149,6 +149,8 @@ export function expandAnswersForFill(
   expandPrefixedDate(out, "studyTo", "studyTo");
   expandPrefixedDate(out, "workFrom", "workFrom");
   expandPrefixedDate(out, "workTo", "workTo");
+  expandPrefixedDate(out, "visitFrom", "visitFrom");
+  expandPrefixedDate(out, "visitTo", "visitTo");
   expandPrefixedDate(out, "caqExpiry", "caqExpiry");
   expandPrefixedDate(out, "palExpiry", "palExpiry");
   expandPrefixedDate(out, "marriage", "marriageDate");
@@ -267,10 +269,51 @@ export function expandAnswersForFill(
   out.lcpDisabled = yn(out.lcpDisabled, "N") === "Y";
   out.lcpElderly = yn(out.lcpElderly, "N") === "Y";
   out.lcpOther = yn(out.lcpOther, "N") === "Y";
-  out.applyingExtend = yn(out.applyingExtend, "N") === "Y";
-  out.applyingRestore = yn(out.applyingRestore, "N") === "Y";
+  out.applyingExtend =
+    yn(out.applyingExtend, "N") === "Y" || yn(out.visitorApplyExtend, "N") === "Y";
+  out.applyingRestore =
+    yn(out.applyingRestore, "N") === "Y" || yn(out.visitorApplyRestore, "N") === "Y";
   out.applyingNewEmployer = yn(out.applyingNewEmployer, "N") === "Y";
   out.applyingTrp = yn(out.applyingTrp, "N") === "Y";
+  if (!out.origEntryDate && out.visitorOrigEntryDate) {
+    out.origEntryDate = out.visitorOrigEntryDate;
+  }
+  if (!out.origEntryPlace && out.visitorOrigEntryPlace) {
+    out.origEntryPlace = out.visitorOrigEntryPlace;
+  }
+  if (!out.recentEntryDate && out.visitorRecentEntryDate) {
+    out.recentEntryDate = out.visitorRecentEntryDate;
+  }
+  if (!out.recentEntryPlace && out.visitorRecentEntryPlace) {
+    out.recentEntryPlace = out.visitorRecentEntryPlace;
+  }
+  if (!out.prevDocNum && out.visitorPrevDocNum) {
+    out.prevDocNum = out.visitorPrevDocNum;
+  }
+
+  const FUNDS_PAYERS = new Set(["Myself", "Parents", "Other"]);
+  if (FUNDS_PAYERS.has(String(out.visitFunds || "")) && !out.visitExpensePayer) {
+    out.visitExpensePayer = out.visitFunds;
+  }
+  if (!out.visitFundsAmount && out.visitFunds && !FUNDS_PAYERS.has(String(out.visitFunds))) {
+    out.visitFundsAmount = out.visitFunds;
+  }
+  if (!out.availableFunds && out.visitFundsAmount) {
+    out.availableFunds = out.visitFundsAmount;
+  }
+  if (!out.funds && FUNDS_PAYERS.has(String(out.visitExpensePayer || out.visitFunds || ""))) {
+    out.funds = out.visitExpensePayer || out.visitFunds;
+  }
+
+  out.studyNeedsWorkPermit = yn(out.studyNeedsWorkPermit, "N") === "Y";
+  if (!Array.isArray(out.militaryServiceRows)) out.militaryServiceRows = [];
+  if (!Array.isArray(out.warCrimesRows)) out.warCrimesRows = [];
+  if (!Array.isArray(out.membershipRows)) out.membershipRows = [];
+  if (!Array.isArray(out.governmentPositionRows)) out.governmentPositionRows = [];
+  if (!Array.isArray(out.previousTravelRows)) out.previousTravelRows = [];
+
+  if (out.ableToCommunicate === "English") out.preferredLang = "English";
+  if (out.ableToCommunicate === "French") out.preferredLang = "French";
 
   out.hasDesignee = yn(out.hasDesignee, "N");
   out.isCommonLaw = String(out.isCommonLaw ?? "N");

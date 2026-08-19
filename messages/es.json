@@ -1383,12 +1383,23 @@
       "caqExpiry": "CAQ expiry",
       "palNumber": "Provincial attestation letter (PAL) number",
       "palExpiry": "PAL expiry",
+      "roomBoard": "Alojamiento y comida (CAD)",
+      "otherStudyCosts": "Otros gastos de estudio (CAD)",
+      "studentId": "Número de estudiante",
+      "studyNeedsWorkPermit": "¿También necesita un permiso de trabajo?",
+      "studyWorkPermitType": "Tipo de permiso de trabajo",
+      "visaType": "Tipo de visa solicitada",
       "visitPurpose": "Motivo de la visita",
       "visitPurposeOther": "Otro motivo (describa)",
       "visitFrom": "Estancia prevista desde",
       "visitTo": "Estancia prevista hasta",
       "visitHostName": "Anfitrión / persona que visitará",
       "visitHostRelationship": "Relación con el anfitrión",
+      "visitHostAddress": "Dirección del anfitrión en Canadá",
+      "visitHost2Name": "Segundo anfitrión (opcional)",
+      "visitHost2Relationship": "Relación con el segundo anfitrión",
+      "visitHost2Address": "Dirección del segundo anfitrión en Canadá",
+      "visitFundsAmount": "Fondos disponibles para esta visita (CAD)",
       "visitFunds": "¿Quién paga esta visita?",
       "visitorApplyExtend": "Prolongar mi estancia como visitante",
       "visitorApplyRestore": "Restablecer mi estatus de visitante",
@@ -1412,8 +1423,8 @@
       "lcpElderly": "Care for an elderly person",
       "lcpOther": "Other caregiving",
       "lcpNoPersons": "Number of persons in care",
-      "applyingExtend": "Extending my stay as a worker",
-      "applyingRestore": "Restoring my status as a worker",
+      "applyingExtend": "Prolongar mi estancia",
+      "applyingRestore": "Restablecer mi estatus",
       "applyingNewEmployer": "Getting a new employer / work location",
       "applyingTrp": "Applying for a temporary resident permit",
       "origEntryDate": "Original entry date",
@@ -1441,6 +1452,9 @@
       "bgViolence": "Witnessed or participated in war crimes / violence?",
       "bgWitness": "Member of an organization using violence?",
       "cicContactConsent": "May IRCC contact your doctor / school / employer?",
+      "hasMembership": "¿Ha sido miembro de una organización?",
+      "heldGovPosition": "¿Ha ocupado un cargo gubernamental?",
+      "traveledOtherCountry": "¿Ha viajado a un país distinto de su ciudadanía o residencia actual?",
       "commonLawCity": "City where you live together",
       "commonLawProvince": "Province / state where you live together",
       "commonLawCountry": "Country where you live together",
@@ -1560,6 +1574,9 @@
       "visitStudy": "Estudiar",
       "visitWork": "Trabajar",
       "visitOther": "Otro",
+      "visaVisitor": "Visa de visitante",
+      "visaSuper": "Super visa",
+      "visaTransit": "Visa de tránsito",
       "relSon": "Hijo",
       "relDaughter": "Hija",
       "relStepSon": "Hijastro",
@@ -1592,7 +1609,7 @@
       "previouslyMarriedHelp": "Include dissolved marriages and common-law unions.",
       "childrenHelp": "Include biological, adopted, and step-children.",
       "siblingsHelp": "Incluya medios hermanos y hermanastros, vivan o no con usted.",
-      "siblingsRowsHelp": "Añada cada hermano en su propia fila (máximo 3 en esta página).",
+      "siblingsRowsHelp": "Añada cada hermano en su propia fila (máximo 7 en el IMM 5645).",
       "dliHelp": "Starts with O followed by digits — from your school’s offer letter.",
       "caqHelp": "Required for most study programs in Quebec.",
       "palHelp": "Provincial attestation letter when required by your province.",
@@ -1603,7 +1620,15 @@
       "previousCorRowsHelp": "List up to two previous countries of residence.",
       "jobsHelp": "List up to three jobs or activities, newest first. Leave end blank if current.",
       "educationRowsHelp": "List prior schools. At least one row when you answer Yes.",
-      "childrenRowsHelp": "One row per child."
+      "childrenRowsHelp": "Una fila por hijo o hija.",
+      "studyWorkPermitHelp": "Responda Sí si también necesita trabajar mientras estudia en Canadá.",
+      "membershipOrgHelp": "Organizaciones políticas, sociales, juveniles o estudiantiles — no clubes habituales.",
+      "previousTravelHelp": "Incluya viajes de más de unos días a otros países.",
+      "militaryRowsHelp": "Una fila por período de servicio.",
+      "warCrimesRowsHelp": "Describa cada hecho o lugar.",
+      "membershipRowsHelp": "Una fila por organización.",
+      "govPositionRowsHelp": "Una fila por cargo gubernamental.",
+      "previousTravelRowsHelp": "Una fila por país visitado."
     },
     "placeholders": {
       "ifApplicable": "Si aplica"
@@ -1640,9 +1665,11 @@
       "studyProgram": "Programa",
       "studyFunding": "Matrícula y fondos",
       "studyPal": "Atestación provincial",
+      "studyWorkPermit": "Trabajo durante los estudios",
       "visitPurposeGroup": "Motivo de la visita",
       "visitStay": "Fechas de estancia",
       "visitHost": "Anfitrión en Canadá",
+      "visitHost2": "Segundo anfitrión (opcional)",
       "visitInland": "Estancia actual en Canadá",
       "workJob": "Empleador y puesto",
       "workLocation": "Lugar y fechas de trabajo",
@@ -1655,6 +1682,7 @@
       "bgCrime": "Antecedentes penales",
       "bgMilitary": "Servicio militar",
       "bgSecurity": "Violencia y testigo",
+      "bgSchedule1": "Anexo 1 — antecedentes adicionales",
       "spouse": "Cónyuge / pareja",
       "prevSpouse": "Cónyuge / pareja anterior",
       "parent1": "Padre o madre 1",
@@ -1687,8 +1715,33 @@
       },
       "siblings": {
         "title": "Hermanos y hermanas",
-        "help": "Incluya medios hermanos y hermanastros.",
+        "help": "Incluya medios hermanos y hermanastros (hasta 7 en el IMM 5645).",
         "add": "Añadir hermano/a"
+      },
+      "militaryServiceRows": {
+        "title": "Servicio militar / milicia / defensa civil",
+        "help": "Indique cada período de servicio (máximo 4).",
+        "add": "Añadir servicio"
+      },
+      "warCrimesRows": {
+        "title": "Crímenes de guerra / violencia",
+        "help": "Indique cada hecho o lugar (máximo 3).",
+        "add": "Añadir hecho"
+      },
+      "membershipRows": {
+        "title": "Organizaciones",
+        "help": "Indique cada organización (máximo 4).",
+        "add": "Añadir organización"
+      },
+      "governmentPositionRows": {
+        "title": "Cargos gubernamentales",
+        "help": "Indique cada cargo (máximo 4).",
+        "add": "Añadir cargo"
+      },
+      "previousTravelRows": {
+        "title": "Viajes anteriores",
+        "help": "Indique cada país visitado (máximo 4).",
+        "add": "Añadir viaje"
       },
       "columns": {
         "colCountry": "País",
@@ -1712,7 +1765,13 @@
         "colAccompanying": "¿Acompaña?",
         "colAddress": "Dirección",
         "colMaritalStatus": "Estado civil",
-        "colPhone": "Teléfono"
+        "colPhone": "Teléfono",
+        "colDetails": "Detalles",
+        "colOrganization": "Organización",
+        "colPosition": "Cargo / actividades",
+        "colLevel": "Nivel de gobierno",
+        "colDepartment": "Departamento / rama",
+        "colPurpose": "Motivo del viaje"
       }
     },
     "addRow": "Añadir fila",

@@ -93,6 +93,7 @@ export type Imm1294Answers = {
   postalCode: string;
   sameAsMailing: YesNo;
   residential?: ResidentialAddress;
+  aptUnit?: string;
   phone: string;
   phoneType: string;
   phoneCountryCode: string;
@@ -110,6 +111,8 @@ export type Imm1294Answers = {
   studyToMonth: string;
   studyToDay: string;
   tuitionAmount: string;
+  roomBoard?: string;
+  otherStudyCosts?: string;
   availableFunds: string;
   funds: "Myself" | "Parents" | "Other";
   fundsOtherPerson?: string;
@@ -231,9 +234,8 @@ function esc(value: string): string {
 /** Strip accents / characters IRCC open-text validators often reject. */
 function asciiSafe(value: string): string {
   return value
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replace(/[^\x20-\x7E]/g, "");
+    .normalize("NFC")
+    .replace(/[\u0000-\u001F\u007F]/g, "");
 }
 
 function openTag(tag: string, value: string): string {
@@ -279,27 +281,30 @@ function fillNested(
 }
 
 function resolveProvinceLic(value: string): string {
-  const raw = value.trim().toUpperCase();
+  const raw = (value || "").trim().toUpperCase();
+  if (!raw) return "";
   if (/^\d{2}$/.test(raw)) return raw;
   if (PROVINCE_LIC[raw]) return PROVINCE_LIC[raw];
-  throw new Error(`Unknown school province code: ${value}`);
+  return raw;
 }
 
 function resolveCityLic(value: string): string {
-  const raw = value.trim();
+  const raw = (value || "").trim();
+  if (!raw) return "";
   if (/^\d+$/.test(raw)) return raw;
   const { aliases, labels } = cityCodes as {
     aliases: Record<string, string>;
     labels: Record<string, string>;
   };
-  if (aliases[raw.toLowerCase()]) return aliases[raw.toLowerCase()];
+  const lower = raw.toLowerCase();
+  if (aliases[lower]) return aliases[lower];
   if (labels[raw]) return labels[raw];
+  const stripped = lower.replace(/,\s*[a-z]{2}$/, "").trim();
+  if (aliases[stripped]) return aliases[stripped];
   for (const [label, lic] of Object.entries(labels)) {
-    if (label.toLowerCase() === raw.toLowerCase() && lic) return lic;
+    if (label.toLowerCase() === lower && lic) return lic;
   }
-  throw new Error(
-    `Unknown school city (use a major Canadian city name or IRCC city code): ${raw}`,
-  );
+  return asciiSafe(raw);
 }
 
 function phoneDigits(phone: string): string {
@@ -392,16 +397,7 @@ function normalizeJob(job: JobRow): JobRow {
 export function normalizeAnswers(a: Imm1294Answers): Imm1294Answers {
   const serviceIn = a.serviceIn === "French" ? "French" : "English";
   const preferredLang = a.preferredLang === "French" ? "French" : "English";
-  const jobs = (a.jobs?.length
-    ? a.jobs
-    : [{
-      fromYear: "2022",
-      fromMonth: "09",
-      occupation: "Student",
-      employer: a.schoolName || "School",
-      city: a.city || "Paris",
-      country: a.currentCountry || "France",
-    }]).map(normalizeJob);
+  const jobs = (a.jobs?.length ? a.jobs : []).map(normalizeJob);
 
   const previousCor = yn(a.previousCor, "N");
   const sameAsCor = yn(a.sameAsCor, "Y");
@@ -471,6 +467,7 @@ export function normalizeAnswers(a: Imm1294Answers): Imm1294Answers {
     country: resolveCountryLic(a.country),
     provinceState: asciiSafe(a.provinceState),
     sameAsMailing,
+    aptUnit: a.aptUnit ? asciiSafe(a.aptUnit) : undefined,
     residential: sameAsMailing === "N" && a.residential
       ? {
         streetNum: a.residential.streetNum,
@@ -489,8 +486,8 @@ export function normalizeAnswers(a: Imm1294Answers): Imm1294Answers {
     phoneType: a.phoneType || "02",
     phoneCountryCode: (a.phoneCountryCode || "").replace(/\D/g, "") || "33",
     schoolName: asciiSafe(a.schoolName),
-    studyLevel: a.studyLevel || "04",
-    fieldOfStudy: a.fieldOfStudy || "04",
+    studyLevel: a.studyLevel || "",
+    fieldOfStudy: a.fieldOfStudy || "",
     schoolProvince: resolveProvinceLic(a.schoolProvince),
     schoolCity: resolveCityLic(a.schoolCity),
     schoolAddress: asciiSafe(a.schoolAddress),
@@ -769,6 +766,9 @@ export function buildFilledForm1(template: string, a: Imm1294Answers): string {
 
   xml = fillNested(xml, "StreetNum", a.streetNum, "><AddressRow1\n>");
   xml = fillNested(xml, "Streetname", a.streetName, "><AddressRow1\n>");
+  if (a.aptUnit) {
+    xml = fillEmpty(xml, "AptUnit", a.aptUnit, "><AddressRow1\n>");
+  }
   xml = fillEmpty(xml, "CityTown", a.city, "><CityTow\n>");
   xml = fillNested(xml, "Country", a.country, "><AddressRow2\n>");
   if (a.provinceState) {
@@ -818,6 +818,8 @@ export function buildFilledForm1(template: string, a: Imm1294Answers): string {
   xml = fillEmpty(xml, "ToDate", studyTo, "><HowLongStudy\n>");
 
   xml = fillEmpty(xml, "amount", a.tuitionAmount, "><tuition\n>");
+  if (a.roomBoard) xml = fillEmpty(xml, "amount", a.roomBoard, "><roomBoard\n>");
+  if (a.otherStudyCosts) xml = fillEmpty(xml, "amount", a.otherStudyCosts, "><other\n>");
   xml = fillNested(xml, "Funds", a.availableFunds, "><expensesPaid\n>");
   xml = fillEmpty(xml, "expensesPaidBy", a.funds, "><expensesPaid\n>");
   if (a.funds === "Other" && a.fundsOtherPerson) {

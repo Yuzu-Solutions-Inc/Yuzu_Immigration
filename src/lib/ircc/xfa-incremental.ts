@@ -235,12 +235,16 @@ export async function fillXfaDatasetsIncremental(
   return out;
 }
 
-/** Fill first empty `<Tag\n/>` or `<Tag\n></Tag\n>` occurrence with text. */
-export function setEmptyTag(xml: string, tag: string, value: string): string {
-  const safe = value
+export function xmlEscape(value: string): string {
+  return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+/** Fill first empty `<Tag\n/>` or `<Tag\n></Tag\n>` occurrence with text. */
+export function setEmptyTag(xml: string, tag: string, value: string): string {
+  const safe = xmlEscape(value);
   const selfClosing = new RegExp(`<${tag}\\n/>`);
   if (selfClosing.test(xml)) {
     return xml.replace(selfClosing, `<${tag}\n>${safe}</${tag}\n>`);
@@ -250,6 +254,61 @@ export function setEmptyTag(xml: string, tag: string, value: string): string {
     return xml.replace(empty, `<${tag}\n>${safe}</${tag}\n>`);
   }
   return xml;
+}
+
+/** Set the first occurrence of a tag, whether empty or already valued (e.g. `0`). */
+export function setTag(xml: string, tag: string, value: string): string {
+  const filled = setEmptyTag(xml, tag, value);
+  if (filled !== xml) return filled;
+  const safe = xmlEscape(value);
+  const existing = new RegExp(`<${tag}\\n>[^<]*</${tag}\\n>`);
+  if (existing.test(xml)) {
+    return xml.replace(existing, `<${tag}\n>${safe}</${tag}\n>`);
+  }
+  return xml;
+}
+
+export function setFlag01(xml: string, tag: string, on: boolean): string {
+  return setTag(xml, tag, on ? "1" : "0");
+}
+
+/** Patch the inner XML of the first `<openTag>...</openTag>` element. */
+export function mapInner(
+  xml: string,
+  openTag: string,
+  patcher: (inner: string) => string,
+): string {
+  const open = new RegExp(`<${openTag}\\n?>`);
+  const m = open.exec(xml);
+  if (!m) return xml;
+  const start = m.index + m[0].length;
+  const close = xml.indexOf(`</${openTag}`, start);
+  if (close < 0) return xml;
+  return xml.slice(0, start) + patcher(xml.slice(start, close)) + xml.slice(close);
+}
+
+export function mapForm1(
+  datasetsXml: string,
+  patcher: (form1: string) => string,
+): string {
+  const start = datasetsXml.indexOf("<form1");
+  if (start < 0) throw new Error("form1 missing in XFA datasets");
+  const endMatch = datasetsXml.slice(start).match(/<\/form1\n?>/);
+  if (!endMatch || endMatch.index === undefined) {
+    throw new Error("form1 close tag missing");
+  }
+  const end = start + endMatch.index + endMatch[0].length;
+  return datasetsXml.slice(0, start) + patcher(datasetsXml.slice(start, end)) + datasetsXml.slice(end);
+}
+
+export function replaceBlock(
+  xml: string,
+  tag: string,
+  innerXml: string,
+): string {
+  const re = new RegExp(`<${tag}\\n?>[\\s\\S]*?</${tag}\\n?>`);
+  if (!re.test(xml)) return xml;
+  return xml.replace(re, `<${tag}\n>${innerXml}</${tag}\n>`);
 }
 
 export function setNthEmptyTag(xml: string, tag: string, value: string, n: number): string {

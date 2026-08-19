@@ -141,6 +141,8 @@ export type Imm5710Answers = {
   bgViolence: YesNo;
   bgWitness: YesNo;
   cicContactConsent: YesNo;
+  /** Inland form flavour — 5710 work, 5709 study, 5708 visitor. */
+  inlandVariant?: "work" | "study" | "visit";
 };
 
 function esc(value: string): string {
@@ -151,7 +153,7 @@ function esc(value: string): string {
 }
 
 function asciiSafe(value: string): string {
-  return value.normalize("NFD").replace(/\p{M}/gu, "").replace(/[^\x20-\x7E]/g, "");
+  return value.normalize("NFC").replace(/[\u0000-\u001F\u007F]/g, "");
 }
 
 function openTag(tag: string, value: string): string {
@@ -187,7 +189,8 @@ function fillNested(xml: string, outer: string, value: string, after = ""): stri
 }
 
 function resolveProvinceLic(value: string): string {
-  const raw = value.trim().toUpperCase();
+  const raw = (value || "").trim().toUpperCase();
+  if (!raw) return "";
   if (/^\d{2}$/.test(raw)) return raw;
   if (PROVINCE_LIC[raw]) return PROVINCE_LIC[raw];
   return asciiSafe(value);
@@ -244,10 +247,7 @@ function normalizeJob(job: JobRow): JobRow {
 }
 
 export function normalize5710Answers(a: Imm5710Answers): Imm5710Answers {
-  const jobs = (a.jobs?.length ? a.jobs : [{
-    fromYear: "2022", fromMonth: "09", occupation: a.jobTitle || "Worker",
-    employer: a.employerName, city: a.workCity || a.city, country: "511",
-  }]).map(normalizeJob);
+  const jobs = (a.jobs?.length ? a.jobs : []).map(normalizeJob);
 
   return {
     ...a,
@@ -271,11 +271,11 @@ export function normalize5710Answers(a: Imm5710Answers): Imm5710Answers {
     city: asciiSafe(a.city),
     provinceState: resolveProvinceLic(a.provinceState),
     workProvince: resolveProvinceLic(a.workProvince),
-    employerName: asciiSafe(a.employerName),
-    employerAddress: asciiSafe(a.employerAddress),
-    workCity: asciiSafe(a.workCity),
-    jobTitle: asciiSafe(a.jobTitle),
-    jobDescription: asciiSafe(a.jobDescription),
+    employerName: asciiSafe(a.employerName || ""),
+    employerAddress: asciiSafe(a.employerAddress || ""),
+    workCity: asciiSafe(a.workCity || ""),
+    jobTitle: asciiSafe(a.jobTitle || ""),
+    jobDescription: asciiSafe(a.jobDescription || ""),
     educationIndicator: yn(a.educationIndicator, "N"),
     jobs,
     bgTb: yn(a.bgTb, "N"),
@@ -303,12 +303,18 @@ export function buildFilledForm5710(template: string, raw: Imm5710Answers): stri
   xml = fillEmpty(xml, "FamilyName", a.familyName, "><Name\n>");
   xml = fillEmpty(xml, "GivenName", a.givenName, "><Name\n>");
 
+  const variant = a.inlandVariant || "work";
   xml = xml.replace(
     /<ApplyingFor\n>[\s\S]*?<\/ApplyingFor\n>/,
-    `<ApplyingFor\n><RestoreStat\n>${a.applyingRestore ? "1" : "0"}</RestoreStat\n>` +
-      `<Extend\n>${a.applyingExtend ? "1" : "0"}</Extend\n>` +
-      `<NewEmployer\n>${a.applyingNewEmployer ? "1" : "0"}</NewEmployer\n>` +
-      `<TRP\n>${a.applyingTrp ? "1" : "0"}</TRP\n></ApplyingFor\n>`,
+    variant === "work"
+      ? `<ApplyingFor\n><RestoreStat\n>${a.applyingRestore ? "1" : "0"}</RestoreStat\n>` +
+        `<Extend\n>${a.applyingExtend ? "1" : "0"}</Extend\n>` +
+        `<NewEmployer\n>${a.applyingNewEmployer ? "1" : "0"}</NewEmployer\n>` +
+        `<TRP\n>${a.applyingTrp ? "1" : "0"}</TRP\n></ApplyingFor\n>`
+      : `<ApplyingFor\n><RestoreStat\n>${a.applyingRestore ? "1" : "0"}</RestoreStat\n>` +
+        `<Extend\n>${a.applyingExtend ? "1" : "0"}</Extend\n>` +
+        `<HiddenStat\n/>` +
+        `<TRP\n>${a.applyingTrp ? "1" : "0"}</TRP\n></ApplyingFor\n>`,
   );
 
   xml = fillNested(xml, "AliasNameIndicator", a.hasAlias === "Y" ? "Y" : "N");
@@ -457,7 +463,9 @@ export function buildFilledForm5710(template: string, raw: Imm5710Answers): stri
 
   const workFrom = isoDate(a.workFromYear, a.workFromMonth, a.workFromDay);
   const workTo = isoDate(a.workToYear, a.workToMonth, a.workToDay);
-  xml = xml.replace(
+  if (variant !== "work") {
+    // Study / visitor inland forms use DetailsOfStudy or DetailsOfVisit instead.
+  } else xml = xml.replace(
     /<DetailsOfWork\n>[\s\S]*?<\/DetailsOfWork\n>/,
       `<DetailsOfWork\n><Purpose\n><Type\n>${esc(a.workPurposeType || "LMOS")}</Type\n>` +
       (a.workPurposeOther ? `<Other\n>${esc(a.workPurposeOther)}</Other\n>` : `<Other\n/>`) +

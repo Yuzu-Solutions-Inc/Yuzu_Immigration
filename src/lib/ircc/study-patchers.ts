@@ -3,6 +3,7 @@
  * companions live in _shared/patch_companions.ts.
  */
 import {
+  mapInner,
   setCheckbox,
   setEmptyTag,
 } from "./xfa-incremental";
@@ -56,104 +57,107 @@ export function patchImm5409(xml: string, a: KitAnswers): string {
   return patchImm5409Shared(xml, a);
 }
 
-/** IMM 5646 — Custodianship declaration (minors only). */
+/** IMM 5646 — Custodianship declaration (minors only). Page 1 and page 2 duplicate most fields. */
 export function patchImm5646(xml: string, a: KitAnswers): string {
-  let out = xml;
   const b = primaryBag(a);
   const studentAddr = ascii(mailingAddress(a), 200);
   const schoolAddr = ascii(
     String(b.schoolAddress || a.schoolAddress || a.schoolName || ""),
     200,
   );
-  const fillStudentBlock = (x: string) => {
-    let o = x;
-    o = setEmptyTag(o, "FamilyName", ascii(a.familyName));
-    o = setEmptyTag(o, "GivenNames", ascii(a.givenName));
-    if (a.citizenship) o = setEmptyTag(o, "Citizenship", ascii(a.citizenship));
-    o = setEmptyTag(o, "theDate", ymd(a));
-    if (schoolAddr) o = setEmptyTag(o, "schoolAddress", schoolAddr);
-    if (a.sex === "Male" || a.sex === "Female") {
-      o = setEmptyTag(o, "mfGroup", a.sex === "Male" ? "M" : "F");
-    }
-    if (studentAddr) o = setEmptyTag(o, "studentAddress", studentAddr);
+  const studentName = ascii(`${a.givenName} ${a.familyName}`.trim());
+  const parent1Name = ascii(
+    `${a.parent1GivenName || ""} ${a.parent1FamilyName || ""}`.trim(),
+  );
+  const parent2Name = ascii(
+    `${a.parent2GivenName || ""} ${a.parent2FamilyName || ""}`.trim(),
+  );
+  const custodianName = ascii(
+    `${a.custodianGivenName || ""} ${a.custodianFamilyName || ""}`.trim(),
+  );
+  const now = new Date();
+
+  const fillPage = (page: string, extras: boolean) => {
+    let o = page;
+    o = mapInner(o, "subStudentInfo", (block) => {
+      let x = block;
+      x = setEmptyTag(x, "FamilyName", ascii(a.familyName));
+      x = setEmptyTag(x, "GivenNames", ascii(a.givenName));
+      if (a.citizenship) x = setEmptyTag(x, "Citizenship", ascii(a.citizenship));
+      x = setEmptyTag(x, "theDate", ymd(a));
+      if (schoolAddr) x = setEmptyTag(x, "schoolAddress", schoolAddr);
+      if (a.sex === "Male" || a.sex === "Female") {
+        x = setEmptyTag(x, "mfGroup", a.sex === "Male" ? "M" : "F");
+      }
+      if (studentAddr) x = setEmptyTag(x, "studentAddress", studentAddr);
+      return x;
+    });
+
+    let parentIndex = 0;
+    o = o.replace(/<Parent\n>[\s\S]*?<\/Parent\n>/g, (block) => {
+      const first = parentIndex === 0;
+      parentIndex += 1;
+      const family = first ? a.parent1FamilyName : a.parent2FamilyName;
+      const given = first ? a.parent1GivenName : a.parent2GivenName;
+      const dob = first ? a.parent1Dob : a.parent2Dob;
+      const address = first ? a.parent1Address : a.parent2Address;
+      const phone = first ? a.parent1Telephone : a.parent2Telephone;
+      if (!family) return block;
+      let x = block;
+      x = setEmptyTag(x, "parentFamilyName", ascii(family));
+      x = setEmptyTag(x, "parentGivenNames", ascii(given || ""));
+      if (dob) x = setEmptyTag(x, "theDate", ascii(dob, 20));
+      x = setEmptyTag(x, "parentAddress", ascii(address || studentAddr, 200));
+      if (phone) x = setEmptyTag(x, "parentTelephone", ascii(phone, 40));
+      return x;
+    });
+
+    o = mapInner(o, "subCustodian", (block) => {
+      if (!a.custodianFamilyName) return block;
+      let x = block;
+      x = setEmptyTag(x, "FamilyName", ascii(a.custodianFamilyName));
+      x = setEmptyTag(x, "GivenNames", ascii(a.custodianGivenName || ""));
+      if (a.custodianStatus) {
+        x = setEmptyTag(x, "statusGroup", ascii(a.custodianStatus, 40));
+      }
+      if (a.custodianDob) x = setEmptyTag(x, "theDate", ascii(a.custodianDob, 20));
+      if (a.custodianAddress) {
+        x = setEmptyTag(x, "Address", ascii(a.custodianAddress, 200));
+      }
+      if (a.custodianTelephone) {
+        x = setEmptyTag(x, "Telephone", ascii(a.custodianTelephone, 40));
+      }
+      return x;
+    });
+
+    o = mapInner(o, "subDeclaration", (block) => {
+      let x = block;
+      if (custodianName) x = setEmptyTag(x, "nameCustodian", custodianName);
+      if (studentName) x = setEmptyTag(x, "nameStudent", studentName);
+      if (extras) {
+        if (parent1Name) x = setEmptyTag(x, "nameParent1", parent1Name);
+        if (parent2Name) x = setEmptyTag(x, "nameParent2", parent2Name);
+        if (custodianName) x = setEmptyTag(x, "nameCust", custodianName);
+      }
+      if (a.city) x = setEmptyTag(x, "swornCity", ascii(a.city));
+      if (a.provinceState) {
+        x = setEmptyTag(x, "swornProv", ascii(a.provinceState, 40));
+      }
+      if (a.country) x = setEmptyTag(x, "swornCountry", ascii(a.country));
+      x = setEmptyTag(x, "swornDay", String(now.getDate()).padStart(2, "0"));
+      x = setEmptyTag(
+        x,
+        "swornMonth",
+        String(now.getMonth() + 1).padStart(2, "0"),
+      );
+      x = setEmptyTag(x, "swornYear", String(now.getFullYear()));
+      return x;
+    });
     return o;
   };
 
-  out = fillStudentBlock(out);
-  if (a.parent1FamilyName) {
-    out = setEmptyTag(out, "parentFamilyName", ascii(a.parent1FamilyName));
-    out = setEmptyTag(out, "parentGivenNames", ascii(a.parent1GivenName));
-    if (a.parent1Dob) out = setEmptyTag(out, "theDate", ascii(a.parent1Dob, 20));
-    out = setEmptyTag(
-      out,
-      "parentAddress",
-      ascii(a.parent1Address || studentAddr, 200),
-    );
-    if (a.parent1Telephone) {
-      out = setEmptyTag(out, "parentTelephone", ascii(a.parent1Telephone, 40));
-    }
-  }
-  if (a.parent2FamilyName) {
-    out = setEmptyTag(out, "parentFamilyName", ascii(a.parent2FamilyName));
-    out = setEmptyTag(out, "parentGivenNames", ascii(a.parent2GivenName || ""));
-    if (a.parent2Dob) out = setEmptyTag(out, "theDate", ascii(a.parent2Dob, 20));
-    out = setEmptyTag(
-      out,
-      "parentAddress",
-      ascii(a.parent2Address || studentAddr, 200),
-    );
-    if (a.parent2Telephone) {
-      out = setEmptyTag(out, "parentTelephone", ascii(a.parent2Telephone, 40));
-    }
-  }
-
-  if (a.custodianFamilyName) {
-    out = setEmptyTag(out, "FamilyName", ascii(a.custodianFamilyName));
-    out = setEmptyTag(out, "GivenNames", ascii(a.custodianGivenName));
-    if (a.custodianStatus) {
-      out = setEmptyTag(out, "statusGroup", ascii(a.custodianStatus, 40));
-    }
-    if (a.custodianDob) out = setEmptyTag(out, "theDate", ascii(a.custodianDob, 20));
-    if (a.custodianAddress) {
-      out = setEmptyTag(out, "Address", ascii(a.custodianAddress, 200));
-    }
-    if (a.custodianTelephone) {
-      out = setEmptyTag(out, "Telephone", ascii(a.custodianTelephone, 40));
-    }
-    out = setEmptyTag(
-      out,
-      "nameCustodian",
-      ascii(`${a.custodianGivenName || ""} ${a.custodianFamilyName}`.trim()),
-    );
-  }
-  out = setEmptyTag(
-    out,
-    "nameStudent",
-    ascii(`${a.givenName} ${a.familyName}`.trim()),
-  );
-  if (a.parent1FamilyName) {
-    out = setEmptyTag(
-      out,
-      "nameParent1",
-      ascii(`${a.parent1GivenName || ""} ${a.parent1FamilyName}`.trim()),
-    );
-  }
-  if (a.parent2FamilyName) {
-    out = setEmptyTag(
-      out,
-      "nameParent2",
-      ascii(`${a.parent2GivenName || ""} ${a.parent2FamilyName}`.trim()),
-    );
-  }
-  if (a.city) out = setEmptyTag(out, "swornCity", ascii(a.city));
-  if (a.provinceState) out = setEmptyTag(out, "swornProv", ascii(a.provinceState, 40));
-  if (a.country) out = setEmptyTag(out, "swornCountry", ascii(a.country));
-  const now = new Date();
-  out = setEmptyTag(out, "swornDay", String(now.getDate()).padStart(2, "0"));
-  out = setEmptyTag(out, "swornMonth", String(now.getMonth() + 1).padStart(2, "0"));
-  out = setEmptyTag(out, "swornYear", String(now.getFullYear()));
-
-  out = fillStudentBlock(out);
+  let out = mapInner(xml, "Page1", (page) => fillPage(page, false));
+  out = mapInner(out, "Page2", (page) => fillPage(page, true));
   return out;
 }
 

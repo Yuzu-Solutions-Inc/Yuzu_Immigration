@@ -6,6 +6,10 @@ on:
     - cron: "0 14 * * 0"
   workflow_dispatch:
 
+concurrency:
+  group: ircc-form-watch
+  cancel-in-progress: true
+
 permissions:
   contents: write
   issues: write
@@ -21,7 +25,7 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      - name: Validate IRCC form dates and choice lists
+      - name: Validate IRCC form dates, structure, and choice lists
         id: validate
         continue-on-error: true
         run: npm run ircc:validate
@@ -36,16 +40,41 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require("fs");
             const title = "IRCC form drift detected";
+            let errors = [];
+            let warnings = [];
+            try {
+              const status = JSON.parse(
+                fs.readFileSync("src/lib/ircc/form-validation-status.json", "utf8"),
+              );
+              errors = Array.isArray(status.errors) ? status.errors : [];
+              warnings = Array.isArray(status.warnings) ? status.warnings : [];
+              if (!errors.length && status.forms) {
+                for (const row of Object.values(status.forms)) {
+                  if (Array.isArray(row.errors)) errors.push(...row.errors);
+                }
+              }
+            } catch (err) {
+              errors = [`Could not read form-validation-status.json (${err.message})`];
+            }
+            const listed = errors.slice(0, 40).map((line) => `- ${line}`);
+            if (errors.length > 40) listed.push(`- …and ${errors.length - 40} more`);
             const body = [
               "Sunday IRCC watch found a mismatch between canada.ca forms and this app.",
               "",
-              "Run `npm run ircc:validate` locally, then:",
+              `**${errors.length} error(s)**, ${warnings.length} warning(s).`,
+              "",
+              "### Findings",
+              ...(listed.length ? listed : ["- (no error list recorded — see workflow logs)"]),
+              "",
+              "Then:",
               "1. Download the new EN/FR blanks into `assets/ircc/blanks/`",
               "2. Refresh `form-meta.json` encryption keys",
               "3. Re-extract choice lists (`npx tsx scripts/extract-xfa-choices.ts imm1294e --write-json`)",
               "4. Update questionnaire options in `src/lib/ircc/fields.ts`",
               "5. Set the new `irccUpdated` month in `src/lib/ircc/form-revisions.json`",
+              "6. Run `npm run ircc:validate -- --local` and `npm run ircc:verify-fill`",
               "",
               `Workflow: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             ].join("\n");

@@ -55,11 +55,11 @@ export async function loadBlankPdf(
   const dated = key.startsWith("imm5645")
     ? [
         key.endsWith("f")
-          ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5645f.pdf"
-          : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5645e.pdf",
-        key.endsWith("f")
           ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5645/01-01-2021/imm5645f.pdf"
           : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5645/01-01-2021/imm5645e.pdf",
+        key.endsWith("f")
+          ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5645f.pdf"
+          : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5645e.pdf",
       ]
     : key.startsWith("imm5406")
       ? [
@@ -79,17 +79,26 @@ export async function loadBlankPdf(
         : key.startsWith("imm5257sch1")
           ? [
               key.endsWith("f")
+                ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5257-sch1/01-09-2023/imm5257_1f.pdf"
+                : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5257-sch1/01-09-2023/imm5257_1e.pdf",
+              key.endsWith("f")
                 ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5257sch1f.pdf"
                 : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5257sch1e.pdf",
             ]
           : key.startsWith("imm5257")
             ? [
                 key.endsWith("f")
+                  ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5257/01-09-2023/imm5257f.pdf"
+                  : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5257/01-09-2023/imm5257e.pdf",
+                key.endsWith("f")
                   ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5257f.pdf"
                   : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5257e.pdf",
               ]
             : key.startsWith("imm5708")
               ? [
+                  key.endsWith("f")
+                    ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5708/01-09-2023/imm5708f.pdf"
+                    : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5708/01-09-2023/imm5708e.pdf",
                   key.endsWith("f")
                     ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5708f.pdf"
                     : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5708e.pdf",

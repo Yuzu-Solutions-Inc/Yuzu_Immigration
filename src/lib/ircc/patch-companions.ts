@@ -5,7 +5,10 @@
  * Checklist patchers and primary application fillers stay kit-local.
  */
 import {
+  mapInner,
   setEmptyTag,
+  setFlag01,
+  setTag,
 } from "./xfa-incremental";
 import { countryDisplayName } from "./codes/resolve-lic";
 
@@ -95,6 +98,7 @@ export type CompanionAnswers = {
   siblings?: Array<Record<string, unknown>>;
   email?: string;
   formLanguage?: "e" | "f";
+  forms?: string[];
 };
 
 export type PatchImm5707Options = {
@@ -120,8 +124,8 @@ export function todayYmd(): string {
 
 export function ascii(s: string | undefined, max = 120): string {
   return String(s || "")
-    .normalize("NFKD")
-    .replace(/[^\x20-\x7E]/g, "")
+    .normalize("NFC")
+    .replace(/[\u0000-\u001F\u007F]/g, "")
     .trim()
     .slice(0, max);
 }
@@ -380,11 +384,296 @@ function na(value: string | undefined, fallback = "N/A"): string {
   return ascii(value) || fallback;
 }
 
+function irccFullName(family?: string, given?: string): string {
+  const f = ascii(family);
+  const g = ascii(given);
+  if (f && g) return `${f}, ${g}`;
+  return f || g;
+}
+
+function yn01(value: unknown, fallback = false): boolean {
+  if (value === true || value === 1 || value === "1") return true;
+  const v = String(value ?? "").trim().toUpperCase();
+  if (v === "Y" || v === "YES") return true;
+  if (v === "N" || v === "NO" || v === "0") return false;
+  return fallback;
+}
+
 /**
- * IMM 5645 — Family Information for visitors, students and workers (outside Canada).
- * Section A: applicant, spouse, parents. B: children. C: siblings.
+ * IMM 5645 — Family Information (outside Canada). Tags are AppName / SpouseName /
+ * MotherName / ChildName, not the FamilyName layout used on IMM 5406 / 5707.
  */
 export function patchImm5645(xml: string, a: CompanionAnswers): string {
+  let out = xml;
+  const b = primaryBag(a);
+  const marital = String(b.maritalStatus || a.maritalStatus || "02");
+  const address = ascii(mailingAddress(a), 200) || "N/A";
+  const occupation =
+    ascii(String(b.occupation || a.occupation || a.jobTitle || ""), 80) ||
+    pdfFallback(a, "Applicant", "Demandeur");
+  const codes = (a.forms ?? []).map((c) => c.toLowerCase());
+  const isStudent = codes.some((c) => c === "imm1294" || c === "imm5709");
+  const isWorker = codes.some((c) => c === "imm1295" || c === "imm5710");
+  const isVisitor = codes.some(
+    (c) => c === "imm5257" || c === "imm5708" || c === "imm5257sch1",
+  );
+
+  out = mapInner(out, "Subform1", (inner) => {
+    let chunk = inner;
+    chunk = setFlag01(chunk, "Visitor", isVisitor);
+    chunk = setFlag01(chunk, "Worker", isWorker);
+    chunk = setFlag01(chunk, "Student", isStudent);
+    chunk = setFlag01(chunk, "Other", !isVisitor && !isWorker && !isStudent);
+    return chunk;
+  });
+
+  out = mapInner(out, "Applicant", (inner) => {
+    let chunk = inner;
+    chunk = setTag(chunk, "AppName", irccFullName(a.familyName, a.givenName));
+    chunk = setTag(chunk, "AppDOB", ymd(a));
+    chunk = setTag(
+      chunk,
+      "AppCOB",
+      ascii(cob(a, a.placeBirthCountry || a.citizenship)) || "N/A",
+    );
+    chunk = setTag(chunk, "AppAddress", address);
+    chunk = setTag(chunk, "AppOccupation", occupation);
+    chunk = setTag(chunk, "ChildMStatus", maritalCodeImm5645(marital));
+    return chunk;
+  });
+
+  const hasSpouse = marital === "01" || marital === "03";
+  const spouseFamily = ascii(
+    a.spouseFamilyName || String(b.spouseFamilyName || a.partnerFamilyName || ""),
+  );
+  const spouseGiven = ascii(
+    a.spouseGivenName || String(b.spouseGivenName || a.partnerGivenName || ""),
+  );
+  const sDob = ascii(
+    a.spouseDob ||
+      (b.spouseDobYear && b.spouseDobMonth && b.spouseDobDay
+        ? `${b.spouseDobYear}-${String(b.spouseDobMonth).padStart(2, "0")}-${String(
+            b.spouseDobDay,
+          ).padStart(2, "0")}`
+        : ""),
+    20,
+  );
+  out = mapInner(out, "Spouse", (inner) => {
+    let chunk = inner;
+    chunk = setTag(
+      chunk,
+      "SpouseName",
+      hasSpouse ? irccFullName(spouseFamily, spouseGiven) || "N/A" : "N/A",
+    );
+    chunk = setTag(chunk, "SpouseDOB", hasSpouse ? sDob || "N/A" : "N/A");
+    chunk = setTag(
+      chunk,
+      "SpouseCOB",
+      hasSpouse ? na(ascii(cob(a, a.spouseCob || a.citizenship))) : "N/A",
+    );
+    chunk = setTag(
+      chunk,
+      "SpouseAddress",
+      hasSpouse ? na(ascii(a.spouseAddress || address, 200)) : "N/A",
+    );
+    chunk = setTag(
+      chunk,
+      "SpouseOccupation",
+      hasSpouse ? ascii(a.spouseOccupation || "Partner", 80) : "N/A",
+    );
+    chunk = setFlag01(chunk, "SpouseYes", hasSpouse && Boolean(a.spouseAccompanying));
+    chunk = setFlag01(chunk, "SpouseNo", hasSpouse && !a.spouseAccompanying);
+    chunk = setTag(
+      chunk,
+      "ChildMStatus",
+      hasSpouse ? maritalCodeImm5645(marital) : "N/A",
+    );
+    return chunk;
+  });
+
+  out = mapInner(out, "Mother", (inner) => {
+    let chunk = inner;
+    chunk = setTag(
+      chunk,
+      "MotherName",
+      irccFullName(a.parent1FamilyName, a.parent1GivenName) || "N/A",
+    );
+    chunk = setTag(chunk, "MotherDOB", na(a.parent1Dob, "N/A"));
+    chunk = setTag(
+      chunk,
+      "MotherCOB",
+      na(cob(a, a.parent1Cob || a.placeBirthCountry)),
+    );
+    chunk = setTag(
+      chunk,
+      "MotherAddress",
+      na(ascii(a.parent1Address || address, 200)),
+    );
+    chunk = setTag(
+      chunk,
+      "MotherOccupation",
+      ascii(a.parent1Occupation || "Parent", 80) || "N/A",
+    );
+    chunk = setFlag01(chunk, "MotherYes", false);
+    chunk = setFlag01(chunk, "MotherNo", true);
+    chunk = setTag(
+      chunk,
+      "ChildMStatus",
+      a.parent1FamilyName
+        ? maritalCodeImm5645(a.parent1MaritalStatus || "01")
+        : "N/A",
+    );
+    return chunk;
+  });
+
+  out = mapInner(out, "Father", (inner) => {
+    let chunk = inner;
+    chunk = setTag(
+      chunk,
+      "FatherName",
+      irccFullName(a.parent2FamilyName, a.parent2GivenName) || "N/A",
+    );
+    chunk = setTag(chunk, "FatherDOB", na(a.parent2Dob, "N/A"));
+    chunk = setTag(
+      chunk,
+      "FatherCOB",
+      na(cob(a, a.parent2Cob || a.placeBirthCountry)),
+    );
+    chunk = setTag(
+      chunk,
+      "FatherAddress",
+      na(ascii(a.parent2Address || address, 200)),
+    );
+    chunk = setTag(
+      chunk,
+      "FatherOccupation",
+      ascii(a.parent2Occupation || "Parent", 80) || "N/A",
+    );
+    chunk = setFlag01(chunk, "FatherYes", false);
+    chunk = setFlag01(chunk, "FatherNo", true);
+    chunk = setTag(
+      chunk,
+      "ChildMStatus",
+      a.parent2FamilyName
+        ? maritalCodeImm5645(a.parent2MaritalStatus || "01")
+        : "N/A",
+    );
+    return chunk;
+  });
+
+  const children = Array.isArray(a.children)
+    ? a.children.filter((c) => c.familyName || c.givenName)
+    : [];
+  let childIndex = 0;
+  out = mapInner(out, "SectionB", (section) =>
+    section.replace(/<Child\n>[\s\S]*?<\/Child\n>/g, (block) => {
+    if (!block.includes("<ChildName")) return block;
+    const child = children[childIndex++];
+    if (!child) return block;
+    let chunk = block;
+    chunk = setTag(
+      chunk,
+      "ChildName",
+      irccFullName(String(child.familyName || ""), String(child.givenName || "")),
+    );
+    chunk = setTag(
+      chunk,
+      "ChildMStatus",
+      maritalCodeImm5645(String(child.maritalStatus || "02")),
+    );
+    chunk = setTag(
+      chunk,
+      "ChildRelationship",
+      childRelationshipImm5645(String(child.relationship || "")) ||
+        ascii(String(child.relationship || "Child"), 40),
+    );
+    if (child.dob) chunk = setTag(chunk, "ChildDOB", ascii(String(child.dob), 20));
+    chunk = setTag(
+      chunk,
+      "ChildCOB",
+      ascii(cob(a, String(child.cob || a.placeBirthCountry || ""))),
+    );
+    chunk = setTag(
+      chunk,
+      "ChildAddress",
+      ascii(String(child.address || address), 200),
+    );
+    chunk = setTag(
+      chunk,
+      "ChildOccupation",
+      ascii(String(child.occupation || pdfFallback(a, "Child", "Enfant")), 80),
+    );
+    const acc = yn01(child.accompanying);
+    chunk = setFlag01(chunk, "ChildYes", acc);
+    chunk = setFlag01(chunk, "ChildNo", !acc);
+    return chunk;
+  }),
+  );
+
+  const siblings = Array.isArray(a.siblings)
+    ? a.siblings.filter((s) => s.familyName || s.givenName)
+    : [];
+  // Section C reuses Child* tags after Section B children are consumed.
+  out = mapInner(out, "SectionC", (section) => {
+    let siblingIndex = 0;
+    return section.replace(/<Child\n>[\s\S]*?<\/Child\n>/g, (block) => {
+      const sibling = siblings[siblingIndex++];
+      if (!sibling) return block;
+      let chunk = block;
+      chunk = setTag(
+        chunk,
+        "ChildName",
+        irccFullName(
+          String(sibling.familyName || ""),
+          String(sibling.givenName || ""),
+        ),
+      );
+      chunk = setTag(
+        chunk,
+        "ChildMStatus",
+        maritalCodeImm5645(String(sibling.maritalStatus || "02")),
+      );
+      chunk = setTag(
+        chunk,
+        "ChildRelationship",
+        siblingRelationshipImm5645(String(sibling.relationship || "")) ||
+          ascii(String(sibling.relationship || "Sibling"), 40),
+      );
+      if (sibling.dob) {
+        chunk = setTag(chunk, "ChildDOB", ascii(String(sibling.dob), 20));
+      }
+      chunk = setTag(
+        chunk,
+        "ChildCOB",
+        ascii(cob(a, String(sibling.cob || a.placeBirthCountry || ""))),
+      );
+      chunk = setTag(
+        chunk,
+        "ChildAddress",
+        ascii(String(sibling.address || address), 200),
+      );
+      chunk = setTag(
+        chunk,
+        "ChildOccupation",
+        ascii(String(sibling.occupation || ""), 80),
+      );
+      chunk = setFlag01(chunk, "ChildYes", false);
+      chunk = setFlag01(chunk, "ChildNo", true);
+      return chunk;
+    });
+  });
+
+  out = setEmptyTag(out, "SectionAdate", todayYmd());
+  out = setEmptyTag(out, "SectionBdate", todayYmd());
+  out = setEmptyTag(out, "SectionCdate", todayYmd());
+  return out;
+}
+
+/**
+ * IMM 5406 — additional family information (visitor visa). Same FamilyName /
+ * GivenNames layout as IMM 5707, plus siblings.
+ */
+export function patchImm5406(xml: string, a: CompanionAnswers): string {
   let out = xml;
   const b = primaryBag(a);
   const marital = String(b.maritalStatus || a.maritalStatus || "02");
@@ -543,9 +832,6 @@ export function patchImm5645(xml: string, a: CompanionAnswers): string {
   out = setEmptyTag(out, "SignedDate", todayYmd());
   return out;
 }
-
-/** IMM 5406 — additional family information (visitor visa outside Canada). Same XFA tags as IMM 5645. */
-export const patchImm5406 = patchImm5645;
 
 /** IMM 5476 — Use of a representative. */
 export function patchImm5476(

@@ -162,10 +162,12 @@ const PRIMARY = [
   "imm5710",
 ] as const;
 const STUDY = ["imm1294", "imm5709"] as const;
+const STUDY_IN = ["imm5709"] as const;
 const WORK = ["imm1295", "imm5710"] as const;
 const VISITOR = ["imm5257", "imm5257sch1", "imm5708"] as const;
 const VISITOR_IN = ["imm5708"] as const;
 const VISITOR_OUT = ["imm5257", "imm5257sch1"] as const;
+const SCH1 = ["imm5257sch1"] as const;
 const WORK_IN = ["imm5710"] as const;
 const WORK_OUT = ["imm1295"] as const;
 const IN_CANADA = ["imm5709", "imm5710"] as const;
@@ -357,6 +359,12 @@ const VISIT_PURPOSE_ORIGINAL_OPTS: FieldOption[] = [
   { value: "03", labelKey: "visitOther" },
 ];
 
+const VISA_TYPE_OPTS: FieldOption[] = [
+  { value: "Visitor", labelKey: "visaVisitor" },
+  { value: "Super Visa", labelKey: "visaSuper" },
+  { value: "Transit", labelKey: "visaTransit" },
+];
+
 const CHILD_REL_OPTS: FieldOption[] = [
   { value: "son", labelKey: "relSon" },
   { value: "daughter", labelKey: "relDaughter" },
@@ -400,6 +408,7 @@ export const QUESTIONNAIRE_LOVS = {
   workPermitInland: WORK_PERMIT_INLAND_OPTS,
   visitPurpose: VISIT_PURPOSE_OPTS,
   visitPurposeOriginal: VISIT_PURPOSE_ORIGINAL_OPTS,
+  visaType: VISA_TYPE_OPTS,
   childRel: CHILD_REL_OPTS,
   siblingRel: SIBLING_REL_OPTS,
   country: COUNTRY_OPTS,
@@ -505,6 +514,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     type: "select",
     options: PREF_LANG_OPTS,
     forms: [...PRIMARY],
+    showWhen: { key: "ableToCommunicate", equals: "Both" },
   },
   {
     key: "langTest",
@@ -1207,8 +1217,51 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     forms: [...STUDY],
     showWhen: { key: "palNumber", notEquals: "" },
   },
+  {
+    key: "roomBoard",
+    section: "study",
+    type: "text",
+    maxLength: 20,
+    forms: [...STUDY],
+  },
+  {
+    key: "otherStudyCosts",
+    section: "study",
+    type: "text",
+    maxLength: 20,
+    forms: [...STUDY],
+  },
+  {
+    key: "studentId",
+    section: "study",
+    type: "text",
+    maxLength: 40,
+    forms: [...STUDY_IN],
+  },
+  {
+    key: "studyNeedsWorkPermit",
+    section: "study",
+    type: "yesno",
+    forms: [...STUDY_IN],
+    helpKey: "studyWorkPermitHelp",
+  },
+  {
+    key: "studyWorkPermitType",
+    section: "study",
+    type: "select",
+    options: WORK_PERMIT_INLAND_OPTS,
+    forms: [...STUDY_IN],
+    showWhen: { key: "studyNeedsWorkPermit", equals: "Y" },
+  },
 
   // —— Visitor ——
+  {
+    key: "visaType",
+    section: "visit",
+    type: "select",
+    options: VISA_TYPE_OPTS,
+    forms: [...VISITOR_OUT],
+  },
   {
     key: "visitPurpose",
     section: "visit",
@@ -1230,14 +1283,14 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "visit",
     type: "date",
     required: true,
-    forms: [...VISITOR_OUT],
+    forms: [...VISITOR],
   },
   {
     key: "visitTo",
     section: "visit",
     type: "date",
     required: true,
-    forms: [...VISITOR_OUT],
+    forms: [...VISITOR],
   },
   {
     key: "visitHostName",
@@ -1251,6 +1304,43 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "visit",
     type: "text",
     maxLength: 80,
+    forms: [...VISITOR],
+  },
+  {
+    key: "visitHostAddress",
+    section: "visit",
+    type: "textarea",
+    maxLength: 200,
+    forms: [...VISITOR],
+    wide: true,
+  },
+  {
+    key: "visitHost2Name",
+    section: "visit",
+    type: "text",
+    maxLength: 120,
+    forms: [...VISITOR],
+  },
+  {
+    key: "visitHost2Relationship",
+    section: "visit",
+    type: "text",
+    maxLength: 80,
+    forms: [...VISITOR],
+  },
+  {
+    key: "visitHost2Address",
+    section: "visit",
+    type: "textarea",
+    maxLength: 200,
+    forms: [...VISITOR],
+    wide: true,
+  },
+  {
+    key: "visitFundsAmount",
+    section: "visit",
+    type: "text",
+    maxLength: 20,
     forms: [...VISITOR],
   },
   {
@@ -1639,6 +1729,26 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     forms: [...PRIMARY],
     helpKey: "cicConsentHelp",
   },
+  {
+    key: "hasMembership",
+    section: "background",
+    type: "yesno",
+    forms: [...SCH1],
+    helpKey: "membershipOrgHelp",
+  },
+  {
+    key: "heldGovPosition",
+    section: "background",
+    type: "yesno",
+    forms: [...SCH1],
+  },
+  {
+    key: "traveledOtherCountry",
+    section: "background",
+    type: "yesno",
+    forms: [...SCH1],
+    helpKey: "previousTravelHelp",
+  },
 
   // —— Companions (designee, common-law, custodian) ——
   {
@@ -1861,7 +1971,7 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
     section: "family",
     forms: [...FAMILY_OUT],
     showWhen: { key: "hasSiblings", equals: "Y" },
-    maxRows: 3,
+    maxRows: 7,
     minRows: 1,
     helpKey: "siblingsRowsHelp",
     reorderable: false,
@@ -1878,6 +1988,89 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
         options: MARITAL_OPTS,
       },
       { key: "address", type: "text", labelKey: "colAddress", maxLength: 120 },
+    ],
+  },
+  {
+    key: "militaryServiceRows",
+    section: "background",
+    forms: [...SCH1],
+    showWhen: { key: "bgMilitary", equals: "Y" },
+    maxRows: 4,
+    minRows: 1,
+    helpKey: "militaryRowsHelp",
+    columns: [
+      { key: "from", type: "month", labelKey: "colFrom", required: true },
+      { key: "to", type: "month", labelKey: "colTo" },
+      { key: "location", type: "text", labelKey: "colCity", maxLength: 80, required: true },
+      { key: "provinceState", type: "text", labelKey: "colProvince", maxLength: 40 },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS, required: true },
+    ],
+  },
+  {
+    key: "warCrimesRows",
+    section: "background",
+    forms: [...SCH1],
+    showWhen: { key: "bgViolence", equals: "Y" },
+    maxRows: 3,
+    minRows: 1,
+    helpKey: "warCrimesRowsHelp",
+    columns: [
+      { key: "from", type: "month", labelKey: "colFrom" },
+      { key: "to", type: "month", labelKey: "colTo" },
+      { key: "location", type: "text", labelKey: "colCity", maxLength: 80 },
+      { key: "provinceState", type: "text", labelKey: "colProvince", maxLength: 40 },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS },
+      { key: "details", type: "text", labelKey: "colDetails", maxLength: 200 },
+    ],
+  },
+  {
+    key: "membershipRows",
+    section: "background",
+    forms: [...SCH1],
+    showWhen: { key: "hasMembership", equals: "Y" },
+    maxRows: 4,
+    minRows: 1,
+    helpKey: "membershipRowsHelp",
+    columns: [
+      { key: "from", type: "month", labelKey: "colFrom" },
+      { key: "to", type: "month", labelKey: "colTo" },
+      { key: "organization", type: "text", labelKey: "colOrganization", maxLength: 120, required: true },
+      { key: "position", type: "text", labelKey: "colPosition", maxLength: 120 },
+      { key: "provinceState", type: "text", labelKey: "colProvince", maxLength: 40 },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS },
+    ],
+  },
+  {
+    key: "governmentPositionRows",
+    section: "background",
+    forms: [...SCH1],
+    showWhen: { key: "heldGovPosition", equals: "Y" },
+    maxRows: 4,
+    minRows: 1,
+    helpKey: "govPositionRowsHelp",
+    columns: [
+      { key: "from", type: "month", labelKey: "colFrom" },
+      { key: "to", type: "month", labelKey: "colTo" },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS, required: true },
+      { key: "level", type: "text", labelKey: "colLevel", maxLength: 80 },
+      { key: "department", type: "text", labelKey: "colDepartment", maxLength: 120 },
+      { key: "position", type: "text", labelKey: "colPosition", maxLength: 120 },
+    ],
+  },
+  {
+    key: "previousTravelRows",
+    section: "background",
+    forms: [...SCH1],
+    showWhen: { key: "traveledOtherCountry", equals: "Y" },
+    maxRows: 4,
+    minRows: 1,
+    helpKey: "previousTravelRowsHelp",
+    columns: [
+      { key: "from", type: "month", labelKey: "colFrom", required: true },
+      { key: "to", type: "month", labelKey: "colTo" },
+      { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS, required: true },
+      { key: "location", type: "text", labelKey: "colCity", maxLength: 80 },
+      { key: "purpose", type: "text", labelKey: "colPurpose", maxLength: 80 },
     ],
   },
 ];
@@ -1957,6 +2150,7 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
     "schoolCity",
     "schoolProvince",
     "dli",
+    "studentId",
     "caqNumber",
     "caqExpiry",
   ]),
@@ -1968,12 +2162,19 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
   ]),
   subsection("studyFunding", "study", [
     "tuitionAmount",
+    "roomBoard",
+    "otherStudyCosts",
     "availableFunds",
     "funds",
     "fundsOtherPerson",
   ]),
   subsection("studyPal", "study", ["palNumber", "palExpiry"]),
+  subsection("studyWorkPermit", "study", [
+    "studyNeedsWorkPermit",
+    "studyWorkPermitType",
+  ]),
   subsection("visitPurposeGroup", "visit", [
+    "visaType",
     "visitPurpose",
     "visitPurposeOther",
   ]),
@@ -1981,7 +2182,14 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
   subsection("visitHost", "visit", [
     "visitHostName",
     "visitHostRelationship",
+    "visitHostAddress",
+    "visitFundsAmount",
     "visitFunds",
+  ]),
+  subsection("visitHost2", "visit", [
+    "visitHost2Name",
+    "visitHost2Relationship",
+    "visitHost2Address",
   ]),
   subsection("visitInland", "visit", [
     "visitorApplyExtend",
@@ -2048,6 +2256,11 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
   subsection("bgCrime", "background", ["bgCrime", "bgCrimeDetails"]),
   subsection("bgMilitary", "background", ["bgMilitary", "bgMilitaryDetails"]),
   subsection("bgSecurity", "background", ["bgViolence", "bgWitness"]),
+  subsection("bgSchedule1", "background", [
+    "hasMembership",
+    "heldGovPosition",
+    "traveledOtherCountry",
+  ]),
   {
     key: "phone",
     section: "contact",
