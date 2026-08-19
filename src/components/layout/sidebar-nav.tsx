@@ -3,13 +3,13 @@
 import {
   Briefcase,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   FolderKanban,
   Home,
   LogOut,
   Menu,
+  PanelLeft,
+  PanelLeftClose,
   Plus,
   UserPlus,
   Users,
@@ -25,7 +25,7 @@ import {
   OrgSwitcher,
   type OrgSwitcherOption,
 } from "@/components/layout/org-switcher";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -115,47 +115,52 @@ function SidebarBody({
   const pathname = usePathname();
   const locale = useLocale();
 
+  const collapseLabel = collapsed ? t("expand") : t("collapse");
+
   return (
-    <div className="relative flex h-full flex-col">
-      {onToggleCollapse && !collapsed ? (
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          aria-expanded
-          aria-label={t("collapse")}
-          title={t("collapse")}
-          className="absolute top-1.5 right-1.5 z-10 inline-flex size-7 items-center justify-center rounded-md text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-        >
-          <ChevronLeft className="size-4" aria-hidden />
-        </button>
-      ) : null}
+    <div className="flex h-full flex-col">
       <div
         className={cn(
-          "space-y-4 border-b border-sidebar-border py-5",
-          collapsed ? "flex flex-col items-center px-2" : "px-3",
+          "space-y-3 border-b border-sidebar-border",
+          collapsed ? "flex flex-col items-center px-2 py-3" : "px-3 py-3",
         )}
       >
-        {collapsed ? (
-          onToggleCollapse ? (
-            <button
+        <div
+          className={cn(
+            "flex",
+            collapsed
+              ? "flex-col items-center gap-1"
+              : "h-9 items-center justify-between gap-2",
+          )}
+        >
+          <BrandLogo
+            href="/home"
+            inverted
+            markOnly={collapsed}
+            size="sidebar"
+          />
+          {onToggleCollapse ? (
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={onToggleCollapse}
-              aria-expanded={false}
-              aria-label={t("expand")}
-              title={t("expand")}
+              aria-expanded={!collapsed}
+              aria-label={collapseLabel}
+              title={collapseLabel}
               className={cn(
-                collapsedItemClass,
-                "text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                "size-8 shrink-0 rounded-lg text-sidebar-foreground/55 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                collapsed && "size-9",
               )}
             >
-              <ChevronRight className="size-4" aria-hidden />
-            </button>
-          ) : null
-        ) : (
-          <div className="pr-8">
-            <BrandLogo href="/home" size="sm" inverted />
-          </div>
-        )}
+              {collapsed ? (
+                <PanelLeft className="size-4" aria-hidden />
+              ) : (
+                <PanelLeftClose className="size-4" aria-hidden />
+              )}
+            </Button>
+          ) : null}
+        </div>
         <OrgSwitcher
           organizations={organizations}
           activeOrganizationId={activeOrganizationId}
