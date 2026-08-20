@@ -22,6 +22,7 @@ import {
   normalizeGuestEmail,
 } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
+import { stripHtmlToPlainText } from "@/lib/html/sanitize";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 const MAX_BODY_CHARS = 100_000;
@@ -37,23 +38,8 @@ function getResend() {
   return new Resend(apiKey);
 }
 
-function stripHtml(html: string) {
-  return html
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function emailPlaintext(text: string | null, html: string | null) {
-  const raw = text?.trim() ? text : html ? stripHtml(html) : "";
+  const raw = text?.trim() ? text : html ? stripHtmlToPlainText(html) : "";
   return raw.slice(0, MAX_BODY_CHARS);
 }
 
@@ -398,7 +384,7 @@ export async function processReceivedEmail(emailId: string) {
     route.organizationId,
     fromEmail,
   );
-  let unknownSender = !personId;
+  const unknownSender = !personId;
   if (!personId && thread?.personId) personId = thread.personId;
 
   if (!projectId && personId) {

@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { inflate } from "pako";
 import { md5 } from "js-md5";
 import formMeta from "../src/lib/ircc/form-meta.json";
+import { decodeHtmlEntities } from "../src/lib/html/entities";
 
 function hexToBytes(hex: string): Uint8Array {
   const out = new Uint8Array(hex.length / 2);
@@ -109,11 +110,7 @@ async function tryDecode(
 }
 
 function extractEmbeddedLovs(xml: string) {
-  const decoded = xml
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"');
+  const decoded = decodeHtmlEntities(xml);
   const lists = new Map<string, Array<{ lic: string; label: string }>>();
   const re = /<([A-Za-z][A-Za-z0-9]*)\s+lic="([^"]*)">([^<]*)<\/\1>/g;
   let m: RegExpExecArray | null;

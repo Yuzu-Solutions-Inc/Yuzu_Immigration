@@ -14,8 +14,7 @@ import {
 } from "@/lib/portal/auth";
 import { PORTAL_LEGAL_ACCEPT_COOKIE } from "@/lib/legal/acceptance";
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
-import { hashPortalEmail } from "@/lib/security/email-lookup";
-import { requireAppEncryptionKey } from "@/lib/security/app-encryption-key";
+import { normalizeGuestEmail } from "@/lib/security/email-lookup";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export const PORTAL_GOOGLE_OAUTH_COOKIE = "mc_portal_google_oauth";
@@ -131,14 +130,9 @@ export function googleEmailMatchesExpected(
   expectedEmail: string | undefined,
 ) {
   if (!expectedEmail) return true;
-  try {
-    const key = requireAppEncryptionKey();
-    return (
-      hashPortalEmail(googleEmail, key) === hashPortalEmail(expectedEmail, key)
-    );
-  } catch {
-    return false;
-  }
+  return (
+    normalizeGuestEmail(googleEmail) === normalizeGuestEmail(expectedEmail)
+  );
 }
 
 export async function portalNeedsLegalConsent(access: PortalAccessRow) {

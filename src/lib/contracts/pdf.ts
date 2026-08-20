@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 import { decodeXmlEntities } from "@/lib/contracts/html";
+import { removeDangerousHtmlBlocks } from "@/lib/html/sanitize";
 import type { ContractAuditEventRow, ContractSignerRow } from "@/lib/contracts/types";
 
 const PAGE_WIDTH = 612;
@@ -58,7 +59,8 @@ function wrapLines(font: PDFFont, text: string, size: number, maxWidth: number) 
 }
 
 function htmlToBlocks(html: string): Block[] {
-  const marked = html
+  const safe = removeDangerousHtmlBlocks(html);
+  const marked = safe
     .replace(
       /<div[^>]*data-sign="(client|consultant)"[^>]*>[\s\S]*?<\/div>/gi,
       (_, role: string) => `\n%%SIGN:${role}%%\n`,

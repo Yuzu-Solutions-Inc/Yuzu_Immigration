@@ -1,4 +1,10 @@
 import type { AppLocale } from "@/lib/i18n/locales";
+import { decodeHtmlEntities } from "@/lib/html/entities";
+import {
+  removeDangerousHtmlBlocks,
+  removeDangerousUrlSchemes,
+  removeHtmlEventHandlers,
+} from "@/lib/html/sanitize";
 
 const ALLOWED_TAGS = new Set([
   "p",
@@ -32,12 +38,7 @@ export function escapeContractText(value: string) {
 }
 
 function decodeXmlEntities(value: string) {
-  return value
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&amp;", "&");
+  return decodeHtmlEntities(value);
 }
 
 export function wrapContractTokens(html: string) {
@@ -58,11 +59,9 @@ export function wrapContractTokens(html: string) {
 
 export function sanitizeContractHtml(raw: string, maxChars = 200_000): string {
   let html = raw.replace(/\0/g, "").slice(0, maxChars);
-  html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-  html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
-  html = html.replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
-  html = html.replace(/on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
-  html = html.replace(/javascript:/gi, "");
+  html = removeDangerousHtmlBlocks(html);
+  html = removeHtmlEventHandlers(html);
+  html = removeDangerousUrlSchemes(html);
   html = html.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (tag, name: string) => {
     const n = name.toLowerCase();
     if (!ALLOWED_TAGS.has(n)) return "";
@@ -135,15 +134,14 @@ export function extractContractVariableKeys(html: string): string[] {
 }
 
 export function htmlToPlainText(html: string) {
-  return decodeXmlEntities(
-    html
-      .replace(/<div[^>]*data-sign="[^"]+"[^>]*>[\s\S]*?<\/div>/gi, "\n")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/(p|h1|h2|h3|li|div|blockquote)>/gi, "\n")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim(),
-  );
+  const stripped = removeDangerousHtmlBlocks(html)
+    .replace(/<div[^>]*data-sign="[^"]+"[^>]*>[\s\S]*?<\/div>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|h1|h2|h3|li|div|blockquote)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return decodeXmlEntities(stripped);
 }
 
 export { decodeXmlEntities };
