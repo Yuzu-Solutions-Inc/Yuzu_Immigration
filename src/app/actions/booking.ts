@@ -745,7 +745,7 @@ export async function cancelAppointmentAction(
         organizationId: orgId,
         hostName: ctx.hostName,
         hostUserId: ctx.hostUserId,
-        appointmentId: parsed.data.appointmentId,
+        appointmentId,
         serviceTitle: ctx.serviceTitle,
         startsAt: ctx.startsAt,
         timezone: ctx.settings.timezone,

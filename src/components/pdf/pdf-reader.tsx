@@ -96,7 +96,8 @@ export function PdfReader({
       });
       const pdf = await task.promise;
       if (cancelled) {
-        await pdf.destroy();
+        await pdf.cleanup();
+        await pdf.loadingTask.destroy();
         return;
       }
       pdfRef.current = pdf;
@@ -112,7 +113,8 @@ export function PdfReader({
       cancelled = true;
       const pdf = pdfRef.current;
       pdfRef.current = null;
-      void pdf?.destroy();
+      if (!pdf) return;
+      void pdf.cleanup().then(() => pdf.loadingTask.destroy());
     };
   }, [dataBase64]);
 

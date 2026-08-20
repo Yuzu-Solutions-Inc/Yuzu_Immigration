@@ -28,9 +28,13 @@ export type InboundMailActionState = { error?: string; message?: string };
 async function requireStaff() {
   const membership = await getPrimaryMembership();
   const user = await getSessionUser();
-  if (!membership || !user) return { error: "unauthorized" as const };
-  if (!canCreateRecords(membership.role)) return { error: "forbidden" as const };
-  return { membership, user };
+  if (!membership || !user) {
+    return { ok: false as const, error: "unauthorized" as const };
+  }
+  if (!canCreateRecords(membership.role)) {
+    return { ok: false as const, error: "forbidden" as const };
+  }
+  return { ok: true as const, membership, user };
 }
 
 export async function assignInboundMessageAction(
@@ -52,7 +56,7 @@ export async function assignInboundMessageAction(
     });
   if (!parsed.success) return { error: "invalid" };
   const staff = await requireStaff();
-  if ("error" in staff) return { error: staff.error };
+  if (!staff.ok) return { error: staff.error };
 
   const orgId = staff.membership.organization.id;
   const projectId = parsed.data.projectId || null;
@@ -97,7 +101,7 @@ export async function replyInboundMessageAction(
     });
   if (!parsed.success) return { error: "invalid" };
   const staff = await requireStaff();
-  if ("error" in staff) return { error: staff.error };
+  if (!staff.ok) return { error: staff.error };
 
   const orgId = staff.membership.organization.id;
   const supabase = await createClient();
@@ -209,7 +213,7 @@ export async function fileInboundAttachmentAction(
     });
   if (!parsed.success) return { error: "invalid" };
   const staff = await requireStaff();
-  if ("error" in staff) return { error: staff.error };
+  if (!staff.ok) return { error: staff.error };
 
   const orgId = staff.membership.organization.id;
   const supabase = await createClient();
@@ -284,7 +288,7 @@ export async function downloadInboundAttachmentAction(attachmentId: string): Pro
   | { ok: false; error: string }
 > {
   const staff = await requireStaff();
-  if ("error" in staff) return { ok: false, error: staff.error };
+  if (!staff.ok) return { ok: false, error: staff.error };
 
   const orgId = staff.membership.organization.id;
   const supabase = await createClient();

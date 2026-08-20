@@ -12,7 +12,10 @@ export function base64ToBytes(base64: string): Uint8Array {
 }
 
 export function base64ToBlob(base64: string, contentType: string): Blob {
-  return new Blob([base64ToBytes(base64)], { type: contentType });
+  const bytes = base64ToBytes(base64);
+  const copy = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(copy).set(bytes);
+  return new Blob([copy], { type: contentType });
 }
 
 export function isBrowserPreviewable(contentType: string): boolean {
