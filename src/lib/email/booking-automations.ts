@@ -38,6 +38,7 @@ type AppointmentSendRow = Pick<
   | "person_id"
   | "form_answers"
   | "guest_preferred_locale"
+  | "project_id"
 >;
 
 export async function processDueBookingAutomations(now = new Date()) {
@@ -87,7 +88,7 @@ export async function processDueBookingAutomations(now = new Date()) {
   const { data: appointments, error: appointmentError } = await admin
     .from("booking_appointments")
     .select(
-      "id, organization_id, service_id, host_user_id, starts_at, guest_name, guest_email, status, meet_join_url, person_id, form_answers, guest_preferred_locale",
+      "id, organization_id, service_id, host_user_id, starts_at, guest_name, guest_email, status, meet_join_url, person_id, form_answers, guest_preferred_locale, project_id",
     )
     .eq("status", "confirmed")
     .gt("starts_at", now.toISOString())
@@ -315,6 +316,7 @@ export async function processDueBookingAutomations(now = new Date()) {
             organizationId: appointment.organization_id,
             locale: prepared.emailLocale,
             includeDoNotReply: automation.include_do_not_reply !== false,
+            projectId: appointment.project_id,
             replyToUserId:
               automation.include_do_not_reply === false
                 ? appointment.host_user_id

@@ -101,14 +101,6 @@ async function eraseInboundMail(
     .eq("organization_id", organizationId)
     .in("message_id", messageIds);
   const listed: string[] = [];
-  if ("projectId" in filter) {
-    listed.push(
-      ...(await listStorageUnderPrefix(
-        admin,
-        `${organizationId}/inbound/${filter.projectId}`,
-      )),
-    );
-  }
   for (const id of messageIds) {
     listed.push(
       ...(await listStorageUnderPrefix(

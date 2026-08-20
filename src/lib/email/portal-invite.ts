@@ -2,7 +2,6 @@ import { createTranslator } from "next-intl";
 
 import { emailStyle } from "@/lib/email/styles";
 import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
-import { personRepresentativeUserId } from "@/lib/email/reply-to";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -45,7 +44,6 @@ export async function sendPortalInviteEmail(input: {
   const subject = input.reset
     ? t("resetSubject", { org: input.organizationName })
     : t("inviteSubject", { org: input.organizationName });
-  const replyToUserId = await personRepresentativeUserId(input.personId);
 
   const html = `<!DOCTYPE html>
 <html>
@@ -89,6 +87,5 @@ export async function sendPortalInviteEmail(input: {
     organizationName: input.organizationName,
     organizationId: input.organizationId,
     locale,
-    replyToUserId,
   });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
+import { processReceivedEmail } from "@/lib/email/inbound";
 import { applyOutboundEmailEvent } from "@/lib/email/outbound";
 
 function resendWebhookConfig() {
@@ -35,6 +36,23 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("resend webhook verify:", error);
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
+  }
+
+  if (event.type === "email.received") {
+    try {
+      const result = await processReceivedEmail(event.data.email_id);
+      if (
+        result &&
+        result.ok === false &&
+        (result.reason === "fetch_failed" || result.reason === "insert_failed")
+      ) {
+        return NextResponse.json({ ok: false }, { status: 500 });
+      }
+    } catch (error) {
+      console.error("resend inbound via delivery webhook:", error);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
   }
 
   try {

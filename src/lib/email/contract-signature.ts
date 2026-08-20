@@ -45,6 +45,7 @@ export async function sendContractSignatureRequestEmail(input: {
   signUrl: string;
   role: "client" | "consultant";
   envelopeId: string;
+  projectId?: string | null;
   replyToUserId?: string | null;
 }) {
   if (!input.to.includes("@")) return { sent: false as const };
@@ -89,6 +90,7 @@ export async function sendContractSignatureRequestEmail(input: {
     organizationName: input.organizationName,
     organizationId: input.organizationId,
     locale,
+    projectId: input.projectId,
     replyToUserId: input.role === "client" ? input.replyToUserId : null,
   });
 }
@@ -102,6 +104,7 @@ export async function sendContractCompletedEmail(input: {
   contractTitle: string;
   pdfBytes: Uint8Array;
   envelopeId: string;
+  projectId?: string | null;
   replyToUserId?: string | null;
   role?: "client" | "consultant";
 }) {
@@ -136,6 +139,7 @@ export async function sendContractCompletedEmail(input: {
     organizationName: input.organizationName,
     organizationId: input.organizationId,
     locale,
+    projectId: input.projectId,
     replyToUserId: input.role === "consultant" ? null : input.replyToUserId,
     attachments: [
       {

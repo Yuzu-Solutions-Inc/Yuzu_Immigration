@@ -120,6 +120,7 @@ async function sendSignerEmail(input: {
   signUrl: string;
   role: "client" | "consultant";
   envelopeId: string;
+  projectId?: string | null;
   replyToUserId?: string | null;
 }) {
   const { sendContractSignatureRequestEmail } = await import(
@@ -133,7 +134,7 @@ export async function issueContractsForAppointment(appointmentId: string) {
   const { data: appointment, error: appointmentError } = await admin
     .from("booking_appointments")
     .select(
-      "id, organization_id, service_id, host_user_id, starts_at, ends_at, status, guest_name, guest_email, guest_phone, guest_address, guest_preferred_locale, form_answers, meet_join_url",
+      "id, organization_id, service_id, host_user_id, starts_at, ends_at, status, guest_name, guest_email, guest_phone, guest_address, guest_preferred_locale, form_answers, meet_join_url, project_id",
     )
     .eq("id", appointmentId)
     .maybeSingle();
@@ -377,6 +378,7 @@ export async function issueContractsForAppointment(appointmentId: string) {
       signUrl: signUrl(origin, locale, clientToken),
       role: "client",
       envelopeId: envelope.id as string,
+      projectId: (appointment.project_id as string | null) ?? null,
       replyToUserId: appointment.host_user_id as string,
     });
     issued += 1;
@@ -499,7 +501,7 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
   const { data: appointment } = envelope.appointment_id
     ? await admin
         .from("booking_appointments")
-        .select("host_user_id")
+        .select("host_user_id, project_id")
         .eq("id", envelope.appointment_id)
         .maybeSingle()
     : { data: null };
@@ -515,6 +517,7 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
       contractTitle: envelope.title as string,
       pdfBytes: pdf.bytes,
       envelopeId,
+      projectId: (appointment?.project_id as string | null) ?? null,
       replyToUserId: hostUserId,
       role: signer.role === "consultant" ? "consultant" : "client",
     });

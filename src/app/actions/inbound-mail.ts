@@ -145,7 +145,7 @@ export async function replyInboundMessageAction(
     idempotencyKey: emailIdempotencyKey(
       "inbound-reply",
       parsed.data.messageId,
-      String(Date.now()),
+      parsed.data.body,
     ),
     organizationName: orgName,
     organizationId: orgId,
@@ -253,17 +253,22 @@ export async function fileInboundAttachmentAction(
     Buffer.from(await blob.arrayBuffer()),
     key,
   );
-  await storeEncryptedDocument({
-    organizationId: orgId,
-    projectId: request.project_id as string,
-    personId: request.person_id as string,
-    requestId: request.id as string,
-    plaintext,
-    originalFilename: decryptInboundFilename(attachment.filename as string, key),
-    contentType: (attachment.content_type as string) || "application/octet-stream",
-    uploadedVia: "email",
-    client: admin,
-  });
+  try {
+    await storeEncryptedDocument({
+      organizationId: orgId,
+      projectId: request.project_id as string,
+      personId: request.person_id as string,
+      requestId: request.id as string,
+      plaintext,
+      originalFilename: decryptInboundFilename(attachment.filename as string, key),
+      contentType: (attachment.content_type as string) || "application/octet-stream",
+      uploadedVia: "email",
+      client: admin,
+    });
+  } catch (error) {
+    console.error("file inbound attachment:", error);
+    return { error: "save_failed" };
+  }
 
   await admin
     .from("inbound_attachments")

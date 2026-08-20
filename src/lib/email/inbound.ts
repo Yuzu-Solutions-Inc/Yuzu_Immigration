@@ -178,21 +178,6 @@ async function openProjectsForPerson(
   return [...new Set(ids)];
 }
 
-async function personOnProject(
-  admin: ReturnType<typeof createServiceClient>,
-  projectId: string,
-  personId: string,
-) {
-  const { data } = await admin
-    .from("project_participants")
-    .select("id")
-    .eq("project_id", projectId)
-    .eq("person_id", personId)
-    .is("left_at", null)
-    .maybeSingle();
-  return Boolean(data?.id);
-}
-
 async function inheritFromThread(
   admin: ReturnType<typeof createServiceClient>,
   organizationId: string,
@@ -416,10 +401,6 @@ export async function processReceivedEmail(emailId: string) {
   let unknownSender = !personId;
   if (!personId && thread?.personId) personId = thread.personId;
 
-  if (projectId && personId && !(await personOnProject(admin, projectId, personId))) {
-    // Keep the person link for display even if they are not a participant.
-  }
-
   if (!projectId && personId) {
     const open = await openProjectsForPerson(
       admin,
@@ -431,9 +412,7 @@ export async function processReceivedEmail(emailId: string) {
 
   const assignmentStatus: "project" | "person" | "unassigned" = projectId
     ? "project"
-    : personId
-      ? "person"
-      : "unassigned";
+    : "unassigned";
 
   const sealed = encryptInboundMessageWrite(
     {

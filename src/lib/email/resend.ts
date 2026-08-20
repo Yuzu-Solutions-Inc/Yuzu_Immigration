@@ -9,6 +9,7 @@ import {
   isEmailSuppressed,
   recordOutboundEmail,
 } from "@/lib/email/outbound";
+import { projectInboundAddress } from "@/lib/email/inbound-address";
 import { staffReplyTo } from "@/lib/email/reply-to";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
@@ -94,7 +95,7 @@ function replyNoticeCopy(input: {
   return t("doNotReply");
 }
 
-/** Per-org From on the verified domain; Reply-To stays the env mailbox unless a staff address is set. */
+/** Per-org From on the verified domain. Reply-To is chosen by sendResendEmail. */
 export function bookingSenderForOrg(organizationName: string) {
   const configured = emailConfigured();
   if (!configured) return null;
@@ -129,6 +130,9 @@ export async function sendResendEmail(input: {
   locale?: string;
   includeDoNotReply?: boolean;
   replyTo?: string;
+  /** Immigration file — Reply-To becomes the project inbound address. */
+  projectId?: string | null;
+  /** Fallback for public bookings with no file: consultant mailbox. */
   replyToUserId?: string | null;
   from?: string;
   automated?: boolean;
@@ -148,15 +152,22 @@ export async function sendResendEmail(input: {
     input.idempotencyKey ?? emailIdempotencyKey(kind, to, input.subject);
 
   const locale = toAppLocale(input.locale);
-  const representative = await staffReplyTo(input.replyToUserId);
+  const explicitReplyTo = input.replyTo?.trim() || undefined;
+  const inboundReplyTo = explicitReplyTo
+    ? null
+    : await projectInboundAddress(input.projectId);
+  const representative =
+    explicitReplyTo || inboundReplyTo
+      ? null
+      : await staffReplyTo(input.replyToUserId);
   const representativeReply =
     representative && representative.email !== to ? representative : null;
-  const explicitReplyTo = input.replyTo?.trim();
   const sender = input.organizationName
     ? bookingSenderForOrg(input.organizationName)
     : { from: config.from, replyTo: parseFromEnv(config.from)?.email };
   const replyTo =
     explicitReplyTo ||
+    inboundReplyTo ||
     representativeReply?.email ||
     sender?.replyTo;
   const from = input.from?.trim() || sender?.from || config.from;
@@ -164,10 +175,11 @@ export async function sendResendEmail(input: {
   const notice = replyNoticeCopy({
     locale,
     organizationName: input.organizationName,
-    representativeName: explicitReplyTo
-      ? undefined
-      : representativeReply?.name,
-    includeDoNotReply: input.includeDoNotReply !== false,
+    representativeName: representativeReply?.name,
+    includeDoNotReply:
+      Boolean(explicitReplyTo) || Boolean(inboundReplyTo)
+        ? false
+        : input.includeDoNotReply !== false,
   });
   const content = notice
     ? footerNotice(input.html, input.text, notice)
@@ -184,7 +196,12 @@ export async function sendResendEmail(input: {
   }
 
   const headers: Record<string, string> = {};
-  if (input.automated !== false && !representativeReply && !explicitReplyTo) {
+  if (
+    input.automated !== false &&
+    !representativeReply &&
+    !explicitReplyTo &&
+    !inboundReplyTo
+  ) {
     headers["Auto-Submitted"] = "auto-generated";
     headers["X-Auto-Response-Suppress"] = "All";
   }

@@ -13,6 +13,7 @@ import {
 import { SurfaceCard } from "@/components/layout/surface-card";
 import {
   Field,
+  FieldError,
   FieldHint,
   FieldLabel,
   FormStack,
@@ -44,6 +45,17 @@ function actionError(
   return map[error] ?? t("errors.generic");
 }
 
+function skipReasonLabel(
+  reason: string | null,
+  t: ReturnType<typeof useTranslations<"inboundMail">>,
+) {
+  if (reason === "too_large") return t("skipTooLarge");
+  if (reason === "too_many") return t("skipTooMany");
+  if (reason === "download_failed") return t("skipDownloadFailed");
+  if (reason === "upload_failed") return t("skipUploadFailed");
+  return t("skipUnknown");
+}
+
 function AttachmentRow({
   locale,
   attachment,
@@ -69,7 +81,9 @@ function AttachmentRow({
           {attachment.filename}
           <span className="ml-2 text-xs text-muted-foreground">
             {attachment.skipped
-              ? t("skipped", { reason: attachment.skip_reason ?? "unknown" })
+              ? t("skipped", {
+                  reason: skipReasonLabel(attachment.skip_reason, t),
+                })
               : `${Math.max(1, Math.round(attachment.byte_size / 1024))} KB`}
           </span>
         </p>
@@ -127,9 +141,9 @@ function AttachmentRow({
             {pending ? t("filing") : t("file")}
           </Button>
           {state.error ? (
-            <p className="w-full text-xs text-destructive" role="alert">
+            <FieldError className="w-full text-xs">
               {actionError(state.error, t)}
-            </p>
+            </FieldError>
           ) : null}
         </form>
       ) : null}
@@ -146,6 +160,7 @@ export function InboundMailThread({
   assignPeople,
   assignProjects,
   documentRequests,
+  emptyLabel,
 }: {
   locale: string;
   messages: InboundMessageView[];
@@ -272,7 +287,7 @@ export function InboundMailThread({
                           id={`person-${message.id}`}
                           name="personId"
                           density="compact"
-                          defaultValue=""
+                          defaultValue={message.person_id ?? ""}
                         >
                           <option value="">{t("none")}</option>
                           {assignPeople.map((row) => (
@@ -287,13 +302,12 @@ export function InboundMailThread({
                       {assignPending ? t("assigning") : t("assign")}
                     </Button>
                     {assignState.error ? (
-                      <p className="text-sm text-destructive" role="alert">
+                      <FieldError>
                         {actionError(assignState.error, t)}
-                      </p>
+                      </FieldError>
                     ) : null}
                   </FormStack>
                 ) : null}
-                {message.project_id && message.assignment_status === "person" ? null : null}
                 {message.project_id ? (
                   <Link
                     href={`/projects/${message.project_id}`}
@@ -326,9 +340,7 @@ export function InboundMailThread({
               />
             </Field>
             {replyState.error ? (
-              <p className="text-sm text-destructive" role="alert">
-                {actionError(replyState.error, t)}
-              </p>
+              <FieldError>{actionError(replyState.error, t)}</FieldError>
             ) : null}
             {replyState.message === "sent" ? (
               <p className="text-sm text-muted-foreground">{t("sent")}</p>

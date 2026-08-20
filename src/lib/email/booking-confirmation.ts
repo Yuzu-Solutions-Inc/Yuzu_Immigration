@@ -6,6 +6,7 @@ import { email } from "@/lib/design-tokens";
 import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
+import { createServiceClient } from "@/lib/supabase/admin";
 
 const messagesByLocale = dictionaries;
 
@@ -24,6 +25,20 @@ function translator(locale: AppLocale) {
     messages: messagesByLocale[locale],
     namespace: "bookingEmail",
   });
+}
+
+async function appointmentProjectId(appointmentId: string) {
+  const admin = createServiceClient();
+  const { data, error } = await admin
+    .from("booking_appointments")
+    .select("project_id")
+    .eq("id", appointmentId)
+    .maybeSingle();
+  if (error) {
+    console.error("appointmentProjectId:", error.message);
+    return null;
+  }
+  return (data?.project_id as string | null) ?? null;
 }
 
 function safeLink(url?: string | null) {
@@ -183,6 +198,7 @@ export async function sendBookingConfirmationEmail(input: {
       organizationName: input.organizationName,
       organizationId: input.organizationId,
       locale: input.locale,
+      projectId: await appointmentProjectId(input.appointmentId),
       replyToUserId: input.hostUserId,
     });
   } catch (error) {
@@ -253,6 +269,7 @@ export async function sendBookingPaymentReceivedEmail(input: {
       organizationName: input.organizationName,
       organizationId: input.organizationId,
       locale: input.locale,
+      projectId: await appointmentProjectId(input.appointmentId),
       replyToUserId: input.hostUserId,
     });
   } catch (error) {
@@ -333,6 +350,7 @@ export async function sendBookingPaymentReminderEmail(input: {
       organizationName: input.organizationName,
       organizationId: input.organizationId,
       locale: input.locale,
+      projectId: await appointmentProjectId(input.appointmentId),
       replyToUserId: input.hostUserId,
     });
   } catch (error) {
@@ -415,6 +433,7 @@ export async function sendBookingCancelledEmail(input: {
       organizationName: input.organizationName,
       organizationId: input.organizationId,
       locale: input.locale,
+      projectId: await appointmentProjectId(input.appointmentId),
       replyToUserId: input.hostUserId,
     });
   } catch (error) {

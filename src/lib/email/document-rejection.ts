@@ -2,7 +2,6 @@ import { createTranslator } from "next-intl";
 
 import { email } from "@/lib/design-tokens";
 import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
-import { projectInboundAddress } from "@/lib/email/inbound-address";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -82,7 +81,6 @@ export async function sendDocumentRejectionEmail(input: {
     input.shareUrl ?? t("rejectionNoLink"),
   ].join("\n");
 
-  const replyTo = await projectInboundAddress(input.projectId);
   return sendResendEmail({
     to: input.to,
     subject,
@@ -98,7 +96,6 @@ export async function sendDocumentRejectionEmail(input: {
     organizationName: input.organizationName,
     organizationId: input.organizationId,
     locale,
-    includeDoNotReply: false,
-    replyTo: replyTo ?? undefined,
+    projectId: input.projectId,
   });
 }

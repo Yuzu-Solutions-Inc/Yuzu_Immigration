@@ -357,7 +357,7 @@ export async function resendContractSignerAction(
   const { data: appointment } = envelope.appointment_id
     ? await admin
         .from("booking_appointments")
-        .select("host_user_id")
+        .select("host_user_id, project_id")
         .eq("id", envelope.appointment_id)
         .maybeSingle()
     : { data: null };
@@ -371,6 +371,7 @@ export async function resendContractSignerAction(
     signUrl: `${origin.replace(/\/$/, "")}/${signLocale}/sign/${encodeURIComponent(token)}`,
     role: next.role,
     envelopeId,
+    projectId: (appointment?.project_id as string | null) ?? null,
     replyToUserId: (appointment?.host_user_id as string | null) ?? null,
   });
   await appendContractAudit({

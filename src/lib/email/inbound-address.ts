@@ -39,7 +39,10 @@ export function isInboundDomainAddress(email: string) {
   return emailDomain(email) === domain;
 }
 
-export async function projectInboundAddress(projectId: string) {
+export async function projectInboundAddress(
+  projectId: string | null | undefined,
+) {
+  if (!projectId) return null;
   const admin = createServiceClient();
   const { data, error } = await admin
     .from("immigration_projects")

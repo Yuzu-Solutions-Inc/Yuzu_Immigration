@@ -273,7 +273,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
     .eq("id", payment.appointment_id)
     .eq("status", "pending_payment")
     .select(
-      "id, organization_id, host_user_id, service_id, starts_at, ends_at, guest_name, guest_email, guest_phone, guest_preferred_locale, manage_token_encrypted, google_event_id, microsoft_event_id, meet_join_url",
+      "id, organization_id, host_user_id, service_id, starts_at, ends_at, guest_name, guest_email, guest_phone, guest_preferred_locale, manage_token_encrypted, google_event_id, microsoft_event_id, meet_join_url, project_id",
     )
     .maybeSingle();
 
