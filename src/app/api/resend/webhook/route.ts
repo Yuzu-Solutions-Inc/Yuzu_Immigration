@@ -33,8 +33,9 @@ export async function POST(request: Request) {
       headers: { id, timestamp, signature },
       webhookSecret: config.webhookSecret,
     });
-  } catch (error) {
-    console.error("resend webhook verify:", error);
+  } catch {
+    // Never log verify errors — they can include the raw webhook payload.
+    console.error("resend webhook verify: invalid_signature");
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
@@ -49,7 +50,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: false }, { status: 500 });
       }
     } catch (error) {
-      console.error("resend inbound via delivery webhook:", error);
+      const message = error instanceof Error ? error.message : "handler_failed";
+      console.error("resend inbound via delivery webhook:", message);
       return NextResponse.json({ ok: false }, { status: 500 });
     }
     return NextResponse.json({ ok: true });
@@ -93,7 +95,8 @@ export async function POST(request: Request) {
         break;
     }
   } catch (error) {
-    console.error("resend webhook handler:", error);
+    const message = error instanceof Error ? error.message : "handler_failed";
+    console.error("resend webhook handler:", message);
     return NextResponse.json({ error: "handler_failed" }, { status: 500 });
   }
 

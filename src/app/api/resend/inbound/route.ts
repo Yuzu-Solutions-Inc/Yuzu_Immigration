@@ -36,8 +36,9 @@ export async function POST(request: Request) {
       headers: { id, timestamp, signature },
       webhookSecret: config.webhookSecret,
     });
-  } catch (error) {
-    console.error("resend inbound verify:", error);
+  } catch {
+    // Never log verify errors — Svix/Resend objects can include the webhook payload.
+    console.error("resend inbound verify: invalid_signature");
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
@@ -53,7 +54,8 @@ export async function POST(request: Request) {
       }
     }
   } catch (error) {
-    console.error("resend inbound handler:", error);
+    const message = error instanceof Error ? error.message : "handler_failed";
+    console.error("resend inbound handler:", message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
