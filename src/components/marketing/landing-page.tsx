@@ -31,9 +31,10 @@ import {
   MarketingHeader,
   MarketingTestingBanner,
 } from "@/components/marketing/marketing-chrome";
+import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
+import { HeroProductStage } from "@/components/marketing/hero-product-stage";
 import { PricingPlanCards } from "@/components/marketing/pricing-plans";
 import {
-  AppCalendarPreview,
   AppHomePreview,
   AppProjectPreview,
   ClientPortalPreview,
@@ -120,6 +121,8 @@ const SECURITY_ICONS = {
   privacy: ScrollText,
 } as const;
 
+const STAGE_CHIP_KEYS = ["forms", "booking", "square", "documents"] as const;
+
 const SHOWCASE_KEYS = [
   "client",
   "representative",
@@ -183,13 +186,58 @@ export async function LandingPage() {
           from { opacity: 0; transform: translateY(18px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes landing-mesh {
-          0%, 100% { transform: translate3d(0,0,0) scale(1); }
-          50% { transform: translate3d(2%, -1%, 0) scale(1.04); }
+        @keyframes lp-grid-pan {
+          to { background-position: 48px 48px; }
         }
-        @keyframes landing-preview-in {
-          from { opacity: 0; transform: translateY(28px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes lp-orb-drift {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(6%, 8%) scale(1.12); }
+        }
+        @keyframes lp-orb-drift-b {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-10%, 4%) scale(1.08); }
+        }
+        @keyframes lp-orb-drift-c {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(4%, -8%) scale(1.16); }
+        }
+        @keyframes lp-plane-a {
+          0% { transform: translate(-18%, 78%) rotate(-16deg); opacity: 0; }
+          10% { opacity: 0.5; }
+          90% { opacity: 0.35; }
+          100% { transform: translate(112%, 6%) rotate(14deg); opacity: 0; }
+        }
+        @keyframes lp-plane-b {
+          0% { transform: translate(108%, 62%) rotate(28deg) scaleX(-1); opacity: 0; }
+          12% { opacity: 0.28; }
+          88% { opacity: 0.2; }
+          100% { transform: translate(-20%, 18%) rotate(8deg) scaleX(-1); opacity: 0; }
+        }
+        @keyframes lp-plane-c {
+          0% { transform: translate(-10%, 40%) rotate(-8deg); opacity: 0; }
+          15% { opacity: 0.22; }
+          85% { opacity: 0.18; }
+          100% { transform: translate(80%, -8%) rotate(18deg); opacity: 0; }
+        }
+        @keyframes lp-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-12px); }
+        }
+        @keyframes lp-stage-idle {
+          0%, 100% { transform: perspective(1400px) rotateY(-11deg) rotateX(5deg) translateY(0); }
+          50% { transform: perspective(1400px) rotateY(-7deg) rotateX(3deg) translateY(-10px); }
+        }
+        @keyframes lp-card-idle {
+          0%, 100% { transform: translateY(0) rotate(-2deg); }
+          50% { transform: translateY(-14px) rotate(-1deg); }
+        }
+        @keyframes lp-glow-pulse {
+          0%, 100% { opacity: 0.45; transform: scale(1); }
+          50% { opacity: 0.75; transform: scale(1.08); }
+        }
+        @keyframes lp-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
         }
         .landing-page .lp-fade {
           animation: landing-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -197,17 +245,139 @@ export async function LandingPage() {
         .landing-page .lp-delay-1 { animation-delay: 0.08s; }
         .landing-page .lp-delay-2 { animation-delay: 0.16s; }
         .landing-page .lp-delay-3 { animation-delay: 0.24s; }
-        .landing-page .lp-delay-4 { animation-delay: 0.32s; }
-        .landing-page .lp-mesh {
-          animation: landing-mesh 18s ease-in-out infinite;
+        .landing-page .lp-atmosphere {
+          --lp-mx: 0;
+          --lp-my: 0;
         }
-        .landing-page .landing-preview {
-          animation: landing-preview-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
+        .landing-page .lp-parallax {
+          will-change: transform;
+          transition: transform 0.5s ease-out;
+        }
+        .landing-page .lp-parallax-slow {
+          transform: translate(calc(var(--lp-mx) * 18px), calc(var(--lp-my) * 14px));
+        }
+        .landing-page .lp-parallax-fast {
+          transform: translate(calc(var(--lp-mx) * 36px), calc(var(--lp-my) * 24px));
+        }
+        .landing-page .lp-grid {
+          animation: lp-grid-pan 32s linear infinite;
+        }
+        .landing-page .lp-orb {
+          position: absolute;
+          border-radius: 999px;
+          filter: blur(48px);
+          will-change: transform;
+        }
+        .landing-page .lp-orb-indigo {
+          width: min(52vw, 34rem);
+          height: min(48vw, 30rem);
+          left: -8%;
+          top: -16%;
+          background: color-mix(in srgb, var(--indigo-500) 42%, transparent);
+          animation: lp-orb-drift 18s ease-in-out infinite;
+        }
+        .landing-page .lp-orb-emerald {
+          width: min(38vw, 22rem);
+          height: min(38vw, 22rem);
+          right: -6%;
+          top: 8%;
+          background: color-mix(in srgb, var(--emerald-500) 22%, transparent);
+          animation: lp-orb-drift-b 22s ease-in-out infinite;
+        }
+        .landing-page .lp-orb-amber {
+          width: min(32vw, 18rem);
+          height: min(28vw, 16rem);
+          right: 18%;
+          bottom: 6%;
+          background: color-mix(in srgb, var(--amber-500) 16%, transparent);
+          animation: lp-orb-drift-c 16s ease-in-out infinite;
+        }
+        .landing-page .lp-plane {
+          position: absolute;
+          top: 0;
+          left: 0;
+          color: white;
+          will-change: transform, opacity;
+        }
+        .landing-page .lp-plane-a { animation: lp-plane-a 22s linear infinite; }
+        .landing-page .lp-plane-b { animation: lp-plane-b 28s linear infinite 4s; }
+        .landing-page .lp-plane-c { animation: lp-plane-c 18s linear infinite 9s; }
+        .landing-page .landing-stage {
+          min-height: 22rem;
+        }
+        .landing-page .lp-stage-glow {
+          pointer-events: none;
+          position: absolute;
+          inset: 12% 8% 8% 8%;
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--indigo-500) 28%, transparent);
+          filter: blur(48px);
+          animation: lp-glow-pulse 7s ease-in-out infinite;
+        }
+        .landing-page .lp-stage-main {
+          position: relative;
+          z-index: 2;
+          transform-origin: center;
+          animation: lp-stage-idle 9s ease-in-out infinite;
+        }
+        .landing-page .lp-stage-card {
+          position: absolute;
+          z-index: 3;
+          width: min(58%, 17rem);
+          left: -6%;
+          bottom: 4%;
+          animation: lp-card-idle 6.5s ease-in-out infinite;
+          filter: drop-shadow(0 18px 40px color-mix(in srgb, var(--graphite-900) 45%, transparent));
+        }
+        .landing-page .lp-stage-chips {
+          position: absolute;
+          inset: 0;
+          z-index: 4;
+          pointer-events: none;
+        }
+        .landing-page .lp-stage-chip {
+          position: absolute;
+          border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.16);
+          background: color-mix(in srgb, var(--graphite-900) 35%, transparent);
+          backdrop-filter: blur(10px);
+          padding: 0.4rem 0.8rem;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          color: rgba(255,255,255,0.88);
+          animation: lp-float 5.5s ease-in-out infinite;
+          white-space: nowrap;
+        }
+        .landing-page .lp-stage-chip-1 { top: 6%; right: 2%; animation-delay: 0s; }
+        .landing-page .lp-stage-chip-2 { top: 32%; right: -2%; animation-delay: 0.7s; }
+        .landing-page .lp-stage-chip-3 { bottom: 18%; right: 8%; animation-delay: 1.3s; }
+        .landing-page .lp-stage-chip-4 { top: 18%; left: 2%; animation-delay: 1.9s; }
+        .landing-page .lp-marquee-wrap {
+          overflow: hidden;
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+        }
+        .landing-page .lp-marquee {
+          animation: lp-marquee 28s linear infinite;
+        }
+        .landing-page .lp-marquee-wrap:hover .lp-marquee {
+          animation-play-state: paused;
+        }
+        @media (max-width: 1023px) {
+          .landing-page .lp-stage-card { width: min(64%, 15rem); left: -2%; }
+          .landing-page .lp-stage-chip-2,
+          .landing-page .lp-stage-chip-4 { display: none; }
         }
         @media (prefers-reduced-motion: reduce) {
           .landing-page .lp-fade,
-          .landing-page .lp-mesh,
-          .landing-page .landing-preview {
+          .landing-page .lp-grid,
+          .landing-page .lp-orb,
+          .landing-page .lp-plane,
+          .landing-page .lp-stage-glow,
+          .landing-page .lp-stage-main,
+          .landing-page .lp-stage-card,
+          .landing-page .lp-stage-chip,
+          .landing-page .lp-marquee {
             animation: none !important;
           }
         }
@@ -219,90 +389,83 @@ export async function LandingPage() {
       <section className="relative isolate overflow-hidden bg-graphite-900 text-white">
         <div
           aria-hidden
-          className="lp-mesh pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 80% 55% at 12% 16%, color-mix(in srgb, var(--indigo-500) 34%, transparent), transparent 58%), radial-gradient(ellipse 55% 42% at 90% 8%, color-mix(in srgb, var(--emerald-500) 16%, transparent), transparent 52%), radial-gradient(ellipse 48% 32% at 82% 38%, color-mix(in srgb, var(--amber-500) 10%, transparent), transparent 55%), linear-gradient(180deg, var(--graphite-700) 0%, var(--graphite-900) 38%, var(--graphite-900) 100%)",
+              "linear-gradient(180deg, var(--graphite-700) 0%, var(--graphite-900) 42%, var(--graphite-900) 100%)",
           }}
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          className="lp-grid pointer-events-none absolute inset-0 opacity-[0.14]"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+              "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)",
             backgroundSize: "48px 48px",
             maskImage:
-              "radial-gradient(ellipse at center, black 20%, transparent 75%)",
+              "radial-gradient(ellipse at center, black 18%, transparent 78%)",
           }}
         />
+        <HeroAtmosphere />
 
-        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.5rem)] w-full max-w-6xl flex-col justify-between px-6 pt-14 sm:pt-20">
-          <div className="max-w-3xl space-y-6 pb-12">
-            <p className="lp-fade text-sm font-semibold tracking-[0.16em] text-white/55 uppercase">
-              {t("audience")}
-            </p>
-            <div className="lp-fade lp-delay-1">
-              <BrandLogo size="hero" href={null} inverted />
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-16 sm:py-20 lg:py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10">
+            <div className="max-w-xl space-y-6">
+              <p className="lp-fade text-sm font-semibold tracking-[0.16em] text-white/55 uppercase">
+                {t("audience")}
+              </p>
+              <div className="lp-fade lp-delay-1">
+                <BrandLogo size="hero" href={null} inverted />
+              </div>
+              <h1 className="lp-fade lp-delay-2 font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+                {t("title")}
+              </h1>
+              <p className="lp-fade lp-delay-3 max-w-xl text-base leading-relaxed text-pretty text-white/70 sm:text-lg">
+                {t("subtitle")}
+              </p>
+              <div className="lp-fade lp-delay-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <Link
+                  href="/login?mode=signup"
+                  className={cn(
+                    buttonVariants({ size: "lg" }),
+                    "bg-white text-brand hover:bg-white/95",
+                  )}
+                >
+                  {t("cta")}
+                </Link>
+                <Link
+                  href="/login"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white",
+                  )}
+                >
+                  {t("secondaryCta")}
+                </Link>
+              </div>
             </div>
-            <h1 className="lp-fade lp-delay-2 font-heading max-w-2xl text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
-              {t("title")}
-            </h1>
-            <p className="lp-fade lp-delay-3 max-w-xl text-base leading-relaxed text-pretty text-white/70 sm:text-lg">
-              {t("subtitle")}
-            </p>
-            <div className="lp-fade lp-delay-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <Link
-                href="/login?mode=signup"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "bg-white text-brand hover:bg-white/95",
-                )}
-              >
-                {t("cta")}
-              </Link>
-              <Link
-                href="/login"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white",
-                )}
-              >
-                {t("secondaryCta")}
-              </Link>
+
+            <div className="lp-fade lp-delay-3 overflow-visible">
+              <HeroProductStage
+                chips={STAGE_CHIP_KEYS.map((key) => ({
+                  key,
+                  label: t(`capabilities.${key}`),
+                }))}
+              />
             </div>
-            <ul className="lp-fade lp-delay-4 flex flex-wrap gap-2 pt-1">
-              {CAPABILITY_KEYS.map((key) => (
+          </div>
+
+          <div className="lp-marquee-wrap lp-fade lp-delay-4 mt-14">
+            <ul className="lp-marquee flex w-max gap-2">
+              {[...CAPABILITY_KEYS, ...CAPABILITY_KEYS].map((key, index) => (
                 <li
-                  key={key}
-                  className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-xs font-medium text-white/70"
+                  key={`${key}-${index}`}
+                  className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-xs font-medium whitespace-nowrap text-white/70"
                 >
                   {t(`capabilities.${key}`)}
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div className="landing-preview relative mt-4 w-full">
-            <div
-              className="relative max-h-[min(36rem,52svh)] overflow-hidden"
-              style={{
-                WebkitMaskImage:
-                  "linear-gradient(to bottom, #000 0%, #000 42%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,0.32) 82%, transparent 100%)",
-                maskImage:
-                  "linear-gradient(to bottom, #000 0%, #000 42%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,0.32) 82%, transparent 100%)",
-              }}
-            >
-              <AppCalendarPreview />
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 sm:h-52"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(to top, var(--graphite-900) 0%, color-mix(in srgb, var(--graphite-900) 82%, transparent) 28%, color-mix(in srgb, var(--graphite-900) 38%, transparent) 62%, transparent 100%)",
-                }}
-              />
-            </div>
           </div>
         </div>
       </section>
