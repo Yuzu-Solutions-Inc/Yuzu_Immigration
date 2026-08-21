@@ -45,7 +45,7 @@ function faqParams(
   extraAdmin: string,
   extraUser: string,
   locale: AppLocale,
-) {
+): Record<string, string | number> {
   switch (key) {
     case "founding":
       return {
