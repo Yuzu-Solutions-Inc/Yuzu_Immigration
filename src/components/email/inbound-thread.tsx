@@ -161,6 +161,7 @@ export function InboundMailThread({
   assignProjects,
   documentRequests,
   emptyLabel,
+  help,
 }: {
   locale: string;
   messages: InboundMessageView[];
@@ -171,6 +172,7 @@ export function InboundMailThread({
   assignProjects?: { id: string; label: string }[];
   documentRequests?: { id: string; label: string }[];
   emptyLabel?: string;
+  help?: string;
 }) {
   const t = useTranslations("inboundMail");
   const dateLocale =
@@ -194,12 +196,12 @@ export function InboundMailThread({
         <h2 className="font-heading text-lg font-semibold text-brand">
           {t("title")}
         </h2>
-        <p className="text-sm text-muted-foreground">{t("help")}</p>
+        <p className="text-sm text-muted-foreground">{help ?? t("help")}</p>
         {inboundAddress ? (
           <p className="mt-1 font-mono text-sm text-brand">{inboundAddress}</p>
-        ) : (
+        ) : inboundAddress === null ? (
           <FieldHint>{t("notConfigured")}</FieldHint>
-        )}
+        ) : null}
       </div>
 
       {messages.length === 0 ? (

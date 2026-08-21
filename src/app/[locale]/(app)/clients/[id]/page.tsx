@@ -2,6 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { DeletePersonButton } from "@/components/people/delete-person-button";
+import { PersonDetailTabs } from "@/components/people/person-detail-tabs";
+import { PersonHomeTab } from "@/components/people/person-home-tab";
 import { PersonNotesSection } from "@/components/people/person-notes-section";
 import { InboundMailThread } from "@/components/email/inbound-thread";
 import { PersonPortalCard } from "@/components/people/person-portal-card";
@@ -68,75 +70,49 @@ export default async function PersonDetailPage({
   const ti = await getTranslations("immigrationStatus");
   const tprog = await getTranslations("programs");
   const tr = await getTranslations("roles");
+  const tmail = await getTranslations("inboundMail");
+
+  const dateLocale =
+    locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA";
+  const statusExpires = person.status_expires_at
+    ? t("expires", {
+        date: new Date(`${person.status_expires_at}T12:00:00`).toLocaleDateString(
+          dateLocale,
+          { year: "numeric", month: "short", day: "numeric" },
+        ),
+      })
+    : null;
+  const immigrationStatusLabel = statusExpires
+    ? `${ti(person.immigration_status)} · ${statusExpires}`
+    : ti(person.immigration_status);
+  const sageAddressLabel = person.sage_contact_id
+    ? person.sage_has_main_address
+      ? t("sageAddressYes")
+      : t("sageAddressNo")
+    : t("sageNotLinked");
+  const preferredLocale = toAppLocale(person.preferred_locale);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
+    <div>
+      <header className="space-y-4 pb-5">
         <Link
           href="/clients"
-          className="text-sm font-medium text-action hover:underline"
+          className="inline-flex text-sm font-medium text-action hover:underline"
         >
           ← {t("back")}
         </Link>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-2xl font-semibold text-brand">
+
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 space-y-2">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-brand sm:text-3xl">
               {person.first_name} {person.last_name}
             </h1>
-            <dl className="mt-2 space-y-1 text-sm text-muted-foreground">
-              {person.email ? (
-                <div>
-                  <dt className="inline font-medium text-brand/70">
-                    {t("email")}:{" "}
-                  </dt>
-                  <dd className="inline">{person.email}</dd>
-                </div>
-              ) : null}
-              {person.phone ? (
-                <div>
-                  <dt className="inline font-medium text-brand/70">
-                    {t("phone")}:{" "}
-                  </dt>
-                  <dd className="inline">{person.phone}</dd>
-                </div>
-              ) : null}
-              <div>
-                <dt className="inline font-medium text-brand/70">
-                  {t("immigrationStatus")}:{" "}
-                </dt>
-                <dd className="inline">
-                  {ti(person.immigration_status)}
-                  {person.status_expires_at
-                    ? ` · ${t("expires", {
-                        date: new Date(
-                          `${person.status_expires_at}T12:00:00`,
-                        ).toLocaleDateString(
-                          locale === "fr" ? "fr-CA" : "en-CA",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          },
-                        ),
-                      })}`
-                    : ""}
-                </dd>
-              </div>
-              <div>
-                <dt className="inline font-medium text-brand/70">
-                  {t("sageAddress")}:{" "}
-                </dt>
-                <dd className="inline">
-                  {person.sage_contact_id
-                    ? person.sage_has_main_address
-                      ? t("sageAddressYes")
-                      : t("sageAddressNo")
-                    : t("sageNotLinked")}
-                </dd>
-              </div>
-            </dl>
+            {person.email ? (
+              <p className="text-sm text-muted-foreground">{person.email}</p>
+            ) : null}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+
+          <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
             {canAdministerOrg(membership?.role) ? (
               <ExportPersonButton personId={person.id} />
             ) : null}
@@ -166,75 +142,98 @@ export default async function PersonDetailPage({
             ) : null}
           </div>
         </div>
-      </div>
+      </header>
 
-      <section className="space-y-3">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("projects")}
-        </h2>
-        {projects.length === 0 ? (
-          <SurfaceCard>
-            <p className="text-[15px] text-muted-foreground">{t("noProjects")}</p>
-          </SurfaceCard>
-        ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-            {projects.map((project) => (
-              <li key={project.id}>
-                <Link
-                  href={`/projects/${project.id}`}
-                  className="flex flex-col gap-1 px-5 py-4 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="font-medium text-brand">{project.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {tprog(project.program_family)} · {tr(project.role)}
-                    </p>
-                  </div>
-                  <ProjectStatusSummary
-                    status={project.status}
-                    statusAt={project.status_at}
-                    locale={locale}
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {canCreate ? (
-        <PersonPortalCard
-          locale={locale}
-          personId={person.id}
-          hasEmail={Boolean(person.email)}
-          portalBaseUrl={portalBaseUrl(
-            baseUrl,
-            toAppLocale(person.preferred_locale),
-          )}
-          access={
-            portalAccess
-              ? {
-                  isActive: portalAccess.is_active,
-                  lastAuthenticatedAt: portalAccess.last_authenticated_at,
+      <section className="border-t border-border pt-6">
+        <PersonDetailTabs
+          panels={{
+            home: (
+              <PersonHomeTab
+                personId={person.id}
+                email={person.email || t("emptyValue")}
+                phone={person.phone || t("emptyValue")}
+                preferredLocaleLabel={t(`locales.${preferredLocale}`)}
+                immigrationStatusLabel={immigrationStatusLabel}
+                sageAddressLabel={sageAddressLabel}
+                portal={
+                  canCreate ? (
+                    <PersonPortalCard
+                      locale={locale}
+                      personId={person.id}
+                      hasEmail={Boolean(person.email)}
+                      portalBaseUrl={portalBaseUrl(
+                        baseUrl,
+                        toAppLocale(person.preferred_locale),
+                      )}
+                      access={
+                        portalAccess
+                          ? {
+                              isActive: portalAccess.is_active,
+                              lastAuthenticatedAt:
+                                portalAccess.last_authenticated_at,
+                            }
+                          : null
+                      }
+                    />
+                  ) : null
                 }
-              : null
-          }
+                projects={
+                  projects.length === 0 ? (
+                    <SurfaceCard>
+                      <p className="text-[15px] text-muted-foreground">
+                        {t("noProjects")}
+                      </p>
+                    </SurfaceCard>
+                  ) : (
+                    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
+                      {projects.map((project) => (
+                        <li key={project.id}>
+                          <Link
+                            href={`/projects/${project.id}`}
+                            className="flex flex-col gap-1 px-5 py-4 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div>
+                              <p className="font-medium text-brand">
+                                {project.title}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {tprog(project.program_family)} · {tr(project.role)}
+                              </p>
+                            </div>
+                            <ProjectStatusSummary
+                              status={project.status}
+                              statusAt={project.status_at}
+                              locale={locale}
+                            />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )
+                }
+              />
+            ),
+            emails: (
+              <InboundMailThread
+                locale={locale}
+                messages={inboundMessages}
+                canWrite={canCreate}
+                showReply={false}
+                help={tmail("helpPerson")}
+                emptyLabel={tmail("emptyPerson")}
+              />
+            ),
+            bookings: (
+              <PersonNotesSection
+                locale={locale}
+                personId={person.id}
+                meetings={meetings}
+                timeZone={bookingSettings?.timezone ?? "America/Toronto"}
+              />
+            ),
+          }}
         />
-      ) : null}
-
-      <InboundMailThread
-        locale={locale}
-        messages={inboundMessages}
-        canWrite={canCreate}
-        showReply={false}
-      />
-
-      <PersonNotesSection
-        locale={locale}
-        personId={person.id}
-        meetings={meetings}
-        timeZone={bookingSettings?.timezone ?? "America/Toronto"}
-      />
+      </section>
     </div>
   );
 }

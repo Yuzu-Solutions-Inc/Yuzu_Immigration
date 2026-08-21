@@ -927,8 +927,10 @@
   "inboundMail": {
     "title": "Courriel",
     "help": "Les réponses des clients à l’adresse de ce dossier sont enregistrées ici. Donnez cette adresse pour l’envoi de documents.",
+    "helpPerson": "Les courriels assignés à ce client sont enregistrés ici.",
     "notConfigured": "La réception de courriel n’est pas encore configurée sur le serveur.",
     "empty": "Aucun courriel sur ce dossier pour le moment.",
+    "emptyPerson": "Aucun courriel pour ce client pour l’instant.",
     "emptyInbox": "Aucun courriel non attribué.",
     "inboxHelp": "Les messages qui n’ont pas pu être associés à un dossier restent ici jusqu’à ce que vous les attribuiez.",
     "noSubject": "(sans objet)",
@@ -1036,6 +1038,12 @@
     "noteEdited": "modifiée",
     "notesEmpty": "Aucun rendez-vous ni note pour l’instant.",
     "noteAuthorUnknown": "Équipe",
+    "detailTabs": {
+      "home": "Accueil",
+      "emails": "Courriels",
+      "bookings": "Réservations"
+    },
+    "infoTitle": "Fiche client",
     "projects": "Projets",
     "noProjects": "Pas encore lié à un projet.",
     "email": "E-mail",

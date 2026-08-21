@@ -927,8 +927,10 @@
   "inboundMail": {
     "title": "Email",
     "help": "Client replies to this file’s address are stored here. Give clients this address to send documents.",
+    "helpPerson": "Email assigned to this client is stored here.",
     "notConfigured": "Inbound email is not configured on the server yet.",
     "empty": "No email on this file yet.",
+    "emptyPerson": "No email for this client yet.",
     "emptyInbox": "No unassigned email.",
     "inboxHelp": "Mail that could not be matched to a file waits here until you assign it.",
     "noSubject": "(no subject)",
@@ -1036,6 +1038,12 @@
     "noteEdited": "edited",
     "notesEmpty": "No meetings or notes yet.",
     "noteAuthorUnknown": "Staff",
+    "detailTabs": {
+      "home": "Home",
+      "emails": "Emails",
+      "bookings": "Bookings"
+    },
+    "infoTitle": "Client details",
     "projects": "Projects",
     "noProjects": "Not linked to any projects yet.",
     "email": "Email",

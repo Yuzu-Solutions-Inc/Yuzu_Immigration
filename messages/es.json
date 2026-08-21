@@ -927,8 +927,10 @@
   "inboundMail": {
     "title": "Correo",
     "help": "Las respuestas de los clientes a la dirección de este expediente se guardan aquí. Déles esta dirección para enviar documentos.",
+    "helpPerson": "El correo asignado a este cliente se guarda aquí.",
     "notConfigured": "La recepción de correo aún no está configurada en el servidor.",
     "empty": "Aún no hay correo en este expediente.",
+    "emptyPerson": "Aún no hay correo para este cliente.",
     "emptyInbox": "No hay correo sin asignar.",
     "inboxHelp": "Los mensajes que no se pudieron asociar a un expediente esperan aquí hasta que los asigne.",
     "noSubject": "(sin asunto)",
@@ -1036,8 +1038,14 @@
     "noteEdited": "editada",
     "notesEmpty": "Aún no hay reuniones ni notas.",
     "noteAuthorUnknown": "Equipo",
-    "projects": "Projects",
-    "noProjects": "Not linked to any projects yet.",
+    "detailTabs": {
+      "home": "Inicio",
+      "emails": "Correos",
+      "bookings": "Reservas"
+    },
+    "infoTitle": "Datos del cliente",
+    "projects": "Proyectos",
+    "noProjects": "Aún no está vinculado a ningún proyecto.",
     "email": "Email",
     "emailOptional": "Email (optional)",
     "phone": "Phone",
