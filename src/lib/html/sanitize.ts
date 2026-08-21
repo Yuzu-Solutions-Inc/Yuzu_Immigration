@@ -1,45 +1,48 @@
 import { decodeHtmlEntities } from "@/lib/html/entities";
 
-/** Matches script/style/iframe blocks; closing tag allows trailing whitespace. */
+/** Matches script/style/iframe blocks. Closing tags may include junk (`</script foo>`). */
 const DANGEROUS_BLOCK_RE =
-  /<(?:script|style|iframe)\b[^>]*>[\s\S]*?<\/(?:script|style|iframe)\s*>/gi;
+  /<(?:script|style|iframe)\b[^>]*>[\s\S]*?<\/(?:script|style|iframe)[^>]*>/gi;
 
-export function removeDangerousHtmlBlocks(html: string): string {
+const HTML_TAG_RE = /<[^>]+>/g;
+
+function replaceUntilStable(
+  input: string,
+  pattern: RegExp,
+  replacement: string,
+): string {
   let prev = "";
-  let cur = html;
+  let cur = input;
   while (cur !== prev) {
     prev = cur;
-    cur = cur.replace(DANGEROUS_BLOCK_RE, "");
+    cur = cur.replace(pattern, replacement);
   }
   return cur;
+}
+
+export function removeDangerousHtmlBlocks(html: string): string {
+  return replaceUntilStable(html, DANGEROUS_BLOCK_RE, "");
 }
 
 const EVENT_HANDLER_RE = /\bon[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi;
 
 export function removeHtmlEventHandlers(html: string): string {
-  let prev = "";
-  let cur = html;
-  while (cur !== prev) {
-    prev = cur;
-    cur = cur.replace(EVENT_HANDLER_RE, "");
-  }
-  return cur;
+  return replaceUntilStable(html, EVENT_HANDLER_RE, "");
 }
 
 const DANGEROUS_URL_SCHEME_RE = /(?:javascript|data|vbscript):/gi;
 
 export function removeDangerousUrlSchemes(html: string): string {
-  let prev = "";
-  let cur = html;
-  while (cur !== prev) {
-    prev = cur;
-    cur = cur.replace(DANGEROUS_URL_SCHEME_RE, "");
-  }
-  return cur;
+  return replaceUntilStable(html, DANGEROUS_URL_SCHEME_RE, "");
+}
+
+/** Strip tags and leftover `<>` so nested/unclosed markup cannot re-form. */
+export function stripRemainingHtmlTags(html: string): string {
+  return replaceUntilStable(html, HTML_TAG_RE, " ").replace(/[<>]/g, "");
 }
 
 export function stripHtmlTags(html: string): string {
-  return removeDangerousHtmlBlocks(html).replace(/<[^>]+>/g, " ");
+  return stripRemainingHtmlTags(removeDangerousHtmlBlocks(html));
 }
 
 export function stripHtmlToPlainText(html: string): string {

@@ -3,7 +3,10 @@ import { createHash } from "node:crypto";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 import { decodeXmlEntities } from "@/lib/contracts/html";
-import { removeDangerousHtmlBlocks } from "@/lib/html/sanitize";
+import {
+  removeDangerousHtmlBlocks,
+  stripRemainingHtmlTags,
+} from "@/lib/html/sanitize";
 import type { ContractAuditEventRow, ContractSignerRow } from "@/lib/contracts/types";
 
 const PAGE_WIDTH = 612;
@@ -60,18 +63,19 @@ function wrapLines(font: PDFFont, text: string, size: number, maxWidth: number) 
 
 function htmlToBlocks(html: string): Block[] {
   const safe = removeDangerousHtmlBlocks(html);
-  const marked = safe
-    .replace(
-      /<div[^>]*data-sign="(client|consultant)"[^>]*>[\s\S]*?<\/div>/gi,
-      (_, role: string) => `\n%%SIGN:${role}%%\n`,
-    )
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<h1[^>]*>/gi, "\n# ")
-    .replace(/<h2[^>]*>/gi, "\n## ")
-    .replace(/<h3[^>]*>/gi, "\n## ")
-    .replace(/<li[^>]*>/gi, "\n• ")
-    .replace(/<\/(p|h1|h2|h3|li|div|blockquote|ul|ol)>/gi, "\n")
-    .replace(/<[^>]+>/g, "");
+  const marked = stripRemainingHtmlTags(
+    safe
+      .replace(
+        /<div[^>]*data-sign="(client|consultant)"[^>]*>[\s\S]*?<\/div>/gi,
+        (_, role: string) => `\n%%SIGN:${role}%%\n`,
+      )
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<h1[^>]*>/gi, "\n# ")
+      .replace(/<h2[^>]*>/gi, "\n## ")
+      .replace(/<h3[^>]*>/gi, "\n## ")
+      .replace(/<li[^>]*>/gi, "\n• ")
+      .replace(/<\/(p|h1|h2|h3|li|div|blockquote|ul|ol)>/gi, "\n"),
+  );
   const blocks: Block[] = [];
   for (const raw of marked.split("\n")) {
     const line = decodeXmlEntities(raw).replace(/\s+/g, " ").trim();

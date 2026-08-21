@@ -4,6 +4,7 @@ import {
   removeDangerousHtmlBlocks,
   removeDangerousUrlSchemes,
   removeHtmlEventHandlers,
+  stripRemainingHtmlTags,
 } from "@/lib/html/sanitize";
 
 const ALLOWED_TAGS = new Set([
@@ -134,11 +135,12 @@ export function extractContractVariableKeys(html: string): string[] {
 }
 
 export function htmlToPlainText(html: string) {
-  const stripped = removeDangerousHtmlBlocks(html)
-    .replace(/<div[^>]*data-sign="[^"]+"[^>]*>[\s\S]*?<\/div>/gi, "\n")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|h1|h2|h3|li|div|blockquote)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
+  const stripped = stripRemainingHtmlTags(
+    removeDangerousHtmlBlocks(html)
+      .replace(/<div[^>]*data-sign="[^"]+"[^>]*>[\s\S]*?<\/div>/gi, "\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(p|h1|h2|h3|li|div|blockquote)>/gi, "\n"),
+  )
     .replace(/\n{3,}/g, "\n\n")
     .trim();
   return decodeXmlEntities(stripped);
