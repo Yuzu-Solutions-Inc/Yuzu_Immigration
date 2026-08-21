@@ -60,6 +60,9 @@
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
   --color-info-text: var(--info-text);
+  --color-blocked: var(--blocked);
+  --color-blocked-bg: var(--blocked-bg);
+  --color-blocked-text: var(--blocked-text);
   --color-surface: var(--surface);
   --color-canvas: var(--canvas);
   --color-graphite-50: var(--graphite-50);
@@ -255,6 +258,26 @@
 
   .bg-info-bg {
     background-color: var(--info-bg);
+  }
+
+  .text-blocked {
+    color: var(--blocked-text);
+  }
+
+  .text-blocked-text {
+    color: var(--blocked-text);
+  }
+
+  .bg-blocked {
+    background-color: var(--blocked);
+  }
+
+  .bg-blocked-bg {
+    background-color: var(--blocked-bg);
+  }
+
+  .border-blocked {
+    border-color: var(--blocked);
   }
 
   .animate-submit-attention {

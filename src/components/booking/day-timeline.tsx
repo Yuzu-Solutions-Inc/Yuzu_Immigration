@@ -255,7 +255,7 @@ export function DayTimeline({
           {t("legendBookings")}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm bg-warning" />
+          <span className="size-2.5 rounded-sm bg-blocked" />
           {t("legendBlocked")}
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -431,7 +431,7 @@ export function DayTimeline({
                           : `${when} · ${label}`
                       }
                       className={cn(
-                        "group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg/90 px-1.5 text-left text-[11px] leading-tight text-warning-text hover:bg-amber-100 disabled:hover:bg-warning-bg/90",
+                        "group absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-graphite-200 bg-blocked-bg/90 px-1.5 text-left text-[11px] leading-tight text-blocked-text hover:bg-graphite-200 disabled:hover:bg-blocked-bg/90",
                         density === "xs" || density === "sm"
                           ? "flex items-center py-0"
                           : "py-0.5",
@@ -463,7 +463,7 @@ export function DayTimeline({
                           ) : density === "sm" ? (
                             <span className="block truncate font-medium">
                               <span className="tabular-nums">{when}</span>
-                              <span className="text-warning-text/70"> · </span>
+                              <span className="text-blocked-text/70"> · </span>
                               {label}
                             </span>
                           ) : (
@@ -471,7 +471,7 @@ export function DayTimeline({
                               <span className="block truncate font-medium">
                                 {label}
                               </span>
-                              <span className="block truncate text-[10px] tabular-nums text-warning-text/80">
+                              <span className="block truncate text-[10px] tabular-nums text-blocked-text/80">
                                 {when}
                               </span>
                             </>
@@ -480,7 +480,7 @@ export function DayTimeline({
                         {canManage && density !== "xs" ? (
                           <Trash2
                             aria-hidden
-                            className="size-3 shrink-0 text-warning-text opacity-0 transition-opacity group-hover:opacity-100"
+                            className="size-3 shrink-0 text-blocked-text opacity-0 transition-opacity group-hover:opacity-100"
                           />
                         ) : null}
                       </span>
@@ -573,7 +573,7 @@ export function DayTimeline({
 
             {live ? (
               <div
-                className="pointer-events-none absolute inset-x-1 z-[4] flex items-center rounded-md border-2 border-dashed border-warning bg-warning/25 px-1.5 py-0 text-[11px] font-medium text-warning-text"
+                className="pointer-events-none absolute inset-x-1 z-[4] flex items-center rounded-md border-2 border-dashed border-blocked bg-blocked/20 px-1.5 py-0 text-[11px] font-medium text-blocked-text"
                 style={styleForRange(live.start, live.end, gridHeight)}
               >
                 <span className="truncate tabular-nums">

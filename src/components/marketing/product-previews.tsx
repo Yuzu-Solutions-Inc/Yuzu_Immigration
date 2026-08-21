@@ -687,13 +687,13 @@ export async function AppCalendarPreview({
                           : "border-transparent",
                         isBlocked &&
                           !selected &&
-                          "border-amber-100 bg-warning-bg text-warning-text",
-                        isBlocked && selected && "border-warning bg-warning-bg",
+                          "border-graphite-200 bg-blocked-bg text-blocked-text",
+                        isBlocked && selected && "border-blocked bg-blocked-bg",
                       )}
                     >
                       {isBlocked ? (
                         <Ban
-                          className="absolute top-1 right-1 size-2.5 text-warning"
+                          className="absolute top-1 right-1 size-2.5 text-blocked"
                           aria-hidden
                         />
                       ) : null}
@@ -709,7 +709,7 @@ export async function AppCalendarPreview({
                             <span className="h-1 w-1 rounded-full bg-success" />
                           ) : null}
                           {isBlocked && count === 0 ? (
-                            <span className="h-1 w-1 rounded-full bg-warning" />
+                            <span className="h-1 w-1 rounded-full bg-blocked" />
                           ) : null}
                         </span>
                       ) : null}
@@ -727,7 +727,7 @@ export async function AppCalendarPreview({
                   {tCal("legendOpen")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Ban className="size-3 text-warning" aria-hidden />
+                  <Ban className="size-3 text-blocked" aria-hidden />
                   {tCal("legendBlocked")}
                 </span>
               </div>
@@ -764,7 +764,7 @@ export async function AppCalendarPreview({
                   {tCal("legendBookings")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-sm bg-warning" />
+                  <span className="size-2.5 rounded-sm bg-blocked" />
                   {tCal("legendBlocked")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
@@ -838,11 +838,11 @@ export async function AppCalendarPreview({
                       </p>
                     </div>
                     <div
-                      className="absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-amber-100 bg-warning-bg/90 px-1.5 py-0.5 text-left text-[11px] leading-tight text-warning-text"
+                      className="absolute inset-x-1 z-[2] overflow-hidden rounded-md border border-graphite-200 bg-blocked-bg/90 px-1.5 py-0.5 text-left text-[11px] leading-tight text-blocked-text"
                       style={previewRangeStyle(12, 13)}
                     >
                       <p className="truncate font-medium">{tCal("legendBlocked")}</p>
-                      <p className="truncate text-[10px] tabular-nums text-warning-text/80">
+                      <p className="truncate text-[10px] tabular-nums text-blocked-text/80">
                         {previewHourLabel(12, locale)}–{previewHourLabel(13, locale)}
                       </p>
                     </div>

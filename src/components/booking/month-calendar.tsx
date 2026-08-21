@@ -164,15 +164,15 @@ export function MonthCalendar({
                   ? "border-action bg-action/5 text-brand"
                   : "border-transparent hover:border-border hover:bg-muted/60",
                 isToday && !selected && "border-action/40",
-                isBlocked && !selected && "border-amber-100 bg-warning-bg text-warning-text hover:border-amber-300 hover:bg-warning-bg",
-                isBlocked && selected && "border-warning bg-warning-bg",
-                isBlocked && !cell.inMonth && "bg-warning-bg/50",
+                isBlocked && !selected && "border-graphite-200 bg-blocked-bg text-blocked-text hover:border-graphite-200 hover:bg-graphite-200",
+                isBlocked && selected && "border-blocked bg-blocked-bg",
+                isBlocked && !cell.inMonth && "bg-blocked-bg/50",
                 disabled && "cursor-not-allowed opacity-40 hover:border-transparent hover:bg-transparent",
               )}
             >
               {isBlocked ? (
                 <Ban
-                  className="absolute top-1 right-1 size-2.5 text-warning sm:top-1.5 sm:right-1.5 sm:size-3"
+                  className="absolute top-1 right-1 size-2.5 text-blocked sm:top-1.5 sm:right-1.5 sm:size-3"
                   aria-hidden
                 />
               ) : null}
@@ -204,7 +204,7 @@ export function MonthCalendar({
                     />
                   ) : null}
                   {isBlocked && count === 0 && !hasOpenHours ? (
-                    <span className="h-1 w-1 rounded-full bg-warning sm:h-1.5 sm:w-1.5" />
+                    <span className="h-1 w-1 rounded-full bg-blocked sm:h-1.5 sm:w-1.5" />
                   ) : null}
                 </span>
               ) : null}
@@ -226,7 +226,7 @@ export function MonthCalendar({
           ) : null}
           {blockedDays ? (
             <span className="inline-flex items-center gap-1.5">
-              <Ban className="size-3 text-warning" aria-hidden />
+              <Ban className="size-3 text-blocked" aria-hidden />
               {t("legendBlocked")}
             </span>
           ) : null}

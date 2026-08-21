@@ -54,6 +54,9 @@
   --info: #3b82f6;
   --info-bg: #eff6ff;
   --info-text: #1d4ed8;
+  --blocked: var(--graphite-400);
+  --blocked-bg: var(--graphite-100);
+  --blocked-text: var(--graphite-700);
 
   /* ── App semantic aliases ── */
   --brand: var(--graphite-900);
