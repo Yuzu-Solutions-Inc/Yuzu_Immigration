@@ -22,6 +22,7 @@ export default async function InboxPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("inboundMail");
+  const tNav = await getTranslations("nav");
   const membership = await getPrimaryMembership();
   const orgId = await requireOrganizationId();
   const [messages, people, projects, org] = await Promise.all([
@@ -43,10 +44,8 @@ export default async function InboxPage({
   return (
     <div className={listPageClassName}>
       <div className={listPageHeaderClassName}>
-        <div>
-          <h1 className={listPageTitleClassName}>{t("title")}</h1>
-          <p className={listPageSubtitleClassName}>{t("inboxHelp")}</p>
-        </div>
+        <h1 className={listPageTitleClassName}>{tNav("inbox")}</h1>
+        <p className={listPageSubtitleClassName}>{t("inboxHelp")}</p>
       </div>
       <InboundMailThread
         locale={locale}
@@ -56,6 +55,7 @@ export default async function InboxPage({
         )}
         canWrite={canCreateRecords(membership?.role)}
         showReply={false}
+        showHeading={false}
         emptyLabel={t("emptyInbox")}
         assignPeople={people.map((person) => ({
           id: person.id,

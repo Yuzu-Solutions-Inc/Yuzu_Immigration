@@ -162,6 +162,7 @@ export function InboundMailThread({
   documentRequests,
   emptyLabel,
   help,
+  showHeading = true,
 }: {
   locale: string;
   messages: InboundMessageView[];
@@ -173,6 +174,7 @@ export function InboundMailThread({
   documentRequests?: { id: string; label: string }[];
   emptyLabel?: string;
   help?: string;
+  showHeading?: boolean;
 }) {
   const t = useTranslations("inboundMail");
   const dateLocale =
@@ -190,19 +192,29 @@ export function InboundMailThread({
     .reverse()
     .find((row) => row.direction === "inbound");
 
+  const addressHint = inboundAddress ? (
+    <p className={showHeading ? "mt-1 font-mono text-sm text-brand" : "font-mono text-sm text-brand"}>
+      {inboundAddress}
+    </p>
+  ) : inboundAddress === null ? (
+    <FieldHint>{t("notConfigured")}</FieldHint>
+  ) : null;
+
   return (
     <section className="space-y-3">
-      <div>
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("title")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{help ?? t("help")}</p>
-        {inboundAddress ? (
-          <p className="mt-1 font-mono text-sm text-brand">{inboundAddress}</p>
-        ) : inboundAddress === null ? (
-          <FieldHint>{t("notConfigured")}</FieldHint>
-        ) : null}
-      </div>
+      {showHeading || addressHint ? (
+        <div>
+          {showHeading ? (
+            <>
+              <h2 className="font-heading text-lg font-semibold text-brand">
+                {t("title")}
+              </h2>
+              <p className="text-sm text-muted-foreground">{help ?? t("help")}</p>
+            </>
+          ) : null}
+          {addressHint}
+        </div>
+      ) : null}
 
       {messages.length === 0 ? (
         <SurfaceCard>
