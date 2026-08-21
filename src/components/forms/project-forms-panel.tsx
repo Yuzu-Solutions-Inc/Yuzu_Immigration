@@ -226,26 +226,24 @@ export function ProjectFormsPanel({
                       >
                         <Eye className="size-4" />
                       </Button>
-                      {ready ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-xs"
-                          disabled={genPending}
-                          data-downloading={downloading ? "" : undefined}
-                          onClick={() => handleDownload(form.id)}
-                          aria-label={
-                            downloading ? t("downloading") : t("download")
-                          }
-                          title={t("download")}
-                        >
-                          {downloading ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Download className="size-4" />
-                          )}
-                        </Button>
-                      ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        disabled={genPending}
+                        data-downloading={downloading ? "" : undefined}
+                        onClick={() => handleDownload(form.id)}
+                        aria-label={
+                          downloading ? t("downloading") : t("download")
+                        }
+                        title={t("download")}
+                      >
+                        {downloading ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Download className="size-4" />
+                        )}
+                      </Button>
                       {!modificationBlocked ? (
                       <form
                         action={removeAction}

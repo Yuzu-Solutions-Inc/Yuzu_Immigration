@@ -286,7 +286,7 @@ export async function fillProjectForms(input: {
   answers?: Record<string, unknown>;
   /** Preferred: one entry per project_forms row with person-specific answers. */
   instances?: FillFormInstance[];
-  /** Fill whatever answers exist; skip filing-quality gates and fall back to the blank PDF. */
+  /** Fill whatever answers exist; skip filing-quality gates and fall back to the blank PDF. Used for on-screen preview and staff downloads of incomplete forms. */
   preview?: boolean;
 }): Promise<FillResult> {
   const instances: FillFormInstance[] =
@@ -352,7 +352,7 @@ export async function fillProjectForms(input: {
             crypto,
           );
         } else if (preview) {
-          warnings.push(`IMM 1294 preview is incomplete: ${validated.error}`);
+          warnings.push(`IMM 1294 is incomplete: ${validated.error}`);
           bytes = await fillImm1294Pdf(
             blank,
             coerceAnswersForPreview(payload),
@@ -426,7 +426,7 @@ export async function fillProjectForms(input: {
 
   if (out.length === 0) {
     throw new Error(
-      warnings[0] || "Could not generate any forms. Complete the questionnaire.",
+      warnings[0] || "Could not generate any forms.",
     );
   }
 

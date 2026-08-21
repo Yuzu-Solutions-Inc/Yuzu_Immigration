@@ -360,7 +360,7 @@ export async function generateProjectPdfsAction(
   const supabase = await createClient();
 
   try {
-    const result = await fillProjectForms({ instances });
+    const result = await fillProjectForms({ instances, preview: true });
 
     const generatedIds = result.forms
       .map((f) => f.formId)
