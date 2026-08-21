@@ -123,11 +123,11 @@ export function TodayTimeline({
                 />
               </span>
               <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
-                <Link href={item.href} className="min-w-0 flex-1 rounded-md hover:bg-muted/40">
+                <Link href={item.href} className="min-w-0 flex-1 rounded-md px-1 hover:bg-muted">
                   <p className="truncate text-sm font-semibold text-brand">
                     {item.label}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  <p className="truncate text-xs text-muted-foreground">
                     {detail}
                   </p>
                 </Link>

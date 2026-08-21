@@ -55,7 +55,13 @@ function appointmentDurationMinutes(item: DashboardAppointment) {
   );
 }
 
-function KpiCard({
+const snapshotTileClass = cn(
+  "flex min-w-0 flex-col gap-1 rounded-xl px-3 py-2.5",
+  "bg-muted/60 transition-colors",
+  "hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+);
+
+function SnapshotMetric({
   href,
   label,
   value,
@@ -71,33 +77,34 @@ function KpiCard({
   className?: string;
 }) {
   const quiet = value === 0 || value === "0";
+  const callout = emphasize && !quiet;
 
   return (
     <Link
       href={href}
       className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-xl border border-border bg-surface p-3 shadow-elevated",
-        "transition-[border-color,box-shadow] hover:border-action/25 hover:shadow-md",
-        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+        snapshotTileClass,
+        callout && "bg-action/10 hover:bg-action/15",
         className,
       )}
     >
       <p
         className={cn(
-          "font-heading text-xl leading-none font-semibold tracking-tight tabular-nums",
-          quiet
-            ? "text-muted-foreground"
-            : emphasize
-              ? "text-action"
-              : "text-brand",
+          "font-heading text-2xl leading-none font-semibold tracking-tight tabular-nums",
+          quiet ? "text-muted-foreground" : callout ? "text-action" : "text-brand",
         )}
       >
         {value}
       </p>
-      <p className="truncate text-[13px] font-medium text-brand">{label}</p>
+      <p className="truncate text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+        {label}
+      </p>
       {hint ? (
         <p
-          className="truncate text-[11px] leading-snug text-muted-foreground"
+          className={cn(
+            "truncate text-xs font-medium tabular-nums",
+            callout ? "text-action" : "text-brand",
+          )}
           title={hint}
         >
           {hint}
@@ -138,6 +145,8 @@ export async function HomeDashboardView({
   );
   const laterByDay = groupByDay(laterAppointments, booking.timezone);
   const joinLabel = t("appointments.joinNow");
+  const caseloadTotal =
+    kpis.openProjects + kpis.readyToSubmit + kpis.submittedProjects;
 
   const unpaidHint =
     kpis.pendingAmountCents > 0
@@ -146,31 +155,17 @@ export async function HomeDashboardView({
           locale,
           kpis.pendingCurrency,
         )
-      : kpis.pendingPayments > 0
-        ? t("tiles.unpaidCount", { count: kpis.pendingPayments })
-        : t("tiles.unpaidHint");
+      : undefined;
 
   return (
-    <div className="flex min-w-0 flex-col gap-3 lg:h-[calc(100dvh-5rem)] lg:overflow-hidden">
-      <div className="flex shrink-0 flex-wrap items-end justify-between gap-2">
-        <div className="min-w-0 space-y-0.5">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-            <h1 className="font-heading text-xl font-semibold text-brand sm:text-2xl lg:text-xl">
-              {title}
-            </h1>
-            <p className="hidden text-xs text-muted-foreground sm:block">
-              {formatDateInZone(now, booking.timezone, locale)}
-            </p>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {dashboard.hasCaseload
-              ? dashboard.attention.length > 0
-                ? t("actionSummary", {
-                    count: dashboard.attention.length,
-                    bookings: booking.todayCount,
-                  })
-                : t("actionSummaryClear", { bookings: booking.todayCount })
-              : t("dashboardSubtitle")}
+    <div className="flex min-w-0 flex-col gap-4 lg:h-[calc(100dvh-5rem)] lg:overflow-hidden">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="font-heading text-lg font-semibold tracking-tight text-brand">
+            {title}
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            {formatDateInZone(now, booking.timezone, locale)}
           </p>
         </div>
         {canCreate ? <NewProjectButton label={t("newProject")} /> : null}
@@ -186,19 +181,28 @@ export async function HomeDashboardView({
           <div
             role="navigation"
             aria-label={t("tiles.aria")}
-            className="grid shrink-0 grid-cols-2 gap-2.5 lg:grid-cols-12"
+            className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-12"
           >
             <Link
               href="/projects"
               className={cn(
-                "col-span-2 flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated lg:col-span-6",
-                "transition-[border-color,box-shadow] hover:border-action/25 hover:shadow-md",
-                "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+                snapshotTileClass,
+                "col-span-2 gap-2 lg:col-span-6",
               )}
             >
-              <p className="font-heading text-sm font-semibold text-brand">
-                {t("caseload.title")}
-              </p>
+              <div className="flex items-baseline justify-between gap-2">
+                <p
+                  className={cn(
+                    "font-heading text-2xl leading-none font-semibold tracking-tight tabular-nums",
+                    caseloadTotal === 0 ? "text-muted-foreground" : "text-brand",
+                  )}
+                >
+                  {caseloadTotal}
+                </p>
+                <p className="truncate text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                  {t("caseload.title")}
+                </p>
+              </div>
               <CaseloadBar
                 open={kpis.openProjects}
                 ready={kpis.readyToSubmit}
@@ -211,15 +215,14 @@ export async function HomeDashboardView({
                 }}
               />
             </Link>
-            <KpiCard
+            <SnapshotMetric
               href="/projects"
               className="lg:col-span-3"
               label={t("tiles.docsToReview")}
               value={kpis.docsToReview}
-              hint={t("tiles.docsToReviewHint")}
               emphasize={kpis.docsToReview > 0}
             />
-            <KpiCard
+            <SnapshotMetric
               href="/bookings?payment=pending"
               className="lg:col-span-3"
               label={t("tiles.unpaid")}
@@ -230,9 +233,9 @@ export async function HomeDashboardView({
           </div>
 
           {booking.needsSetup ? (
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-muted-foreground">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border-l-2 border-l-action bg-action/5 px-3 py-2 text-sm text-brand">
               <span className="inline-flex items-center gap-2">
-                <Briefcase className="size-4 shrink-0" aria-hidden />
+                <Briefcase className="size-4 shrink-0 text-action" aria-hidden />
                 {t("bookingSetup.banner")}
               </span>
               <span className="flex flex-wrap gap-3">
@@ -252,26 +255,30 @@ export async function HomeDashboardView({
             </div>
           ) : null}
 
-          <div className="grid min-h-0 min-w-0 items-stretch gap-2.5 lg:grid-cols-12 lg:flex-1 lg:overflow-hidden">
-            <SurfaceCard className="flex max-h-[min(24rem,55dvh)] min-h-0 min-w-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-5 lg:max-h-none">
+          <div className="grid min-h-0 min-w-0 items-stretch gap-4 lg:grid-cols-12 lg:flex-1 lg:overflow-hidden">
+            <SurfaceCard className="flex max-h-[min(24rem,55dvh)] min-h-0 min-w-0 flex-col overflow-hidden p-4 sm:p-5 lg:col-span-5 lg:max-h-none">
               <AttentionList rows={dashboard.attention} locale={locale} />
             </SurfaceCard>
 
-            <SurfaceCard className="flex max-h-[min(32rem,70dvh)] min-h-0 min-w-0 flex-col overflow-hidden p-3 sm:p-4 lg:col-span-7 lg:max-h-none">
-              <div className="flex shrink-0 items-baseline justify-between gap-2">
-                <div className="min-w-0">
-                  <h2 className="font-heading text-sm font-semibold text-brand">
-                    {t("appointments.title")}
+            <SurfaceCard className="flex max-h-[min(32rem,70dvh)] min-h-0 min-w-0 flex-col overflow-hidden p-4 sm:p-5 lg:col-span-7 lg:max-h-none">
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <h2 className="font-heading text-base font-semibold text-brand">
+                    {t("timing.today")}
                   </h2>
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    {t("appointments.todayCount", {
+                  <span
+                    className={cn(
+                      "tabular-nums text-sm font-semibold",
+                      booking.todayCount > 0
+                        ? "text-action"
+                        : "text-muted-foreground",
+                    )}
+                    aria-label={t("appointments.todayCount", {
                       count: booking.todayCount,
                     })}
-                    {" · "}
-                    {t("appointments.weekCount", {
-                      count: booking.next7Count,
-                    })}
-                  </p>
+                  >
+                    {booking.todayCount}
+                  </span>
                 </div>
                 <Link
                   href="/calendar"
@@ -283,15 +290,12 @@ export async function HomeDashboardView({
               <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
                 {todayAppointments.length === 0 &&
                 laterAppointments.length === 0 ? (
-                  <p className="pt-2.5 text-sm text-muted-foreground">
+                  <p className="pt-3 text-sm text-muted-foreground">
                     {t("appointments.empty")}
                   </p>
                 ) : (
-                  <div className="flex min-w-0 flex-col gap-5 pt-3">
+                  <div className="flex min-w-0 flex-col gap-6 pt-3">
                     <section className="min-w-0">
-                      <h3 className="pb-1.5 text-xs font-semibold text-brand">
-                        {t("timing.today")}
-                      </h3>
                       <TodayTimeline
                         nowMinutes={nowMinutes}
                         nowLabel={t("appointments.now")}
@@ -338,16 +342,21 @@ export async function HomeDashboardView({
                     </section>
                     {laterByDay.length > 0 ? (
                       <section className="min-w-0">
-                        <h3 className="border-b border-border/70 pb-1 text-[11px] font-medium text-muted-foreground">
-                          {t("appointments.laterHeading")}
+                        <h3 className="flex items-baseline justify-between gap-2 border-b border-border pb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                          <span>{t("appointments.laterHeading")}</span>
+                          <span className="tabular-nums font-medium normal-case">
+                            {t("appointments.weekCount", {
+                              count: booking.next7Count,
+                            })}
+                          </span>
                         </h3>
                         <ul className="min-w-0">
                           {laterByDay.map((group) => (
-                            <li key={group.day} className="min-w-0 pt-2.5">
-                              <p className="pb-1 text-xs font-medium text-muted-foreground">
+                            <li key={group.day} className="min-w-0 pt-3">
+                              <p className="pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                                 {formatWeekdayDate(group.day, locale)}
                               </p>
-                              <ul className="min-w-0">
+                              <ul className="min-w-0 divide-y divide-border/70">
                                 {group.items.map((item) => {
                                   const joinUrl = meetingJoinUrl({
                                     url: item.meetJoinUrl,
@@ -357,23 +366,23 @@ export async function HomeDashboardView({
                                   });
                                   return (
                                     <li key={item.id} className="min-w-0">
-                                      <div className="flex min-w-0 items-start gap-3 py-1.5">
-                                        <p className="w-[5.25rem] shrink-0 pt-0.5 text-right text-[13px] font-semibold text-brand tabular-nums">
+                                      <div className="flex min-w-0 items-center gap-3 py-2">
+                                        <p className="w-[4.5rem] shrink-0 text-right text-xs font-medium text-muted-foreground tabular-nums">
                                           {formatTimeInZone(
                                             new Date(item.startsAt),
                                             booking.timezone,
                                             locale,
                                           )}
                                         </p>
-                                        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                                        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
                                           <Link
                                             href="/bookings"
-                                            className="min-w-0 flex-1 rounded-md hover:bg-muted/40"
+                                            className="min-w-0 flex-1 rounded-md px-1 hover:bg-muted"
                                           >
-                                            <p className="truncate text-sm font-semibold text-brand">
+                                            <p className="truncate text-sm font-medium text-brand">
                                               {item.guestName}
                                             </p>
-                                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                            <p className="truncate text-xs text-muted-foreground">
                                               {item.serviceTitle ??
                                                 t("appointments.unknownService")}
                                               {" · "}

@@ -22,6 +22,15 @@ const KIND_DOT: Record<AttentionKind, string> = {
   due_soon: "bg-muted-foreground",
 };
 
+const KIND_HEADER: Record<AttentionKind, string> = {
+  overdue: "text-destructive",
+  docs_review: "text-brand",
+  questionnaire: "text-brand",
+  unpaid: "text-brand",
+  stuck: "text-muted-foreground",
+  due_soon: "text-muted-foreground",
+};
+
 const FILTER_KINDS: AttentionKind[] = [
   "overdue",
   "docs_review",
@@ -148,16 +157,29 @@ export function AttentionList({
   }, [filter, visible]);
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5">
-      <div className="flex shrink-0 items-baseline justify-between gap-2">
-        <h2 className="font-heading text-sm font-semibold text-brand">
-          {t("attention.title")}
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <div className="flex min-w-0 items-baseline gap-2">
+          <h2 className="font-heading text-base font-semibold text-brand">
+            {t("attention.title")}
+          </h2>
           {rows.length > 0 ? (
-            <span className="ml-1.5 text-xs font-medium text-muted-foreground tabular-nums">
+            <span
+              className={cn(
+                "tabular-nums text-sm font-semibold",
+                rows.some((row) => row.alerts[0]?.kind === "overdue")
+                  ? "text-destructive"
+                  : "text-action",
+              )}
+            >
               {rows.length}
             </span>
-          ) : null}
-        </h2>
+          ) : (
+            <span className="tabular-nums text-sm font-semibold text-muted-foreground">
+              0
+            </span>
+          )}
+        </div>
         <Link
           href="/projects"
           className="shrink-0 text-xs font-medium text-action hover:underline"
@@ -169,7 +191,7 @@ export function AttentionList({
         <div
           role="toolbar"
           aria-label={t("attention.filter")}
-          className="flex shrink-0 flex-wrap gap-1"
+          className="-mx-1 flex shrink-0 gap-0.5 overflow-x-auto px-1"
         >
           <FilterChip
             active={filter === "all"}
@@ -203,10 +225,18 @@ export function AttentionList({
               return (
                 <section
                   key={group.kind}
-                  className={cn("min-w-0", index > 0 && "mt-3")}
+                  className={cn("min-w-0", index > 0 && "mt-4")}
                 >
                   {showHeader ? (
-                    <h3 className="sticky top-0 z-10 border-b border-border/70 bg-surface pb-1 text-[11px] font-medium text-muted-foreground">
+                    <h3
+                      className={cn(
+                        "sticky top-0 z-10 border-b bg-surface pb-1.5 text-[11px] font-semibold tracking-wide uppercase",
+                        KIND_HEADER[group.kind],
+                        group.kind === "overdue"
+                          ? "border-destructive/20"
+                          : "border-border",
+                      )}
+                    >
                       <span
                         className={cn(
                           "mr-1.5 inline-block size-1.5 rounded-full align-middle",
@@ -217,23 +247,24 @@ export function AttentionList({
                       {t(`attention.kinds.${group.kind}`)}
                     </h3>
                   ) : null}
-                  <ul className="min-w-0">
+                  <ul className="min-w-0 divide-y divide-border/70">
                     {group.rows.map((row) => {
                       const meta = rowMeta(row, locale, t);
                       const primary = row.alerts[0]?.kind ?? group.kind;
                       const detail = secondaryDetail(row.alerts, primary, t);
+                      const urgent = primary === "overdue";
                       return (
                         <li key={row.id} className="min-w-0">
                           <Link
                             href={row.href}
-                            className="flex min-w-0 items-start justify-between gap-3 py-2 transition-colors hover:bg-muted/40"
+                            className="-mx-1 flex min-w-0 items-center justify-between gap-3 rounded-lg px-1 py-2.5 transition-colors hover:bg-muted"
                           >
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-sm font-semibold text-brand">
                                 {row.title}
                               </p>
                               {detail ? (
-                                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                <p className="truncate text-xs text-muted-foreground">
                                   {detail}
                                 </p>
                               ) : null}
@@ -241,8 +272,10 @@ export function AttentionList({
                             {meta ? (
                               <p
                                 className={cn(
-                                  "shrink-0 pt-0.5 text-xs tabular-nums",
-                                  meta.className,
+                                  "shrink-0 text-xs font-semibold tabular-nums",
+                                  urgent
+                                    ? "text-destructive"
+                                    : meta.className,
                                 )}
                               >
                                 {meta.text}
@@ -284,16 +317,25 @@ function FilterChip({
       className={cn(
         buttonVariants({ variant: "ghost", size: "xs" }),
         "max-w-full gap-1",
+        "shrink-0",
         active
-          ? "bg-action/10 text-action hover:bg-action/15 hover:text-action"
+          ? "bg-brand text-surface hover:bg-brand hover:text-surface"
           : "text-muted-foreground hover:text-foreground",
       )}
     >
       {dotClass ? (
-        <span className={cn("size-1.5 rounded-full", dotClass)} aria-hidden />
+        <span
+          className={cn(
+            "size-1.5 rounded-full",
+            active ? "bg-surface/80" : dotClass,
+          )}
+          aria-hidden
+        />
       ) : null}
       <span>{label}</span>
-      <span className="tabular-nums opacity-70">{count}</span>
+      <span className={cn("tabular-nums", active ? "opacity-80" : "opacity-60")}>
+        {count}
+      </span>
     </button>
   );
 }

@@ -198,29 +198,39 @@ function PreviewKpi({
 }: {
   label: string;
   value: number;
-  hint: string;
+  hint?: string;
   emphasize?: boolean;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-xl border border-border bg-surface p-3 shadow-elevated",
+        "flex min-w-0 flex-col gap-1 rounded-xl px-3 py-2.5",
+        emphasize ? "bg-action/10" : "bg-muted/60",
         className,
       )}
     >
       <p
         className={cn(
-          "font-heading text-xl leading-none font-semibold tracking-tight tabular-nums",
+          "font-heading text-2xl leading-none font-semibold tracking-tight tabular-nums",
           emphasize ? "text-action" : "text-brand",
         )}
       >
         {value}
       </p>
-      <p className="truncate text-[13px] font-medium text-brand">{label}</p>
-      <p className="truncate text-[11px] leading-snug text-muted-foreground">
-        {hint}
+      <p className="truncate text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+        {label}
       </p>
+      {hint ? (
+        <p
+          className={cn(
+            "truncate text-xs font-medium tabular-nums",
+            emphasize ? "text-action" : "text-brand",
+          )}
+        >
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -237,14 +247,14 @@ function AttentionRow({
   metaClass: string;
 }) {
   return (
-    <div className="flex min-w-0 items-start justify-between gap-3 py-2">
+    <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border/70 py-2.5 last:border-b-0">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-brand">{title}</p>
         {detail ? (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{detail}</p>
+          <p className="truncate text-xs text-muted-foreground">{detail}</p>
         ) : null}
       </div>
-      <p className={cn("shrink-0 pt-0.5 text-xs tabular-nums", metaClass)}>
+      <p className={cn("shrink-0 text-xs font-semibold tabular-nums", metaClass)}>
         {meta}
       </p>
     </div>
@@ -314,29 +324,29 @@ export async function AppHomePreview({
           crumb={tTop("crumbHome")}
           searchPlaceholder={tTop("searchPlaceholder")}
         />
-        <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden px-5 py-4">
-          <div className="flex shrink-0 items-end justify-between gap-2">
-            <div className="min-w-0 space-y-0.5">
-              <div className="flex flex-wrap items-baseline gap-x-3">
-                <h1 className="font-heading text-xl font-semibold text-brand">
-                  {tApp("greetingAfternoon", { name: t("preview.userName") })}
-                </h1>
-                <p className="text-xs text-muted-foreground">{dateLabel}</p>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {tApp("actionSummary", { count: 4, bookings: 2 })}
-              </p>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-5 py-4">
+          <div className="flex shrink-0 items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="font-heading text-lg font-semibold tracking-tight text-brand">
+                {tApp("greetingAfternoon", { name: t("preview.userName") })}
+              </h1>
+              <p className="text-xs text-muted-foreground">{dateLabel}</p>
             </div>
             <span className="inline-flex h-9 items-center rounded-xl bg-action px-3 text-sm font-semibold text-action-foreground">
               {tApp("newProject")}
             </span>
           </div>
 
-          <div className="grid shrink-0 grid-cols-12 gap-2.5">
-            <div className="col-span-6 flex min-w-0 flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated">
-              <p className="font-heading text-sm font-semibold text-brand">
-                {tApp("caseload.title")}
-              </p>
+          <div className="grid shrink-0 grid-cols-12 gap-2">
+            <div className="col-span-6 flex min-w-0 flex-col gap-2 rounded-xl bg-muted/60 px-3 py-2.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="font-heading text-2xl leading-none font-semibold tracking-tight text-brand tabular-nums">
+                  15
+                </p>
+                <p className="truncate text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                  {tApp("caseload.title")}
+                </p>
+              </div>
               <CaseloadBar
                 open={8}
                 ready={3}
@@ -353,7 +363,6 @@ export async function AppHomePreview({
               className="col-span-3"
               label={tApp("tiles.docsToReview")}
               value={3}
-              hint={tApp("tiles.docsToReviewHint")}
               emphasize
             />
             <PreviewKpi
@@ -365,38 +374,40 @@ export async function AppHomePreview({
             />
           </div>
 
-          <div className="grid min-h-0 min-w-0 flex-1 grid-cols-12 gap-2.5">
-            <SurfaceCard className="col-span-5 flex min-h-0 min-w-0 flex-col gap-2.5 overflow-hidden p-4">
-              <div className="flex shrink-0 items-baseline justify-between gap-2">
-                <h2 className="font-heading text-sm font-semibold text-brand">
-                  {tApp("attention.title")}
-                  <span className="ml-1.5 text-xs font-medium text-muted-foreground tabular-nums">
+          <div className="grid min-h-0 min-w-0 flex-1 grid-cols-12 gap-4">
+            <SurfaceCard className="col-span-5 flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden p-5">
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <h2 className="font-heading text-base font-semibold text-brand">
+                    {tApp("attention.title")}
+                  </h2>
+                  <span className="tabular-nums text-sm font-semibold text-destructive">
                     4
                   </span>
-                </h2>
+                </div>
                 <span className="text-xs font-medium text-action">
                   {tApp("viewAllProjects")}
                 </span>
               </div>
-              <div className="flex shrink-0 flex-wrap gap-1">
-                <span className="inline-flex h-7 items-center gap-1 rounded-lg bg-action/10 px-2.5 text-xs font-semibold text-action">
+              <div className="flex shrink-0 gap-0.5">
+                <span className="inline-flex h-7 items-center gap-1 rounded-lg bg-brand px-2.5 text-xs font-semibold text-surface">
                   {tApp("attention.filterAll")}
-                  <span className="tabular-nums opacity-70">4</span>
+                  <span className="tabular-nums opacity-80">4</span>
                 </span>
                 <span className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-muted-foreground">
                   <span className="size-1.5 rounded-full bg-destructive" />
                   {tApp("attention.kinds.overdue")}
-                  <span className="tabular-nums opacity-70">1</span>
+                  <span className="tabular-nums opacity-60">1</span>
                 </span>
                 <span className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-muted-foreground">
                   <span className="size-1.5 rounded-full bg-action" />
                   {tApp("attention.kinds.docs_review")}
-                  <span className="tabular-nums opacity-70">2</span>
+                  <span className="tabular-nums opacity-60">2</span>
                 </span>
               </div>
               <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
                 <section>
-                  <h3 className="border-b border-border/70 pb-1 text-[11px] font-medium text-muted-foreground">
+                  <h3 className="border-b border-destructive/20 pb-1.5 text-[11px] font-semibold tracking-wide text-destructive uppercase">
                     <span className="mr-1.5 inline-block size-1.5 rounded-full bg-destructive align-middle" />
                     {tApp("attention.kinds.overdue")}
                   </h3>
@@ -407,8 +418,8 @@ export async function AppHomePreview({
                     metaClass="text-destructive"
                   />
                 </section>
-                <section className="mt-3">
-                  <h3 className="border-b border-border/70 pb-1 text-[11px] font-medium text-muted-foreground">
+                <section className="mt-4">
+                  <h3 className="border-b border-border pb-1.5 text-[11px] font-semibold tracking-wide text-brand uppercase">
                     <span className="mr-1.5 inline-block size-1.5 rounded-full bg-action align-middle" />
                     {tApp("attention.kinds.docs_review")}
                   </h3>
@@ -419,8 +430,8 @@ export async function AppHomePreview({
                     metaClass="text-brand"
                   />
                 </section>
-                <section className="mt-3">
-                  <h3 className="border-b border-border/70 pb-1 text-[11px] font-medium text-muted-foreground">
+                <section className="mt-4">
+                  <h3 className="border-b border-border pb-1.5 text-[11px] font-semibold tracking-wide text-brand uppercase">
                     <span className="mr-1.5 inline-block size-1.5 rounded-full bg-action align-middle" />
                     {tApp("attention.kinds.questionnaire")}
                   </h3>
@@ -434,26 +445,21 @@ export async function AppHomePreview({
               </div>
             </SurfaceCard>
 
-            <SurfaceCard className="col-span-7 flex min-h-0 min-w-0 flex-col gap-2.5 overflow-hidden p-4">
-              <div className="flex shrink-0 items-baseline justify-between gap-2">
-                <div className="min-w-0">
-                  <h2 className="font-heading text-sm font-semibold text-brand">
-                    {tApp("appointments.title")}
+            <SurfaceCard className="col-span-7 flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden p-5">
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <h2 className="font-heading text-base font-semibold text-brand">
+                    {tApp("timing.today")}
                   </h2>
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    {tApp("appointments.todayCount", { count: 2 })}
-                    {" · "}
-                    {tApp("appointments.weekCount", { count: 6 })}
-                  </p>
+                  <span className="tabular-nums text-sm font-semibold text-action">
+                    2
+                  </span>
                 </div>
                 <span className="text-xs font-medium text-action">
                   {tApp("appointments.viewCalendar")}
                 </span>
               </div>
-              <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-                <h3 className="pb-1.5 text-xs font-semibold text-brand">
-                  {tApp("timing.today")}
-                </h3>
+              <div className="min-h-0 min-w-0 flex-1 overflow-hidden pt-1">
                 <div className="relative min-w-0">
                   <span className="absolute top-2 bottom-2 left-[calc(5.25rem+0.5rem+0.5rem)] w-px -translate-x-1/2 bg-border" />
                   <div className="flex min-w-0 gap-2 py-2">
@@ -473,7 +479,7 @@ export async function AppHomePreview({
                         <p className="truncate text-sm font-semibold text-brand">
                           {t("preview.guestPriya")}
                         </p>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        <p className="truncate text-xs text-muted-foreground">
                           {t("preview.serviceConsult")}
                           {" · "}
                           {tApp("appointments.durationMinutes", { minutes: 30 })}
@@ -509,7 +515,7 @@ export async function AppHomePreview({
                       <p className="truncate text-sm font-semibold text-brand">
                         {t("preview.guestLucas")}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      <p className="truncate text-xs text-muted-foreground">
                         {t("preview.servicePgwp")}
                         {" · "}
                         {tApp("appointments.durationMinutes", { minutes: 45 })}
@@ -519,21 +525,22 @@ export async function AppHomePreview({
                     </div>
                   </div>
                 </div>
-                <h3 className="mt-4 border-b border-border/70 pb-1 text-[11px] font-medium text-muted-foreground">
-                  {tApp("appointments.laterHeading")}
+                <h3 className="mt-6 flex items-baseline justify-between gap-2 border-b border-border pb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  <span>{tApp("appointments.laterHeading")}</span>
+                  <span className="tabular-nums font-medium normal-case">
+                    {tApp("appointments.weekCount", { count: 6 })}
+                  </span>
                 </h3>
-                <div className="flex min-w-0 items-start gap-3 pt-2.5">
-                  <p className="w-[5.25rem] shrink-0 text-right text-[13px] font-semibold text-brand tabular-nums">
+                <div className="flex min-w-0 items-center gap-3 py-2">
+                  <p className="w-[4.5rem] shrink-0 text-right text-xs font-medium text-muted-foreground tabular-nums">
                     09:00
                   </p>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-brand">
+                    <p className="truncate text-sm font-medium text-brand">
                       {t("preview.personAmina")}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    <p className="truncate text-xs text-muted-foreground">
                       {t("preview.serviceConsult")}
-                      {" · "}
-                      {tApp("appointments.durationMinutes", { minutes: 30 })}
                     </p>
                   </div>
                 </div>

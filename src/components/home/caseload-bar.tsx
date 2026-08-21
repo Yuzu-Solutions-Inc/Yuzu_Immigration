@@ -25,9 +25,9 @@ export function CaseloadBar({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2">
       <div
-        className="flex h-2 overflow-hidden rounded-full bg-muted"
+        className="flex h-2.5 overflow-hidden rounded-full bg-canvas"
         role="img"
         aria-label={segments
           .map((segment) => `${segment.label}: ${segment.count}`)
@@ -41,7 +41,7 @@ export function CaseloadBar({
           />
         ))}
       </div>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+      <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
         {segments.map((segment) => (
           <li key={segment.key} className="inline-flex items-center gap-1.5">
             <span
@@ -49,7 +49,7 @@ export function CaseloadBar({
               aria-hidden
             />
             <span>
-              <span className="tabular-nums font-medium text-brand">
+              <span className="tabular-nums font-semibold text-brand">
                 {segment.count}
               </span>{" "}
               {segment.label}
