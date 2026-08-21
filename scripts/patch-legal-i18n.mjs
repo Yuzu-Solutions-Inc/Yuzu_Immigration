@@ -32,7 +32,7 @@ const downloads = {
       },
       efvp: {
         label: "Firm privacy impact assessment (EFVP)",
-        hint: "Template for adopting %PRODUCT_NAME% and extra-Québec tools.",
+        hint: "Facts about the product for your Law 25 EFVP; your firm writes its own conclusions.",
       },
       privacyNotice: {
         label: "Privacy notice for your clients",
@@ -84,7 +84,7 @@ const downloads = {
       },
       efvp: {
         label: "EFVP du cabinet",
-        hint: "Modèle pour l’adoption de %PRODUCT_NAME% et des outils hors Québec.",
+        hint: "Faits sur le produit pour votre EFVP Loi 25 ; le cabinet rédige ses propres conclusions.",
       },
       privacyNotice: {
         label: "Avis de confidentialité pour vos clients",
@@ -136,7 +136,7 @@ const downloads = {
       },
       efvp: {
         label: "Evaluación de impacto de privacidad del despacho",
-        hint: "Plantilla para adoptar %PRODUCT_NAME% y herramientas fuera de Quebec.",
+        hint: "Hechos sobre el producto para su EFVP de la Ley 25; su despacho redacta sus propias conclusiones.",
       },
       privacyNotice: {
         label: "Aviso de privacidad para sus clientes",

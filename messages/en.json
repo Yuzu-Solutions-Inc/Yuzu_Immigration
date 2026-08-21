@@ -2200,7 +2200,7 @@
         },
         "efvp": {
           "label": "Firm privacy impact assessment (EFVP)",
-          "hint": "Template for adopting %PRODUCT_NAME% and extra-Québec tools."
+          "hint": "Facts about the product for your Law 25 EFVP; your firm writes its own conclusions."
         },
         "privacyNotice": {
           "label": "Privacy notice for your clients",

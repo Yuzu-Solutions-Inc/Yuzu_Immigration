@@ -2200,7 +2200,7 @@
         },
         "efvp": {
           "label": "EFVP du cabinet",
-          "hint": "Modèle pour l’adoption de %PRODUCT_NAME% et des outils hors Québec."
+          "hint": "Faits sur le produit pour votre EFVP Loi 25 ; le cabinet rédige ses propres conclusions."
         },
         "privacyNotice": {
           "label": "Avis de confidentialité pour vos clients",
