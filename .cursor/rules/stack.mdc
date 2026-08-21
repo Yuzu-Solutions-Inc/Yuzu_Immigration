@@ -22,7 +22,7 @@ Follow `.cursor/rules/design-system.mdc` for every UI/form/email change. Tokens 
 - `immigration_projects` — time-bound engagements (program_family + jurisdiction + status). `representative_user_id` points at the staff profile whose `rep_*` details fill IMM 5476.
 - `project_participants` — people linked to a project with roles; soft-unlink via `left_at`
 - `project_forms` — IRCC forms on a project to-do (seeded by program; IMM 5476 always included)
-- `project_form_answers` — ask-once questionnaire answers (jsonb) per project
+- `project_form_answers` — ask-once questionnaire answers (jsonb) per project. PDF fill, IRCC edition watch, and answer quality flags: `.cursor/rules/ircc-forms.mdc` (`src/lib/ircc/`).
 - `customer_portal_access` — portal access_code + access_token on a person; passwords in `private.customer_portal_secrets`
 - Portal login verification is **server-only** via `verify_customer_portal_login` (service_role). Never call from the browser.
 - Client form fill and document upload via `/[locale]/portal` after portal session.

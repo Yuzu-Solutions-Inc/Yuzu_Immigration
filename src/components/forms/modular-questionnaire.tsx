@@ -42,9 +42,31 @@ import {
   type RepeatableTable,
   type TableColumn,
 } from "@/lib/ircc/fields";
+import {
+  analyzeAnswerQuality,
+  qualityIssuesForSection,
+  type QualityIssue,
+} from "@/lib/ircc/data-quality";
 import { questionnaireFillPercent, questionnaireSectionComplete } from "@/lib/ircc/form-readiness";
 import { getRecycleMeta } from "@/lib/ircc/recycle-meta";
 import { cn } from "@/lib/utils";
+
+function qualityIssueText(
+  issue: QualityIssue,
+  t: ReturnType<typeof useTranslations>,
+): string {
+  const params: Record<string, string | number> = { ...issue.params };
+  if (typeof params.table === "string") {
+    params.table = t(`tables.${params.table}.title`);
+  }
+  if (typeof params.item === "string") {
+    params.item = t(`quality.items.${params.item}`);
+  }
+  if (typeof params.field === "string") {
+    params.field = t(`fields.${params.field}`);
+  }
+  return t(`quality.issues.${issue.id}`, params);
+}
 
 function personInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -426,6 +448,7 @@ function SectionProgressNav({
   sectionIndex,
   percent,
   sectionComplete,
+  sectionFlags,
   onSelect,
   disabled,
   t,
@@ -435,6 +458,7 @@ function SectionProgressNav({
   sectionIndex: number;
   percent: number;
   sectionComplete: boolean[];
+  sectionFlags: boolean[];
   onSelect: (index: number) => void;
   disabled?: boolean;
   t: ReturnType<typeof useTranslations>;
@@ -555,15 +579,18 @@ function SectionProgressNav({
           {sections.map((s, i) => {
             const current = i === sectionIndex;
             const complete = sectionComplete[i] ?? false;
+            const flagged = sectionFlags[i] ?? false;
             return (
               <li key={s} className="relative">
                 <button
                   type="button"
                   aria-current={current ? "step" : undefined}
                   aria-label={
-                    complete
-                      ? `${t(`sections.${s}`)} — ${t("sectionComplete")}`
-                      : t(`sections.${s}`)
+                    flagged
+                      ? `${t(`sections.${s}`)} — ${t("quality.sectionHasFlags")}`
+                      : complete
+                        ? `${t(`sections.${s}`)} — ${t("sectionComplete")}`
+                        : t(`sections.${s}`)
                   }
                   disabled={disabled}
                   onClick={() => onSelect(i)}
@@ -595,7 +622,7 @@ function SectionProgressNav({
                   </span>
                   <span
                     className={cn(
-                      "min-w-0 text-sm font-semibold leading-snug",
+                      "min-w-0 flex-1 text-sm font-semibold leading-snug",
                       complete && "text-success",
                       current && !complete && "text-brand",
                       !complete && !current && "text-graphite-700",
@@ -603,6 +630,12 @@ function SectionProgressNav({
                   >
                     {t(`sections.${s}`)}
                   </span>
+                  {flagged ? (
+                    <span
+                      className="size-2 shrink-0 rounded-full bg-warning"
+                      title={t("quality.sectionHasFlags")}
+                    />
+                  ) : null}
                 </button>
               </li>
             );
@@ -861,6 +894,28 @@ export function ModularQuestionnaire({
       ),
     );
   }, [activePerson, sections, liveAnswers]);
+
+  const qualityIssues = useMemo(
+    () =>
+      analyzeAnswerQuality(applyDerivedAnswers(liveAnswers), {
+        formCodes: activePerson?.formCodes,
+      }),
+    [liveAnswers, activePerson?.formCodes],
+  );
+
+  const sectionQualityFlags = useMemo(
+    () =>
+      sections.map(
+        (sectionKey) =>
+          qualityIssuesForSection(qualityIssues, sectionKey).length > 0,
+      ),
+    [sections, qualityIssues],
+  );
+
+  const sectionQualityIssues = useMemo(() => {
+    const current = sections[sectionIndex];
+    return current ? qualityIssuesForSection(qualityIssues, current) : [];
+  }, [qualityIssues, sections, sectionIndex]);
 
   const allPeopleComplete = useMemo(() => {
     if (people.length === 0) return false;
@@ -1257,6 +1312,7 @@ export function ModularQuestionnaire({
           sectionIndex={sectionIndex}
           percent={activeFillPercent}
           sectionComplete={sectionCompleteFlags}
+          sectionFlags={sectionQualityFlags}
           onSelect={setSectionIndex}
           disabled={busy}
           t={t}
@@ -1283,6 +1339,27 @@ export function ModularQuestionnaire({
                 {t(`sectionLedes.${section}`)}
               </p>
             </header>
+
+            {sectionQualityIssues.length > 0 ? (
+              <div
+                className="mt-5 rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
+                role="status"
+              >
+                <p className="font-semibold">{t("quality.title")}</p>
+                <p className="mt-0.5 text-xs text-warning-text/90">
+                  {t("quality.lede")}
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {sectionQualityIssues.map((issue) => (
+                    <li
+                      key={`${issue.id}-${issue.params?.row ?? issue.params?.rowA ?? issue.params?.field ?? issue.params?.item ?? ""}-${issue.params?.table ?? ""}`}
+                    >
+                      {qualityIssueText(issue, t)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             <div
               className={cn(
