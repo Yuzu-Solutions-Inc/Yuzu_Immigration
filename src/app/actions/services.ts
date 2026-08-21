@@ -68,9 +68,9 @@ function parseServiceForm(formData: FormData) {
 }
 
 function parseUrgentPricing(input: {
-  urgentPrice: string | undefined;
-  autoUrgent: string | undefined;
-  urgentAutoWithinDays: string | undefined;
+  urgentPrice?: string;
+  autoUrgent?: string;
+  urgentAutoWithinDays?: string;
 }): { urgentPriceCents: number | null; urgentAutoWithinDays: number | null } | null {
   const raw = (input.urgentPrice ?? "").trim();
   let urgentPriceCents: number | null = null;
