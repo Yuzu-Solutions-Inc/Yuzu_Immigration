@@ -68,11 +68,11 @@ function parseServiceForm(formData: FormData) {
 }
 
 function parseUrgentPricing(input: {
-  urgentPrice: string;
+  urgentPrice: string | undefined;
   autoUrgent: string | undefined;
   urgentAutoWithinDays: string | undefined;
 }): { urgentPriceCents: number | null; urgentAutoWithinDays: number | null } | null {
-  const raw = input.urgentPrice.trim();
+  const raw = (input.urgentPrice ?? "").trim();
   let urgentPriceCents: number | null = null;
   if (raw) {
     const cents = parsePriceToCents(raw);
