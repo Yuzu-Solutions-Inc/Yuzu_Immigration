@@ -25,8 +25,8 @@
   "home": {
     "audience": "Pour les consultants et avocats en immigration",
     "title": "Gérez votre pratique d’immigration dans un espace sécurisé",
-    "subtitle": "Clients, dossiers, questionnaires IRCC, documents, contrats signés, Google Calendar et Meet, paiements Square, comptabilité Sage et portails — pensé pour l’immigration canadienne, pas un CRM générique.",
-    "cta": "Commencer gratuitement — phase de test",
+    "subtitle": "Clients, dossiers, formulaires IRCC, réservation et paiements — pensé pour l’immigration canadienne.",
+    "cta": "Commencer gratuitement",
     "secondaryCta": "Se connecter",
     "ctaNote": "Gratuit pendant la phase de test ouverte. Aucune carte de crédit.",
     "navSignIn": "Se connecter",
@@ -46,7 +46,7 @@
     },
     "showcases": {
       "eyebrow": "Dans le produit",
-      "title": "Portail client, espace du représentant, réservation et tableau de bord",
+      "title": "Dans le produit",
       "subtitle": "Le client remplit les formulaires et dépose les pièces. Votre cabinet révise le dossier. Les consultations se réservent et se paient. Le tableau de bord montre la prochaine action.",
       "client": {
         "title": "Portail client",
@@ -254,7 +254,7 @@
       }
     },
     "securityCta": "Lire la politique de confidentialité",
-    "finalTitle": "Essayez %PRODUCT_NAME% gratuitement pendant la phase de test",
+    "finalTitle": "Créer un compte gratuit",
     "finalSubtitle": "Créez l’espace de votre cabinet en quelques minutes et voyez s’il s’adapte à votre pratique.",
     "finalCta": "Créer un compte gratuit",
     "finalNote": "Gratuit pendant la phase de test ouverte.",
@@ -264,11 +264,11 @@
     "metaTitle": "Tarifs",
     "metaDescription": "Formules Standard et Équipe de %PRODUCT_NAME%. Gratuit pendant le test ouvert. Tarifs de lancement pour les 100 premiers cabinets.",
     "eyebrow": "Tarifs",
-    "title": "Des formules simples. Le même produit.",
-    "subtitle": "On facture le cabinet, pas le dossier. Standard, c’est un consultant. Équipe, jusqu’à quatre personnes. Chaque formule inclut le portail, les questionnaires IRCC, la réservation, les contrats et Square — sans options à la carte, sans commission sur vos honoraires.",
-    "testingBanner": "Tout est gratuit pendant le test ouvert. Les 100 premiers cabinets — y compris les testeurs déjà sur le produit — bénéficient des tarifs de lancement pendant 12 mois lorsque la facturation commence.",
-    "currencyNote": "Prix en dollars canadiens, TPS/TVH en sus. La facturation annuelle, c’est 10 mois payés, 2 mois offerts. Les frais Square restent à Square ; %PRODUCT_NAME% ne prélève aucune commission sur les paiements de consultation.",
-    "cta": "Commencer gratuitement — test ouvert",
+    "title": "Standard ou Équipe",
+    "subtitle": "Le même produit. La différence, c’est le nombre de personnes connectées.",
+    "testingBanner": "Tout est gratuit pendant la période de test.",
+    "currencyNote": "CAD, TPS/TVH en sus. La facturation annuelle offre 2 mois.",
+    "cta": "Commencer gratuitement",
     "freeNow": "Gratuit pendant le test ouvert",
     "foundingHelp": "Tarif de lancement pour les {count} premiers cabinets · {months} premiers mois",
     "yearlyPrice": "ou {amount} facturé à l’année ({free} mois offerts)",
@@ -298,12 +298,11 @@
       "audience": "Cabinets avec plus d’une personne sur les dossiers",
       "badge": "Pour les cabinets",
       "teaser": "Jusqu’à 4 utilisateurs. Le même logiciel que Standard.",
-      "extraSeats": "Puis {admin} par admin supplémentaire, {user} par gestionnaire de cas supplémentaire",
+      "extraSeats": "Puis {price} par compte supplémentaire",
       "features": {
         "staff": "Jusqu’à 4 utilisateurs inclus (admins ou gestionnaires de cas)",
         "sameProduct": "Le même logiciel que Standard — rien n’est verrouillé",
-        "extraAdmin": "Admins supplémentaires {price}",
-        "extraUser": "Gestionnaires de cas supplémentaires {price}",
+        "extraSeat": "Comptes supplémentaires {price}",
         "files": "Clients et projets illimités",
         "payments": "Paiements Square et comptabilité Sage",
         "languages": "Anglais, français et espagnol"
@@ -319,8 +318,7 @@
       "staffTeam": "Jusqu’à {count} utilisateurs",
       "rows": {
         "staff": "Utilisateurs du personnel inclus",
-        "extraUser": "Gestionnaire de cas supplémentaire",
-        "extraAdmin": "Admin supplémentaire",
+        "extraSeat": "Compte supplémentaire",
         "files": "Clients et projets",
         "portal": "Portail client",
         "forms": "Questionnaires IRCC et remplissage PDF",
@@ -352,7 +350,7 @@
       },
       "difference": {
         "q": "Quelle est la différence entre Standard et Équipe ?",
-        "a": "Le même produit. Standard, c’est {standardUsers} utilisateur. Équipe en inclut jusqu’à {teamUsers}. Les admins supplémentaires sont à {admin} ; les gestionnaires de cas supplémentaires à {user}."
+        "a": "Le même produit. Standard, c’est {standardUsers} utilisateur. Équipe en inclut jusqu’à {teamUsers}. Chaque compte supplémentaire est à {extraSeat}."
       },
       "roles": {
         "q": "Quelle est la différence entre un admin et un gestionnaire de cas ?",
@@ -821,6 +819,14 @@
     "dpaAccepting": "Enregistrement…",
     "repTitle": "Représentant (IMM 5476)",
     "repHelp": "Vos coordonnées de consultant pour le IMM 5476. Utilisées sur les dossiers où vous êtes le représentant assigné.",
+    "repFilledTitle": "Renseignements IMM 5476",
+    "repEdit": "Modifier",
+    "repCancel": "Annuler",
+    "repMissingTitle": "Encore requis pour le IMM 5476 :",
+    "repSavedComplete": "Renseignements IMM 5476 enregistrés.",
+    "repSavedIncomplete": "Enregistré. Complétez les champs en surbrillance pour terminer le IMM 5476.",
+    "repEmailHelp": "Laissez vide pour utiliser le courriel du compte.",
+    "fieldRequired": "Ce champ est obligatoire.",
     "repFamilyName": "Nom de famille",
     "repGivenName": "Prénom(s)",
     "repOrganization": "Nom du cabinet / organisation",
@@ -868,7 +874,8 @@
       "cannotRemoveSelf": "Vous ne pouvez pas vous retirer vous-même.",
       "notFound": "Ce membre ou cette invitation est introuvable.",
       "dpaRequired": "Ouvrez l’avenant, puis cochez les deux cases pour lier votre cabinet.",
-      "generic": "Une erreur est survenue. Réessayez."
+      "repEmailInvalid": "Entrez une adresse courriel valide.",
+      "generic": "Une erreur s’est produite. Réessayez."
     }
   },
   "projects": {

@@ -25,8 +25,7 @@ const STANDARD_FEATURE_KEYS = [
 const TEAM_FEATURE_KEYS = [
   "staff",
   "sameProduct",
-  "extraAdmin",
-  "extraUser",
+  "extraSeat",
   "files",
   "payments",
   "languages",
@@ -49,7 +48,6 @@ export async function PricingPlanCards({
       <PlanCard
         name={t("standard.name")}
         audience={t("standard.audience")}
-        freeNow={t("freeNow")}
         founding={formatCadMonthly(PRICING.standard.foundingMonthly, locale)}
         foundingYearly={t("yearlyPrice", {
           amount: formatCadYearly(
@@ -80,7 +78,6 @@ export async function PricingPlanCards({
         name={t("team.name")}
         audience={t("team.audience")}
         badge={t("team.badge")}
-        freeNow={t("freeNow")}
         founding={formatCadMonthly(PRICING.team.foundingMonthly, locale)}
         foundingYearly={t("yearlyPrice", {
           amount: formatCadYearly(
@@ -103,29 +100,17 @@ export async function PricingPlanCards({
           detailed
             ? TEAM_FEATURE_KEYS.map((key) =>
                 t(`team.features.${key}`, {
-                  price:
-                    key === "extraAdmin"
-                      ? formatCadMonthly(
-                          PRICING.team.extraAdminMonthly,
-                          locale,
-                        )
-                      : key === "extraUser"
-                        ? formatCadMonthly(
-                            PRICING.team.extraUserMonthly,
-                            locale,
-                          )
-                        : "",
+                  price: formatCadMonthly(
+                    PRICING.team.extraSeatMonthly,
+                    locale,
+                  ),
                 }),
               )
             : [
                 t("team.teaser"),
                 t("team.extraSeats", {
-                  admin: formatCadMonthly(
-                    PRICING.team.extraAdminMonthly,
-                    locale,
-                  ),
-                  user: formatCadMonthly(
-                    PRICING.team.extraUserMonthly,
+                  price: formatCadMonthly(
+                    PRICING.team.extraSeatMonthly,
                     locale,
                   ),
                 }),
@@ -142,7 +127,6 @@ function PlanCard({
   name,
   audience,
   badge,
-  freeNow,
   founding,
   foundingYearly,
   list,
@@ -156,7 +140,6 @@ function PlanCard({
   name: string;
   audience: string;
   badge?: string;
-  freeNow: string;
   founding: string;
   foundingYearly: string;
   list: string;
@@ -186,8 +169,7 @@ function PlanCard({
       </div>
       <p className="mt-1 text-sm text-muted-foreground">{audience}</p>
 
-      <p className="mt-5 text-sm font-medium text-action">{freeNow}</p>
-      <p className="mt-2 font-heading text-4xl font-bold tracking-tight text-brand">
+      <p className="mt-5 font-heading text-4xl font-bold tracking-tight text-brand">
         {founding}
       </p>
       <p className="mt-1 text-sm text-muted-foreground text-pretty">

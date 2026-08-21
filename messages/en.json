@@ -25,8 +25,8 @@
   "home": {
     "audience": "For immigration consultants and lawyers",
     "title": "Run your immigration practice in one secure workspace",
-    "subtitle": "Clients, files, IRCC questionnaires, documents, signed contracts, Google Calendar and Meet, Square payments, Sage Accounting, and portals — built for Canadian immigration work, not generic CRM.",
-    "cta": "Start free — open testing",
+    "subtitle": "Clients, files, IRCC forms, booking, and payments — built for Canadian immigration work.",
+    "cta": "Start free",
     "secondaryCta": "Sign in",
     "ctaNote": "Free during open testing. No credit card required.",
     "navSignIn": "Sign in",
@@ -46,7 +46,7 @@
     },
     "showcases": {
       "eyebrow": "Inside the product",
-      "title": "Client portal, representative workspace, booking, and dashboard",
+      "title": "Inside the product",
       "subtitle": "Clients fill forms and upload documents. Your firm reviews the file. Prospective clients book and pay. The dashboard shows the next action.",
       "client": {
         "title": "Client portal",
@@ -254,7 +254,7 @@
       }
     },
     "securityCta": "Read the privacy policy",
-    "finalTitle": "Try %PRODUCT_NAME% free while we’re in open testing",
+    "finalTitle": "Create a free account",
     "finalSubtitle": "Set up your firm workspace in minutes and see whether it fits how you already practice.",
     "finalCta": "Create a free account",
     "finalNote": "Free during the open testing phase.",
@@ -264,11 +264,11 @@
     "metaTitle": "Pricing",
     "metaDescription": "Standard and Team plans for %PRODUCT_NAME%. Free during open testing. Founding rates for the first 100 firms.",
     "eyebrow": "Pricing",
-    "title": "Simple firm plans. Same product.",
-    "subtitle": "Charge the practice, not the file. Standard is one consultant. Team is up to four people. Every plan includes portal, IRCC questionnaires, booking, contracts, and Square — no add-on maze, no cut of your fees.",
-    "testingBanner": "Everything is free during open testing. The first 100 firms — including testers already on the product — get founding rates for 12 months when billing starts.",
-    "currencyNote": "Prices in CAD, exclusive of GST/HST. Yearly billing is 10 months paid, 2 months free. Square processing fees stay with Square; %PRODUCT_NAME% does not take a cut of consultation payments.",
-    "cta": "Start free — open testing",
+    "title": "Standard or Team",
+    "subtitle": "Same product. The difference is how many people sign in.",
+    "testingBanner": "Everything is free during the testing period.",
+    "currencyNote": "CAD, plus GST/HST. Yearly billing includes 2 months free.",
+    "cta": "Start free",
     "freeNow": "Free during open testing",
     "foundingHelp": "Founding rate for the first {count} firms · first {months} months",
     "yearlyPrice": "or {amount} billed yearly ({free} months free)",
@@ -298,12 +298,11 @@
       "audience": "Firms with more than one person on the caseload",
       "badge": "For firms",
       "teaser": "Up to 4 staff users. Same software as Standard.",
-      "extraSeats": "Then {admin} per extra admin, {user} per extra case manager",
+      "extraSeats": "Then {price} per extra staff account",
       "features": {
         "staff": "Up to 4 staff users included (admins or case managers)",
         "sameProduct": "Same software as Standard — nothing gated",
-        "extraAdmin": "Additional admins {price}",
-        "extraUser": "Additional case managers {price}",
+        "extraSeat": "Additional staff accounts {price}",
         "files": "Unlimited clients and projects",
         "payments": "Square payments and Sage Accounting",
         "languages": "English, French, and Spanish"
@@ -319,8 +318,7 @@
       "staffTeam": "Up to {count} staff users",
       "rows": {
         "staff": "Staff users included",
-        "extraUser": "Additional case manager",
-        "extraAdmin": "Additional admin",
+        "extraSeat": "Additional staff account",
         "files": "Clients and projects",
         "portal": "Client portal",
         "forms": "IRCC questionnaires and PDF fill",
@@ -352,7 +350,7 @@
       },
       "difference": {
         "q": "What is the difference between Standard and Team?",
-        "a": "Same product. Standard is {standardUsers} staff user. Team includes up to {teamUsers}. Extra admins are {admin}; extra case managers are {user}."
+        "a": "Same product. Standard is {standardUsers} staff user. Team includes up to {teamUsers}. Extra staff accounts are {extraSeat}."
       },
       "roles": {
         "q": "What is an admin vs a case manager?",
@@ -821,6 +819,14 @@
     "orgSlugHelp": "Lowercase letters, numbers, and hyphens.",
     "repTitle": "Representative (IMM 5476)",
     "repHelp": "Your consultant details for IMM 5476. Used on projects where you are the assigned representative.",
+    "repFilledTitle": "IMM 5476 information",
+    "repEdit": "Edit",
+    "repCancel": "Cancel",
+    "repMissingTitle": "Still needed for IMM 5476:",
+    "repSavedComplete": "IMM 5476 information saved.",
+    "repSavedIncomplete": "Saved. Fill the highlighted fields to finish IMM 5476.",
+    "repEmailHelp": "Leave blank to use your account email.",
+    "fieldRequired": "This field is required.",
     "repFamilyName": "Family name",
     "repGivenName": "Given name(s)",
     "repOrganization": "Organization / firm name",
@@ -868,6 +874,7 @@
       "cannotRemoveSelf": "You cannot remove yourself.",
       "notFound": "That member or invitation was not found.",
       "dpaRequired": "Open the addendum, then check both boxes to bind your firm.",
+      "repEmailInvalid": "Enter a valid email.",
       "generic": "Something went wrong. Try again."
     }
   },

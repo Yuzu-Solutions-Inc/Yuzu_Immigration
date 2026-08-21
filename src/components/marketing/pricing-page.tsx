@@ -4,6 +4,7 @@ import {
   MarketingFinalCta,
   MarketingFooter,
   MarketingHeader,
+  MarketingTestingBanner,
 } from "@/components/marketing/marketing-chrome";
 import { PricingPlanCards } from "@/components/marketing/pricing-plans";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
@@ -16,8 +17,7 @@ import {
 
 const COMPARE_KEYS = [
   "staff",
-  "extraUser",
-  "extraAdmin",
+  "extraSeat",
   "files",
   "portal",
   "forms",
@@ -30,7 +30,6 @@ const COMPARE_KEYS = [
 ] as const;
 
 const FAQ_KEYS = [
-  "testing",
   "founding",
   "after",
   "annual",
@@ -42,8 +41,7 @@ const FAQ_KEYS = [
 
 function faqParams(
   key: (typeof FAQ_KEYS)[number],
-  extraAdmin: string,
-  extraUser: string,
+  extraSeat: string,
   locale: AppLocale,
 ): Record<string, string | number> {
   switch (key) {
@@ -76,8 +74,7 @@ function faqParams(
       return {
         standardUsers: PRICING.standard.includedUsers,
         teamUsers: PRICING.team.includedUsers,
-        admin: extraAdmin,
-        user: extraUser,
+        extraSeat,
       };
     default:
       return {};
@@ -98,8 +95,7 @@ export async function PricingPage() {
     footerTagline: home("footerTagline"),
   };
 
-  const extraAdmin = formatCadMonthly(PRICING.team.extraAdminMonthly, locale);
-  const extraUser = formatCadMonthly(PRICING.team.extraUserMonthly, locale);
+  const extraSeat = formatCadMonthly(PRICING.team.extraSeatMonthly, locale);
   const included = t("compare.included");
 
   const compareValues: Record<
@@ -112,8 +108,7 @@ export async function PricingPage() {
       }),
       team: t("compare.staffTeam", { count: PRICING.team.includedUsers }),
     },
-    extraUser: { standard: t("compare.upgrade"), team: extraUser },
-    extraAdmin: { standard: t("compare.upgrade"), team: extraAdmin },
+    extraSeat: { standard: t("compare.upgrade"), team: extraSeat },
     files: { standard: included, team: included },
     portal: { standard: included, team: included },
     forms: { standard: included, team: included },
@@ -128,41 +123,24 @@ export async function PricingPage() {
   return (
     <main className="relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
       <MarketingHeader copy={nav} active="pricing" />
+      <MarketingTestingBanner>{t("testingBanner")}</MarketingTestingBanner>
 
-      <section className="border-b border-border bg-canvas py-16 sm:py-20">
-        <div className="mx-auto w-full max-w-6xl space-y-10 px-6">
-          <div className="max-w-2xl space-y-3">
-            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
-              {t("eyebrow")}
-            </p>
-            <h1 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
-              {t("title")}
-            </h1>
-            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
-              {t("subtitle")}
-            </p>
-            <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
-              {t("testingBanner")}
-            </p>
-          </div>
+      <section className="border-b border-border bg-canvas py-12 sm:py-16">
+        <div className="mx-auto w-full max-w-6xl space-y-8 px-6">
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+            {t("title")}
+          </h1>
 
           <PricingPlanCards variant="page" />
-          <p className="text-sm text-muted-foreground text-pretty">
-            {t("currencyNote")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("currencyNote")}</p>
         </div>
       </section>
 
       <section className="border-b border-border bg-surface py-16 sm:py-20">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-2xl space-y-3">
-            <h2 className="font-heading text-2xl font-bold tracking-tight text-brand text-pretty sm:text-3xl">
-              {t("compare.title")}
-            </h2>
-            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-              {t("compare.subtitle")}
-            </p>
-          </div>
+          <h2 className="font-heading text-2xl font-bold tracking-tight text-brand text-pretty sm:text-3xl">
+            {t("compare.title")}
+          </h2>
 
           <div className="mt-10 overflow-x-auto">
             <table className="w-full min-w-[36rem] border-collapse text-left text-[15px]">
@@ -214,7 +192,7 @@ export async function PricingPage() {
                 <dd className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
                   {t(
                     `faq.${key}.a`,
-                    faqParams(key, extraAdmin, extraUser, locale),
+                    faqParams(key, extraSeat, locale),
                   )}
                 </dd>
               </div>
@@ -225,10 +203,8 @@ export async function PricingPage() {
 
       <MarketingFinalCta
         title={home("finalTitle")}
-        subtitle={home("finalSubtitle")}
         cta={home("finalCta")}
         secondaryCta={home("secondaryCta")}
-        note={home("finalNote")}
       />
       <MarketingFooter copy={nav} />
     </main>

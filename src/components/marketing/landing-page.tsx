@@ -29,6 +29,7 @@ import {
   MarketingFinalCta,
   MarketingFooter,
   MarketingHeader,
+  MarketingTestingBanner,
 } from "@/components/marketing/marketing-chrome";
 import { PricingPlanCards } from "@/components/marketing/pricing-plans";
 import {
@@ -128,12 +129,10 @@ const SHOWCASE_KEYS = [
 
 function ShowcaseCopy({
   title,
-  body,
   points,
   align = "start",
 }: {
   title: string;
-  body: string;
   points: string[];
   align?: "start" | "end";
 }) {
@@ -147,10 +146,7 @@ function ShowcaseCopy({
       <h3 className="font-heading text-2xl font-semibold tracking-tight text-brand text-pretty">
         {title}
       </h3>
-      <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-        {body}
-      </p>
-      <ul className="space-y-2 pt-1">
+      <ul className="space-y-2">
         {points.map((point) => (
           <li
             key={point}
@@ -218,6 +214,7 @@ export async function LandingPage() {
       `}</style>
 
       <MarketingHeader copy={nav} active="home" />
+      <MarketingTestingBanner>{pricing("testingBanner")}</MarketingTestingBanner>
 
       <section className="relative isolate overflow-hidden bg-graphite-900 text-white">
         <div
@@ -274,7 +271,6 @@ export async function LandingPage() {
                 {t("secondaryCta")}
               </Link>
             </div>
-            <p className="lp-fade lp-delay-4 text-sm text-white/50">{t("ctaNote")}</p>
             <ul className="lp-fade lp-delay-4 flex flex-wrap gap-2 pt-1">
               {CAPABILITY_KEYS.map((key) => (
                 <li
@@ -313,16 +309,10 @@ export async function LandingPage() {
 
       <section className="relative z-10 border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl space-y-20 px-6">
-          <div className="max-w-3xl space-y-3">
-            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
-              {t("showcases.eyebrow")}
-            </p>
+          <div className="max-w-3xl">
             <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
               {t("showcases.title")}
             </h2>
-            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
-              {t("showcases.subtitle")}
-            </p>
           </div>
 
           {SHOWCASE_KEYS.map((key, index) => {
@@ -354,7 +344,6 @@ export async function LandingPage() {
               >
                 <ShowcaseCopy
                   title={t(`showcases.${key}.title`)}
-                  body={t(`showcases.${key}.body`)}
                   points={points}
                   align={previewFirst ? "start" : "end"}
                 />
@@ -376,28 +365,17 @@ export async function LandingPage() {
 
       <section className="border-b border-border bg-surface py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-2xl space-y-3">
-            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
-              {t("integrations.eyebrow")}
-            </p>
+          <div className="max-w-2xl">
             <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
               {t("integrations.title")}
             </h2>
-            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
-              {t("integrations.subtitle")}
-            </p>
           </div>
           <div className="mt-12 space-y-14">
             {INTEGRATION_GROUPS.map((group) => (
               <div key={group.key} className="space-y-6">
-                <div className="max-w-2xl space-y-1">
-                  <h3 className="font-heading text-lg font-semibold tracking-tight text-brand">
-                    {t(`integrations.groups.${group.key}.title`)}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
-                    {t(`integrations.groups.${group.key}.help`)}
-                  </p>
-                </div>
+                <h3 className="font-heading text-lg font-semibold tracking-tight text-brand">
+                  {t(`integrations.groups.${group.key}.title`)}
+                </h3>
                 <ul className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
                   {group.items.map((item) => {
                     const Logo = item.Logo;
@@ -433,16 +411,10 @@ export async function LandingPage() {
 
       <section className="border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-2xl space-y-3">
-            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
-              {t("featuresEyebrow")}
-            </p>
+          <div className="max-w-2xl">
             <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
               {t("featuresTitle")}
             </h2>
-            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
-              {t("featuresSubtitle")}
-            </p>
           </div>
 
           <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2">
@@ -479,10 +451,7 @@ export async function LandingPage() {
 
       <section className="border-b border-border bg-surface py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-2xl space-y-3">
-            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
-              {t("howEyebrow")}
-            </p>
+          <div className="max-w-2xl">
             <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
               {t("howTitle")}
             </h2>
@@ -508,16 +477,10 @@ export async function LandingPage() {
 
       <section className="border-b border-border bg-canvas py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-3xl space-y-3">
-            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
-              {t("securityEyebrow")}
-            </p>
+          <div className="max-w-3xl">
             <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
               {t("securityTitle")}
             </h2>
-            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
-              {t("securitySubtitle")}
-            </p>
           </div>
 
           <div className="mt-12 space-y-3">
@@ -572,42 +535,29 @@ export async function LandingPage() {
 
       <section className="border-b border-border bg-surface py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="max-w-2xl space-y-3">
-            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
-              {pricing("teaser.eyebrow")}
-            </p>
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
-              {pricing("teaser.title")}
-            </h2>
-            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
-              {pricing("teaser.subtitle")}
-            </p>
-          </div>
+          <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+            {pricing("title")}
+          </h2>
 
-          <div className="mt-12">
+          <div className="mt-10">
             <PricingPlanCards variant="teaser" />
           </div>
 
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-8">
             <Link
               href="/pricing"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               {pricing("teaser.compare")}
             </Link>
-            <p className="text-sm text-muted-foreground text-pretty">
-              {pricing("currencyNote")}
-            </p>
           </div>
         </div>
       </section>
 
       <MarketingFinalCta
         title={t("finalTitle")}
-        subtitle={t("finalSubtitle")}
         cta={t("finalCta")}
         secondaryCta={t("secondaryCta")}
-        note={t("finalNote")}
       />
       <MarketingFooter copy={nav} />
     </main>

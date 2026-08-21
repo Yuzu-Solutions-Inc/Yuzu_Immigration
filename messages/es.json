@@ -25,8 +25,8 @@
   "home": {
     "audience": "Para consultores y abogados de inmigración",
     "title": "Gestione su práctica de inmigración en un espacio seguro",
-    "subtitle": "Clientes, expedientes, cuestionarios IRCC, documentos, contratos firmados, Google Calendar y Meet, pagos Square, contabilidad Sage y portales — pensado para inmigración canadiense, no un CRM genérico.",
-    "cta": "Empezar gratis — fase de prueba",
+    "subtitle": "Clientes, expedientes, formularios IRCC, reservas y pagos — pensado para inmigración canadiense.",
+    "cta": "Empezar gratis",
     "secondaryCta": "Iniciar sesión",
     "ctaNote": "Gratis durante la fase de prueba abierta. Sin tarjeta de crédito.",
     "navSignIn": "Iniciar sesión",
@@ -46,7 +46,7 @@
     },
     "showcases": {
       "eyebrow": "Dentro del producto",
-      "title": "Portal del cliente, espacio del representante, reservas y panel",
+      "title": "Dentro del producto",
       "subtitle": "El cliente rellena formularios y sube documentos. Su firma revisa el expediente. Las consultas se reservan y se pagan. El panel muestra la siguiente acción.",
       "client": {
         "title": "Portal del cliente",
@@ -254,7 +254,7 @@
       }
     },
     "securityCta": "Leer la política de privacidad",
-    "finalTitle": "Pruebe %PRODUCT_NAME% gratis durante la fase de prueba abierta",
+    "finalTitle": "Crear una cuenta gratuita",
     "finalSubtitle": "Configure el espacio de su firma en minutos y vea si encaja con su práctica.",
     "finalCta": "Crear una cuenta gratuita",
     "finalNote": "Gratis durante la fase de prueba abierta.",
@@ -264,11 +264,11 @@
     "metaTitle": "Precios",
     "metaDescription": "Planes Standard y Equipo de %PRODUCT_NAME%. Gratis durante la prueba abierta. Tarifas de lanzamiento para las primeras 100 firmas.",
     "eyebrow": "Precios",
-    "title": "Planes simples para la firma. El mismo producto.",
-    "subtitle": "Se cobra a la práctica, no al expediente. Standard es un consultor. Equipo, hasta cuatro personas. Cada plan incluye portal, cuestionarios IRCC, reservas, contratos y Square — sin extras a la carta ni comisión sobre sus honorarios.",
-    "testingBanner": "Todo es gratis durante la prueba abierta. Las primeras 100 firmas — incluidos quienes ya están en el producto — obtienen tarifas de lanzamiento durante 12 meses cuando empiece la facturación.",
-    "currencyNote": "Precios en CAD, sin GST/HST. El pago anual son 10 meses cobrados y 2 meses gratis. Las comisiones de Square siguen en Square; %PRODUCT_NAME% no se queda con un recorte de los pagos de consulta.",
-    "cta": "Empezar gratis — prueba abierta",
+    "title": "Standard o Equipo",
+    "subtitle": "El mismo producto. La diferencia es cuántas personas entran.",
+    "testingBanner": "Todo es gratis durante el periodo de prueba.",
+    "currencyNote": "CAD, más GST/HST. El pago anual incluye 2 meses gratis.",
+    "cta": "Empezar gratis",
     "freeNow": "Gratis durante la prueba abierta",
     "foundingHelp": "Tarifa de lanzamiento para las primeras {count} firmas · primeros {months} meses",
     "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
@@ -298,12 +298,11 @@
       "audience": "Firmas con más de una persona en los expedientes",
       "badge": "Para firmas",
       "teaser": "Hasta 4 usuarios. El mismo software que Standard.",
-      "extraSeats": "Luego {admin} por admin extra, {user} por gestor de casos extra",
+      "extraSeats": "Luego {price} por cuenta extra",
       "features": {
         "staff": "Hasta 4 usuarios incluidos (admins o gestores de casos)",
         "sameProduct": "El mismo software que Standard — nada bloqueado",
-        "extraAdmin": "Admins adicionales {price}",
-        "extraUser": "Gestores de casos adicionales {price}",
+        "extraSeat": "Cuentas adicionales {price}",
         "files": "Clientes y proyectos ilimitados",
         "payments": "Pagos Square y Sage Accounting",
         "languages": "Inglés, francés y español"
@@ -319,8 +318,7 @@
       "staffTeam": "Hasta {count} usuarios",
       "rows": {
         "staff": "Usuarios del personal incluidos",
-        "extraUser": "Gestor de casos adicional",
-        "extraAdmin": "Admin adicional",
+        "extraSeat": "Cuenta adicional",
         "files": "Clientes y proyectos",
         "portal": "Portal del cliente",
         "forms": "Cuestionarios IRCC y relleno de PDF",
@@ -352,7 +350,7 @@
       },
       "difference": {
         "q": "¿Cuál es la diferencia entre Standard y Equipo?",
-        "a": "El mismo producto. Standard es {standardUsers} usuario. Equipo incluye hasta {teamUsers}. Los admins extra cuestan {admin}; los gestores de casos extra, {user}."
+        "a": "El mismo producto. Standard es {standardUsers} usuario. Equipo incluye hasta {teamUsers}. Cada cuenta extra cuesta {extraSeat}."
       },
       "roles": {
         "q": "¿Qué es un admin frente a un gestor de casos?",
@@ -821,6 +819,14 @@
     "dpaAccepting": "Guardando…",
     "repTitle": "Representante (IMM 5476)",
     "repHelp": "Tus datos de consultor para el IMM 5476. Se usan en los expedientes donde eres el representante asignado.",
+    "repFilledTitle": "Información IMM 5476",
+    "repEdit": "Editar",
+    "repCancel": "Cancelar",
+    "repMissingTitle": "Aún falta para el IMM 5476:",
+    "repSavedComplete": "Información IMM 5476 guardada.",
+    "repSavedIncomplete": "Guardado. Completa los campos resaltados para terminar el IMM 5476.",
+    "repEmailHelp": "Déjalo en blanco para usar el correo de la cuenta.",
+    "fieldRequired": "Este campo es obligatorio.",
     "repFamilyName": "Apellido",
     "repGivenName": "Nombre(s)",
     "repOrganization": "Nombre del despacho / organización",
@@ -868,6 +874,7 @@
       "cannotRemoveSelf": "No puedes quitarte a ti mismo.",
       "notFound": "No se encontró ese miembro o invitación.",
       "dpaRequired": "Abra el addendum y marque ambas casillas para vincular a su despacho.",
+      "repEmailInvalid": "Introduce un correo válido.",
       "generic": "Algo salió mal. Inténtalo de nuevo."
     }
   },

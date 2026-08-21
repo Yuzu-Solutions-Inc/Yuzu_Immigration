@@ -12,6 +12,14 @@ type MarketingNavCopy = {
   footerTagline: string;
 };
 
+export function MarketingTestingBanner({ children }: { children: string }) {
+  return (
+    <div className="bg-action px-6 py-2.5 text-center">
+      <p className="text-sm font-semibold text-action-foreground">{children}</p>
+    </div>
+  );
+}
+
 export function MarketingHeader({
   copy,
   active,
@@ -105,10 +113,10 @@ export function MarketingFinalCta({
   note,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   cta: string;
   secondaryCta: string;
-  note: string;
+  note?: string;
 }) {
   return (
     <section className="relative overflow-hidden bg-graphite-900 py-20 text-white sm:py-24">
@@ -124,9 +132,11 @@ export function MarketingFinalCta({
         <h2 className="font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
           {title}
         </h2>
-        <p className="max-w-xl text-[15px] leading-relaxed text-pretty text-white/90 sm:text-base">
-          {subtitle}
-        </p>
+        {subtitle ? (
+          <p className="max-w-xl text-[15px] leading-relaxed text-pretty text-white/90 sm:text-base">
+            {subtitle}
+          </p>
+        ) : null}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link
             href="/login?mode=signup"
@@ -147,7 +157,7 @@ export function MarketingFinalCta({
             {secondaryCta}
           </Link>
         </div>
-        <p className="text-sm text-white/75">{note}</p>
+        {note ? <p className="text-sm text-white/75">{note}</p> : null}
       </div>
     </section>
   );

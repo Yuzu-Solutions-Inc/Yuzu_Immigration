@@ -17,8 +17,7 @@ export const PRICING = {
     foundingMonthly: 99,
     listMonthly: 129,
     includedUsers: 4,
-    extraAdminMonthly: 49,
-    extraUserMonthly: 29,
+    extraSeatMonthly: 29,
   },
 } as const;
 
