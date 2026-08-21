@@ -36,6 +36,8 @@ export const ACCOUNT_REP_ANSWER_KEYS = [
 
 export type AccountRepAnswerKey = (typeof ACCOUNT_REP_ANSWER_KEYS)[number];
 
+export type AccountRepFormValues = Record<AccountRepAnswerKey, string>;
+
 export const PROFILE_REP_SELECT =
   "id, email, full_name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code";
 
@@ -64,6 +66,39 @@ const REQUIRED_REP_COLUMNS: (keyof AccountRepSource)[] = [
   "rep_country",
   "rep_postal_code",
 ];
+
+/** Form keys that must be filled for IMM 5476 (email may fall back to the account). */
+export const ACCOUNT_REP_REQUIRED_FORM_KEYS = [
+  "repFamilyName",
+  "repGivenName",
+  "repOrganization",
+  "repMembershipId",
+  "repPhone",
+  "repPhoneCountryCode",
+  "repStreetNum",
+  "repStreetName",
+  "repCity",
+  "repProvince",
+  "repCountry",
+  "repPostalCode",
+] as const;
+
+export type AccountRepRequiredFormKey =
+  | (typeof ACCOUNT_REP_REQUIRED_FORM_KEYS)[number]
+  | "repEmail";
+
+/** Empty IMM 5476 keys from form values. Pass a fallback email when the account email can stand in. */
+export function missingAccountRepFormKeys(
+  values: Partial<Record<AccountRepAnswerKey, string | null | undefined>>,
+  accountEmail?: string | null,
+): AccountRepRequiredFormKey[] {
+  const missing: AccountRepRequiredFormKey[] =
+    ACCOUNT_REP_REQUIRED_FORM_KEYS.filter((key) => !filled(values[key]));
+  if (!filled(values.repEmail) && !filled(accountEmail)) {
+    missing.push("repEmail");
+  }
+  return missing;
+}
 
 /** True when IMM 5476 representative fields on the staff profile are filled. */
 export function isAccountRepComplete(

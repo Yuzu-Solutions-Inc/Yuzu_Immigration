@@ -34,6 +34,7 @@ export function CertifiedSearchSelect({
   label,
   noMatchLabel,
   refineLabel,
+  invalid,
 }: {
   id: string;
   value: string;
@@ -45,6 +46,7 @@ export function CertifiedSearchSelect({
   label: string;
   noMatchLabel: string;
   refineLabel: string;
+  invalid?: boolean;
 }) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +138,7 @@ export function CertifiedSearchSelect({
           }
           autoComplete="off"
           spellCheck={false}
+          aria-invalid={invalid || undefined}
           placeholder={placeholder}
           value={open ? query : selectedLabel}
           required={required && !value}

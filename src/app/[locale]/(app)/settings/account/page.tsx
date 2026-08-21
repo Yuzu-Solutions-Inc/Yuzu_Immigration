@@ -6,6 +6,7 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import { hasEmailPasswordAuth } from "@/lib/auth/providers";
 import { getSessionUser } from "@/lib/auth/session";
 import { toAppLocale } from "@/lib/i18n/locales";
+import { isAccountRepComplete } from "@/lib/ircc/account-rep";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AccountSettingsPage({
@@ -59,6 +60,7 @@ export default async function AccountSettingsPage({
           repCountry: profile?.rep_country ?? "Canada",
           repPostalCode: profile?.rep_postal_code ?? "",
         }}
+        representativeComplete={isAccountRepComplete(profile)}
       />
     </SurfaceCard>
   );

@@ -9,6 +9,11 @@ import { canAdministerOrg } from "@/lib/auth/rbac";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
 import { resolveCountryLic } from "@/lib/ircc/codes/resolve-lic";
+import {
+  missingAccountRepFormKeys,
+  type AccountRepFormValues,
+  type AccountRepRequiredFormKey,
+} from "@/lib/ircc/account-rep";
 import { slugifyOrganizationName } from "@/lib/org/slug";
 import {
   FIRM_DPA_VERSION,
@@ -27,9 +32,15 @@ function normalizeRepCountry(value: string): string {
   }
 }
 
+export type SettingsFieldError = "required" | "invalid";
+
 export type SettingsActionState = {
   error?: string;
   success?: boolean;
+  fieldErrors?: Record<string, SettingsFieldError>;
+  missingRepFields?: AccountRepRequiredFormKey[];
+  repComplete?: boolean;
+  repValues?: AccountRepFormValues;
 };
 
 const localeEnum = z.enum(
@@ -39,9 +50,25 @@ const localeEnum = z.enum(
 const optionalText = (max: number) =>
   z.string().trim().max(max).optional().or(z.literal(""));
 
-const accountSchema = z.object({
+function zodFieldErrors(
+  error: z.ZodError,
+): Record<string, SettingsFieldError> {
+  const fieldErrors: Record<string, SettingsFieldError> = {};
+  for (const issue of error.issues) {
+    const key = issue.path[0];
+    if (typeof key !== "string" || fieldErrors[key]) continue;
+    fieldErrors[key] = issue.code === "too_small" ? "required" : "invalid";
+  }
+  return fieldErrors;
+}
+
+const accountProfileSchema = z.object({
   locale: localeEnum,
   fullName: z.string().trim().min(1).max(120),
+});
+
+const accountRepSchema = z.object({
+  locale: localeEnum,
   repFamilyName: optionalText(80),
   repGivenName: optionalText(80),
   repOrganization: optionalText(120),
@@ -76,10 +103,47 @@ export async function updateAccountSettingsAction(
   _prev: SettingsActionState,
   formData: FormData,
 ): Promise<SettingsActionState> {
-  const empty = (key: string) => String(formData.get(key) ?? "").trim();
-  const parsed = accountSchema.safeParse({
+  const parsed = accountProfileSchema.safeParse({
     locale: formData.get("locale") || "en",
     fullName: formData.get("fullName"),
+  });
+
+  if (!parsed.success) {
+    return { error: "invalid", fieldErrors: zodFieldErrors(parsed.error) };
+  }
+
+  const user = await getSessionUser();
+  if (!user) {
+    redirect(`/${parsed.data.locale}/login`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: parsed.data.fullName,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("update account:", error.message);
+    return { error: "save_failed" };
+  }
+
+  revalidatePath(`/${parsed.data.locale}/settings/account`);
+  revalidatePath(`/${parsed.data.locale}/home`);
+
+  return { success: true };
+}
+
+export async function updateAccountRepAction(
+  _prev: SettingsActionState,
+  formData: FormData,
+): Promise<SettingsActionState> {
+  const empty = (key: string) => String(formData.get(key) ?? "").trim();
+  const parsed = accountRepSchema.safeParse({
+    locale: formData.get("locale") || "en",
     repFamilyName: empty("repFamilyName"),
     repGivenName: empty("repGivenName"),
     repOrganization: empty("repOrganization"),
@@ -96,7 +160,26 @@ export async function updateAccountSettingsAction(
   });
 
   if (!parsed.success) {
-    return { error: "invalid" };
+    const missingRepFields = missingAccountRepFormKeys({
+      repFamilyName: empty("repFamilyName"),
+      repGivenName: empty("repGivenName"),
+      repOrganization: empty("repOrganization"),
+      repEmail: empty("repEmail"),
+      repPhone: empty("repPhone"),
+      repPhoneCountryCode: empty("repPhoneCountryCode"),
+      repMembershipId: empty("repMembershipId"),
+      repStreetNum: empty("repStreetNum"),
+      repStreetName: empty("repStreetName"),
+      repCity: empty("repCity"),
+      repProvince: empty("repProvince"),
+      repCountry: normalizeRepCountry(empty("repCountry")),
+      repPostalCode: empty("repPostalCode"),
+    });
+    return {
+      error: "invalid",
+      fieldErrors: zodFieldErrors(parsed.error),
+      missingRepFields: missingRepFields.length ? missingRepFields : undefined,
+    };
   }
 
   const user = await getSessionUser();
@@ -108,7 +191,6 @@ export async function updateAccountSettingsAction(
   const { error } = await supabase
     .from("profiles")
     .update({
-      full_name: parsed.data.fullName,
       rep_family_name: parsed.data.repFamilyName || null,
       rep_given_name: parsed.data.repGivenName || null,
       rep_organization: parsed.data.repOrganization || null,
@@ -127,14 +209,40 @@ export async function updateAccountSettingsAction(
     .eq("id", user.id);
 
   if (error) {
-    console.error("update account:", error.message);
+    console.error("update account representative:", error.message);
     return { error: "save_failed" };
   }
+
+  const missingRepFields = missingAccountRepFormKeys(
+    parsed.data,
+    user.email,
+  );
+  const repComplete = missingRepFields.length === 0;
+  const repValues: AccountRepFormValues = {
+    repFamilyName: parsed.data.repFamilyName || "",
+    repGivenName: parsed.data.repGivenName || "",
+    repOrganization: parsed.data.repOrganization || "",
+    repEmail: parsed.data.repEmail || "",
+    repPhone: parsed.data.repPhone || "",
+    repPhoneCountryCode: parsed.data.repPhoneCountryCode || "",
+    repMembershipId: parsed.data.repMembershipId || "",
+    repStreetNum: parsed.data.repStreetNum || "",
+    repStreetName: parsed.data.repStreetName || "",
+    repCity: parsed.data.repCity || "",
+    repProvince: parsed.data.repProvince || "",
+    repCountry: parsed.data.repCountry || "",
+    repPostalCode: parsed.data.repPostalCode || "",
+  };
 
   revalidatePath(`/${parsed.data.locale}/settings/account`);
   revalidatePath(`/${parsed.data.locale}/home`);
 
-  return { success: true };
+  return {
+    success: true,
+    repComplete,
+    repValues,
+    missingRepFields: repComplete ? undefined : missingRepFields,
+  };
 }
 
 export async function updateOrganizationSettingsAction(
