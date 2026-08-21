@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@/i18n/navigation";
-import { formatPriceCents, generateServiceSlots } from "@/lib/booking/slots";
+import { formatPriceCents, generateServiceSlots, generateUnblockedServiceSlots } from "@/lib/booking/slots";
+import { resolveBookingPrice, hasUrgentPricing, type BookingRateKind } from "@/lib/booking/pricing";
 import { serviceCopy } from "@/lib/booking/service-i18n";
 import { formFieldInputName, isReservedBookingFieldKey } from "@/lib/booking/form-fields";
 import { isCompositeFieldType } from "@/lib/booking/composite-fields";
@@ -56,6 +57,9 @@ export type PublicBookingPayload = {
   formFields: BookingServiceFormFieldRow[];
   hosts: PublicHostCalendar[];
   cancelPolicy: CancelPolicyDisplay | null;
+  slotMode?: "availability" | "unblocked";
+  rateKind?: BookingRateKind;
+  lockService?: boolean;
 };
 
 const initialState: PublicBookingState = {};
@@ -105,21 +109,33 @@ export function PublicBookingFlow({
   const host = payload.hosts.find((row) => row.userId === hostUserId) ?? null;
   const service = payload.services.find((row) => row.id === serviceId) ?? null;
   const serviceLabel = service ? serviceCopy(service, locale).title : "";
+  const rateKind = payload.rateKind ?? "standard";
+  const slotMode = payload.slotMode ?? "availability";
+  const lockService = Boolean(payload.lockService) || payload.services.length === 1;
   const slots = useMemo(() => {
     if (!service || !host) return [];
+    const window = {
+      timezone: payload.timezone,
+      bookingWindowDays: payload.bookingWindowDays,
+      minNoticeHours: payload.minNoticeHours,
+      bufferMinutes: payload.bufferMinutes,
+    };
+    if (slotMode === "unblocked") {
+      return generateUnblockedServiceSlots({
+        durationMinutes: service.duration_minutes,
+        blocked: host.blocked,
+        busy: host.busy,
+        window,
+      });
+    }
     return generateServiceSlots({
       durationMinutes: service.duration_minutes,
       rules: host.rules,
       blocked: host.blocked,
       busy: host.busy,
-      window: {
-        timezone: payload.timezone,
-        bookingWindowDays: payload.bookingWindowDays,
-        minNoticeHours: payload.minNoticeHours,
-        bufferMinutes: payload.bufferMinutes,
-      },
+      window,
     });
-  }, [host, payload, service]);
+  }, [host, payload, service, slotMode]);
 
   const availableDays = useMemo(
     () => new Set(slots.map((slot) => slot.dateIso)),
@@ -138,6 +154,13 @@ export function PublicBookingFlow({
         : null;
   const daySlots = slots.filter((slot) => slot.dateIso === effectiveDateIso);
   const selectedSlot = slots.find((slot) => slot.startsAt === slotStart) ?? null;
+  const charged = service
+    ? resolveBookingPrice({
+        service,
+        rateKind,
+        startsAt: selectedSlot?.startsAt,
+      })
+    : null;
   const selectedService = payload.services.find((row) => row.id === serviceId);
   const serviceFields = payload.formFields.filter(
     (field) =>
@@ -413,7 +436,7 @@ export function PublicBookingFlow({
               {payload.organizationName}
             </p>
             <h1 className="font-heading truncate text-lg font-semibold text-brand lg:text-xl">
-              {t("title")}
+              {slotMode === "unblocked" ? t("directTitle") : t("title")}
             </h1>
           </div>
         </div>
@@ -465,6 +488,24 @@ export function PublicBookingFlow({
           </section>
         ) : null}
 
+        {lockService && service ? (
+          <section className="shrink-0">
+            <p className="text-sm font-semibold text-brand">
+              {serviceCopy(service, locale).title}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("durationMinutes", { minutes: service.duration_minutes })}
+              {" · "}
+              {formatPriceCents(
+                (charged ?? resolveBookingPrice({ service, rateKind })).amountCents,
+                locale,
+                service.currency,
+              )}
+              {charged?.applied === "urgent" ? ` · ${t("urgentApplied")}` : null}
+            </p>
+          </section>
+        ) : null}
+        {lockService ? null : (
         <section className="shrink-0 space-y-1.5">
           <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             {t("chooseService")}
@@ -473,6 +514,10 @@ export function PublicBookingFlow({
             {payload.services.map((row) => {
               const selected = row.id === serviceId;
               const copy = serviceCopy(row, locale);
+              const chipPrice = resolveBookingPrice({
+                service: row,
+                rateKind,
+              });
               return (
                 <button
                   key={row.id}
@@ -497,17 +542,31 @@ export function PublicBookingFlow({
                   <p className="text-xs text-muted-foreground">
                     {t("durationMinutes", { minutes: row.duration_minutes })}
                     {" · "}
-                    {formatPriceCents(row.price_cents, locale, row.currency)}
+                    {formatPriceCents(chipPrice.amountCents, locale, row.currency)}
+                    {hasUrgentPricing(row) && rateKind === "standard" ? (
+                      <>
+                        {" · "}
+                        {t("urgentShort")}{" "}
+                        {formatPriceCents(
+                          row.urgent_price_cents ?? 0,
+                          locale,
+                          row.currency,
+                        )}
+                      </>
+                    ) : null}
                   </p>
                 </button>
               );
             })}
           </div>
         </section>
+        )}
 
         <section className="flex min-h-0 flex-1 flex-col">
           {slots.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noSlots")}</p>
+            <p className="text-sm text-muted-foreground">
+              {slotMode === "unblocked" ? t("noSlotsUnblocked") : t("noSlots")}
+            </p>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center lg:justify-center lg:gap-5">
               <div className="min-h-[22rem] w-full max-w-[32rem] lg:h-[min(100%,32rem)] lg:min-h-0">
@@ -593,8 +652,8 @@ export function PublicBookingFlow({
           >
             {state.error === "slot_taken"
               ? t("errors.slot_taken")
-              : selectedWhen && service
-                ? `${serviceLabel} · ${selectedWhen}`
+              : selectedWhen && service && charged
+                ? `${serviceLabel} · ${selectedWhen} · ${formatPriceCents(charged.amountCents, locale, service.currency)}${charged.applied === "urgent" ? ` · ${t("urgentApplied")}` : ""}`
                 : t("selectTimeHint")}
           </p>
           <Button
@@ -650,6 +709,10 @@ export function PublicBookingFlow({
                   <p className="truncate text-sm text-muted-foreground">
                     {host ? `${host.name} · ` : null}
                     {serviceLabel} · {selectedWhen}
+                    {charged
+                      ? ` · ${formatPriceCents(charged.amountCents, locale, service.currency)}`
+                      : null}
+                    {charged?.applied === "urgent" ? ` · ${t("urgentApplied")}` : null}
                   </p>
                 ) : null}
               </>
@@ -881,12 +944,12 @@ export function PublicBookingFlow({
                       </>
                     }
                   />
-                  {service.price_cents > 0 && payload.cancelPolicy ? (
+                  {charged && charged.amountCents > 0 && payload.cancelPolicy ? (
                     <CancelPolicyNotice
                       policy={payload.cancelPolicy}
                       locale={locale}
                       currency={service.currency}
-                      paidAmountCents={service.price_cents}
+                      paidAmountCents={charged.amountCents}
                     />
                   ) : null}
                   {showExistingNotice ? null : (

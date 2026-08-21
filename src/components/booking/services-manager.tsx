@@ -38,6 +38,7 @@ import {
   listViewportStackClassName,
 } from "@/components/layout/list-layout";
 import { ServiceBookingFormButton } from "@/components/booking/service-booking-form";
+import { CopyServiceLinkButton } from "@/components/booking/copy-service-link-button";
 import { ServiceContractsButton } from "@/components/booking/service-contracts";
 import { ServiceEmailAutomationsButton } from "@/components/booking/service-email-automations";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +149,8 @@ function ServiceFormFields({
   onIsActiveChange,
   allowPayLater,
   onAllowPayLaterChange,
+  autoUrgent,
+  onAutoUrgentChange,
   showActiveToggle = true,
 }: {
   locale: string;
@@ -157,6 +160,8 @@ function ServiceFormFields({
   onIsActiveChange: (value: boolean) => void;
   allowPayLater: boolean;
   onAllowPayLaterChange: (value: boolean) => void;
+  autoUrgent: boolean;
+  onAutoUrgentChange: (value: boolean) => void;
   showActiveToggle?: boolean;
 }) {
   const t = useTranslations("services");
@@ -253,25 +258,25 @@ function ServiceFormFields({
           <h3 className="text-sm font-semibold text-brand">
             {t("serviceDetailsSection")}
           </h3>
+          <Field>
+            <FieldLabel htmlFor="durationMinutes" required>
+              {t("duration")}
+            </FieldLabel>
+            <Input
+              id="durationMinutes"
+              name="durationMinutes"
+              type="number"
+              min={5}
+              max={480}
+              step={5}
+              defaultValue={service?.duration_minutes ?? 30}
+              required
+            />
+          </Field>
           <FieldGrid>
             <Field>
-              <FieldLabel htmlFor="durationMinutes" required>
-                {t("duration")}
-              </FieldLabel>
-              <Input
-                id="durationMinutes"
-                name="durationMinutes"
-                type="number"
-                min={5}
-                max={480}
-                step={5}
-                defaultValue={service?.duration_minutes ?? 30}
-                required
-              />
-            </Field>
-            <Field>
               <FieldLabel htmlFor="price" required>
-                {t("price")}
+                {t("standardPrice")}
               </FieldLabel>
               <Input
                 id="price"
@@ -281,7 +286,56 @@ function ServiceFormFields({
                 required
               />
             </Field>
+            <Field>
+              <FieldLabel htmlFor="urgentPrice" required={autoUrgent}>
+                {t("urgentPrice")}
+              </FieldLabel>
+              <Input
+                id="urgentPrice"
+                name="urgentPrice"
+                inputMode="decimal"
+                required={autoUrgent}
+                defaultValue={
+                  service?.urgent_price_cents == null
+                    ? ""
+                    : centsToPriceInput(service.urgent_price_cents)
+                }
+              />
+              <FieldHint>{t("urgentPriceHelp")}</FieldHint>
+            </Field>
           </FieldGrid>
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3">
+            <div className="min-w-0 space-y-0.5">
+              <Label htmlFor="service-auto-urgent" className="text-sm font-medium">
+                {t("autoUrgent")}
+              </Label>
+              <p className="text-xs text-muted-foreground">{t("autoUrgentHelp")}</p>
+            </div>
+            <Switch
+              id="service-auto-urgent"
+              checked={autoUrgent}
+              onCheckedChange={onAutoUrgentChange}
+            />
+          </div>
+          <input type="hidden" name="autoUrgent" value={autoUrgent ? "on" : ""} />
+          {autoUrgent ? (
+            <Field>
+              <FieldLabel htmlFor="urgentAutoWithinDays" required>
+                {t("autoUrgentDays")}
+              </FieldLabel>
+              <Input
+                id="urgentAutoWithinDays"
+                name="urgentAutoWithinDays"
+                type="number"
+                min={1}
+                max={90}
+                step={1}
+                defaultValue={service?.urgent_auto_within_days ?? 2}
+                required
+              />
+              <FieldHint>{t("autoUrgentDaysHelp")}</FieldHint>
+            </Field>
+          ) : null}
         </section>
 
         <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
@@ -375,12 +429,22 @@ function ServiceFormDialog({
   const [allowPayLater, setAllowPayLater] = useState(
     service?.allow_pay_later ?? false,
   );
+  const [autoUrgent, setAutoUrgent] = useState(
+    Boolean(service?.urgent_auto_within_days),
+  );
 
   useEffect(() => {
     if (!open) return;
     setIsActive(service?.is_active ?? true);
     setAllowPayLater(service?.allow_pay_later ?? false);
-  }, [open, service?.id, service?.is_active, service?.allow_pay_later]);
+    setAutoUrgent(Boolean(service?.urgent_auto_within_days));
+  }, [
+    open,
+    service?.id,
+    service?.is_active,
+    service?.allow_pay_later,
+    service?.urgent_auto_within_days,
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -427,6 +491,8 @@ function ServiceFormDialog({
               onIsActiveChange={setIsActive}
               allowPayLater={allowPayLater}
               onAllowPayLaterChange={setAllowPayLater}
+              autoUrgent={autoUrgent}
+              onAutoUrgentChange={setAutoUrgent}
               showActiveToggle={mode === "create"}
             />
           </div>
@@ -787,11 +853,7 @@ export function ServicesManager({
                     {t("columnReminders")}
                   </TableHead>
                   <TableHead
-                    className={cn(
-                      "min-w-[7rem]",
-                      listTableHeadClassName,
-                      !canManage && listTableEdgeEndClassName,
-                    )}
+                    className={cn("min-w-[7rem]", listTableHeadClassName)}
                   >
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="is_active" label={t("active")} />
@@ -809,24 +871,22 @@ export function ServicesManager({
                       </NativeSelect>
                     </div>
                   </TableHead>
-                  {canManage ? (
-                    <TableHead
-                      className={cn(
-                        "w-12",
-                        listTableHeadClassName,
-                        listTableEdgeEndClassName,
-                      )}
-                    >
-                      <span className="sr-only">{t("edit")}</span>
-                    </TableHead>
-                  ) : null}
+                  <TableHead
+                    className={cn(
+                      "w-20",
+                      listTableHeadClassName,
+                      listTableEdgeEndClassName,
+                    )}
+                  >
+                    <span className="sr-only">{t("copyLink")}</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredSorted.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell
-                      colSpan={canManage ? 7 : 6}
+                      colSpan={7}
                       className={listTableEmptyCellClassName}
                     >
                       {t("noMatches")}
@@ -860,11 +920,25 @@ export function ServicesManager({
                     {t("durationMinutes", { minutes: service.duration_minutes })}
                   </TableCell>
                   <TableCell>
-                    {formatPriceCents(
-                      service.price_cents,
-                      locale,
-                      service.currency,
-                    )}
+                    <div className="space-y-0.5">
+                      <p>
+                        {formatPriceCents(
+                          service.price_cents,
+                          locale,
+                          service.currency,
+                        )}
+                      </p>
+                      {service.urgent_price_cents != null ? (
+                        <p className="text-xs text-muted-foreground">
+                          {t("urgentShort")}:{" "}
+                          {formatPriceCents(
+                            service.urgent_price_cents,
+                            locale,
+                            service.currency,
+                          )}
+                        </p>
+                      ) : null}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {service.form_id
@@ -876,26 +950,31 @@ export function ServicesManager({
                       count: reminderCountByService.get(service.id) ?? 0,
                     })}
                   </TableCell>
-                  <TableCell className={cn(!canManage && listTableEdgeEndClassName)}>
+                  <TableCell>
                     <Badge variant={service.is_active ? "default" : "secondary"}>
                       {service.is_active ? t("active") : t("inactive")}
                     </Badge>
                   </TableCell>
-                  {canManage ? (
-                    <TableCell className={cn("text-right", listTableEdgeEndClassName)}>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100"
-                        onClick={() => setEditing(service)}
-                        aria-label={t("edit")}
-                        title={t("edit")}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                    </TableCell>
-                  ) : null}
+                  <TableCell
+                    className={cn("text-right", listTableEdgeEndClassName)}
+                  >
+                    <div className="flex items-center justify-end gap-0.5">
+                      <CopyServiceLinkButton locale={locale} service={service} />
+                      {canManage ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100"
+                          onClick={() => setEditing(service)}
+                          aria-label={t("edit")}
+                          title={t("edit")}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </TableCell>
                 </TableRow>
                 );
               })

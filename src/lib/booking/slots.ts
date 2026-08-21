@@ -139,6 +139,76 @@ export function isSlotStillOpen(input: {
   );
 }
 
+const DAY_MINUTES = 24 * 60;
+
+/** Slots around the clock except blocked time, existing bookings, and calendar busy. */
+export function generateUnblockedServiceSlots(input: {
+  durationMinutes: number;
+  blocked: BusyInterval[];
+  busy: BusyInterval[];
+  window: SlotWindow;
+  from?: Date;
+}): GeneratedSlot[] {
+  const now = input.from ?? new Date();
+  const earliest = now.getTime() + input.window.minNoticeHours * 3_600_000;
+  const durationMs = input.durationMinutes * 60_000;
+  const busy = [
+    ...expandBusyWithBuffer(input.busy, input.window.bufferMinutes),
+    ...expandBusyWithBuffer(input.blocked, 0),
+  ];
+  const dates = listCivilDatesInWindow(
+    input.window.timezone,
+    input.window.bookingWindowDays,
+    now,
+  );
+  const slots: GeneratedSlot[] = [];
+  const step = Math.max(5, input.durationMinutes);
+
+  for (const dateIso of dates) {
+    for (let cursor = 0; cursor < DAY_MINUTES; cursor += step) {
+      const startHm = hmFromMinutes(cursor);
+      const startsAt = zonedCivilToUtc(dateIso, startHm, input.window.timezone);
+      if (startsAt.getTime() < earliest) continue;
+      const endsAt = new Date(startsAt.getTime() + durationMs);
+      const startMs = startsAt.getTime();
+      const endMs = endsAt.getTime();
+      const taken = busy.some((interval) =>
+        overlaps(startMs, endMs, interval.start, interval.end),
+      );
+      if (taken) continue;
+      slots.push({
+        startsAt: startsAt.toISOString(),
+        endsAt: endsAt.toISOString(),
+        dateIso,
+      });
+    }
+  }
+
+  return slots;
+}
+
+export function isUnblockedSlotStillOpen(input: {
+  startsAt: string;
+  endsAt: string;
+  durationMinutes: number;
+  blocked: BusyInterval[];
+  busy: BusyInterval[];
+  window: SlotWindow;
+  from?: Date;
+}) {
+  const expected = generateUnblockedServiceSlots({
+    durationMinutes: input.durationMinutes,
+    blocked: input.blocked,
+    busy: input.busy,
+    window: input.window,
+    from: input.from,
+  });
+  return expected.some(
+    (slot) =>
+      slot.startsAt === input.startsAt && slot.endsAt === input.endsAt,
+  );
+}
+
 export function formatPriceCents(
   cents: number,
   locale: string,

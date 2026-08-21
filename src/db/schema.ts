@@ -799,6 +799,8 @@ export const bookingServices = pgTable("booking_services", {
   translations: jsonb("translations").notNull().default({}),
   durationMinutes: integer("duration_minutes").notNull(),
   priceCents: integer("price_cents").notNull().default(0),
+  urgentPriceCents: integer("urgent_price_cents"),
+  urgentAutoWithinDays: integer("urgent_auto_within_days"),
   currency: text("currency").notNull().default("CAD"),
   isActive: boolean("is_active").notNull().default(true),
   allowPayLater: boolean("allow_pay_later").notNull().default(false),
@@ -1117,6 +1119,29 @@ export const staffContractSignatures = pgTable(
     primaryKey({ columns: [table.organizationId, table.userId] }),
   ],
 );
+
+/** Single-use service booking links copied from the services list. */
+export const bookingServiceLinks = pgTable("booking_service_links", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  serviceId: uuid("service_id")
+    .notNull()
+    .references(() => bookingServices.id, { onDelete: "cascade" }),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  rateKind: text("rate_kind").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  appointmentId: uuid("appointment_id").references(() => bookingAppointments.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 /** Single-use “schedule a call” links emailed from a project file. */
 export const projectBookingInvites = pgTable("project_booking_invites", {

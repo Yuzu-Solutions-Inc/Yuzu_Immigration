@@ -1,6 +1,7 @@
 import { normalizeDayOffsets } from "@/lib/booking/day-offsets";
 import { generateServiceSlots } from "@/lib/booking/slots";
 import { hashBookingToken } from "@/lib/booking/token";
+import type { BookingRateKind } from "@/lib/booking/pricing";
 import { addDaysToIsoDate, zonedCivilToUtc } from "@/lib/booking/timezone";
 import { getSessionUser } from "@/lib/auth/session";
 import { requireOrganizationId, type PersonRow } from "@/lib/crm/queries";
@@ -73,6 +74,8 @@ export type {
   ServiceEmailAutomationRow,
 };
 
+export type PublicBookingSlotMode = "availability" | "unblocked";
+
 export type PublicBookingContext = {
   organizationId: string;
   organizationName: string;
@@ -81,7 +84,16 @@ export type PublicBookingContext = {
   formFields: BookingFormFieldRow[];
   hosts: PublicHostCalendar[];
   cancelPolicy: CancelPolicyDisplay | null;
+  slotMode: PublicBookingSlotMode;
+  rateKind: BookingRateKind;
+  serviceLinkId: string | null;
 };
+
+export type BookingPageLoad =
+  | { status: "ok"; ctx: PublicBookingContext }
+  | { status: "used" }
+  | { status: "expired" }
+  | { status: "missing" };
 
 export type ManageBookingContext = {
   organizationId: string;
@@ -125,6 +137,7 @@ async function loadHostCalendars(input: {
   bookingWindowDays: number;
   excludeAppointmentId?: string;
   excludeBusyRange?: { starts_at: string; ends_at: string };
+  includeAllMembers?: boolean;
 }): Promise<PublicHostCalendar[]> {
   const admin = createServiceClient();
   const now = new Date();
@@ -175,9 +188,11 @@ async function loadHostCalendars(input: {
   );
   const hostIds = [
     ...new Set(
-      rules
-        .map((rule) => rule.user_id)
-        .filter((userId) => memberIds.has(userId)),
+      input.includeAllMembers
+        ? [...memberIds]
+        : rules
+            .map((rule) => rule.user_id)
+            .filter((userId) => memberIds.has(userId)),
     ),
   ];
   if (hostIds.length === 0) return [];
@@ -405,7 +420,11 @@ export async function listBookingServices(): Promise<BookingServiceRow[]> {
     console.error("listBookingServices:", error.message);
     return [];
   }
-  return (data ?? []) as BookingServiceRow[];
+  return ((data ?? []) as BookingServiceRow[]).map((row) => ({
+    ...row,
+    urgent_price_cents: row.urgent_price_cents ?? null,
+    urgent_auto_within_days: row.urgent_auto_within_days ?? null,
+  }));
 }
 
 export async function listBookingForms(): Promise<BookingFormRow[]> {
@@ -590,60 +609,156 @@ export async function listAppointmentsInRange(
 export async function loadPublicBookingContext(
   token: string,
 ): Promise<PublicBookingContext | null> {
+  const loaded = await loadBookingPage(token);
+  return loaded.status === "ok" ? loaded.ctx : null;
+}
+
+export async function loadBookingPage(token: string): Promise<BookingPageLoad> {
   const admin = createServiceClient();
   const hash = hashBookingToken(token);
+
+  const linkLoad = await loadServiceLinkBookingPage(admin, hash);
+  if (linkLoad) return linkLoad;
+
   const { data: settings, error } = await admin
     .from("booking_settings")
     .select("*")
     .eq("public_token_hash", hash)
     .maybeSingle();
-  if (error || !settings) {
-    if (error) console.error("loadPublicBookingContext settings:", error.message);
+  if (error) {
+    console.error("loadPublicBookingContext settings:", error.message);
+    return { status: "missing" };
+  }
+  if (!settings) return { status: "missing" };
+  const row = settings as BookingSettingsRow;
+  if (!row.is_enabled) return { status: "missing" };
+
+  const ctx = await buildPublicBookingContext({
+    organizationId: row.organization_id,
+    settings: row,
+    servicesFilter: { activeOnly: true },
+    includeAllMembers: false,
+    slotMode: "availability",
+    rateKind: "standard",
+    serviceLinkId: null,
+  });
+  return ctx ? { status: "ok", ctx } : { status: "missing" };
+}
+
+async function loadServiceLinkBookingPage(
+  admin: ReturnType<typeof createServiceClient>,
+  tokenHash: string,
+): Promise<BookingPageLoad | null> {
+  const { data: link, error } = await admin
+    .from("booking_service_links")
+    .select("*")
+    .eq("token_hash", tokenHash)
+    .maybeSingle();
+  if (error) {
+    console.error("loadServiceLinkBookingPage:", error.message);
+    return { status: "missing" };
+  }
+  if (!link) {
+    await admin
+      .from("booking_service_links")
+      .delete()
+      .lt("expires_at", new Date().toISOString());
     return null;
   }
-  const row = settings as BookingSettingsRow;
-  if (!row.is_enabled) return null;
 
+  if (link.appointment_id) return { status: "used" };
+  if (Date.parse(link.expires_at as string) <= Date.now()) {
+    await admin.from("booking_service_links").delete().eq("id", link.id);
+    return { status: "expired" };
+  }
+
+  const { data: settings } = await admin
+    .from("booking_settings")
+    .select("*")
+    .eq("organization_id", link.organization_id)
+    .maybeSingle();
+  if (!settings) return { status: "missing" };
+
+  const rateKind =
+    link.rate_kind === "urgent" ? "urgent" : "standard";
+  const ctx = await buildPublicBookingContext({
+    organizationId: link.organization_id as string,
+    settings: settings as BookingSettingsRow,
+    servicesFilter: { serviceId: link.service_id as string },
+    includeAllMembers: true,
+    slotMode: "unblocked",
+    rateKind,
+    serviceLinkId: link.id as string,
+  });
+  return ctx ? { status: "ok", ctx } : { status: "missing" };
+}
+
+async function buildPublicBookingContext(input: {
+  organizationId: string;
+  settings: BookingSettingsRow;
+  servicesFilter: { activeOnly: true } | { serviceId: string };
+  includeAllMembers: boolean;
+  slotMode: PublicBookingSlotMode;
+  rateKind: BookingRateKind;
+  serviceLinkId: string | null;
+}): Promise<PublicBookingContext | null> {
+  const admin = createServiceClient();
   const { data: org } = await admin
     .from("organizations")
     .select("id, name")
-    .eq("id", row.organization_id)
+    .eq("id", input.organizationId)
     .maybeSingle();
   if (!org) return null;
 
+  let servicesQuery = admin
+    .from("booking_services")
+    .select("*")
+    .eq("organization_id", input.organizationId);
+  if ("activeOnly" in input.servicesFilter) {
+    servicesQuery = servicesQuery.eq("is_active", true);
+  } else {
+    servicesQuery = servicesQuery.eq("id", input.servicesFilter.serviceId);
+  }
+
   const [servicesRes, fieldsRes, hosts, squareRes] = await Promise.all([
-    admin
-      .from("booking_services")
-      .select("*")
-      .eq("organization_id", row.organization_id)
-      .eq("is_active", true)
+    servicesQuery
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
     admin
       .from("booking_service_form_fields")
       .select("*")
-      .eq("organization_id", row.organization_id)
+      .eq("organization_id", input.organizationId)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
     loadHostCalendars({
-      organizationId: row.organization_id,
-      bookingWindowDays: row.booking_window_days,
+      organizationId: input.organizationId,
+      bookingWindowDays: input.settings.booking_window_days,
+      includeAllMembers: input.includeAllMembers,
     }),
     admin
       .from("square_connections")
       .select(
         "cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
       )
-      .eq("organization_id", row.organization_id)
+      .eq("organization_id", input.organizationId)
       .eq("is_enabled", true)
       .maybeSingle(),
   ]);
 
+  const services = ((servicesRes.data ?? []) as BookingServiceRow[]).map(
+    (row) => ({
+      ...row,
+      urgent_price_cents: row.urgent_price_cents ?? null,
+      urgent_auto_within_days: row.urgent_auto_within_days ?? null,
+    }),
+  );
+  if (services.length === 0) return null;
+
   return {
     organizationId: org.id as string,
     organizationName: org.name as string,
-    settings: row,
-    services: (servicesRes.data ?? []) as BookingServiceRow[],
+    settings: input.settings,
+    services,
     formFields: (fieldsRes.data ?? []) as BookingFormFieldRow[],
     hosts,
     cancelPolicy: squareRes.data
@@ -651,6 +766,9 @@ export async function loadPublicBookingContext(
           normalizeSquareCancelRefundPolicy(squareRes.data),
         )
       : null,
+    slotMode: input.slotMode,
+    rateKind: input.rateKind,
+    serviceLinkId: input.serviceLinkId,
   };
 }
 

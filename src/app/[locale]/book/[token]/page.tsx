@@ -2,7 +2,7 @@ import { after } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PublicBookingFlow } from "@/components/booking/public-booking-flow";
-import { loadPublicBookingContext } from "@/lib/booking/queries";
+import { loadBookingPage } from "@/lib/booking/queries";
 import { refreshHostCalendarsIfStale } from "@/lib/calendar/host-calendar";
 
 export default async function PublicBookPage({
@@ -13,24 +13,36 @@ export default async function PublicBookPage({
   const { locale, token } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("booking");
-  const ctx = await loadPublicBookingContext(token);
+  const loaded = await loadBookingPage(token);
 
-  if (ctx) {
-    after(() => refreshHostCalendarsIfStale(ctx.organizationId));
+  if (loaded.status === "ok") {
+    after(() => refreshHostCalendarsIfStale(loaded.ctx.organizationId));
   }
 
-  if (!ctx) {
+  if (loaded.status !== "ok") {
+    const title =
+      loaded.status === "used"
+        ? t("alreadyUsedTitle")
+        : loaded.status === "expired"
+          ? t("expiredTitle")
+          : t("unavailableTitle");
+    const body =
+      loaded.status === "used"
+        ? t("alreadyUsedBody")
+        : loaded.status === "expired"
+          ? t("expiredBody")
+          : t("unavailableBody");
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <h1 className="font-heading text-2xl font-semibold text-brand">
-          {t("unavailableTitle")}
+          {title}
         </h1>
-        <p className="mt-2 text-[15px] text-muted-foreground">
-          {t("unavailableBody")}
-        </p>
+        <p className="mt-2 text-[15px] text-muted-foreground">{body}</p>
       </div>
     );
   }
+
+  const ctx = loaded.ctx;
 
   return (
     <PublicBookingFlow
@@ -46,6 +58,9 @@ export default async function PublicBookPage({
         formFields: ctx.formFields,
         hosts: ctx.hosts,
         cancelPolicy: ctx.cancelPolicy,
+        slotMode: ctx.slotMode,
+        rateKind: ctx.rateKind,
+        lockService: Boolean(ctx.serviceLinkId),
       }}
     />
   );

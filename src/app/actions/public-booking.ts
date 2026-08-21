@@ -20,9 +20,11 @@ import { parseBookingFormAnswers, isReservedBookingFieldKey } from "@/lib/bookin
 import {
   findPersonByEmail,
   listFutureGuestAppointmentsByEmail,
+  loadBookingPage,
   loadPublicBookingContext,
 } from "@/lib/booking/queries";
-import { isSlotStillOpen } from "@/lib/booking/slots";
+import { resolveBookingPrice } from "@/lib/booking/pricing";
+import { isSlotStillOpen, isUnblockedSlotStillOpen } from "@/lib/booking/slots";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { recordAuditEvent } from "@/lib/security/audit";
@@ -133,8 +135,10 @@ export async function submitPublicBookingAction(
     return { error: "invalid" };
   }
 
-  const ctx = await loadPublicBookingContext(parsed.data.token);
-  if (!ctx) return { error: "unavailable" };
+  const loaded = await loadBookingPage(parsed.data.token);
+  if (loaded.status === "used") return { error: "already_used" };
+  if (loaded.status !== "ok") return { error: "unavailable" };
+  const ctx = loaded.ctx;
 
   const guestEmail = normalizeGuestEmail(parsed.data.guestEmail);
   const hashes = await bookingSubjectHashes(ctx.organizationId, guestEmail);
@@ -159,20 +163,35 @@ export async function submitPublicBookingAction(
   const service = ctx.services.find((row) => row.id === parsed.data.serviceId);
   if (!service) return { error: "invalid_service" };
 
-  const open = isSlotStillOpen({
-    startsAt: parsed.data.startsAt,
-    endsAt: parsed.data.endsAt,
-    durationMinutes: service.duration_minutes,
-    rules: host.rules,
-    blocked: host.blocked,
-    busy: host.busy,
-    window: {
-      timezone: ctx.settings.timezone,
-      bookingWindowDays: ctx.settings.booking_window_days,
-      minNoticeHours: ctx.settings.min_notice_hours,
-      bufferMinutes: ctx.settings.buffer_minutes,
-    },
-  });
+  const open =
+    ctx.slotMode === "unblocked"
+      ? isUnblockedSlotStillOpen({
+          startsAt: parsed.data.startsAt,
+          endsAt: parsed.data.endsAt,
+          durationMinutes: service.duration_minutes,
+          blocked: host.blocked,
+          busy: host.busy,
+          window: {
+            timezone: ctx.settings.timezone,
+            bookingWindowDays: ctx.settings.booking_window_days,
+            minNoticeHours: ctx.settings.min_notice_hours,
+            bufferMinutes: ctx.settings.buffer_minutes,
+          },
+        })
+      : isSlotStillOpen({
+          startsAt: parsed.data.startsAt,
+          endsAt: parsed.data.endsAt,
+          durationMinutes: service.duration_minutes,
+          rules: host.rules,
+          blocked: host.blocked,
+          busy: host.busy,
+          window: {
+            timezone: ctx.settings.timezone,
+            bookingWindowDays: ctx.settings.booking_window_days,
+            minNoticeHours: ctx.settings.min_notice_hours,
+            bufferMinutes: ctx.settings.buffer_minutes,
+          },
+        });
   if (!open) return { error: "slot_taken" };
 
   const expectedEnd = new Date(
@@ -270,12 +289,19 @@ export async function submitPublicBookingAction(
       .eq("organization_id", ctx.organizationId);
   }
 
+  const priced = resolveBookingPrice({
+    service,
+    rateKind: ctx.rateKind,
+    startsAt: parsed.data.startsAt,
+  });
+  const amountCents = priced.amountCents;
+
   const { getOrgSquareConnection } = await import("@/lib/square/client");
   const squareConnection =
-    service.price_cents > 0
+    amountCents > 0
       ? await getOrgSquareConnection(ctx.organizationId)
       : null;
-  const requiresPayment = Boolean(squareConnection && service.price_cents > 0);
+  const requiresPayment = Boolean(squareConnection && amountCents > 0);
 
   const manageToken = createBookingToken();
   const { encryptField } = await import("@/lib/security/field-crypto");
@@ -323,6 +349,26 @@ export async function submitPublicBookingAction(
     return { error: "book_failed" };
   }
 
+  if (ctx.serviceLinkId) {
+    const claimed = await claimServiceLink({
+      admin,
+      linkId: ctx.serviceLinkId,
+      organizationId: ctx.organizationId,
+      appointmentId: appointment.id,
+    });
+    if (!claimed) {
+      await admin
+        .from("booking_appointments")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", appointment.id);
+      return { error: "already_used" };
+    }
+  }
+
   await recordBookingAbuseEvent({
     organizationId: ctx.organizationId,
     kind: "book_success",
@@ -339,6 +385,8 @@ export async function submitPublicBookingAction(
     metadata: {
       serviceId: service.id,
       paymentRequired: requiresPayment,
+      rateKind: priced.applied,
+      amountCents,
     },
   });
 
@@ -354,7 +402,7 @@ export async function submitPublicBookingAction(
       const checkout = await createCheckoutPaymentRequest({
         organizationId: ctx.organizationId,
         source: "booking",
-        amountCents: service.price_cents,
+        amountCents,
         currency: service.currency || "CAD",
         description: `${localizedTitle} — ${ctx.organizationName}`,
         locale: preferredLocale,
@@ -447,6 +495,13 @@ export async function submitPublicBookingAction(
           updated_at: new Date().toISOString(),
         })
         .eq("id", appointment.id);
+      if (ctx.serviceLinkId) {
+        await releaseServiceLink({
+          admin,
+          linkId: ctx.serviceLinkId,
+          appointmentId: appointment.id,
+        });
+      }
       return { error: "payment_failed", guestEmail };
     }
   }
@@ -607,4 +662,39 @@ export async function sendPublicBookingManageLinksAction(
   });
 
   return { message: "links_sent" };
+}
+
+async function claimServiceLink(input: {
+  admin: ReturnType<typeof createServiceClient>;
+  linkId: string;
+  organizationId: string;
+  appointmentId: string;
+}) {
+  const { data, error } = await input.admin
+    .from("booking_service_links")
+    .update({ appointment_id: input.appointmentId })
+    .eq("id", input.linkId)
+    .eq("organization_id", input.organizationId)
+    .is("appointment_id", null)
+    .gt("expires_at", new Date().toISOString())
+    .select("id")
+    .maybeSingle();
+  if (error) {
+    console.error("claimServiceLink:", error.message);
+    return false;
+  }
+  return Boolean(data?.id);
+}
+
+async function releaseServiceLink(input: {
+  admin: ReturnType<typeof createServiceClient>;
+  linkId: string;
+  appointmentId: string;
+}) {
+  const { error } = await input.admin
+    .from("booking_service_links")
+    .update({ appointment_id: null })
+    .eq("id", input.linkId)
+    .eq("appointment_id", input.appointmentId);
+  if (error) console.error("releaseServiceLink:", error.message);
 }

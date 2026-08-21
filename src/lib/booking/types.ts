@@ -24,6 +24,8 @@ export type BookingServiceRow = {
   translations?: ServiceTranslations | null;
   duration_minutes: number;
   price_cents: number;
+  urgent_price_cents: number | null;
+  urgent_auto_within_days: number | null;
   currency: string;
   is_active: boolean;
   allow_pay_later: boolean;
