@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-import { processReceivedEmail } from "@/lib/email/inbound";
 import { applyOutboundEmailEvent } from "@/lib/email/outbound";
 
 function resendWebhookConfig() {
@@ -34,27 +33,13 @@ export async function POST(request: Request) {
       webhookSecret: config.webhookSecret,
     });
   } catch {
-    // Never log verify errors — they can include the raw webhook payload.
     console.error("resend webhook verify: invalid_signature");
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
+  // Inbound CRM messaging is disabled — ignore email.received.
   if (event.type === "email.received") {
-    try {
-      const result = await processReceivedEmail(event.data.email_id);
-      if (
-        result &&
-        result.ok === false &&
-        (result.reason === "fetch_failed" || result.reason === "insert_failed")
-      ) {
-        return NextResponse.json({ ok: false }, { status: 500 });
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "handler_failed";
-      console.error("resend inbound via delivery webhook:", message);
-      return NextResponse.json({ ok: false }, { status: 500 });
-    }
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, ignored: "inbound_disabled" });
   }
 
   try {

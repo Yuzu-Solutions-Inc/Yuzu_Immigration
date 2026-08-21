@@ -29,6 +29,7 @@ Follow `.cursor/rules/design-system.mdc` for every UI/form/email change. Tokens 
 - `booking_settings` + `booking_availability_rules` — firm timezone, booking window (X days ahead), recurring weekly open hours.
 - `booking_services` — bookable consultation types (title, description, duration, price).
 - `booking_appointments` — public bookings; guest PII org-DEK encrypted. Public page `/[locale]/book/[token]` uses service role after token hash lookup.
+- Outbound notifications via Resend only (no inbound CRM mail). Replies blocked; footers include consultant or org privacy contact email.
 - `google_calendar_connections` + `private.google_calendar_secrets` — per-staff Google Calendar OAuth; also used for Google Meet when that meeting tool is selected.
 - `microsoft_calendar_connections` + `private.microsoft_calendar_secrets` — per-staff Outlook / Microsoft 365 OAuth; also used for Teams when that meeting tool is selected.
 - `zoom_connections` + `private.zoom_secrets` — per-staff Zoom OAuth for meeting join links only (not a calendar).

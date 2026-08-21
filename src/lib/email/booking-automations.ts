@@ -315,12 +315,9 @@ export async function processDueBookingAutomations(now = new Date()) {
               orgName.get(appointment.organization_id) ?? product.name,
             organizationId: appointment.organization_id,
             locale: prepared.emailLocale,
-            includeDoNotReply: automation.include_do_not_reply !== false,
+            includeDoNotReply: true,
             projectId: appointment.project_id,
-            replyToUserId:
-              automation.include_do_not_reply === false
-                ? appointment.host_user_id
-                : null,
+            replyToUserId: appointment.host_user_id,
           });
           if (!result.sent && result.reason !== "suppressed") allSent = false;
         }

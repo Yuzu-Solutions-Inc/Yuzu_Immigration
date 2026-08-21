@@ -4,13 +4,12 @@ import { createTranslator } from "next-intl";
 import { Resend } from "resend";
 
 import { email as emailTokens } from "@/lib/design-tokens";
+import { resolveFirmContact } from "@/lib/email/firm-contact";
 import {
   emailIdempotencyKey,
   isEmailSuppressed,
   recordOutboundEmail,
 } from "@/lib/email/outbound";
-import { projectInboundAddress } from "@/lib/email/inbound-address";
-import { staffReplyTo } from "@/lib/email/reply-to";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -76,38 +75,38 @@ function footerNotice(html: string, text: string, notice: string) {
   return { html: htmlOut, text: textOut };
 }
 
-function replyNoticeCopy(input: {
+function notificationFooterCopy(input: {
   locale: AppLocale;
-  organizationName?: string;
-  representativeName?: string;
-  includeDoNotReply: boolean;
+  contact: { email: string; name: string } | null;
+  allowReply: boolean;
 }) {
   const t = createTranslator({
     locale: input.locale,
     messages: messagesByLocale[input.locale],
     namespace: "bookingEmail",
   });
-  if (input.representativeName) {
-    return t("replyToRepresentative", { name: input.representativeName });
+  if (input.allowReply) return null;
+  if (input.contact) {
+    return t("doNotReplyContact", {
+      name: input.contact.name,
+      email: input.contact.email,
+    });
   }
-  if (!input.includeDoNotReply) return null;
-  if (input.organizationName) return t("firmWillNotSeeReply");
   return t("doNotReply");
 }
 
-/** Per-org From on the verified domain. Reply-To is chosen by sendResendEmail. */
+/** Per-org From on the verified platform domain. Replies are not accepted. */
 export function bookingSenderForOrg(organizationName: string) {
   const configured = emailConfigured();
   if (!configured) return null;
   const parsed = parseFromEnv(configured.from);
   if (!parsed) {
-    return { from: configured.from, replyTo: undefined as string | undefined };
+    return { from: configured.from };
   }
   const display = safeDisplayName(`${organizationName} Bookings`);
   const address = `${orgLocalPart(organizationName)}+Bookings@${parsed.domain}`;
   return {
     from: `${display} <${address}>`,
-    replyTo: parsed.email,
   };
 }
 
@@ -118,6 +117,11 @@ export type SendResendEmailResult =
       reason: "not_configured" | "send_failed" | "suppressed";
     };
 
+/**
+ * Outbound notifications only. Replies are blocked by default (no Reply-To,
+ * Auto-Submitted). Every client-facing notice should resolve a firm contact
+ * (consultant or org privacy email) for the footer.
+ */
 export async function sendResendEmail(input: {
   to: string;
   subject: string;
@@ -128,11 +132,16 @@ export async function sendResendEmail(input: {
   organizationName?: string;
   organizationId?: string | null;
   locale?: string;
+  /** @deprecated Replies are always blocked for client notifications. */
   includeDoNotReply?: boolean;
+  /**
+   * Rare: allow Reply-To (e.g. privacy deletion notice to the firm, Reply-To client).
+   * Client-facing notifications must omit this.
+   */
   replyTo?: string;
-  /** Immigration file — Reply-To becomes the project inbound address. */
+  /** Unused — kept so callers do not break. Inbound CRM mail is removed. */
   projectId?: string | null;
-  /** Fallback for public bookings with no file: consultant mailbox. */
+  /** Consultant/host used to resolve the firm contact shown in the footer. */
   replyToUserId?: string | null;
   from?: string;
   automated?: boolean;
@@ -153,33 +162,35 @@ export async function sendResendEmail(input: {
 
   const locale = toAppLocale(input.locale);
   const explicitReplyTo = input.replyTo?.trim() || undefined;
-  const inboundReplyTo = explicitReplyTo
-    ? null
-    : await projectInboundAddress(input.projectId);
-  const representative =
-    explicitReplyTo || inboundReplyTo
-      ? null
-      : await staffReplyTo(input.replyToUserId);
-  const representativeReply =
-    representative && representative.email !== to ? representative : null;
+  const allowReply = Boolean(explicitReplyTo);
+
+  const contact = await resolveFirmContact({
+    organizationId: input.organizationId,
+    staffUserId: input.replyToUserId,
+    organizationName: input.organizationName,
+  });
+
+  if (
+    !allowReply &&
+    input.organizationId &&
+    !contact &&
+    input.includeDoNotReply !== false
+  ) {
+    console.error(
+      "sendResendEmail: missing firm contact (set rep email or org privacy contact)",
+      input.organizationId,
+    );
+  }
+
   const sender = input.organizationName
     ? bookingSenderForOrg(input.organizationName)
-    : { from: config.from, replyTo: parseFromEnv(config.from)?.email };
-  const replyTo =
-    explicitReplyTo ||
-    inboundReplyTo ||
-    representativeReply?.email ||
-    sender?.replyTo;
+    : { from: config.from };
   const from = input.from?.trim() || sender?.from || config.from;
 
-  const notice = replyNoticeCopy({
+  const notice = notificationFooterCopy({
     locale,
-    organizationName: input.organizationName,
-    representativeName: representativeReply?.name,
-    includeDoNotReply:
-      Boolean(explicitReplyTo) || Boolean(inboundReplyTo)
-        ? false
-        : input.includeDoNotReply !== false,
+    contact,
+    allowReply,
   });
   const content = notice
     ? footerNotice(input.html, input.text, notice)
@@ -196,12 +207,7 @@ export async function sendResendEmail(input: {
   }
 
   const headers: Record<string, string> = {};
-  if (
-    input.automated !== false &&
-    !representativeReply &&
-    !explicitReplyTo &&
-    !inboundReplyTo
-  ) {
+  if (input.automated !== false && !allowReply) {
     headers["Auto-Submitted"] = "auto-generated";
     headers["X-Auto-Response-Suppress"] = "All";
   }
@@ -218,7 +224,7 @@ export async function sendResendEmail(input: {
       subject: input.subject,
       html: content.html,
       text: content.text,
-      replyTo: replyTo || undefined,
+      replyTo: explicitReplyTo,
       headers: Object.keys(headers).length ? headers : undefined,
       tags,
       attachments: input.attachments?.map((file) => ({

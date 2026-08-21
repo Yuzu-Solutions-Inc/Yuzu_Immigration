@@ -385,6 +385,7 @@ export async function reviewDocumentRequestAction(
         documentName,
         comment,
         shareUrl: portalBaseUrl(await getAppBaseUrl(), locale),
+        replyToUserId: user?.id,
       });
 
       if (!emailResult.sent) {

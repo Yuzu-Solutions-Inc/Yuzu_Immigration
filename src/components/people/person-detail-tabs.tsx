@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { HashDetailTabs } from "@/components/layout/hash-detail-tabs";
 
-const TAB_VALUES = ["home", "emails", "bookings"] as const;
+const TAB_VALUES = ["home", "bookings"] as const;
 
 export type PersonDetailTab = (typeof TAB_VALUES)[number];
 
@@ -13,8 +13,9 @@ const HASH_ALIASES: Record<string, PersonDetailTab> = {
   info: "home",
   portal: "home",
   projects: "home",
-  mail: "emails",
-  communication: "emails",
+  emails: "home",
+  mail: "home",
+  communication: "home",
   notes: "bookings",
   meetings: "bookings",
 };
@@ -35,7 +36,6 @@ export function PersonDetailTabs({
       aliases={HASH_ALIASES}
       labels={{
         home: t("home"),
-        emails: t("emails"),
         bookings: t("bookings"),
       }}
       panels={panels}

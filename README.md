@@ -52,7 +52,7 @@ Staff Google **sign-in** is separate from **Calendar sync**. Each staff member c
 
 Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` on a verified **subdomain** (e.g. `Permit OS <bookings@mail.yourdomain.com>`). Point the Resend webhook to `/api/resend/webhook` and set `RESEND_WEBHOOK_SECRET` so bounces and spam complaints are recorded.
 
-Inbound client mail uses the same subdomain with **Receiving** enabled (MX priority 10, lowest number — do not put MX on the firm’s existing Google/Microsoft domain). Set `INBOUND_MAIL_DOMAIN` and subscribe `email.received` to `{APP_URL}/api/resend/inbound` (or add that event to the existing `/api/resend/webhook`). Copy the inbound webhook signing secret into `RESEND_INBOUND_WEBHOOK_SECRET` if it differs from `RESEND_WEBHOOK_SECRET`. Each project gets an opaque address; unmatched mail lands in the firm inbox for staff to assign.
+Resend is for **outbound notifications only**. Client replies are blocked (no Reply-To). Every firm notification footer includes a consultant or organization contact email (`profiles.rep_email` / `profiles.email`, else `organizations.privacy_contact_email`). Do not enable Resend Receiving for CRM messaging.
 
 ## Repo
 

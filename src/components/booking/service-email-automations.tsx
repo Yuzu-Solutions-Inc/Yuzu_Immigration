@@ -188,9 +188,6 @@ function AutomationForm({
     extraEmailsFrom(automation?.recipients ?? []),
   );
   const [extraDraft, setExtraDraft] = useState("");
-  const [includeDoNotReply, setIncludeDoNotReply] = useState(
-    automation?.include_do_not_reply ?? true,
-  );
   const action = automation
     ? updateServiceAutomationAction
     : createServiceAutomationAction;
@@ -289,7 +286,7 @@ function AutomationForm({
       <input
         type="hidden"
         name="includeDoNotReply"
-        value={includeDoNotReply ? "on" : ""}
+        value="on"
       />
 
       <Field>
@@ -574,8 +571,9 @@ function AutomationForm({
             </div>
             <Switch
               id="automation-do-not-reply"
-              checked={includeDoNotReply}
-              onCheckedChange={setIncludeDoNotReply}
+              checked
+              disabled
+              onCheckedChange={() => undefined}
             />
           </div>
         </div>

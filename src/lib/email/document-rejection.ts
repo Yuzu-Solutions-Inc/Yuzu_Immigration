@@ -35,6 +35,7 @@ export async function sendDocumentRejectionEmail(input: {
   documentName: string;
   comment: string;
   shareUrl: string | null;
+  replyToUserId?: string | null;
 }) {
   const locale = toAppLocale(input.locale);
   const t = translator(locale);
@@ -97,5 +98,6 @@ export async function sendDocumentRejectionEmail(input: {
     organizationId: input.organizationId,
     locale,
     projectId: input.projectId,
+    replyToUserId: input.replyToUserId,
   });
 }
