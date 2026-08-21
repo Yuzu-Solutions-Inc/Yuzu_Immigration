@@ -12,6 +12,14 @@ import {
 } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
+const STARTER_FEATURE_KEYS = [
+  "staff",
+  "files",
+  "portal",
+  "booking",
+  "contracts",
+] as const;
+
 const STANDARD_FEATURE_KEYS = [
   "staff",
   "files",
@@ -42,82 +50,98 @@ export async function PricingPlanCards({
   ]);
   const locale = toAppLocale(localeRaw);
   const detailed = variant === "page";
+  const extraSeat = formatCadMonthly(PRICING.team.extraSeatMonthly, locale);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+    <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+      <PlanCard
+        name={t("starter.name")}
+        audience={t("starter.audience")}
+        price={formatCadMonthly(PRICING.starter.listMonthly, locale)}
+        yearly={t("yearlyPrice", {
+          amount: formatCadYearly(
+            annualTotal(PRICING.starter.listMonthly),
+            locale,
+          ),
+          free: PRICING.annualFreeMonths,
+        })}
+        features={
+          detailed
+            ? STARTER_FEATURE_KEYS.map((key) =>
+                t(`starter.features.${key}`, {
+                  count: PRICING.starter.activeProjects,
+                }),
+              )
+            : [
+                t("starter.teaser", {
+                  count: PRICING.starter.activeProjects,
+                }),
+              ]
+        }
+        cta={t("cta")}
+        highlighted={false}
+      />
       <PlanCard
         name={t("standard.name")}
         audience={t("standard.audience")}
-        founding={formatCadMonthly(PRICING.standard.foundingMonthly, locale)}
-        foundingYearly={t("yearlyPrice", {
+        badge={t("standard.badge")}
+        price={formatCadMonthly(PRICING.standard.foundingMonthly, locale)}
+        yearly={t("yearlyPrice", {
           amount: formatCadYearly(
             annualTotal(PRICING.standard.foundingMonthly),
             locale,
           ),
           free: PRICING.annualFreeMonths,
         })}
+        footnote={t("foundingHelp", {
+          months: PRICING.promoMonths,
+          count: PRICING.foundingCohortSize,
+        })}
+        thenLabel={t("thenList")}
         list={formatCadMonthly(PRICING.standard.listMonthly, locale)}
         listYearly={formatCadYearly(
           annualTotal(PRICING.standard.listMonthly),
           locale,
         )}
-        foundingHelp={t("foundingHelp", {
-          months: PRICING.promoMonths,
-          count: PRICING.foundingCohortSize,
-        })}
-        thenLabel={t("thenList")}
         features={
           detailed
             ? STANDARD_FEATURE_KEYS.map((key) => t(`standard.features.${key}`))
             : [t("standard.teaser")]
         }
         cta={t("cta")}
-        highlighted={false}
+        highlighted
       />
       <PlanCard
         name={t("team.name")}
         audience={t("team.audience")}
         badge={t("team.badge")}
-        founding={formatCadMonthly(PRICING.team.foundingMonthly, locale)}
-        foundingYearly={t("yearlyPrice", {
+        price={formatCadMonthly(PRICING.team.foundingMonthly, locale)}
+        yearly={t("yearlyPrice", {
           amount: formatCadYearly(
             annualTotal(PRICING.team.foundingMonthly),
             locale,
           ),
           free: PRICING.annualFreeMonths,
         })}
+        footnote={t("foundingHelp", {
+          months: PRICING.promoMonths,
+          count: PRICING.foundingCohortSize,
+        })}
+        thenLabel={t("thenList")}
         list={formatCadMonthly(PRICING.team.listMonthly, locale)}
         listYearly={formatCadYearly(
           annualTotal(PRICING.team.listMonthly),
           locale,
         )}
-        foundingHelp={t("foundingHelp", {
-          months: PRICING.promoMonths,
-          count: PRICING.foundingCohortSize,
-        })}
-        thenLabel={t("thenList")}
         features={
           detailed
             ? TEAM_FEATURE_KEYS.map((key) =>
-                t(`team.features.${key}`, {
-                  price: formatCadMonthly(
-                    PRICING.team.extraSeatMonthly,
-                    locale,
-                  ),
-                }),
+                t(`team.features.${key}`, { price: extraSeat }),
               )
-            : [
-                t("team.teaser"),
-                t("team.extraSeats", {
-                  price: formatCadMonthly(
-                    PRICING.team.extraSeatMonthly,
-                    locale,
-                  ),
-                }),
-              ]
+            : [t("team.teaser"), t("team.extraSeats", { price: extraSeat })]
         }
         cta={t("cta")}
-        highlighted
+        highlighted={false}
       />
     </div>
   );
@@ -127,12 +151,12 @@ function PlanCard({
   name,
   audience,
   badge,
-  founding,
-  foundingYearly,
+  price,
+  yearly,
+  footnote,
+  thenLabel,
   list,
   listYearly,
-  foundingHelp,
-  thenLabel,
   features,
   cta,
   highlighted,
@@ -140,12 +164,12 @@ function PlanCard({
   name: string;
   audience: string;
   badge?: string;
-  founding: string;
-  foundingYearly: string;
-  list: string;
-  listYearly: string;
-  foundingHelp: string;
-  thenLabel: string;
+  price: string;
+  yearly: string;
+  footnote?: string;
+  thenLabel?: string;
+  list?: string;
+  listYearly?: string;
   features: string[];
   cta: string;
   highlighted: boolean;
@@ -153,7 +177,7 @@ function PlanCard({
   return (
     <article
       className={cn(
-        "flex flex-col rounded-xl border bg-surface p-6 sm:p-8",
+        "flex flex-col rounded-xl border bg-surface p-6 sm:p-7",
         highlighted ? "border-action/35" : "border-border",
       )}
     >
@@ -170,19 +194,23 @@ function PlanCard({
       <p className="mt-1 text-sm text-muted-foreground">{audience}</p>
 
       <p className="mt-5 font-heading text-4xl font-bold tracking-tight text-brand">
-        {founding}
+        {price}
       </p>
-      <p className="mt-1 text-sm text-muted-foreground text-pretty">
-        {foundingYearly}
-      </p>
-      <p className="mt-1 text-sm text-muted-foreground text-pretty">
-        {foundingHelp}
-      </p>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {thenLabel}{" "}
-        <span className="font-medium text-brand">{list}</span>
-        <span className="text-muted-foreground"> · {listYearly}</span>
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground text-pretty">{yearly}</p>
+      {footnote ? (
+        <p className="mt-1 text-sm text-muted-foreground text-pretty">
+          {footnote}
+        </p>
+      ) : null}
+      {thenLabel && list ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {thenLabel}{" "}
+          <span className="font-medium text-brand">{list}</span>
+          {listYearly ? (
+            <span className="text-muted-foreground"> · {listYearly}</span>
+          ) : null}
+        </p>
+      ) : null}
 
       <ul className="mt-6 flex-1 space-y-2.5">
         {features.map((feature) => (

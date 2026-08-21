@@ -37,6 +37,7 @@
       "people": "Clientes",
       "forms": "Formularios IRCC",
       "documents": "Documentos",
+      "booking": "Reservas",
       "contracts": "Contratos y firma",
       "calendar": "Google Calendar",
       "meet": "Google Meet",
@@ -262,10 +263,10 @@
   },
   "pricing": {
     "metaTitle": "Precios",
-    "metaDescription": "Planes Standard y Equipo de %PRODUCT_NAME%. Gratis durante la prueba abierta. Tarifas de lanzamiento para las primeras 100 firmas.",
+    "metaDescription": "Planes Starter, Standard y Equipo de %PRODUCT_NAME%. Gratis durante la prueba abierta. Tarifas de lanzamiento para las primeras 100 firmas.",
     "eyebrow": "Precios",
-    "title": "Standard o Equipo",
-    "subtitle": "El mismo producto. La diferencia es cuántas personas entran.",
+    "title": "Starter, Standard o Equipo",
+    "subtitle": "Un arranque a bajo coste. Expedientes ilimitados cuando crece la práctica. Más asientos cuando contrate.",
     "testingBanner": "Todo es gratis durante el periodo de prueba.",
     "currencyNote": "CAD, más GST/HST. El pago anual incluye 2 meses gratis.",
     "cta": "Empezar gratis",
@@ -276,12 +277,26 @@
     "teaser": {
       "eyebrow": "Precios",
       "title": "Gratis durante la prueba abierta. Precios claros después.",
-      "subtitle": "Tarifas de lanzamiento para las primeras 100 firmas, incluidas las que ya están en prueba. Standard para la práctica en solitario. Equipo cuando sume personal.",
-      "compare": "Comparar Standard y Equipo"
+      "subtitle": "Tarifas de lanzamiento para las primeras 100 firmas, incluidas las que ya están en prueba. Starter para empezar. Standard para la práctica en solitario. Equipo cuando sume personal.",
+      "compare": "Comparar planes"
+    },
+    "starter": {
+      "name": "%PRODUCT_NAME% Starter",
+      "audience": "Prácticas nuevas y primeros expedientes",
+      "teaser": "Un usuario. {count} proyectos activos. Las herramientas esenciales.",
+      "features": {
+        "staff": "1 usuario del personal",
+        "files": "{count} proyectos activos; clientes ilimitados",
+        "portal": "Portal del cliente, cuestionarios IRCC y relleno de PDF",
+        "booking": "Reserva pública, calendario y Google Meet",
+        "contracts": "Mandatos, firma electrónica y Square",
+        "payments": "Pagos Square (sin recorte de la plataforma)"
+      }
     },
     "standard": {
       "name": "%PRODUCT_NAME% Standard",
       "audience": "Consultores y abogados en solitario",
+      "badge": "La mayoría de solos",
       "teaser": "Un usuario. El producto completo — clientes y expedientes ilimitados.",
       "features": {
         "staff": "1 usuario del personal",
@@ -309,20 +324,26 @@
       }
     },
     "compare": {
-      "title": "Standard frente a Equipo",
-      "subtitle": "La única diferencia es cuántas personas pueden entrar como personal. Las obligaciones de expediente del CICC no son extras opcionales.",
+      "title": "Comparar planes",
+      "subtitle": "Starter tiene tope. Standard y Equipo son el mismo producto; cambian los asientos.",
       "feature": "Incluido",
       "included": "Incluido",
+      "notIncluded": "—",
       "upgrade": "Pasar a Equipo",
       "staffStandard": "{count} usuario del personal",
       "staffTeam": "Hasta {count} usuarios",
+      "filesStarter": "{count} proyectos activos",
+      "filesUnlimited": "Ilimitado",
+      "meetOnly": "Google Meet",
+      "meetFull": "Meet, Teams y Zoom",
       "rows": {
         "staff": "Usuarios del personal incluidos",
         "extraSeat": "Cuenta adicional",
-        "files": "Clientes y proyectos",
+        "files": "Proyectos activos",
         "portal": "Portal del cliente",
         "forms": "Cuestionarios IRCC y relleno de PDF",
-        "booking": "Reservas, calendario y enlaces de reunión",
+        "booking": "Reservas y calendario",
+        "meetings": "Enlaces de reunión",
         "contracts": "Contratos y firma electrónica",
         "payments": "Square (sin recorte de la plataforma)",
         "sage": "Sage Accounting",
@@ -338,19 +359,23 @@
       },
       "founding": {
         "q": "¿Quién obtiene las tarifas de lanzamiento?",
-        "a": "Las primeras {count} firmas, incluidas todas las que ya están en prueba abierta. Las tarifas de lanzamiento duran {months} meses desde que empieza la facturación de esa firma."
+        "a": "Las primeras {count} firmas en Standard o Equipo, incluidas todas las que ya están en prueba abierta. Las tarifas de lanzamiento duran {months} meses desde que empieza la facturación de esa firma. Starter no tiene descuento de lanzamiento: se queda en el precio de lista."
       },
       "after": {
         "q": "¿Qué ocurre después de 12 meses?",
-        "a": "Pasa al precio de lista entonces vigente (hoy, Standard {standardList} y Equipo {teamList}). Tras el periodo de lanzamiento, %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
+        "a": "Standard y Equipo de lanzamiento pasan al precio de lista entonces vigente (hoy, {standardList} y {teamList}). Starter se queda en {starterList}. Tras el periodo de lanzamiento, %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
       },
       "annual": {
         "q": "¿Hay un precio anual?",
-        "a": "Sí. Paga {paid} meses y {free} meses son gratis. El Standard de lanzamiento es {standardAnnual} al año; Equipo, {teamAnnual}."
+        "a": "Sí. Paga {paid} meses y {free} meses son gratis. Starter es {starterAnnual} al año. El Standard de lanzamiento es {standardAnnual}; Equipo, {teamAnnual}."
       },
       "difference": {
-        "q": "¿Cuál es la diferencia entre Standard y Equipo?",
-        "a": "El mismo producto. Standard es {standardUsers} usuario. Equipo incluye hasta {teamUsers}. Cada cuenta extra cuesta {extraSeat}."
+        "q": "¿En qué se diferencian los planes?",
+        "a": "Starter es 1 usuario y {starterProjects} proyectos activos, sin Sage ni Teams/Zoom. Standard es {standardUsers} usuario y el producto completo, expedientes ilimitados. Equipo incluye hasta {teamUsers} usuarios. Cada cuenta extra cuesta {extraSeat}."
+      },
+      "starter": {
+        "q": "¿Por qué Starter no es gratis?",
+        "a": "La prueba abierta ya lo es. Starter cuesta {price} para que una práctica real se quede después de la prueba, con tarjeta en archivo. El tope de {count} proyectos activos es cuando la mayoría de solos pasa a Standard."
       },
       "roles": {
         "q": "¿Qué es un admin frente a un gestor de casos?",
@@ -362,7 +387,7 @@
       },
       "files": {
         "q": "¿Cobráis por cliente o por expediente?",
-        "a": "No. No limitamos los casos activos. El plan es para la firma, no por expediente."
+        "a": "Starter limita los proyectos activos a {count}. Un expediente cerrado libera un hueco; los clientes siguen ilimitados. Standard y Equipo no miden expedientes: esos planes son para la firma, no por caso."
       }
     }
   },

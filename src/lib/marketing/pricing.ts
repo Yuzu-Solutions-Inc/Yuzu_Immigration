@@ -8,6 +8,11 @@ export const PRICING = {
   priceChangeNoticeDays: 30,
   annualMonthsPaid: 10,
   annualFreeMonths: 2,
+  starter: {
+    listMonthly: 19,
+    includedUsers: 1,
+    activeProjects: 10,
+  },
   standard: {
     foundingMonthly: 49,
     listMonthly: 69,
@@ -21,7 +26,7 @@ export const PRICING = {
   },
 } as const;
 
-export type PricingPlanId = "standard" | "team";
+export type PricingPlanId = "starter" | "standard" | "team";
 
 export function formatCadAmount(amount: number, locale: AppLocale): string {
   if (locale === "fr") return `${amount}\u00a0$`;

@@ -37,6 +37,7 @@
       "people": "Clients",
       "forms": "Formulaires IRCC",
       "documents": "Documents",
+      "booking": "Réservation",
       "contracts": "Contrats et signature",
       "calendar": "Google Calendar",
       "meet": "Google Meet",
@@ -262,10 +263,10 @@
   },
   "pricing": {
     "metaTitle": "Tarifs",
-    "metaDescription": "Formules Standard et Équipe de %PRODUCT_NAME%. Gratuit pendant le test ouvert. Tarifs de lancement pour les 100 premiers cabinets.",
+    "metaDescription": "Formules Starter, Standard et Équipe de %PRODUCT_NAME%. Gratuit pendant le test ouvert. Tarifs de lancement pour les 100 premiers cabinets.",
     "eyebrow": "Tarifs",
-    "title": "Standard ou Équipe",
-    "subtitle": "Le même produit. La différence, c’est le nombre de personnes connectées.",
+    "title": "Starter, Standard ou Équipe",
+    "subtitle": "Un départ abordable. Dossiers illimités quand la pratique grandit. Plus de sièges quand vous embauchez.",
     "testingBanner": "Tout est gratuit pendant la période de test.",
     "currencyNote": "CAD, TPS/TVH en sus. La facturation annuelle offre 2 mois.",
     "cta": "Commencer gratuitement",
@@ -276,12 +277,26 @@
     "teaser": {
       "eyebrow": "Tarifs",
       "title": "Gratuit pendant le test ouvert. Des prix clairs ensuite.",
-      "subtitle": "Tarifs de lancement pour les 100 premiers cabinets, y compris ceux déjà en test. Standard pour la pratique en solo. Équipe lorsque vous ajoutez du personnel.",
-      "compare": "Comparer Standard et Équipe"
+      "subtitle": "Tarifs de lancement pour les 100 premiers cabinets, y compris ceux déjà en test. Starter pour commencer. Standard pour la pratique en solo. Équipe lorsque vous ajoutez du personnel.",
+      "compare": "Comparer les formules"
+    },
+    "starter": {
+      "name": "%PRODUCT_NAME% Starter",
+      "audience": "Nouvelles pratiques et premiers dossiers",
+      "teaser": "Un utilisateur. {count} projets actifs. Les outils essentiels.",
+      "features": {
+        "staff": "1 utilisateur du personnel",
+        "files": "{count} projets actifs ; clients illimités",
+        "portal": "Portail client, questionnaires IRCC et remplissage PDF",
+        "booking": "Réservation publique, calendrier et Google Meet",
+        "contracts": "Mandats, signature électronique et Square",
+        "payments": "Paiements Square (sans commission plateforme)"
+      }
     },
     "standard": {
       "name": "%PRODUCT_NAME% Standard",
       "audience": "Consultants et avocats en solo",
+      "badge": "La plupart des solos",
       "teaser": "Un utilisateur. Le produit complet — clients et dossiers illimités.",
       "features": {
         "staff": "1 utilisateur du personnel",
@@ -309,20 +324,26 @@
       }
     },
     "compare": {
-      "title": "Standard ou Équipe",
-      "subtitle": "La seule différence, c’est le nombre de personnes qui se connectent comme personnel. Les devoirs de dossier du CRCIC ne sont pas des options.",
+      "title": "Comparer les formules",
+      "subtitle": "Starter est plafonné. Standard et Équipe sont le même produit, selon le nombre de sièges.",
       "feature": "Inclus",
       "included": "Inclus",
+      "notIncluded": "—",
       "upgrade": "Passer à Équipe",
       "staffStandard": "{count} utilisateur du personnel",
       "staffTeam": "Jusqu’à {count} utilisateurs",
+      "filesStarter": "{count} projets actifs",
+      "filesUnlimited": "Illimité",
+      "meetOnly": "Google Meet",
+      "meetFull": "Meet, Teams et Zoom",
       "rows": {
         "staff": "Utilisateurs du personnel inclus",
         "extraSeat": "Compte supplémentaire",
-        "files": "Clients et projets",
+        "files": "Projets actifs",
         "portal": "Portail client",
         "forms": "Questionnaires IRCC et remplissage PDF",
-        "booking": "Réservation, calendrier et liens de réunion",
+        "booking": "Réservation et calendrier",
+        "meetings": "Liens de réunion",
         "contracts": "Contrats et signature électronique",
         "payments": "Square (sans commission plateforme)",
         "sage": "Comptabilité Sage",
@@ -338,19 +359,23 @@
       },
       "founding": {
         "q": "Qui a droit aux tarifs de lancement ?",
-        "a": "Les {count} premiers cabinets, y compris toutes les personnes déjà en test ouvert. Les tarifs de lancement durent {months} mois à compter du début de la facturation pour ce cabinet."
+        "a": "Les {count} premiers cabinets sur Standard ou Équipe, y compris toutes les personnes déjà en test ouvert. Les tarifs de lancement durent {months} mois à compter du début de la facturation pour ce cabinet. Starter n’a pas de rabais de lancement — il reste au tarif affiché."
       },
       "after": {
         "q": "Que se passe-t-il après 12 mois ?",
-        "a": "Vous passez au tarif affiché alors en vigueur (aujourd’hui, Standard {standardList} et Équipe {teamList}). Après la période de lancement, %PRODUCT_NAME% peut modifier les tarifs affichés moyennant un préavis d’au moins {days} jours aux administrateurs du cabinet."
+        "a": "Les formules de lancement Standard et Équipe passent au tarif affiché alors en vigueur (aujourd’hui, {standardList} et {teamList}). Starter reste à {starterList}. Après la période de lancement, %PRODUCT_NAME% peut modifier les tarifs affichés moyennant un préavis d’au moins {days} jours aux administrateurs du cabinet."
       },
       "annual": {
         "q": "Y a-t-il un tarif annuel ?",
-        "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Le tarif de lancement Standard est de {standardAnnual} pour l’année ; Équipe, {teamAnnual}."
+        "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Starter est à {starterAnnual} pour l’année. Le tarif de lancement Standard est de {standardAnnual} ; Équipe, {teamAnnual}."
       },
       "difference": {
-        "q": "Quelle est la différence entre Standard et Équipe ?",
-        "a": "Le même produit. Standard, c’est {standardUsers} utilisateur. Équipe en inclut jusqu’à {teamUsers}. Chaque compte supplémentaire est à {extraSeat}."
+        "q": "En quoi les formules diffèrent-elles ?",
+        "a": "Starter, c’est 1 utilisateur et {starterProjects} projets actifs, sans Sage ni Teams/Zoom. Standard, c’est {standardUsers} utilisateur et le produit complet, dossiers illimités. Équipe inclut jusqu’à {teamUsers} utilisateurs. Chaque compte supplémentaire est à {extraSeat}."
+      },
+      "starter": {
+        "q": "Pourquoi Starter n’est-il pas gratuit ?",
+        "a": "Le test ouvert l’est déjà. Starter est à {price} pour qu’une vraie pratique reste après le test, avec une carte au dossier. Le plafond de {count} projets actifs est le moment où la plupart des solos passent à Standard."
       },
       "roles": {
         "q": "Quelle est la différence entre un admin et un gestionnaire de cas ?",
@@ -362,7 +387,7 @@
       },
       "files": {
         "q": "Facturez-vous par client ou par dossier ?",
-        "a": "Non. Nous ne plafonnons pas les dossiers actifs. La formule est pour le cabinet, pas par dossier."
+        "a": "Starter plafonne les projets actifs à {count}. Un dossier fermé libère une place ; les clients restent illimités. Standard et Équipe ne mesurent pas les dossiers — ces formules sont pour le cabinet, pas par cas."
       }
     }
   },

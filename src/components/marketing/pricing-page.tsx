@@ -22,6 +22,7 @@ const COMPARE_KEYS = [
   "portal",
   "forms",
   "booking",
+  "meetings",
   "contracts",
   "payments",
   "sage",
@@ -34,9 +35,10 @@ const FAQ_KEYS = [
   "after",
   "annual",
   "difference",
+  "starter",
+  "files",
   "roles",
   "currency",
-  "files",
 ] as const;
 
 function faqParams(
@@ -54,6 +56,7 @@ function faqParams(
       return {
         months: PRICING.promoMonths,
         days: PRICING.priceChangeNoticeDays,
+        starterList: formatCadMonthly(PRICING.starter.listMonthly, locale),
         standardList: formatCadMonthly(PRICING.standard.listMonthly, locale),
         teamList: formatCadMonthly(PRICING.team.listMonthly, locale),
       };
@@ -61,6 +64,10 @@ function faqParams(
       return {
         paid: PRICING.annualMonthsPaid,
         free: PRICING.annualFreeMonths,
+        starterAnnual: formatCadYearly(
+          annualTotal(PRICING.starter.listMonthly),
+          locale,
+        ),
         standardAnnual: formatCadYearly(
           annualTotal(PRICING.standard.foundingMonthly),
           locale,
@@ -72,10 +79,18 @@ function faqParams(
       };
     case "difference":
       return {
+        starterProjects: PRICING.starter.activeProjects,
         standardUsers: PRICING.standard.includedUsers,
         teamUsers: PRICING.team.includedUsers,
         extraSeat,
       };
+    case "starter":
+      return {
+        count: PRICING.starter.activeProjects,
+        price: formatCadMonthly(PRICING.starter.listMonthly, locale),
+      };
+    case "files":
+      return { count: PRICING.starter.activeProjects };
     default:
       return {};
   }
@@ -97,27 +112,45 @@ export async function PricingPage() {
 
   const extraSeat = formatCadMonthly(PRICING.team.extraSeatMonthly, locale);
   const included = t("compare.included");
+  const notIncluded = t("compare.notIncluded");
+  const staffOne = t("compare.staffStandard", {
+    count: PRICING.starter.includedUsers,
+  });
 
   const compareValues: Record<
     (typeof COMPARE_KEYS)[number],
-    { standard: string; team: string }
+    { starter: string; standard: string; team: string }
   > = {
     staff: {
-      standard: t("compare.staffStandard", {
-        count: PRICING.standard.includedUsers,
-      }),
+      starter: staffOne,
+      standard: staffOne,
       team: t("compare.staffTeam", { count: PRICING.team.includedUsers }),
     },
-    extraSeat: { standard: t("compare.upgrade"), team: extraSeat },
-    files: { standard: included, team: included },
-    portal: { standard: included, team: included },
-    forms: { standard: included, team: included },
-    booking: { standard: included, team: included },
-    contracts: { standard: included, team: included },
-    payments: { standard: included, team: included },
-    sage: { standard: included, team: included },
-    languages: { standard: included, team: included },
-    canada: { standard: included, team: included },
+    extraSeat: {
+      starter: notIncluded,
+      standard: t("compare.upgrade"),
+      team: extraSeat,
+    },
+    files: {
+      starter: t("compare.filesStarter", {
+        count: PRICING.starter.activeProjects,
+      }),
+      standard: t("compare.filesUnlimited"),
+      team: t("compare.filesUnlimited"),
+    },
+    portal: { starter: included, standard: included, team: included },
+    forms: { starter: included, standard: included, team: included },
+    booking: { starter: included, standard: included, team: included },
+    meetings: {
+      starter: t("compare.meetOnly"),
+      standard: t("compare.meetFull"),
+      team: t("compare.meetFull"),
+    },
+    contracts: { starter: included, standard: included, team: included },
+    payments: { starter: included, standard: included, team: included },
+    sage: { starter: notIncluded, standard: included, team: included },
+    languages: { starter: included, standard: included, team: included },
+    canada: { starter: included, standard: included, team: included },
   };
 
   return (
@@ -143,12 +176,15 @@ export async function PricingPage() {
           </h2>
 
           <div className="mt-10 overflow-x-auto">
-            <table className="w-full min-w-[36rem] border-collapse text-left text-[15px]">
+            <table className="w-full min-w-[44rem] border-collapse text-left text-[15px]">
               <caption className="sr-only">{t("compare.title")}</caption>
               <thead>
                 <tr className="border-b border-border">
                   <th className="py-3 pr-4 font-heading text-sm font-semibold text-brand">
                     {t("compare.feature")}
+                  </th>
+                  <th className="px-4 py-3 font-heading text-sm font-semibold text-brand">
+                    {t("starter.name")}
                   </th>
                   <th className="px-4 py-3 font-heading text-sm font-semibold text-brand">
                     {t("standard.name")}
@@ -164,6 +200,9 @@ export async function PricingPage() {
                     <th className="py-3.5 pr-4 font-medium text-brand">
                       {t(`compare.rows.${key}`)}
                     </th>
+                    <td className="px-4 py-3.5 text-muted-foreground">
+                      {compareValues[key].starter}
+                    </td>
                     <td className="px-4 py-3.5 text-muted-foreground">
                       {compareValues[key].standard}
                     </td>
@@ -190,10 +229,7 @@ export async function PricingPage() {
                   {t(`faq.${key}.q`)}
                 </dt>
                 <dd className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                  {t(
-                    `faq.${key}.a`,
-                    faqParams(key, extraSeat, locale),
-                  )}
+                  {t(`faq.${key}.a`, faqParams(key, extraSeat, locale))}
                 </dd>
               </div>
             ))}

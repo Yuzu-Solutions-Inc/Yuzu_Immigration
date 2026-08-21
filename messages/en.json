@@ -37,6 +37,7 @@
       "people": "Clients",
       "forms": "IRCC forms",
       "documents": "Documents",
+      "booking": "Booking",
       "contracts": "Contracts & signing",
       "calendar": "Google Calendar",
       "meet": "Google Meet",
@@ -262,10 +263,10 @@
   },
   "pricing": {
     "metaTitle": "Pricing",
-    "metaDescription": "Standard and Team plans for %PRODUCT_NAME%. Free during open testing. Founding rates for the first 100 firms.",
+    "metaDescription": "Starter, Standard, and Team plans for %PRODUCT_NAME%. Free during open testing. Founding rates for the first 100 firms.",
     "eyebrow": "Pricing",
-    "title": "Standard or Team",
-    "subtitle": "Same product. The difference is how many people sign in.",
+    "title": "Starter, Standard, or Team",
+    "subtitle": "A low-cost start. Unlimited files when the practice grows. More seats when you hire.",
     "testingBanner": "Everything is free during the testing period.",
     "currencyNote": "CAD, plus GST/HST. Yearly billing includes 2 months free.",
     "cta": "Start free",
@@ -276,12 +277,26 @@
     "teaser": {
       "eyebrow": "Pricing",
       "title": "Free during open testing. Clear prices after.",
-      "subtitle": "Founding rates for the first 100 firms, including everyone already testing. Standard for solo practice. Team when you add staff.",
-      "compare": "Compare Standard and Team"
+      "subtitle": "Founding rates for the first 100 firms, including everyone already testing. Starter to begin. Standard for solo practice. Team when you add staff.",
+      "compare": "Compare plans"
+    },
+    "starter": {
+      "name": "Starter %PRODUCT_NAME%",
+      "audience": "New practices and first files",
+      "teaser": "One staff user. {count} active projects. Core practice tools.",
+      "features": {
+        "staff": "1 staff user",
+        "files": "{count} active projects; unlimited clients",
+        "portal": "Client portal, IRCC questionnaires, and PDF fill",
+        "booking": "Public booking, calendar, and Google Meet",
+        "contracts": "Retainers, electronic signature, and Square",
+        "payments": "Square payments (no platform cut)"
+      }
     },
     "standard": {
       "name": "Standard %PRODUCT_NAME%",
       "audience": "Solo consultants and lawyers",
+      "badge": "Most solos",
       "teaser": "One staff user. The full product — unlimited clients and files.",
       "features": {
         "staff": "1 staff user",
@@ -309,20 +324,26 @@
       }
     },
     "compare": {
-      "title": "Standard vs Team",
-      "subtitle": "The only difference is how many people can sign in as staff. CICC file duties are not optional extras.",
+      "title": "Compare plans",
+      "subtitle": "Starter is capped. Standard and Team are the same product, differing by staff seats.",
       "feature": "Included",
       "included": "Included",
+      "notIncluded": "—",
       "upgrade": "Move to Team",
       "staffStandard": "{count} staff user",
       "staffTeam": "Up to {count} staff users",
+      "filesStarter": "{count} active projects",
+      "filesUnlimited": "Unlimited",
+      "meetOnly": "Google Meet",
+      "meetFull": "Meet, Teams, and Zoom",
       "rows": {
         "staff": "Staff users included",
         "extraSeat": "Additional staff account",
-        "files": "Clients and projects",
+        "files": "Active projects",
         "portal": "Client portal",
         "forms": "IRCC questionnaires and PDF fill",
-        "booking": "Booking, calendar, and meeting links",
+        "booking": "Booking and calendar",
+        "meetings": "Meeting links",
         "contracts": "Contracts and e-sign",
         "payments": "Square (no platform cut)",
         "sage": "Sage Accounting",
@@ -338,19 +359,23 @@
       },
       "founding": {
         "q": "Who gets founding rates?",
-        "a": "The first {count} firms, including everyone already in open testing. Founding rates last {months} months from when paid billing begins for that firm."
+        "a": "The first {count} firms on Standard or Team, including everyone already in open testing. Founding rates last {months} months from when paid billing begins for that firm. Starter has no founding discount — it stays at the list price."
       },
       "after": {
         "q": "What happens after 12 months?",
-        "a": "You move to the list price then in effect (today, Standard {standardList} and Team {teamList}). After the founding period, %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
+        "a": "Founding Standard and Team move to the list price then in effect (today, {standardList} and {teamList}). Starter stays {starterList}. After the founding period, %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
       },
       "annual": {
         "q": "Is there a yearly price?",
-        "a": "Yes. Pay {paid} months and get {free} months free. Founding Standard is {standardAnnual} for the year; founding Team is {teamAnnual}."
+        "a": "Yes. Pay {paid} months and get {free} months free. Starter is {starterAnnual} for the year. Founding Standard is {standardAnnual}; founding Team is {teamAnnual}."
       },
       "difference": {
-        "q": "What is the difference between Standard and Team?",
-        "a": "Same product. Standard is {standardUsers} staff user. Team includes up to {teamUsers}. Extra staff accounts are {extraSeat}."
+        "q": "How do the plans differ?",
+        "a": "Starter is 1 staff user and {starterProjects} active projects, without Sage or Teams/Zoom. Standard is {standardUsers} staff user and the full product, unlimited files. Team includes up to {teamUsers} staff. Extra staff accounts are {extraSeat}."
+      },
+      "starter": {
+        "q": "Why isn’t Starter free?",
+        "a": "Open testing is already free. Starter is {price} so a real practice can stay after testing, with a card on file. The {count} active-project cap is when most solos move to Standard."
       },
       "roles": {
         "q": "What is an admin vs a case manager?",
@@ -362,7 +387,7 @@
       },
       "files": {
         "q": "Do you meter clients or files?",
-        "a": "No. We do not cap active cases. The plan is for the firm, not per file."
+        "a": "Starter caps active projects at {count}. Closed files free a slot; clients stay unlimited. Standard and Team do not meter files — those plans are for the firm, not per case."
       }
     }
   },

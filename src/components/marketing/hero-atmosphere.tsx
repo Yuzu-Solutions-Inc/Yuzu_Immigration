@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 
 import { BrandMark } from "@/components/brand/brand-mark";
 
-/** Mouse-tracked orbs and paper planes behind the hero copy. */
-export function HeroAtmosphere() {
+/** Mouse-tracked orbs and optional paper planes behind a dark band. */
+export function HeroAtmosphere({ planes = true }: { planes?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,17 +43,19 @@ export function HeroAtmosphere() {
         <div className="lp-orb lp-orb-emerald" />
         <div className="lp-orb lp-orb-amber" />
       </div>
-      <div className="lp-parallax lp-parallax-fast absolute inset-0">
-        <div className="lp-plane lp-plane-a">
-          <BrandMark inverted className="size-10 sm:size-12" />
+      {planes ? (
+        <div className="lp-parallax lp-parallax-fast absolute inset-0">
+          <div className="lp-plane lp-plane-a">
+            <BrandMark inverted className="size-10 sm:size-12" />
+          </div>
+          <div className="lp-plane lp-plane-b">
+            <BrandMark inverted className="size-7 sm:size-8" />
+          </div>
+          <div className="lp-plane lp-plane-c">
+            <BrandMark inverted className="size-5" />
+          </div>
         </div>
-        <div className="lp-plane lp-plane-b">
-          <BrandMark inverted className="size-7 sm:size-8" />
-        </div>
-        <div className="lp-plane lp-plane-c">
-          <BrandMark inverted className="size-5" />
-        </div>
-      </div>
+      ) : null}
     </div>
   );
 }

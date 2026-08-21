@@ -1,6 +1,7 @@
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { LegalLinks } from "@/components/legal/legal-links";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -111,23 +112,39 @@ export function MarketingFinalCta({
   cta,
   secondaryCta,
   note,
+  atmosphere = false,
 }: {
   title: string;
   subtitle?: string;
   cta: string;
   secondaryCta: string;
   note?: string;
+  atmosphere?: boolean;
 }) {
   return (
-    <section className="relative overflow-hidden bg-graphite-900 py-20 text-white sm:py-24">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "radial-gradient(ellipse 90% 45% at 50% -10%, color-mix(in srgb, var(--indigo-500) 18%, transparent), transparent 58%)",
-        }}
-      />
+    <section className="relative isolate overflow-hidden bg-graphite-900 py-20 text-white sm:py-24">
+      {atmosphere ? (
+        <>
+          <div
+            aria-hidden
+            className="lp-dark-veil pointer-events-none absolute inset-0"
+          />
+          <div
+            aria-hidden
+            className="lp-dark-grid pointer-events-none absolute inset-0 opacity-[0.14]"
+          />
+          <HeroAtmosphere />
+        </>
+      ) : (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse 90% 45% at 50% -10%, color-mix(in srgb, var(--indigo-500) 18%, transparent), transparent 58%)",
+          }}
+        />
+      )}
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 text-left sm:items-center sm:text-center">
         <h2 className="font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
           {title}
