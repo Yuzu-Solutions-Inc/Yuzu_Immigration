@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
-import { canCreateRecords } from "@/lib/auth/rbac";
+import { canCreateRecords, canManageBookingCatalog } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { parseDayOffsets } from "@/lib/booking/day-offsets";
 import {
@@ -43,7 +43,16 @@ const serviceFieldsSchema = z.object({
   paymentReminderDays: z.string().optional(),
 });
 
-async function requireManager() {
+async function requireCatalogAdmin() {
+  const membership = await getPrimaryMembership();
+  if (!membership) return { ok: false as const, error: "unauthorized" as const };
+  if (!canManageBookingCatalog(membership.role)) {
+    return { ok: false as const, error: "forbidden" as const };
+  }
+  return { ok: true as const, membership };
+}
+
+async function requireStaff() {
   const membership = await getPrimaryMembership();
   if (!membership) return { ok: false as const, error: "unauthorized" as const };
   if (!canCreateRecords(membership.role)) {
@@ -116,7 +125,7 @@ export async function createServiceAction(
   const reminderDays = parseDayOffsets(parsed.data.paymentReminderDays);
   if (reminderDays == null) return { error: "invalid" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const orgDefault = toAppLocale(gate.membership.organization.defaultLocale);
@@ -183,7 +192,7 @@ export async function updateServiceAction(
   const reminderDays = parseDayOffsets(parsed.data.paymentReminderDays);
   if (reminderDays == null) return { error: "invalid" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const orgDefault = toAppLocale(gate.membership.organization.defaultLocale);
@@ -240,7 +249,7 @@ export async function deleteServiceAction(
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
@@ -312,7 +321,7 @@ export async function copyServiceLinkAction(input: {
     return { error: "invalid" };
   }
 
-  const gate = await requireManager();
+  const gate = await requireStaff();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();

@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { AttentionList } from "@/components/home/attention-list";
 import { CaseloadBar } from "@/components/home/caseload-bar";
+import { SetupChecklist } from "@/components/home/setup-checklist";
 import { TodayTimeline } from "@/components/home/today-timeline";
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
@@ -158,7 +159,14 @@ export async function HomeDashboardView({
       : undefined;
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 lg:h-[calc(100dvh-5rem)] lg:overflow-hidden">
+    <div
+      className={cn(
+        "flex min-w-0 flex-col gap-4",
+        dashboard.hasCaseload
+          ? "lg:h-[calc(100dvh-5rem)] lg:overflow-hidden"
+          : "lg:overflow-y-auto",
+      )}
+    >
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="font-heading text-lg font-semibold tracking-tight text-brand">
@@ -170,6 +178,31 @@ export async function HomeDashboardView({
         </div>
         {canCreate ? <NewProjectButton label={t("newProject")} /> : null}
       </div>
+
+      <SetupChecklist setup={dashboard.setup} />
+
+      {booking.needsSetup ? (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border-l-2 border-l-action bg-action/5 px-3 py-2 text-sm text-brand">
+          <span className="inline-flex items-center gap-2">
+            <Briefcase className="size-4 shrink-0 text-action" aria-hidden />
+            {t("bookingSetup.banner")}
+          </span>
+          <span className="flex flex-wrap gap-3">
+            <Link
+              href="/services"
+              className="font-medium text-action underline-offset-2 hover:underline"
+            >
+              {t("bookingSetup.services")}
+            </Link>
+            <Link
+              href="/settings/calendar"
+              className="font-medium text-action underline-offset-2 hover:underline"
+            >
+              {t("bookingSetup.hours")}
+            </Link>
+          </span>
+        </div>
+      ) : null}
 
       {!dashboard.hasCaseload ? (
         <SurfaceCard className="space-y-3 p-4 sm:p-5">
@@ -231,29 +264,6 @@ export async function HomeDashboardView({
               emphasize={kpis.pendingPayments > 0}
             />
           </div>
-
-          {booking.needsSetup ? (
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border-l-2 border-l-action bg-action/5 px-3 py-2 text-sm text-brand">
-              <span className="inline-flex items-center gap-2">
-                <Briefcase className="size-4 shrink-0 text-action" aria-hidden />
-                {t("bookingSetup.banner")}
-              </span>
-              <span className="flex flex-wrap gap-3">
-                <Link
-                  href="/services"
-                  className="font-medium text-action underline-offset-2 hover:underline"
-                >
-                  {t("bookingSetup.services")}
-                </Link>
-                <Link
-                  href="/settings/calendar"
-                  className="font-medium text-action underline-offset-2 hover:underline"
-                >
-                  {t("bookingSetup.hours")}
-                </Link>
-              </span>
-            </div>
-          ) : null}
 
           <div className="grid min-h-0 min-w-0 items-stretch gap-4 lg:grid-cols-12 lg:flex-1 lg:overflow-hidden">
             <SurfaceCard className="flex max-h-[min(24rem,55dvh)] min-h-0 min-w-0 flex-col overflow-hidden p-4 sm:p-5 lg:col-span-5 lg:max-h-none">

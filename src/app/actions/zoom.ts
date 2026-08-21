@@ -38,6 +38,7 @@ async function requireMember() {
 function revalidateCalendar(locale: string) {
   revalidatePath(`/${locale}/calendar`);
   revalidatePath(`/${locale}/settings/calendar`);
+  revalidatePath(`/${locale}/home`);
 }
 
 export async function startZoomConnectAction(formData: FormData) {

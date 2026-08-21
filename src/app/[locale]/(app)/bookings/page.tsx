@@ -9,7 +9,7 @@ import {
   listPageTitleClassName,
 } from "@/components/layout/list-layout";
 import { canCreateRecords } from "@/lib/auth/rbac";
-import { getPrimaryMembership } from "@/lib/auth/session";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { listOrgBookingsWithPayment } from "@/lib/booking/bookings-list";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +28,8 @@ export default async function BookingsPage({
 
   const membership = await getPrimaryMembership();
   if (!membership) redirect(`/${locale}/onboarding`);
+  const user = await getSessionUser();
+  if (!user) redirect(`/${locale}/login`);
 
   const supabase = await createClient();
   const [{ data: settings }, bookings] = await Promise.all([
@@ -53,6 +55,7 @@ export default async function BookingsPage({
       <BookingsList
         locale={locale}
         canManage={canCreateRecords(membership.role)}
+        currentUserId={user.id}
         timezone={settings?.timezone ?? "America/Toronto"}
         bookings={bookings}
         initialPayment={payment}

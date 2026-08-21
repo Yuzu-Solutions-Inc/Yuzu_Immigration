@@ -174,49 +174,55 @@ export function CalendarSettingsPage({
         </form>
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-4 sm:p-6">
-        <WeekTemplateHours locale={locale} canManage={canManage} rules={rules} />
-      </SurfaceCard>
+      <div id="hours" className="scroll-mt-6">
+        <SurfaceCard className="space-y-4 sm:p-6">
+          <WeekTemplateHours locale={locale} canManage={canManage} rules={rules} />
+        </SurfaceCard>
+      </div>
 
-      <SurfaceCard className="space-y-4 sm:p-6">
-        <div>
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("integrationsCalendarTitle")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t("integrationsCalendarHelp")}
-          </p>
-        </div>
-        <StaffCalendarIntegrations
-          locale={locale}
-          googleConfigured={googleConfigured}
-          googleConnection={googleConnection}
-          microsoftConfigured={microsoftConfigured}
-          microsoftConnection={microsoftConnection}
-          calendarProvider={calendarProvider}
-        />
-      </SurfaceCard>
+      <div id="calendar" className="scroll-mt-6">
+        <SurfaceCard className="space-y-4 sm:p-6">
+          <div>
+            <h2 className="font-heading text-lg font-semibold text-brand">
+              {t("integrationsCalendarTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("integrationsCalendarHelp")}
+            </p>
+          </div>
+          <StaffCalendarIntegrations
+            locale={locale}
+            googleConfigured={googleConfigured}
+            googleConnection={googleConnection}
+            microsoftConfigured={microsoftConfigured}
+            microsoftConnection={microsoftConnection}
+            calendarProvider={calendarProvider}
+          />
+        </SurfaceCard>
+      </div>
 
-      <SurfaceCard className="space-y-4 sm:p-6">
-        <div>
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("integrationsMeetingsTitle")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t("integrationsMeetingsHelp")}
-          </p>
-        </div>
-        <StaffMeetingIntegrations
-          locale={locale}
-          googleConfigured={googleConfigured}
-          googleConnection={googleConnection}
-          microsoftConfigured={microsoftConfigured}
-          microsoftConnection={microsoftConnection}
-          zoomConfigured={zoomConfigured}
-          zoomConnection={zoomConnection}
-          meetingProvider={meetingProvider}
-        />
-      </SurfaceCard>
+      <div id="meetings" className="scroll-mt-6">
+        <SurfaceCard className="space-y-4 sm:p-6">
+          <div>
+            <h2 className="font-heading text-lg font-semibold text-brand">
+              {t("integrationsMeetingsTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("integrationsMeetingsHelp")}
+            </p>
+          </div>
+          <StaffMeetingIntegrations
+            locale={locale}
+            googleConfigured={googleConfigured}
+            googleConnection={googleConnection}
+            microsoftConfigured={microsoftConfigured}
+            microsoftConnection={microsoftConnection}
+            zoomConfigured={zoomConfigured}
+            zoomConnection={zoomConnection}
+            meetingProvider={meetingProvider}
+          />
+        </SurfaceCard>
+      </div>
     </div>
   );
 }

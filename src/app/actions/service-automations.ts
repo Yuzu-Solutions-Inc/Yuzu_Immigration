@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { canCreateRecords } from "@/lib/auth/rbac";
+import { canManageBookingCatalog } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { parseDayOffsets } from "@/lib/booking/day-offsets";
 import type { AutomationTranslations } from "@/lib/booking/types";
@@ -34,10 +34,10 @@ const fieldsSchema = z.object({
   includeDoNotReply: z.enum(["on", "true", "false"]).optional(),
 });
 
-async function requireManager() {
+async function requireCatalogAdmin() {
   const membership = await getPrimaryMembership();
   if (!membership) return { ok: false as const, error: "unauthorized" as const };
-  if (!canCreateRecords(membership.role)) {
+  if (!canManageBookingCatalog(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
   return { ok: true as const, membership };
@@ -178,7 +178,7 @@ export async function createServiceAutomationAction(
   const recipients = parseRecipientsJson(parsed.data.recipients);
   if (!recipients) return { error: "invalid_recipients" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
@@ -244,7 +244,7 @@ export async function updateServiceAutomationAction(
   const recipients = parseRecipientsJson(parsed.data.recipients);
   if (!recipients) return { error: "invalid_recipients" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
@@ -305,7 +305,7 @@ export async function toggleServiceAutomationAction(
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const supabase = await createClient();
@@ -337,7 +337,7 @@ export async function deleteServiceAutomationAction(
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();

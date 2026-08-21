@@ -153,12 +153,14 @@ function paymentLabel(
 export function BookingsList({
   locale,
   canManage,
+  currentUserId,
   timezone,
   bookings,
   initialPayment,
 }: {
   locale: string;
   canManage: boolean;
+  currentUserId: string;
   timezone: string;
   bookings: BookingListItem[];
   initialPayment?: string;
@@ -768,6 +770,8 @@ export function BookingsList({
                           locale={locale}
                           appointmentId={booking.id}
                           guestName={booking.guestName}
+                          hostName={booking.hostName}
+                          isHost={booking.hostUserId === currentUserId}
                           contracts={booking.contracts}
                         />
                         <Button
@@ -841,6 +845,8 @@ export function BookingsList({
                           locale={locale}
                           appointmentId={booking.id}
                           guestName={booking.guestName}
+                          hostName={booking.hostName}
+                          isHost={booking.hostUserId === currentUserId}
                           contracts={booking.contracts}
                         />
                       </div>

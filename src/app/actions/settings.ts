@@ -132,6 +132,7 @@ export async function updateAccountSettingsAction(
   }
 
   revalidatePath(`/${parsed.data.locale}/settings/account`);
+  revalidatePath(`/${parsed.data.locale}/home`);
 
   return { success: true };
 }

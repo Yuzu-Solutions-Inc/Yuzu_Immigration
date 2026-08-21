@@ -20,6 +20,11 @@ import {
   getProjectsProgress,
   type ProjectProgress,
 } from "@/lib/crm/progress";
+import {
+  EMPTY_STAFF_SETUP,
+  getStaffSetupChecklist,
+  type StaffSetupChecklist,
+} from "@/lib/crm/setup-checklist";
 
 export type ChartDatum = {
   key: string;
@@ -89,6 +94,7 @@ export type HomeDashboard = {
     peopleCount: number;
   };
   booking: BookingModuleSummary;
+  setup: StaffSetupChecklist;
   projectsByStatus: ChartDatum[];
   attention: AttentionRow[];
   appointments: DashboardAppointment[];
@@ -115,6 +121,7 @@ const EMPTY: HomeDashboard = {
     next7Count: 0,
     needsSetup: true,
   },
+  setup: EMPTY_STAFF_SETUP,
   projectsByStatus: [],
   attention: [],
   appointments: [],
@@ -201,6 +208,7 @@ export async function getHomeDashboard(
     settingsResult,
     servicesResult,
     rulesResult,
+    setup,
   ] = await Promise.all([
     listProjects(),
     supabase
@@ -221,6 +229,7 @@ export async function getHomeDashboard(
       .from("booking_availability_rules")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId),
+    getStaffSetupChecklist(orgId),
   ]);
 
   if (peopleCountResult.error) {
@@ -585,6 +594,7 @@ export async function getHomeDashboard(
       next7Count,
       needsSetup,
     },
+    setup,
     projectsByStatus,
     attention,
     appointments,

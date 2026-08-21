@@ -62,6 +62,7 @@ async function requireMember() {
 function revalidateBooking(locale: string) {
   revalidatePath(`/${locale}/calendar`);
   revalidatePath(`/${locale}/settings/calendar`);
+  revalidatePath(`/${locale}/home`);
 }
 
 function mintTokenPayload(orgId: string, dek: Buffer) {

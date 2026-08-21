@@ -28,11 +28,15 @@ export function BookingContractsButton({
   locale,
   appointmentId,
   guestName,
+  hostName,
+  isHost,
   contracts,
 }: {
   locale: string;
   appointmentId: string;
   guestName: string;
+  hostName: string;
+  isHost: boolean;
   contracts: ContractEnvelopeSummary[];
 }) {
   const t = useTranslations("bookings");
@@ -139,43 +143,51 @@ export function BookingContractsButton({
               </ul>
             )}
             {pendingConsultant ? (
-              <div className="space-y-2 rounded-xl border border-border p-3">
-                <Field>
-                  <FieldLabel htmlFor={`sign-${appointmentId}`} required>
-                    {t("consultantSignName")}
-                  </FieldLabel>
-                  <Input
-                    id={`sign-${appointmentId}`}
-                    value={typedName}
-                    onChange={(event) => setTypedName(event.target.value)}
-                  />
-                  <FieldHint>{t("consultantSignHint", { name: guestName })}</FieldHint>
-                </Field>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={pending || typedName.trim().length < 2}
-                  onClick={() => {
-                    startTransition(async () => {
-                      const result = await staffSignContractAction(
-                        pendingConsultant.id,
-                        typedName,
-                        "typed",
-                        null,
-                        locale,
-                      );
-                      if (result.error) {
-                        toast.error(t(`errors.${result.error}`));
-                        return;
-                      }
-                      toast.success(t("contractSigned"));
-                      router.refresh();
-                    });
-                  }}
-                >
-                  {t("signAsConsultant")}
-                </Button>
-              </div>
+              isHost ? (
+                <div className="space-y-2 rounded-xl border border-border p-3">
+                  <Field>
+                    <FieldLabel htmlFor={`sign-${appointmentId}`} required>
+                      {t("consultantSignName")}
+                    </FieldLabel>
+                    <Input
+                      id={`sign-${appointmentId}`}
+                      value={typedName}
+                      onChange={(event) => setTypedName(event.target.value)}
+                    />
+                    <FieldHint>
+                      {t("consultantSignHint", { name: guestName })}
+                    </FieldHint>
+                  </Field>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pending || typedName.trim().length < 2}
+                    onClick={() => {
+                      startTransition(async () => {
+                        const result = await staffSignContractAction(
+                          pendingConsultant.id,
+                          typedName,
+                          "typed",
+                          null,
+                          locale,
+                        );
+                        if (result.error) {
+                          toast.error(t(`errors.${result.error}`));
+                          return;
+                        }
+                        toast.success(t("contractSigned"));
+                        router.refresh();
+                      });
+                    }}
+                  >
+                    {t("signAsConsultant")}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {t("consultantWaiting", { name: hostName })}
+                </p>
+              )
             ) : null}
             <Button
               type="button"

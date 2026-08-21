@@ -406,6 +406,37 @@
       "services": "Ajouter des services",
       "hours": "Définir les heures"
     },
+    "setup": {
+      "title": "Terminez la configuration de votre compte",
+      "subtitle": "{done} sur {total} faits",
+      "cta": "Configurer",
+      "items": {
+        "account": {
+          "title": "Votre nom",
+          "help": "Le nom affiché sur votre profil et dans les courriels aux clients."
+        },
+        "representative": {
+          "title": "Coordonnées du représentant (IMM 5476)",
+          "help": "Adhésion CICC, coordonnées et adresse postale pour les formulaires de représentant."
+        },
+        "signature": {
+          "title": "Signature de contrat",
+          "help": "Enregistrez votre signature pour contre-signer les contrats de réservation."
+        },
+        "hours": {
+          "title": "Vos heures d’ouverture",
+          "help": "Les clients ne peuvent réserver que pendant les heures que vous publiez."
+        },
+        "calendar": {
+          "title": "Calendrier connecté",
+          "help": "Connectez Google Calendar ou Outlook pour synchroniser les rendez-vous."
+        },
+        "meeting": {
+          "title": "Outil de réunion",
+          "help": "Choisissez Google Meet, Teams ou Zoom pour le lien de connexion."
+        }
+      }
+    },
     "appointments": {
       "title": "Cette semaine",
       "viewCalendar": "Calendrier",
@@ -2575,11 +2606,11 @@
     "contractSendOnBooking": "Envoyer à la réservation",
     "contractRequireConsultant": "Contre-signature du consultant",
     "contractSendHelp": "Si l’envoi est activé, le contrat rempli est courriellé après une réservation. Le client signe en premier ; le consultant ensuite si la contre-signature est activée.",
-    "contractRequireConsultantHelp": "Si c’est activé, vous contre-signez après le client. Activez la pré-signature ci-dessous pour appliquer automatiquement votre signature enregistrée.",
+    "contractRequireConsultantHelp": "Si c’est activé, le consultant assigné à la réservation contre-signe après le client. Chaque personne enregistre sa propre signature ci-dessous ; la pré-signature applique cette marque automatiquement.",
     "contractSignature": "Votre signature",
-    "contractSignatureHelp": "Utilisée pour la contre-signature. Tapez, dessinez ou téléversez un PNG. La pré-signature applique cette marque à chaque nouveau contrat.",
+    "contractSignatureHelp": "Utilisée lorsque vous êtes le consultant de la réservation. Saisissez votre nom tel qu’il apparaît sur votre profil, ou dessinez/téléversez un PNG. La pré-signature applique cette marque aux nouveaux contrats de vos rendez-vous.",
     "contractPresignAll": "Pré-signer tous les contrats",
-    "contractPresignHelp": "Applique votre signature enregistrée dès l’envoi du contrat. Le client signe toujours ; l’enveloppe se termine ensuite.",
+    "contractPresignHelp": "Applique votre signature enregistrée dès l’envoi d’un contrat pour une réservation qui vous est assignée. Le client signe toujours ; l’enveloppe se termine ensuite.",
     "contractSignatureSave": "Enregistrer la signature",
     "contractSignatureSaved": "Signature enregistrée",
     "contractDocument": "Document",
@@ -2782,7 +2813,7 @@
       "missing_default_locale": "Ajoutez la version dans la langue par défaut du cabinet.",
       "incomplete_translation": "Chaque langue doit avoir un objet et un message, ou laissez les deux vides.",
       "unauthorized": "Connectez-vous pour continuer.",
-      "forbidden": "Vous n’avez pas le droit de gérer les services.",
+      "forbidden": "Seuls les administrateurs du cabinet peuvent créer ou modifier les services, contrats, formulaires et courriels types.",
       "save_failed": "Enregistrement impossible. Réessayez.",
       "generic": "Une erreur s’est produite. Réessayez.",
       "booking_not_configured": "Activez d’abord les réservations dans les réglages du calendrier.",
@@ -2804,7 +2835,8 @@
       "name_mismatch": "Le nom saisi doit correspondre au nom de la réservation.",
       "invalid_signature": "Dessinez votre signature dans la case, puis réessayez.",
       "already_signed": "Ce contrat est déjà signé.",
-      "expired": "Ce lien de signature a expiré."
+      "expired": "Ce lien de signature a expiré.",
+      "not_host": "Seul le consultant assigné à cette réservation peut contre-signer."
     },
     "allowPayLater": "Autoriser le paiement plus tard",
     "allowPayLaterHelp": "Si activé, le client peut réserver maintenant et payer avant le rendez-vous. Sinon, le paiement est requis pour confirmer.",
@@ -3338,6 +3370,7 @@
     "signAsConsultant": "Signer comme consultant",
     "consultantSignName": "Votre nom légal",
     "consultantSignHint": "Doit correspondre au nom du consultant sur la réservation. Le client est {name}.",
+    "consultantWaiting": "En attente de la contre-signature de {name}. Seul le consultant assigné à cette réservation peut appliquer sa signature.",
     "contractSigned": "Contrat signé",
     "contractStatus": {
       "sent": "Envoyé",
@@ -3379,7 +3412,8 @@
       "name_mismatch": "Le nom saisi doit correspondre au nom de la réservation.",
       "invalid_signature": "Dessinez votre signature, puis réessayez.",
       "already_signed": "Ce contrat est déjà signé.",
-      "expired": "Ce lien de signature a expiré."
+      "expired": "Ce lien de signature a expiré.",
+      "not_host": "Seul le consultant assigné à cette réservation peut contre-signer."
     }
   },
   "contractEmail": {

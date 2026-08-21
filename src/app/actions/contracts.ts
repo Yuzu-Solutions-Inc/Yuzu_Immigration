@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { canCreateRecords } from "@/lib/auth/rbac";
+import {
+  canCreateRecords,
+  canManageBookingCatalog,
+} from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { defaultContractBodyHtml, sanitizeContractHtml } from "@/lib/contracts/html";
@@ -35,10 +38,19 @@ export type ContractActionState = {
 
 const localeSchema = z.enum(["en", "fr", "es"]);
 
-async function requireManager() {
+async function requireStaff() {
   const membership = await getPrimaryMembership();
   if (!membership) return { ok: false as const, error: "unauthorized" as const };
   if (!canCreateRecords(membership.role)) {
+    return { ok: false as const, error: "forbidden" as const };
+  }
+  return { ok: true as const, membership };
+}
+
+async function requireCatalogAdmin() {
+  const membership = await getPrimaryMembership();
+  if (!membership) return { ok: false as const, error: "unauthorized" as const };
+  if (!canManageBookingCatalog(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
   return { ok: true as const, membership };
@@ -105,7 +117,7 @@ export async function parseContractUploadAction(
   _prev: ContractActionState,
   formData: FormData,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireCatalogAdmin();
   if (!auth.ok) return { error: auth.error };
   const file = formData.get("file");
   if (!(file instanceof File) || file.size < 1) return { error: "invalid_upload" };
@@ -144,7 +156,7 @@ export async function saveContractTemplateAction(
   _prev: ContractActionState,
   formData: FormData,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireCatalogAdmin();
   if (!auth.ok) return { error: auth.error };
   const parsed = saveSchema.safeParse({
     locale: formData.get("locale") || "en",
@@ -253,7 +265,7 @@ export async function deleteContractTemplateAction(
   templateId: string,
   locale: string,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireCatalogAdmin();
   if (!auth.ok) return { error: auth.error };
   const supabase = await createClient();
   const { count } = await supabase
@@ -292,7 +304,7 @@ export async function sendAppointmentContractsAction(
   appointmentId: string,
   locale: string,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireStaff();
   if (!auth.ok) return { error: auth.error };
   const supabase = await createClient();
   const { data } = await supabase
@@ -311,7 +323,7 @@ export async function resendContractSignerAction(
   envelopeId: string,
   locale: string,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireStaff();
   if (!auth.ok) return { error: auth.error };
   const supabase = await createClient();
   const { data: envelope } = await supabase
@@ -388,7 +400,7 @@ export async function voidContractEnvelopeAction(
   envelopeId: string,
   locale: string,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireStaff();
   if (!auth.ok) return { error: auth.error };
   const now = new Date().toISOString();
   const supabase = await createClient();
@@ -418,9 +430,26 @@ export async function staffSignContractAction(
   image: string | null,
   locale: string,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireStaff();
   if (!auth.ok) return { error: auth.error };
+  const user = await getSessionUser();
+  if (!user) return { error: "unauthorized" };
   const supabase = await createClient();
+  const { data: envelope } = await supabase
+    .from("contract_envelopes")
+    .select("id, appointment_id")
+    .eq("id", envelopeId)
+    .eq("organization_id", auth.membership.organization.id)
+    .maybeSingle();
+  if (!envelope) return { error: "not_found" };
+  const { data: appointment } = await supabase
+    .from("booking_appointments")
+    .select("host_user_id")
+    .eq("id", envelope.appointment_id)
+    .eq("organization_id", auth.membership.organization.id)
+    .maybeSingle();
+  if (!appointment) return { error: "not_found" };
+  if (appointment.host_user_id !== user.id) return { error: "not_host" };
   const { data: signer } = await supabase
     .from("contract_signers")
     .select("id")
@@ -447,7 +476,7 @@ export async function setContractTemplateActiveAction(
   isActive: boolean,
   locale: string,
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireCatalogAdmin();
   if (!auth.ok) return { error: auth.error };
   const supabase = await createClient();
   const { error } = await supabase
@@ -475,7 +504,7 @@ export async function saveStaffContractSignatureAction(
     image: string | null;
   },
 ): Promise<ContractActionState> {
-  const auth = await requireManager();
+  const auth = await requireStaff();
   if (!auth.ok) return { error: auth.error };
   const user = await getSessionUser();
   if (!user) return { error: "unauthorized" };
@@ -521,5 +550,6 @@ export async function saveStaffContractSignatureAction(
     resourceId: user.id,
   });
   revalidatePath(`/${toAppLocale(input.locale)}/services`);
+  revalidatePath(`/${toAppLocale(input.locale)}/home`);
   return { message: "signature_saved" };
 }

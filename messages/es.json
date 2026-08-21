@@ -406,6 +406,37 @@
       "services": "Añadir servicios",
       "hours": "Definir horarios"
     },
+    "setup": {
+      "title": "Termine de configurar su cuenta",
+      "subtitle": "{done} de {total} listos",
+      "cta": "Configurar",
+      "items": {
+        "account": {
+          "title": "Su nombre",
+          "help": "El nombre que aparece en su perfil y en los correos a clientes."
+        },
+        "representative": {
+          "title": "Datos del representante (IMM 5476)",
+          "help": "Afiliación CICC, contacto y dirección postal para los formularios de representante."
+        },
+        "signature": {
+          "title": "Firma de contrato",
+          "help": "Guarde su firma para refrendar los contratos de reserva."
+        },
+        "hours": {
+          "title": "Su horario de atención",
+          "help": "Los clientes solo pueden reservarle durante las horas que publique."
+        },
+        "calendar": {
+          "title": "Calendario conectado",
+          "help": "Conecte Google Calendar u Outlook para sincronizar las citas."
+        },
+        "meeting": {
+          "title": "Herramienta de reunión",
+          "help": "Elija Google Meet, Teams o Zoom para el enlace de unión."
+        }
+      }
+    },
     "appointments": {
       "title": "Esta semana",
       "viewCalendar": "Calendario",
@@ -2575,11 +2606,11 @@
     "contractSendOnBooking": "Enviar al reservar",
     "contractRequireConsultant": "El consultor contrafirma",
     "contractSendHelp": "Si el envío está activo, el contrato relleno se envía por correo tras la reserva. El cliente firma primero; el consultor después si hay contrafirma.",
-    "contractRequireConsultantHelp": "Si está activo, usted contrafirma después del cliente. Active la prefirma abajo para aplicar automáticamente su firma guardada.",
+    "contractRequireConsultantHelp": "Si está activo, el consultor asignado a la reserva contrafirma después del cliente. Cada persona guarda su propia firma abajo; la prefirma aplica esa marca automáticamente.",
     "contractSignature": "Su firma",
-    "contractSignatureHelp": "Se usa al contrafirmar. Escriba, dibuje o suba un PNG. La prefirma aplica esta marca a cada contrato nuevo.",
+    "contractSignatureHelp": "Se usa cuando usted es el consultor de la reserva. Escriba su nombre como aparece en su perfil, o dibuje/suba un PNG. La prefirma aplica esta marca a los contratos nuevos de sus citas.",
     "contractPresignAll": "Prefirmar todos los contratos",
-    "contractPresignHelp": "Aplica su firma guardada en cuanto se envía el contrato. El cliente sigue firmando; el sobre se completa después.",
+    "contractPresignHelp": "Aplica su firma guardada en cuanto se envía un contrato de una reserva asignada a usted. El cliente sigue firmando; el sobre se completa después.",
     "contractSignatureSave": "Guardar firma",
     "contractSignatureSaved": "Firma guardada",
     "contractDocument": "Documento",
@@ -2782,7 +2813,7 @@
       "missing_default_locale": "Añada la versión en el idioma predeterminado del despacho.",
       "incomplete_translation": "Cada idioma necesita asunto y mensaje, o deje ambos en blanco.",
       "unauthorized": "Inicie sesión para continuar.",
-      "forbidden": "No tiene permiso para gestionar servicios.",
+      "forbidden": "Solo los administradores del despacho pueden crear o cambiar servicios, contratos, formularios y correos tipo.",
       "save_failed": "No se pudo guardar. Inténtelo de nuevo.",
       "generic": "Algo salió mal. Inténtelo de nuevo.",
       "booking_not_configured": "Active primero las reservas en la configuración del calendario.",
@@ -2804,7 +2835,8 @@
       "name_mismatch": "El nombre escrito debe coincidir con el de la reserva.",
       "invalid_signature": "Dibuje su firma en el recuadro e inténtelo de nuevo.",
       "already_signed": "Este contrato ya está firmado.",
-      "expired": "Este enlace de firma ha caducado."
+      "expired": "Este enlace de firma ha caducado.",
+      "not_host": "Solo el consultor asignado a esta reserva puede contrafirmar."
     },
     "allowPayLater": "Permitir pagar después",
     "allowPayLaterHelp": "Si está activado, el cliente puede reservar ahora y pagar antes de la cita. Si no, el pago es obligatorio para confirmar.",
@@ -3338,6 +3370,7 @@
     "signAsConsultant": "Firmar como consultor",
     "consultantSignName": "Su nombre legal",
     "consultantSignHint": "Debe coincidir con el nombre del consultor en la reserva. El cliente es {name}.",
+    "consultantWaiting": "Esperando la contrafirma de {name}. Solo el consultor asignado a esta reserva puede aplicar su firma.",
     "contractSigned": "Contrato firmado",
     "contractStatus": {
       "sent": "Enviado",
@@ -3379,7 +3412,8 @@
       "name_mismatch": "El nombre escrito debe coincidir con el de la reserva.",
       "invalid_signature": "Dibuje su firma e inténtelo de nuevo.",
       "already_signed": "Este contrato ya está firmado.",
-      "expired": "Este enlace de firma ha caducado."
+      "expired": "Este enlace de firma ha caducado.",
+      "not_host": "Solo el consultor asignado a esta reserva puede contrafirmar."
     }
   },
   "contractEmail": {

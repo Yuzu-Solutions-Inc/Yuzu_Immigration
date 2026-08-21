@@ -141,7 +141,7 @@ export function AccountSettingsForm({
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="repCountry" value={repCountry} />
 
-      <section className="space-y-4">
+      <section className="scroll-mt-6 space-y-4" id="account">
         <Field>
           <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
           <Input id="email" value={email} disabled readOnly />
@@ -164,7 +164,7 @@ export function AccountSettingsForm({
         </Field>
       </section>
 
-      <section className="space-y-4">
+      <section className="scroll-mt-6 space-y-4" id="representative">
         <div>
           <h3 className="font-heading text-base font-semibold text-brand">
             {t("repTitle")}

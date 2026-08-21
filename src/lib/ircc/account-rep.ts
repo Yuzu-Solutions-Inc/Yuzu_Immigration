@@ -39,6 +39,41 @@ export type AccountRepAnswerKey = (typeof ACCOUNT_REP_ANSWER_KEYS)[number];
 export const PROFILE_REP_SELECT =
   "id, email, full_name, rep_family_name, rep_given_name, rep_organization, rep_email, rep_phone, rep_phone_country_code, rep_membership_id, rep_street_num, rep_street_name, rep_city, rep_province, rep_country, rep_postal_code";
 
+function filled(value: string | null | undefined) {
+  return String(value ?? "").trim().length > 0;
+}
+
+/** Display name on the staff account (not the IMM 5476 block). */
+export function isAccountNameComplete(
+  profile: AccountRepSource | null | undefined,
+): boolean {
+  return filled(profile?.full_name);
+}
+
+const REQUIRED_REP_COLUMNS: (keyof AccountRepSource)[] = [
+  "rep_family_name",
+  "rep_given_name",
+  "rep_organization",
+  "rep_membership_id",
+  "rep_phone",
+  "rep_phone_country_code",
+  "rep_street_num",
+  "rep_street_name",
+  "rep_city",
+  "rep_province",
+  "rep_country",
+  "rep_postal_code",
+];
+
+/** True when IMM 5476 representative fields on the staff profile are filled. */
+export function isAccountRepComplete(
+  profile: AccountRepSource | null | undefined,
+): boolean {
+  if (!profile) return false;
+  if (!filled(profile.rep_email) && !filled(profile.email)) return false;
+  return REQUIRED_REP_COLUMNS.every((key) => filled(profile[key]));
+}
+
 /** Display name for a staff representative on client-facing surfaces. */
 export function representativeDisplayName(
   profile: AccountRepSource | null | undefined,

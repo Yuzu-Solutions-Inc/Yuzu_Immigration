@@ -649,6 +649,7 @@ export function ServiceContractsButton({
   templates,
   signature,
   canManage,
+  initialOpen = false,
 }: {
   locale: string;
   orgDefaultLocale: AppLocale;
@@ -657,9 +658,10 @@ export function ServiceContractsButton({
   templates: ContractTemplateRow[];
   signature: StaffContractSignature;
   canManage: boolean;
+  initialOpen?: boolean;
 }) {
   const t = useTranslations("services");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ContractTemplateRow | null>(null);
   const [formActive, setFormActive] = useState(true);
@@ -673,6 +675,15 @@ export function ServiceContractsButton({
       ),
     [locale, orgDefaultLocale, services],
   );
+
+  useEffect(() => {
+    if (!initialOpen) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("contracts") !== "1") return;
+    url.searchParams.delete("contracts");
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(null, "", next);
+  }, [initialOpen]);
 
   function closeForm() {
     setCreating(false);
@@ -755,9 +766,7 @@ export function ServiceContractsButton({
               />
             ) : (
               <div className="space-y-4">
-                {canManage ? (
-                  <StaffSignaturePanel locale={locale} signature={signature} />
-                ) : null}
+                <StaffSignaturePanel locale={locale} signature={signature} />
                 {templates.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     {t("contractsEmpty")}

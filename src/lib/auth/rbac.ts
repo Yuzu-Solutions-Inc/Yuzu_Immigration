@@ -24,6 +24,13 @@ export function canAdministerOrg(role: OrgRole | null | undefined): boolean {
   return isAdmin(role);
 }
 
+/** Admin-only: services, contracts, booking forms, and service email templates. */
+export function canManageBookingCatalog(
+  role: OrgRole | null | undefined,
+): boolean {
+  return isAdmin(role);
+}
+
 export function canDeleteRecord(input: {
   role: OrgRole | null | undefined;
   createdBy: string | null | undefined;

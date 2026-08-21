@@ -539,6 +539,7 @@ export function ServicesManager({
   formFields,
   templates,
   signature,
+  openContracts = false,
 }: {
   locale: string;
   orgDefaultLocale: AppLocale;
@@ -549,6 +550,7 @@ export function ServicesManager({
   formFields: BookingFormFieldRow[];
   templates: ContractTemplateRow[];
   signature: StaffContractSignature;
+  openContracts?: boolean;
 }) {
   const t = useTranslations("services");
   const router = useRouter();
@@ -715,6 +717,7 @@ export function ServicesManager({
             templates={templates}
             signature={signature}
             canManage={canManage}
+            initialOpen={openContracts}
           />
           <ServiceBookingFormButton
             locale={locale}

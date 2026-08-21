@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { canCreateRecords } from "@/lib/auth/rbac";
+import { canManageBookingCatalog } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
   BOOKING_FORM_FIELD_TYPES,
@@ -42,10 +42,10 @@ const saveSchema = z.object({
   fields: z.array(draftFieldSchema).max(MAX_BOOKING_FORM_FIELDS),
 });
 
-async function requireManager() {
+async function requireCatalogAdmin() {
   const membership = await getPrimaryMembership();
   if (!membership) return { ok: false as const, error: "unauthorized" as const };
-  if (!canCreateRecords(membership.role)) {
+  if (!canManageBookingCatalog(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
   return { ok: true as const, membership };
@@ -115,7 +115,7 @@ export async function saveBookingFormAction(
     });
   }
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
@@ -286,7 +286,7 @@ export async function deleteBookingFormAction(
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
 
-  const gate = await requireManager();
+  const gate = await requireCatalogAdmin();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();

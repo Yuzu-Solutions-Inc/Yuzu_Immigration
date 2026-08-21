@@ -406,6 +406,37 @@
       "services": "Add services",
       "hours": "Set open hours"
     },
+    "setup": {
+      "title": "Finish setting up your account",
+      "subtitle": "{done} of {total} done",
+      "cta": "Set up",
+      "items": {
+        "account": {
+          "title": "Your name",
+          "help": "Add the name shown on your profile and in client emails."
+        },
+        "representative": {
+          "title": "Representative details (IMM 5476)",
+          "help": "CICC membership, contact, and mailing address for use of representative forms."
+        },
+        "signature": {
+          "title": "Contract signature",
+          "help": "Save your signature so you can countersign booking contracts."
+        },
+        "hours": {
+          "title": "Your open hours",
+          "help": "Clients can only book you during the hours you publish."
+        },
+        "calendar": {
+          "title": "Calendar connection",
+          "help": "Connect Google Calendar or Outlook so bookings stay in sync."
+        },
+        "meeting": {
+          "title": "Meeting tool",
+          "help": "Choose Google Meet, Teams, or Zoom so clients get a join link."
+        }
+      }
+    },
     "appointments": {
       "title": "This week",
       "viewCalendar": "Calendar",
@@ -2580,11 +2611,11 @@
     "contractSendOnBooking": "Send when booked",
     "contractRequireConsultant": "Consultant countersigns",
     "contractSendHelp": "When send is on, the filled contract is emailed after a booking. The client signs first; the consultant signs next if countersignature is on.",
-    "contractRequireConsultantHelp": "When on, you countersign after the client. Turn on pre-sign below to apply your saved signature automatically.",
+    "contractRequireConsultantHelp": "When on, the consultant assigned to the booking countersigns after the client. Each person saves their own signature below; pre-sign applies that mark automatically.",
     "contractSignature": "Your signature",
-    "contractSignatureHelp": "Used when you countersign. Type, draw, or upload a PNG. Pre-sign applies this mark to every new booking contract.",
+    "contractSignatureHelp": "Used when you are the consultant on a booking. Type your name as it appears on your profile, or draw/upload a PNG. Pre-sign applies this mark to new contracts on your bookings.",
     "contractPresignAll": "Pre-sign all contracts",
-    "contractPresignHelp": "Apply your saved signature as soon as a contract is sent. The client still signs; the envelope completes after they do.",
+    "contractPresignHelp": "Apply your saved signature as soon as a contract is sent for a booking assigned to you. The client still signs; the envelope completes after they do.",
     "contractSignatureSave": "Save signature",
     "contractSignatureSaved": "Signature saved",
     "contractDocument": "Document",
@@ -2787,7 +2818,7 @@
       "missing_default_locale": "Add the version in your firm’s default language.",
       "incomplete_translation": "Each language needs both a subject and a message, or leave both blank.",
       "unauthorized": "Sign in to continue.",
-      "forbidden": "You do not have permission to manage services.",
+      "forbidden": "Only organization admins can create or change services, contracts, forms, and template emails.",
       "save_failed": "Could not save. Try again.",
       "generic": "Something went wrong. Try again.",
       "booking_not_configured": "Turn on booking in Calendar settings first.",
@@ -2809,7 +2840,8 @@
       "name_mismatch": "The typed name must match the name on this booking.",
       "invalid_signature": "Draw your signature in the box, then try again.",
       "already_signed": "This contract is already signed.",
-      "expired": "This signature link has expired."
+      "expired": "This signature link has expired.",
+      "not_host": "Only the consultant assigned to this booking can countersign."
     }
   },
   "booking": {
@@ -3213,6 +3245,7 @@
     "signAsConsultant": "Sign as consultant",
     "consultantSignName": "Your legal name",
     "consultantSignHint": "Must match the consultant name on the booking. The client is {name}.",
+    "consultantWaiting": "Waiting for {name} to countersign. Only the consultant assigned to this booking can apply their signature.",
     "contractSigned": "Contract signed",
     "contractStatus": {
       "sent": "Sent",
@@ -3270,7 +3303,8 @@
       "name_mismatch": "The typed name must match the name on this booking.",
       "invalid_signature": "Draw your signature, then try again.",
       "already_signed": "This contract is already signed.",
-      "expired": "This signature link has expired."
+      "expired": "This signature link has expired.",
+      "not_host": "Only the consultant assigned to this booking can countersign."
     }
   },
   "projectCall": {
