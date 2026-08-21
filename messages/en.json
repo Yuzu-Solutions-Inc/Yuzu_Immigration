@@ -1264,6 +1264,8 @@
     "quality": {
       "title": "Review these answers",
       "lede": "They look unusual and may be typos. Saving and downloading still work.",
+      "downloadLede": "They look unusual in the current filled forms. Review them before you download — saving and downloading still work.",
+      "summaryTitle": "Review answers before download",
       "sectionHasFlags": "Needs review",
       "items": {
         "study": "Study program dates",
@@ -1303,6 +1305,13 @@
         "commonLawUnderOneYear": "Common-law union appears shorter than 12 months.",
         "studyMinorNoCustodian": "Applicant is under 17. A custodian in Canada is usually required for study."
       }
+    },
+    "edition": {
+      "title": "Form edition alerts",
+      "lede": "Check these before downloading. Filled PDFs use the edition we currently certify.",
+      "newer": "{form}: IRCC now lists {date}. Downloaded PDFs still use the edition we fill.",
+      "failed": "{form}: last validation against canada.ca failed.",
+      "errors": "{form}: current edition has validation notes."
     },
     "save": "Save",
     "saving": "Saving…",

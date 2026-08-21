@@ -2,6 +2,7 @@ import {
   ALL_FORM_CODES,
   formTitle,
   IRCC_FORMS,
+  isFormCode,
   type FormCode,
 } from "./catalog";
 import type { PermitKitFamily } from "./kits";
@@ -146,4 +147,42 @@ export function groupedFormVersionRows(): Array<{
     category,
     forms: rows.filter((row) => row.category === category),
   })).filter((group) => group.forms.length > 0);
+}
+
+export type FormEditionAlert = {
+  code: FormCode;
+  newer: boolean;
+  failed: boolean;
+  livePublished: string | null;
+  errors: string[];
+};
+
+/** Edition / validation problems for the IRCC PDFs currently on a file. */
+export function formEditionAlertsForCodes(
+  codes: Iterable<string>,
+): FormEditionAlert[] {
+  const wanted = new Set(
+    [...codes].map((code) => code.toLowerCase()).filter(isFormCode),
+  );
+  if (wanted.size === 0) return [];
+
+  return getFormVersionRows().flatMap((row) => {
+    if (!wanted.has(row.code)) return [];
+    const newer = Boolean(
+      row.livePublished &&
+        row.published &&
+        row.livePublished !== row.published,
+    );
+    const failed = row.validation === "failed";
+    if (!newer && !failed && row.errors.length === 0) return [];
+    return [
+      {
+        code: row.code,
+        newer,
+        failed,
+        livePublished: row.livePublished,
+        errors: row.errors,
+      },
+    ];
+  });
 }

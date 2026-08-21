@@ -1264,6 +1264,8 @@
     "quality": {
       "title": "Vérifiez ces réponses",
       "lede": "Elles semblent inhabituelles et peuvent être des erreurs de saisie. Vous pouvez quand même enregistrer et télécharger.",
+      "downloadLede": "Elles semblent inhabituelles dans les formulaires actuellement remplis. Vérifiez-les avant de télécharger — vous pouvez quand même enregistrer et télécharger.",
+      "summaryTitle": "Vérifiez les réponses avant de télécharger",
       "sectionHasFlags": "À revoir",
       "items": {
         "study": "Dates du programme d’études",
@@ -1303,6 +1305,13 @@
         "commonLawUnderOneYear": "L’union de fait semble durer moins de 12 mois.",
         "studyMinorNoCustodian": "Le demandeur a moins de 17 ans. Un tuteur au Canada est généralement requis pour les études."
       }
+    },
+    "edition": {
+      "title": "Alertes d’édition des formulaires",
+      "lede": "Vérifiez ces points avant de télécharger. Les PDF remplis utilisent l’édition que nous certifions actuellement.",
+      "newer": "{form} : IRCC indique maintenant {date}. Les PDF téléchargés utilisent encore l’édition que nous remplissons.",
+      "failed": "{form} : la dernière validation sur canada.ca a échoué.",
+      "errors": "{form} : l’édition actuelle comporte des notes de validation."
     },
     "save": "Enregistrer",
     "saving": "Enregistrement…",

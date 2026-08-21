@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState, useTransition } from "react";
-import { Download, Eye, Loader2, Trash2 } from "lucide-react";
+import { AlertCircle, Download, Eye, Loader2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -16,6 +16,10 @@ import {
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
 import { ProjectFormPdfViewer } from "@/components/forms/project-form-pdf-viewer";
+import {
+  qualityIssueKey,
+  qualityIssueText,
+} from "@/components/forms/quality-issue-text";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -27,6 +31,16 @@ import {
   type FormCode,
   ALL_FORM_CODES,
 } from "@/lib/ircc/catalog";
+import {
+  analyzeAnswerQuality,
+  qualityIssuesForFormCode,
+  type QualityIssue,
+} from "@/lib/ircc/data-quality";
+import { applyDerivedAnswers } from "@/lib/ircc/fields";
+import {
+  formEditionAlertsForCodes,
+  formatImmCode,
+} from "@/lib/ircc/form-directory";
 import {
   addableFormsForProgram,
   isCustomProgram,
@@ -59,6 +73,86 @@ function triggerBrowserDownload(
 export type ProjectFormTodoRow = ProjectFormRow & {
   mandatoryReady: boolean;
 };
+
+function FormAlertsSummary({
+  people,
+  editionAlerts,
+}: {
+  people: Array<{ id: string; displayName: string; issues: QualityIssue[] }>;
+  editionAlerts: ReturnType<typeof formEditionAlertsForCodes>;
+}) {
+  const t = useTranslations("forms");
+  const hasQuality = people.some((person) => person.issues.length > 0);
+  if (!hasQuality && editionAlerts.length === 0) return null;
+
+  return (
+    <div className="space-y-3 border-t border-border px-5 py-4">
+      {hasQuality ? (
+        <div
+          className="rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
+          role="status"
+        >
+          <p className="flex items-start gap-2 font-semibold">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>{t("quality.summaryTitle")}</span>
+          </p>
+          <p className="mt-1 text-xs text-warning-text/90">
+            {t("quality.downloadLede")}
+          </p>
+          <ul className="mt-3 space-y-3">
+            {people.map((person) =>
+              person.issues.length === 0 ? null : (
+                <li key={person.id}>
+                  <p className="font-medium">{person.displayName}</p>
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    {person.issues.map((issue) => (
+                      <li key={qualityIssueKey(issue, person.id)}>
+                        {qualityIssueText(issue, t)}
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
+      ) : null}
+      {editionAlerts.length > 0 ? (
+        <div
+          className="rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
+          role="status"
+        >
+          <p className="flex items-start gap-2 font-semibold">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>{t("edition.title")}</span>
+          </p>
+          <p className="mt-1 text-xs text-warning-text/90">{t("edition.lede")}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {editionAlerts.map((alert) => (
+              <li key={alert.code}>
+                {alert.newer && alert.livePublished
+                  ? t("edition.newer", {
+                      form: formatImmCode(alert.code),
+                      date: alert.livePublished,
+                    })
+                  : alert.failed
+                    ? t("edition.failed", { form: formatImmCode(alert.code) })
+                    : t("edition.errors", { form: formatImmCode(alert.code) })}
+                {alert.errors.length > 0 ? (
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+                    {alert.errors.map((error) => (
+                      <li key={error}>{error}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function ProjectFormsPanel({
   locale,
@@ -100,6 +194,53 @@ export function ProjectFormsPanel({
     const map = new Map(people.map((p) => [p.id, p]));
     return map;
   }, [people]);
+
+  const principalPerson =
+    people.find((person) => person.role === "principal") ?? people[0] ?? null;
+
+  const qualityByPersonId = useMemo(() => {
+    const map = new Map<string, QualityIssue[]>();
+    for (const person of people) {
+      map.set(
+        person.id,
+        analyzeAnswerQuality(applyDerivedAnswers(person.answers), {
+          formCodes: person.formCodes,
+        }),
+      );
+    }
+    return map;
+  }, [people]);
+
+  const qualityPeople = useMemo(
+    () =>
+      people.map((person) => ({
+        id: person.id,
+        displayName: person.displayName,
+        issues: qualityByPersonId.get(person.id) ?? [],
+      })),
+    [people, qualityByPersonId],
+  );
+
+  const issuesByFormId = useMemo(() => {
+    const map = new Map<string, QualityIssue[]>();
+    for (const form of forms) {
+      const person = form.person_id
+        ? peopleById.get(form.person_id)
+        : principalPerson;
+      if (!person) continue;
+      const relevant = qualityIssuesForFormCode(
+        qualityByPersonId.get(person.id) ?? [],
+        form.form_code,
+      );
+      if (relevant.length > 0) map.set(form.id, relevant);
+    }
+    return map;
+  }, [forms, peopleById, principalPerson, qualityByPersonId]);
+
+  const editionAlerts = useMemo(
+    () => formEditionAlertsForCodes(forms.map((form) => form.form_code)),
+    [forms],
+  );
 
   const addOptions =
     isFederalPermitProgram(programFamily) || isCustomProgram(programFamily)
@@ -181,6 +322,10 @@ export function ProjectFormsPanel({
           </Button>
         </div>
       </div>
+      <FormAlertsSummary
+        people={qualityPeople}
+        editionAlerts={editionAlerts}
+      />
       {modificationBlocked ? (
         <p className="border-t border-border px-5 py-3 text-sm text-muted-foreground">
           {tp("grantedLock")}
@@ -198,6 +343,11 @@ export function ProjectFormsPanel({
                 : null;
               const ready = form.mandatoryReady;
               const downloading = downloadingKey === form.id;
+              const flagged =
+                (issuesByFormId.get(form.id)?.length ?? 0) > 0 ||
+                editionAlerts.some(
+                  (alert) => alert.code === form.form_code.toLowerCase(),
+                );
               return (
                 <li key={form.id} className="group px-5 py-3">
                   <div className="flex items-center gap-2">
@@ -280,7 +430,12 @@ export function ProjectFormsPanel({
                       </form>
                       ) : null}
                     </div>
-                    {ready ? (
+                    {flagged ? (
+                      <StatusPill
+                        label={t("quality.sectionHasFlags")}
+                        tone="warning"
+                      />
+                    ) : ready ? (
                       <StatusPill
                         label={t("pills.completed")}
                         tone="success"

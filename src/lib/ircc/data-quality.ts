@@ -3,7 +3,13 @@
  * These never block save or PDF download — they highlight likely entry errors.
  */
 
-import type { QuestionnaireSection } from "@/lib/ircc/fields";
+import {
+  CHECKLIST_FORM_CODES,
+  fieldsForFormCodes,
+  sectionsForFields,
+  tablesForFormCodes,
+  type QuestionnaireSection,
+} from "@/lib/ircc/fields";
 
 export type QualityIssue = {
   id: QualityIssueId;
@@ -526,4 +532,20 @@ export function qualityIssuesForSection(
   section: QuestionnaireSection,
 ): QualityIssue[] {
   return issues.filter((issue) => issue.section === section);
+}
+
+/** Issues whose section appears on this IRCC form's questionnaire fields. */
+export function qualityIssuesForFormCode(
+  issues: QualityIssue[],
+  formCode: string,
+): QualityIssue[] {
+  if (CHECKLIST_FORM_CODES.has(formCode.toLowerCase())) return [];
+  const sections = new Set(
+    sectionsForFields(
+      fieldsForFormCodes([formCode]),
+      tablesForFormCodes([formCode]),
+    ),
+  );
+  if (sections.size === 0) return [];
+  return issues.filter((issue) => sections.has(issue.section));
 }

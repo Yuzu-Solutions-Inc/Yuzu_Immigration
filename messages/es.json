@@ -1264,6 +1264,8 @@
     "quality": {
       "title": "Revise estas respuestas",
       "lede": "Parecen inusuales y pueden ser errores de captura. Aun así puede guardar y descargar.",
+      "downloadLede": "Parecen inusuales en los formularios rellenados actualmente. Revíselas antes de descargar: aun así puede guardar y descargar.",
+      "summaryTitle": "Revise las respuestas antes de descargar",
       "sectionHasFlags": "Revisar",
       "items": {
         "study": "Fechas del programa de estudios",
@@ -1303,6 +1305,13 @@
         "commonLawUnderOneYear": "La unión de hecho parece durar menos de 12 meses.",
         "studyMinorNoCustodian": "El solicitante tiene menos de 17 años. Suele exigirse un tutor en Canadá para estudios."
       }
+    },
+    "edition": {
+      "title": "Alertas de edición de formularios",
+      "lede": "Revise esto antes de descargar. Los PDF rellenados usan la edición que certificamos actualmente.",
+      "newer": "{form}: IRCC indica ahora {date}. Los PDF descargados siguen usando la edición que rellenamos.",
+      "failed": "{form}: la última validación frente a canada.ca falló.",
+      "errors": "{form}: la edición actual tiene notas de validación."
     },
     "save": "Guardar",
     "saving": "Saving…",
