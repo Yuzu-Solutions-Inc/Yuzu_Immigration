@@ -25,8 +25,12 @@ import { OutlookCalendarLogo } from "@/components/brand/outlook-calendar-logo";
 import { SageLogo } from "@/components/brand/sage-logo";
 import { SquareLogo } from "@/components/brand/square-logo";
 import { ZoomLogo } from "@/components/brand/zoom-logo";
-import { LegalLinks } from "@/components/legal/legal-links";
-import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import {
+  MarketingFinalCta,
+  MarketingFooter,
+  MarketingHeader,
+} from "@/components/marketing/marketing-chrome";
+import { PricingPlanCards } from "@/components/marketing/pricing-plans";
 import {
   AppCalendarPreview,
   AppHomePreview,
@@ -165,7 +169,16 @@ function ShowcaseCopy({
 }
 
 export async function LandingPage() {
-  const t = await getTranslations("home");
+  const [t, pricing] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("pricing"),
+  ]);
+  const nav = {
+    pricing: t("navPricing"),
+    signIn: t("navSignIn"),
+    cta: t("navCta"),
+    footerTagline: t("footerTagline"),
+  };
 
   return (
     <main className="landing-page relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
@@ -204,26 +217,7 @@ export async function LandingPage() {
         }
       `}</style>
 
-      <header className="relative z-20 border-b border-brand/5 bg-canvas/80 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
-          <BrandLogo size="md" />
-          <div className="flex items-center gap-2 sm:gap-3">
-            <LocaleSwitcher compact className="hidden sm:inline-flex" />
-            <Link
-              href="/login"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-            >
-              {t("navSignIn")}
-            </Link>
-            <Link
-              href="/login?mode=signup"
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
-              {t("navCta")}
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader copy={nav} active="home" />
 
       <section className="relative isolate overflow-hidden bg-graphite-900 text-white">
         <div
@@ -576,63 +570,46 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-graphite-900 py-20 text-white sm:py-24">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 90% 45% at 50% -10%, color-mix(in srgb, var(--indigo-500) 18%, transparent), transparent 58%)",
-          }}
-        />
-        <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-6 text-left sm:items-center sm:text-center">
-          <h2 className="font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
-            {t("finalTitle")}
-          </h2>
-          <p className="max-w-xl text-[15px] leading-relaxed text-pretty text-white/90 sm:text-base">
-            {t("finalSubtitle")}
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/login?mode=signup"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "bg-white text-brand hover:bg-white/95",
-              )}
-            >
-              {t("finalCta")}
-            </Link>
-            <Link
-              href="/login"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "border-white/45 bg-transparent text-white hover:bg-white/10 hover:text-white",
-              )}
-            >
-              {t("secondaryCta")}
-            </Link>
+      <section className="border-b border-border bg-surface py-20 sm:py-24">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <div className="max-w-2xl space-y-3">
+            <p className="text-sm font-semibold tracking-[0.14em] text-action uppercase">
+              {pricing("teaser.eyebrow")}
+            </p>
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+              {pricing("teaser.title")}
+            </h2>
+            <p className="text-[15px] leading-relaxed text-muted-foreground text-pretty sm:text-base">
+              {pricing("teaser.subtitle")}
+            </p>
           </div>
-          <p className="text-sm text-white/75">{t("finalNote")}</p>
+
+          <div className="mt-12">
+            <PricingPlanCards variant="teaser" />
+          </div>
+
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <Link
+              href="/pricing"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              {pricing("teaser.compare")}
+            </Link>
+            <p className="text-sm text-muted-foreground text-pretty">
+              {pricing("currencyNote")}
+            </p>
+          </div>
         </div>
       </section>
 
-      <footer className="border-t border-white/10 bg-graphite-900 py-8 text-white/50">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2">
-            <BrandLogo size="sm" inverted />
-            <p className="max-w-md text-xs leading-relaxed text-pretty">
-              {t("footerTagline")}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <LocaleSwitcher
-              compact
-              className="[&_select]:border-white/15 [&_select]:bg-white/5 [&_select]:text-white/80"
-            />
-            <LegalLinks linkClassName="text-white/45 hover:text-white/70" />
-          </div>
-        </div>
-      </footer>
+      <MarketingFinalCta
+        title={t("finalTitle")}
+        subtitle={t("finalSubtitle")}
+        cta={t("finalCta")}
+        secondaryCta={t("secondaryCta")}
+        note={t("finalNote")}
+      />
+      <MarketingFooter copy={nav} />
     </main>
   );
 }

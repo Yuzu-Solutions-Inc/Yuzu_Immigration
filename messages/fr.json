@@ -30,6 +30,7 @@
     "secondaryCta": "Se connecter",
     "ctaNote": "Gratuit pendant la phase de test ouverte. Aucune carte de crédit.",
     "navSignIn": "Se connecter",
+    "navPricing": "Tarifs",
     "navCta": "Essai gratuit",
     "capabilities": {
       "projects": "Projets",
@@ -258,6 +259,114 @@
     "finalCta": "Créer un compte gratuit",
     "finalNote": "Gratuit pendant la phase de test ouverte.",
     "footerTagline": "Logiciel de pratique pour consultants et avocats en immigration canadienne. Exploité par Yuzu Solutions."
+  },
+  "pricing": {
+    "metaTitle": "Tarifs",
+    "metaDescription": "Formules Standard et Équipe de %PRODUCT_NAME%. Gratuit pendant le test ouvert. Tarifs de lancement pour les 100 premiers cabinets.",
+    "eyebrow": "Tarifs",
+    "title": "Des formules simples. Le même produit.",
+    "subtitle": "On facture le cabinet, pas le dossier. Standard, c’est un consultant. Équipe, jusqu’à quatre personnes. Chaque formule inclut le portail, les questionnaires IRCC, la réservation, les contrats et Square — sans options à la carte, sans commission sur vos honoraires.",
+    "testingBanner": "Tout est gratuit pendant le test ouvert. Les 100 premiers cabinets — y compris les testeurs déjà sur le produit — bénéficient des tarifs de lancement pendant 12 mois lorsque la facturation commence.",
+    "currencyNote": "Prix en dollars canadiens, TPS/TVH en sus. La facturation annuelle, c’est 10 mois payés, 2 mois offerts. Les frais Square restent à Square ; %PRODUCT_NAME% ne prélève aucune commission sur les paiements de consultation.",
+    "cta": "Commencer gratuitement — test ouvert",
+    "freeNow": "Gratuit pendant le test ouvert",
+    "foundingHelp": "Tarif de lancement pour les {count} premiers cabinets · {months} premiers mois",
+    "yearlyPrice": "ou {amount} facturé à l’année ({free} mois offerts)",
+    "thenList": "Ensuite",
+    "teaser": {
+      "eyebrow": "Tarifs",
+      "title": "Gratuit pendant le test ouvert. Des prix clairs ensuite.",
+      "subtitle": "Tarifs de lancement pour les 100 premiers cabinets, y compris ceux déjà en test. Standard pour la pratique en solo. Équipe lorsque vous ajoutez du personnel.",
+      "compare": "Comparer Standard et Équipe"
+    },
+    "standard": {
+      "name": "%PRODUCT_NAME% Standard",
+      "audience": "Consultants et avocats en solo",
+      "teaser": "Un utilisateur. Le produit complet — clients et dossiers illimités.",
+      "features": {
+        "staff": "1 utilisateur du personnel",
+        "files": "Clients et projets illimités",
+        "portal": "Portail client, questionnaires IRCC et remplissage PDF",
+        "booking": "Réservation publique, calendrier, et Meet / Teams / Zoom",
+        "contracts": "Mandats et signature électronique",
+        "payments": "Paiements Square et comptabilité Sage",
+        "languages": "Anglais, français et espagnol"
+      }
+    },
+    "team": {
+      "name": "%PRODUCT_NAME% Équipe",
+      "audience": "Cabinets avec plus d’une personne sur les dossiers",
+      "badge": "Pour les cabinets",
+      "teaser": "Jusqu’à 4 utilisateurs. Le même logiciel que Standard.",
+      "extraSeats": "Puis {admin} par admin supplémentaire, {user} par gestionnaire de cas supplémentaire",
+      "features": {
+        "staff": "Jusqu’à 4 utilisateurs inclus (admins ou gestionnaires de cas)",
+        "sameProduct": "Le même logiciel que Standard — rien n’est verrouillé",
+        "extraAdmin": "Admins supplémentaires {price}",
+        "extraUser": "Gestionnaires de cas supplémentaires {price}",
+        "files": "Clients et projets illimités",
+        "payments": "Paiements Square et comptabilité Sage",
+        "languages": "Anglais, français et espagnol"
+      }
+    },
+    "compare": {
+      "title": "Standard ou Équipe",
+      "subtitle": "La seule différence, c’est le nombre de personnes qui se connectent comme personnel. Les devoirs de dossier du CRCIC ne sont pas des options.",
+      "feature": "Inclus",
+      "included": "Inclus",
+      "upgrade": "Passer à Équipe",
+      "staffStandard": "{count} utilisateur du personnel",
+      "staffTeam": "Jusqu’à {count} utilisateurs",
+      "rows": {
+        "staff": "Utilisateurs du personnel inclus",
+        "extraUser": "Gestionnaire de cas supplémentaire",
+        "extraAdmin": "Admin supplémentaire",
+        "files": "Clients et projets",
+        "portal": "Portail client",
+        "forms": "Questionnaires IRCC et remplissage PDF",
+        "booking": "Réservation, calendrier et liens de réunion",
+        "contracts": "Contrats et signature électronique",
+        "payments": "Square (sans commission plateforme)",
+        "sage": "Comptabilité Sage",
+        "languages": "Anglais, français, espagnol",
+        "canada": "Données principales hébergées au Canada"
+      }
+    },
+    "faq": {
+      "title": "Comment la facturation fonctionnera",
+      "testing": {
+        "q": "Dois-je payer maintenant ?",
+        "a": "Non. Le test ouvert est gratuit, sans carte de crédit. Nous écrirons aux administrateurs du cabinet avant le début de la facturation."
+      },
+      "founding": {
+        "q": "Qui a droit aux tarifs de lancement ?",
+        "a": "Les {count} premiers cabinets, y compris toutes les personnes déjà en test ouvert. Les tarifs de lancement durent {months} mois à compter du début de la facturation pour ce cabinet."
+      },
+      "after": {
+        "q": "Que se passe-t-il après 12 mois ?",
+        "a": "Vous passez au tarif affiché alors en vigueur (aujourd’hui, Standard {standardList} et Équipe {teamList}). Après la période de lancement, %PRODUCT_NAME% peut modifier les tarifs affichés moyennant un préavis d’au moins {days} jours aux administrateurs du cabinet."
+      },
+      "annual": {
+        "q": "Y a-t-il un tarif annuel ?",
+        "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Le tarif de lancement Standard est de {standardAnnual} pour l’année ; Équipe, {teamAnnual}."
+      },
+      "difference": {
+        "q": "Quelle est la différence entre Standard et Équipe ?",
+        "a": "Le même produit. Standard, c’est {standardUsers} utilisateur. Équipe en inclut jusqu’à {teamUsers}. Les admins supplémentaires sont à {admin} ; les gestionnaires de cas supplémentaires à {user}."
+      },
+      "roles": {
+        "q": "Quelle est la différence entre un admin et un gestionnaire de cas ?",
+        "a": "Les admins gèrent les paramètres de l’espace, les invitations, la conservation et le catalogue de réservation. Les gestionnaires de cas travaillent sur le portefeuille partagé. Chaque membre accède aux dossiers du cabinet."
+      },
+      "currency": {
+        "q": "Dans quelle devise ?",
+        "a": "En dollars canadiens, TPS/TVH en sus. Nous ne prenons aucun pourcentage sur les paiements de consultation Square."
+      },
+      "files": {
+        "q": "Facturez-vous par client ou par dossier ?",
+        "a": "Non. Nous ne plafonnons pas les dossiers actifs. La formule est pour le cabinet, pas par dossier."
+      }
+    }
   },
   "auth": {
     "title": "Connexion à %PRODUCT_NAME%",

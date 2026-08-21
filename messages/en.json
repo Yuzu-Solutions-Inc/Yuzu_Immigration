@@ -30,6 +30,7 @@
     "secondaryCta": "Sign in",
     "ctaNote": "Free during open testing. No credit card required.",
     "navSignIn": "Sign in",
+    "navPricing": "Pricing",
     "navCta": "Start free",
     "capabilities": {
       "projects": "Projects",
@@ -258,6 +259,114 @@
     "finalCta": "Create a free account",
     "finalNote": "Free during the open testing phase.",
     "footerTagline": "Practice software for Canadian immigration consultants and lawyers. Operated by Yuzu Solutions."
+  },
+  "pricing": {
+    "metaTitle": "Pricing",
+    "metaDescription": "Standard and Team plans for %PRODUCT_NAME%. Free during open testing. Founding rates for the first 100 firms.",
+    "eyebrow": "Pricing",
+    "title": "Simple firm plans. Same product.",
+    "subtitle": "Charge the practice, not the file. Standard is one consultant. Team is up to four people. Every plan includes portal, IRCC questionnaires, booking, contracts, and Square — no add-on maze, no cut of your fees.",
+    "testingBanner": "Everything is free during open testing. The first 100 firms — including testers already on the product — get founding rates for 12 months when billing starts.",
+    "currencyNote": "Prices in CAD, exclusive of GST/HST. Yearly billing is 10 months paid, 2 months free. Square processing fees stay with Square; %PRODUCT_NAME% does not take a cut of consultation payments.",
+    "cta": "Start free — open testing",
+    "freeNow": "Free during open testing",
+    "foundingHelp": "Founding rate for the first {count} firms · first {months} months",
+    "yearlyPrice": "or {amount} billed yearly ({free} months free)",
+    "thenList": "Then",
+    "teaser": {
+      "eyebrow": "Pricing",
+      "title": "Free during open testing. Clear prices after.",
+      "subtitle": "Founding rates for the first 100 firms, including everyone already testing. Standard for solo practice. Team when you add staff.",
+      "compare": "Compare Standard and Team"
+    },
+    "standard": {
+      "name": "Standard %PRODUCT_NAME%",
+      "audience": "Solo consultants and lawyers",
+      "teaser": "One staff user. The full product — unlimited clients and files.",
+      "features": {
+        "staff": "1 staff user",
+        "files": "Unlimited clients and projects",
+        "portal": "Client portal, IRCC questionnaires, and PDF fill",
+        "booking": "Public booking, calendar, and Meet / Teams / Zoom",
+        "contracts": "Retainers and electronic signature",
+        "payments": "Square payments and Sage Accounting",
+        "languages": "English, French, and Spanish"
+      }
+    },
+    "team": {
+      "name": "Team %PRODUCT_NAME%",
+      "audience": "Firms with more than one person on the caseload",
+      "badge": "For firms",
+      "teaser": "Up to 4 staff users. Same software as Standard.",
+      "extraSeats": "Then {admin} per extra admin, {user} per extra case manager",
+      "features": {
+        "staff": "Up to 4 staff users included (admins or case managers)",
+        "sameProduct": "Same software as Standard — nothing gated",
+        "extraAdmin": "Additional admins {price}",
+        "extraUser": "Additional case managers {price}",
+        "files": "Unlimited clients and projects",
+        "payments": "Square payments and Sage Accounting",
+        "languages": "English, French, and Spanish"
+      }
+    },
+    "compare": {
+      "title": "Standard vs Team",
+      "subtitle": "The only difference is how many people can sign in as staff. CICC file duties are not optional extras.",
+      "feature": "Included",
+      "included": "Included",
+      "upgrade": "Move to Team",
+      "staffStandard": "{count} staff user",
+      "staffTeam": "Up to {count} staff users",
+      "rows": {
+        "staff": "Staff users included",
+        "extraUser": "Additional case manager",
+        "extraAdmin": "Additional admin",
+        "files": "Clients and projects",
+        "portal": "Client portal",
+        "forms": "IRCC questionnaires and PDF fill",
+        "booking": "Booking, calendar, and meeting links",
+        "contracts": "Contracts and e-sign",
+        "payments": "Square (no platform cut)",
+        "sage": "Sage Accounting",
+        "languages": "English, French, Spanish",
+        "canada": "Primary data hosted in Canada"
+      }
+    },
+    "faq": {
+      "title": "How billing will work",
+      "testing": {
+        "q": "Do I pay anything now?",
+        "a": "No. Open testing is free, with no credit card. We will email firm administrators before billing starts."
+      },
+      "founding": {
+        "q": "Who gets founding rates?",
+        "a": "The first {count} firms, including everyone already in open testing. Founding rates last {months} months from when paid billing begins for that firm."
+      },
+      "after": {
+        "q": "What happens after 12 months?",
+        "a": "You move to the list price then in effect (today, Standard {standardList} and Team {teamList}). After the founding period, %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
+      },
+      "annual": {
+        "q": "Is there a yearly price?",
+        "a": "Yes. Pay {paid} months and get {free} months free. Founding Standard is {standardAnnual} for the year; founding Team is {teamAnnual}."
+      },
+      "difference": {
+        "q": "What is the difference between Standard and Team?",
+        "a": "Same product. Standard is {standardUsers} staff user. Team includes up to {teamUsers}. Extra admins are {admin}; extra case managers are {user}."
+      },
+      "roles": {
+        "q": "What is an admin vs a case manager?",
+        "a": "Admins manage workspace settings, invites, retention, and the booking catalogue. Case managers work the shared caseload. Every member can access the firm’s files."
+      },
+      "currency": {
+        "q": "What currency is this?",
+        "a": "Canadian dollars, plus applicable GST/HST. We do not take a percentage of Square consultation payments."
+      },
+      "files": {
+        "q": "Do you meter clients or files?",
+        "a": "No. We do not cap active cases. The plan is for the firm, not per file."
+      }
+    }
   },
   "auth": {
     "title": "Sign in to %PRODUCT_NAME%",

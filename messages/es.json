@@ -30,6 +30,7 @@
     "secondaryCta": "Iniciar sesión",
     "ctaNote": "Gratis durante la fase de prueba abierta. Sin tarjeta de crédito.",
     "navSignIn": "Iniciar sesión",
+    "navPricing": "Precios",
     "navCta": "Empezar gratis",
     "capabilities": {
       "projects": "Proyectos",
@@ -258,6 +259,114 @@
     "finalCta": "Crear una cuenta gratuita",
     "finalNote": "Gratis durante la fase de prueba abierta.",
     "footerTagline": "Software de práctica para consultores y abogados de inmigración canadiense. Operado por Yuzu Solutions."
+  },
+  "pricing": {
+    "metaTitle": "Precios",
+    "metaDescription": "Planes Standard y Equipo de %PRODUCT_NAME%. Gratis durante la prueba abierta. Tarifas de lanzamiento para las primeras 100 firmas.",
+    "eyebrow": "Precios",
+    "title": "Planes simples para la firma. El mismo producto.",
+    "subtitle": "Se cobra a la práctica, no al expediente. Standard es un consultor. Equipo, hasta cuatro personas. Cada plan incluye portal, cuestionarios IRCC, reservas, contratos y Square — sin extras a la carta ni comisión sobre sus honorarios.",
+    "testingBanner": "Todo es gratis durante la prueba abierta. Las primeras 100 firmas — incluidos quienes ya están en el producto — obtienen tarifas de lanzamiento durante 12 meses cuando empiece la facturación.",
+    "currencyNote": "Precios en CAD, sin GST/HST. El pago anual son 10 meses cobrados y 2 meses gratis. Las comisiones de Square siguen en Square; %PRODUCT_NAME% no se queda con un recorte de los pagos de consulta.",
+    "cta": "Empezar gratis — prueba abierta",
+    "freeNow": "Gratis durante la prueba abierta",
+    "foundingHelp": "Tarifa de lanzamiento para las primeras {count} firmas · primeros {months} meses",
+    "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
+    "thenList": "Después",
+    "teaser": {
+      "eyebrow": "Precios",
+      "title": "Gratis durante la prueba abierta. Precios claros después.",
+      "subtitle": "Tarifas de lanzamiento para las primeras 100 firmas, incluidas las que ya están en prueba. Standard para la práctica en solitario. Equipo cuando sume personal.",
+      "compare": "Comparar Standard y Equipo"
+    },
+    "standard": {
+      "name": "%PRODUCT_NAME% Standard",
+      "audience": "Consultores y abogados en solitario",
+      "teaser": "Un usuario. El producto completo — clientes y expedientes ilimitados.",
+      "features": {
+        "staff": "1 usuario del personal",
+        "files": "Clientes y proyectos ilimitados",
+        "portal": "Portal del cliente, cuestionarios IRCC y relleno de PDF",
+        "booking": "Reserva pública, calendario y Meet / Teams / Zoom",
+        "contracts": "Mandatos y firma electrónica",
+        "payments": "Pagos Square y Sage Accounting",
+        "languages": "Inglés, francés y español"
+      }
+    },
+    "team": {
+      "name": "%PRODUCT_NAME% Equipo",
+      "audience": "Firmas con más de una persona en los expedientes",
+      "badge": "Para firmas",
+      "teaser": "Hasta 4 usuarios. El mismo software que Standard.",
+      "extraSeats": "Luego {admin} por admin extra, {user} por gestor de casos extra",
+      "features": {
+        "staff": "Hasta 4 usuarios incluidos (admins o gestores de casos)",
+        "sameProduct": "El mismo software que Standard — nada bloqueado",
+        "extraAdmin": "Admins adicionales {price}",
+        "extraUser": "Gestores de casos adicionales {price}",
+        "files": "Clientes y proyectos ilimitados",
+        "payments": "Pagos Square y Sage Accounting",
+        "languages": "Inglés, francés y español"
+      }
+    },
+    "compare": {
+      "title": "Standard frente a Equipo",
+      "subtitle": "La única diferencia es cuántas personas pueden entrar como personal. Las obligaciones de expediente del CICC no son extras opcionales.",
+      "feature": "Incluido",
+      "included": "Incluido",
+      "upgrade": "Pasar a Equipo",
+      "staffStandard": "{count} usuario del personal",
+      "staffTeam": "Hasta {count} usuarios",
+      "rows": {
+        "staff": "Usuarios del personal incluidos",
+        "extraUser": "Gestor de casos adicional",
+        "extraAdmin": "Admin adicional",
+        "files": "Clientes y proyectos",
+        "portal": "Portal del cliente",
+        "forms": "Cuestionarios IRCC y relleno de PDF",
+        "booking": "Reservas, calendario y enlaces de reunión",
+        "contracts": "Contratos y firma electrónica",
+        "payments": "Square (sin recorte de la plataforma)",
+        "sage": "Sage Accounting",
+        "languages": "Inglés, francés, español",
+        "canada": "Datos principales alojados en Canadá"
+      }
+    },
+    "faq": {
+      "title": "Cómo funcionará la facturación",
+      "testing": {
+        "q": "¿Pago algo ahora?",
+        "a": "No. La prueba abierta es gratuita, sin tarjeta. Escribiremos a los administradores de la firma antes de empezar a facturar."
+      },
+      "founding": {
+        "q": "¿Quién obtiene las tarifas de lanzamiento?",
+        "a": "Las primeras {count} firmas, incluidas todas las que ya están en prueba abierta. Las tarifas de lanzamiento duran {months} meses desde que empieza la facturación de esa firma."
+      },
+      "after": {
+        "q": "¿Qué ocurre después de 12 meses?",
+        "a": "Pasa al precio de lista entonces vigente (hoy, Standard {standardList} y Equipo {teamList}). Tras el periodo de lanzamiento, %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
+      },
+      "annual": {
+        "q": "¿Hay un precio anual?",
+        "a": "Sí. Paga {paid} meses y {free} meses son gratis. El Standard de lanzamiento es {standardAnnual} al año; Equipo, {teamAnnual}."
+      },
+      "difference": {
+        "q": "¿Cuál es la diferencia entre Standard y Equipo?",
+        "a": "El mismo producto. Standard es {standardUsers} usuario. Equipo incluye hasta {teamUsers}. Los admins extra cuestan {admin}; los gestores de casos extra, {user}."
+      },
+      "roles": {
+        "q": "¿Qué es un admin frente a un gestor de casos?",
+        "a": "Los admins gestionan la configuración del espacio, las invitaciones, la conservación y el catálogo de reservas. Los gestores de casos trabajan el caseload compartido. Cada miembro accede a los expedientes de la firma."
+      },
+      "currency": {
+        "q": "¿En qué moneda?",
+        "a": "Dólares canadienses, más GST/HST aplicable. No nos quedamos con un porcentaje de los pagos de consulta de Square."
+      },
+      "files": {
+        "q": "¿Cobráis por cliente o por expediente?",
+        "a": "No. No limitamos los casos activos. El plan es para la firma, no por expediente."
+      }
+    }
   },
   "auth": {
     "title": "Sign in to %PRODUCT_NAME%",
