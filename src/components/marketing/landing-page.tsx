@@ -18,6 +18,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import type { ComponentType } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { GoogleCalendarLogo } from "@/components/brand/google-calendar-logo";
@@ -101,7 +102,16 @@ const FEATURE_TONES = {
 
 const FEATURE_BETA = new Set<(typeof FEATURE_KEYS)[number]>(["sage"]);
 
-const INTEGRATION_GROUPS = [
+type IntegrationItem = {
+  key: "calendar" | "outlook" | "meet" | "teams" | "zoom" | "square" | "sage";
+  Logo: ComponentType<{ className?: string; title?: string }>;
+  beta: boolean;
+};
+
+const INTEGRATION_GROUPS: readonly {
+  key: "calendar" | "meetings" | "payment";
+  items: readonly IntegrationItem[];
+}[] = [
   {
     key: "calendar",
     items: [
@@ -124,9 +134,11 @@ const INTEGRATION_GROUPS = [
       { key: "sage", Logo: SageLogo, beta: true },
     ],
   },
-] as const;
+];
 
-const INTEGRATION_MARQUEE = INTEGRATION_GROUPS.flatMap((group) => group.items);
+const INTEGRATION_MARQUEE: IntegrationItem[] = INTEGRATION_GROUPS.flatMap(
+  (group) => [...group.items],
+);
 
 const HOW_KEYS = ["one", "two", "three", "four"] as const;
 
