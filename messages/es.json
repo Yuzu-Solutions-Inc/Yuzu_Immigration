@@ -296,7 +296,7 @@
     "standard": {
       "name": "%PRODUCT_NAME% Standard",
       "audience": "Consultores y abogados en solitario",
-      "badge": "La mayoría de solos",
+      "badge": "Individual",
       "teaser": "Un usuario. El producto completo — clientes y expedientes ilimitados.",
       "features": {
         "staff": "1 usuario del personal",
