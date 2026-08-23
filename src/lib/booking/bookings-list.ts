@@ -132,12 +132,14 @@ async function fetchBookingRows(
   extra?: (query: ListFilterQuery) => ListFilterQuery,
 ): Promise<{ rows: BookingListDbRow[]; error: string | null }> {
   return fetchAllInChunks<BookingListDbRow>(async (from, to) => {
-    let query = supabase
-      .from("booking_appointments")
-      .select(BOOKING_LIST_SELECT)
-      .eq("organization_id", organizationId);
-    query = applyBookingSqlFilters(asListFilterQuery(query), filters) as typeof query;
-    if (extra) query = extra(asListFilterQuery(query)) as typeof query;
+    let query = asListFilterQuery(
+      supabase
+        .from("booking_appointments")
+        .select(BOOKING_LIST_SELECT)
+        .eq("organization_id", organizationId),
+    );
+    query = applyBookingSqlFilters(query, filters);
+    if (extra) query = extra(query);
     const { data, error } = await query
       .order("id", { ascending: true })
       .range(from, to);
@@ -388,16 +390,17 @@ export async function listOrgBookingsPage(
 
   if (canSqlPaginate) {
     const { from, to } = listRange(offset, limit);
-    let query = supabase
-      .from("booking_appointments")
-      .select(BOOKING_LIST_SELECT, { count: "exact" })
-      .eq("organization_id", organizationId);
-    query = applyBookingSqlFilters(asListFilterQuery(query), filters) as typeof query;
-    if (extra) query = extra(asListFilterQuery(query)) as typeof query;
-    const withIds = applyIdFilter(asListFilterQuery(query), paymentFilter);
+    let query = asListFilterQuery(
+      supabase
+        .from("booking_appointments")
+        .select(BOOKING_LIST_SELECT, { count: "exact" })
+        .eq("organization_id", organizationId),
+    );
+    query = applyBookingSqlFilters(query, filters);
+    if (extra) query = extra(query);
+    const withIds = applyIdFilter(query, paymentFilter);
     if (withIds === null || withIds === "scan") return emptyListPage();
-    query = withIds as typeof query;
-    query = query
+    query = withIds
       .order("starts_at", { ascending: sortDir === "asc" })
       .order("id", { ascending: sortDir === "asc" });
     const { data, error, count } = await query.range(from, to);
