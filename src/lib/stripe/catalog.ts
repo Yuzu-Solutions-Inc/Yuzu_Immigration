@@ -174,7 +174,7 @@ async function ensureProduct(
       tax_code: PERMIT_OS_TAX_CODE,
       metadata: { plan: key },
     },
-    { idempotencyKey: `permitos_product_${key}_v1` },
+    { idempotencyKey: `permitos_product_${key}_v2` },
   );
   return product.id;
 }
