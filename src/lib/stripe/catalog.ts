@@ -105,6 +105,9 @@ const PRODUCT_NAMES = {
   extra_seat: "Permit OS extra staff seat",
 } as const;
 
+// Stripe's "Software as a service (SaaS) — business use" tax code.
+const PERMIT_OS_TAX_CODE = "txcd_10103001";
+
 export function planPriceLookupKey(
   _plan: PricingPlanId,
   interval: BillingInterval,
@@ -168,6 +171,7 @@ async function ensureProduct(
   const product = await stripe.products.create(
     {
       name: PRODUCT_NAMES[key],
+      tax_code: PERMIT_OS_TAX_CODE,
       metadata: { plan: key },
     },
     { idempotencyKey: `permitos_product_${key}_v1` },

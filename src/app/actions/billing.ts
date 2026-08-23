@@ -160,6 +160,7 @@ export async function startCheckoutAction(
       success_url: `${origin}/${locale}/settings/billing?checkout=success`,
       cancel_url: `${origin}/${locale}/settings/billing?checkout=cancel`,
       line_items,
+      automatic_tax: { enabled: true },
       billing_address_collection: "required",
       tax_id_collection: { enabled: true },
       customer_update: { address: "auto", name: "auto" },
@@ -181,14 +182,7 @@ export async function startCheckoutAction(
       ...(foundingDiscount ? { discounts: [foundingDiscount] } : {}),
     };
 
-    let session;
-    try {
-      session = await stripe.checkout.sessions.create(checkoutParams);
-    } catch {
-      const withoutTax = { ...checkoutParams };
-      delete withoutTax.tax_id_collection;
-      session = await stripe.checkout.sessions.create(withoutTax);
-    }
+    const session = await stripe.checkout.sessions.create(checkoutParams);
     sessionUrl = session.url;
   } catch (error) {
     console.error("checkout session:", error);

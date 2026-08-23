@@ -174,6 +174,7 @@ async function applyCatalog(input: {
   const intervalChanged =
     subscriptionBillingInterval(input.subscription) !== input.interval;
   const updated = await stripe.subscriptions.update(input.subscription.id, {
+    automatic_tax: { enabled: true },
     items: subscriptionItemsForCatalog(
       input.subscription,
       prices,
@@ -348,6 +349,7 @@ async function createRenewalSchedule(input: {
       {
         start_date: periodStart,
         end_date: periodEnd,
+        automatic_tax: { enabled: true },
         items: scheduleItemsFromSubscription(input.subscription),
         proration_behavior: "none",
         ...(currentDiscounts.length ? { discounts: currentDiscounts } : {}),
@@ -356,6 +358,7 @@ async function createRenewalSchedule(input: {
         start_date: periodEnd,
         duration: { interval: input.interval, interval_count: 1 },
         billing_cycle_anchor: "phase_start",
+        automatic_tax: { enabled: true },
         items: targetItems,
         proration_behavior: "none",
         ...(targetDiscounts.length ? { discounts: targetDiscounts } : {}),
