@@ -66,6 +66,7 @@ export default async function InvitePage({
         expired: t("expired"),
         email_mismatch: t("emailMismatch", { email: invitation.email }),
         join_failed: t("joinFailed"),
+        seats_exceeded: t("seatsExceeded"),
         invalid: t("invalid"),
         unauthorized: t("invalid"),
         legal_required: t("joinFailed"),

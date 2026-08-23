@@ -452,7 +452,8 @@
     "joinFailed": "Impossible de rejoindre l’organisation. Réessayez.",
     "goHome": "Aller à l’espace de travail",
     "goLogin": "Se connecter",
-    "organizationFallback": "l’organisation"
+    "organizationFallback": "l’organisation",
+    "seatsExceeded": "Ce cabinet n’a plus de siège libre. Demandez à un admin d’en ajouter un sous Facturation."
   },
   "appHome": {
     "title": "Accueil",
@@ -735,7 +736,8 @@
     "billingCheckoutSuccess": "Abonnement mis à jour.",
     "billingCheckoutCancel": "Le paiement a été annulé.",
     "billingRenews": "Renouvellement le {date}",
-    "teamSeatWillBill": "Cette invitation ajoute un siège. Nous facturons la différence au prorata pour le reste de la période.",
+    "billingAddSeat": "Ajouter un siège",
+    "teamSeatsFull": "Tous les sièges sont utilisés. Ajoutez-en un sous",
     "squareTitle": "Paiements Square",
     "squareHelp": "Connectez Square pour encaisser les services tarifés et les liens de paiement de dossier.",
     "squareConnect": "Connecter Square",
@@ -918,7 +920,7 @@
       "forbidden": "Vous n’avez pas l’autorisation pour cette action.",
       "alreadyMember": "Ce collègue est déjà membre.",
       "inviteFailed": "Impossible d’envoyer l’invitation. Réessayez.",
-      "seatsExceeded": "Impossible d’ajouter un siège pour cette invitation. Réessayez ou vérifiez la facturation.",
+      "seatsExceeded": "Tous les sièges payés sont utilisés. Ajoutez un siège sous Facturation, puis invitez de nouveau.",
       "seatChargeFailed": "Impossible de facturer le siège supplémentaire. Mettez à jour le moyen de paiement sous Facturation, puis invitez de nouveau.",
       "lastAdmin": "L’organisation doit conserver au moins un admin.",
       "cannotRemoveSelf": "Vous ne pouvez pas vous retirer vous-même.",

@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
 import { getSessionUser } from "@/lib/auth/session";
+import { canAddMemberSeat } from "@/lib/billing/occupancy";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -41,16 +42,29 @@ async function addMembership(input: {
   role: OrgRole;
 }) {
   const admin = createServiceClient();
-  const { error } = await admin.from("organization_members").upsert(
-    {
-      organization_id: input.organizationId,
-      user_id: input.userId,
-      role: isOrgRole(input.role) ? input.role : DEFAULT_ORG_ROLE,
-    },
-    { onConflict: "organization_id,user_id", ignoreDuplicates: true },
-  );
+  const { data: existing } = await admin
+    .from("organization_members")
+    .select("id")
+    .eq("organization_id", input.organizationId)
+    .eq("user_id", input.userId)
+    .maybeSingle();
+  if (existing) return;
+
+  const allowed = await canAddMemberSeat(input.organizationId);
+  if (!allowed) {
+    throw new Error("seats_exceeded");
+  }
+
+  const { error } = await admin.from("organization_members").insert({
+    organization_id: input.organizationId,
+    user_id: input.userId,
+    role: isOrgRole(input.role) ? input.role : DEFAULT_ORG_ROLE,
+  });
   if (error) {
     console.error("addMembership:", error.message);
+    if (/seats_exceeded/i.test(error.message)) {
+      throw new Error("seats_exceeded");
+    }
     throw new Error("join_failed");
   }
 }
@@ -94,8 +108,12 @@ export async function acceptInvitationByToken(
       userId: user.id,
       role: row.role,
     });
-  } catch {
-    return { ok: false, error: "join_failed" };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "";
+    return {
+      ok: false,
+      error: message === "seats_exceeded" ? "seats_exceeded" : "join_failed",
+    };
   }
 
   await admin

@@ -8,6 +8,7 @@ import {
   type BillingInterval,
   type SeatCatalog,
 } from "@/lib/billing/plans";
+import { occupancyCount } from "@/lib/billing/occupancy";
 import type { PricingPlanId } from "@/lib/marketing/pricing";
 import {
   ensureBillingPrices,
@@ -22,7 +23,6 @@ import {
   parseSubscriptionItems,
   syncOrgFromSubscription,
 } from "@/lib/stripe/sync";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 export type SeatSyncError =
   | "not_configured"
@@ -76,24 +76,7 @@ function subscriptionItemsForCatalog(
   return items;
 }
 
-export async function occupancyCount(orgId: string): Promise<number> {
-  const admin = createServiceClient();
-  const now = new Date().toISOString();
-  const [members, pending] = await Promise.all([
-    admin
-      .from("organization_members")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId),
-    admin
-      .from("organization_invitations")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .is("accepted_at", null)
-      .is("revoked_at", null)
-      .gt("expires_at", now),
-  ]);
-  return (members.count ?? 0) + (pending.count ?? 0);
-}
+export { occupancyCount };
 
 async function applyCatalog(input: {
   orgId: string;

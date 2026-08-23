@@ -8,6 +8,7 @@ import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { occupancyCount } from "@/lib/billing/occupancy";
 import { catalogForOccupancy, type BillingInterval } from "@/lib/billing/plans";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
@@ -18,7 +19,7 @@ import {
 } from "@/lib/stripe/catalog";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
 import {
-  occupancyCount,
+  ensureLicensedSeats,
   updateSubscriptionCatalog,
 } from "@/lib/stripe/seats";
 import {
@@ -268,4 +269,42 @@ export async function openBillingPortalAction(
   });
 
   redirect(session.url);
+}
+
+export async function addLicensedSeatAction(
+  _prev: BillingActionState,
+  formData: FormData,
+): Promise<BillingActionState> {
+  const locale = String(formData.get("locale") || "en");
+  const gate = await requireBillingAdmin();
+  if (!gate.ok) return { error: gate.error };
+
+  const orgId = gate.membership.organization.id;
+  const occupancy = await occupancyCount(orgId);
+  const billing = await loadOrgBilling(orgId);
+  const licensed = billing?.billing_seat_quantity ?? 1;
+  const result = await ensureLicensedSeats({
+    orgId,
+    occupancy: Math.max(occupancy, licensed) + 1,
+  });
+  if (!result.ok) {
+    return {
+      error:
+        result.error === "seat_charge_failed" ? "update_failed" : result.error,
+    };
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: gate.user.id,
+    actorKind: "staff",
+    action: "billing.seat.add",
+    resourceType: "organization",
+    resourceId: orgId,
+    metadata: { occupancy, licensed },
+  });
+
+  revalidatePath(`/${locale}/settings/billing`);
+  revalidatePath(`/${locale}/settings/team`);
+  return {};
 }

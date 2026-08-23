@@ -79,32 +79,9 @@ export async function inviteOrgMemberAction(
   }
 
   if (membership.organization.subscribed) {
-    const { occupancyCount, ensureLicensedSeats } = await import(
-      "@/lib/stripe/seats"
-    );
-    const occupancy = await occupancyCount(orgId);
-    const { count: pendingForEmail } = await admin
-      .from("organization_invitations")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .ilike("email", email)
-      .is("accepted_at", null)
-      .is("revoked_at", null)
-      .gt("expires_at", new Date().toISOString());
-    const billed = await ensureLicensedSeats({
-      orgId,
-      occupancy: occupancy + ((pendingForEmail ?? 0) > 0 ? 0 : 1),
-    });
-    if (!billed.ok) {
-      return {
-        error:
-          billed.error === "seat_charge_failed"
-            ? "seat_charge_failed"
-            : billed.error === "not_configured"
-              ? "invite_failed"
-              : "seats_exceeded",
-      };
-    }
+    const { canReserveInviteSeat } = await import("@/lib/billing/occupancy");
+    const allowed = await canReserveInviteSeat(orgId, email);
+    if (!allowed) return { error: "seats_exceeded" };
   }
 
   await admin
@@ -133,6 +110,9 @@ export async function inviteOrgMemberAction(
 
   if (insertError) {
     console.error("invite insert:", insertError.message);
+    if (/seats_exceeded/i.test(insertError.message)) {
+      return { error: "seats_exceeded" };
+    }
     return { error: "invite_failed" };
   }
 

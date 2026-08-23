@@ -452,7 +452,8 @@
     "joinFailed": "Could not join the organization. Try again.",
     "goHome": "Go to workspace",
     "goLogin": "Sign in",
-    "organizationFallback": "the organization"
+    "organizationFallback": "the organization",
+    "seatsExceeded": "This firm has no free seats. Ask an admin to add a seat under Billing."
   },
   "appHome": {
     "title": "Home",
@@ -735,7 +736,8 @@
     "billingCheckoutSuccess": "Subscription updated.",
     "billingCheckoutCancel": "Checkout was cancelled.",
     "billingRenews": "Renews {date}",
-    "teamSeatWillBill": "This invite adds a seat. We’ll charge the prorated difference for the rest of this period.",
+    "billingAddSeat": "Add a seat",
+    "teamSeatsFull": "All seats are in use. Add a seat under",
     "squareTitle": "Square payments",
     "squareHelp": "Connect Square so clients can pay for priced booking services and project payment links.",
     "squareConnect": "Connect Square",
@@ -918,7 +920,7 @@
       "forbidden": "You do not have permission for this action.",
       "alreadyMember": "That colleague is already a member.",
       "inviteFailed": "Could not send the invitation. Try again.",
-      "seatsExceeded": "Could not add a seat for this invite. Try again, or check Billing.",
+      "seatsExceeded": "All paid seats are in use. Add a seat under Billing, then invite again.",
       "seatChargeFailed": "Could not charge for the extra seat. Update the payment method under Billing, then invite again.",
       "lastAdmin": "The organization must keep at least one admin.",
       "cannotRemoveSelf": "You cannot remove yourself.",

@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
+  addLicensedSeatAction,
   openBillingPortalAction,
   startCheckoutAction,
   type BillingActionState,
@@ -65,6 +66,10 @@ export function BillingSettingsForm({
     openBillingPortalAction,
     initial,
   );
+  const [seatState, seatAction, seatPending] = useActionState(
+    addLicensedSeatAction,
+    initial,
+  );
   const [interval, setInterval] = useState<BillingInterval>(
     currentInterval ?? "month",
   );
@@ -76,9 +81,10 @@ export function BillingSettingsForm({
       : catalogForOccupancy(occupancy, founding);
   const licensed = subscribed ? Math.max(seatQuantity, catalog.seatQuantity) : catalog.seatQuantity;
   const unused = Math.max(0, licensed - occupancy);
+  const atSeatCap = subscribed && occupancy >= licensed;
   const pendingIntervalChange = subscribed && interval !== (currentInterval ?? "month");
 
-  const errorKey = checkoutState.error || portalState.error;
+  const errorKey = checkoutState.error || portalState.error || seatState.error;
   const error =
     errorKey &&
     ({
@@ -198,6 +204,15 @@ export function BillingSettingsForm({
           </Button>
         ) : null}
       </form>
+
+      {atSeatCap ? (
+        <form action={seatAction} className="space-y-2">
+          <input type="hidden" name="locale" value={locale} />
+          <Button type="submit" variant="outline" disabled={seatPending}>
+            {seatPending ? t("billingWorking") : t("billingAddSeat")}
+          </Button>
+        </form>
+      ) : null}
 
       {hasCustomer ? (
         <form action={portalAction}>

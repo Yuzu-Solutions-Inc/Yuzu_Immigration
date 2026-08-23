@@ -452,7 +452,8 @@
     "joinFailed": "No se pudo unir a la organización. Inténtalo de nuevo.",
     "goHome": "Ir al espacio de trabajo",
     "goLogin": "Iniciar sesión",
-    "organizationFallback": "la organización"
+    "organizationFallback": "la organización",
+    "seatsExceeded": "Este despacho no tiene plazas libres. Pida a un admin que añada una en Facturación."
   },
   "appHome": {
     "title": "Inicio",
@@ -735,7 +736,8 @@
     "billingCheckoutSuccess": "Suscripción actualizada.",
     "billingCheckoutCancel": "El pago se canceló.",
     "billingRenews": "Se renueva el {date}",
-    "teamSeatWillBill": "Esta invitación añade una plaza. Cobramos la diferencia prorrateada del resto del periodo.",
+    "billingAddSeat": "Añadir una plaza",
+    "teamSeatsFull": "Todas las plazas están en uso. Añada una en",
     "squareTitle": "Pagos Square",
     "squareHelp": "Conecte Square para cobrar servicios con precio y enlaces de pago de expediente.",
     "squareConnect": "Conectar Square",
@@ -918,7 +920,7 @@
       "forbidden": "No tienes permiso para esta acción.",
       "alreadyMember": "Ese colega ya es miembro.",
       "inviteFailed": "No se pudo enviar la invitación. Inténtalo de nuevo.",
-      "seatsExceeded": "No se pudo añadir una plaza para esta invitación. Inténtelo de nuevo o revise Facturación.",
+      "seatsExceeded": "Todas las plazas pagadas están en uso. Añada una plaza en Facturación y vuelva a invitar.",
       "seatChargeFailed": "No se pudo cobrar la plaza extra. Actualice el método de pago en Facturación y vuelva a invitar.",
       "lastAdmin": "La organización debe conservar al menos un admin.",
       "cannotRemoveSelf": "No puedes quitarte a ti mismo.",

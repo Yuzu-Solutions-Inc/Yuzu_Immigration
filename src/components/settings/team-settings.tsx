@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldHint, FieldLabel, FieldSuccess } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { Link } from "@/i18n/navigation";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { ORG_ROLES } from "@/lib/auth/rbac";
 import type { AppLocale } from "@/lib/i18n/locales";
@@ -107,8 +108,7 @@ export function TeamSettings({
   const [copied, setCopied] = useState(false);
 
   const occupancy = members.length + invitations.length;
-  const willBillSeat =
-    subscribed && occupancy >= Math.max(1, licensedSeats);
+  const atSeatCap = subscribed && occupancy >= Math.max(1, licensedSeats);
   const adminCount = members.filter((m) => m.role === "admin").length;
   const error =
     teamErrorMessage(inviteState.error, t) ||
@@ -127,7 +127,7 @@ export function TeamSettings({
         <p className="text-sm text-muted-foreground">
           {t("billingSeatUse", {
             used: occupancy,
-            total: Math.max(licensedSeats, occupancy),
+            total: licensedSeats,
           })}
           {licensedSeats > occupancy
             ? ` · ${t("billingSeatUnused", { count: licensedSeats - occupancy })}`
@@ -146,6 +146,7 @@ export function TeamSettings({
             type="email"
             required
             autoComplete="email"
+            disabled={atSeatCap}
           />
         </Field>
         <Field>
@@ -154,6 +155,7 @@ export function TeamSettings({
             id="inviteRole"
             name="role"
             defaultValue="case_manager"
+            disabled={atSeatCap}
           >
             {ORG_ROLES.map((role) => (
               <option key={role} value={role}>
@@ -163,12 +165,20 @@ export function TeamSettings({
           </NativeSelect>
         </Field>
         <div className="flex items-end">
-          <Button type="submit" disabled={invitePending}>
+          <Button type="submit" disabled={invitePending || atSeatCap}>
             {invitePending ? t("inviteSending") : t("inviteSend")}
           </Button>
         </div>
-        {willBillSeat ? (
-          <FieldHint className="sm:col-span-3">{t("teamSeatWillBill")}</FieldHint>
+        {atSeatCap ? (
+          <FieldHint className="sm:col-span-3">
+            {t("teamSeatsFull")}{" "}
+            <Link
+              href="/settings/billing"
+              className="font-medium text-action underline-offset-2 hover:underline"
+            >
+              {t("billing")}
+            </Link>
+          </FieldHint>
         ) : null}
       </form>
 
