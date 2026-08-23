@@ -300,14 +300,14 @@ export function BillingSettingsForm({
             </FieldHint>
           </form>
 
-          <form ref={trueUpFormRef} action={trueUpAction}>
-            <input type="hidden" name="locale" value={locale} />
-            <input
-              type="hidden"
-              name="enabled"
-              value={seatTrueUp ? "false" : "true"}
-            />
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-canvas px-4 py-3">
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-canvas px-4 py-3">
+            <form ref={trueUpFormRef} action={trueUpAction}>
+              <input type="hidden" name="locale" value={locale} />
+              <input
+                type="hidden"
+                name="enabled"
+                value={seatTrueUp ? "false" : "true"}
+              />
               <div className="min-w-0 space-y-0.5">
                 <Label htmlFor="seatTrueUp">{t("billingSeatTrueUp")}</Label>
                 <FieldHint>
@@ -322,15 +322,14 @@ export function BillingSettingsForm({
                     : t("billingSeatTrueUpOff")}
                 </FieldHint>
               </div>
-              <Switch
-                id="seatTrueUp"
-                type="button"
-                checked={seatTrueUp}
-                disabled={trueUpPending}
-                onCheckedChange={() => trueUpFormRef.current?.requestSubmit()}
-              />
-            </div>
-          </form>
+            </form>
+            <Switch
+              id="seatTrueUp"
+              checked={seatTrueUp}
+              disabled={trueUpPending}
+              onCheckedChange={() => trueUpFormRef.current?.requestSubmit()}
+            />
+          </div>
         </div>
       ) : null}
 
