@@ -95,6 +95,7 @@ export default async function BillingSettingsPage({
           seatQuantity={billing?.billing_seat_quantity ?? 1}
           occupancy={occupancy}
           hasCustomer={Boolean(billing?.stripe_customer_id)}
+          seatTrueUp={Boolean(billing?.billing_seat_true_up)}
           checkoutFlash={query.checkout}
         />
       </SurfaceCard>

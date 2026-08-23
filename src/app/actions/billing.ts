@@ -9,7 +9,11 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { occupancyCount } from "@/lib/billing/occupancy";
-import { catalogForOccupancy, type BillingInterval } from "@/lib/billing/plans";
+import {
+  catalogForOccupancy,
+  MAX_SEAT_ADD,
+  type BillingInterval,
+} from "@/lib/billing/plans";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
   ensureBillingPrices,
@@ -20,6 +24,7 @@ import {
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
 import {
   ensureLicensedSeats,
+  setOrgSeatTrueUp,
   updateSubscriptionCatalog,
 } from "@/lib/stripe/seats";
 import {
@@ -275,7 +280,17 @@ export async function addLicensedSeatAction(
   _prev: BillingActionState,
   formData: FormData,
 ): Promise<BillingActionState> {
-  const locale = String(formData.get("locale") || "en");
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      quantity: z.coerce.number().int().min(1).max(MAX_SEAT_ADD),
+    })
+    .safeParse({
+      locale: formData.get("locale") || "en",
+      quantity: formData.get("quantity") || "1",
+    });
+  if (!parsed.success) return { error: "invalid" };
+
   const gate = await requireBillingAdmin();
   if (!gate.ok) return { error: gate.error };
 
@@ -285,7 +300,7 @@ export async function addLicensedSeatAction(
   const licensed = billing?.billing_seat_quantity ?? 1;
   const result = await ensureLicensedSeats({
     orgId,
-    occupancy: Math.max(occupancy, licensed) + 1,
+    occupancy: Math.max(occupancy, licensed) + parsed.data.quantity,
   });
   if (!result.ok) {
     return {
@@ -301,9 +316,52 @@ export async function addLicensedSeatAction(
     action: "billing.seat.add",
     resourceType: "organization",
     resourceId: orgId,
-    metadata: { occupancy, licensed },
+    metadata: {
+      occupancy,
+      licensed,
+      added: parsed.data.quantity,
+    },
   });
 
-  revalidatePath(`/${locale}/settings/billing`);
+  revalidatePath(`/${parsed.data.locale}/settings/billing`);
+  return {};
+}
+
+export async function setSeatTrueUpAction(
+  _prev: BillingActionState,
+  formData: FormData,
+): Promise<BillingActionState> {
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      enabled: z.enum(["true", "false"]),
+    })
+    .safeParse({
+      locale: formData.get("locale") || "en",
+      enabled: formData.get("enabled"),
+    });
+  if (!parsed.success) return { error: "invalid" };
+
+  const gate = await requireBillingAdmin();
+  if (!gate.ok) return { error: gate.error };
+
+  const orgId = gate.membership.organization.id;
+  const enabled = parsed.data.enabled === "true";
+  try {
+    await setOrgSeatTrueUp(orgId, enabled);
+  } catch {
+    return { error: "update_failed" };
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: gate.user.id,
+    actorKind: "staff",
+    action: enabled ? "billing.seat.true_up.on" : "billing.seat.true_up.off",
+    resourceType: "organization",
+    resourceId: orgId,
+  });
+
+  revalidatePath(`/${parsed.data.locale}/settings/billing`);
   return {};
 }

@@ -109,6 +109,8 @@ export const organizations = pgTable("organizations", {
   billingPlan: text("billing_plan"),
   billingInterval: text("billing_interval"),
   billingSeatQuantity: integer("billing_seat_quantity").default(1).notNull(),
+  /** Drop unused licensed seats on the next renewal invoice. */
+  billingSeatTrueUp: boolean("billing_seat_true_up").default(false).notNull(),
   foundingRate: boolean("founding_rate").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

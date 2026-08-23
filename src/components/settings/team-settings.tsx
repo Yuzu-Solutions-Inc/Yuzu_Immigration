@@ -47,6 +47,7 @@ function teamErrorMessage(
       invite_failed: t("errors.inviteFailed"),
       seats_exceeded: t("errors.seatsExceeded"),
       seat_charge_failed: t("errors.seatChargeFailed"),
+      not_configured: t("errors.seatChargeFailed"),
       last_admin: t("errors.lastAdmin"),
       cannot_remove_self: t("errors.cannotRemoveSelf"),
       not_found: t("errors.notFound"),
@@ -134,7 +135,6 @@ export function TeamSettings({
             type="email"
             required
             autoComplete="email"
-            disabled={atSeatCap}
           />
         </Field>
         <Field>
@@ -143,7 +143,6 @@ export function TeamSettings({
             id="inviteRole"
             name="role"
             defaultValue="case_manager"
-            disabled={atSeatCap}
           >
             {ORG_ROLES.map((role) => (
               <option key={role} value={role}>
@@ -153,8 +152,12 @@ export function TeamSettings({
           </NativeSelect>
         </Field>
         <div className="flex items-end">
-          <Button type="submit" disabled={invitePending || atSeatCap}>
-            {invitePending ? t("inviteSending") : t("inviteSend")}
+          <Button type="submit" disabled={invitePending}>
+            {invitePending
+              ? t("inviteSending")
+              : atSeatCap
+                ? t("inviteSendAndAddSeat")
+                : t("inviteSend")}
           </Button>
         </div>
         {atSeatCap ? (

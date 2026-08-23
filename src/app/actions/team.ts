@@ -79,9 +79,27 @@ export async function inviteOrgMemberAction(
   }
 
   if (membership.organization.subscribed) {
-    const { canReserveInviteSeat } = await import("@/lib/billing/occupancy");
+    const { canReserveInviteSeat, loadSeatCap } = await import(
+      "@/lib/billing/occupancy"
+    );
     const allowed = await canReserveInviteSeat(orgId, email);
-    if (!allowed) return { error: "seats_exceeded" };
+    if (!allowed) {
+      const { ensureLicensedSeats } = await import("@/lib/stripe/seats");
+      const cap = await loadSeatCap(orgId);
+      const charged = await ensureLicensedSeats({
+        orgId,
+        occupancy: cap.occupancy + 1,
+      });
+      if (!charged.ok) {
+        return {
+          error:
+            charged.error === "seat_charge_failed" ||
+            charged.error === "not_configured"
+              ? "seat_charge_failed"
+              : "seats_exceeded",
+        };
+      }
+    }
   }
 
   await admin

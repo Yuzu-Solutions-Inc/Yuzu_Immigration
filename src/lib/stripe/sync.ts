@@ -25,6 +25,7 @@ type OrgBillingRow = {
   billing_plan: string | null;
   billing_interval: string | null;
   billing_seat_quantity: number | null;
+  billing_seat_true_up: boolean | null;
   founding_rate: boolean | null;
 };
 
@@ -97,7 +98,7 @@ export async function loadOrgBilling(orgId: string): Promise<OrgBillingRow | nul
   const { data, error } = await admin
     .from("organizations")
     .select(
-      "id, subscribed_at, stripe_customer_id, stripe_subscription_id, billing_plan, billing_interval, billing_seat_quantity, founding_rate",
+      "id, subscribed_at, stripe_customer_id, stripe_subscription_id, billing_plan, billing_interval, billing_seat_quantity, billing_seat_true_up, founding_rate",
     )
     .eq("id", orgId)
     .maybeSingle();

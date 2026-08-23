@@ -2,6 +2,9 @@ import { PRICING, type PricingPlanId } from "@/lib/marketing/pricing";
 
 export type BillingInterval = "month" | "year";
 
+/** Max seats an admin can add in one billing update. */
+export const MAX_SEAT_ADD = 10;
+
 export type SeatCatalog = {
   plan: PricingPlanId;
   extraSeats: number;
@@ -99,4 +102,15 @@ export function catalogFromLicensed(
     seatQuantity: totalPaidSeats(plan, extraSeats),
     monthlyCad: catalogMonthlyCad({ plan, extraSeats }, founding),
   };
+}
+
+/** Seats to bill on the next invoice. True-up drops unused; otherwise keep licensed. */
+export function renewalSeatTarget(input: {
+  licensed: number;
+  occupancy: number;
+  trueUp: boolean;
+}): number {
+  const occupancy = Math.max(1, input.occupancy);
+  const licensed = Math.max(1, input.licensed);
+  return input.trueUp ? occupancy : Math.max(licensed, occupancy);
 }

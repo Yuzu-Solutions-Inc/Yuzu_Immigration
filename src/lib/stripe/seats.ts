@@ -5,6 +5,7 @@ import type Stripe from "stripe";
 import {
   catalogForOccupancy,
   catalogFromLicensed,
+  renewalSeatTarget,
   type BillingInterval,
   type SeatCatalog,
 } from "@/lib/billing/plans";
@@ -23,6 +24,7 @@ import {
   parseSubscriptionItems,
   syncOrgFromSubscription,
 } from "@/lib/stripe/sync";
+import { createServiceClient } from "@/lib/supabase/admin";
 
 export type SeatSyncError =
   | "not_configured"
@@ -143,7 +145,8 @@ function catalogFromSubscription(
 /**
  * Mid-cycle adds: if occupancy is over licensed seats, upgrade to the
  * cheapest covering catalog and invoice the prorated difference now.
- * Removals never call this — licensed seats stay until renewal true-up.
+ * Removals never call this — licensed seats stay unless the admin opts
+ * into dropping unused seats at renewal.
  */
 export async function ensureLicensedSeats(input: {
   orgId: string;
@@ -188,7 +191,26 @@ export async function ensureLicensedSeats(input: {
   }
 }
 
-/** Drop unused licensed seats on the renewal invoice (no mid-cycle credit). */
+export async function setOrgSeatTrueUp(orgId: string, enabled: boolean) {
+  const admin = createServiceClient();
+  const { error } = await admin
+    .from("organizations")
+    .update({
+      billing_seat_true_up: enabled,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orgId);
+  if (error) {
+    console.error("setOrgSeatTrueUp:", error.message);
+    throw new Error("true_up_save_failed");
+  }
+}
+
+/**
+ * Renewal invoice: drop unused seats only when the admin opted in.
+ * Otherwise keep licensed quantity (may still switch to a cheaper plan mix
+ * for the same seat count). Occupancy over licensed is covered on this invoice.
+ */
 export async function trueUpLicensedSeatsForRenewal(
   subscriptionId: string,
 ): Promise<void> {
@@ -204,11 +226,24 @@ export async function trueUpLicensedSeatsForRenewal(
   const billing = await loadOrgBilling(orgId);
   const founding = Boolean(billing?.founding_rate);
   const occupancy = await occupancyCount(orgId);
-  const needed = catalogForOccupancy(occupancy, founding);
+  const licensed = billing?.billing_seat_quantity ?? 1;
+  const trueUp = Boolean(billing?.billing_seat_true_up);
+  const needed = catalogForOccupancy(
+    renewalSeatTarget({ licensed, occupancy, trueUp }),
+    founding,
+  );
   const current = catalogFromSubscription(subscription, founding);
   if (!current.catalog || !current.interval) return;
   if (catalogsMatch(current.catalog, needed)) return;
-  if (needed.monthlyCad >= current.catalog.monthlyCad) return;
+
+  const shrinking = needed.seatQuantity < current.catalog.seatQuantity;
+  if (shrinking && !trueUp) return;
+  if (
+    needed.monthlyCad > current.catalog.monthlyCad &&
+    needed.seatQuantity <= current.catalog.seatQuantity
+  ) {
+    return;
+  }
 
   try {
     await applyCatalog({
