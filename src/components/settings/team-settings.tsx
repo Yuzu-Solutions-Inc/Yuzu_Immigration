@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -9,21 +9,16 @@ import {
   revokeOrgInvitationAction,
   transferOrgOwnershipAction,
   updateOrgMemberRoleAction,
+  updateRenewalLicenseRosterAction,
   type TeamActionState,
 } from "@/app/actions/team";
-import { InviteSeatChargeDialog } from "@/components/settings/invite-seat-charge-dialog";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldHint, FieldLabel, FieldSuccess } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import type { OrgRole } from "@/lib/auth/rbac";
+import type { OrgAccessLevel, OrgRole } from "@/lib/auth/rbac";
 import { ASSIGNABLE_ORG_ROLES, isOwner } from "@/lib/auth/rbac";
-import {
-  catalogForOccupancy,
-  type BillingInterval,
-} from "@/lib/billing/plans";
 import type { AppLocale } from "@/lib/i18n/locales";
-import type { PricingPlanId } from "@/lib/marketing/pricing";
 
 const empty: TeamActionState = {};
 
@@ -31,6 +26,8 @@ type Member = {
   id: string;
   user_id: string;
   role: OrgRole;
+  is_licensed: boolean;
+  licensed_at_renewal: boolean | null;
   profile: { full_name: string | null; email: string | null };
 };
 
@@ -38,6 +35,7 @@ type Invitation = {
   id: string;
   email: string;
   role: OrgRole;
+  is_licensed: boolean;
   expires_at: string;
 };
 
@@ -53,10 +51,12 @@ function teamErrorMessage(
       already_member: t("errors.alreadyMember"),
       invite_failed: t("errors.inviteFailed"),
       seats_exceeded: t("errors.seatsExceeded"),
+      renewal_seats_exceeded: t("errors.renewalSeatsExceeded"),
       seat_charge_failed: t("errors.seatChargeFailed"),
       not_configured: t("errors.seatChargeFailed"),
       last_admin: t("errors.lastAdmin"),
       last_owner: t("errors.lastOwner"),
+      owner_must_be_licensed: t("errors.ownerMustBeLicensed"),
       cannot_remove_self: t("errors.cannotRemoveSelf"),
       not_found: t("errors.notFound"),
       save_failed: t("errors.saveFailed"),
@@ -77,6 +77,7 @@ function teamSuccessMessage(
       role_updated: t("roleUpdated"),
       removed: t("memberRemoved"),
       ownership_transferred: t("ownershipTransferred"),
+      renewal_roster_updated: t("renewalRosterUpdated"),
     }[message] ?? null
   );
 }
@@ -87,28 +88,15 @@ export function TeamSettings({
   currentUserRole,
   members,
   invitations,
-  subscribed,
-  licensedSeats,
-  founding = false,
-  currentPlan = null,
-  currentInterval = null,
 }: {
   locale: AppLocale;
   currentUserId: string;
-  currentUserRole: OrgRole;
+  currentUserRole: OrgAccessLevel;
   members: Member[];
   invitations: Invitation[];
-  subscribed: boolean;
-  licensedSeats: number;
-  founding?: boolean;
-  currentPlan?: PricingPlanId | null;
-  currentInterval?: BillingInterval | null;
 }) {
   const t = useTranslations("settings");
   const tRoles = useTranslations("orgRoles");
-  const inviteFormRef = useRef<HTMLFormElement>(null);
-  const confirmChargeRef = useRef<HTMLInputElement>(null);
-  const [chargeOpen, setChargeOpen] = useState(false);
   const [inviteState, inviteAction, invitePending] = useActionState(
     inviteOrgMemberAction,
     empty,
@@ -129,79 +117,35 @@ export function TeamSettings({
     transferOrgOwnershipAction,
     empty,
   );
+  const [rosterState, rosterAction, rosterPending] = useActionState(
+    updateRenewalLicenseRosterAction,
+    empty,
+  );
   const [copied, setCopied] = useState(false);
 
-  const occupancy = members.length + invitations.length;
-  const atSeatCap = subscribed && occupancy >= Math.max(1, licensedSeats);
-  const previewCatalog = catalogForOccupancy(occupancy + 1, founding);
-  const quote = inviteState.needsSeatChargeConfirm
-    ? {
-        monthlyCad: inviteState.nextMonthlyCad ?? previewCatalog.monthlyCad,
-        seats: inviteState.nextSeats ?? previewCatalog.seatQuantity,
-        interval: inviteState.interval ?? currentInterval ?? "month",
-      }
-    : {
-        monthlyCad: previewCatalog.monthlyCad,
-        seats: previewCatalog.seatQuantity,
-        interval: currentInterval ?? "month",
-      };
   const currentIsOwner = isOwner(currentUserRole);
   const error =
     teamErrorMessage(inviteState.error, t) ||
     teamErrorMessage(memberState.error, t) ||
     teamErrorMessage(removeState.error, t) ||
     teamErrorMessage(revokeState.error, t) ||
-    teamErrorMessage(transferState.error, t);
+    teamErrorMessage(transferState.error, t) ||
+    teamErrorMessage(rosterState.error, t);
   const success =
     teamSuccessMessage(inviteState.message, t) ||
     teamSuccessMessage(memberState.message, t) ||
     teamSuccessMessage(removeState.message, t) ||
     teamSuccessMessage(revokeState.message, t) ||
-    teamSuccessMessage(transferState.message, t);
-
-  useEffect(() => {
-    if (inviteState.needsSeatChargeConfirm) {
-      if (confirmChargeRef.current) confirmChargeRef.current.value = "";
-      setChargeOpen(true);
-    }
-    if (inviteState.message || inviteState.inviteUrl || inviteState.error) {
-      if (confirmChargeRef.current) confirmChargeRef.current.value = "";
-      setChargeOpen(false);
-    }
-  }, [inviteState]);
+    teamSuccessMessage(transferState.message, t) ||
+    teamSuccessMessage(rosterState.message, t);
 
   return (
     <section className="space-y-6">
       <form
-        ref={inviteFormRef}
         action={inviteAction}
-        onSubmit={(event) => {
-          const email = String(
-            new FormData(event.currentTarget).get("email") || "",
-          )
-            .trim()
-            .toLowerCase();
-          const reinvite = invitations.some(
-            (invite) => invite.email.toLowerCase() === email,
-          );
-          if (
-            atSeatCap &&
-            !reinvite &&
-            confirmChargeRef.current?.value !== "true"
-          ) {
-            event.preventDefault();
-            setChargeOpen(true);
-          }
-        }}
         className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]"
       >
         <input type="hidden" name="locale" value={locale} />
-        <input
-          ref={confirmChargeRef}
-          type="hidden"
-          name="confirmSeatCharge"
-          defaultValue=""
-        />
         <Field>
           <FieldLabel htmlFor="inviteEmail" required>
             {t("inviteEmail")}
@@ -218,7 +162,7 @@ export function TeamSettings({
           <FieldLabel htmlFor="inviteRole">{t("inviteRole")}</FieldLabel>
           <NativeSelect
             id="inviteRole"
-            name="role"
+            name="access"
             defaultValue="case_manager"
           >
             {ASSIGNABLE_ORG_ROLES.map((role) => (
@@ -226,37 +170,20 @@ export function TeamSettings({
                 {tRoles(role)}
               </option>
             ))}
+            <option value="unlicensed">{tRoles("unlicensed")}</option>
           </NativeSelect>
         </Field>
         <div className="flex items-end">
           <Button type="submit" disabled={invitePending}>
             {invitePending
               ? t("inviteSending")
-              : atSeatCap
-                ? t("inviteSendAndAddSeat")
-                : t("inviteSend")}
+              : t("inviteSend")}
           </Button>
         </div>
-        {atSeatCap ? (
-          <FieldHint className="sm:col-span-3">{t("teamSeatsFull")}</FieldHint>
-        ) : null}
+        <FieldHint className="sm:col-span-3">
+          {t("teamInviteLicenseHint")}
+        </FieldHint>
       </form>
-      <InviteSeatChargeDialog
-        locale={locale}
-        open={chargeOpen}
-        onOpenChange={setChargeOpen}
-        monthlyCad={quote.monthlyCad}
-        seats={quote.seats}
-        interval={quote.interval}
-        pending={invitePending}
-        onConfirm={() => {
-          if (confirmChargeRef.current) {
-            confirmChargeRef.current.value = "true";
-          }
-          setChargeOpen(false);
-          inviteFormRef.current?.requestSubmit();
-        }}
-      />
 
       {inviteState.inviteUrl ? (
         <div className="space-y-2 rounded-xl border border-border bg-canvas p-3">
@@ -289,6 +216,9 @@ export function TeamSettings({
             const isSelf = member.user_id === currentUserId;
             const memberIsOwner = isOwner(member.role);
             const roleLocked = memberIsOwner;
+            const access = member.is_licensed ? member.role : "unlicensed";
+            const renewalLicensed =
+              member.licensed_at_renewal ?? member.is_licensed;
             return (
               <li
                 key={member.id}
@@ -301,15 +231,22 @@ export function TeamSettings({
                       {member.profile.email}
                     </p>
                   ) : null}
+                  {renewalLicensed !== member.is_licensed ? (
+                    <p className="text-xs text-muted-foreground">
+                      {renewalLicensed
+                        ? t("teamLicensedAtRenewal")
+                        : t("teamUnlicensedAtRenewal")}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <form action={memberAction}>
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="memberId" value={member.id} />
                     <NativeSelect
-                      name="role"
+                      name="access"
                       density="compact"
-                      defaultValue={member.role}
+                      defaultValue={access}
                       disabled={memberPending || roleLocked}
                       title={roleLocked ? t("errors.lastOwner") : undefined}
                       onChange={(event) => event.currentTarget.form?.requestSubmit()}
@@ -325,9 +262,14 @@ export function TeamSettings({
                           </option>
                         ))
                       )}
+                      {!memberIsOwner ? (
+                        <option value="unlicensed">
+                          {tRoles("unlicensed")}
+                        </option>
+                      ) : null}
                     </NativeSelect>
                   </form>
-                  {currentIsOwner && !memberIsOwner ? (
+                  {currentIsOwner && !memberIsOwner && member.is_licensed ? (
                     <form
                       action={transferAction}
                       onSubmit={(event) => {
@@ -377,6 +319,58 @@ export function TeamSettings({
         </ul>
       </div>
 
+      {members.some((member) => member.licensed_at_renewal !== null) ? (
+        <form
+          action={rosterAction}
+          className="space-y-3 rounded-xl border border-border bg-canvas p-4"
+        >
+          <input type="hidden" name="locale" value={locale} />
+          <div>
+            <h4 className="text-sm font-semibold text-brand">
+              {t("billingRenewalRoster")}
+            </h4>
+            <FieldHint>{t("renewalRosterHint")}</FieldHint>
+          </div>
+          <div className="space-y-2">
+            {members.map((member) => {
+              const owner = isOwner(member.role);
+              const checked =
+                member.licensed_at_renewal ?? member.is_licensed;
+              const name =
+                member.profile.full_name ??
+                member.profile.email ??
+                member.user_id;
+              return (
+                <label
+                  key={member.id}
+                  className="flex items-center gap-2 text-sm text-brand"
+                >
+                  {owner ? (
+                    <input
+                      type="hidden"
+                      name="licensedMemberIds"
+                      value={member.id}
+                    />
+                  ) : null}
+                  <input
+                    type="checkbox"
+                    name="licensedMemberIds"
+                    value={member.id}
+                    defaultChecked={checked}
+                    disabled={owner}
+                    className="size-4 rounded border-input"
+                  />
+                  {name}
+                </label>
+              );
+            })}
+          </div>
+          <Button type="submit" variant="outline" disabled={rosterPending}>
+            {rosterPending ? t("saving") : t("saveRenewalRoster")}
+          </Button>
+        </form>
+      ) : null}
+
       <div className="space-y-3">
         <h4 className="text-sm font-semibold text-brand">{t("pendingInvites")}</h4>
         {invitations.length === 0 ? (
@@ -391,7 +385,10 @@ export function TeamSettings({
                 <div>
                   <p className="font-medium text-brand">{invite.email}</p>
                   <p className="text-sm text-muted-foreground">
-                    {tRoles(invite.role)} ·{" "}
+                    {invite.is_licensed
+                      ? tRoles(invite.role)
+                      : tRoles("unlicensed")}{" "}
+                    ·{" "}
                     {t("inviteExpires", {
                       date: new Date(invite.expires_at).toLocaleDateString(
                         locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",

@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
   addLicensedSeatAction,
   openBillingPortalAction,
-  setSeatTrueUpAction,
+  scheduleSeatReductionAction,
   startCheckoutAction,
   type BillingActionState,
 } from "@/app/actions/billing";
@@ -17,17 +17,14 @@ import {
   FieldHint,
   FieldLabel,
 } from "@/components/ui/field";
-import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { StatusPill } from "@/components/ui/status-pill";
-import { Switch } from "@/components/ui/switch";
 import {
-  catalogForOccupancy,
   catalogFromLicensed,
   MAX_SEAT_ADD,
-  renewalSeatTarget,
   type BillingInterval,
 } from "@/lib/billing/plans";
+import type { OrgRole } from "@/lib/auth/rbac";
 import type { AppLocale } from "@/lib/i18n/locales";
 import {
   annualTotal,
@@ -52,8 +49,9 @@ export function BillingSettingsForm({
   currentPlan,
   currentInterval,
   seatQuantity,
-  occupancy,
-  seatTrueUp,
+  pendingSeatQuantity,
+  pendingInterval,
+  members,
   hasCustomer,
   checkoutFlash,
 }: {
@@ -67,13 +65,20 @@ export function BillingSettingsForm({
   currentPlan: PricingPlanId | null;
   currentInterval: BillingInterval | null;
   seatQuantity: number;
-  occupancy: number;
-  seatTrueUp: boolean;
+  pendingSeatQuantity: number | null;
+  pendingInterval: BillingInterval | null;
+  members: Array<{
+    id: string;
+    role: OrgRole;
+    is_licensed: boolean;
+    licensed_at_renewal: boolean | null;
+    profile: { full_name: string | null; email: string | null };
+  }>;
   hasCustomer: boolean;
   checkoutFlash?: string;
 }) {
   const t = useTranslations("settings");
-  const trueUpFormRef = useRef<HTMLFormElement>(null);
+  const tRoles = useTranslations("orgRoles");
   const [checkoutState, checkoutAction, checkoutPending] = useActionState(
     startCheckoutAction,
     initial,
@@ -86,45 +91,47 @@ export function BillingSettingsForm({
     addLicensedSeatAction,
     initial,
   );
-  const [trueUpState, trueUpAction, trueUpPending] = useActionState(
-    setSeatTrueUpAction,
+  const [reduceState, reduceAction, reducePending] = useActionState(
+    scheduleSeatReductionAction,
     initial,
   );
   const [interval, setInterval] = useState<BillingInterval>(
-    currentInterval ?? "month",
+    pendingInterval ?? currentInterval ?? "month",
   );
   const [addCount, setAddCount] = useState(1);
+  const [removeCount, setRemoveCount] = useState(1);
 
   const founding = foundingLockedIn || foundingEligible;
-  const catalog =
-    subscribed && currentPlan
-      ? catalogFromLicensed(currentPlan, seatQuantity, founding)
-      : catalogForOccupancy(occupancy, founding);
-  const licensed = subscribed
-    ? Math.max(seatQuantity, catalog.seatQuantity)
-    : catalog.seatQuantity;
-  const unused = Math.max(0, licensed - occupancy);
-  const pendingIntervalChange =
-    subscribed && interval !== (currentInterval ?? "month");
-  const renewalCatalog = catalogForOccupancy(
-    renewalSeatTarget({ licensed, occupancy, trueUp: seatTrueUp }),
+  const catalog = catalogFromLicensed(
+    currentPlan ?? "standard",
+    seatQuantity,
     founding,
   );
-  const addCatalog = catalogForOccupancy(
-    Math.max(occupancy, licensed) + addCount,
+  const licensed = Math.max(seatQuantity, catalog.seatQuantity);
+  const nextSeats = pendingSeatQuantity ?? licensed;
+  const nextInterval = pendingInterval ?? currentInterval ?? "month";
+  const pendingIntervalChange =
+    subscribed && interval !== nextInterval;
+  const renewalCatalog = catalogFromLicensed(
+    "standard",
+    nextSeats,
+    founding,
+  );
+  const addCatalog = catalogFromLicensed(
+    "standard",
+    licensed + addCount,
     founding,
   );
   const showRenewalShift =
     subscribed &&
-    seatTrueUp &&
-    unused > 0 &&
-    !catalogsEqual(catalog, renewalCatalog);
+    (nextSeats !== licensed ||
+      nextInterval !== (currentInterval ?? "month"));
 
   const errorKey =
     checkoutState.error ||
     portalState.error ||
     seatState.error ||
-    trueUpState.error;
+    reduceState.error;
   const error =
     errorKey &&
     ({
@@ -134,6 +141,8 @@ export function BillingSettingsForm({
       not_found: t("errors.notFound"),
       checkout_failed: t("billingCheckoutFailed"),
       update_failed: t("billingUpdateFailed"),
+      too_many_licensed: t("billingTooManyLicensed"),
+      license_roster_failed: t("billingLicenseRosterFailed"),
       generic: t("errors.generic"),
     }[errorKey] ??
       t("errors.generic"));
@@ -148,8 +157,16 @@ export function BillingSettingsForm({
     ? new Date(periodEndsAt).toLocaleDateString(locale, dateOpts)
     : null;
 
-  const price = formatCatalogPrice(catalog.monthlyCad, interval, locale);
-  const addPrice = formatCatalogPrice(addCatalog.monthlyCad, interval, locale);
+  const price = formatCatalogPrice(
+    catalog.monthlyCad,
+    currentInterval ?? "month",
+    locale,
+  );
+  const addPrice = formatCatalogPrice(
+    addCatalog.monthlyCad,
+    currentInterval ?? "month",
+    locale,
+  );
 
   if (!configured) {
     return (
@@ -193,8 +210,7 @@ export function BillingSettingsForm({
           {price}
         </p>
         <p className="text-sm text-muted-foreground">
-          {t("billingSeatUse", { used: occupancy, total: licensed })}
-          {unused > 0 ? ` · ${t("billingSeatUnused", { count: unused })}` : null}
+          {t("billingCurrentSeats", { count: licensed })}
         </p>
         {subscribed && renewDate ? (
           <p className="text-sm text-muted-foreground">
@@ -204,7 +220,7 @@ export function BillingSettingsForm({
                   seats: renewalCatalog.seatQuantity,
                   price: formatCatalogPrice(
                     renewalCatalog.monthlyCad,
-                    interval,
+                    nextInterval,
                     locale,
                   ),
                 })
@@ -289,36 +305,85 @@ export function BillingSettingsForm({
             </FieldHint>
           </form>
 
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-canvas px-4 py-3">
-            <form ref={trueUpFormRef} action={trueUpAction}>
+          {nextSeats > 1 ? (
+            <form
+              action={reduceAction}
+              className="space-y-3 rounded-xl border border-border bg-canvas px-4 py-3"
+            >
               <input type="hidden" name="locale" value={locale} />
-              <input
-                type="hidden"
-                name="enabled"
-                value={seatTrueUp ? "false" : "true"}
-              />
-              <div className="min-w-0 space-y-0.5">
-                <Label htmlFor="seatTrueUp">{t("billingSeatTrueUp")}</Label>
-                <FieldHint>
-                  {seatTrueUp
-                    ? unused > 0 && renewDate
-                      ? t("billingSeatTrueUpOnUnused", {
-                          count: unused,
-                          date: renewDate,
-                          seats: renewalCatalog.seatQuantity,
-                        })
-                      : t("billingSeatTrueUpOn")
-                    : t("billingSeatTrueUpOff")}
-                </FieldHint>
+              <div className="grid gap-3 sm:grid-cols-[8rem_auto] sm:items-end">
+                <Field>
+                  <FieldLabel htmlFor="seatRemoveQuantity">
+                    {t("billingRemoveSeats")}
+                  </FieldLabel>
+                  <NativeSelect
+                    id="seatRemoveQuantity"
+                    name="quantity"
+                    value={String(removeCount)}
+                    onChange={(event) =>
+                      setRemoveCount(Number(event.currentTarget.value) || 1)
+                    }
+                  >
+                    {ADD_QUANTITIES.filter((n) => n < nextSeats).map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Button type="submit" variant="outline" disabled={reducePending}>
+                  {reducePending
+                    ? t("billingWorking")
+                    : t("billingRemoveSeatsSubmit")}
+                </Button>
               </div>
+              <FieldHint>
+                {t("billingRemoveSeatsHint", {
+                  seats: Math.max(1, nextSeats - removeCount),
+                  date: renewDate ?? "",
+                })}
+              </FieldHint>
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium text-brand">
+                  {t("billingRenewalRoster")}
+                </legend>
+                {members.map((member) => {
+                  const checked =
+                    member.licensed_at_renewal ?? member.is_licensed;
+                  const owner = member.role === "owner";
+                  const name =
+                    member.profile.full_name ??
+                    member.profile.email ??
+                    member.id;
+                  return (
+                    <label
+                      key={member.id}
+                      className="flex items-center gap-2 text-sm text-brand"
+                    >
+                      {owner ? (
+                        <input
+                          type="hidden"
+                          name="licensedMemberIds"
+                          value={member.id}
+                        />
+                      ) : null}
+                      <input
+                        type="checkbox"
+                        name="licensedMemberIds"
+                        value={member.id}
+                        defaultChecked={checked}
+                        disabled={owner}
+                        className="size-4 rounded border-input"
+                      />
+                      <span>
+                        {name} · {tRoles(member.role)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </fieldset>
             </form>
-            <Switch
-              id="seatTrueUp"
-              checked={seatTrueUp}
-              disabled={trueUpPending}
-              onCheckedChange={() => trueUpFormRef.current?.requestSubmit()}
-            />
-          </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -331,17 +396,6 @@ export function BillingSettingsForm({
         </form>
       ) : null}
     </div>
-  );
-}
-
-function catalogsEqual(
-  a: { plan: PricingPlanId; extraSeats: number; seatQuantity: number },
-  b: { plan: PricingPlanId; extraSeats: number; seatQuantity: number },
-) {
-  return (
-    a.plan === b.plan &&
-    a.extraSeats === b.extraSeats &&
-    a.seatQuantity === b.seatQuantity
   );
 }
 

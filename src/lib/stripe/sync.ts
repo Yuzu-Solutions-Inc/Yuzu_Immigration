@@ -9,6 +9,7 @@ import {
   totalPaidSeats,
   type BillingInterval,
 } from "@/lib/billing/plans";
+import { pendingCatalogApplied } from "@/lib/billing/transitions";
 import {
   isFoundingCouponId,
   parseLookupKey,
@@ -18,7 +19,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 
 const ENTITLED_STATUSES = new Set(["active", "trialing", "past_due"]);
 
-type OrgBillingRow = {
+export type OrgBillingRow = {
   id: string;
   subscribed_at: string | null;
   stripe_customer_id: string | null;
@@ -27,6 +28,10 @@ type OrgBillingRow = {
   billing_interval: string | null;
   billing_seat_quantity: number | null;
   billing_seat_true_up: boolean | null;
+  billing_pending_seat_quantity: number | null;
+  billing_pending_interval: string | null;
+  billing_pending_effective_at: string | null;
+  stripe_subscription_schedule_id: string | null;
   founding_rate: boolean | null;
 };
 
@@ -35,8 +40,11 @@ export function subscriptionEntitlesAccess(status: Stripe.Subscription.Status) {
 }
 
 export function periodEndIso(subscription: Stripe.Subscription): string | null {
-  const end = subscription.items.data[0]?.current_period_end;
-  if (!end) return null;
+  const ends = subscription.items.data
+    .map((item) => item.current_period_end)
+    .filter((value): value is number => typeof value === "number");
+  const end = ends.length ? Math.max(...ends) : null;
+  if (end === null) return null;
   return new Date(end * 1000).toISOString();
 }
 
@@ -107,7 +115,7 @@ export async function loadOrgBilling(orgId: string): Promise<OrgBillingRow | nul
   const { data, error } = await admin
     .from("organizations")
     .select(
-      "id, subscribed_at, stripe_customer_id, stripe_subscription_id, billing_plan, billing_interval, billing_seat_quantity, billing_seat_true_up, founding_rate",
+      "id, subscribed_at, stripe_customer_id, stripe_subscription_id, billing_plan, billing_interval, billing_seat_quantity, billing_seat_true_up, billing_pending_seat_quantity, billing_pending_interval, billing_pending_effective_at, stripe_subscription_schedule_id, founding_rate",
     )
     .eq("id", orgId)
     .maybeSingle();
@@ -116,6 +124,70 @@ export async function loadOrgBilling(orgId: string): Promise<OrgBillingRow | nul
     return null;
   }
   return data as OrgBillingRow | null;
+}
+
+export async function savePendingBilling(input: {
+  orgId: string;
+  seatQuantity: number | null;
+  interval: BillingInterval | null;
+  effectiveAt: string | null;
+  scheduleId: string | null;
+}) {
+  const admin = createServiceClient();
+  const { error } = await admin
+    .from("organizations")
+    .update({
+      billing_pending_seat_quantity: input.seatQuantity,
+      billing_pending_interval: input.interval,
+      billing_pending_effective_at: input.effectiveAt,
+      stripe_subscription_schedule_id: input.scheduleId,
+      billing_seat_true_up: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.orgId);
+  if (error) {
+    console.error("savePendingBilling:", error.message);
+    throw new Error("pending_billing_save_failed");
+  }
+}
+
+export async function applyPendingLicenses(orgId: string) {
+  const admin = createServiceClient();
+  const { error } = await admin.rpc("apply_org_renewal_licenses", {
+    p_organization_id: orgId,
+  });
+  if (error) {
+    console.error("applyPendingLicenses:", error.message);
+    throw new Error("pending_license_apply_failed");
+  }
+}
+
+export async function clearPendingLicenses(orgId: string) {
+  const admin = createServiceClient();
+  const { error } = await admin
+    .from("organization_members")
+    .update({ licensed_at_renewal: null })
+    .eq("organization_id", orgId);
+  if (error) {
+    console.error("clearPendingLicenses:", error.message);
+    throw new Error("pending_license_clear_failed");
+  }
+}
+
+export async function clearPendingBillingForSchedule(
+  orgId: string,
+  scheduleId: string,
+) {
+  const billing = await loadOrgBilling(orgId);
+  if (billing?.stripe_subscription_schedule_id !== scheduleId) return;
+  await clearPendingLicenses(orgId);
+  await savePendingBilling({
+    orgId,
+    seatQuantity: null,
+    interval: null,
+    effectiveAt: null,
+    scheduleId: null,
+  });
 }
 
 export async function upsertStripeCustomerId(
@@ -205,6 +277,59 @@ export async function syncOrgFromSubscription(
     console.error("syncOrgFromSubscription:", error.message);
     throw new Error("sync_failed");
   }
+}
+
+/**
+ * Apply staged member access once Stripe reports the scheduled catalog as the
+ * active subscription catalog. Safe to call repeatedly from webhook events.
+ */
+export async function finalizePendingBillingIfApplied(
+  subscription: Stripe.Subscription,
+  orgIdHint?: string | null,
+): Promise<boolean> {
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer.id;
+  const orgId =
+    orgIdHint ||
+    subscription.metadata.organization_id ||
+    (await findOrgIdForCustomer(customerId));
+  if (!orgId) return false;
+
+  const billing = await loadOrgBilling(orgId);
+  if (
+    !billing?.billing_pending_seat_quantity ||
+    !billing.billing_pending_interval
+  ) {
+    return false;
+  }
+
+  const parsed = parseSubscriptionItems(subscription);
+  if (
+    !pendingCatalogApplied({
+      activeSeats: parsed.seatQuantity,
+      activeInterval: parsed.interval,
+      pendingSeats: billing.billing_pending_seat_quantity,
+      pendingInterval:
+        billing.billing_pending_interval === "year" ||
+        billing.billing_pending_interval === "month"
+          ? billing.billing_pending_interval
+          : null,
+    })
+  ) {
+    return false;
+  }
+
+  await applyPendingLicenses(orgId);
+  await savePendingBilling({
+    orgId,
+    seatQuantity: null,
+    interval: null,
+    effectiveAt: null,
+    scheduleId: null,
+  });
+  return true;
 }
 
 export async function reconcileOrgBilling(orgId: string) {

@@ -27,11 +27,13 @@ export async function loadSeatCap(orgId: string): Promise<SeatCap> {
     admin
       .from("organization_members")
       .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId),
+      .eq("organization_id", orgId)
+      .eq("is_licensed", true),
     admin
       .from("organization_invitations")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId)
+      .eq("is_licensed", true)
       .is("accepted_at", null)
       .is("revoked_at", null)
       .gt("expires_at", now),

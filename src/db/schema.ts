@@ -113,6 +113,14 @@ export const organizations = pgTable("organizations", {
   billingSeatQuantity: integer("billing_seat_quantity").default(1).notNull(),
   /** Drop unused licensed seats on the next renewal invoice. */
   billingSeatTrueUp: boolean("billing_seat_true_up").default(false).notNull(),
+  /** Renewal-only seat quantity. Null when no seat change is scheduled. */
+  billingPendingSeatQuantity: integer("billing_pending_seat_quantity"),
+  /** Renewal-only interval. Null when no interval change is scheduled. */
+  billingPendingInterval: text("billing_pending_interval"),
+  billingPendingEffectiveAt: timestamp("billing_pending_effective_at", {
+    withTimezone: true,
+  }),
+  stripeSubscriptionScheduleId: text("stripe_subscription_schedule_id"),
   foundingRate: boolean("founding_rate").default(false).notNull(),
   /** When set, the workspace is offboarded. Remaining columns are a Loi 25 tombstone. */
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -172,6 +180,10 @@ export const organizationMembers = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     role: orgMemberRoleEnum("role").notNull().default("case_manager"),
+    /** Paid workspace access. False keeps membership read-only. */
+    isLicensed: boolean("is_licensed").default(true).notNull(),
+    /** Optional license assignment to apply with the next billing phase. */
+    licensedAtRenewal: boolean("licensed_at_renewal"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -210,6 +222,8 @@ export const organizationInvitations = pgTable("organization_invitations", {
     .references(() => organizations.id, { onDelete: "cascade" }),
   email: text("email").notNull(),
   role: orgMemberRoleEnum("role").notNull(),
+  /** Whether accepting this invite consumes a paid seat. */
+  isLicensed: boolean("is_licensed").default(true).notNull(),
   tokenHash: text("token_hash").notNull().unique(),
   invitedBy: uuid("invited_by").references(() => profiles.id, {
     onDelete: "set null",

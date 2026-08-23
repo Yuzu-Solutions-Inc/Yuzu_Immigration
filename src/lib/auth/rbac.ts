@@ -1,6 +1,7 @@
 export const ORG_ROLES = ["owner", "admin", "case_manager"] as const;
 
 export type OrgRole = (typeof ORG_ROLES)[number];
+export type OrgAccessLevel = OrgRole | "unlicensed";
 
 export const DEFAULT_ORG_ROLE: OrgRole = "case_manager";
 
@@ -24,34 +25,38 @@ export function isAssignableOrgRole(
   );
 }
 
-export function isOwner(role: OrgRole | null | undefined): boolean {
+export function isOwner(role: OrgAccessLevel | null | undefined): boolean {
   return role === "owner";
 }
 
 /** Owner has the same workspace privileges as admin. */
-export function isAdmin(role: OrgRole | null | undefined): boolean {
+export function isAdmin(role: OrgAccessLevel | null | undefined): boolean {
   return role === "owner" || role === "admin";
 }
 
 /** Owner, admin, and case manager: full org caseload, can create records. */
-export function canCreateRecords(role: OrgRole | null | undefined): boolean {
+export function canCreateRecords(
+  role: OrgAccessLevel | null | undefined,
+): boolean {
   return role === "owner" || role === "admin" || role === "case_manager";
 }
 
 /** Org settings, invites, retention destroy, audit log. */
-export function canAdministerOrg(role: OrgRole | null | undefined): boolean {
+export function canAdministerOrg(
+  role: OrgAccessLevel | null | undefined,
+): boolean {
   return isAdmin(role);
 }
 
 /** Admin-only: services, contracts, booking forms, and service email templates. */
 export function canManageBookingCatalog(
-  role: OrgRole | null | undefined,
+  role: OrgAccessLevel | null | undefined,
 ): boolean {
   return isAdmin(role);
 }
 
 export function canDeleteRecord(input: {
-  role: OrgRole | null | undefined;
+  role: OrgAccessLevel | null | undefined;
   createdBy: string | null | undefined;
   actorUserId: string | null | undefined;
 }): boolean {
@@ -62,17 +67,21 @@ export function canDeleteRecord(input: {
   return false;
 }
 
-export function canTransferOwnership(role: OrgRole | null | undefined): boolean {
-  return isOwner(role);
-}
-
-export function canDeleteOrganization(
-  role: OrgRole | null | undefined,
+export function canTransferOwnership(
+  role: OrgAccessLevel | null | undefined,
 ): boolean {
   return isOwner(role);
 }
 
-export function assertCanAdministerOrg(role: OrgRole | null | undefined): void {
+export function canDeleteOrganization(
+  role: OrgAccessLevel | null | undefined,
+): boolean {
+  return isOwner(role);
+}
+
+export function assertCanAdministerOrg(
+  role: OrgAccessLevel | null | undefined,
+): void {
   if (!canAdministerOrg(role)) {
     throw new Error("forbidden_role");
   }

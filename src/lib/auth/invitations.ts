@@ -40,6 +40,7 @@ async function addMembership(input: {
   organizationId: string;
   userId: string;
   role: OrgRole;
+  isLicensed: boolean;
 }) {
   const admin = createServiceClient();
   const { data: existing } = await admin
@@ -50,15 +51,35 @@ async function addMembership(input: {
     .maybeSingle();
   if (existing) return;
 
-  const allowed = await canAddMemberSeat(input.organizationId);
+  const allowed =
+    !input.isLicensed || (await canAddMemberSeat(input.organizationId));
   if (!allowed) {
     throw new Error("seats_exceeded");
+  }
+
+  let licensedAtRenewal: boolean | null = null;
+  const { data: org } = await admin
+    .from("organizations")
+    .select("billing_pending_seat_quantity")
+    .eq("id", input.organizationId)
+    .maybeSingle();
+  if (org?.billing_pending_seat_quantity) {
+    const { count } = await admin
+      .from("organization_members")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", input.organizationId)
+      .eq("licensed_at_renewal", true);
+    licensedAtRenewal =
+      input.isLicensed &&
+      (count ?? 0) < Number(org.billing_pending_seat_quantity);
   }
 
   const { error } = await admin.from("organization_members").insert({
     organization_id: input.organizationId,
     user_id: input.userId,
     role: isOrgRole(input.role) ? input.role : DEFAULT_ORG_ROLE,
+    is_licensed: input.isLicensed,
+    licensed_at_renewal: licensedAtRenewal,
   });
   if (error) {
     console.error("addMembership:", error.message);
@@ -84,7 +105,7 @@ export async function acceptInvitationByToken(
   const { data, error } = await admin
     .from("organization_invitations")
     .select(
-      "id, organization_id, email, role, expires_at, accepted_at, revoked_at",
+      "id, organization_id, email, role, is_licensed, expires_at, accepted_at, revoked_at",
     )
     .eq("token_hash", hashInviteToken(token))
     .maybeSingle();
@@ -107,6 +128,7 @@ export async function acceptInvitationByToken(
       organizationId: row.organization_id,
       userId: user.id,
       role: row.role,
+      isLicensed: row.is_licensed !== false,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "";
@@ -137,7 +159,7 @@ export async function acceptPendingInvitationsForUser(): Promise<number> {
   const { data, error } = await admin
     .from("organization_invitations")
     .select(
-      "id, organization_id, email, role, expires_at, accepted_at, revoked_at",
+      "id, organization_id, email, role, is_licensed, expires_at, accepted_at, revoked_at",
     )
     .is("accepted_at", null)
     .is("revoked_at", null)
@@ -159,6 +181,7 @@ export async function acceptPendingInvitationsForUser(): Promise<number> {
         organizationId: row.organization_id,
         userId: user.id,
         role: row.role,
+        isLicensed: row.is_licensed !== false,
       });
       await admin
         .from("organization_invitations")
@@ -181,7 +204,7 @@ export async function getInvitationByToken(token: string) {
   const { data } = await admin
     .from("organization_invitations")
     .select(
-      "id, organization_id, email, role, expires_at, accepted_at, revoked_at",
+      "id, organization_id, email, role, is_licensed, expires_at, accepted_at, revoked_at",
     )
     .eq("token_hash", hashInviteToken(token))
     .maybeSingle();

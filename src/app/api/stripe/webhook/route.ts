@@ -7,8 +7,12 @@ import {
   markConnectedCheckoutFailed,
   syncConnectedAccountFromEvent,
 } from "@/lib/stripe/connect-webhooks";
-import { trueUpLicensedSeatsForRenewal } from "@/lib/stripe/seats";
-import { syncOrgFromSubscription } from "@/lib/stripe/sync";
+import { ensurePendingRenewalSchedule } from "@/lib/stripe/seats";
+import {
+  clearPendingBillingForSchedule,
+  finalizePendingBillingIfApplied,
+  syncOrgFromSubscription,
+} from "@/lib/stripe/sync";
 
 export const runtime = "nodejs";
 
@@ -18,12 +22,20 @@ function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
   return typeof sub === "string" ? sub : sub.id;
 }
 
-async function syncFromSubscriptionId(subscriptionId: string) {
+async function syncFromSubscriptionId(
+  subscriptionId: string,
+  restorePendingSchedule = false,
+) {
   const stripe = getStripe();
   const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
     expand: ["items.data.price", "discounts.source.coupon"],
   });
+  await finalizePendingBillingIfApplied(subscription);
   await syncOrgFromSubscription(subscription);
+  const orgId = subscription.metadata.organization_id;
+  if (restorePendingSchedule && orgId) {
+    await ensurePendingRenewalSchedule(orgId);
+  }
 }
 
 async function constructStripeEvent(payload: string, signature: string) {
@@ -118,19 +130,41 @@ export async function POST(request: Request) {
         await syncFromSubscriptionId(event.data.object.id);
         break;
       }
-      case "invoice.created": {
-        const invoice = event.data.object;
-        if (invoice.billing_reason !== "subscription_cycle") break;
-        const subscriptionId = invoiceSubscriptionId(invoice);
-        if (subscriptionId) {
-          await trueUpLicensedSeatsForRenewal(subscriptionId);
+      case "subscription_schedule.created":
+      case "subscription_schedule.updated":
+      case "subscription_schedule.expiring":
+      case "subscription_schedule.completed":
+      case "subscription_schedule.released":
+      case "subscription_schedule.canceled":
+      case "subscription_schedule.aborted": {
+        const schedule = event.data.object;
+        const subscription =
+          schedule.subscription ?? schedule.released_subscription;
+        const subscriptionId =
+          typeof subscription === "string" ? subscription : subscription?.id;
+        if (subscriptionId) await syncFromSubscriptionId(subscriptionId);
+        if (
+          (event.type === "subscription_schedule.released" ||
+            event.type === "subscription_schedule.canceled" ||
+            event.type === "subscription_schedule.aborted") &&
+          schedule.metadata.organization_id
+        ) {
+          await clearPendingBillingForSchedule(
+            schedule.metadata.organization_id,
+            schedule.id,
+          );
         }
         break;
       }
       case "invoice.paid":
       case "invoice.payment_failed": {
         const subscriptionId = invoiceSubscriptionId(event.data.object);
-        if (subscriptionId) await syncFromSubscriptionId(subscriptionId);
+        if (subscriptionId) {
+          await syncFromSubscriptionId(
+            subscriptionId,
+            event.type === "invoice.paid",
+          );
+        }
         break;
       }
       default:

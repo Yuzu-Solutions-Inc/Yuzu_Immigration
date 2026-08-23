@@ -4,13 +4,13 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { switchOrganizationAction } from "@/app/actions/org";
 import { NativeSelect } from "@/components/ui/native-select";
-import type { OrgRole } from "@/lib/auth/rbac";
+import type { OrgAccessLevel } from "@/lib/auth/rbac";
 import { cn } from "@/lib/utils";
 
 export type OrgSwitcherOption = {
   id: string;
   name: string;
-  role: OrgRole;
+  role: OrgAccessLevel;
 };
 
 function orgNameShort(name: string) {

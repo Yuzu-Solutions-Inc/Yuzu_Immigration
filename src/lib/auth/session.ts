@@ -1,13 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/auth/active-org";
 import { orgAllowsWrites, trialEndsAt } from "@/lib/billing/trial";
-import type { OrgRole } from "@/lib/auth/rbac";
+import type { OrgAccessLevel, OrgRole } from "@/lib/auth/rbac";
 import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 
 export type OrgMembership = {
   id: string;
-  role: OrgRole;
+  /** Effective access level. Unlicensed memberships are always read-only. */
+  role: OrgAccessLevel;
+  assignedRole: OrgRole;
+  isLicensed: boolean;
   organization: {
     id: string;
     name: string;
@@ -47,7 +50,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
 
   const { data: membershipRows, error: membershipError } = await supabase
     .from("organization_members")
-    .select("id, role, organization_id")
+    .select("id, role, is_licensed, organization_id")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true });
 
@@ -79,9 +82,13 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
         return null;
       }
 
+      const assignedRole = isOrgRole(row.role) ? row.role : DEFAULT_ORG_ROLE;
+      const isLicensed = row.is_licensed !== false;
       return {
         id: row.id as string,
-        role: isOrgRole(row.role) ? row.role : DEFAULT_ORG_ROLE,
+        role: isLicensed ? assignedRole : "unlicensed",
+        assignedRole,
+        isLicensed,
         organization: {
           id: organization.id as string,
           name: organization.name as string,

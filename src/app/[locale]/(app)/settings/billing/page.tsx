@@ -11,7 +11,6 @@ import { listOrgMembers, listPendingInvitations } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import type { PricingPlanId } from "@/lib/marketing/pricing";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
-import { occupancyCount } from "@/lib/stripe/seats";
 import {
   foundingCohortOpen,
   loadOrgBilling,
@@ -46,9 +45,8 @@ export default async function BillingSettingsPage({
     }
   }
 
-  const [occupancy, billing, foundingEligible, members, invitations, user] =
+  const [billing, foundingEligible, members, invitations, user] =
     await Promise.all([
-      occupancyCount(orgId),
       loadOrgBilling(orgId),
       foundingCohortOpen(orgId),
       listOrgMembers(),
@@ -92,10 +90,23 @@ export default async function BillingSettingsPage({
           foundingLockedIn={Boolean(billing?.founding_rate)}
           currentPlan={plan}
           currentInterval={interval}
-          seatQuantity={billing?.billing_seat_quantity ?? 1}
-          occupancy={occupancy}
+          seatQuantity={
+            billing?.subscribed_at
+              ? (billing.billing_seat_quantity ?? 1)
+              : Math.max(
+                  1,
+                  members.filter((member) => member.is_licensed).length,
+                )
+          }
+          pendingSeatQuantity={billing?.billing_pending_seat_quantity ?? null}
+          pendingInterval={
+            billing?.billing_pending_interval === "year" ||
+            billing?.billing_pending_interval === "month"
+              ? billing.billing_pending_interval
+              : null
+          }
+          members={members}
           hasCustomer={Boolean(billing?.stripe_customer_id)}
-          seatTrueUp={Boolean(billing?.billing_seat_true_up)}
           checkoutFlash={query.checkout}
         />
       </SurfaceCard>
@@ -109,11 +120,6 @@ export default async function BillingSettingsPage({
           currentUserRole={membership.role}
           members={members}
           invitations={invitations}
-          subscribed={membership.organization.subscribed}
-          licensedSeats={billing?.billing_seat_quantity ?? 1}
-          founding={Boolean(billing?.founding_rate) || foundingEligible}
-          currentPlan={plan}
-          currentInterval={interval}
         />
       </SurfaceCard>
     </div>

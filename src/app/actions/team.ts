@@ -16,11 +16,8 @@ import {
   normalizeInviteEmail,
 } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
-import { catalogForOccupancy, type BillingInterval } from "@/lib/billing/plans";
 import { trialExpiredError } from "@/lib/billing/trial";
-import type { PricingPlanId } from "@/lib/marketing/pricing";
 import { recordAuditEvent } from "@/lib/security/audit";
-import { loadOrgBilling } from "@/lib/stripe/sync";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,14 +25,9 @@ export type TeamActionState = {
   error?: string;
   message?: string;
   inviteUrl?: string;
-  needsSeatChargeConfirm?: boolean;
-  nextMonthlyCad?: number;
-  nextSeats?: number;
-  nextPlan?: PricingPlanId;
-  interval?: BillingInterval;
 };
 
-const roleSchema = z.enum(["admin", "case_manager"]);
+const accessSchema = z.enum(["admin", "case_manager", "unlicensed"]);
 
 export async function inviteOrgMemberAction(
   _prev: TeamActionState,
@@ -45,12 +37,12 @@ export async function inviteOrgMemberAction(
     .object({
       locale: z.enum(["en", "fr", "es"]).default("en"),
       email: z.string().email(),
-      role: roleSchema,
+      access: accessSchema,
     })
     .safeParse({
       locale: formData.get("locale") || "en",
       email: String(formData.get("email") || ""),
-      role: String(formData.get("role") || ""),
+      access: String(formData.get("access") || formData.get("role") || ""),
     });
 
   if (!parsed.success) {
@@ -90,44 +82,6 @@ export async function inviteOrgMemberAction(
     }
   }
 
-  if (membership.organization.subscribed) {
-    const { canReserveInviteSeat, loadSeatCap } = await import(
-      "@/lib/billing/occupancy"
-    );
-    const allowed = await canReserveInviteSeat(orgId, email);
-    if (!allowed) {
-      const cap = await loadSeatCap(orgId);
-      const billing = await loadOrgBilling(orgId);
-      const founding = Boolean(billing?.founding_rate);
-      const catalog = catalogForOccupancy(cap.occupancy + 1, founding);
-      const interval: BillingInterval =
-        billing?.billing_interval === "year" ? "year" : "month";
-      if (formData.get("confirmSeatCharge") !== "true") {
-        return {
-          needsSeatChargeConfirm: true,
-          nextMonthlyCad: catalog.monthlyCad,
-          nextSeats: catalog.seatQuantity,
-          nextPlan: catalog.plan,
-          interval,
-        };
-      }
-      const { ensureLicensedSeats } = await import("@/lib/stripe/seats");
-      const charged = await ensureLicensedSeats({
-        orgId,
-        occupancy: cap.occupancy + 1,
-      });
-      if (!charged.ok) {
-        return {
-          error:
-            charged.error === "seat_charge_failed" ||
-            charged.error === "not_configured"
-              ? "seat_charge_failed"
-              : "seats_exceeded",
-        };
-      }
-    }
-  }
-
   await admin
     .from("organization_invitations")
     .update({ revoked_at: new Date().toISOString() })
@@ -146,7 +100,8 @@ export async function inviteOrgMemberAction(
     .insert({
       organization_id: orgId,
       email,
-      role: parsed.data.role,
+      role: parsed.data.access === "admin" ? "admin" : "case_manager",
+      is_licensed: parsed.data.access !== "unlicensed",
       token_hash: hashInviteToken(token),
       invited_by: user?.id ?? null,
       expires_at: expiresAt,
@@ -180,7 +135,11 @@ export async function inviteOrgMemberAction(
     actorKind: "staff",
     action: "member.invite",
     resourceType: "organization_invitation",
-    metadata: { email, role: parsed.data.role, authInvited: !authError },
+    metadata: {
+      email,
+      access: parsed.data.access,
+      authInvited: !authError,
+    },
   });
 
   revalidatePath(`/${locale}/settings/billing`);
@@ -238,12 +197,12 @@ export async function updateOrgMemberRoleAction(
     .object({
       locale: z.enum(["en", "fr", "es"]).default("en"),
       memberId: z.string().uuid(),
-      role: roleSchema,
+      access: accessSchema,
     })
     .safeParse({
       locale: formData.get("locale") || "en",
       memberId: String(formData.get("memberId") || ""),
-      role: String(formData.get("role") || ""),
+      access: String(formData.get("access") || formData.get("role") || ""),
     });
 
   if (!parsed.success) return { error: "invalid" };
@@ -258,7 +217,7 @@ export async function updateOrgMemberRoleAction(
   const supabase = await createClient();
   const { data: target } = await supabase
     .from("organization_members")
-    .select("id, user_id, role")
+    .select("id, user_id, role, is_licensed, licensed_at_renewal")
     .eq("id", parsed.data.memberId)
     .eq("organization_id", membership.organization.id)
     .maybeSingle();
@@ -268,14 +227,48 @@ export async function updateOrgMemberRoleAction(
     return { error: "last_owner" };
   }
 
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("billing_pending_seat_quantity")
+    .eq("id", membership.organization.id)
+    .maybeSingle();
+  let licensedAtRenewal: boolean | null = null;
+  if (org?.billing_pending_seat_quantity) {
+    licensedAtRenewal = parsed.data.access !== "unlicensed";
+    if (licensedAtRenewal && target.licensed_at_renewal !== true) {
+      const { count } = await supabase
+        .from("organization_members")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", membership.organization.id)
+        .eq("licensed_at_renewal", true);
+      if ((count ?? 0) >= Number(org.billing_pending_seat_quantity)) {
+        return { error: "renewal_seats_exceeded" };
+      }
+    }
+  }
+
+  const update =
+    parsed.data.access === "unlicensed"
+      ? {
+          is_licensed: false,
+          licensed_at_renewal: licensedAtRenewal,
+        }
+      : {
+          role: parsed.data.access,
+          is_licensed: true,
+          licensed_at_renewal: licensedAtRenewal,
+        };
   const { error } = await supabase
     .from("organization_members")
-    .update({ role: parsed.data.role })
+    .update(update)
     .eq("id", parsed.data.memberId)
     .eq("organization_id", membership.organization.id);
 
   if (error) {
     console.error("update member role:", error.message);
+    if (/seats_exceeded/i.test(error.message)) {
+      return { error: "seats_exceeded" };
+    }
     if (error.code === "42501" || /row-level security/i.test(error.message)) {
       return { error: "last_admin" };
     }
@@ -290,11 +283,58 @@ export async function updateOrgMemberRoleAction(
     action: "member.role_update",
     resourceType: "organization_member",
     resourceId: parsed.data.memberId,
-    metadata: { role: parsed.data.role },
+    metadata: { access: parsed.data.access },
   });
 
   revalidatePath(`/${parsed.data.locale}/settings/billing`);
   return { message: "role_updated" };
+}
+
+export async function updateRenewalLicenseRosterAction(
+  _prev: TeamActionState,
+  formData: FormData,
+): Promise<TeamActionState> {
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      licensedMemberIds: z.array(z.string().uuid()).min(1),
+    })
+    .safeParse({
+      locale: formData.get("locale") || "en",
+      licensedMemberIds: formData
+        .getAll("licensedMemberIds")
+        .map((value) => String(value)),
+    });
+  if (!parsed.success) return { error: "invalid" };
+
+  const membership = await getPrimaryMembership();
+  if (!membership || !canAdministerOrg(membership.role)) {
+    return { error: "forbidden" };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("stage_org_renewal_licenses", {
+    p_organization_id: membership.organization.id,
+    p_licensed_member_ids: parsed.data.licensedMemberIds,
+  });
+  if (error) {
+    console.error("update renewal roster:", error.message);
+    return {
+      error: /invalid_license_roster/i.test(error.message)
+        ? "renewal_seats_exceeded"
+        : "save_failed",
+    };
+  }
+  await recordAuditEvent({
+    organizationId: membership.organization.id,
+    actorUserId: (await getSessionUser())?.id,
+    actorKind: "staff",
+    action: "billing.renewal_roster.update",
+    resourceType: "organization",
+    resourceId: membership.organization.id,
+    metadata: { licensedMemberIds: parsed.data.licensedMemberIds },
+  });
+  revalidatePath(`/${parsed.data.locale}/settings/billing`);
+  return { message: "renewal_roster_updated" };
 }
 
 export async function removeOrgMemberAction(
@@ -324,7 +364,7 @@ export async function removeOrgMemberAction(
   const supabase = await createClient();
   const { data: target } = await supabase
     .from("organization_members")
-    .select("id, user_id, role")
+    .select("id, user_id, role, is_licensed")
     .eq("id", parsed.data.memberId)
     .eq("organization_id", membership.organization.id)
     .maybeSingle();
@@ -389,7 +429,7 @@ export async function transferOrgOwnershipAction(
   const supabase = await createClient();
   const { data: target } = await supabase
     .from("organization_members")
-    .select("id, user_id, role")
+    .select("id, user_id, role, is_licensed")
     .eq("id", parsed.data.memberId)
     .eq("organization_id", membership.organization.id)
     .maybeSingle();
@@ -397,6 +437,9 @@ export async function transferOrgOwnershipAction(
   if (!target) return { error: "not_found" };
   if (target.user_id === user.id) {
     return { error: "invalid" };
+  }
+  if (target.is_licensed === false) {
+    return { error: "owner_must_be_licensed" };
   }
 
   const { error } = await supabase.rpc("transfer_organization_ownership", {

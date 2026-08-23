@@ -126,6 +126,8 @@ export type OrgMemberRow = {
   id: string;
   user_id: string;
   role: OrgRole;
+  is_licensed: boolean;
+  licensed_at_renewal: boolean | null;
   profile: StaffProfileRow;
 };
 
@@ -785,7 +787,7 @@ export async function listOrgMembers(): Promise<OrgMemberRow[]> {
   const supabase = await createClient();
   const { data: members, error } = await supabase
     .from("organization_members")
-    .select("id, user_id, role")
+    .select("id, user_id, role, is_licensed, licensed_at_renewal")
     .eq("organization_id", orgId)
     .order("created_at", { ascending: true });
 
@@ -819,6 +821,11 @@ export async function listOrgMembers(): Promise<OrgMemberRow[]> {
         id: m.id as string,
         user_id: m.user_id as string,
         role: isOrgRole(m.role) ? m.role : DEFAULT_ORG_ROLE,
+        is_licensed: m.is_licensed !== false,
+        licensed_at_renewal:
+          typeof m.licensed_at_renewal === "boolean"
+            ? m.licensed_at_renewal
+            : null,
         profile,
       };
     })
@@ -1367,6 +1374,7 @@ export type PendingInvitationRow = {
   id: string;
   email: string;
   role: OrgRole;
+  is_licensed: boolean;
   expires_at: string;
   created_at: string;
 };
@@ -1378,7 +1386,7 @@ export async function listPendingInvitations(): Promise<PendingInvitationRow[]> 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("organization_invitations")
-    .select("id, email, role, expires_at, created_at")
+    .select("id, email, role, is_licensed, expires_at, created_at")
     .eq("organization_id", orgId)
     .is("accepted_at", null)
     .is("revoked_at", null)

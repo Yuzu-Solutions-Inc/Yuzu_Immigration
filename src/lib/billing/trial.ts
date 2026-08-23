@@ -1,4 +1,4 @@
-import { canCreateRecords, type OrgRole } from "@/lib/auth/rbac";
+import { canCreateRecords, type OrgAccessLevel } from "@/lib/auth/rbac";
 import { PRICING } from "@/lib/marketing/pricing";
 
 const DAY_MS = 86_400_000;
@@ -49,7 +49,7 @@ export function orgAllowsWrites(input: {
 export function canCreateInWorkspace(
   membership:
     | {
-        role: OrgRole | null | undefined;
+        role: OrgAccessLevel | null | undefined;
         organization: { writable: boolean };
       }
     | null

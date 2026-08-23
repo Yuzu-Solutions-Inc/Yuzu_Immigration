@@ -1,10 +1,10 @@
 import { getTranslations } from "next-intl/server";
 
 import { isAdmin } from "@/lib/auth/rbac";
-import type { OrgRole } from "@/lib/auth/rbac";
+import type { OrgAccessLevel } from "@/lib/auth/rbac";
 import { Link } from "@/i18n/navigation";
 
-export async function TrialLockBanner({ role }: { role: OrgRole }) {
+export async function TrialLockBanner({ role }: { role: OrgAccessLevel }) {
   const t = await getTranslations("trialLock");
   const admin = isAdmin(role);
 
