@@ -122,9 +122,10 @@ export async function getOnboardingState(): Promise<OnboardingState | null> {
     (integrations?.meeting_provider === "teams" && microsoftOk) ||
     (integrations?.meeting_provider === "zoom" && zoomOk);
 
+  const skippedRaw = onboardingResult.data?.skipped_steps;
   const skipped = new Set(
-    (onboardingResult.data?.skipped_steps ?? []).filter(
-      (step): step is string => typeof step === "string",
+    (Array.isArray(skippedRaw) ? skippedRaw : []).filter(
+      (step: unknown): step is string => typeof step === "string",
     ),
   );
   const kind = signatureResult.data?.signature_kind;
