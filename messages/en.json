@@ -458,6 +458,8 @@
     "kicker": "Step {current} of {total}",
     "skipAll": "Skip setup",
     "skipStep": "Skip this step",
+    "skipForNow": "Skip for now",
+    "connectLater": "You can connect this later in Settings → Calendar.",
     "back": "Back",
     "continue": "Continue",
     "finish": "Go to home",
@@ -584,7 +586,7 @@
       "calendar": "Calendar connection",
       "meeting": "Meeting tool",
       "service": "Bookable service",
-      "next": "Create a project from Home, or finish remaining items on the setup list."
+      "next": "Create a project from Home. You can connect a calendar or meeting tool later from Settings."
     }
   },
   "orgRoles": {

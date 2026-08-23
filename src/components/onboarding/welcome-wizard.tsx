@@ -23,6 +23,7 @@ import { applyWeekdayHoursPresetAction } from "@/app/actions/booking";
 import {
   completeOnboardingAction,
   dismissOnboardingAction,
+  skipOnboardingIntegrationsAction,
 } from "@/app/actions/onboarding";
 import {
   createServiceAction,
@@ -64,9 +65,9 @@ import type {
 } from "@/lib/booking/types";
 import type { AppLocale } from "@/lib/i18n/locales";
 import {
+  isIntegrationCheckId,
   wizardStepsForRole,
   type OnboardingChecks,
-  type WizardStepId,
 } from "@/lib/onboarding/steps";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +111,9 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
   const steps = useMemo(() => wizardStepsForRole(isAdmin), [isAdmin]);
   const [index, setIndex] = useState(0);
   const [pending, startTransition] = useTransition();
+  const [skippedIntegrations, setSkippedIntegrations] = useState(
+    () => new Set<string>(),
+  );
   const step = steps[index] ?? "tour";
 
   const [profileState, profileAction, profilePending] = useActionState(
@@ -133,23 +137,33 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
     ) {
       router.refresh();
     }
+    if (profileState.success) {
+      setIndex((current) => Math.min(current + 1, steps.length - 1));
+    }
   }, [
     profileState.success,
     serviceState.message,
     inviteState.message,
     router,
+    steps.length,
   ]);
 
-  const markedDone: Partial<Record<WizardStepId, boolean>> = {
-    profile: checks.account,
-    representative: checks.representative,
-    hours: checks.hours,
-    calendar: checks.calendar,
-    meeting: checks.meeting,
-    service: checks.service,
+  const effectiveChecks: OnboardingChecks = {
+    ...checks,
+    calendar: checks.calendar || skippedIntegrations.has("calendar"),
+    meeting: checks.meeting || skippedIntegrations.has("meeting"),
   };
 
+  function markIntegrationSkippedIfNeeded(stepId: typeof step) {
+    if (!isIntegrationCheckId(stepId) || effectiveChecks[stepId]) return;
+    setSkippedIntegrations((current) => new Set(current).add(stepId));
+    startTransition(() => {
+      void skipOnboardingIntegrationsAction(locale, [stepId]);
+    });
+  }
+
   function goNext() {
+    markIntegrationSkippedIfNeeded(step);
     setIndex((current) => Math.min(current + 1, steps.length - 1));
     router.refresh();
   }
@@ -211,46 +225,19 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
         ) : null}
       </div>
 
-      <ol className="flex gap-1 overflow-x-auto pb-1">
-        {steps.map((id, stepIndex) => {
-          const active = stepIndex === index;
-          const done = stepIndex < index || Boolean(markedDone[id]);
-          return (
-            <li key={id} className="min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={() => setIndex(stepIndex)}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium transition-colors",
-                  active
-                    ? "bg-action/10 text-brand"
-                    : "text-muted-foreground hover:bg-muted",
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
-                    active
-                      ? "bg-action text-action-foreground"
-                      : done
-                        ? "bg-action/15 text-action"
-                        : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {done && !active ? (
-                    <Check className="size-3" aria-hidden />
-                  ) : (
-                    stepIndex + 1
-                  )}
-                </span>
-                <span className="hidden truncate sm:inline">
-                  {t(`steps.${id}.nav`)}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+      <div
+        className="h-1.5 overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={steps.length}
+        aria-valuenow={index + 1}
+        aria-label={t("kicker", { current: index + 1, total: steps.length })}
+      >
+        <div
+          className="h-full rounded-full bg-action transition-[width] duration-300"
+          style={{ width: `${((index + 1) / steps.length) * 100}%` }}
+        />
+      </div>
 
       <SurfaceCard className="space-y-5 sm:p-6">
         {step === "tour" ? (
@@ -325,7 +312,7 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
             <p className="text-sm text-muted-foreground">
               {t("representative.detail")}
             </p>
-            {checks.representative ? (
+            {effectiveChecks.representative ? (
               <p className="text-sm font-medium text-action">
                 {t("representative.complete")}
               </p>
@@ -343,7 +330,7 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
         {step === "hours" ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">{t("hours.detail")}</p>
-            {checks.hours ? (
+            {effectiveChecks.hours ? (
               <p className="text-sm font-medium text-action">
                 {t("hours.complete")}
               </p>
@@ -364,27 +351,33 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
         ) : null}
 
         {step === "calendar" ? (
-          <StaffCalendarIntegrations
-            locale={locale}
-            googleConfigured={googleConfigured}
-            googleConnection={googleConnection}
-            microsoftConfigured={microsoftConfigured}
-            microsoftConnection={microsoftConnection}
-            calendarProvider={calendarProvider}
-          />
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("connectLater")}</p>
+            <StaffCalendarIntegrations
+              locale={locale}
+              googleConfigured={googleConfigured}
+              googleConnection={googleConnection}
+              microsoftConfigured={microsoftConfigured}
+              microsoftConnection={microsoftConnection}
+              calendarProvider={calendarProvider}
+            />
+          </div>
         ) : null}
 
         {step === "meeting" ? (
-          <StaffMeetingIntegrations
-            locale={locale}
-            googleConfigured={googleConfigured}
-            googleConnection={googleConnection}
-            microsoftConfigured={microsoftConfigured}
-            microsoftConnection={microsoftConnection}
-            zoomConfigured={zoomConfigured}
-            zoomConnection={zoomConnection}
-            meetingProvider={meetingProvider}
-          />
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("connectLater")}</p>
+            <StaffMeetingIntegrations
+              locale={locale}
+              googleConfigured={googleConfigured}
+              googleConnection={googleConnection}
+              microsoftConfigured={microsoftConfigured}
+              microsoftConnection={microsoftConnection}
+              zoomConfigured={zoomConfigured}
+              zoomConnection={zoomConnection}
+              meetingProvider={meetingProvider}
+            />
+          </div>
         ) : null}
 
         {step === "service" ? (
@@ -493,16 +486,16 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
         {step === "done" ? (
           <div className="space-y-4">
             <ul className="space-y-2 text-sm">
-              <DoneRow ok={checks.account} label={t("done.profile")} />
+              <DoneRow ok={effectiveChecks.account} label={t("done.profile")} />
               <DoneRow
-                ok={checks.representative}
+                ok={effectiveChecks.representative}
                 label={t("done.representative")}
               />
-              <DoneRow ok={checks.hours} label={t("done.hours")} />
-              <DoneRow ok={checks.calendar} label={t("done.calendar")} />
-              <DoneRow ok={checks.meeting} label={t("done.meeting")} />
+              <DoneRow ok={effectiveChecks.hours} label={t("done.hours")} />
+              <DoneRow ok={effectiveChecks.calendar} label={t("done.calendar")} />
+              <DoneRow ok={effectiveChecks.meeting} label={t("done.meeting")} />
               {isAdmin ? (
-                <DoneRow ok={checks.service} label={t("done.service")} />
+                <DoneRow ok={effectiveChecks.service} label={t("done.service")} />
               ) : null}
             </ul>
             <p className="text-sm text-muted-foreground">{t("done.next")}</p>
@@ -527,7 +520,7 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
               onClick={goNext}
               disabled={pending}
             >
-              {t("skipStep")}
+              {isIntegrationCheckId(step) ? t("skipForNow") : t("skipStep")}
             </Button>
           ) : null}
           {step === "done" ? (

@@ -49,6 +49,9 @@ export async function getStaffSetupChecklist(
 ): Promise<StaffSetupChecklist> {
   const state = await getOnboardingState();
   if (!state) return EMPTY_STAFF_SETUP;
+  if (state.wizardCompleted || state.wizardDismissed) {
+    return EMPTY_STAFF_SETUP;
+  }
 
   const ids: OnboardingCheckId[] = state.canManageServices
     ? [...STAFF_SETUP_ITEM_IDS]

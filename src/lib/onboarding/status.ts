@@ -84,7 +84,7 @@ export async function getOnboardingState(): Promise<OnboardingState | null> {
     getMyZoomConnection(),
     supabase
       .from("staff_onboarding")
-      .select("completed_at, dismissed_at")
+      .select("completed_at, dismissed_at, skipped_steps")
       .eq("organization_id", orgId)
       .eq("user_id", user.id)
       .maybeSingle(),
@@ -122,14 +122,19 @@ export async function getOnboardingState(): Promise<OnboardingState | null> {
     (integrations?.meeting_provider === "teams" && microsoftOk) ||
     (integrations?.meeting_provider === "zoom" && zoomOk);
 
+  const skipped = new Set(
+    (onboardingResult.data?.skipped_steps ?? []).filter(
+      (step): step is string => typeof step === "string",
+    ),
+  );
   const kind = signatureResult.data?.signature_kind;
   const checks: OnboardingChecks = {
     account: isAccountNameComplete(profile),
     representative: isAccountRepComplete(profile),
     signature: kind === "typed" || kind === "drawn",
     hours: rules.length > 0,
-    calendar: calendarOk,
-    meeting: meetingOk,
+    calendar: calendarOk || skipped.has("calendar"),
+    meeting: meetingOk || skipped.has("meeting"),
     service: canManageServices ? (servicesResult.count ?? 0) > 0 : true,
   };
 

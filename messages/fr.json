@@ -458,6 +458,8 @@
     "kicker": "Étape {current} sur {total}",
     "skipAll": "Ignorer la configuration",
     "skipStep": "Ignorer cette étape",
+    "skipForNow": "Ignorer pour l’instant",
+    "connectLater": "Vous pourrez connecter cela plus tard dans Réglages → Calendrier.",
     "back": "Retour",
     "continue": "Continuer",
     "finish": "Aller à l’accueil",
@@ -584,7 +586,7 @@
       "calendar": "Calendrier connecté",
       "meeting": "Outil de réunion",
       "service": "Service réservable",
-      "next": "Créez un dossier depuis l’accueil, ou terminez les éléments restants dans la liste de configuration."
+      "next": "Créez un dossier depuis l’accueil. Vous pourrez connecter un calendrier ou un outil de réunion plus tard dans les réglages."
     }
   },
   "orgRoles": {

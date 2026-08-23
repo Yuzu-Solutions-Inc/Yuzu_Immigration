@@ -191,6 +191,7 @@ export const staffOnboarding = pgTable(
       .references(() => profiles.id, { onDelete: "cascade" }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+    skippedSteps: text("skipped_steps").array().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

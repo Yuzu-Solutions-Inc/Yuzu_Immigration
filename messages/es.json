@@ -458,6 +458,8 @@
     "kicker": "Paso {current} de {total}",
     "skipAll": "Omitir la configuración",
     "skipStep": "Omitir este paso",
+    "skipForNow": "Omitir por ahora",
+    "connectLater": "Puede conectar esto más tarde en Ajustes → Calendario.",
     "back": "Atrás",
     "continue": "Continuar",
     "finish": "Ir al inicio",
@@ -584,7 +586,7 @@
       "calendar": "Calendario conectado",
       "meeting": "Herramienta de reunión",
       "service": "Servicio reservable",
-      "next": "Cree un expediente desde Inicio, o termine los elementos pendientes en la lista de configuración."
+      "next": "Cree un expediente desde Inicio. Puede conectar un calendario o una herramienta de reunión más tarde en Ajustes."
     }
   },
   "orgRoles": {

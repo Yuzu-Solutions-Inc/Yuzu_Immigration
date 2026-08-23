@@ -47,6 +47,9 @@ export default async function WelcomePage({
   ]);
 
   if (!state) redirect(`/${locale}/login`);
+  if (state.wizardCompleted || state.wizardDismissed) {
+    redirect(`/${locale}/home`);
+  }
 
   return (
     <WelcomeWizard
