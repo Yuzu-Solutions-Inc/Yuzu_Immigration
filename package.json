@@ -68,9 +68,10 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
+  "overrides": {
+    "esbuild": ">=0.25.0"
+  },
   "allowScripts": {
-    "esbuild@0.18.20": true,
-    "esbuild@0.25.12": true,
     "esbuild@0.28.2": true,
     "@parcel/watcher@2.6.0": true,
     "fsevents@2.3.3": true,
