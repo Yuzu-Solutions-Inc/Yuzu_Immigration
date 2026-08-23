@@ -14,10 +14,16 @@ import {
   computeCancelRefundAmounts,
   normalizeSquareCancelRefundPolicy,
 } from "./cancel-policy";
+import { getActiveCheckoutProcessor } from "@/lib/payments/processor";
+import {
+  ensureConnectedCheckoutSession,
+  refundConnectedCharge,
+} from "@/lib/stripe/connect-checkout";
+
 import {
   createSquarePaymentLink,
   findSquarePaymentIdByOrderId,
-  getOrgSquareConnection,
+  getOrgSquareConnectionRecord,
   refundSquarePayment,
 } from "./client";
 
@@ -42,10 +48,15 @@ export type PaymentRequestRow = {
   project_id: string | null;
   person_id: string | null;
   appointment_id: string | null;
+  processor: "square" | "stripe";
   checkout_url: string | null;
   square_order_id: string | null;
   square_payment_id: string | null;
   square_refund_id: string | null;
+  stripe_account_id: string | null;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  stripe_refund_id: string | null;
   paid_at: string | null;
   refunded_at: string | null;
   created_at: string;
@@ -69,8 +80,8 @@ export async function createCheckoutPaymentRequest(input: {
   /** Absolute expiry (wins over expiresInHours when set). */
   expiresAt?: Date | null;
 }): Promise<{ payment: PaymentRequestRow; token: string; checkoutUrl: string }> {
-  const connection = await getOrgSquareConnection(input.organizationId);
-  if (!connection) throw new Error("square_not_connected");
+  const processor = await getActiveCheckoutProcessor(input.organizationId);
+  if (!processor) throw new Error("processor_not_connected");
 
   const token = createBookingToken();
   const tokenHash = hashBookingToken(token);
@@ -86,7 +97,7 @@ export async function createCheckoutPaymentRequest(input: {
   const dek = await getOrgDataKey(input.organizationId);
   const { getOrgSageConnection } = await import("@/lib/sage/client");
   const sageConnection = await getOrgSageConnection(input.organizationId);
-  const deferSquareLink = Boolean(sageConnection);
+  const deferProcessorCheckout = Boolean(sageConnection);
 
   const { data: payment, error } = await admin
     .from("payment_requests")
@@ -101,6 +112,11 @@ export async function createCheckoutPaymentRequest(input: {
       person_id: input.personId ?? null,
       appointment_id: input.appointmentId ?? null,
       created_by: input.createdBy ?? null,
+      processor: processor.processor,
+      stripe_account_id:
+        processor.processor === "stripe"
+          ? processor.stripe.stripe_account_id
+          : null,
       token_hash: tokenHash,
       token_encrypted: encryptField(token, PAYMENT_TOKEN_AAD, dek),
       expires_at: expiresAt,
@@ -113,7 +129,7 @@ export async function createCheckoutPaymentRequest(input: {
     throw new Error("payment_create_failed");
   }
 
-  if (deferSquareLink) {
+  if (deferProcessorCheckout) {
     return {
       payment: payment as PaymentRequestRow,
       token,
@@ -122,37 +138,16 @@ export async function createCheckoutPaymentRequest(input: {
   }
 
   try {
-    const link = await createSquarePaymentLink({
-      connection,
-      amountCents: input.amountCents,
-      currency: input.currency,
-      name: input.description,
-      paymentNote: payment.id as string,
-      redirectUrl,
+    const attached = await attachProcessorCheckout({
+      payment: payment as PaymentRequestRow,
+      token,
+      locale: input.locale,
       buyerEmail: input.buyerEmail,
     });
-
-    const { data: updated, error: updateError } = await admin
-      .from("payment_requests")
-      .update({
-        square_payment_link_id: link.paymentLinkId,
-        square_order_id: link.orderId,
-        checkout_url: link.checkoutUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payment.id)
-      .select("*")
-      .single();
-
-    if (updateError || !updated) {
-      console.error("update payment link:", updateError?.message);
-      throw new Error("payment_link_save_failed");
-    }
-
     return {
-      payment: updated as PaymentRequestRow,
+      payment: attached,
       token,
-      checkoutUrl: link.checkoutUrl,
+      checkoutUrl: attached.checkout_url || redirectUrl,
     };
   } catch (err) {
     await admin
@@ -166,12 +161,166 @@ export async function createCheckoutPaymentRequest(input: {
   }
 }
 
+export async function attachProcessorCheckout(input: {
+  payment: PaymentRequestRow;
+  token: string;
+  locale: string;
+  buyerEmail?: string | null;
+  tax?: {
+    taxCents: number;
+    taxPercent: number;
+    taxLabel: string;
+    country: string;
+    region: string | null;
+    sageTaxRateId: string | null;
+  } | null;
+}): Promise<PaymentRequestRow> {
+  const origin = await getAppBaseUrl();
+  const redirectUrl = `${origin.replace(/\/$/, "")}/${input.locale}/pay/${input.token}`;
+  const processor = input.payment.processor || "square";
+  const taxCents = input.tax?.taxCents ?? input.payment.tax_cents ?? 0;
+  const admin = createServiceClient();
+  const taxPatch = input.tax
+    ? {
+        tax_cents: input.tax.taxCents,
+        tax_percent: input.tax.taxPercent,
+        tax_label: input.tax.taxLabel,
+        tax_country: input.tax.country,
+        tax_region: input.tax.region,
+        sage_tax_rate_id: input.tax.sageTaxRateId,
+      }
+    : {};
+
+  if (processor === "stripe") {
+    const stripeAccountId = input.payment.stripe_account_id;
+    if (!stripeAccountId) throw new Error("stripe_account_missing");
+    const session = await ensureConnectedCheckoutSession({
+      stripeAccountId,
+      sessionId:
+        input.tax && input.payment.tax_cents !== taxCents
+          ? null
+          : input.payment.stripe_checkout_session_id,
+      checkoutUrl: input.payment.checkout_url,
+      amountCents: input.payment.amount_cents,
+      taxCents,
+      taxLabel: input.tax?.taxLabel ?? input.payment.tax_label,
+      currency: input.payment.currency,
+      name: input.payment.description,
+      paymentRequestId: input.payment.id,
+      successUrl: redirectUrl,
+      cancelUrl: redirectUrl,
+      buyerEmail: input.buyerEmail,
+      expiresAt: input.payment.expires_at
+        ? new Date(input.payment.expires_at)
+        : null,
+    });
+    const { data: updated, error } = await admin
+      .from("payment_requests")
+      .update({
+        ...taxPatch,
+        stripe_checkout_session_id: session.sessionId,
+        checkout_url: session.checkoutUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", input.payment.id)
+      .eq("status", "pending")
+      .select("*")
+      .single();
+    if (error || !updated) {
+      console.error("attachProcessorCheckout stripe:", error?.message);
+      throw new Error("payment_link_save_failed");
+    }
+    return updated as PaymentRequestRow;
+  }
+
+  const connection = await getOrgSquareConnectionRecord(
+    input.payment.organization_id,
+  );
+  if (!connection) throw new Error("square_not_connected");
+
+  if (
+    input.payment.checkout_url &&
+    input.payment.square_order_id &&
+    (!input.tax || input.payment.tax_cents === taxCents)
+  ) {
+    return input.payment;
+  }
+
+  const link = await createSquarePaymentLink({
+    connection,
+    amountCents: input.payment.amount_cents,
+    currency: input.payment.currency,
+    name: input.payment.description,
+    paymentNote: input.payment.id,
+    redirectUrl,
+    buyerEmail: input.buyerEmail,
+    tax:
+      input.tax && input.tax.taxCents > 0
+        ? { name: input.tax.taxLabel, percentage: input.tax.taxPercent }
+        : null,
+  });
+
+  const { data: updated, error } = await admin
+    .from("payment_requests")
+    .update({
+      ...taxPatch,
+      square_payment_link_id: link.paymentLinkId,
+      square_order_id: link.orderId,
+      checkout_url: link.checkoutUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.payment.id)
+    .eq("status", "pending")
+    .select("*")
+    .single();
+  if (error || !updated) {
+    console.error("attachProcessorCheckout square:", error?.message);
+    throw new Error("payment_link_save_failed");
+  }
+  return updated as PaymentRequestRow;
+}
+
+export function paymentWindowOpen(
+  payment: { expires_at?: string | null },
+  now = Date.now(),
+) {
+  if (!payment.expires_at) return true;
+  return Date.parse(payment.expires_at) >= now;
+}
+
+/** Checkout Session expiry must not kill a still-valid payment link. */
+export async function reopenUnexpiredCheckout(
+  payment: PaymentRequestRow,
+): Promise<PaymentRequestRow> {
+  if (payment.status === "pending") return payment;
+  if (payment.status !== "expired" && payment.status !== "failed") {
+    return payment;
+  }
+  if (!paymentWindowOpen(payment)) return payment;
+  const admin = createServiceClient();
+  const { data, error } = await admin
+    .from("payment_requests")
+    .update({
+      status: "pending",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", payment.id)
+    .in("status", ["expired", "failed"])
+    .select("*")
+    .maybeSingle();
+  if (error) {
+    console.error("reopenUnexpiredCheckout:", error.message);
+    return payment;
+  }
+  return (data as PaymentRequestRow) ?? payment;
+}
+
 export async function loadPaymentByToken(token: string) {
   const admin = createServiceClient();
   const { data, error } = await admin
     .from("payment_requests")
     .select(
-      "id, organization_id, source, status, amount_cents, tax_cents, tax_percent, tax_label, tax_country, tax_region, sage_tax_rate_id, sage_invoice_id, currency, description, project_id, person_id, appointment_id, checkout_url, square_order_id, square_payment_id, paid_at, created_at, expires_at",
+      "id, organization_id, source, status, amount_cents, tax_cents, tax_percent, tax_label, tax_country, tax_region, sage_tax_rate_id, sage_invoice_id, currency, description, project_id, person_id, appointment_id, processor, checkout_url, square_order_id, square_payment_id, stripe_account_id, stripe_checkout_session_id, stripe_payment_intent_id, paid_at, created_at, expires_at",
     )
     .eq("token_hash", hashBookingToken(token))
     .maybeSingle();
@@ -212,10 +361,26 @@ export async function loadPaymentById(paymentId: string) {
   return data as PaymentRequestRow | null;
 }
 
+export async function loadPaymentByStripeSessionId(sessionId: string) {
+  const admin = createServiceClient();
+  const { data, error } = await admin
+    .from("payment_requests")
+    .select("*")
+    .eq("stripe_checkout_session_id", sessionId)
+    .maybeSingle();
+  if (error) {
+    console.error("loadPaymentByStripeSessionId:", error.message);
+    return null;
+  }
+  return data as PaymentRequestRow | null;
+}
+
 export async function markPaymentPaid(input: {
   paymentId: string;
   squarePaymentId?: string | null;
   squareOrderId?: string | null;
+  stripeCheckoutSessionId?: string | null;
+  stripePaymentIntentId?: string | null;
 }) {
   const admin = createServiceClient();
   const now = new Date().toISOString();
@@ -226,6 +391,12 @@ export async function markPaymentPaid(input: {
   };
   if (input.squarePaymentId) patch.square_payment_id = input.squarePaymentId;
   if (input.squareOrderId) patch.square_order_id = input.squareOrderId;
+  if (input.stripeCheckoutSessionId) {
+    patch.stripe_checkout_session_id = input.stripeCheckoutSessionId;
+  }
+  if (input.stripePaymentIntentId) {
+    patch.stripe_payment_intent_id = input.stripePaymentIntentId;
+  }
 
   const { data: payment, error } = await admin
     .from("payment_requests")
@@ -466,7 +637,7 @@ export async function settlePaymentOnBookingCancel(input: {
   const { data, error } = await admin
     .from("payment_requests")
     .select(
-      "id, organization_id, source, status, amount_cents, tax_cents, currency, description, project_id, person_id, appointment_id, checkout_url, square_order_id, square_payment_id, square_refund_id, paid_at, refunded_at, created_at",
+      "id, organization_id, source, status, amount_cents, tax_cents, currency, description, project_id, person_id, appointment_id, processor, checkout_url, square_order_id, square_payment_id, square_refund_id, stripe_account_id, stripe_checkout_session_id, stripe_payment_intent_id, stripe_refund_id, paid_at, refunded_at, created_at",
     )
     .eq("appointment_id", input.appointmentId)
     .eq("organization_id", input.organizationId)
@@ -511,10 +682,16 @@ export async function settlePaymentOnBookingCancel(input: {
   }
 
   try {
-    const connection = await getOrgSquareConnection(input.organizationId);
-    if (!connection) throw new Error("square_not_connected");
+    const { loadEnabledCancelPolicyRow, getOrgStripeConnectionRecord } =
+      await import("@/lib/payments/processor");
+    const policyRow =
+      (await loadEnabledCancelPolicyRow(input.organizationId)) ??
+      (payment.processor === "stripe"
+        ? await getOrgStripeConnectionRecord(input.organizationId)
+        : await getOrgSquareConnectionRecord(input.organizationId));
+    if (!policyRow) throw new Error("cancel_policy_missing");
 
-    const policy = normalizeSquareCancelRefundPolicy(connection);
+    const policy = normalizeSquareCancelRefundPolicy(policyRow);
     const chargedCents = payment.amount_cents + (payment.tax_cents ?? 0);
     const { refundCents } = computeCancelRefundAmounts(
       chargedCents,
@@ -525,6 +702,62 @@ export async function settlePaymentOnBookingCancel(input: {
     if (!policy.cancelRefundEnabled || refundCents <= 0) {
       return { outcome: "skipped" };
     }
+
+    if ((payment.processor || "square") === "stripe") {
+      const accountId = payment.stripe_account_id;
+      let paymentIntentId = payment.stripe_payment_intent_id;
+      if (!paymentIntentId && payment.stripe_checkout_session_id && accountId) {
+        const { getStripe } = await import("@/lib/stripe/client");
+        const session = await getStripe().checkout.sessions.retrieve(
+          payment.stripe_checkout_session_id,
+          {},
+          { stripeAccount: accountId },
+        );
+        const intent = session.payment_intent;
+        paymentIntentId =
+          typeof intent === "string" ? intent : (intent?.id ?? null);
+        if (paymentIntentId) {
+          await admin
+            .from("payment_requests")
+            .update({
+              stripe_payment_intent_id: paymentIntentId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", payment.id);
+        }
+      }
+      if (!accountId || !paymentIntentId) {
+        throw new Error("stripe_payment_intent_missing");
+      }
+      const refund = await refundConnectedCharge({
+        stripeAccountId: accountId,
+        paymentIntentId,
+        amountCents: refundCents,
+        idempotencyKey: `refund-${payment.id}`,
+      });
+      const now = new Date().toISOString();
+      const { error: refundUpdateError } = await admin
+        .from("payment_requests")
+        .update({
+          status: "refunded",
+          stripe_refund_id: refund.refundId,
+          refunded_at: now,
+          updated_at: now,
+        })
+        .eq("id", payment.id)
+        .eq("status", "paid");
+      if (refundUpdateError) {
+        console.error(
+          "settlePaymentOnBookingCancel mark refunded:",
+          refundUpdateError.message,
+        );
+        return { outcome: "failed" };
+      }
+      return { outcome: "refunded" };
+    }
+
+    const connection = await getOrgSquareConnectionRecord(input.organizationId);
+    if (!connection) throw new Error("square_not_connected");
 
     let squarePaymentId = payment.square_payment_id;
     if (!squarePaymentId && payment.square_order_id) {

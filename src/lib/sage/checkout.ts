@@ -1,4 +1,3 @@
-import { getAppBaseUrl } from "@/lib/app-url";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { getOrgSageConnection } from "@/lib/sage/client";
 import {
@@ -18,9 +17,10 @@ import {
   normalizeCountryCode,
   taxCentsFromPercent,
 } from "@/lib/sage/tax-regions";
-import { createSquarePaymentLink, getOrgSquareConnection } from "@/lib/square/client";
 import {
+  attachProcessorCheckout,
   loadPaymentByToken,
+  reopenUnexpiredCheckout,
   type PaymentRequestRow,
 } from "@/lib/square/payments";
 
@@ -127,56 +127,27 @@ export async function personTaxAddress(input: {
   };
 }
 
-export async function createTaxedSquareCheckout(input: {
+export async function createTaxedProcessorCheckout(input: {
   payment: PaymentRequestRow;
   token: string;
   locale: string;
   tax: PaymentTaxBreakdown;
   buyerEmail?: string | null;
 }) {
-  const connection = await getOrgSquareConnection(input.payment.organization_id);
-  if (!connection) throw new Error("square_not_connected");
-  const origin = await getAppBaseUrl();
-  const redirectUrl = `${origin.replace(/\/$/, "")}/${input.locale}/pay/${input.token}`;
-
-  const link = await createSquarePaymentLink({
-    connection,
-    amountCents: input.tax.subtotalCents,
-    currency: input.payment.currency,
-    name: input.payment.description,
-    paymentNote: input.payment.id,
-    redirectUrl,
+  return attachProcessorCheckout({
+    payment: input.payment,
+    token: input.token,
+    locale: input.locale,
     buyerEmail: input.buyerEmail,
-    tax:
-      input.tax.taxCents > 0
-        ? { name: input.tax.taxLabel, percentage: input.tax.taxPercent }
-        : null,
+    tax: {
+      taxCents: input.tax.taxCents,
+      taxPercent: input.tax.taxPercent,
+      taxLabel: input.tax.taxLabel,
+      country: input.tax.country,
+      region: input.tax.region,
+      sageTaxRateId: input.tax.sageTaxRateId,
+    },
   });
-
-  const admin = createServiceClient();
-  const { data: updated, error } = await admin
-    .from("payment_requests")
-    .update({
-      tax_cents: input.tax.taxCents,
-      tax_percent: input.tax.taxPercent,
-      tax_label: input.tax.taxLabel,
-      tax_country: input.tax.country,
-      tax_region: input.tax.region,
-      sage_tax_rate_id: input.tax.sageTaxRateId,
-      square_payment_link_id: link.paymentLinkId,
-      square_order_id: link.orderId,
-      checkout_url: link.checkoutUrl,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", input.payment.id)
-    .eq("status", "pending")
-    .select("*")
-    .single();
-  if (error || !updated) {
-    console.error("createTaxedSquareCheckout:", error?.message);
-    throw new Error("payment_link_save_failed");
-  }
-  return updated as PaymentRequestRow & { checkout_url: string | null };
 }
 
 export async function prepareSagePaymentCheckout(input: {
@@ -184,8 +155,12 @@ export async function prepareSagePaymentCheckout(input: {
   locale: string;
   address?: SageMainAddress | null;
 }) {
-  const payment = await loadPaymentByToken(input.token);
-  if (!payment || payment.status !== "pending") {
+  const loaded = await loadPaymentByToken(input.token);
+  if (!loaded) {
+    return { error: "unavailable" as const };
+  }
+  const payment = await reopenUnexpiredCheckout(loaded);
+  if (payment.status !== "pending") {
     return { error: "unavailable" as const };
   }
   if (payment.expires_at && Date.parse(payment.expires_at) < Date.now()) {
@@ -208,7 +183,7 @@ export async function prepareSagePaymentCheckout(input: {
       if (payment.checkout_url) {
         return { payment, tax, checkoutUrl: payment.checkout_url };
       }
-      const updated = await createTaxedSquareCheckout({
+      const updated = await createTaxedProcessorCheckout({
         payment,
         token: input.token,
         locale: input.locale,
@@ -281,7 +256,7 @@ export async function prepareSagePaymentCheckout(input: {
     }
   }
 
-  const updated = await createTaxedSquareCheckout({
+  const updated = await createTaxedProcessorCheckout({
     payment,
     token: input.token,
     locale: input.locale,

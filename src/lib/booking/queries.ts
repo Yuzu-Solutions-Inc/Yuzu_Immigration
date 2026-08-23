@@ -720,7 +720,7 @@ async function buildPublicBookingContext(input: {
     servicesQuery = servicesQuery.eq("id", input.servicesFilter.serviceId);
   }
 
-  const [servicesRes, fieldsRes, hosts, squareRes] = await Promise.all([
+  const [servicesRes, fieldsRes, hosts, squareRes, stripeRes] = await Promise.all([
     servicesQuery
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
@@ -737,6 +737,14 @@ async function buildPublicBookingContext(input: {
     }),
     admin
       .from("square_connections")
+      .select(
+        "cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
+      )
+      .eq("organization_id", input.organizationId)
+      .eq("is_enabled", true)
+      .maybeSingle(),
+    admin
+      .from("stripe_connections")
       .select(
         "cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
       )
@@ -761,9 +769,9 @@ async function buildPublicBookingContext(input: {
     services,
     formFields: (fieldsRes.data ?? []) as BookingFormFieldRow[],
     hosts,
-    cancelPolicy: squareRes.data
+    cancelPolicy: (stripeRes.data ?? squareRes.data)
       ? toCancelPolicyDisplay(
-          normalizeSquareCancelRefundPolicy(squareRes.data),
+          normalizeSquareCancelRefundPolicy(stripeRes.data ?? squareRes.data),
         )
       : null,
     slotMode: input.slotMode,
@@ -791,7 +799,7 @@ export async function loadManageBookingContext(
   const dek = await getOrgDataKey(row.organization_id);
   const guest = decryptBookingGuestRow(row, dek);
 
-  const [{ data: org }, { data: settings }, { data: service }, { data: profile }, { data: payment }, { data: square }] =
+  const [{ data: org }, { data: settings }, { data: service }, { data: profile }, { data: payment }, { data: square }, { data: stripe }] =
     await Promise.all([
       admin
         .from("organizations")
@@ -827,12 +835,20 @@ export async function loadManageBookingContext(
         .eq("organization_id", row.organization_id)
         .eq("is_enabled", true)
         .maybeSingle(),
+      admin
+        .from("stripe_connections")
+        .select(
+          "cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent, is_enabled",
+        )
+        .eq("organization_id", row.organization_id)
+        .eq("is_enabled", true)
+        .maybeSingle(),
     ]);
   if (!org || !settings || !service) return null;
 
   const settingsRow = settings as BookingSettingsRow;
-  const cancelPolicy = square
-    ? toCancelPolicyDisplay(normalizeSquareCancelRefundPolicy(square))
+  const cancelPolicy = (stripe ?? square)
+    ? toCancelPolicyDisplay(normalizeSquareCancelRefundPolicy(stripe ?? square))
     : null;
   const canManage =
     row.status === "confirmed" && Date.parse(row.starts_at) > Date.now();

@@ -295,6 +295,7 @@ function cc07WebhookVerification() {
       /verifyGoogleChannelToken/.test(source) ||
       /verifyMicrosoftChannelToken/.test(source) ||
       /resend\.webhooks\.verify/.test(source) ||
+      /webhooks\.constructEvent/.test(source) ||
       /timingSafeEqual/.test(source);
     if (!verified) {
       findings.push({

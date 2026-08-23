@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
 import { getStripe } from "@/lib/stripe/client";
+import {
+  fulfillConnectedCheckoutSession,
+  markConnectedCheckoutFailed,
+  syncConnectedAccountFromEvent,
+} from "@/lib/stripe/connect-webhooks";
 import { trueUpLicensedSeatsForRenewal } from "@/lib/stripe/seats";
 import { syncOrgFromSubscription } from "@/lib/stripe/sync";
 
@@ -21,9 +26,35 @@ async function syncFromSubscriptionId(subscriptionId: string) {
   await syncOrgFromSubscription(subscription);
 }
 
+async function constructStripeEvent(payload: string, signature: string) {
+  const stripe = getStripe();
+  const secrets = [
+    process.env.STRIPE_WEBHOOK_SECRET,
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET,
+  ]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value));
+
+  let lastError: unknown;
+  for (const secret of secrets) {
+    try {
+      return await stripe.webhooks.constructEventAsync(
+        payload,
+        signature,
+        secret,
+      );
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error("invalid_signature");
+}
+
 export async function POST(request: Request) {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
-  if (!secret) {
+  if (
+    !process.env.STRIPE_WEBHOOK_SECRET?.trim() &&
+    !process.env.STRIPE_CONNECT_WEBHOOK_SECRET?.trim()
+  ) {
     return NextResponse.json({ error: "not_configured" }, { status: 503 });
   }
 
@@ -33,14 +64,9 @@ export async function POST(request: Request) {
   }
 
   const payload = await request.text();
-  const stripe = getStripe();
   let event: Stripe.Event;
   try {
-    event = await stripe.webhooks.constructEventAsync(
-      payload,
-      signature,
-      secret,
-    );
+    event = await constructStripeEvent(payload, signature);
   } catch (error) {
     console.error(
       "stripe webhook verify:",
@@ -60,6 +86,30 @@ export async function POST(request: Request) {
               : session.subscription.id;
           await syncFromSubscriptionId(subscriptionId);
         }
+        if (session.mode === "payment") {
+          await fulfillConnectedCheckoutSession(session);
+        }
+        break;
+      }
+      case "checkout.session.async_payment_succeeded": {
+        await fulfillConnectedCheckoutSession(event.data.object);
+        break;
+      }
+      case "checkout.session.async_payment_failed": {
+        await markConnectedCheckoutFailed(event.data.object, "failed");
+        break;
+      }
+      case "checkout.session.expired": {
+        await markConnectedCheckoutFailed(event.data.object, "expired");
+        break;
+      }
+      case "account.updated": {
+        const accountId =
+          event.account ||
+          (typeof event.data.object.id === "string"
+            ? event.data.object.id
+            : undefined);
+        await syncConnectedAccountFromEvent(accountId);
         break;
       }
       case "customer.subscription.created":

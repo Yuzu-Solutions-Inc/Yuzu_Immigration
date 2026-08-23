@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 export const maxDuration = 60;
 
 import { listProjectPaymentLinks } from "@/app/actions/project-payment";
-import { getOrgSquareConnection } from "@/lib/square/client";
+import { getActiveCheckoutProcessor } from "@/lib/payments/processor";
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
@@ -100,7 +100,7 @@ export default async function ProjectDetailPage({
     callInvites,
     bookingSettings,
     projectPayments,
-    squareConnection,
+    processor,
     appBaseUrl,
   ] = await Promise.all([
     getProjectParticipants(id),
@@ -121,7 +121,7 @@ export default async function ProjectDetailPage({
       return data;
     })(),
     listProjectPaymentLinks(id),
-    getOrgSquareConnection(project.organization_id),
+    getActiveCheckoutProcessor(project.organization_id),
     getAppBaseUrl(),
   ]);
   const t = await getTranslations("projects");
@@ -379,7 +379,7 @@ export default async function ProjectDetailPage({
               locale={locale}
               projectId={project.id}
               canCreate={canCreate}
-              squareConnected={Boolean(squareConnection)}
+              processorConnected={Boolean(processor)}
               payments={projectPayments}
               people={questionnairePeople.map((p) => ({
                 id: p.id,

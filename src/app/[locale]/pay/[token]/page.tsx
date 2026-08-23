@@ -8,7 +8,12 @@ import { toAppLocale } from "@/lib/i18n/locales";
 import { getOrgSageConnection } from "@/lib/sage/client";
 import { personTaxAddress } from "@/lib/sage/checkout";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { loadPaymentByToken } from "@/lib/square/payments";
+import {
+  attachProcessorCheckout,
+  loadPaymentByToken,
+  paymentWindowOpen,
+  reopenUnexpiredCheckout,
+} from "@/lib/square/payments";
 import { cn } from "@/lib/utils";
 
 export default async function PublicPayPage({
@@ -21,7 +26,8 @@ export default async function PublicPayPage({
   const locale = toAppLocale(localeParam);
   const t = await getTranslations("publicPay");
 
-  const payment = await loadPaymentByToken(token);
+  const loaded = await loadPaymentByToken(token);
+  let payment = loaded;
   if (!payment) {
     return (
       <main className="mx-auto max-w-lg space-y-4 px-4 py-16 text-center">
@@ -32,6 +38,24 @@ export default async function PublicPayPage({
         <p className="text-muted-foreground">{t("unavailableBody")}</p>
       </main>
     );
+  }
+
+  if (paymentWindowOpen(payment)) {
+    payment = await reopenUnexpiredCheckout(payment);
+    if (
+      payment.status === "pending" &&
+      (payment.processor || "square") === "stripe"
+    ) {
+      try {
+        payment = await attachProcessorCheckout({
+          payment,
+          token,
+          locale,
+        });
+      } catch (error) {
+        console.error("refresh stripe checkout:", error);
+      }
+    }
   }
 
   const admin = createServiceClient();
@@ -141,7 +165,7 @@ export default async function PublicPayPage({
               "bg-action text-action-foreground hover:bg-action/90",
             )}
           >
-            {t("payWithSquare")}
+            {t("payNow")}
           </a>
         </div>
       ) : null}

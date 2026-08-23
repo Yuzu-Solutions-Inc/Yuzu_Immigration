@@ -39,14 +39,14 @@ export function ProjectPaymentsCard({
   locale,
   projectId,
   canCreate,
-  squareConnected,
+  processorConnected,
   payments,
   people,
 }: {
   locale: string;
   projectId: string;
   canCreate: boolean;
-  squareConnected: boolean;
+  processorConnected: boolean;
   payments: ProjectPaymentListItem[];
   people: { id: string; label: string }[];
 }) {
@@ -70,7 +70,8 @@ export function ProjectPaymentsCard({
         unauthorized: t("errors.unauthorized"),
         forbidden: t("errors.forbidden"),
         not_found: t("errors.notFound"),
-        square_not_connected: t("errors.squareNotConnected"),
+        processor_not_connected: t("errors.processorNotConnected"),
+        square_not_connected: t("errors.processorNotConnected"),
         create_failed: t("errors.createFailed"),
         trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.createFailed")
@@ -85,8 +86,8 @@ export function ProjectPaymentsCard({
         <p className="text-xs text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      {!squareConnected ? (
-        <p className="text-sm text-muted-foreground">{t("connectSquareFirst")}</p>
+      {!processorConnected ? (
+        <p className="text-sm text-muted-foreground">{t("connectProcessorFirst")}</p>
       ) : canCreate ? (
         <FormStack action={action} gap="tight">
           <input type="hidden" name="locale" value={locale} />

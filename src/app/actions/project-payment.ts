@@ -10,7 +10,7 @@ import { trialExpiredError } from "@/lib/billing/trial";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
-import { getOrgSquareConnection } from "@/lib/square/client";
+import { getActiveCheckoutProcessor } from "@/lib/payments/processor";
 import {
   createCheckoutPaymentRequest,
   decryptPaymentToken,
@@ -88,8 +88,8 @@ export async function createProjectPaymentAction(
     .maybeSingle();
   if (!project) return { error: "not_found" };
 
-  const connection = await getOrgSquareConnection(orgId);
-  if (!connection) return { error: "square_not_connected" };
+  const processor = await getActiveCheckoutProcessor(orgId);
+  if (!processor) return { error: "processor_not_connected" };
 
   const personId = parsed.data.personId || null;
   let buyerEmail: string | null = null;
@@ -117,7 +117,7 @@ export async function createProjectPaymentAction(
       organizationId: orgId,
       source: "project",
       amountCents,
-      currency: connection.currency || "CAD",
+      currency: processor.currency || "CAD",
       description: parsed.data.description,
       locale: parsed.data.locale,
       projectId: project.id as string,

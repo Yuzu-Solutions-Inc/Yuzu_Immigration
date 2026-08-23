@@ -1,9 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
+import { syncStripeConnectReturnAction, resumeStripeOnboardingAction } from "@/app/actions/stripe-connect";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { CancelPolicySettings } from "@/components/settings/cancel-policy-settings";
 import { SageSettings } from "@/components/settings/sage-settings";
 import { SquareSettings } from "@/components/settings/square-settings";
+import { StripeSettings } from "@/components/settings/stripe-settings";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { toAppLocale } from "@/lib/i18n/locales";
@@ -17,6 +20,7 @@ import {
   listSageTaxRates,
 } from "@/lib/sage/tax";
 import { squareConfigured } from "@/lib/square/oauth";
+import { stripeConfigured } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PaymentsSettingsPage({
@@ -24,7 +28,7 @@ export default async function PaymentsSettingsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ square?: string; sage?: string }>;
+  searchParams: Promise<{ square?: string; sage?: string; stripe?: string }>;
 }) {
   const { locale: localeParam } = await params;
   const query = await searchParams;
@@ -37,14 +41,28 @@ export default async function PaymentsSettingsPage({
     redirect(`/${locale}/settings/account`);
   }
 
+  if (query.stripe === "refresh") {
+    await resumeStripeOnboardingAction(locale);
+  }
+  if (query.stripe === "return") {
+    await syncStripeConnectReturnAction(locale);
+  }
+
   const orgId = membership.organization.id;
   const supabase = await createClient();
-  const [{ data: square }, sageConnection, { data: mappings }] =
+  const [{ data: square }, { data: stripe }, sageConnection, { data: mappings }] =
     await Promise.all([
       supabase
         .from("square_connections")
         .select(
           "business_name, merchant_id, currency, is_enabled, cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent",
+        )
+        .eq("organization_id", orgId)
+        .maybeSingle(),
+      supabase
+        .from("stripe_connections")
+        .select(
+          "business_name, stripe_account_id, currency, is_enabled, charges_ready, details_submitted, cancel_refund_enabled, cancel_free_days_before, cancel_min_days_before, cancel_refund_fee_type, cancel_refund_fee_cents, cancel_refund_fee_percent",
         )
         .eq("organization_id", orgId)
         .maybeSingle(),
@@ -83,9 +101,14 @@ export default async function PaymentsSettingsPage({
   const t = await getTranslations("settings");
   const squareFlash = query.square;
   const sageFlash = query.sage;
+  const stripeFlash = query.stripe;
+  const squareEnabled = Boolean(square?.is_enabled);
+  const stripeEnabled = Boolean(stripe?.is_enabled);
+  const policyValues = stripeEnabled ? stripe : squareEnabled ? square : null;
 
   return (
     <SurfaceCard className="space-y-8 sm:p-6">
+      <p className="text-sm text-muted-foreground">{t("processorExclusiveHelp")}</p>
       {squareFlash === "connected" ? (
         <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
           {t("squareConnectedFlash")}
@@ -95,6 +118,27 @@ export default async function PaymentsSettingsPage({
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {t(`squareErrors.${squareFlash}`, {
             defaultValue: t("squareErrors.save_failed"),
+          })}
+        </p>
+      ) : null}
+      {stripeFlash === "connected" ? (
+        <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
+          {t("stripeConnectedFlash")}
+        </p>
+      ) : null}
+      {stripeFlash === "continue" ? (
+        <p className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          {t("stripeContinueOnboarding")}
+        </p>
+      ) : null}
+      {stripeFlash &&
+      stripeFlash !== "connected" &&
+      stripeFlash !== "return" &&
+      stripeFlash !== "refresh" &&
+      stripeFlash !== "continue" ? (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {t(`stripeErrors.${stripeFlash}`, {
+            defaultValue: t("stripeErrors.save_failed"),
           })}
         </p>
       ) : null}
@@ -114,7 +158,17 @@ export default async function PaymentsSettingsPage({
         locale={locale}
         configured={squareConfigured()}
         connection={square}
+        otherProcessorConnected={stripeEnabled}
       />
+      <StripeSettings
+        locale={locale}
+        configured={stripeConfigured()}
+        connection={stripe}
+        otherProcessorConnected={squareEnabled}
+      />
+      {policyValues ? (
+        <CancelPolicySettings locale={locale} values={policyValues} />
+      ) : null}
       <SageSettings
         locale={locale}
         configured={sageConfigured()}

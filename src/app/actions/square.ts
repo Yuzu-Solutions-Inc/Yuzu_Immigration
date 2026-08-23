@@ -7,7 +7,7 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { trialExpiredError } from "@/lib/billing/trial";
-import { decryptField, encryptField } from "@/lib/security/field-crypto";
+import { encryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import {
@@ -17,13 +17,11 @@ import {
 } from "@/lib/square/client";
 import {
   encodeSquareOAuthState,
-  revokeSquareToken,
   squareAuthUrl,
   squareConfigured,
   SQUARE_AAD,
 } from "@/lib/square/oauth";
 import { DEFAULT_SQUARE_CANCEL_REFUND_POLICY } from "@/lib/square/cancel-policy";
-import { getSquareSecrets } from "@/lib/square/secrets";
 
 export type SquareActionState = {
   error?: string;
@@ -70,37 +68,12 @@ export async function disconnectSquareAction(
 ): Promise<SquareActionState> {
   const gate = await requireAdmin();
   if (!gate.ok) return { error: gate.error };
-  const orgId = gate.membership.organization.id;
-  const admin = createServiceClient();
-
-  const { data: connection } = await admin
-    .from("square_connections")
-    .select("id")
-    .eq("organization_id", orgId)
-    .maybeSingle();
-
-  if (connection) {
-    const secrets = await getSquareSecrets(connection.id as string);
-    if (secrets) {
-      try {
-        const access = decryptField(
-          secrets.access_token_encrypted,
-          SQUARE_AAD.accessToken,
-          await getOrgDataKey(orgId),
-        );
-        await revokeSquareToken(access);
-      } catch {
-        /* best-effort revoke */
-      }
-    }
-    const { error } = await admin
-      .from("square_connections")
-      .delete()
-      .eq("id", connection.id);
-    if (error) {
-      console.error("disconnect square:", error.message);
-      return { error: "save_failed" };
-    }
+  const { disablePaymentProcessor } = await import("@/lib/payments/processor");
+  try {
+    await disablePaymentProcessor(gate.membership.organization.id, "square");
+  } catch (error) {
+    console.error("disconnect square:", error);
+    return { error: "save_failed" };
   }
 
   revalidatePath(`/${locale}/settings/payments`);
@@ -157,22 +130,10 @@ export async function saveSquareCancelPolicyAction(
   }
 
   const locale = String(formData.get("locale") || "en");
-  const admin = createServiceClient();
-  const { data: existing, error: loadError } = await admin
-    .from("square_connections")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("is_enabled", true)
-    .maybeSingle();
-  if (loadError) {
-    console.error("saveSquareCancelPolicy load:", loadError.message);
-    return { error: "save_failed" };
-  }
-  if (!existing) return { error: "not_connected" };
-
-  const { error } = await admin
-    .from("square_connections")
-    .update(
+  try {
+    const { saveEnabledCancelPolicy } = await import("@/lib/payments/processor");
+    await saveEnabledCancelPolicy(
+      orgId,
       cancelRefundEnabled
         ? {
             cancel_refund_enabled: true,
@@ -181,16 +142,18 @@ export async function saveSquareCancelPolicyAction(
             cancel_refund_fee_type: feeType,
             cancel_refund_fee_cents: feeType === "fixed" ? feeCents : 0,
             cancel_refund_fee_percent: feeType === "percent" ? feePercent : 0,
-            updated_at: new Date().toISOString(),
           }
         : {
             cancel_refund_enabled: false,
-            updated_at: new Date().toISOString(),
+            cancel_free_days_before: freeDays,
+            cancel_min_days_before: feeDays,
+            cancel_refund_fee_type: feeType,
+            cancel_refund_fee_cents: feeCents,
+            cancel_refund_fee_percent: feePercent,
           },
-    )
-    .eq("id", existing.id);
-  if (error) {
-    console.error("saveSquareCancelPolicy:", error.message);
+    );
+  } catch (error) {
+    console.error("saveSquareCancelPolicy:", error);
     return { error: "save_failed" };
   }
 
@@ -291,6 +254,9 @@ export async function persistSquareConnection(input: {
     ),
     accessTokenExpiresAt: input.expiresAt,
   });
+
+  const { copyCancelPolicyOnto } = await import("@/lib/payments/processor");
+  await copyCancelPolicyOnto(input.organizationId, "square");
 
   return connectionId;
 }

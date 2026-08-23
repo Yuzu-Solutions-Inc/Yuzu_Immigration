@@ -710,6 +710,11 @@ export const paymentSourceEnum = pgEnum("payment_source", [
   "project",
 ]);
 
+export const paymentProcessorEnum = pgEnum("payment_processor", [
+  "square",
+  "stripe",
+]);
+
 export const bookingFormFieldTypeEnum = pgEnum("booking_form_field_type", [
   "text",
   "textarea",
@@ -1294,6 +1299,37 @@ export const squareConnections = pgTable("square_connections", {
     .notNull(),
 });
 
+/** One Stripe connected account per firm. Direct charges; no platform application fee. */
+export const stripeConnections = pgTable("stripe_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" })
+    .unique(),
+  connectedBy: uuid("connected_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  stripeAccountId: text("stripe_account_id").notNull().unique(),
+  currency: text("currency").notNull().default("CAD"),
+  businessName: text("business_name"),
+  chargesReady: boolean("charges_ready").notNull().default(false),
+  payoutsReady: boolean("payouts_ready").notNull().default(false),
+  detailsSubmitted: boolean("details_submitted").notNull().default(false),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  cancelRefundEnabled: boolean("cancel_refund_enabled").notNull().default(true),
+  cancelFreeDaysBefore: integer("cancel_free_days_before").notNull().default(10),
+  cancelMinDaysBefore: integer("cancel_min_days_before").notNull().default(2),
+  cancelRefundFeeType: text("cancel_refund_fee_type").notNull().default("percent"),
+  cancelRefundFeeCents: integer("cancel_refund_fee_cents").notNull().default(0),
+  cancelRefundFeePercent: integer("cancel_refund_fee_percent").notNull().default(10),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 /** One Sage Business Cloud Accounting company per firm. Tokens in private.sage_secrets. */
 export const sageConnections = pgTable("sage_connections", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -1365,12 +1401,17 @@ export const paymentRequests = pgTable(
     createdBy: uuid("created_by").references(() => profiles.id, {
       onDelete: "set null",
     }),
+    processor: paymentProcessorEnum("processor").notNull().default("square"),
     tokenHash: text("token_hash").notNull().unique(),
     tokenEncrypted: text("token_encrypted"),
     squarePaymentLinkId: text("square_payment_link_id"),
     squareOrderId: text("square_order_id"),
     squarePaymentId: text("square_payment_id"),
     squareRefundId: text("square_refund_id"),
+    stripeAccountId: text("stripe_account_id"),
+    stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+    stripePaymentIntentId: text("stripe_payment_intent_id"),
+    stripeRefundId: text("stripe_refund_id"),
     checkoutUrl: text("checkout_url"),
     taxCents: integer("tax_cents").notNull().default(0),
     taxPercent: numeric("tax_percent"),
@@ -1391,6 +1432,9 @@ export const paymentRequests = pgTable(
   },
   (table) => [
     uniqueIndex("payment_requests_square_order_uidx").on(table.squareOrderId),
+    uniqueIndex("payment_requests_stripe_session_uidx").on(
+      table.stripeCheckoutSessionId,
+    ),
     uniqueIndex("payment_requests_appointment_uidx").on(table.appointmentId),
   ],
 );

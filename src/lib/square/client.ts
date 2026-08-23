@@ -38,7 +38,7 @@ const SQUARE_CONNECTION_SELECT =
 
 const SQUARE_VERSION = "2025-01-23";
 
-export async function getOrgSquareConnection(
+export async function getOrgSquareConnectionRecord(
   organizationId: string,
 ): Promise<SquareConnectionRow | null> {
   const admin = createServiceClient();
@@ -46,13 +46,20 @@ export async function getOrgSquareConnection(
     .from("square_connections")
     .select(SQUARE_CONNECTION_SELECT)
     .eq("organization_id", organizationId)
-    .eq("is_enabled", true)
     .maybeSingle();
   if (error) {
-    console.error("getOrgSquareConnection:", error.message);
+    console.error("getOrgSquareConnectionRecord:", error.message);
     return null;
   }
   return (data as SquareConnectionRow | null) ?? null;
+}
+
+export async function getOrgSquareConnection(
+  organizationId: string,
+): Promise<SquareConnectionRow | null> {
+  const row = await getOrgSquareConnectionRecord(organizationId);
+  if (!row?.is_enabled) return null;
+  return row;
 }
 
 async function squareFetch(

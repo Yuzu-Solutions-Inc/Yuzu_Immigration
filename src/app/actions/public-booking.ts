@@ -296,12 +296,14 @@ export async function submitPublicBookingAction(
   });
   const amountCents = priced.amountCents;
 
-  const { getOrgSquareConnection } = await import("@/lib/square/client");
-  const squareConnection =
+  const { getActiveCheckoutProcessor } = await import(
+    "@/lib/payments/processor"
+  );
+  const processor =
     amountCents > 0
-      ? await getOrgSquareConnection(ctx.organizationId)
+      ? await getActiveCheckoutProcessor(ctx.organizationId)
       : null;
-  const requiresPayment = Boolean(squareConnection && amountCents > 0);
+  const requiresPayment = Boolean(processor && amountCents > 0);
 
   const manageToken = createBookingToken();
   const { encryptField } = await import("@/lib/security/field-crypto");

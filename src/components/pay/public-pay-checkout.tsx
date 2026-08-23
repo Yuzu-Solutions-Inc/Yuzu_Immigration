@@ -66,7 +66,7 @@ export function PublicPayCheckout({
             "bg-action text-action-foreground hover:bg-action/90",
           )}
         >
-          {t("payWithSquare")}
+          {t("payNow")}
         </a>
       </div>
     );
