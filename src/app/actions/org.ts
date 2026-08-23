@@ -134,7 +134,7 @@ export async function createOrganizationAction(
     metadata: { name: parsed.data.name, dpaVersion: FIRM_DPA_VERSION },
   });
 
-  redirect(`/${locale}/home`);
+  redirect(`/${locale}/welcome`);
 }
 
 export async function switchOrganizationAction(formData: FormData) {

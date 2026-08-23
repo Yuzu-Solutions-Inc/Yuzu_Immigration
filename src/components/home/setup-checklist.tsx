@@ -9,10 +9,16 @@ export async function SetupChecklist({
 }: {
   setup: StaffSetupChecklist;
 }) {
-  if (setup.items.length === 0 || setup.total === 0) return null;
+  if (
+    (setup.items.length === 0 || setup.total === 0) &&
+    !setup.showGuidedSetup
+  ) {
+    return null;
+  }
 
   const t = await getTranslations("appHome.setup");
-  const progress = Math.round((setup.done / setup.total) * 100);
+  const progress =
+    setup.total > 0 ? Math.round((setup.done / setup.total) * 100) : 0;
 
   return (
     <SurfaceCard className="shrink-0 space-y-3 p-4 sm:p-5">
@@ -21,46 +27,62 @@ export async function SetupChecklist({
           <h2 className="font-heading text-base font-semibold text-brand">
             {t("title")}
           </h2>
-          <p className="text-xs text-muted-foreground">
-            {t("subtitle", { done: setup.done, total: setup.total })}
-          </p>
+          {setup.total > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {t("subtitle", { done: setup.done, total: setup.total })}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">{t("guidedHelp")}</p>
+          )}
         </div>
-        <div
-          className="h-1.5 w-28 overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={setup.total}
-          aria-valuenow={setup.done}
-          aria-label={t("subtitle", { done: setup.done, total: setup.total })}
-        >
+        {setup.total > 0 ? (
           <div
-            className="h-full rounded-full bg-action"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+            className="h-1.5 w-28 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={setup.total}
+            aria-valuenow={setup.done}
+            aria-label={t("subtitle", { done: setup.done, total: setup.total })}
+          >
+            <div
+              className="h-full rounded-full bg-action"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        ) : null}
       </div>
-      <ul className="min-w-0 divide-y divide-border/70">
-        {setup.items.map((item) => (
-          <li key={item.id} className="min-w-0">
-            <Link
-              href={item.href}
-              className="-mx-1 flex min-w-0 items-center justify-between gap-3 rounded-lg px-1 py-2.5 transition-colors hover:bg-muted"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-brand">
-                  {t(`items.${item.id}.title`)}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {t(`items.${item.id}.help`)}
-                </p>
-              </div>
-              <span className="shrink-0 text-xs font-semibold text-action">
-                {t("cta")}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {setup.showGuidedSetup ? (
+        <Link
+          href="/welcome"
+          className="-mx-1 flex items-center justify-between gap-3 rounded-lg px-1 py-2 text-sm font-semibold text-action transition-colors hover:bg-muted"
+        >
+          {t("guidedCta")}
+        </Link>
+      ) : null}
+      {setup.items.length > 0 ? (
+        <ul className="min-w-0 divide-y divide-border/70">
+          {setup.items.map((item) => (
+            <li key={item.id} className="min-w-0">
+              <Link
+                href={item.href}
+                className="-mx-1 flex min-w-0 items-center justify-between gap-3 rounded-lg px-1 py-2.5 transition-colors hover:bg-muted"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-brand">
+                    {t(`items.${item.id}.title`)}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {t(`items.${item.id}.help`)}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-action">
+                  {t("cta")}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </SurfaceCard>
   );
 }

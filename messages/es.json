@@ -567,8 +567,14 @@
         "meeting": {
           "title": "Herramienta de reunión",
           "help": "Elija Google Meet, Teams o Zoom para el enlace de unión."
+        },
+        "service": {
+          "title": "Primer servicio reservable",
+          "help": "Añada una consulta para que los clientes puedan reservar en línea."
         }
-      }
+      },
+      "guidedCta": "Abrir la configuración guiada",
+      "guidedHelp": "Un recorrido breve del producto y de los ajustes que cambian las reservas y los formularios IMM."
     },
     "appointments": {
       "title": "Esta semana",
@@ -3736,6 +3742,139 @@
       "invalid_signature": "Dibuje su firma en el recuadro e inténtelo de nuevo.",
       "already_signed": "Este contrato ya está firmado.",
       "expired": "Este enlace de firma ha caducado."
+    }
+  },
+  "welcome": {
+    "kicker": "Paso {current} de {total}",
+    "skipAll": "Omitir la configuración",
+    "skipStep": "Omitir este paso",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "finish": "Ir al inicio",
+    "saving": "Guardando…",
+    "saveError": "No se pudo guardar. Inténtelo de nuevo.",
+    "features": {
+      "projects": {
+        "title": "Expedientes",
+        "body": "Abra un expediente de inmigración, vincule clientes y genere los PDF IMM a partir de un solo cuestionario."
+      },
+      "clients": {
+        "title": "Clientes",
+        "body": "Conserve fichas, notas y acceso al portal de cada persona, de un expediente a otro."
+      },
+      "forms": {
+        "title": "Formularios y portal",
+        "body": "Los clientes completan el cuestionario y suben documentos. Usted revisa, corrige y descarga los PDF listos para presentar."
+      },
+      "booking": {
+        "title": "Calendario y citas",
+        "body": "Publique su horario, reciba consultas de pago y envíe automáticamente un enlace de Meet, Teams o Zoom."
+      },
+      "services": {
+        "title": "Servicios",
+        "body": "La página pública de reservas solo muestra las consultas que usted añade aquí."
+      },
+      "payments": {
+        "title": "Pagos",
+        "body": "Conecte Stripe o Square para que los clientes paguen al reservar o en una factura."
+      }
+    },
+    "steps": {
+      "tour": {
+        "nav": "Resumen",
+        "title": "Bienvenido a su espacio",
+        "body": "Este recorrido muestra las áreas principales del producto y luego los ajustes que cambian expedientes, citas y formularios."
+      },
+      "profile": {
+        "nav": "Nombre",
+        "title": "Su nombre",
+        "body": "Aparece en la aplicación, en los correos a clientes y como respaldo en los formularios de representante."
+      },
+      "representative": {
+        "nav": "IMM 5476",
+        "title": "Datos del representante",
+        "body": "El IMM 5476 se incluye en cada expediente. Sus datos CICC y su dirección postal lo rellenan automáticamente."
+      },
+      "hours": {
+        "nav": "Horario",
+        "title": "Cuándo pueden reservarle",
+        "body": "La reserva pública solo ofrece huecos dentro del horario semanal que publique."
+      },
+      "calendar": {
+        "nav": "Calendario",
+        "title": "Mantener las citas en su calendario",
+        "body": "Conecte Google Calendar u Outlook para ver las nuevas reservas y bloquear eventos externos."
+      },
+      "meeting": {
+        "nav": "Reuniones",
+        "title": "Enlace de videollamada",
+        "body": "Elija Google Meet, Teams o Zoom para que cada reserva incluya un enlace de unión."
+      },
+      "service": {
+        "nav": "Servicio",
+        "title": "Añadir una consulta",
+        "body": "Sin al menos un servicio activo, la página pública de reservas no tiene nada que ofrecer."
+      },
+      "payments": {
+        "nav": "Pagos",
+        "title": "Cobrar (opcional)",
+        "body": "Conecte Stripe o Square cuando esté listo. Puede omitir este paso y hacerlo más tarde."
+      },
+      "team": {
+        "nav": "Equipo",
+        "title": "Invitar a un colega (opcional)",
+        "body": "Los gestores de casos ven toda la carga. Puede omitir este paso e invitar más tarde desde Facturación."
+      },
+      "done": {
+        "nav": "Listo",
+        "title": "Ya puede trabajar",
+        "body": "Lo que quede pendiente sigue en Inicio hasta que lo termine. Puede reabrir este recorrido desde allí."
+      }
+    },
+    "profile": {
+      "label": "Nombre completo",
+      "hint": "El nombre que los clientes deben ver en correos y formularios.",
+      "save": "Guardar nombre"
+    },
+    "representative": {
+      "detail": "Abra la configuración de la cuenta para indicar el número de colegiado, el teléfono y la dirección postal. Esos campos rellenan el IMM 5476 en cada expediente donde usted sea el representante.",
+      "cta": "Abrir datos del representante",
+      "complete": "Los datos del representante están registrados."
+    },
+    "hours": {
+      "detail": "Aplique de lunes a viernes de 9:00 a 17:00, o defina una cuadrícula personalizada en el calendario.",
+      "preset": "Usar de lunes a viernes 9:00–17:00",
+      "custom": "Horario personalizado",
+      "applied": "Horario laborable guardado.",
+      "complete": "Ya tiene horario de atención."
+    },
+    "service": {
+      "titleLabel": "Nombre del servicio",
+      "titleHint": "Ejemplo: Consulta inicial.",
+      "duration": "Duración (minutos)",
+      "price": "Precio (CAD)",
+      "priceHint": "Use 0 para una consulta gratuita.",
+      "save": "Añadir servicio",
+      "created": "Servicio añadido."
+    },
+    "payments": {
+      "detail": "Stripe y Square están en Ajustes → Pagos. Omita este paso si aún no cobra.",
+      "cta": "Abrir pagos"
+    },
+    "team": {
+      "email": "Correo profesional",
+      "role": "Rol",
+      "send": "Enviar invitación",
+      "sent": "Invitación enviada."
+    },
+    "done": {
+      "profile": "Nombre",
+      "representative": "Datos del representante",
+      "hours": "Horario de atención",
+      "calendar": "Calendario conectado",
+      "meeting": "Herramienta de reunión",
+      "service": "Servicio reservable",
+      "next": "Cree un expediente desde Inicio, o termine los elementos pendientes en la lista de configuración."
     }
   }
 }

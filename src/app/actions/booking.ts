@@ -66,6 +66,7 @@ function revalidateBooking(locale: string) {
   revalidatePath(`/${locale}/calendar`);
   revalidatePath(`/${locale}/settings/calendar`);
   revalidatePath(`/${locale}/home`);
+  revalidatePath(`/${locale}/welcome`);
 }
 
 function mintTokenPayload(orgId: string, dek: Buffer) {

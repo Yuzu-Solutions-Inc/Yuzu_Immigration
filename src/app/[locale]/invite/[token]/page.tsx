@@ -57,7 +57,7 @@ export default async function InvitePage({
 
     const result = await acceptInvitationByToken(token);
     if (result.ok) {
-      redirect(`/${locale}/home`);
+      redirect(`/${locale}/welcome`);
     }
 
     const errorMessage =

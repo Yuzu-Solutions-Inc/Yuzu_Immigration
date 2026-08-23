@@ -42,6 +42,7 @@ function revalidateCalendar(locale: string) {
   revalidatePath(`/${locale}/calendar`);
   revalidatePath(`/${locale}/settings/calendar`);
   revalidatePath(`/${locale}/home`);
+  revalidatePath(`/${locale}/welcome`);
 }
 
 export async function startZoomConnectAction(formData: FormData) {

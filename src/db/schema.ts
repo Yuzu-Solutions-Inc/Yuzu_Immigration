@@ -171,6 +171,28 @@ export const organizationMembers = pgTable(
   (table) => [unique().on(table.organizationId, table.userId)],
 );
 
+/** First-run welcome wizard per staff membership. */
+export const staffOnboarding = pgTable(
+  "staff_onboarding",
+  {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.organizationId, table.userId] })],
+);
+
 /** Admin-issued staff invites (hashed token). */
 export const organizationInvitations = pgTable("organization_invitations", {
   id: uuid("id").defaultRandom().primaryKey(),

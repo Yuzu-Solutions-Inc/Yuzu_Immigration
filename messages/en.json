@@ -567,8 +567,14 @@
         "meeting": {
           "title": "Meeting tool",
           "help": "Choose Google Meet, Teams, or Zoom so clients get a join link."
+        },
+        "service": {
+          "title": "First bookable service",
+          "help": "Add a consultation so clients can book from your public page."
         }
-      }
+      },
+      "guidedCta": "Open guided setup",
+      "guidedHelp": "A short walkthrough of the product and the settings that change bookings and IMM forms."
     },
     "appointments": {
       "title": "This week",
@@ -3736,6 +3742,139 @@
       "too_late": "This appointment can no longer be changed.",
       "cancel_window": "Cancellations must be made earlier before the appointment.",
       "save_failed": "Could not save. Try again."
+    }
+  },
+  "welcome": {
+    "kicker": "Step {current} of {total}",
+    "skipAll": "Skip setup",
+    "skipStep": "Skip this step",
+    "back": "Back",
+    "continue": "Continue",
+    "finish": "Go to home",
+    "saving": "Saving…",
+    "saveError": "Could not save. Try again.",
+    "features": {
+      "projects": {
+        "title": "Projects",
+        "body": "Open an immigration file, attach clients, and generate IMM PDFs from one questionnaire."
+      },
+      "clients": {
+        "title": "Clients",
+        "body": "Keep people records, notes, and portal access across every file they belong to."
+      },
+      "forms": {
+        "title": "Forms and portal",
+        "body": "Clients complete the questionnaire and upload documents. You review, correct, and download filing-ready PDFs."
+      },
+      "booking": {
+        "title": "Calendar and bookings",
+        "body": "Publish hours, take paid consultations, and send a Meet, Teams, or Zoom link automatically."
+      },
+      "services": {
+        "title": "Services",
+        "body": "The public booking page only lists the consultations you add here."
+      },
+      "payments": {
+        "title": "Payments",
+        "body": "Connect Stripe or Square so clients can pay when they book or when you send an invoice."
+      }
+    },
+    "steps": {
+      "tour": {
+        "nav": "Overview",
+        "title": "Welcome to your workspace",
+        "body": "This walkthrough shows the main areas of the product, then the settings that change how files, bookings, and forms work."
+      },
+      "profile": {
+        "nav": "Name",
+        "title": "Your name",
+        "body": "This appears in the app, in client emails, and as a fallback on representative forms."
+      },
+      "representative": {
+        "nav": "IMM 5476",
+        "title": "Representative details",
+        "body": "IMM 5476 is included on every file. Your CICC details and mailing address fill that form automatically."
+      },
+      "hours": {
+        "nav": "Hours",
+        "title": "When clients can book you",
+        "body": "Public booking only offers slots inside the weekly hours you publish."
+      },
+      "calendar": {
+        "nav": "Calendar",
+        "title": "Keep bookings on your calendar",
+        "body": "Connect Google Calendar or Outlook so new bookings appear there and outside events block those times."
+      },
+      "meeting": {
+        "nav": "Meetings",
+        "title": "Video meeting link",
+        "body": "Choose Google Meet, Teams, or Zoom so each booking includes a join link for the client."
+      },
+      "service": {
+        "nav": "Service",
+        "title": "Add a consultation",
+        "body": "Without at least one active service, the public booking page has nothing to offer."
+      },
+      "payments": {
+        "nav": "Payments",
+        "title": "Collect payment (optional)",
+        "body": "Connect Stripe or Square when you are ready. You can skip this and set it up later."
+      },
+      "team": {
+        "nav": "Team",
+        "title": "Invite a colleague (optional)",
+        "body": "Case managers get the full caseload. You can skip this and invite people later from Billing."
+      },
+      "done": {
+        "nav": "Done",
+        "title": "You are ready to work",
+        "body": "Anything still open stays on Home until you finish it. You can reopen this walkthrough from there."
+      }
+    },
+    "profile": {
+      "label": "Full name",
+      "hint": "Use the name clients should see on emails and forms.",
+      "save": "Save name"
+    },
+    "representative": {
+      "detail": "Open account settings to enter membership ID, phone, and mailing address. Those fields fill IMM 5476 on every project where you are the representative.",
+      "cta": "Open representative details",
+      "complete": "Representative details are on file."
+    },
+    "hours": {
+      "detail": "Apply weekday 9:00–17:00, or set a custom grid in calendar settings.",
+      "preset": "Use weekdays 9:00–17:00",
+      "custom": "Set custom hours",
+      "applied": "Weekday hours saved.",
+      "complete": "You already have open hours."
+    },
+    "service": {
+      "titleLabel": "Service name",
+      "titleHint": "Example: Initial consultation.",
+      "duration": "Duration (minutes)",
+      "price": "Price (CAD)",
+      "priceHint": "Use 0 for a free consultation.",
+      "save": "Add service",
+      "created": "Service added."
+    },
+    "payments": {
+      "detail": "Stripe and Square live under Settings → Payments. Skip this if you are not collecting money yet.",
+      "cta": "Open payments"
+    },
+    "team": {
+      "email": "Work email",
+      "role": "Role",
+      "send": "Send invite",
+      "sent": "Invitation sent."
+    },
+    "done": {
+      "profile": "Name",
+      "representative": "Representative details",
+      "hours": "Open hours",
+      "calendar": "Calendar connection",
+      "meeting": "Meeting tool",
+      "service": "Bookable service",
+      "next": "Create a project from Home, or finish remaining items on the setup list."
     }
   }
 }

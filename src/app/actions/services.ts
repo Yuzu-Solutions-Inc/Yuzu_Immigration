@@ -176,6 +176,8 @@ export async function createServiceAction(
 
   revalidatePath(`/${parsed.data.locale}/services`);
   revalidatePath(`/${parsed.data.locale}/calendar`);
+  revalidatePath(`/${parsed.data.locale}/welcome`);
+  revalidatePath(`/${parsed.data.locale}/home`);
   return { message: "created" };
 }
 

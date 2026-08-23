@@ -134,6 +134,7 @@ export async function updateAccountSettingsAction(
 
   revalidatePath(`/${parsed.data.locale}/settings/account`);
   revalidatePath(`/${parsed.data.locale}/home`);
+  revalidatePath(`/${parsed.data.locale}/welcome`);
 
   return { success: true };
 }
@@ -237,6 +238,7 @@ export async function updateAccountRepAction(
 
   revalidatePath(`/${parsed.data.locale}/settings/account`);
   revalidatePath(`/${parsed.data.locale}/home`);
+  revalidatePath(`/${parsed.data.locale}/welcome`);
 
   return {
     success: true,

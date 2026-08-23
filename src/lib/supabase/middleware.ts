@@ -59,6 +59,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/services/") ||
     pathname === "/settings" ||
     pathname.startsWith("/settings/") ||
+    pathname === "/welcome" ||
+    pathname.startsWith("/welcome/") ||
     isPasswordResetRoute;
 
   if (!isProtectedRoute && !isAuthRoute && !isPasswordResetRoute) {
