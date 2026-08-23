@@ -83,6 +83,18 @@ export type ListFilterQuery = {
   lte: (column: string, value: string) => ListFilterQuery;
   gte: (column: string, value: string) => ListFilterQuery;
   in: (column: string, values: readonly string[]) => ListFilterQuery;
+  order: (
+    column: string,
+    options?: { ascending?: boolean; nullsFirst?: boolean },
+  ) => ListFilterQuery;
+  range: (
+    from: number,
+    to: number,
+  ) => Promise<{
+    data: unknown;
+    error: { message: string } | null;
+    count: number | null;
+  }>;
 };
 
 export function asListFilterQuery(query: object): ListFilterQuery {

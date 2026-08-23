@@ -184,12 +184,11 @@ async function fetchOrgRows<T>(
   apply?: (query: ListFilterQuery) => ListFilterQuery,
 ): Promise<{ rows: T[]; error: string | null }> {
   return fetchAllInChunks<T>(async (from, to) => {
-    let query = supabase
-      .from(table)
-      .select(columns)
-      .eq("organization_id", orgId);
+    let query = asListFilterQuery(
+      supabase.from(table).select(columns).eq("organization_id", orgId),
+    );
     if (apply) {
-      query = apply(asListFilterQuery(query)) as typeof query;
+      query = apply(query);
     }
     const { data, error } = await query
       .order("id", { ascending: true })
@@ -375,11 +374,13 @@ export async function listPeoplePage(
 
   if (!peopleNeedsDecryptScan(filters)) {
     const { from, to } = listRange(offset, limit);
-    let query = supabase
-      .from("people")
-      .select("*", { count: "exact" })
-      .eq("organization_id", orgId);
-    query = applyPeopleSqlFilters(asListFilterQuery(query), filters) as typeof query;
+    let query = asListFilterQuery(
+      supabase
+        .from("people")
+        .select("*", { count: "exact" })
+        .eq("organization_id", orgId),
+    );
+    query = applyPeopleSqlFilters(query, filters);
     if (sortKey === "immigration_status") {
       query = query.order("immigration_status", {
         ascending: sortDir === "asc",
@@ -1059,11 +1060,13 @@ export async function listProjectsPage(
 
   if (!projectsNeedsDecryptScan(filters)) {
     const { from, to } = listRange(offset, limit);
-    let query = supabase
-      .from("immigration_projects")
-      .select("*", { count: "exact" })
-      .eq("organization_id", orgId);
-    query = applyProjectsSqlFilters(asListFilterQuery(query), filters) as typeof query;
+    let query = asListFilterQuery(
+      supabase
+        .from("immigration_projects")
+        .select("*", { count: "exact" })
+        .eq("organization_id", orgId),
+    );
+    query = applyProjectsSqlFilters(query, filters);
     if (sortKey === "program_family") {
       query = query.order("program_family", { ascending: sortDir === "asc" });
     } else if (sortKey === "submit_before") {

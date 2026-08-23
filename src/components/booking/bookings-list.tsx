@@ -73,7 +73,7 @@ import {
   type BookingListItem,
   type BookingPaymentFilter,
   type BookingTimeFilter,
-} from "@/lib/booking/bookings-list";
+} from "@/lib/booking/bookings-list-shared";
 import type { ListPage } from "@/lib/lists/pagination";
 import { meetingJoinUrl as joinUrlInWindow } from "@/lib/booking/join-window";
 import { formatPriceCents } from "@/lib/booking/slots";

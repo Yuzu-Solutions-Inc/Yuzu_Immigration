@@ -9,6 +9,7 @@ import {
   type BookingsListFilters,
 } from "@/lib/booking/bookings-list";
 import { PERSON_IMMIGRATION_STATUSES } from "@/lib/crm/person-status";
+import { PROGRAM_FAMILIES } from "@/lib/crm/programs";
 import {
   listPeoplePage,
   listProjectsPage,
@@ -43,7 +44,9 @@ const peoplePageSchema = pageSchema.extend({
 
 const projectsPageSchema = pageSchema.extend({
   titleQuery: z.string().max(120).optional(),
-  program: z.union([z.literal("all"), z.string().max(64)]).optional(),
+  program: z
+    .enum(["all", ...(PROGRAM_FAMILIES as [string, ...string[]])])
+    .optional(),
   status: z.enum(["all", ...PROJECT_STATUSES]).optional(),
   representative: z
     .union([z.literal("all"), z.literal("unassigned"), z.string().uuid()])
@@ -100,10 +103,16 @@ export async function loadProjectsPageAction(
     return { items: [], total: 0, progressById: {} };
   }
   const { offset, limit, ...filters } = parsed.data;
-  return listProjectsPage(filters, {
-    offset,
-    limit: limit ?? LIST_PAGE_SIZE,
-  });
+  return listProjectsPage(
+    {
+      ...filters,
+      program: filters.program as ProjectsListFilters["program"],
+    },
+    {
+      offset,
+      limit: limit ?? LIST_PAGE_SIZE,
+    },
+  );
 }
 
 export async function loadBookingsPageAction(
