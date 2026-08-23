@@ -234,6 +234,9 @@ async function updateSubscription(input: {
           : result.error,
     };
   }
+  if (result.paymentUrl) {
+    redirect(result.paymentUrl);
+  }
 
   await recordAuditEvent({
     organizationId: input.orgId,

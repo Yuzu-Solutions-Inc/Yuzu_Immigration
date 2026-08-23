@@ -15,6 +15,7 @@ import {
   ensureBillingPrices,
   extraSeatLookupKey,
   foundingCouponDiscount,
+  parseLookupKey,
   planPriceLookupKey,
   type PriceLookupKey,
 } from "@/lib/stripe/catalog";
@@ -31,34 +32,97 @@ export type SeatSyncError =
   | "not_found"
   | "seat_charge_failed";
 
+type CatalogSubscriptionItem = {
+  id?: string;
+  price?: string;
+  quantity?: number;
+  deleted?: boolean;
+};
+
+function itemBillingInterval(
+  item: Stripe.SubscriptionItem,
+): BillingInterval | null {
+  const parsed = parseLookupKey(item.price.lookup_key);
+  if (parsed) return parsed.interval;
+  const recurring = item.price.recurring?.interval;
+  if (recurring === "year" || recurring === "month") return recurring;
+  return null;
+}
+
+function subscriptionBillingInterval(
+  subscription: Stripe.Subscription,
+): BillingInterval | null {
+  for (const item of subscription.items.data) {
+    const interval = itemBillingInterval(item);
+    if (interval) return interval;
+  }
+  return null;
+}
+
+function existingCatalogItemIds(subscription: Stripe.Subscription): {
+  planItemId?: string;
+  extraItemId?: string;
+} {
+  let planItemId: string | undefined;
+  let extraItemId: string | undefined;
+  for (const item of subscription.items.data) {
+    const key = item.price.lookup_key ?? "";
+    const parsed = parseLookupKey(key);
+    if (parsed?.plan === "extra_seat" || key.startsWith("extra_seat")) {
+      extraItemId = item.id;
+    } else if (
+      parsed?.plan === "standard" ||
+      parsed?.plan === "team" ||
+      key.startsWith("standard_") ||
+      key.startsWith("team_")
+    ) {
+      planItemId = item.id;
+    }
+  }
+  if (!planItemId) {
+    const leftover = subscription.items.data.find(
+      (item) => item.id !== extraItemId,
+    );
+    planItemId = leftover?.id;
+  }
+  return { planItemId, extraItemId };
+}
+
+/**
+ * Classic Stripe billing rejects mixed intervals. Updating a monthly item
+ * to a yearly price while adding a new yearly extra-seat item fails, and
+ * legacy Team subscriptions have no extra-seat item to update in place.
+ * Interval changes therefore replace every item in one request.
+ */
 function subscriptionItemsForCatalog(
   subscription: Stripe.Subscription,
   prices: Record<PriceLookupKey, string>,
   catalog: SeatCatalog,
   interval: BillingInterval,
   founding: boolean,
-): Array<{
-  id?: string;
-  price?: string;
-  quantity?: number;
-  deleted?: boolean;
-}> {
-  let planItemId: string | undefined;
-  let extraItemId: string | undefined;
-  for (const item of subscription.items.data) {
-    const key = item.price.lookup_key ?? "";
-    if (key.startsWith("extra_seat")) extraItemId = item.id;
-    else if (key.startsWith("standard_") || key.startsWith("team_")) {
-      planItemId = item.id;
+): CatalogSubscriptionItem[] {
+  const currentInterval = subscriptionBillingInterval(subscription);
+  const replaceAll = Boolean(currentInterval && currentInterval !== interval);
+
+  if (replaceAll) {
+    const items: CatalogSubscriptionItem[] = subscription.items.data.map(
+      (item) => ({ id: item.id, deleted: true }),
+    );
+    items.push({
+      price: prices[planPriceLookupKey(catalog.plan, interval)],
+      quantity: 1,
+    });
+    if (catalog.extraSeats > 0) {
+      items.push({
+        price: prices[extraSeatLookupKey(interval, founding)],
+        quantity: catalog.extraSeats,
+      });
     }
+    return items;
   }
 
-  const items: Array<{
-    id?: string;
-    price?: string;
-    quantity?: number;
-    deleted?: boolean;
-  }> = [
+  const { planItemId, extraItemId } = existingCatalogItemIds(subscription);
+  const items: CatalogSubscriptionItem[] = [
     {
       id: planItemId,
       price: prices[planPriceLookupKey(catalog.plan, interval)],
@@ -79,6 +143,18 @@ function subscriptionItemsForCatalog(
   return items;
 }
 
+function pendingInvoiceUrl(subscription: Stripe.Subscription): string | null {
+  const pending = (
+    subscription as Stripe.Subscription & { pending_update?: unknown }
+  ).pending_update;
+  if (!pending) return null;
+  const invoice = subscription.latest_invoice;
+  if (!invoice || typeof invoice === "string") return null;
+  return "hosted_invoice_url" in invoice
+    ? (invoice.hosted_invoice_url ?? null)
+    : null;
+}
+
 export { occupancyCount };
 
 async function applyCatalog(input: {
@@ -89,9 +165,11 @@ async function applyCatalog(input: {
   founding: boolean;
   proration: Stripe.SubscriptionUpdateParams.ProrationBehavior;
   collectPayment: boolean;
-}): Promise<Stripe.Subscription> {
+}): Promise<{ subscription: Stripe.Subscription; paymentUrl?: string }> {
   const prices = await ensureBillingPrices();
   const stripe = getStripe();
+  const intervalChanged =
+    subscriptionBillingInterval(input.subscription) !== input.interval;
   const updated = await stripe.subscriptions.update(input.subscription.id, {
     items: subscriptionItemsForCatalog(
       input.subscription,
@@ -101,8 +179,15 @@ async function applyCatalog(input: {
       input.founding,
     ),
     proration_behavior: input.proration,
+    ...(intervalChanged && input.subscription.status !== "trialing"
+      ? { billing_cycle_anchor: "now" as const }
+      : {}),
     ...(input.collectPayment
-      ? { payment_behavior: "error_if_incomplete" as const }
+      ? {
+          payment_behavior: (intervalChanged
+            ? "pending_if_incomplete"
+            : "error_if_incomplete") as "pending_if_incomplete" | "error_if_incomplete",
+        }
       : {}),
     discounts: input.founding
       ? [foundingCouponDiscount(input.catalog.plan, input.interval)]
@@ -113,10 +198,13 @@ async function applyCatalog(input: {
       interval: input.interval,
       founding: input.founding ? "true" : "false",
     },
-    expand: ["items.data.price"],
+    expand: ["items.data.price", "latest_invoice"],
   });
-  await syncOrgFromSubscription(updated, input.orgId);
-  return updated;
+  const paymentUrl = pendingInvoiceUrl(updated) ?? undefined;
+  if (!paymentUrl) {
+    await syncOrgFromSubscription(updated, input.orgId);
+  }
+  return { subscription: updated, paymentUrl };
 }
 
 function catalogsMatch(a: SeatCatalog, b: SeatCatalog): boolean {
@@ -267,7 +355,12 @@ export async function updateSubscriptionCatalog(input: {
   interval: BillingInterval;
   occupancy: number;
 }): Promise<
-  | { ok: true; catalog: SeatCatalog; fromPlan: PricingPlanId | null }
+  | {
+      ok: true;
+      catalog: SeatCatalog;
+      fromPlan: PricingPlanId | null;
+      paymentUrl?: string;
+    }
   | { ok: false; error: SeatSyncError }
 > {
   const billing = await loadOrgBilling(input.orgId);
@@ -287,7 +380,7 @@ export async function updateSubscriptionCatalog(input: {
         ? needed
         : (current.catalog ?? needed);
 
-    await applyCatalog({
+    const applied = await applyCatalog({
       orgId: input.orgId,
       subscription,
       catalog,
@@ -296,7 +389,12 @@ export async function updateSubscriptionCatalog(input: {
       proration: "always_invoice",
       collectPayment: true,
     });
-    return { ok: true, catalog, fromPlan: current.catalog?.plan ?? null };
+    return {
+      ok: true,
+      catalog,
+      fromPlan: current.catalog?.plan ?? null,
+      paymentUrl: applied.paymentUrl,
+    };
   } catch (error) {
     console.error("updateSubscriptionCatalog:", error);
     return { ok: false, error: "seat_charge_failed" };
