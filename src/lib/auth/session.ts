@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/auth/active-org";
+import { orgAllowsWrites, trialEndsAt } from "@/lib/billing/trial";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
@@ -12,6 +13,9 @@ export type OrgMembership = {
     name: string;
     slug: string;
     defaultLocale: AppLocale;
+    writable: boolean;
+    subscribed: boolean;
+    trialEndsAt: Date;
   };
 };
 
@@ -57,7 +61,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
   const orgIds = membershipRows.map((row) => row.organization_id as string);
   const { data: orgs, error: orgError } = await supabase
     .from("organizations")
-    .select("id, name, slug, default_locale")
+    .select("id, name, slug, default_locale, created_at, trial_started_at, subscribed_at")
     .in("id", orgIds);
 
   if (orgError) {
@@ -82,6 +86,15 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
           name: organization.name as string,
           slug: organization.slug as string,
           defaultLocale: toAppLocale(organization.default_locale as string | null),
+          writable: orgAllowsWrites({
+            trialStartedAt: (organization.trial_started_at ??
+              organization.created_at) as string,
+            subscribedAt: organization.subscribed_at as string | null,
+          }),
+          subscribed: Boolean(organization.subscribed_at),
+          trialEndsAt: trialEndsAt(
+            (organization.trial_started_at ?? organization.created_at) as string,
+          ),
         },
       };
     })

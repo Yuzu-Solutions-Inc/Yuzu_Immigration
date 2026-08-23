@@ -7,20 +7,26 @@ import {
   MobileSidebarTrigger,
 } from "@/components/layout/sidebar-nav";
 import { type OrgSwitcherOption } from "@/components/layout/org-switcher";
+import { TrialLockBanner } from "@/components/layout/trial-lock-banner";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import type { OrgRole } from "@/lib/auth/rbac";
 import { cn } from "@/lib/utils";
 
 export async function DashboardShell({
   organizations,
   activeOrganizationId,
   canCreate = true,
+  writable = true,
+  role,
   children,
 }: {
   locale: string;
   organizations: OrgSwitcherOption[];
   activeOrganizationId: string;
   canCreate?: boolean;
+  writable?: boolean;
+  role?: OrgRole;
   children: React.ReactNode;
   actions?: React.ReactNode;
 }) {
@@ -53,6 +59,7 @@ export async function DashboardShell({
         <AppTopBar mobileTrigger={mobileTrigger} />
 
         <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 lg:py-4">
+          {!writable && role ? <TrialLockBanner role={role} /> : null}
           {children}
         </main>
       </div>

@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { CreatePersonForm } from "@/components/people/create-person-form";
 import { Link } from "@/i18n/navigation";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { toAppLocale } from "@/lib/i18n/locales";
 
 export default async function NewPersonPage({
@@ -17,7 +17,7 @@ export default async function NewPersonPage({
   setRequestLocale(locale);
 
   const membership = await getPrimaryMembership();
-  if (!canCreateRecords(membership?.role)) {
+  if (!canCreateInWorkspace(membership)) {
     redirect(`/${locale}/clients`);
   }
 

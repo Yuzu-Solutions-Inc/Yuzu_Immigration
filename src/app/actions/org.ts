@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -117,6 +118,11 @@ export async function createOrganizationAction(
       "@/lib/security/org-data-key"
     );
     await loadOrCreateOrgDataKey(org.id);
+    after(() => {
+      void import("@/lib/email/trial").then(({ sendTrialEmailsForOrg }) =>
+        sendTrialEmailsForOrg(org.id as string, "welcome"),
+      );
+    });
   }
   await recordAuditEvent({
     organizationId: org.id ?? null,

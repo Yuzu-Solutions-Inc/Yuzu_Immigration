@@ -98,6 +98,12 @@ export const organizations = pgTable("organizations", {
   dpaAcceptedBy: uuid("dpa_accepted_by"),
   /** Opaque Resend receiving local-part for unmatched firm mail. */
   inboundLocalPart: text("inbound_local_part").notNull(),
+  /** Start of the 30-day Standard trial. */
+  trialStartedAt: timestamp("trial_started_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  /** When paid billing began. Null = still on trial / locked after trial. */
+  subscribedAt: timestamp("subscribed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -133,6 +139,10 @@ export const profiles = pgTable("profiles", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  /** When set, skip Permit OS trial sequence emails for this staff user. */
+  trialEmailUnsubscribedAt: timestamp("trial_email_unsubscribed_at", {
+    withTimezone: true,
+  }),
 });
 
 export const organizationMembers = pgTable(

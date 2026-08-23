@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { canCreateRecords, canManageBookingCatalog } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { parseDayOffsets } from "@/lib/booking/day-offsets";
 import {
   parseServiceTranslations,
@@ -49,6 +50,8 @@ async function requireCatalogAdmin() {
   if (!canManageBookingCatalog(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership };
 }
 
@@ -58,6 +61,8 @@ async function requireStaff() {
   if (!canCreateRecords(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership };
 }
 

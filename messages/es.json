@@ -26,12 +26,12 @@
     "audience": "Para consultores y abogados de inmigración",
     "title": "Gestione su práctica de inmigración en un espacio seguro",
     "subtitle": "Clientes, expedientes, formularios IRCC, reservas y pagos — pensado para inmigración canadiense.",
-    "cta": "Empezar gratis",
+    "cta": "Prueba de 30 días",
     "secondaryCta": "Iniciar sesión",
-    "ctaNote": "Gratis durante la fase de prueba abierta. Sin tarjeta de crédito.",
+    "ctaNote": "Standard es gratis 30 días desde que crea su firma. Sin tarjeta de crédito.",
     "navSignIn": "Iniciar sesión",
     "navPricing": "Precios",
-    "navCta": "Empezar gratis",
+    "navCta": "Prueba de 30 días",
     "capabilities": {
       "projects": "Proyectos",
       "people": "Clientes",
@@ -255,51 +255,42 @@
       }
     },
     "securityCta": "Leer la política de privacidad",
-    "finalTitle": "Crear una cuenta gratuita",
+    "finalTitle": "Empiece la prueba de 30 días",
     "finalSubtitle": "Configure el espacio de su firma en minutos y vea si encaja con su práctica.",
-    "finalCta": "Crear una cuenta gratuita",
-    "finalNote": "Gratis durante la fase de prueba abierta.",
+    "finalCta": "Prueba de 30 días",
+    "finalNote": "El producto Standard completo desde el día que crea su firma. Sin tarjeta de crédito.",
     "footerTagline": "Software de práctica para consultores y abogados de inmigración canadiense. Operado por Yuzu Solutions."
   },
   "pricing": {
     "metaTitle": "Precios",
-    "metaDescription": "Planes Starter, Standard y Equipo de %PRODUCT_NAME%. Gratis durante la prueba abierta. Tarifas de lanzamiento para las primeras 100 firmas.",
+    "metaDescription": "Planes Standard y Equipo de %PRODUCT_NAME%. Standard es gratis 30 días desde la creación de la firma. Tarifas de lanzamiento para las primeras 100 firmas.",
     "eyebrow": "Precios",
-    "title": "Starter, Standard o Equipo",
-    "subtitle": "Un arranque a bajo coste. Expedientes ilimitados cuando crece la práctica. Más asientos cuando contrate.",
-    "testingBanner": "Todo es gratis durante el periodo de prueba.",
+    "title": "Standard o Equipo",
+    "subtitle": "El mismo producto. Cuentas extra en cualquier plan. Equipo incluye cuatro asientos.",
+    "testingBanner": "Standard es gratis 30 días desde que crea su firma.",
     "currencyNote": "CAD, más GST/HST. El pago anual incluye 2 meses gratis.",
-    "cta": "Empezar gratis",
-    "freeNow": "Gratis durante la prueba abierta",
-    "foundingHelp": "Tarifa de lanzamiento para las primeras {count} firmas · primeros {months} meses",
+    "cta": "Prueba de 30 días",
+    "extraSeats": "Luego {price} por cuenta extra",
+    "foundingHelp": "Tarifa de lanzamiento para las primeras {count} firmas · primeros {months} meses después de la prueba",
     "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
     "thenList": "Después",
+    "trial": {
+      "lead": "{days} días gratis, luego"
+    },
     "teaser": {
       "eyebrow": "Precios",
-      "title": "Gratis durante la prueba abierta. Precios claros después.",
-      "subtitle": "Tarifas de lanzamiento para las primeras 100 firmas, incluidas las que ya están en prueba. Starter para empezar. Standard para la práctica en solitario. Equipo cuando sume personal.",
+      "title": "Pruebe el producto completo. Quédese si encaja.",
+      "subtitle": "Standard es gratis 30 días desde la creación de la firma. Tarifas de lanzamiento para las primeras 100 firmas. Cuentas extra en Standard o Equipo.",
       "compare": "Comparar planes"
-    },
-    "starter": {
-      "name": "%PRODUCT_NAME% Starter",
-      "audience": "Prácticas nuevas y primeros expedientes",
-      "teaser": "Un usuario. {count} proyectos activos. Las herramientas esenciales.",
-      "features": {
-        "staff": "1 usuario del personal",
-        "files": "{count} proyectos activos; clientes ilimitados",
-        "portal": "Portal del cliente, cuestionarios IRCC y relleno de PDF",
-        "booking": "Reserva pública, calendario y Google Meet",
-        "contracts": "Mandatos, firma electrónica y Square",
-        "payments": "Pagos Square (sin recorte de la plataforma)"
-      }
     },
     "standard": {
       "name": "%PRODUCT_NAME% Standard",
-      "audience": "Consultores y abogados en solitario",
-      "badge": "Individual",
-      "teaser": "Un usuario. El producto completo — clientes y expedientes ilimitados.",
+      "audience": "Consultores en solitario y prácticas pequeñas",
+      "badge": "30 días gratis",
+      "teaser": "Un usuario incluido. El producto completo — clientes y expedientes ilimitados.",
       "features": {
-        "staff": "1 usuario del personal",
+        "staff": "1 usuario del personal incluido",
+        "extraSeat": "Cuentas adicionales {price}",
         "files": "Clientes y proyectos ilimitados",
         "portal": "Portal del cliente, cuestionarios IRCC y relleno de PDF",
         "booking": "Reserva pública, calendario y Meet / Teams / Zoom",
@@ -312,8 +303,7 @@
       "name": "%PRODUCT_NAME% Equipo",
       "audience": "Firmas con más de una persona en los expedientes",
       "badge": "Para firmas",
-      "teaser": "Hasta 4 usuarios. El mismo software que Standard.",
-      "extraSeats": "Luego {price} por cuenta extra",
+      "teaser": "Hasta 4 usuarios incluidos. El mismo software que Standard.",
       "features": {
         "staff": "Hasta 4 usuarios incluidos (admins o gestores de casos)",
         "sameProduct": "El mismo software que Standard — nada bloqueado",
@@ -325,16 +315,12 @@
     },
     "compare": {
       "title": "Comparar planes",
-      "subtitle": "Starter tiene tope. Standard y Equipo son el mismo producto; cambian los asientos.",
+      "subtitle": "Standard y Equipo son el mismo producto. La diferencia es cuántos asientos de personal están incluidos.",
       "feature": "Incluido",
       "included": "Incluido",
-      "notIncluded": "—",
-      "upgrade": "Pasar a Equipo",
       "staffStandard": "{count} usuario del personal",
       "staffTeam": "Hasta {count} usuarios",
-      "filesStarter": "{count} proyectos activos",
       "filesUnlimited": "Ilimitado",
-      "meetOnly": "Google Meet",
       "meetFull": "Meet, Teams y Zoom",
       "rows": {
         "staff": "Usuarios del personal incluidos",
@@ -353,29 +339,25 @@
     },
     "faq": {
       "title": "Cómo funcionará la facturación",
-      "testing": {
-        "q": "¿Pago algo ahora?",
-        "a": "No. La prueba abierta es gratuita, sin tarjeta. Escribiremos a los administradores de la firma antes de empezar a facturar."
+      "trial": {
+        "q": "¿Pago algo para empezar?",
+        "a": "No. Standard es gratis {days} días desde que crea su firma, sin tarjeta. El producto completo está incluido. Escribiremos a los administradores de la firma antes de empezar a facturar."
       },
       "founding": {
         "q": "¿Quién obtiene las tarifas de lanzamiento?",
-        "a": "Las primeras {count} firmas en Standard o Equipo, incluidas todas las que ya están en prueba abierta. Las tarifas de lanzamiento duran {months} meses desde que empieza la facturación de esa firma. Starter no tiene descuento de lanzamiento: se queda en el precio de lista."
+        "a": "Las primeras {count} firmas en Standard o Equipo, incluidas todas las que ya usan el producto. Las tarifas de lanzamiento duran {months} meses desde que empieza la facturación de esa firma — después de la prueba de 30 días."
       },
       "after": {
         "q": "¿Qué ocurre después de 12 meses?",
-        "a": "Standard y Equipo de lanzamiento pasan al precio de lista entonces vigente (hoy, {standardList} y {teamList}). Starter se queda en {starterList}. Tras el periodo de lanzamiento, %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
+        "a": "Standard y Equipo de lanzamiento pasan al precio de lista entonces vigente (hoy, {standardList} y {teamList}). Tras el periodo de lanzamiento, %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
       },
       "annual": {
         "q": "¿Hay un precio anual?",
-        "a": "Sí. Paga {paid} meses y {free} meses son gratis. Starter es {starterAnnual} al año. El Standard de lanzamiento es {standardAnnual}; Equipo, {teamAnnual}."
+        "a": "Sí. Paga {paid} meses y {free} meses son gratis. El Standard de lanzamiento es {standardAnnual}; Equipo, {teamAnnual}."
       },
       "difference": {
         "q": "¿En qué se diferencian los planes?",
-        "a": "Starter es 1 usuario y {starterProjects} proyectos activos, sin Sage ni Teams/Zoom. Standard es {standardUsers} usuario y el producto completo, expedientes ilimitados. Equipo incluye hasta {teamUsers} usuarios. Cada cuenta extra cuesta {extraSeat}."
-      },
-      "starter": {
-        "q": "¿Por qué Starter no es gratis?",
-        "a": "La prueba abierta ya lo es. Starter cuesta {price} para que una práctica real se quede después de la prueba, con tarjeta en archivo. El tope de {count} proyectos activos es cuando la mayoría de solos pasa a Standard."
+        "a": "El mismo software. Standard incluye {standardUsers} usuario; Equipo, hasta {teamUsers}. Cada cuenta extra cuesta {extraSeat} en cualquiera de los dos planes."
       },
       "roles": {
         "q": "¿Qué es un admin frente a un gestor de casos?",
@@ -387,7 +369,7 @@
       },
       "files": {
         "q": "¿Cobráis por cliente o por expediente?",
-        "a": "Starter limita los proyectos activos a {count}. Un expediente cerrado libera un hueco; los clientes siguen ilimitados. Standard y Equipo no miden expedientes: esos planes son para la firma, no por caso."
+        "a": "No. Standard y Equipo son para la firma, no por caso. Clientes y proyectos son ilimitados."
       }
     }
   },
@@ -770,6 +752,7 @@
     "sageErrors": {
       "unauthorized": "Inicie sesión para continuar.",
       "forbidden": "Solo los administradores pueden gestionar Sage.",
+      "trial_expired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba.",
       "not_configured": "Sage no está configurado en este servidor.",
       "not_connected": "Conecte Sage antes de guardar estos ajustes.",
       "denied": "Autorización de Sage cancelada.",
@@ -786,6 +769,7 @@
     "squareErrors": {
       "unauthorized": "Inicie sesión para continuar.",
       "forbidden": "Solo los administradores pueden gestionar Square.",
+      "trial_expired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba.",
       "not_configured": "Square no está configurado en este servidor.",
       "not_connected": "Conecte Square antes de guardar esta política.",
       "denied": "Autorización de Square cancelada.",
@@ -900,7 +884,8 @@
       "notFound": "No se encontró ese miembro o invitación.",
       "dpaRequired": "Abra el addendum y marque ambas casillas para vincular a su despacho.",
       "repEmailInvalid": "Introduce un correo válido.",
-      "generic": "Algo salió mal. Inténtalo de nuevo."
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "trialExpired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba."
     }
   },
   "projects": {
@@ -1096,7 +1081,8 @@
       "notFound": "Project not found.",
       "forbidden": "No tienes permiso para esta acción.",
       "granted": "Este expediente fue aprobado. Los documentos y formularios quedan bloqueados hasta cambiar el estado.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "trialExpired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba."
     }
   },
   "inboundMail": {
@@ -1274,7 +1260,8 @@
         "email_not_configured": "El correo no está configurado. Copie el enlace en su lugar.",
         "disable_failed": "No se pudo desactivar el portal. Inténtelo de nuevo.",
         "reset_failed": "No se pudo restablecer la contraseña. Inténtelo de nuevo.",
-        "generic": "Algo salió mal. Inténtelo de nuevo."
+        "generic": "Algo salió mal. Inténtelo de nuevo.",
+        "trial_expired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba."
       }
     },
     "errors": {
@@ -1285,7 +1272,8 @@
       "deleteFailed": "No se pudo eliminar el cliente. Inténtelo de nuevo.",
       "notFound": "Cliente no encontrado.",
       "forbidden": "No tienes permiso para esta acción.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "trialExpired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba."
     }
   },
   "immigrationStatus": {
@@ -1384,7 +1372,8 @@
       "forbidden": "No puede gestionar plantillas.",
       "save_failed": "No se pudo guardar la plantilla.",
       "not_found": "Plantilla no encontrada.",
-      "duplicate_name": "Ya existe una plantilla con este nombre."
+      "duplicate_name": "Ya existe una plantilla con este nombre.",
+      "trial_expired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba."
     }
   },
   "roles": {
@@ -2213,6 +2202,7 @@
       "invalid": "Revise la confirmación e inténtelo de nuevo.",
       "unauthorized": "Debe iniciar sesión.",
       "forbidden": "Solo administradores.",
+      "trialExpired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba.",
       "notFound": "Registro no encontrado.",
       "exportFailed": "No se pudo descargar el expediente. Inténtelo de nuevo.",
       "notEligible": "Este expediente aún no es elegible para destrucción.",
@@ -2673,6 +2663,7 @@
       "save_failed": "No se pudo guardar. Inténtelo de nuevo.",
       "slot_taken": "Ese horario acaba de reservarse. Elija otro.",
       "generic": "Algo salió mal. Inténtelo de nuevo.",
+      "trial_expired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba.",
       "not_configured": "Google Calendar aún no está configurado en este servidor.",
       "not_connected": "Conecte Google Calendar primero.",
       "sync_failed": "No se pudo sincronizar Google Calendar. Inténtelo de nuevo.",
@@ -2963,6 +2954,7 @@
       "forbidden": "Solo los administradores del despacho pueden crear o cambiar servicios, contratos, formularios y correos tipo.",
       "save_failed": "No se pudo guardar. Inténtelo de nuevo.",
       "generic": "Algo salió mal. Inténtelo de nuevo.",
+      "trial_expired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba.",
       "booking_not_configured": "Active primero las reservas en la configuración del calendario.",
       "link_failed": "No se pudo crear ese enlace. Inténtelo de nuevo.",
       "invalid_key": "Elija un nombre de variable con letras, números y guiones bajos. No puede coincidir con un nombre reservado.",
@@ -3204,6 +3196,35 @@
       "generic": "Algo salió mal. Inténtelo de nuevo."
     }
   },
+  "trialLock": {
+    "title": "Su prueba ha terminado",
+    "caseManagerBody": "Gracias por probar %PRODUCT_NAME%. Todavía puede consultar y eliminar sus expedientes. Crear o editar está bloqueado. Pida a la persona administradora de su organización que se suscriba para poder seguir trabajando.",
+    "adminBody": "Gracias por probar %PRODUCT_NAME%. Todavía puede consultar y eliminar sus expedientes. Crear o editar está bloqueado hasta que se suscriba.",
+    "adminCta": "Escriba a {email} para suscribirse"
+  },
+  "trialEmail": {
+    "greeting": "Hola {name}:",
+    "greetingGeneric": "Hola:",
+    "welcomeSubject": "Gracias por probar %PRODUCT_NAME%",
+    "welcomeHeading": "Gracias por unirse",
+    "welcomeIntro": "Gracias por unirse a %PRODUCT_NAME% para probarlo con su despacho. Tiene {count, plural, one {# día} other {# días}} de acceso completo desde la creación del espacio de trabajo. Después, sus expedientes permanecen en %PRODUCT_NAME%. Todavía puede consultarlos y eliminarlos, pero crear o editar queda bloqueado hasta que se suscriba.",
+    "reminderSubject": "Su prueba de %PRODUCT_NAME%: {count, plural, one {# día restante} other {# días restantes}}",
+    "reminderHeading": "Recordatorio de su prueba",
+    "reminderIntro": "A su prueba de %PRODUCT_NAME% le quedan {count, plural, one {# día} other {# días}}. Al terminar, no se elimina nada automáticamente. Todavía puede consultar y eliminar sus expedientes, pero crear o editar queda bloqueado hasta que su organización se suscriba.",
+    "questions": "¿Tiene alguna pregunta o inquietud? Responda a este correo y le contestaremos.",
+    "cta": "Abrir su espacio de trabajo",
+    "replyHint": "Las respuestas se envían a {email}.",
+    "unsubscribe": "Cancelar suscripción"
+  },
+  "trialUnsubscribe": {
+    "title": "Cancelar la suscripción a los correos de prueba",
+    "body": "Dejará de recibir recordatorios de la prueba de %PRODUCT_NAME%. Los correos sobre sus expedientes, reservas y cuenta siguen activos.",
+    "button": "Cancelar suscripción",
+    "doneTitle": "Suscripción cancelada",
+    "doneBody": "No enviaremos más correos de prueba a esta dirección.",
+    "invalidTitle": "Este enlace no es válido",
+    "invalidBody": "Falta el enlace para cancelar la suscripción o no es válido. Responda a un correo de prueba si aún desea optar por no recibirlos."
+  },
   "authEmail": {
     "subject": "Verifique su cuenta de %PRODUCT_NAME%",
     "heading": "Verifique su correo",
@@ -3382,7 +3403,8 @@
       "forbidden": "No puede crear enlaces de pago.",
       "notFound": "Proyecto no encontrado.",
       "squareNotConnected": "Conecte Square primero en Organización.",
-      "createFailed": "No se pudo crear el enlace de pago."
+      "createFailed": "No se pudo crear el enlace de pago.",
+      "trialExpired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba."
     }
   },
   "publicPay": {

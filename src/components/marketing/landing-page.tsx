@@ -317,6 +317,9 @@ export async function LandingPage() {
                   {t("secondaryCta")}
                 </Link>
               </div>
+              <p className="lp-fade lp-delay-4 text-sm text-white/55 text-pretty">
+                {t("ctaNote")}
+              </p>
             </div>
 
             <div className="lp-fade lp-delay-3 overflow-visible">
@@ -673,8 +676,10 @@ export async function LandingPage() {
 
       <MarketingFinalCta
         title={t("finalTitle")}
+        subtitle={t("finalSubtitle")}
         cta={t("finalCta")}
         secondaryCta={t("secondaryCta")}
+        note={t("finalNote")}
         atmosphere
       />
       <MarketingFooter copy={nav} />

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import {
   applyMeetingProvider,
   calendarSettingsHref,
@@ -32,6 +33,8 @@ async function requireMember() {
   if (!membership || !user) {
     return { ok: false as const, error: "unauthorized" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership, user };
 }
 

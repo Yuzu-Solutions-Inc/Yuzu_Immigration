@@ -1,8 +1,8 @@
 import { setRequestLocale } from "next-intl/server";
 
 import { HomeDashboardView } from "@/components/home/home-dashboard";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { getHomeDashboard } from "@/lib/crm/dashboard";
 
 export default async function AppHomePage({
@@ -18,7 +18,7 @@ export default async function AppHomePage({
     getPrimaryMembership(),
     getHomeDashboard(locale),
   ]);
-  const canCreate = canCreateRecords(membership?.role);
+  const canCreate = canCreateInWorkspace(membership);
 
   const displayName =
     (user?.user_metadata?.full_name as string | undefined) ||

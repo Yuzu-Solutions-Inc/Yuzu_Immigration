@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 import { listOrganizationPrograms } from "@/app/actions/org-programs";
 import { ProgramTemplatesManager } from "@/components/projects/program-templates-manager";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 
 export default async function ProjectTemplatesPage({
   params,
@@ -25,7 +25,7 @@ export default async function ProjectTemplatesPage({
     <ProgramTemplatesManager
       locale={locale}
       programs={programs}
-      canManage={canCreateRecords(membership.role)}
+      canManage={canCreateInWorkspace(membership)}
     />
   );
 }

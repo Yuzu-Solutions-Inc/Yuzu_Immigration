@@ -11,8 +11,8 @@ import {
 import { ProjectsTable } from "@/components/projects/projects-table";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { listOrgMembers, listProjectsPage } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,7 @@ export default async function ProjectsPage({
   const th = await getTranslations("appHome");
   const to = await getTranslations("orgPrograms");
   const membership = await getPrimaryMembership();
-  const canCreate = canCreateRecords(membership?.role);
+  const canCreate = canCreateInWorkspace(membership);
   const [projects, members] = await Promise.all([
     listProjectsPage(),
     listOrgMembers(),

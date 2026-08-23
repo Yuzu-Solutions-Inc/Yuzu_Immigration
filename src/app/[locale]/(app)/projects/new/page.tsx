@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { CreateProjectForm } from "@/components/projects/create-project-form";
 import { Link } from "@/i18n/navigation";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { listOrgMembers, listPeople } from "@/lib/crm/queries";
 import { listOrganizationPrograms } from "@/app/actions/org-programs";
 
@@ -22,7 +22,7 @@ export default async function NewProjectPage({
 
   const t = await getTranslations("projects");
   const membership = await getPrimaryMembership();
-  if (!canCreateRecords(membership?.role)) {
+  if (!canCreateInWorkspace(membership)) {
     redirect(`/${locale}/projects`);
   }
   const [people, members, user, organizationPrograms] = await Promise.all([

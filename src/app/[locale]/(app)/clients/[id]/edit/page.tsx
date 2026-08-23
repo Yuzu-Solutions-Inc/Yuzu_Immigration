@@ -1,9 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { EditPersonForm } from "@/components/people/edit-person-form";
 import { Link } from "@/i18n/navigation";
+import { getPrimaryMembership } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { getPerson } from "@/lib/crm/queries";
 
 export default async function EditPersonPage({
@@ -16,6 +18,11 @@ export default async function EditPersonPage({
 
   const person = await getPerson(id);
   if (!person) notFound();
+
+  const membership = await getPrimaryMembership();
+  if (!canCreateInWorkspace(membership)) {
+    redirect(`/${locale}/clients/${id}`);
+  }
 
   const t = await getTranslations("people");
 

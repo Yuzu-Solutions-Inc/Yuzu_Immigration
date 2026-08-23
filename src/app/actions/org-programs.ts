@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import {
   mapOrganizationProgramRow,
   normalizeOrgProgramDocuments,
@@ -27,6 +28,14 @@ async function requireOrgMember() {
   const membership = await getPrimaryMembership();
   if (!membership) return { ok: false as const, error: "unauthorized" as const };
   return { ok: true as const, membership };
+}
+
+async function requireWritableOrgMember() {
+  const gate = await requireOrgMember();
+  if (!gate.ok) return gate;
+  const locked = trialExpiredError(gate.membership);
+  if (locked) return { ok: false as const, error: locked };
+  return gate;
 }
 
 function parseOrgProgramForm(formData: FormData) {
@@ -113,7 +122,7 @@ export async function createOrganizationProgramAction(
   const parsed = orgProgramFieldsSchema.safeParse(raw);
   if (!localeParsed.success || !parsed.success) return { error: "invalid" };
 
-  const gate = await requireOrgMember();
+  const gate = await requireWritableOrgMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
@@ -175,7 +184,7 @@ export async function updateOrganizationProgramAction(
   const parsed = orgProgramFieldsSchema.safeParse(raw);
   if (!localeParsed.success || !parsed.success) return { error: "invalid" };
 
-  const gate = await requireOrgMember();
+  const gate = await requireWritableOrgMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
@@ -236,7 +245,7 @@ export async function deleteOrganizationProgramAction(
     return { error: "invalid" };
   }
 
-  const gate = await requireOrgMember();
+  const gate = await requireWritableOrgMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();

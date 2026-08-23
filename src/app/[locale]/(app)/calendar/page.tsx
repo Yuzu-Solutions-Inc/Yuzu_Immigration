@@ -6,8 +6,8 @@ import {
   CalendarWorkspace,
 } from "@/components/booking/calendar-workspace";
 import { fillPageClassName } from "@/components/layout/list-layout";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import {
   getBookingSettings,
   listAppointmentsInRange,
@@ -34,7 +34,7 @@ export default async function CalendarPage({
     getPrimaryMembership(),
     getSessionUser(),
   ]);
-  const canManage = canCreateRecords(membership?.role);
+  const canManage = canCreateInWorkspace(membership);
   const [settings, rules, services, formFields] = await Promise.all([
     getBookingSettings(),
     listAvailabilityRules(),

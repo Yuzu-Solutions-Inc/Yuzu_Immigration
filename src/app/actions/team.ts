@@ -12,6 +12,7 @@ import {
   normalizeInviteEmail,
 } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -48,6 +49,8 @@ export async function inviteOrgMemberAction(
   if (!membership || !canAdministerOrg(membership.role)) {
     return { error: "forbidden" };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
 
   const user = await getSessionUser();
   const email = normalizeInviteEmail(parsed.data.email);
@@ -154,6 +157,8 @@ export async function revokeOrgInvitationAction(
   if (!membership || !canAdministerOrg(membership.role)) {
     return { error: "forbidden" };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
 
   const admin = createServiceClient();
   const { error } = await admin
@@ -194,6 +199,8 @@ export async function updateOrgMemberRoleAction(
   if (!membership || !canAdministerOrg(membership.role)) {
     return { error: "forbidden" };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
 
   const supabase = await createClient();
   const { data: target } = await supabase
@@ -266,6 +273,8 @@ export async function removeOrgMemberAction(
   if (!membership || !user || !canAdministerOrg(membership.role)) {
     return { error: "forbidden" };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
 
   const supabase = await createClient();
   const { data: target } = await supabase

@@ -7,8 +7,8 @@ import {
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { OrganizationProgramForm } from "@/components/projects/organization-program-form";
 import { Link } from "@/i18n/navigation";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import {
   builtinProgramTemplateDraft,
   draftFromOrganizationProgram,
@@ -31,7 +31,7 @@ export default async function NewProjectTemplatePage({
   if (!membership) {
     redirect(`/${locale}/onboarding`);
   }
-  if (!canCreateRecords(membership.role)) {
+  if (!canCreateInWorkspace(membership)) {
     redirect(`/${locale}/projects/templates`);
   }
 

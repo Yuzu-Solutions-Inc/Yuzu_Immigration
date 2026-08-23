@@ -7,6 +7,7 @@ import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { encryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -52,6 +53,8 @@ async function requireAdmin() {
   if (!canAdministerOrg(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership, user };
 }
 

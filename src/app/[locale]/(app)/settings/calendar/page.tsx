@@ -4,8 +4,8 @@ import { CalendarSettingsPage } from "@/components/booking/calendar-settings-pag
 import { GoogleCallbackToast } from "@/components/booking/google-callback-toast";
 import { MicrosoftCallbackToast } from "@/components/booking/microsoft-callback-toast";
 import { ZoomCallbackToast } from "@/components/booking/zoom-callback-toast";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { getStaffBookingIntegrations } from "@/lib/booking/integrations";
 import {
   getBookingSettings,
@@ -60,7 +60,7 @@ export default async function SettingsCalendarPage({
       <ZoomCallbackToast status={zoomStatus} />
       <CalendarSettingsPage
         locale={locale}
-        canManage={canCreateRecords(membership?.role)}
+        canManage={canCreateInWorkspace(membership)}
         settings={settings}
         rules={rules}
         googleConfigured={googleCalendarConfigured()}

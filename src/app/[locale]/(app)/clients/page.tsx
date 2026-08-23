@@ -10,8 +10,8 @@ import {
 import { PeopleList } from "@/components/people/people-list";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { listPeoplePage } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ export default async function PeoplePage({
 
   const t = await getTranslations("people");
   const membership = await getPrimaryMembership();
-  const canCreate = canCreateRecords(membership?.role);
+  const canCreate = canCreateInWorkspace(membership);
   const people = await listPeoplePage();
 
   return (

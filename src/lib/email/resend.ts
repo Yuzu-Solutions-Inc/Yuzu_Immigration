@@ -147,6 +147,7 @@ export async function sendResendEmail(input: {
   automated?: boolean;
   inReplyTo?: string;
   attachments?: { filename: string; content: string }[];
+  headers?: Record<string, string>;
 }): Promise<SendResendEmailResult> {
   const config = emailConfigured();
   if (!config) return { sent: false, reason: "not_configured" };
@@ -214,6 +215,12 @@ export async function sendResendEmail(input: {
   if (input.inReplyTo) {
     headers["In-Reply-To"] = input.inReplyTo;
     headers["References"] = input.inReplyTo;
+  }
+  if (input.headers) {
+    for (const [key, value] of Object.entries(input.headers)) {
+      const trimmed = value.trim();
+      if (trimmed) headers[key] = trimmed;
+    }
   }
 
   const resend = getResend(config.apiKey);

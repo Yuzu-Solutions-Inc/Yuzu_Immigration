@@ -20,12 +20,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { product } from "@/lib/brand/product";
 import { cn } from "@/lib/utils";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-const SUPPORT_EMAIL = "support@yuzu.solutions";
+const SUPPORT_EMAIL = product.supportEmail;
 
 type Crumb = { label: string; href?: string };
 

@@ -111,6 +111,7 @@ function MeetingItem({
         invalid: t("errors.invalid"),
         save_failed: t("errors.noteSaveFailed"),
         not_found: t("errors.notFound"),
+        trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.generic")
     : null;
 
@@ -230,6 +231,7 @@ export function PersonNotesSection({
         invalid: t("errors.invalid"),
         save_failed: t("errors.noteSaveFailed"),
         not_found: t("errors.notFound"),
+        trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.generic")
     : null;
 

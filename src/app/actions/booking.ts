@@ -8,6 +8,7 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { product } from "@/lib/brand/product";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import {
   mergeMinuteRanges,
   minutesToPgTime,
@@ -47,6 +48,8 @@ async function requireManager() {
   if (!canCreateRecords(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership };
 }
 

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
@@ -53,6 +54,8 @@ async function requireCreator() {
   if (!canCreateRecords(gate.membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(gate.membership);
+  if (locked) return { ok: false as const, error: locked };
   return gate;
 }
 

@@ -52,6 +52,8 @@ next-env.d.ts
 # Local sales/outreach materials (prospect lists, CASL logs, pitch emails)
 /marketing/
 
-# Local brand explorations (not product source)
+# Local brand explorations and name analyses (not product source)
 /logo-ideas/
 /logo-ideas*.html
+/name-analysis/
+/naming/

@@ -6,13 +6,10 @@ export const PRICING = {
   foundingCohortSize: 100,
   promoMonths: 12,
   priceChangeNoticeDays: 30,
+  trialDays: 30,
   annualMonthsPaid: 10,
   annualFreeMonths: 2,
-  starter: {
-    listMonthly: 19,
-    includedUsers: 1,
-    activeProjects: 10,
-  },
+  extraSeatMonthly: 29,
   standard: {
     foundingMonthly: 49,
     listMonthly: 69,
@@ -22,11 +19,10 @@ export const PRICING = {
     foundingMonthly: 99,
     listMonthly: 129,
     includedUsers: 4,
-    extraSeatMonthly: 29,
   },
 } as const;
 
-export type PricingPlanId = "starter" | "standard" | "team";
+export type PricingPlanId = "standard" | "team";
 
 export function formatCadAmount(amount: number, locale: AppLocale): string {
   if (locale === "fr") return `${amount}\u00a0$`;

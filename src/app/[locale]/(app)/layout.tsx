@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 import { DashboardShell } from "@/components/layout/app-shell";
 import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
-import { canCreateRecords } from "@/lib/auth/rbac";
 import { getSessionUser, getWorkspaceContext } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 
 export default async function AppDashboardLayout({
@@ -41,7 +41,9 @@ export default async function AppDashboardLayout({
         role: row.role,
       }))}
       activeOrganizationId={membership.organization.id}
-      canCreate={canCreateRecords(membership.role)}
+      canCreate={canCreateInWorkspace(membership)}
+      writable={membership.organization.writable}
+      role={membership.role}
     >
       {children}
     </DashboardShell>

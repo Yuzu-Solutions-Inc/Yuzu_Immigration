@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { isChildParticipantRole } from "@/lib/crm/programs";
 import { getPerson, getProject, getProjectParticipants } from "@/lib/crm/queries";
 import { sendPortalInviteEmail } from "@/lib/email/portal-invite";
@@ -47,6 +48,8 @@ async function requireStaffActor() {
   const membership = await getPrimaryMembership();
   if (!user || !membership) return { error: "unauthorized" as const };
   if (!canCreateRecords(membership.role)) return { error: "forbidden" as const };
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
   return { user, membership };
 }
 

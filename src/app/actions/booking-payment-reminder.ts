@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { decryptBookingGuestRow } from "@/lib/security/client-pii";
@@ -30,6 +31,8 @@ async function requireManager() {
   if (!canCreateRecords(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership, user };
 }
 

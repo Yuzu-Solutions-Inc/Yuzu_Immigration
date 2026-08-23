@@ -12,16 +12,9 @@ import {
 } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
 
-const STARTER_FEATURE_KEYS = [
-  "staff",
-  "files",
-  "portal",
-  "booking",
-  "contracts",
-] as const;
-
 const STANDARD_FEATURE_KEYS = [
   "staff",
+  "extraSeat",
   "files",
   "portal",
   "booking",
@@ -50,41 +43,15 @@ export async function PricingPlanCards({
   ]);
   const locale = toAppLocale(localeRaw);
   const detailed = variant === "page";
-  const extraSeat = formatCadMonthly(PRICING.team.extraSeatMonthly, locale);
+  const extraSeat = formatCadMonthly(PRICING.extraSeatMonthly, locale);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
-      <PlanCard
-        name={t("starter.name")}
-        audience={t("starter.audience")}
-        price={formatCadMonthly(PRICING.starter.listMonthly, locale)}
-        yearly={t("yearlyPrice", {
-          amount: formatCadYearly(
-            annualTotal(PRICING.starter.listMonthly),
-            locale,
-          ),
-          free: PRICING.annualFreeMonths,
-        })}
-        features={
-          detailed
-            ? STARTER_FEATURE_KEYS.map((key) =>
-                t(`starter.features.${key}`, {
-                  count: PRICING.starter.activeProjects,
-                }),
-              )
-            : [
-                t("starter.teaser", {
-                  count: PRICING.starter.activeProjects,
-                }),
-              ]
-        }
-        cta={t("cta")}
-        highlighted={false}
-      />
+    <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-2 lg:items-stretch">
       <PlanCard
         name={t("standard.name")}
         audience={t("standard.audience")}
         badge={t("standard.badge")}
+        lead={t("trial.lead", { days: PRICING.trialDays })}
         price={formatCadMonthly(PRICING.standard.foundingMonthly, locale)}
         yearly={t("yearlyPrice", {
           amount: formatCadYearly(
@@ -105,8 +72,13 @@ export async function PricingPlanCards({
         )}
         features={
           detailed
-            ? STANDARD_FEATURE_KEYS.map((key) => t(`standard.features.${key}`))
-            : [t("standard.teaser")]
+            ? STANDARD_FEATURE_KEYS.map((key) =>
+                t(`standard.features.${key}`, { price: extraSeat }),
+              )
+            : [
+                t("standard.teaser"),
+                t("extraSeats", { price: extraSeat }),
+              ]
         }
         cta={t("cta")}
         highlighted
@@ -138,7 +110,7 @@ export async function PricingPlanCards({
             ? TEAM_FEATURE_KEYS.map((key) =>
                 t(`team.features.${key}`, { price: extraSeat }),
               )
-            : [t("team.teaser"), t("team.extraSeats", { price: extraSeat })]
+            : [t("team.teaser"), t("extraSeats", { price: extraSeat })]
         }
         cta={t("cta")}
         highlighted={false}
@@ -151,6 +123,7 @@ function PlanCard({
   name,
   audience,
   badge,
+  lead,
   price,
   yearly,
   footnote,
@@ -164,6 +137,7 @@ function PlanCard({
   name: string;
   audience: string;
   badge?: string;
+  lead?: string;
   price: string;
   yearly: string;
   footnote?: string;
@@ -193,7 +167,15 @@ function PlanCard({
       </div>
       <p className="mt-1 text-sm text-muted-foreground">{audience}</p>
 
-      <p className="mt-5 font-heading text-4xl font-bold tracking-tight text-brand">
+      {lead ? (
+        <p className="mt-5 text-sm font-medium text-action">{lead}</p>
+      ) : null}
+      <p
+        className={cn(
+          "font-heading text-4xl font-bold tracking-tight text-brand",
+          lead ? "mt-1" : "mt-5",
+        )}
+      >
         {price}
       </p>
       <p className="mt-1 text-sm text-muted-foreground text-pretty">{yearly}</p>

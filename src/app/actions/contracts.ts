@@ -8,6 +8,7 @@ import {
   canManageBookingCatalog,
 } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { defaultContractBodyHtml, sanitizeContractHtml } from "@/lib/contracts/html";
 import { docxBufferToHtml, plainTextToHtml } from "@/lib/contracts/docx";
@@ -44,6 +45,8 @@ async function requireStaff() {
   if (!canCreateRecords(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership };
 }
 
@@ -53,6 +56,8 @@ async function requireCatalogAdmin() {
   if (!canManageBookingCatalog(membership.role)) {
     return { ok: false as const, error: "forbidden" as const };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { ok: false as const, error: locked };
   return { ok: true as const, membership };
 }
 

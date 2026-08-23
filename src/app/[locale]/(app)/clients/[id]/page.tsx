@@ -11,12 +11,9 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import { ProjectStatusSummary } from "@/components/projects/project-status-summary";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import {
-  canAdministerOrg,
-  canCreateRecords,
-  canDeleteRecord,
-} from "@/lib/auth/rbac";
+import { canAdministerOrg, canDeleteRecord } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { getAppBaseUrl } from "@/lib/app-url";
 import { getBookingSettings } from "@/lib/booking/queries";
 import { getPerson, getPersonProjects, listPersonMeetings } from "@/lib/crm/queries";
@@ -38,7 +35,7 @@ export default async function PersonDetailPage({
 
   const membership = await getPrimaryMembership();
   const user = await getSessionUser();
-  const canCreate = canCreateRecords(membership?.role);
+  const canCreate = canCreateInWorkspace(membership);
   const canDelete = canDeleteRecord({
     role: membership?.role,
     createdBy: person.created_by,
@@ -112,12 +109,14 @@ export default async function PersonDetailPage({
             {canAdministerOrg(membership?.role) ? (
               <ExportPersonButton personId={person.id} />
             ) : null}
-            <Link
-              href={`/clients/${person.id}/edit`}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              {t("edit")}
-            </Link>
+            {canCreate ? (
+              <Link
+                href={`/clients/${person.id}/edit`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                {t("edit")}
+              </Link>
+            ) : null}
             {canCreate ? (
               <Link
                 href={`/projects/new?person=${person.id}`}

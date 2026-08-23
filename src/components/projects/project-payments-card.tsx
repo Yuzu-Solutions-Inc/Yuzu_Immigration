@@ -72,6 +72,7 @@ export function ProjectPaymentsCard({
         not_found: t("errors.notFound"),
         square_not_connected: t("errors.squareNotConnected"),
         create_failed: t("errors.createFailed"),
+        trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.createFailed")
     : null;
 

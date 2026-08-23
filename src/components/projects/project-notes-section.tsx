@@ -45,6 +45,7 @@ function NoteItem({
         invalid: t("errors.invalid"),
         save_failed: t("errors.noteSaveFailed"),
         not_found: t("errors.notFound"),
+        trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.generic")
     : null;
 
@@ -150,6 +151,7 @@ export function ProjectNotesSection({
         invalid: t("errors.invalid"),
         save_failed: t("errors.noteSaveFailed"),
         not_found: t("errors.notFound"),
+        trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.generic")
     : null;
 

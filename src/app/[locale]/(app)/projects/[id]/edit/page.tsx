@@ -1,12 +1,13 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectForm } from "@/components/projects/project-form";
 import { Link } from "@/i18n/navigation";
-import { canCreateRecords, canDeleteRecord } from "@/lib/auth/rbac";
+import { canDeleteRecord } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { inferCompositionFromRoles } from "@/lib/crm/programs";
 import {
   getProject,
@@ -61,6 +62,10 @@ export default async function EditProjectPage({
       listProjectForms(id),
       listOrganizationPrograms(),
     ]);
+
+  if (!canCreateInWorkspace(membership)) {
+    redirect(`/${locale}/projects/${id}`);
+  }
 
   const canDelete = canDeleteRecord({
     role: membership?.role,
@@ -162,7 +167,7 @@ export default async function EditProjectPage({
             email: m.profile.email,
           }))}
           currentUserId={user?.id}
-          canCreatePeople={canCreateRecords(membership?.role)}
+          canCreatePeople={canCreateInWorkspace(membership)}
           organizationPrograms={organizationPrograms}
           initial={{
             projectId: project.id,

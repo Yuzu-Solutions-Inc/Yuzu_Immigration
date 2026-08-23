@@ -8,7 +8,7 @@ import {
   listPageSubtitleClassName,
   listPageTitleClassName,
 } from "@/components/layout/list-layout";
-import { canCreateRecords } from "@/lib/auth/rbac";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import {
   countOrgBookings,
@@ -78,7 +78,7 @@ export default async function BookingsPage({
       </div>
       <BookingsList
         locale={locale}
-        canManage={canCreateRecords(membership.role)}
+        canManage={canCreateInWorkspace(membership)}
         currentUserId={user.id}
         timezone={timezone}
         hasAny={orgTotal > 0}

@@ -45,6 +45,7 @@ export function ProjectSubmitBeforeCard({
         invalid: t("errors.invalid"),
         update_failed: t("errors.updateFailed"),
         not_found: t("errors.notFound"),
+        trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.generic")
     : null;
 

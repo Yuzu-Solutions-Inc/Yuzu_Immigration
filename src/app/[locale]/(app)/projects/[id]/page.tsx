@@ -17,17 +17,16 @@ import { ProjectDetailTabs } from "@/components/projects/project-detail-tabs";
 import { ProjectHomeTab } from "@/components/projects/project-home-tab";
 import { ProjectNotesSection } from "@/components/projects/project-notes-section";
 import { ProjectParticipantsList } from "@/components/projects/project-participants-list";
+import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectPaymentsCard } from "@/components/projects/project-payments-card";
 import { ProjectScheduleCallCard } from "@/components/projects/project-schedule-call-card";
 import { ProjectStatusCard } from "@/components/projects/project-status-update-form";
 import { ProjectSubmitBeforeCard } from "@/components/projects/project-submit-before-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import {
-  canAdministerOrg,
-  canCreateRecords,
-} from "@/lib/auth/rbac";
-import { getPrimaryMembership } from "@/lib/auth/session";
+import { canAdministerOrg, canDeleteRecord } from "@/lib/auth/rbac";
+import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import {
   getProject,
   getProjectParticipants,
@@ -69,18 +68,26 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   const membership = await getPrimaryMembership();
-  const canCreate = canCreateRecords(membership?.role);
+  const user = await getSessionUser();
+  const canCreate = canCreateInWorkspace(membership);
+  const canDelete = canDeleteRecord({
+    role: membership?.role,
+    createdBy: project.created_by,
+    actorUserId: user?.id,
+  });
 
-  await ensureProjectFormsSeeded(
-    project.organization_id,
-    project.id,
-    project.program_family,
-  );
-  await ensureProjectDocumentsSeeded(
-    project.organization_id,
-    project.id,
-    project.program_family,
-  );
+  if (membership?.organization.writable) {
+    await ensureProjectFormsSeeded(
+      project.organization_id,
+      project.id,
+      project.program_family,
+    );
+    await ensureProjectDocumentsSeeded(
+      project.organization_id,
+      project.id,
+      project.program_family,
+    );
+  }
 
   const [
     participants,
@@ -251,15 +258,25 @@ export default async function ProjectDetailPage({
           <div className="flex shrink-0 flex-col items-start gap-2 lg:items-end">
             <div className="flex flex-wrap items-center gap-2 lg:justify-end">
               <ExportProjectFileButton locale={locale} projectId={project.id} />
-              <Link
-                href={`/projects/${project.id}/edit`}
-                className={cn(
-                  buttonVariants({ size: "sm" }),
-                  "bg-action text-action-foreground hover:bg-action/90",
-                )}
-              >
-                {t("edit")}
-              </Link>
+              {canCreate ? (
+                <Link
+                  href={`/projects/${project.id}/edit`}
+                  className={cn(
+                    buttonVariants({ size: "sm" }),
+                    "bg-action text-action-foreground hover:bg-action/90",
+                  )}
+                >
+                  {t("edit")}
+                </Link>
+              ) : null}
+              {canDelete ? (
+                <DeleteProjectButton
+                  locale={locale}
+                  projectId={project.id}
+                  title={project.title}
+                  variant="button"
+                />
+              ) : null}
             </div>
             <p className="text-sm text-muted-foreground">
               {t("representative")} · {representativeLabel}
@@ -342,7 +359,7 @@ export default async function ProjectDetailPage({
                 locale={locale}
                 projectId={project.id}
                 timezone={bookingSettings?.timezone ?? "America/Toronto"}
-                canSchedule={Boolean(membership)}
+                canSchedule={canCreate}
                 principalEmail={
                   participants.find((row) => row.role === "principal")?.person
                     ?.email ?? null
@@ -361,7 +378,7 @@ export default async function ProjectDetailPage({
             <ProjectPaymentsCard
               locale={locale}
               projectId={project.id}
-              canCreate={canCreateRecords(membership?.role)}
+              canCreate={canCreate}
               squareConnected={Boolean(squareConnection)}
               payments={projectPayments}
               people={questionnairePeople.map((p) => ({

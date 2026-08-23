@@ -26,12 +26,12 @@
     "audience": "For immigration consultants and lawyers",
     "title": "Run your immigration practice in one secure workspace",
     "subtitle": "Clients, files, IRCC forms, booking, and payments — built for Canadian immigration work.",
-    "cta": "Start free",
+    "cta": "Start 30-day trial",
     "secondaryCta": "Sign in",
-    "ctaNote": "Free during open testing. No credit card required.",
+    "ctaNote": "Standard is free for 30 days from when you create your firm. No credit card.",
     "navSignIn": "Sign in",
     "navPricing": "Pricing",
-    "navCta": "Start free",
+    "navCta": "Start 30-day trial",
     "capabilities": {
       "projects": "Projects",
       "people": "Clients",
@@ -255,51 +255,42 @@
       }
     },
     "securityCta": "Read the privacy policy",
-    "finalTitle": "Create a free account",
+    "finalTitle": "Start your 30-day trial",
     "finalSubtitle": "Set up your firm workspace in minutes and see whether it fits how you already practice.",
-    "finalCta": "Create a free account",
-    "finalNote": "Free during the open testing phase.",
+    "finalCta": "Start 30-day trial",
+    "finalNote": "Full Standard product from the day you create your firm. No credit card.",
     "footerTagline": "Practice software for Canadian immigration consultants and lawyers. Operated by Yuzu Solutions."
   },
   "pricing": {
     "metaTitle": "Pricing",
-    "metaDescription": "Starter, Standard, and Team plans for %PRODUCT_NAME%. Free during open testing. Founding rates for the first 100 firms.",
+    "metaDescription": "Standard and Team plans for %PRODUCT_NAME%. Standard is free for 30 days from firm creation. Founding rates for the first 100 firms.",
     "eyebrow": "Pricing",
-    "title": "Starter, Standard, or Team",
-    "subtitle": "A low-cost start. Unlimited files when the practice grows. More seats when you hire.",
-    "testingBanner": "Everything is free during the testing period.",
+    "title": "Standard or Team",
+    "subtitle": "Same product. Extra staff accounts on either plan. Team includes four seats.",
+    "testingBanner": "Standard is free for 30 days from when you create your firm.",
     "currencyNote": "CAD, plus GST/HST. Yearly billing includes 2 months free.",
-    "cta": "Start free",
-    "freeNow": "Free during open testing",
-    "foundingHelp": "Founding rate for the first {count} firms · first {months} months",
+    "cta": "Start 30-day trial",
+    "extraSeats": "Then {price} per extra staff account",
+    "foundingHelp": "Founding rate for the first {count} firms · first {months} months after the trial",
     "yearlyPrice": "or {amount} billed yearly ({free} months free)",
     "thenList": "Then",
+    "trial": {
+      "lead": "{days} days free, then"
+    },
     "teaser": {
       "eyebrow": "Pricing",
-      "title": "Free during open testing. Clear prices after.",
-      "subtitle": "Founding rates for the first 100 firms, including everyone already testing. Starter to begin. Standard for solo practice. Team when you add staff.",
+      "title": "Try the full product. Stay if it fits.",
+      "subtitle": "Standard is free for 30 days from firm creation. Founding rates for the first 100 firms. Extra staff accounts on Standard or Team.",
       "compare": "Compare plans"
-    },
-    "starter": {
-      "name": "Starter %PRODUCT_NAME%",
-      "audience": "New practices and first files",
-      "teaser": "One staff user. {count} active projects. Core practice tools.",
-      "features": {
-        "staff": "1 staff user",
-        "files": "{count} active projects; unlimited clients",
-        "portal": "Client portal, IRCC questionnaires, and PDF fill",
-        "booking": "Public booking, calendar, and Google Meet",
-        "contracts": "Retainers, electronic signature, and Square",
-        "payments": "Square payments (no platform cut)"
-      }
     },
     "standard": {
       "name": "Standard %PRODUCT_NAME%",
-      "audience": "Solo consultants and lawyers",
-      "badge": "Individual",
-      "teaser": "One staff user. The full product — unlimited clients and files.",
+      "audience": "Solo consultants and small practices",
+      "badge": "30 days free",
+      "teaser": "One staff user included. The full product — unlimited clients and files.",
       "features": {
-        "staff": "1 staff user",
+        "staff": "1 staff user included",
+        "extraSeat": "Additional staff accounts {price}",
         "files": "Unlimited clients and projects",
         "portal": "Client portal, IRCC questionnaires, and PDF fill",
         "booking": "Public booking, calendar, and Meet / Teams / Zoom",
@@ -312,8 +303,7 @@
       "name": "Team %PRODUCT_NAME%",
       "audience": "Firms with more than one person on the caseload",
       "badge": "For firms",
-      "teaser": "Up to 4 staff users. Same software as Standard.",
-      "extraSeats": "Then {price} per extra staff account",
+      "teaser": "Up to 4 staff users included. Same software as Standard.",
       "features": {
         "staff": "Up to 4 staff users included (admins or case managers)",
         "sameProduct": "Same software as Standard — nothing gated",
@@ -325,16 +315,12 @@
     },
     "compare": {
       "title": "Compare plans",
-      "subtitle": "Starter is capped. Standard and Team are the same product, differing by staff seats.",
+      "subtitle": "Standard and Team are the same product. The difference is how many staff seats are included.",
       "feature": "Included",
       "included": "Included",
-      "notIncluded": "—",
-      "upgrade": "Move to Team",
       "staffStandard": "{count} staff user",
       "staffTeam": "Up to {count} staff users",
-      "filesStarter": "{count} active projects",
       "filesUnlimited": "Unlimited",
-      "meetOnly": "Google Meet",
       "meetFull": "Meet, Teams, and Zoom",
       "rows": {
         "staff": "Staff users included",
@@ -353,29 +339,25 @@
     },
     "faq": {
       "title": "How billing will work",
-      "testing": {
-        "q": "Do I pay anything now?",
-        "a": "No. Open testing is free, with no credit card. We will email firm administrators before billing starts."
+      "trial": {
+        "q": "Do I pay anything to start?",
+        "a": "No. Standard is free for {days} days from when you create your firm, with no credit card. The full product is included. We will email firm administrators before billing starts."
       },
       "founding": {
         "q": "Who gets founding rates?",
-        "a": "The first {count} firms on Standard or Team, including everyone already in open testing. Founding rates last {months} months from when paid billing begins for that firm. Starter has no founding discount — it stays at the list price."
+        "a": "The first {count} firms on Standard or Team, including everyone already using the product. Founding rates last {months} months from when paid billing begins for that firm — after the 30-day trial."
       },
       "after": {
         "q": "What happens after 12 months?",
-        "a": "Founding Standard and Team move to the list price then in effect (today, {standardList} and {teamList}). Starter stays {starterList}. After the founding period, %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
+        "a": "Founding Standard and Team move to the list price then in effect (today, {standardList} and {teamList}). After the founding period, %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
       },
       "annual": {
         "q": "Is there a yearly price?",
-        "a": "Yes. Pay {paid} months and get {free} months free. Starter is {starterAnnual} for the year. Founding Standard is {standardAnnual}; founding Team is {teamAnnual}."
+        "a": "Yes. Pay {paid} months and get {free} months free. Founding Standard is {standardAnnual}; founding Team is {teamAnnual}."
       },
       "difference": {
         "q": "How do the plans differ?",
-        "a": "Starter is 1 staff user and {starterProjects} active projects, without Sage or Teams/Zoom. Standard is {standardUsers} staff user and the full product, unlimited files. Team includes up to {teamUsers} staff. Extra staff accounts are {extraSeat}."
-      },
-      "starter": {
-        "q": "Why isn’t Starter free?",
-        "a": "Open testing is already free. Starter is {price} so a real practice can stay after testing, with a card on file. The {count} active-project cap is when most solos move to Standard."
+        "a": "Same software. Standard includes {standardUsers} staff user; Team includes up to {teamUsers}. Extra staff accounts are {extraSeat} on either plan."
       },
       "roles": {
         "q": "What is an admin vs a case manager?",
@@ -387,7 +369,7 @@
       },
       "files": {
         "q": "Do you meter clients or files?",
-        "a": "Starter caps active projects at {count}. Closed files free a slot; clients stay unlimited. Standard and Team do not meter files — those plans are for the firm, not per case."
+        "a": "No. Standard and Team are for the firm, not per case. Clients and projects are unlimited."
       }
     }
   },
@@ -770,6 +752,7 @@
     "sageErrors": {
       "unauthorized": "Sign in to continue.",
       "forbidden": "Only organization admins can manage Sage.",
+      "trial_expired": "Your trial has ended. The workspace is read-only until your organization subscribes.",
       "not_configured": "Sage is not configured on this server.",
       "not_connected": "Connect Sage before saving these settings.",
       "denied": "Sage authorization was cancelled.",
@@ -786,6 +769,7 @@
     "squareErrors": {
       "unauthorized": "Sign in to continue.",
       "forbidden": "Only organization admins can manage Square.",
+      "trial_expired": "Your trial has ended. The workspace is read-only until your organization subscribes.",
       "not_configured": "Square is not configured on this server.",
       "not_connected": "Connect Square before saving this policy.",
       "denied": "Square authorization was cancelled.",
@@ -900,7 +884,8 @@
       "notFound": "That member or invitation was not found.",
       "dpaRequired": "Open the addendum, then check both boxes to bind your firm.",
       "repEmailInvalid": "Enter a valid email.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "trialExpired": "Your trial has ended. The workspace is read-only until your organization subscribes."
     }
   },
   "projects": {
@@ -1096,7 +1081,8 @@
       "notFound": "Project not found.",
       "forbidden": "You do not have permission for this action.",
       "granted": "This project was granted. Documents and forms are locked until you change the status.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "trialExpired": "Your trial has ended. The workspace is read-only until your organization subscribes."
     }
   },
   "inboundMail": {
@@ -1274,7 +1260,8 @@
         "email_not_configured": "Email is not configured, so the invitation was not sent. Copy the link instead.",
         "disable_failed": "Could not disable the portal. Try again.",
         "reset_failed": "Could not reset the portal password. Try again.",
-        "generic": "Something went wrong. Try again."
+        "generic": "Something went wrong. Try again.",
+        "trial_expired": "Your trial has ended. The workspace is read-only until your organization subscribes."
       }
     },
     "errors": {
@@ -1285,7 +1272,8 @@
       "deleteFailed": "Could not delete the client. Try again.",
       "notFound": "Client not found.",
       "forbidden": "You do not have permission for this action.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "trialExpired": "Your trial has ended. The workspace is read-only until your organization subscribes."
     }
   },
   "immigrationStatus": {
@@ -1384,7 +1372,8 @@
       "forbidden": "You cannot manage templates.",
       "save_failed": "Could not save the template.",
       "not_found": "Template not found.",
-      "duplicate_name": "A template with this name already exists."
+      "duplicate_name": "A template with this name already exists.",
+      "trial_expired": "Your trial has ended. The workspace is read-only until your organization subscribes."
     }
   },
   "roles": {
@@ -2213,6 +2202,7 @@
       "invalid": "Check the confirmation and try again.",
       "unauthorized": "Sign in required.",
       "forbidden": "Only admins can do this.",
+      "trialExpired": "Your trial has ended. The workspace is read-only until your organization subscribes.",
       "notFound": "Record not found.",
       "exportFailed": "Could not download the file. Try again.",
       "notEligible": "This file is not yet eligible for destruction.",
@@ -2673,6 +2663,7 @@
       "save_failed": "Could not save. Try again.",
       "slot_taken": "That time was just booked. Pick another slot.",
       "generic": "Something went wrong. Try again.",
+      "trial_expired": "Your trial has ended. The workspace is read-only until your organization subscribes.",
       "not_configured": "Google Calendar is not configured on this server yet.",
       "not_connected": "Connect Google Calendar first.",
       "sync_failed": "Could not sync Google Calendar. Try again.",
@@ -2968,6 +2959,7 @@
       "forbidden": "Only organization admins can create or change services, contracts, forms, and template emails.",
       "save_failed": "Could not save. Try again.",
       "generic": "Something went wrong. Try again.",
+      "trial_expired": "Your trial has ended. The workspace is read-only until your organization subscribes.",
       "booking_not_configured": "Turn on booking in Calendar settings first.",
       "link_failed": "Could not create that link. Try again.",
       "invalid_key": "Choose a variable name with letters, numbers, and underscores. It cannot match a built-in name.",
@@ -3203,6 +3195,35 @@
       "google": "Google sign-in is not available for this email. Use the email on your file, or ask your consultant.",
       "generic": "Something went wrong. Try again."
     }
+  },
+  "trialLock": {
+    "title": "Your trial has ended",
+    "caseManagerBody": "Thanks for testing %PRODUCT_NAME%. You can still read and delete your files. Creating or editing is locked. Ask your organization admin to subscribe so you can keep working.",
+    "adminBody": "Thanks for testing %PRODUCT_NAME%. You can still read and delete your files. Creating or editing is locked until you subscribe.",
+    "adminCta": "Email {email} to subscribe"
+  },
+  "trialEmail": {
+    "greeting": "Hi {name},",
+    "greetingGeneric": "Hi,",
+    "welcomeSubject": "Thanks for trying %PRODUCT_NAME%",
+    "welcomeHeading": "Thanks for joining",
+    "welcomeIntro": "Thanks for joining %PRODUCT_NAME% to try it with your firm. You have {count, plural, one {# day} other {# days}} of full access from when your workspace was created. After that, your files stay in %PRODUCT_NAME%. You can still read and delete them, but creating or editing is locked until you subscribe.",
+    "reminderSubject": "Your %PRODUCT_NAME% trial: {count, plural, one {# day left} other {# days left}}",
+    "reminderHeading": "A reminder about your trial",
+    "reminderIntro": "Your %PRODUCT_NAME% trial has {count, plural, one {# day} other {# days}} left. When it ends, nothing is deleted automatically. You can still read and delete your files, but creating or editing is locked until your organization subscribes.",
+    "questions": "Do you have any questions or concerns? Reply to this email and we will get back to you.",
+    "cta": "Open your workspace",
+    "replyHint": "Replies go to {email}.",
+    "unsubscribe": "Unsubscribe"
+  },
+  "trialUnsubscribe": {
+    "title": "Unsubscribe from trial emails",
+    "body": "You will stop receiving %PRODUCT_NAME% trial reminders. Emails about your files, bookings, and account stay on.",
+    "button": "Unsubscribe",
+    "doneTitle": "You’re unsubscribed",
+    "doneBody": "We will not send more trial emails to this address.",
+    "invalidTitle": "This link is not valid",
+    "invalidBody": "The unsubscribe link is missing or not valid. Reply to a trial email if you still want to opt out."
   },
   "authEmail": {
     "subject": "Verify your %PRODUCT_NAME% account",
@@ -3534,7 +3555,8 @@
       "forbidden": "You cannot create payment links.",
       "notFound": "Project not found.",
       "squareNotConnected": "Connect Square in Organization settings first.",
-      "createFailed": "Could not create the payment link."
+      "createFailed": "Could not create the payment link.",
+      "trialExpired": "Your trial has ended. The workspace is read-only until your organization subscribes."
     }
   },
   "publicPay": {

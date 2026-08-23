@@ -7,7 +7,10 @@ import { z } from "zod";
 
 import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
 import { canCreateRecords, canDeleteRecord } from "@/lib/auth/rbac";
-import { requireOrganizationId } from "@/lib/crm/queries";
+import {
+  isTrialExpiredDbError,
+  trialExpiredError,
+} from "@/lib/billing/trial";
 import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { erasePersonPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
@@ -88,6 +91,8 @@ export async function createPersonAction(
   if (!canCreateRecords(membership.role)) {
     return { error: "forbidden" };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
   const orgId = membership.organization.id;
   const user = await getSessionUser();
 
@@ -130,6 +135,7 @@ export async function createPersonAction(
 
   if (createError || !created) {
     console.error("create person:", createError?.message);
+    if (isTrialExpiredDbError(createError)) return { error: "trial_expired" };
     return { error: "create_failed" };
   }
 
@@ -164,10 +170,13 @@ export async function updatePersonAction(
   }
 
   const { data } = parsed;
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
+  const membership = await getPrimaryMembership();
+  if (!membership) {
     redirect(`/${data.locale}/onboarding`);
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
+  const orgId = membership.organization.id;
 
   const supabase = await createClient();
   const statusExpiresAt =
@@ -218,6 +227,7 @@ export async function updatePersonAction(
 
   if (updateError) {
     console.error("update person:", updateError.message);
+    if (isTrialExpiredDbError(updateError)) return { error: "trial_expired" };
     return { error: "update_failed" };
   }
 
@@ -355,10 +365,13 @@ export async function addPersonNoteAction(
   }
 
   const { data } = parsed;
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
+  const membership = await getPrimaryMembership();
+  if (!membership) {
     redirect(`/${data.locale}/onboarding`);
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
+  const orgId = membership.organization.id;
 
   const user = await getSessionUser();
   const supabase = await createClient();
@@ -461,10 +474,13 @@ export async function updatePersonNoteAction(
   }
 
   const { data } = parsed;
-  const orgId = await requireOrganizationId();
-  if (!orgId) {
+  const membership = await getPrimaryMembership();
+  if (!membership) {
     redirect(`/${data.locale}/onboarding`);
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
+  const orgId = membership.organization.id;
 
   const supabase = await createClient();
   const { data: existing, error: existingError } = await supabase

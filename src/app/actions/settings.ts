@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
 import { canAdministerOrg } from "@/lib/auth/rbac";
+import { trialExpiredError } from "@/lib/billing/trial";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
 import { resolveCountryLic } from "@/lib/ircc/codes/resolve-lic";
@@ -273,6 +274,8 @@ export async function updateOrganizationSettingsAction(
   if (!canAdministerOrg(membership?.role)) {
     return { error: "forbidden" };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -336,6 +339,8 @@ export async function acceptOrganizationDpaAction(
   if (!canAdministerOrg(membership?.role)) {
     return { error: "forbidden" };
   }
+  const locked = trialExpiredError(membership);
+  if (locked) return { error: locked };
 
   const user = await getSessionUser();
   if (!user) {

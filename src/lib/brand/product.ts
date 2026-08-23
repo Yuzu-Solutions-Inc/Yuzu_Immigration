@@ -30,6 +30,7 @@ export const product = {
   /** Legal operator — not the product name. */
   operator: "Yuzu Solutions Inc.",
   operatorShort: "Yuzu Solutions",
+  supportEmail: "support@yuzu.solutions",
 } as const;
 
 export type ProductIdentity = typeof product;

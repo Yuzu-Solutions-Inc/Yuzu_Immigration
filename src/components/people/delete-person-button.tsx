@@ -36,6 +36,7 @@ export function DeletePersonButton({
         delete_failed: t("errors.deleteFailed"),
         not_found: t("errors.notFound"),
         forbidden: t("errors.forbidden"),
+        trial_expired: t("errors.trialExpired"),
       }[state.error] ?? t("errors.generic")
     : null;
 

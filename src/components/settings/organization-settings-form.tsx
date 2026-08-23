@@ -60,6 +60,7 @@ export function OrganizationSettingsForm({
       slug_taken: t("errors.slugTaken"),
       save_failed: t("errors.saveFailed"),
       forbidden: t("errors.forbidden"),
+      trial_expired: t("errors.trialExpired"),
     }[state.error] ??
       t("errors.generic"));
 
