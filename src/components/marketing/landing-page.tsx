@@ -27,6 +27,7 @@ import { MicrosoftTeamsLogo } from "@/components/brand/microsoft-teams-logo";
 import { OutlookCalendarLogo } from "@/components/brand/outlook-calendar-logo";
 import { SageLogo } from "@/components/brand/sage-logo";
 import { SquareLogo } from "@/components/brand/square-logo";
+import { StripeLogo } from "@/components/brand/stripe-logo";
 import { ZoomLogo } from "@/components/brand/zoom-logo";
 import {
   MarketingFinalCta,
@@ -57,6 +58,7 @@ const CAPABILITY_KEYS = [
   "calendar",
   "meet",
   "square",
+  "stripe",
   "sage",
   "languages",
 ] as const;
@@ -113,7 +115,7 @@ const BUILTIN_ITEMS: readonly BuiltinItem[] = [
 ];
 
 type IntegrationItem = {
-  key: "calendar" | "outlook" | "meet" | "teams" | "zoom" | "square" | "sage";
+  key: "calendar" | "outlook" | "meet" | "teams" | "zoom" | "square" | "stripe" | "sage";
   Logo: ComponentType<{ className?: string; title?: string }>;
   beta: boolean;
 };
@@ -141,6 +143,7 @@ const INTEGRATION_GROUPS: readonly {
     key: "payment",
     items: [
       { key: "square", Logo: SquareLogo, beta: false },
+      { key: "stripe", Logo: StripeLogo, beta: false },
       { key: "sage", Logo: SageLogo, beta: true },
     ],
   },
@@ -161,7 +164,13 @@ const SECURITY_ICONS = {
   privacy: ScrollText,
 } as const;
 
-const STAGE_CHIP_KEYS = ["forms", "booking", "square", "documents"] as const;
+const STAGE_CHIP_KEYS = [
+  "forms",
+  "booking",
+  "square",
+  "stripe",
+  "documents",
+] as const;
 
 const SHOWCASE_KEYS = [
   "client",

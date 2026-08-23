@@ -42,6 +42,7 @@
       "calendar": "Google Calendar",
       "meet": "Google Meet",
       "square": "Square",
+      "stripe": "Stripe",
       "sage": "Sage Accounting",
       "languages": "EN · FR · ES"
     },
@@ -61,11 +62,11 @@
       },
       "representative": {
         "title": "Representative workspace",
-        "body": "Track the file from one screen: verify documents, request a new submission, and review or correct the client’s answers live. Request Square payments, take notes, and track meetings.",
+        "body": "Track the file from one screen: verify documents, request a new submission, and review or correct the client’s answers live. Request Square or Stripe payments, take notes, and track meetings.",
         "points": [
           "Verify documents or request a new upload",
           "Review and correct the questionnaire live",
-          "Request Square payments, take notes, and track meetings",
+          "Request Square or Stripe payments, take notes, and track meetings",
           "Download records or delete them when your practice needs it"
         ]
       },
@@ -74,7 +75,7 @@
         "body": "Set weekly availability and the paid services people can book. Prospective clients find a slot, book, and pay directly. Bookings can send a contract for signature and sync with Google Calendar or Outlook.",
         "points": [
           "Weekly open hours and paid services ready to book",
-          "Clients pick a time and pay on Square Checkout",
+          "Clients pick a time and pay on Square or Stripe Checkout",
           "Send a retainer for electronic signature when they book",
           "Sync with Google Calendar or Outlook — events created outside the app block those times automatically",
           "Confirmed bookings can include a Google Meet, Teams, or Zoom link"
@@ -123,12 +124,12 @@
         "body": "Each consultant connects their own Google Calendar. Public booking skips busy times, confirmed appointments sync to the calendar, and a Google Meet link is attached for the call."
       },
       "payments": {
-        "title": "Square payments",
-        "body": "Connect Square to collect consultation fees at booking or send a payment link on a file. Clients pay on Square Checkout. Unpaid bookings surface on the home screen."
+        "title": "Square or Stripe payments",
+        "body": "Connect Square or Stripe to collect consultation fees at booking or send a payment link on a file — one processor per firm. Clients pay on that checkout. Unpaid bookings surface on the home screen."
       },
       "sage": {
         "title": "Sage Accounting",
-        "body": "Match clients to Sage by email, apply the correct provincial sales tax, and post invoices when Square payments complete."
+        "body": "Match clients to Sage by email, apply the correct provincial sales tax, and post invoices when Square or Stripe payments complete."
       },
       "team": {
         "title": "Firm workspace",
@@ -148,7 +149,7 @@
       },
       "three": {
         "title": "Book, meet, and get paid",
-        "body": "Clients book on your public page. Calendar blocks busy time, a meeting link is attached, Square collects the fee, and a contract can go out for signature."
+        "body": "Clients book on your public page. Calendar blocks busy time, a meeting link is attached, Square or Stripe collects the fee, and a contract can go out for signature."
       },
       "four": {
         "title": "Prepare and close",
@@ -202,7 +203,7 @@
         },
         "payment": {
           "title": "Payments and accounting",
-          "help": "Collect consultation fees at booking or send a payment link on a file. Connect Sage to post matching tax invoices."
+          "help": "Connect Square or Stripe — one processor per firm. Collect consultation fees at booking or send a payment link on a file. Connect Sage to post matching tax invoices."
         }
       },
       "booking": {
@@ -237,9 +238,13 @@
         "title": "Square",
         "body": "Connect Square to charge consultation services and send payment links on a project. Clients check out on Square. You see unpaid bookings on home until they pay."
       },
+      "stripe": {
+        "title": "Stripe",
+        "body": "Connect Stripe to charge consultation services and send payment links on a project. Clients check out on Stripe. You see unpaid bookings on home until they pay. There is no platform cut."
+      },
       "sage": {
         "title": "Sage Accounting",
-        "body": "Connect Sage Business Cloud Accounting to match clients by email, apply the right Canadian sales tax, and post invoices when Square payments complete."
+        "body": "Connect Sage Business Cloud Accounting to match clients by email, apply the right Canadian sales tax, and post invoices when Square or Stripe payments complete."
       }
     },
     "securityEyebrow": "Security, simply",
@@ -308,7 +313,7 @@
         "portal": "Client portal, IRCC questionnaires, and PDF fill",
         "booking": "Public booking, calendar, and Meet / Teams / Zoom",
         "contracts": "Retainers and electronic signature",
-        "payments": "Square payments and Sage Accounting",
+        "payments": "Square or Stripe payments and Sage Accounting",
         "languages": "English, French, and Spanish"
       }
     },
@@ -322,7 +327,7 @@
         "sameProduct": "Same software as Standard — nothing gated",
         "extraSeat": "Additional staff accounts {price}",
         "files": "Unlimited clients and projects",
-        "payments": "Square payments and Sage Accounting",
+        "payments": "Square or Stripe payments and Sage Accounting",
         "languages": "English, French, and Spanish"
       }
     },
@@ -344,7 +349,7 @@
         "booking": "Booking and calendar",
         "meetings": "Meeting links",
         "contracts": "Contracts and e-sign",
-        "payments": "Square (no platform cut)",
+        "payments": "Square or Stripe (no platform cut)",
         "sage": "Sage Accounting",
         "languages": "English, French, Spanish",
         "canada": "Primary data hosted in Canada"
@@ -378,7 +383,7 @@
       },
       "currency": {
         "q": "What currency is this?",
-        "a": "Canadian dollars, plus applicable GST/HST. We do not take a percentage of Square consultation payments."
+        "a": "Canadian dollars, plus applicable GST/HST. We do not take a percentage of Square or Stripe consultation payments."
       },
       "files": {
         "q": "Do you meter clients or files?",
@@ -752,11 +757,12 @@
     "billingAddSeat": "Add a seat",
     "teamSeatsFull": "All seats are in use. Add a seat under",
     "squareTitle": "Square payments",
-    "squareHelp": "Connect Square so clients can pay for priced booking services and project payment links.",
+    "squareHelp": "Connect Square so clients can pay for priced booking services and project payment links. A firm can use Square or Stripe, not both at once.",
     "squareConnect": "Connect Square",
     "squareDisconnect": "Disconnect Square",
     "squareConnectedAs": "Connected account",
     "squareNotConnected": "Not connected. Connect Square to collect payments.",
+    "squareBlockedByStripe": "Disconnect Stripe to switch this firm to Square. Existing Stripe payment links stay valid until they expire.",
     "squareNotConfigured": "Add SQUARE_APPLICATION_ID and SQUARE_APPLICATION_SECRET to the server environment, set the OAuth redirect to /auth/square/callback, and configure the webhook at /api/square/webhook.",
     "squareCurrency": "Settlement currency: {currency}",
     "squareConnectedFlash": "Square connected.",
@@ -764,7 +770,7 @@
     "squareCancelPolicyTitle": "Cancellation & refunds",
     "squareCancelPolicyHelp": "These rules apply to paid bookings. Clients see them when booking and before cancelling.",
     "squareCancelRefundEnabled": "Refund on cancellation",
-    "squareCancelRefundEnabledHelp": "When off, cancelling a paid booking does not refund via Square.",
+    "squareCancelRefundEnabledHelp": "When off, cancelling a paid booking does not refund the original payment.",
     "squareCancelFreeDays": "Days before appointment for free cancellation",
     "squareCancelFreeDaysHelp": "Guests who cancel at least this many days before the appointment receive a full refund. 0 = fully refunded until right before appointment.",
     "squareCancelFeeDays": "Days before appointment to cancel with a fee",
@@ -830,6 +836,29 @@
       "save_failed": "Could not save the Square connection.",
       "invalid_policy": "Free cancellation days must be greater than fee cancellation days.",
       "no_location": "Your Square account needs an active location."
+    },
+    "processorExclusiveHelp": "Connect Square or Stripe — only one payment processor can be active. Switching disables the other for new charges; existing payment links keep working until they expire.",
+    "processorSwitchConfirm": "This disables the other processor for new payments. Existing payment links stay valid until they expire. Continue?",
+    "processorLinksKeepWorking": "This account is disabled for new payments. Existing payment links still work until they expire.",
+    "stripeTitle": "Stripe payments",
+    "stripeHelp": "Connect Stripe so clients can pay for priced bookings and project payment links. A firm can use Square or Stripe, not both at once. There is no platform cut.",
+    "stripeConnect": "Connect Stripe",
+    "stripeDisconnect": "Disconnect Stripe",
+    "stripeContinueOnboarding": "Finish Stripe onboarding",
+    "stripeOnboardingIncomplete": "Onboarding incomplete",
+    "stripeConnectedAs": "Connected account",
+    "stripeNotConnected": "Not connected. Connect Stripe to collect payments.",
+    "stripeBlockedBySquare": "Disconnect Square to switch this firm to Stripe. Existing Square payment links stay valid until they expire.",
+    "stripeNotConfigured": "Add STRIPE_SECRET_KEY to the server environment and configure the webhook at /api/stripe/webhook (include events from connected accounts).",
+    "stripeCurrency": "Settlement currency: {currency}",
+    "stripeConnectedFlash": "Stripe connected.",
+    "stripeDisconnected": "Stripe disconnected for new payments",
+    "stripeErrors": {
+      "unauthorized": "Sign in to continue.",
+      "forbidden": "Only organization admins can manage Stripe.",
+      "trial_expired": "Your trial has ended. The workspace is read-only until your organization subscribes.",
+      "not_configured": "Stripe is not configured on this server.",
+      "save_failed": "Could not save the Stripe connection."
     },
     "orgDefaultLocale": "Default language",
     "orgDefaultLocaleHelp": "Used for the workspace and booking reminders when a client language has no translation.",
@@ -2335,7 +2364,7 @@
       },
       "sharing": {
         "title": "9. Sharing and service providers",
-        "body": "We use these providers to run %PRODUCT_NAME%:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, logs, and optional Web Analytics and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, a firm enables Google sign-in on the client portal, or a consultant connects Google Calendar or Google Meet\n• Microsoft — only if a consultant connects Outlook Calendar or Microsoft Teams\n• Zoom — only if a consultant connects Zoom\n• Square — only if the firm connects payments for priced bookings\n\nA current list is available for download from this page. Those providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects a calendar, that provider receives the booking details the product writes there (including guest name, email, and phone), and we receive busy times and event titles from that calendar. When Zoom is connected, Zoom receives the meeting title and start/end time on that consultant’s Zoom account and returns a join URL."
+        "body": "We use these providers to run %PRODUCT_NAME%:\n• Supabase (Canada) — database, authentication, and file storage\n• Vercel — application hosting, logs, and optional Web Analytics and Speed Insights\n• Resend — transactional email when mail sending is configured (confirmations, reminders, and manage links)\n• Google — only if a staff member uses Google to sign in, a firm enables Google sign-in on the client portal, or a consultant connects Google Calendar or Google Meet\n• Microsoft — only if a consultant connects Outlook Calendar or Microsoft Teams\n• Zoom — only if a consultant connects Zoom\n• Square — only if the firm connects Square for priced bookings\n• Stripe — only if the firm connects Stripe for priced bookings\n\nA current list is available for download from this page. Those providers process the information we send them to provide their service. We do not disclose client file contents to third parties for their marketing. We may disclose information if required by law, to protect rights and security, or on the firm’s instructions (for example sending a reminder the firm wrote).\n\nWhen a consultant connects a calendar, that provider receives the booking details the product writes there (including guest name, email, and phone), and we receive busy times and event titles from that calendar. When Zoom is connected, Zoom receives the meeting title and start/end time on that consultant’s Zoom account and returns a join URL."
       },
       "transfers": {
         "title": "10. Location of processing",
@@ -3582,7 +3611,7 @@
   },
   "projectPayments": {
     "title": "Payment links",
-    "subtitle": "Create a Square checkout link for a custom amount on this project.",
+    "subtitle": "Create a checkout link for a custom amount on this project.",
     "amount": "Amount",
     "description": "Description",
     "descriptionPlaceholder": "Retainer — permanent residence",
@@ -3592,7 +3621,8 @@
     "creating": "Creating…",
     "created": "Payment link created and copied",
     "linkCopied": "Link:",
-    "connectSquareFirst": "Connect Square in Organization settings to create payment links.",
+    "connectProcessorFirst": "Connect Square or Stripe in Organization settings to create payment links.",
+    "connectSquareFirst": "Connect Square or Stripe in Organization settings to create payment links.",
     "history": "Payment history",
     "historyEmpty": "No payment links yet.",
     "openLink": "Open payment page",
@@ -3610,7 +3640,8 @@
       "unauthorized": "Sign in to continue.",
       "forbidden": "You cannot create payment links.",
       "notFound": "Project not found.",
-      "squareNotConnected": "Connect Square in Organization settings first.",
+      "squareNotConnected": "Connect Square or Stripe in Organization settings first.",
+      "processorNotConnected": "Connect Square or Stripe in Organization settings first.",
       "createFailed": "Could not create the payment link.",
       "trialExpired": "Your trial has ended. The workspace is read-only until your organization subscribes."
     }
@@ -3619,7 +3650,8 @@
     "title": "Payment",
     "paidTitle": "Payment received",
     "paidBody": "Thank you. This payment is complete.",
-    "payWithSquare": "Pay with Square",
+    "payWithSquare": "Pay now",
+    "payNow": "Pay now",
     "expiredBody": "This payment link has expired. Ask your consultant for a new one.",
     "unavailableTitle": "Link unavailable",
     "unavailableBody": "This payment link is invalid or no longer available.",

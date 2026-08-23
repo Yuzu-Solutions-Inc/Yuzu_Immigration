@@ -42,6 +42,7 @@
       "calendar": "Google Calendar",
       "meet": "Google Meet",
       "square": "Square",
+      "stripe": "Stripe",
       "sage": "Comptabilité Sage",
       "languages": "EN · FR · ES"
     },
@@ -61,11 +62,11 @@
       },
       "representative": {
         "title": "Espace du représentant",
-        "body": "Suivez le dossier sur un seul écran : vérifiez les documents, demandez un nouveau dépôt, et révisez ou corrigez les réponses du client en direct. Demandez un paiement Square, prenez des notes et suivez les rendez-vous.",
+        "body": "Suivez le dossier sur un seul écran : vérifiez les documents, demandez un nouveau dépôt, et révisez ou corrigez les réponses du client en direct. Demandez un paiement Square ou Stripe, prenez des notes et suivez les rendez-vous.",
         "points": [
           "Vérifiez les documents ou demandez un nouveau dépôt",
           "Révisez et corrigez le questionnaire en direct",
-          "Demandez un paiement Square, prenez des notes et suivez les rendez-vous",
+          "Demandez un paiement Square ou Stripe, prenez des notes et suivez les rendez-vous",
           "Téléchargez les dossiers ou supprimez-les selon les besoins de la pratique"
         ]
       },
@@ -74,7 +75,7 @@
         "body": "Définissez vos plages hebdomadaires et les services payants ouverts à la réservation. Un client potentiel trouve un créneau, réserve et paie. Les réservations peuvent envoyer un contrat en signature et se synchronisent avec Google Calendar ou Outlook.",
         "points": [
           "Disponibilités hebdomadaires et services payants réservables",
-          "Le client choisit une heure et paie sur Square Checkout",
+          "Le client choisit une heure et paie sur Square ou Stripe Checkout",
           "Envoyez un mandat en signature électronique dès la réservation",
           "Synchronisation avec Google Calendar ou Outlook — un événement créé hors de l’application bloque automatiquement le créneau",
           "Les réservations confirmées peuvent inclure un lien Google Meet, Teams ou Zoom"
@@ -123,12 +124,12 @@
         "body": "Chaque consultant connecte son propre Google Calendar. La réservation publique évite les plages occupées, les rendez-vous confirmés se synchronisent, et un lien Google Meet est joint à l’appel."
       },
       "payments": {
-        "title": "Paiements Square",
-        "body": "Connectez Square pour encaisser les consultations à la réservation ou envoyer un lien de paiement sur un dossier. Le client paie sur Square Checkout. Les impayés apparaissent à l’accueil."
+        "title": "Paiements Square ou Stripe",
+        "body": "Connectez Square ou Stripe pour encaisser les consultations à la réservation ou envoyer un lien de paiement sur un dossier — un processeur par cabinet. Le client paie sur cette page de paiement. Les impayés apparaissent à l’accueil."
       },
       "sage": {
         "title": "Comptabilité Sage",
-        "body": "Appariez les clients Sage par courriel, appliquez la bonne taxe de vente provinciale, et postez les factures lorsque les paiements Square sont reçus."
+        "body": "Appariez les clients Sage par courriel, appliquez la bonne taxe de vente provinciale, et postez les factures lorsque les paiements Square ou Stripe sont reçus."
       },
       "team": {
         "title": "Espace cabinet",
@@ -148,7 +149,7 @@
       },
       "three": {
         "title": "Réservez, rencontrez, encaissez",
-        "body": "Les clients réservent sur votre page publique. Le calendrier bloque les plages occupées, un lien de visio est joint, Square encaisse les honoraires, et un contrat peut partir en signature."
+        "body": "Les clients réservent sur votre page publique. Le calendrier bloque les plages occupées, un lien de visio est joint, Square ou Stripe encaisse les honoraires, et un contrat peut partir en signature."
       },
       "four": {
         "title": "Préparez et clôturez",
@@ -202,7 +203,7 @@
         },
         "payment": {
           "title": "Paiement et comptabilité",
-          "help": "Encaissez les honoraires à la réservation ou envoyez un lien de paiement sur un dossier. Connectez Sage pour poster les factures correspondantes."
+          "help": "Connectez Square ou Stripe — un processeur par cabinet. Encaissez les honoraires à la réservation ou envoyez un lien de paiement sur un dossier. Connectez Sage pour poster les factures correspondantes."
         }
       },
       "booking": {
@@ -237,9 +238,13 @@
         "title": "Square",
         "body": "Connectez Square pour facturer les consultations et envoyer des liens de paiement sur un projet. Le client paie sur Square. Vous voyez les impayés à l’accueil jusqu’au règlement."
       },
+      "stripe": {
+        "title": "Stripe",
+        "body": "Connectez Stripe pour facturer les consultations et envoyer des liens de paiement sur un projet. Le client paie sur Stripe. Vous voyez les impayés à l’accueil jusqu’au règlement. Aucune commission plateforme."
+      },
       "sage": {
         "title": "Comptabilité Sage",
-        "body": "Connectez Sage Business Cloud Accounting pour apparier les clients par courriel, appliquer la bonne taxe de vente canadienne et poster les factures lorsque les paiements Square sont reçus."
+        "body": "Connectez Sage Business Cloud Accounting pour apparier les clients par courriel, appliquer la bonne taxe de vente canadienne et poster les factures lorsque les paiements Square ou Stripe sont reçus."
       }
     },
     "securityEyebrow": "Sécurité, simplement",
@@ -308,7 +313,7 @@
         "portal": "Portail client, questionnaires IRCC et remplissage PDF",
         "booking": "Réservation publique, calendrier, et Meet / Teams / Zoom",
         "contracts": "Mandats et signature électronique",
-        "payments": "Paiements Square et comptabilité Sage",
+        "payments": "Paiements Square ou Stripe et comptabilité Sage",
         "languages": "Anglais, français et espagnol"
       }
     },
@@ -322,7 +327,7 @@
         "sameProduct": "Le même logiciel que Standard — rien n’est verrouillé",
         "extraSeat": "Comptes supplémentaires {price}",
         "files": "Clients et projets illimités",
-        "payments": "Paiements Square et comptabilité Sage",
+        "payments": "Paiements Square ou Stripe et comptabilité Sage",
         "languages": "Anglais, français et espagnol"
       }
     },
@@ -344,7 +349,7 @@
         "booking": "Réservation et calendrier",
         "meetings": "Liens de réunion",
         "contracts": "Contrats et signature électronique",
-        "payments": "Square (sans commission plateforme)",
+        "payments": "Square ou Stripe (sans commission plateforme)",
         "sage": "Comptabilité Sage",
         "languages": "Anglais, français, espagnol",
         "canada": "Données principales hébergées au Canada"
@@ -378,7 +383,7 @@
       },
       "currency": {
         "q": "Dans quelle devise ?",
-        "a": "En dollars canadiens, TPS/TVH en sus. Nous ne prenons aucun pourcentage sur les paiements de consultation Square."
+        "a": "En dollars canadiens, TPS/TVH en sus. Nous ne prenons aucun pourcentage sur les paiements de consultation Square ou Stripe."
       },
       "files": {
         "q": "Facturez-vous par client ou par dossier ?",
@@ -752,11 +757,12 @@
     "billingAddSeat": "Ajouter un siège",
     "teamSeatsFull": "Tous les sièges sont utilisés. Ajoutez-en un sous",
     "squareTitle": "Paiements Square",
-    "squareHelp": "Connectez Square pour encaisser les services tarifés et les liens de paiement de dossier.",
+    "squareHelp": "Connectez Square pour encaisser les services tarifés et les liens de paiement de dossier. Un cabinet utilise Square ou Stripe, pas les deux.",
     "squareConnect": "Connecter Square",
     "squareDisconnect": "Déconnecter Square",
     "squareConnectedAs": "Compte connecté",
     "squareNotConnected": "Non connecté. Connectez Square pour accepter les paiements.",
+    "squareBlockedByStripe": "Déconnectez Stripe pour passer à Square. Les liens Stripe existants restent valides jusqu’à leur expiration.",
     "squareNotConfigured": "Ajoutez SQUARE_APPLICATION_ID et SQUARE_APPLICATION_SECRET à l’environnement serveur, l’URI OAuth /auth/square/callback, et le webhook /api/square/webhook.",
     "squareCurrency": "Devise de règlement : {currency}",
     "squareConnectedFlash": "Square connecté.",
@@ -830,6 +836,29 @@
       "save_failed": "Impossible d’enregistrer la connexion Square.",
       "invalid_policy": "Le délai d’annulation gratuite doit être supérieur au délai avec frais.",
       "no_location": "Votre compte Square doit avoir un emplacement actif."
+    },
+    "processorExclusiveHelp": "Connectez Square ou Stripe — un seul processeur de paiement peut être actif. Changer de processeur désactive l’autre pour les nouveaux paiements ; les liens existants restent valides jusqu’à leur expiration.",
+    "processorSwitchConfirm": "Cela désactive l’autre processeur pour les nouveaux paiements. Les liens existants restent valides jusqu’à leur expiration. Continuer ?",
+    "processorLinksKeepWorking": "Ce compte est désactivé pour les nouveaux paiements. Les liens existants restent valides jusqu’à leur expiration.",
+    "stripeTitle": "Paiements Stripe",
+    "stripeHelp": "Connectez Stripe pour encaisser les services tarifés et les liens de paiement de dossier. Un cabinet utilise Square ou Stripe, pas les deux. Aucune commission plateforme.",
+    "stripeConnect": "Connecter Stripe",
+    "stripeDisconnect": "Déconnecter Stripe",
+    "stripeContinueOnboarding": "Terminer l’inscription Stripe",
+    "stripeOnboardingIncomplete": "Inscription incomplète",
+    "stripeConnectedAs": "Compte connecté",
+    "stripeNotConnected": "Non connecté. Connectez Stripe pour accepter les paiements.",
+    "stripeBlockedBySquare": "Déconnectez Square pour passer à Stripe. Les liens Square existants restent valides jusqu’à leur expiration.",
+    "stripeNotConfigured": "Ajoutez STRIPE_SECRET_KEY à l’environnement serveur et configurez le webhook /api/stripe/webhook (événements des comptes connectés inclus).",
+    "stripeCurrency": "Devise de règlement : {currency}",
+    "stripeConnectedFlash": "Stripe connecté.",
+    "stripeDisconnected": "Stripe désactivé pour les nouveaux paiements",
+    "stripeErrors": {
+      "unauthorized": "Connectez-vous pour continuer.",
+      "forbidden": "Seuls les administrateurs peuvent gérer Stripe.",
+      "trial_expired": "Votre essai est terminé. L’espace est en lecture seule jusqu’à l’abonnement.",
+      "not_configured": "Stripe n’est pas configuré sur ce serveur.",
+      "save_failed": "Impossible d’enregistrer la connexion Stripe."
     },
     "securityHelp": "Actions sensibles récentes dans l’espace du cabinet (admins seulement). Téléchargez ci-dessous les modèles Loi 25 et LPRPDE pour votre pratique.",
     "securityForbidden": "Seuls les administrateurs peuvent consulter le journal d’audit.",
@@ -2335,7 +2364,7 @@
       },
       "sharing": {
         "title": "9. Communication et fournisseurs",
-        "body": "Nous utilisons ces fournisseurs pour exploiter %PRODUCT_NAME% :\n• Supabase (Canada) — base de données, authentification et fichiers\n• Vercel — hébergement applicatif, journaux, et Web Analytics / Speed Insights facultatifs\n• Resend — courriel transactionnel lorsque l’envoi est configuré\n• Google — seulement si un membre du personnel se connecte avec Google, si un cabinet active Google sur le portail client, ou si un consultant connecte Google Agenda ou Meet\n• Microsoft — seulement si un consultant connecte Outlook ou Teams\n• Zoom — seulement si un consultant connecte Zoom\n• Square — seulement si le cabinet connecte les paiements\n\nUne liste à jour peut être téléchargée depuis cette page. Ces fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet.\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone)."
+        "body": "Nous utilisons ces fournisseurs pour exploiter %PRODUCT_NAME% :\n• Supabase (Canada) — base de données, authentification et fichiers\n• Vercel — hébergement applicatif, journaux, et Web Analytics / Speed Insights facultatifs\n• Resend — courriel transactionnel lorsque l’envoi est configuré\n• Google — seulement si un membre du personnel se connecte avec Google, si un cabinet active Google sur le portail client, ou si un consultant connecte Google Agenda ou Meet\n• Microsoft — seulement si un consultant connecte Outlook ou Teams\n• Zoom — seulement si un consultant connecte Zoom\n• Square — seulement si le cabinet connecte Square pour les paiements\n• Stripe — seulement si le cabinet connecte Stripe pour les paiements\n\nUne liste à jour peut être téléchargée depuis cette page. Ces fournisseurs traitent les renseignements que nous leur transmettons pour fournir leur service. Nous ne communiquons pas le contenu des dossiers à des tiers à des fins de marketing. Une communication peut survenir si la loi l’exige, pour protéger des droits et la sécurité, ou selon les instructions du cabinet.\n\nLorsqu’un consultant connecte un agenda, ce fournisseur reçoit les détails du rendez-vous inscrits (y compris nom, courriel et téléphone)."
       },
       "transfers": {
         "title": "10. Lieu de traitement",
@@ -3430,7 +3459,7 @@
   },
   "projectPayments": {
     "title": "Liens de paiement",
-    "subtitle": "Créez un lien Square pour un montant personnalisé sur ce dossier.",
+    "subtitle": "Créez un lien de paiement pour un montant personnalisé sur ce dossier.",
     "amount": "Montant",
     "description": "Description",
     "descriptionPlaceholder": "Acompte — résidence permanente",
@@ -3440,7 +3469,8 @@
     "creating": "Création…",
     "created": "Lien de paiement créé et copié",
     "linkCopied": "Lien :",
-    "connectSquareFirst": "Connectez Square dans les paramètres Organisation pour créer des liens.",
+    "connectProcessorFirst": "Connectez Square ou Stripe dans les paramètres Organisation pour créer des liens.",
+    "connectSquareFirst": "Connectez Square ou Stripe dans les paramètres Organisation pour créer des liens.",
     "history": "Historique des paiements",
     "historyEmpty": "Aucun lien de paiement pour le moment.",
     "openLink": "Ouvrir la page de paiement",
@@ -3458,7 +3488,8 @@
       "unauthorized": "Connectez-vous pour continuer.",
       "forbidden": "Vous ne pouvez pas créer de liens de paiement.",
       "notFound": "Projet introuvable.",
-      "squareNotConnected": "Connectez d’abord Square dans Organisation.",
+      "squareNotConnected": "Connectez d’abord Square ou Stripe dans Organisation.",
+      "processorNotConnected": "Connectez d’abord Square ou Stripe dans Organisation.",
       "createFailed": "Impossible de créer le lien de paiement.",
       "trialExpired": "La période d’essai est terminée. L’espace de travail est en lecture seule jusqu’à ce que votre organisation s’abonne."
     }
@@ -3467,7 +3498,8 @@
     "title": "Paiement",
     "paidTitle": "Paiement reçu",
     "paidBody": "Merci. Ce paiement est terminé.",
-    "payWithSquare": "Payer avec Square",
+    "payWithSquare": "Payer",
+    "payNow": "Payer",
     "expiredBody": "Ce lien de paiement a expiré. Demandez-en un nouveau à votre consultant.",
     "unavailableTitle": "Lien indisponible",
     "unavailableBody": "Ce lien de paiement est invalide ou plus disponible.",
