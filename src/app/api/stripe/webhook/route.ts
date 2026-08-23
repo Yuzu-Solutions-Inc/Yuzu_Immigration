@@ -143,14 +143,15 @@ export async function POST(request: Request) {
         const subscriptionId =
           typeof subscription === "string" ? subscription : subscription?.id;
         if (subscriptionId) await syncFromSubscriptionId(subscriptionId);
+        const organizationId = schedule.metadata?.organization_id;
         if (
           (event.type === "subscription_schedule.released" ||
             event.type === "subscription_schedule.canceled" ||
             event.type === "subscription_schedule.aborted") &&
-          schedule.metadata.organization_id
+          organizationId
         ) {
           await clearPendingBillingForSchedule(
-            schedule.metadata.organization_id,
+            organizationId,
             schedule.id,
           );
         }

@@ -478,7 +478,7 @@ export async function addLicensedSeats(input: {
 
   try {
     const stripe = getStripe();
-    let subscription = await stripe.subscriptions.retrieve(
+    let subscription: Stripe.Subscription = await stripe.subscriptions.retrieve(
       billing.stripe_subscription_id,
       { expand: ["items.data.price", "latest_invoice"] },
     );

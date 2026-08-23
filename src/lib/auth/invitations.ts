@@ -26,6 +26,7 @@ type InvitationRow = {
   organization_id: string;
   email: string;
   role: OrgRole;
+  is_licensed: boolean;
   expires_at: string;
   accepted_at: string | null;
   revoked_at: string | null;

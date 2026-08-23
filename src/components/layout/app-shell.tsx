@@ -10,7 +10,7 @@ import { type OrgSwitcherOption } from "@/components/layout/org-switcher";
 import { TrialLockBanner } from "@/components/layout/trial-lock-banner";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import type { OrgRole } from "@/lib/auth/rbac";
+import type { OrgAccessLevel } from "@/lib/auth/rbac";
 import { cn } from "@/lib/utils";
 
 export async function DashboardShell({
@@ -26,7 +26,7 @@ export async function DashboardShell({
   activeOrganizationId: string;
   canCreate?: boolean;
   writable?: boolean;
-  role?: OrgRole;
+  role?: OrgAccessLevel;
   children: React.ReactNode;
   actions?: React.ReactNode;
 }) {
