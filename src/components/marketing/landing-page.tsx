@@ -102,6 +102,16 @@ const FEATURE_TONES = {
 
 const FEATURE_BETA = new Set<(typeof FEATURE_KEYS)[number]>(["sage"]);
 
+type BuiltinItem = {
+  key: "booking" | "contracts";
+  Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+};
+
+const BUILTIN_ITEMS: readonly BuiltinItem[] = [
+  { key: "booking", Icon: CalendarDays },
+  { key: "contracts", Icon: FilePen },
+];
+
 type IntegrationItem = {
   key: "calendar" | "outlook" | "meet" | "teams" | "zoom" | "square" | "sage";
   Logo: ComponentType<{ className?: string; title?: string }>;
@@ -427,9 +437,60 @@ export async function LandingPage() {
 
       <DarkBand>
         <LandingReveal>
-          <h2 className="max-w-2xl font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
+          <p className="text-sm font-semibold tracking-[0.16em] text-white/55 uppercase">
+            {t("integrations.eyebrow")}
+          </p>
+          <h2 className="mt-3 max-w-3xl font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
             {t("integrations.title")}
           </h2>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-pretty text-white/70">
+            {t("integrations.subtitle")}
+          </p>
+        </LandingReveal>
+
+        <LandingReveal className="mt-12">
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <h3 className="font-heading text-lg font-semibold tracking-tight text-white">
+                {t("integrations.groups.builtin.title")}
+              </h3>
+              <p className="max-w-2xl text-[15px] leading-relaxed text-pretty text-white/65">
+                {t("integrations.groups.builtin.help")}
+              </p>
+            </div>
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {BUILTIN_ITEMS.map((item) => {
+                const Icon = item.Icon;
+                return (
+                  <li
+                    key={item.key}
+                    className="lp-integration-card space-y-3 rounded-xl border border-white/12 bg-white/6 p-5"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-emerald/15">
+                        <Icon
+                          className="size-6 text-emerald-100"
+                          strokeWidth={1.75}
+                          aria-hidden
+                        />
+                      </div>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <h4 className="font-heading text-base font-semibold text-white">
+                          {t(`integrations.${item.key}.title`)}
+                        </h4>
+                        <span className="inline-flex h-5 shrink-0 items-center rounded-full border border-emerald-100/20 bg-emerald/15 px-2 text-[11px] font-medium text-emerald-100">
+                          {t("integrations.included")}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[15px] leading-relaxed text-pretty text-white/65">
+                      {t(`integrations.${item.key}.body`)}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </LandingReveal>
 
         <LandingReveal className="mt-10">
@@ -459,9 +520,14 @@ export async function LandingPage() {
           {INTEGRATION_GROUPS.map((group) => (
             <LandingReveal key={group.key}>
               <div className="space-y-5">
-                <h3 className="font-heading text-lg font-semibold tracking-tight text-white">
-                  {t(`integrations.groups.${group.key}.title`)}
-                </h3>
+                <div className="space-y-2">
+                  <h3 className="font-heading text-lg font-semibold tracking-tight text-white">
+                    {t(`integrations.groups.${group.key}.title`)}
+                  </h3>
+                  <p className="max-w-2xl text-[15px] leading-relaxed text-pretty text-white/65">
+                    {t(`integrations.groups.${group.key}.help`)}
+                  </p>
+                </div>
                 <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {group.items.map((item) => {
                     const Logo = item.Logo;

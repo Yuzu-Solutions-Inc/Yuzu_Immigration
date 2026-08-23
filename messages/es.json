@@ -182,11 +182,16 @@
       "docStudyLetter": "Carta de explicación"
     },
     "integrations": {
-      "eyebrow": "Integraciones",
-      "title": "Calendario, reuniones, pagos y contabilidad en las herramientas que ya usa",
-      "subtitle": "Conecte las cuentas que su firma ya usa. Reservas, videollamadas, pagos y facturas siguen en esos productos — %PRODUCT_NAME% los coordina en torno al expediente de inmigración.",
+      "eyebrow": "Incluido, luego conectado",
+      "title": "Reservas y contratos incluidos — luego las herramientas que ya usa",
+      "subtitle": "La página pública de reservas y la firma electrónica forman parte del producto, y comparten los datos. No hace falta un planificador aparte, un producto de firma, ni un conector en medio. Después conecte el calendario, las reuniones, los pagos y la contabilidad que ya usa.",
       "beta": "Beta",
+      "included": "Incluido",
       "groups": {
+        "builtin": {
+          "title": "Incluido en el producto",
+          "help": "Horario semanal, página pública de reservas, plantillas de mandato y firma electrónica. Cuando un cliente reserva, el contrato puede rellenarse a partir de la cita y salir a firma."
+        },
         "calendar": {
           "title": "Calendario",
           "help": "Conecte un calendario. La reserva pública evita el tiempo ocupado; las citas confirmadas se escriben ahí."
@@ -199,6 +204,14 @@
           "title": "Pago y contabilidad",
           "help": "Cobre honorarios al reservar o envíe un enlace de pago en un expediente. Conecte Sage para registrar las facturas correspondientes."
         }
+      },
+      "booking": {
+        "title": "Reserva pública",
+        "body": "Comparta una página de reservas con su horario semanal y sus servicios de pago. El cliente elige una hora, paga y recibe la confirmación. El tiempo ocupado de un calendario conectado se omite automáticamente."
+      },
+      "contracts": {
+        "title": "Contratos y firma electrónica",
+        "body": "Redacte o cargue plantillas en cada idioma que atienda. Los datos de la reserva se insertan automáticamente: nombre, servicio, fecha, enlace de la reunión. Envío a firma al reservar. El cliente escribe o dibuja su marca; usted puede refrendar o prefirmar."
       },
       "calendar": {
         "title": "Google Calendar",
@@ -450,10 +463,10 @@
     "alreadyAccepted": "Esta invitación ya se usó.",
     "emailMismatch": "Inicia sesión con {email} para aceptar esta invitación.",
     "joinFailed": "No se pudo unir a la organización. Inténtalo de nuevo.",
+    "seatsExceeded": "Este despacho no tiene plazas libres. Pida a un admin que añada una en Facturación.",
     "goHome": "Ir al espacio de trabajo",
     "goLogin": "Iniciar sesión",
-    "organizationFallback": "la organización",
-    "seatsExceeded": "Este despacho no tiene plazas libres. Pida a un admin que añada una en Facturación."
+    "organizationFallback": "la organización"
   },
   "appHome": {
     "title": "Inicio",

@@ -182,11 +182,16 @@
       "docStudyLetter": "Letter of explanation"
     },
     "integrations": {
-      "eyebrow": "Integrations",
-      "title": "Calendar, meetings, payments, and accounting in the tools you already use",
-      "subtitle": "Connect the accounts your firm already uses. Booking, video calls, payments, and invoices stay in those products — %PRODUCT_NAME% coordinates them around the immigration file.",
+      "eyebrow": "Built in, then connected",
+      "title": "Booking and contracts included — then the tools you already use",
+      "subtitle": "A public booking page and electronic signature ship with the product, and they share data. You don’t need a separate scheduler, a signing product, or a connector between them. Then connect the calendar, meetings, payments, and accounting you already run.",
       "beta": "Beta",
+      "included": "Included",
       "groups": {
+        "builtin": {
+          "title": "Included in the product",
+          "help": "Weekly open hours, a public booking page, retainer templates, and e-signature. When a client books, the contract can fill from that appointment and go out to sign."
+        },
         "calendar": {
           "title": "Calendar",
           "help": "Connect one calendar. Public booking skips busy times; confirmed appointments are written there."
@@ -199,6 +204,14 @@
           "title": "Payments and accounting",
           "help": "Collect consultation fees at booking or send a payment link on a file. Connect Sage to post matching tax invoices."
         }
+      },
+      "booking": {
+        "title": "Public booking",
+        "body": "Share a booking page with your weekly open hours and paid services. Prospective clients pick a time, pay, and get a confirmation. Busy times on a connected calendar are skipped automatically."
+      },
+      "contracts": {
+        "title": "Contracts and e-signature",
+        "body": "Write or upload templates in each language you serve. Booking details fill in automatically — name, service, date, meeting link. Send for signature when they book. Clients type or draw a mark; you can countersign or pre-sign."
       },
       "calendar": {
         "title": "Google Calendar",
@@ -450,10 +463,10 @@
     "alreadyAccepted": "This invitation was already used.",
     "emailMismatch": "Sign in with {email} to accept this invitation.",
     "joinFailed": "Could not join the organization. Try again.",
+    "seatsExceeded": "This firm has no free seats. Ask an admin to add a seat under Billing.",
     "goHome": "Go to workspace",
     "goLogin": "Sign in",
-    "organizationFallback": "the organization",
-    "seatsExceeded": "This firm has no free seats. Ask an admin to add a seat under Billing."
+    "organizationFallback": "the organization"
   },
   "appHome": {
     "title": "Home",

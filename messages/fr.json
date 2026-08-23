@@ -182,11 +182,16 @@
       "docStudyLetter": "Lettre d’explication"
     },
     "integrations": {
-      "eyebrow": "Intégrations",
-      "title": "Calendrier, réunions, paiements et comptabilité dans les outils que vous utilisez déjà",
-      "subtitle": "Branchez les comptes que votre cabinet utilise déjà. Réservation, visio, paiements et factures restent dans ces produits — %PRODUCT_NAME% les coordonne autour du dossier d’immigration.",
+      "eyebrow": "Inclus, puis connecté",
+      "title": "Réservation et contrats inclus — puis les outils que vous utilisez déjà",
+      "subtitle": "Une page de réservation publique et la signature électronique font partie du produit, et elles partagent les données. Pas de planificateur séparé, pas de produit de signature, pas de connecteur au milieu. Branchez ensuite le calendrier, la visio, les paiements et la comptabilité que vous utilisez déjà.",
       "beta": "Bêta",
+      "included": "Inclus",
       "groups": {
+        "builtin": {
+          "title": "Inclus dans le produit",
+          "help": "Plages hebdomadaires, page de réservation publique, modèles de mandat et signature électronique. Dès qu’un client réserve, le contrat peut se remplir à partir du rendez-vous et partir en signature."
+        },
         "calendar": {
           "title": "Calendrier",
           "help": "Connectez un calendrier. La réservation publique évite les plages occupées ; les rendez-vous confirmés y sont inscrits."
@@ -199,6 +204,14 @@
           "title": "Paiement et comptabilité",
           "help": "Encaissez les honoraires à la réservation ou envoyez un lien de paiement sur un dossier. Connectez Sage pour poster les factures correspondantes."
         }
+      },
+      "booking": {
+        "title": "Réservation publique",
+        "body": "Partagez une page de réservation avec vos plages hebdomadaires et vos services payants. Le client choisit un créneau, paie et reçoit une confirmation. Les plages occupées d’un calendrier connecté sont automatiquement évitées."
+      },
+      "contracts": {
+        "title": "Contrats et signature électronique",
+        "body": "Rédigez ou importez vos modèles dans chaque langue desservie. Les détails de la réservation s’insèrent automatiquement — nom, service, date, lien de visio. Envoi en signature dès la réservation. Le client tape ou dessine sa marque ; vous pouvez contresigner ou pré-signer."
       },
       "calendar": {
         "title": "Google Calendar",
@@ -450,10 +463,10 @@
     "alreadyAccepted": "Cette invitation a déjà été utilisée.",
     "emailMismatch": "Connectez-vous avec {email} pour accepter cette invitation.",
     "joinFailed": "Impossible de rejoindre l’organisation. Réessayez.",
+    "seatsExceeded": "Ce cabinet n’a plus de siège libre. Demandez à un admin d’en ajouter un sous Facturation.",
     "goHome": "Aller à l’espace de travail",
     "goLogin": "Se connecter",
-    "organizationFallback": "l’organisation",
-    "seatsExceeded": "Ce cabinet n’a plus de siège libre. Demandez à un admin d’en ajouter un sous Facturation."
+    "organizationFallback": "l’organisation"
   },
   "appHome": {
     "title": "Accueil",
