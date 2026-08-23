@@ -45,10 +45,14 @@ export function formatCadAmount(amount: number, locale: AppLocale): string {
   return `$${amount}`;
 }
 
+export function cadMonthlyPeriod(locale: AppLocale): string {
+  if (locale === "fr") return "/mois";
+  if (locale === "es") return "/mes";
+  return "/mo";
+}
+
 export function formatCadMonthly(amount: number, locale: AppLocale): string {
-  if (locale === "fr") return `${amount}\u00a0$/mois`;
-  if (locale === "es") return `$${amount}/mes`;
-  return `$${amount}/mo`;
+  return `${formatCadAmount(amount, locale)}${cadMonthlyPeriod(locale)}`;
 }
 
 /** Yearly total: 10 months paid, 2 months free. */

@@ -284,18 +284,31 @@
     "metaDescription": "%PRODUCT_NAME% cuesta 69 $/mes por el primer usuario, luego 29 $ por usuario extra. Primeras 100 firmas: 49 $ y 25 $. Facturación anual: 10 meses pagados.",
     "eyebrow": "Precios",
     "title": "Un precio. Añada asientos al contratar.",
-    "subtitle": "Primer usuario 69 $/mes. Usuarios extra 29 $/mes. Facturación anual: 10 meses pagados, 2 meses gratis.",
+    "subtitle": "Un asiento es un inicio de sesión del personal. Pague el primero y añada asientos al contratar. Clientes, expedientes y portal son ilimitados.",
     "testingBanner": "Gratis 30 días desde que crea su firma. Sin tarjeta.",
     "currencyNote": "CAD, más GST/HST. Facturación anual: pague 10 meses, 2 meses gratis.",
     "cta": "Prueba de 30 días",
+    "firstSeat": "Primer usuario del personal",
+    "extraSeat": "Cada asiento extra",
+    "seatHint": "Un asiento es una persona de su equipo. Los clientes del portal no ocupan asiento.",
     "extraSeats": "Luego {price} por usuario extra",
-    "foundingHelp": "Código {code} para las primeras {count} firmas: {founding} por el primer usuario y {extra} por usuario extra, aplicado automáticamente al pagar.",
+    "foundingTitle": "Tarifas de lanzamiento para las primeras {count} firmas",
+    "foundingHelp": "{founding} por el primer usuario y {extra} por asiento extra. El código {code} se aplica automáticamente al pagar.",
     "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
+    "examples": {
+      "title": "Cómo se suman los asientos",
+      "subtitle": "Paga por inicios de sesión del personal, no por casos. El acceso al portal es gratis.",
+      "seats": "{count, plural, one {# asiento} other {# asientos}}",
+      "you": "Solo usted",
+      "colleague": "Usted y un colega",
+      "team": "Un equipo de tres",
+      "footnote": "Añada un asiento al invitar personal. El extra se prorratea. Los asientos sin usar se pueden quitar en la renovación."
+    },
     "plan": {
       "name": "%PRODUCT_NAME%",
       "audience": "Consultores y abogados de inmigración canadiense",
       "badge": "30 días gratis",
-      "teaser": "Un usuario incluido. El producto completo — clientes y expedientes ilimitados.",
+      "teaser": "Clientes y expedientes ilimitados. El producto completo en cada asiento.",
       "features": {
         "staff": "1 usuario del personal incluido",
         "extraSeat": "Cuentas adicionales {price}",
@@ -313,7 +326,7 @@
     "teaser": {
       "eyebrow": "Precios",
       "title": "Pruebe el producto completo. Quédese si encaja.",
-      "subtitle": "Primer usuario 69 $/mes, usuarios extra 29 $/mes. Firmas fundadoras: 49 $ y 25 $. Facturación anual: 10 meses pagados.",
+      "subtitle": "Un asiento es un inicio de sesión del personal. Primer asiento, luego asientos extra al contratar. Clientes y expedientes ilimitados.",
       "compare": "Ver el detalle de precios"
     },
     "faq": {
@@ -335,8 +348,8 @@
         "a": "Sí. Paga {paid} meses y {free} meses son gratis. El precio anual de lista es {annual}."
       },
       "seats": {
-        "q": "¿Cómo funcionan los usuarios extra?",
-        "a": "El primer usuario está incluido. Cada usuario adicional cuesta {extraSeat}. Invitar a alguien sin asientos disponibles cobra la diferencia prorrateada tras confirmar."
+        "q": "¿Qué es un asiento?",
+        "a": "Un asiento es un inicio de sesión del personal (titular, admin o gestor de casos). El primer asiento es el precio del plan. Cada usuario extra cuesta {extraSeat}. Los clientes del portal no necesitan asiento. Invitar a alguien sin asientos disponibles cobra la diferencia prorrateada tras confirmar."
       },
       "roles": {
         "q": "¿Qué es un admin frente a un gestor de casos?",

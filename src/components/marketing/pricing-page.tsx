@@ -18,14 +18,26 @@ import {
 
 const FAQ_KEYS = [
   "trial",
-  "founding",
-  "after",
-  "annual",
   "seats",
   "files",
+  "annual",
+  "founding",
+  "after",
   "roles",
   "currency",
 ] as const;
+
+const SEAT_EXAMPLES = [1, 2, 3] as const;
+
+const SEAT_EXAMPLE_KEYS = ["you", "colleague", "team"] as const;
+
+function listMonthlyForStaff(count: number): number {
+  return (
+    PRICING.standard.listMonthly +
+    Math.max(0, count - PRICING.standard.includedUsers) *
+      PRICING.extraSeatMonthly
+  );
+}
 
 function faqParams(
   key: (typeof FAQ_KEYS)[number],
@@ -86,13 +98,55 @@ export async function PricingPage() {
       <MarketingTestingBanner>{t("testingBanner")}</MarketingTestingBanner>
 
       <section className="border-b border-border bg-canvas py-12 sm:py-16">
-        <div className="mx-auto w-full max-w-6xl space-y-8 px-6">
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
-            {t("title")}
-          </h1>
+        <div className="mx-auto w-full max-w-6xl space-y-10 px-6">
+          <header className="max-w-2xl space-y-3">
+            <p className="font-heading text-sm font-semibold tracking-[0.16em] text-action">
+              {t("eyebrow")}
+            </p>
+            <h1 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+              {t("title")}
+            </h1>
+            <p className="text-base leading-relaxed text-muted-foreground text-pretty sm:text-[17px]">
+              {t("subtitle")}
+            </p>
+          </header>
 
           <PricingPlanCards variant="page" />
-          <p className="text-sm text-muted-foreground">{t("currencyNote")}</p>
+          <p className="text-center text-sm text-muted-foreground">
+            {t("currencyNote")}
+          </p>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-surface py-16 sm:py-20">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <h2 className="font-heading text-2xl font-bold tracking-tight text-brand text-pretty sm:text-3xl">
+            {t("examples.title")}
+          </h2>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground text-pretty">
+            {t("examples.subtitle")}
+          </p>
+          <ol className="mt-10 grid gap-4 sm:grid-cols-3">
+            {SEAT_EXAMPLES.map((count, index) => (
+              <li
+                key={count}
+                className="rounded-xl border border-border bg-canvas px-5 py-5"
+              >
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("examples.seats", { count })}
+                </p>
+                <p className="mt-2 font-heading text-3xl font-bold tracking-tight text-brand tabular-nums">
+                  {formatCadMonthly(listMonthlyForStaff(count), locale)}
+                </p>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                  {t(`examples.${SEAT_EXAMPLE_KEYS[index]}`)}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-6 text-sm leading-relaxed text-muted-foreground text-pretty">
+            {t("examples.footnote")}
+          </p>
         </div>
       </section>
 

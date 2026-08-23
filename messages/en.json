@@ -284,18 +284,31 @@
     "metaDescription": "%PRODUCT_NAME% is $69/mo for the first staff user, then $29 per extra user. First 100 firms: $49 and $25. Yearly billing is 10 months paid.",
     "eyebrow": "Pricing",
     "title": "One price. Add seats as you hire.",
-    "subtitle": "First staff user $69/mo. Extra users $29/mo. Yearly billing is 10 months paid, 2 months free.",
+    "subtitle": "A seat is a staff login. Pay for the first seat, then add seats as you hire. Clients, files, and portal users are unlimited.",
     "testingBanner": "Free for 30 days from when you create your firm. No credit card.",
     "currencyNote": "CAD, plus GST/HST. Yearly billing: pay 10 months, get 2 months free.",
     "cta": "Start 30-day trial",
+    "firstSeat": "First staff user",
+    "extraSeat": "Each extra seat",
+    "seatHint": "A seat is one person on your team. Clients using the portal do not take a seat.",
     "extraSeats": "Then {price} per extra staff user",
-    "foundingHelp": "Promo {code} for the first {count} firms: {founding} for the first user and {extra} per extra user, applied automatically at checkout.",
+    "foundingTitle": "Founding rates for the first {count} firms",
+    "foundingHelp": "{founding} for the first user and {extra} per extra seat. Promo {code} applies automatically at checkout.",
     "yearlyPrice": "or {amount} billed yearly ({free} months free)",
+    "examples": {
+      "title": "How seats add up",
+      "subtitle": "You pay for staff logins, not cases. Client portal access is free.",
+      "seats": "{count, plural, one {# seat} other {# seats}}",
+      "you": "Just you",
+      "colleague": "You and a colleague",
+      "team": "A team of three",
+      "footnote": "Add a seat when you invite staff. The extra cost is prorated. Unused seats can drop at renewal."
+    },
     "plan": {
       "name": "%PRODUCT_NAME%",
       "audience": "Canadian immigration consultants and lawyers",
       "badge": "30 days free",
-      "teaser": "One staff user included. The full product — unlimited clients and files.",
+      "teaser": "Unlimited clients and files. The full product on every seat.",
       "features": {
         "staff": "1 staff user included",
         "extraSeat": "Additional staff accounts {price}",
@@ -313,7 +326,7 @@
     "teaser": {
       "eyebrow": "Pricing",
       "title": "Try the full product. Stay if it fits.",
-      "subtitle": "First user $69/mo, extra users $29/mo. Founding firms: $49 and $25. Yearly billing is 10 months paid.",
+      "subtitle": "A seat is a staff login. First seat, then extra seats as you hire. Clients and files are unlimited.",
       "compare": "See pricing details"
     },
     "faq": {
@@ -335,8 +348,8 @@
         "a": "Yes. Pay {paid} months and get {free} months free. List yearly is {annual}."
       },
       "seats": {
-        "q": "How do extra users work?",
-        "a": "The first staff user is included. Each additional staff user is {extraSeat}. Inviting someone when you are out of seats bills the prorated difference after you confirm."
+        "q": "What is a seat?",
+        "a": "A seat is a staff login (owner, admin, or case manager). The first seat is the plan price. Each extra staff user is {extraSeat}. Clients using the portal do not need a seat. Inviting someone when you are out of seats bills the prorated difference after you confirm."
       },
       "roles": {
         "q": "What is an admin vs a case manager?",

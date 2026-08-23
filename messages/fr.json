@@ -284,18 +284,31 @@
     "metaDescription": "%PRODUCT_NAME% coûte 69 $/mois pour le premier utilisateur, puis 29 $ par utilisateur supplémentaire. 100 premiers cabinets : 49 $ et 25 $. Facturation annuelle : 10 mois payés.",
     "eyebrow": "Tarifs",
     "title": "Un prix. Des sièges à mesure que vous embauchez.",
-    "subtitle": "Premier utilisateur 69 $/mois. Utilisateurs supplémentaires 29 $/mois. Facturation annuelle : 10 mois payés, 2 mois offerts.",
+    "subtitle": "Un siège est une connexion du personnel. Vous payez le premier siège, puis vous en ajoutez à l’embauche. Clients, dossiers et portail sont illimités.",
     "testingBanner": "Gratuit 30 jours à compter de la création de votre cabinet. Sans carte de crédit.",
     "currencyNote": "CAD, TPS/TVH en sus. Facturation annuelle : 10 mois payés, 2 mois offerts.",
     "cta": "Essai de 30 jours",
+    "firstSeat": "Premier utilisateur",
+    "extraSeat": "Chaque siège supplémentaire",
+    "seatHint": "Un siège, c’est une personne de votre équipe. Les clients du portail n’occupent pas de siège.",
     "extraSeats": "Puis {price} par utilisateur supplémentaire",
-    "foundingHelp": "Code {code} pour les {count} premiers cabinets : {founding} pour le premier utilisateur et {extra} par utilisateur supplémentaire, appliqué automatiquement au paiement.",
+    "foundingTitle": "Tarifs de lancement pour les {count} premiers cabinets",
+    "foundingHelp": "{founding} pour le premier utilisateur et {extra} par siège supplémentaire. Le code {code} s’applique automatiquement au paiement.",
     "yearlyPrice": "ou {amount} facturé à l’année ({free} mois offerts)",
+    "examples": {
+      "title": "Comment les sièges s’additionnent",
+      "subtitle": "Vous payez les connexions du personnel, pas les dossiers. L’accès au portail client est gratuit.",
+      "seats": "{count, plural, one {# siège} other {# sièges}}",
+      "you": "Vous seul",
+      "colleague": "Vous et un collègue",
+      "team": "Une équipe de trois",
+      "footnote": "Ajoutez un siège lorsque vous invitez un membre. La différence est proratisée. Les sièges inutilisés peuvent être retirés au renouvellement."
+    },
     "plan": {
       "name": "%PRODUCT_NAME%",
       "audience": "Consultants et avocats en immigration canadienne",
       "badge": "30 jours gratuits",
-      "teaser": "Un utilisateur inclus. Le produit complet — clients et dossiers illimités.",
+      "teaser": "Clients et dossiers illimités. Le produit complet sur chaque siège.",
       "features": {
         "staff": "1 utilisateur du personnel inclus",
         "extraSeat": "Comptes supplémentaires {price}",
@@ -313,7 +326,7 @@
     "teaser": {
       "eyebrow": "Tarifs",
       "title": "Essayez le produit complet. Restez s’il vous convient.",
-      "subtitle": "Premier utilisateur 69 $/mois, utilisateurs supplémentaires 29 $/mois. Cabinets fondateurs : 49 $ et 25 $. Facturation annuelle : 10 mois payés.",
+      "subtitle": "Un siège est une connexion du personnel. Premier siège, puis sièges supplémentaires à l’embauche. Clients et dossiers illimités.",
       "compare": "Voir le détail des tarifs"
     },
     "faq": {
@@ -335,8 +348,8 @@
         "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Le tarif annuel affiché est {annual}."
       },
       "seats": {
-        "q": "Comment fonctionnent les utilisateurs supplémentaires ?",
-        "a": "Le premier utilisateur est inclus. Chaque utilisateur supplémentaire coûte {extraSeat}. Une invitation sans siège disponible facture la différence proratisée après confirmation."
+        "q": "Qu’est-ce qu’un siège ?",
+        "a": "Un siège est une connexion du personnel (titulaire, admin ou gestionnaire de cas). Le premier siège est le tarif du forfait. Chaque utilisateur supplémentaire coûte {extraSeat}. Les clients du portail n’ont pas besoin de siège. Une invitation sans siège disponible facture la différence proratisée après confirmation."
       },
       "roles": {
         "q": "Quelle est la différence entre un admin et un gestionnaire de cas ?",
