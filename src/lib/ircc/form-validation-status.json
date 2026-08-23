@@ -1,10 +1,15 @@
 {
-  "checkedAt": "2026-08-19T06:06:04.383Z",
-  "passed": true,
+  "checkedAt": "2026-08-23T14:15:51.999Z",
+  "passed": false,
   "datesOnly": false,
-  "errorCount": 0,
+  "errorCount": 4,
   "warningCount": 0,
-  "errors": [],
+  "errors": [
+    "imm5257sch1e: PDF is 1365471 bytes, form-meta expects 538706. Encryption keys and choice lists likely changed.",
+    "imm5257sch1e: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale.",
+    "imm5257sch1f: PDF is 1315819 bytes, form-meta expects 586260. Encryption keys and choice lists likely changed.",
+    "imm5257sch1f: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale."
+  ],
   "warnings": [],
   "forms": {
     "imm1294": {
@@ -27,8 +32,13 @@
     },
     "imm5257sch1": {
       "liveUpdated": "2023-09",
-      "passed": true,
-      "errors": [],
+      "passed": false,
+      "errors": [
+        "imm5257sch1e: PDF is 1365471 bytes, form-meta expects 538706. Encryption keys and choice lists likely changed.",
+        "imm5257sch1e: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale.",
+        "imm5257sch1f: PDF is 1315819 bytes, form-meta expects 586260. Encryption keys and choice lists likely changed.",
+        "imm5257sch1f: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale."
+      ],
       "warnings": []
     },
     "imm5406": {
