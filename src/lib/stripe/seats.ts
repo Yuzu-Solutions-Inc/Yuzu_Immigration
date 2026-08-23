@@ -39,14 +39,20 @@ type CatalogSubscriptionItem = {
   deleted?: boolean;
 };
 
+function toBillingInterval(
+  value: string | null | undefined,
+): BillingInterval | null {
+  if (value === "year") return "year";
+  if (value === "month") return "month";
+  return null;
+}
+
 function itemBillingInterval(
   item: Stripe.SubscriptionItem,
 ): BillingInterval | null {
   const parsed = parseLookupKey(item.price.lookup_key);
   if (parsed) return parsed.interval;
-  const recurring = item.price.recurring?.interval;
-  if (recurring === "year" || recurring === "month") return recurring;
-  return null;
+  return toBillingInterval(item.price.recurring?.interval);
 }
 
 function subscriptionBillingInterval(
