@@ -7,6 +7,7 @@ import {
   inviteOrgMemberAction,
   removeOrgMemberAction,
   revokeOrgInvitationAction,
+  transferOrgOwnershipAction,
   updateOrgMemberRoleAction,
   type TeamActionState,
 } from "@/app/actions/team";
@@ -15,7 +16,7 @@ import { Field, FieldError, FieldHint, FieldLabel, FieldSuccess } from "@/compon
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { OrgRole } from "@/lib/auth/rbac";
-import { ORG_ROLES } from "@/lib/auth/rbac";
+import { ASSIGNABLE_ORG_ROLES, isOwner } from "@/lib/auth/rbac";
 import type { AppLocale } from "@/lib/i18n/locales";
 
 const empty: TeamActionState = {};
@@ -49,6 +50,7 @@ function teamErrorMessage(
       seat_charge_failed: t("errors.seatChargeFailed"),
       not_configured: t("errors.seatChargeFailed"),
       last_admin: t("errors.lastAdmin"),
+      last_owner: t("errors.lastOwner"),
       cannot_remove_self: t("errors.cannotRemoveSelf"),
       not_found: t("errors.notFound"),
       save_failed: t("errors.saveFailed"),
@@ -68,6 +70,7 @@ function teamSuccessMessage(
       revoked: t("inviteRevoked"),
       role_updated: t("roleUpdated"),
       removed: t("memberRemoved"),
+      ownership_transferred: t("ownershipTransferred"),
     }[message] ?? null
   );
 }
@@ -75,6 +78,7 @@ function teamSuccessMessage(
 export function TeamSettings({
   locale,
   currentUserId,
+  currentUserRole,
   members,
   invitations,
   subscribed,
@@ -82,6 +86,7 @@ export function TeamSettings({
 }: {
   locale: AppLocale;
   currentUserId: string;
+  currentUserRole: OrgRole;
   members: Member[];
   invitations: Invitation[];
   subscribed: boolean;
@@ -105,21 +110,27 @@ export function TeamSettings({
     revokeOrgInvitationAction,
     empty,
   );
+  const [transferState, transferAction, transferPending] = useActionState(
+    transferOrgOwnershipAction,
+    empty,
+  );
   const [copied, setCopied] = useState(false);
 
   const occupancy = members.length + invitations.length;
   const atSeatCap = subscribed && occupancy >= Math.max(1, licensedSeats);
-  const adminCount = members.filter((m) => m.role === "admin").length;
+  const currentIsOwner = isOwner(currentUserRole);
   const error =
     teamErrorMessage(inviteState.error, t) ||
     teamErrorMessage(memberState.error, t) ||
     teamErrorMessage(removeState.error, t) ||
-    teamErrorMessage(revokeState.error, t);
+    teamErrorMessage(revokeState.error, t) ||
+    teamErrorMessage(transferState.error, t);
   const success =
     teamSuccessMessage(inviteState.message, t) ||
     teamSuccessMessage(memberState.message, t) ||
     teamSuccessMessage(removeState.message, t) ||
-    teamSuccessMessage(revokeState.message, t);
+    teamSuccessMessage(revokeState.message, t) ||
+    teamSuccessMessage(transferState.message, t);
 
   return (
     <section className="space-y-6">
@@ -144,7 +155,7 @@ export function TeamSettings({
             name="role"
             defaultValue="case_manager"
           >
-            {ORG_ROLES.map((role) => (
+            {ASSIGNABLE_ORG_ROLES.map((role) => (
               <option key={role} value={role}>
                 {tRoles(role)}
               </option>
@@ -194,7 +205,8 @@ export function TeamSettings({
             const name =
               member.profile.full_name || member.profile.email || member.user_id;
             const isSelf = member.user_id === currentUserId;
-            const isLastAdmin = member.role === "admin" && adminCount <= 1;
+            const memberIsOwner = isOwner(member.role);
+            const roleLocked = memberIsOwner;
             return (
               <li
                 key={member.id}
@@ -216,20 +228,45 @@ export function TeamSettings({
                       name="role"
                       density="compact"
                       defaultValue={member.role}
-                      disabled={memberPending || isLastAdmin}
-                      title={isLastAdmin ? t("errors.lastAdmin") : undefined}
+                      disabled={memberPending || roleLocked}
+                      title={roleLocked ? t("errors.lastOwner") : undefined}
                       onChange={(event) => event.currentTarget.form?.requestSubmit()}
                       aria-label={t("changeRole")}
                       className="w-auto"
                     >
-                      {ORG_ROLES.map((role) => (
-                        <option key={role} value={role}>
-                          {tRoles(role)}
-                        </option>
-                      ))}
+                      {memberIsOwner ? (
+                        <option value="owner">{tRoles("owner")}</option>
+                      ) : (
+                        ASSIGNABLE_ORG_ROLES.map((role) => (
+                          <option key={role} value={role}>
+                            {tRoles(role)}
+                          </option>
+                        ))
+                      )}
                     </NativeSelect>
                   </form>
-                  {isSelf || isLastAdmin ? null : (
+                  {currentIsOwner && !memberIsOwner ? (
+                    <form
+                      action={transferAction}
+                      onSubmit={(event) => {
+                        if (!window.confirm(t("transferOwnershipConfirm", { name }))) {
+                          event.preventDefault();
+                        }
+                      }}
+                    >
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="memberId" value={member.id} />
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        disabled={transferPending}
+                      >
+                        {t("transferOwnership")}
+                      </Button>
+                    </form>
+                  ) : null}
+                  {isSelf || memberIsOwner ? null : (
                     <form
                       action={removeAction}
                       onSubmit={(event) => {

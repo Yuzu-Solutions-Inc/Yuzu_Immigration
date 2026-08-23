@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getAppBaseUrl } from "@/lib/app-url";
-import { canAdministerOrg } from "@/lib/auth/rbac";
+import {
+  canAdministerOrg,
+  canTransferOwnership,
+  isOwner,
+} from "@/lib/auth/rbac";
 import {
   INVITE_TTL_DAYS,
   hashInviteToken,
@@ -238,16 +242,8 @@ export async function updateOrgMemberRoleAction(
     .maybeSingle();
 
   if (!target) return { error: "not_found" };
-
-  if (target.role === "admin" && parsed.data.role !== "admin") {
-    const { count } = await supabase
-      .from("organization_members")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", membership.organization.id)
-      .eq("role", "admin");
-    if ((count ?? 0) <= 1) {
-      return { error: "last_admin" };
-    }
+  if (target.role === "owner" || parsed.data.role === "owner") {
+    return { error: "last_owner" };
   }
 
   const { error } = await supabase
@@ -315,15 +311,8 @@ export async function removeOrgMemberAction(
   if (target.user_id === user.id) {
     return { error: "cannot_remove_self" };
   }
-  if (target.role === "admin") {
-    const { count } = await supabase
-      .from("organization_members")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", membership.organization.id)
-      .eq("role", "admin");
-    if ((count ?? 0) <= 1) {
-      return { error: "last_admin" };
-    }
+  if (isOwner(target.role)) {
+    return { error: "last_owner" };
   }
 
   const { error } = await supabase
@@ -351,4 +340,64 @@ export async function removeOrgMemberAction(
 
   revalidatePath(`/${parsed.data.locale}/settings/billing`);
   return { message: "removed" };
+}
+
+export async function transferOrgOwnershipAction(
+  _prev: TeamActionState,
+  formData: FormData,
+): Promise<TeamActionState> {
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      memberId: z.string().uuid(),
+    })
+    .safeParse({
+      locale: formData.get("locale") || "en",
+      memberId: String(formData.get("memberId") || ""),
+    });
+
+  if (!parsed.success) return { error: "invalid" };
+
+  const membership = await getPrimaryMembership();
+  const user = await getSessionUser();
+  if (!membership || !user || !canTransferOwnership(membership.role)) {
+    return { error: "forbidden" };
+  }
+
+  const supabase = await createClient();
+  const { data: target } = await supabase
+    .from("organization_members")
+    .select("id, user_id, role")
+    .eq("id", parsed.data.memberId)
+    .eq("organization_id", membership.organization.id)
+    .maybeSingle();
+
+  if (!target) return { error: "not_found" };
+  if (target.user_id === user.id) {
+    return { error: "invalid" };
+  }
+
+  const { error } = await supabase.rpc("transfer_organization_ownership", {
+    p_organization_id: membership.organization.id,
+    p_new_owner_user_id: target.user_id,
+  });
+
+  if (error) {
+    console.error("transfer ownership:", error.message);
+    return { error: "save_failed" };
+  }
+
+  await recordAuditEvent({
+    organizationId: membership.organization.id,
+    actorUserId: user.id,
+    actorKind: "staff",
+    action: "organization.transfer_ownership",
+    resourceType: "organization_member",
+    resourceId: parsed.data.memberId,
+    metadata: { newOwnerUserId: target.user_id },
+  });
+
+  revalidatePath(`/${parsed.data.locale}/settings/billing`);
+  revalidatePath(`/${parsed.data.locale}/settings/organization`);
+  return { message: "ownership_transferred" };
 }

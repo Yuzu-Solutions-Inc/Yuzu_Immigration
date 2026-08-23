@@ -20,6 +20,7 @@ import {
 import { sql } from "drizzle-orm";
 
 export const orgMemberRoleEnum = pgEnum("org_member_role", [
+  "owner",
   "admin",
   "case_manager",
 ]);
@@ -113,6 +114,12 @@ export const organizations = pgTable("organizations", {
   /** Drop unused licensed seats on the next renewal invoice. */
   billingSeatTrueUp: boolean("billing_seat_true_up").default(false).notNull(),
   foundingRate: boolean("founding_rate").default(false).notNull(),
+  /** When set, the workspace is offboarded. Remaining columns are a Loi 25 tombstone. */
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  /** Snapshot of the owner’s name at deletion (incident contact). */
+  ownerContactName: text("owner_contact_name"),
+  /** Snapshot of the owner’s email at deletion (incident contact). */
+  ownerContactEmail: text("owner_contact_email"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

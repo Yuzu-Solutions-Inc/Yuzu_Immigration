@@ -454,7 +454,141 @@
       "generic": "Une erreur est survenue. Réessayez."
     }
   },
+  "welcome": {
+    "kicker": "Étape {current} sur {total}",
+    "skipAll": "Ignorer la configuration",
+    "skipStep": "Ignorer cette étape",
+    "back": "Retour",
+    "continue": "Continuer",
+    "finish": "Aller à l’accueil",
+    "saving": "Enregistrement…",
+    "saveError": "Enregistrement impossible. Réessayez.",
+    "features": {
+      "projects": {
+        "title": "Dossiers",
+        "body": "Ouvrez un dossier d’immigration, rattachez des clients et générez les PDF IMM à partir d’un seul questionnaire."
+      },
+      "clients": {
+        "title": "Clients",
+        "body": "Conservez les fiches, notes et accès au portail pour chaque personne, d’un dossier à l’autre."
+      },
+      "forms": {
+        "title": "Formulaires et portail",
+        "body": "Les clients remplissent le questionnaire et déposent des pièces. Vous révisez, corrigez et téléchargez les PDF prêts à déposer."
+      },
+      "booking": {
+        "title": "Calendrier et rendez-vous",
+        "body": "Publiez vos heures, prenez des consultations payantes et envoyez automatiquement un lien Meet, Teams ou Zoom."
+      },
+      "services": {
+        "title": "Services",
+        "body": "La page de réservation publique n’affiche que les consultations que vous ajoutez ici."
+      },
+      "payments": {
+        "title": "Paiements",
+        "body": "Connectez Stripe ou Square pour que les clients paient à la réservation ou sur facture."
+      }
+    },
+    "steps": {
+      "tour": {
+        "nav": "Aperçu",
+        "title": "Bienvenue dans votre espace",
+        "body": "Ce parcours présente les zones principales du produit, puis les réglages qui changent les dossiers, les rendez-vous et les formulaires."
+      },
+      "profile": {
+        "nav": "Nom",
+        "title": "Votre nom",
+        "body": "Il apparaît dans l’application, dans les courriels aux clients et comme repli sur les formulaires de représentant."
+      },
+      "representative": {
+        "nav": "IMM 5476",
+        "title": "Coordonnées du représentant",
+        "body": "Le IMM 5476 est ajouté à chaque dossier. Vos renseignements CICC et votre adresse postale le remplissent automatiquement."
+      },
+      "hours": {
+        "nav": "Heures",
+        "title": "Quand les clients peuvent vous réserver",
+        "body": "La réservation publique n’offre des plages que dans les heures hebdomadaires que vous publiez."
+      },
+      "calendar": {
+        "nav": "Calendrier",
+        "title": "Garder les rendez-vous dans votre calendrier",
+        "body": "Connectez Google Calendar ou Outlook pour y voir les nouvelles réservations et bloquer les événements externes."
+      },
+      "meeting": {
+        "nav": "Réunions",
+        "title": "Lien de visio",
+        "body": "Choisissez Google Meet, Teams ou Zoom pour que chaque réservation inclue un lien de connexion."
+      },
+      "service": {
+        "nav": "Service",
+        "title": "Ajouter une consultation",
+        "body": "Sans au moins un service actif, la page de réservation publique n’a rien à offrir."
+      },
+      "payments": {
+        "nav": "Paiements",
+        "title": "Encaisser (facultatif)",
+        "body": "Connectez Stripe ou Square quand vous serez prêt. Vous pouvez ignorer cette étape et le faire plus tard."
+      },
+      "team": {
+        "nav": "Équipe",
+        "title": "Inviter un collègue (facultatif)",
+        "body": "Les gestionnaires de cas voient tout le volume. Vous pouvez ignorer cette étape et inviter plus tard depuis la facturation."
+      },
+      "done": {
+        "nav": "Terminé",
+        "title": "Vous pouvez commencer",
+        "body": "Ce qui reste ouvert reste à l’accueil jusqu’à ce que vous le terminiez. Vous pouvez rouvrir ce parcours depuis là."
+      }
+    },
+    "profile": {
+      "label": "Nom complet",
+      "hint": "Le nom que les clients doivent voir dans les courriels et sur les formulaires.",
+      "save": "Enregistrer le nom"
+    },
+    "representative": {
+      "detail": "Ouvrez les paramètres du compte pour entrer le numéro de membre, le téléphone et l’adresse postale. Ces champs remplissent le IMM 5476 sur chaque dossier où vous êtes le représentant.",
+      "cta": "Ouvrir les coordonnées du représentant",
+      "complete": "Les coordonnées du représentant sont enregistrées."
+    },
+    "hours": {
+      "detail": "Appliquez les jours ouvrables 9 h – 17 h, ou définissez une grille personnalisée dans le calendrier.",
+      "preset": "Utiliser les jours ouvrables 9 h – 17 h",
+      "custom": "Heures personnalisées",
+      "applied": "Heures des jours ouvrables enregistrées.",
+      "complete": "Vous avez déjà des heures d’ouverture."
+    },
+    "service": {
+      "titleLabel": "Nom du service",
+      "titleHint": "Exemple : Consultation initiale.",
+      "duration": "Durée (minutes)",
+      "price": "Prix (CAD)",
+      "priceHint": "Indiquez 0 pour une consultation gratuite.",
+      "save": "Ajouter le service",
+      "created": "Service ajouté."
+    },
+    "payments": {
+      "detail": "Stripe et Square se trouvent sous Paramètres → Paiements. Ignorez cette étape si vous n’encaissez pas encore.",
+      "cta": "Ouvrir les paiements"
+    },
+    "team": {
+      "email": "Courriel professionnel",
+      "role": "Rôle",
+      "send": "Envoyer l’invitation",
+      "sent": "Invitation envoyée."
+    },
+    "done": {
+      "profile": "Nom",
+      "representative": "Coordonnées du représentant",
+      "hours": "Heures d’ouverture",
+      "calendar": "Calendrier connecté",
+      "meeting": "Outil de réunion",
+      "service": "Service réservable",
+      "next": "Créez un dossier depuis l’accueil, ou terminez les éléments restants dans la liste de configuration."
+    }
+  },
   "orgRoles": {
+    "owner": "Propriétaire",
     "admin": "Admin",
     "case_manager": "Gestionnaire de cas"
   },
@@ -543,6 +677,8 @@
       "title": "Terminez la configuration de votre compte",
       "subtitle": "{done} sur {total} faits",
       "cta": "Configurer",
+      "guidedCta": "Ouvrir le guidage",
+      "guidedHelp": "Un court parcours du produit et des réglages qui changent les rendez-vous et les formulaires IMM.",
       "items": {
         "account": {
           "title": "Votre nom",
@@ -572,9 +708,7 @@
           "title": "Premier service réservable",
           "help": "Ajoutez une consultation pour que les clients puissent réserver en ligne."
         }
-      },
-      "guidedCta": "Ouvrir le guidage",
-      "guidedHelp": "Un court parcours du produit et des réglages qui changent les rendez-vous et les formulaires IMM."
+      }
     },
     "appointments": {
       "title": "Cette semaine",
@@ -951,7 +1085,7 @@
     "save": "Enregistrer",
     "saving": "Enregistrement…",
     "saved": "Enregistré.",
-    "teamHelp": "Invitez le personnel par courriel et attribuez Admin ou Gestionnaire de cas.",
+    "teamHelp": "Invitez le personnel par courriel et attribuez Admin ou Gestionnaire de cas. La propriété se transfère, elle ne s’invite pas.",
     "inviteEmail": "Courriel",
     "inviteRole": "Rôle",
     "inviteSend": "Envoyer l’invitation",
@@ -972,6 +1106,42 @@
     "removeMember": "Retirer",
     "removeConfirm": "Retirer {name} de cette organisation ?",
     "memberRemoved": "Membre retiré.",
+    "transferOwnership": "Transférer la propriété",
+    "transferOwnershipConfirm": "Faire de {name} le propriétaire ? Vous deviendrez admin et ne pourrez plus supprimer l’organisation.",
+    "ownershipTransferred": "Propriété transférée.",
+    "ownerContactTitle": "Propriétaire du compte",
+    "ownerContactHelp": "Le propriétaire est le contact du cabinet pour cet espace, y compris les avis de confidentialité et de sécurité.",
+    "ownerContactUnknown": "Aucun contact propriétaire",
+    "deleteOrgTitle": "Supprimer l’organisation",
+    "deleteOrgHelp": "Seul le propriétaire peut fermer définitivement cet espace. Les dossiers clients, projets, rendez-vous et documents sont effacés. Cette action est irréversible.",
+    "deleteOrgOwnerOnly": "Seul le propriétaire de l’organisation peut supprimer cet espace.",
+    "deleteOrgOpen": "Supprimer cette organisation",
+    "deleteOrgDialogTitle": "Supprimer définitivement cette organisation ?",
+    "deleteOrgDialogBody": "Toutes les données clients, projets, rendez-vous et fichiers seront effacées. Nous conservons le nom du cabinet, les dates, le contact confidentialité et le contact du propriétaire au cas où nous devrions vous joindre après un incident.",
+    "deleteOrgBulletClients": "Les personnes, projets, rendez-vous, messages et mots de passe sont supprimés.",
+    "deleteOrgBulletFiles": "Les fichiers téléversés et les clés de chiffrement de cet espace sont détruits.",
+    "deleteOrgBulletKept": "Nous conservons des identifiants anonymisés pour l’analyse, plus le contact du propriétaire pour un avis d’incident.",
+    "deleteOrgContact": "Des questions ? Écrivez à {email} avant de supprimer.",
+    "deleteOrgMailSubject": "Suppression de l’organisation — {name}",
+    "deleteOrgCicc": "J’ai une copie de tous les dossiers clients nécessaires pour respecter l’obligation de conservation de 6 ans du CCIC.",
+    "deleteOrgIrreversible": "Je comprends que cette action est irréversible et que toutes les données de l’espace seront perdues.",
+    "deleteOrgFinal": "Je veux toujours supprimer définitivement cette organisation.",
+    "deleteOrgTypeName": "Saisissez le nom de l’organisation pour confirmer",
+    "deleteOrgTypeNameHelp": "Entrez « {name} » exactement.",
+    "deleteOrgCancel": "Conserver l’organisation",
+    "deleteOrgSubmit": "Supprimer définitivement",
+    "deleteOrgDeleting": "Suppression…",
+    "deleteOrgOpen": "Supprimer cette organisation",
+    "deleteOrgDialogTitle": "Supprimer définitivement cette organisation ?",
+    "deleteOrgDialogBody": "Toutes les données clients, projets, rendez-vous et fichiers seront effacées. Nous conservons le nom du cabinet, les dates, le contact confidentialité et le contact du propriétaire au cas où nous devrions vous joindre après un incident.",
+    "deleteOrgBulletClients": "Les personnes, projets, rendez-vous, messages et mots de passe sont supprimés.",
+    "deleteOrgBulletFiles": "Les fichiers téléversés et les clés de chiffrement de cet espace sont détruits.",
+    "deleteOrgBulletKept": "Nous conservons des identifiants anonymisés pour l’analyse, plus le contact du propriétaire pour un avis d’incident.",
+    "deleteOrgCicc": "J’ai une copie de tous les dossiers clients nécessaires pour respecter l’obligation de conservation de 6 ans du CCIC.",
+    "deleteOrgIrreversible": "Je comprends que cette action est irréversible et que toutes les données de l’espace seront perdues.",
+    "deleteOrgTypeName": "Saisissez le nom de l’organisation pour confirmer",
+    "ownerContactTitle": "Propriétaire du compte",
+    "ownerContactHelp": "Le propriétaire est le contact du cabinet pour cet espace, y compris les avis de confidentialité et de sécurité.",
     "errors": {
       "invalid": "Vérifiez le formulaire et réessayez.",
       "slugTaken": "Cet identifiant est déjà pris.",
@@ -982,12 +1152,19 @@
       "seatsExceeded": "Tous les sièges payés sont utilisés. Ajoutez des sièges ci-dessus, puis invitez de nouveau.",
       "seatChargeFailed": "Impossible de facturer le siège supplémentaire. Mettez à jour le moyen de paiement sous Facturation, puis invitez de nouveau.",
       "lastAdmin": "L’organisation doit conserver au moins un admin.",
+      "lastOwner": "L’organisation doit conserver exactement un propriétaire. Transférez la propriété plutôt.",
       "cannotRemoveSelf": "Vous ne pouvez pas vous retirer vous-même.",
       "notFound": "Ce membre ou cette invitation est introuvable.",
       "dpaRequired": "Ouvrez l’avenant, puis cochez les deux cases pour lier votre cabinet.",
       "repEmailInvalid": "Entrez une adresse courriel valide.",
       "generic": "Une erreur s’est produite. Réessayez.",
-      "trialExpired": "La période d’essai est terminée. L’espace de travail est en lecture seule jusqu’à ce que votre organisation s’abonne."
+      "trialExpired": "La période d’essai est terminée. L’espace de travail est en lecture seule jusqu’à ce que votre organisation s’abonne.",
+      "deleteConfirmations": "Confirmez chaque énoncé et saisissez le nom de l’organisation.",
+      "deleteNameMismatch": "Le nom ne correspond pas à cette organisation.",
+      "deleteFailed": "Impossible de supprimer l’organisation. Réessayez ou écrivez au soutien.",
+      "deleteConfirmations": "Confirmez chaque énoncé et saisissez le nom de l’organisation.",
+      "deleteNameMismatch": "Le nom ne correspond pas à cette organisation.",
+      "deleteFailed": "Impossible de supprimer l’organisation. Réessayez ou écrivez au soutien."
     }
   },
   "projects": {
@@ -3830,139 +4007,6 @@
       "invalid_signature": "Dessinez votre signature dans la case, puis réessayez.",
       "already_signed": "Ce contrat est déjà signé.",
       "expired": "Ce lien de signature a expiré."
-    }
-  },
-  "welcome": {
-    "kicker": "Étape {current} sur {total}",
-    "skipAll": "Ignorer la configuration",
-    "skipStep": "Ignorer cette étape",
-    "back": "Retour",
-    "continue": "Continuer",
-    "finish": "Aller à l’accueil",
-    "saving": "Enregistrement…",
-    "saveError": "Enregistrement impossible. Réessayez.",
-    "features": {
-      "projects": {
-        "title": "Dossiers",
-        "body": "Ouvrez un dossier d’immigration, rattachez des clients et générez les PDF IMM à partir d’un seul questionnaire."
-      },
-      "clients": {
-        "title": "Clients",
-        "body": "Conservez les fiches, notes et accès au portail pour chaque personne, d’un dossier à l’autre."
-      },
-      "forms": {
-        "title": "Formulaires et portail",
-        "body": "Les clients remplissent le questionnaire et déposent des pièces. Vous révisez, corrigez et téléchargez les PDF prêts à déposer."
-      },
-      "booking": {
-        "title": "Calendrier et rendez-vous",
-        "body": "Publiez vos heures, prenez des consultations payantes et envoyez automatiquement un lien Meet, Teams ou Zoom."
-      },
-      "services": {
-        "title": "Services",
-        "body": "La page de réservation publique n’affiche que les consultations que vous ajoutez ici."
-      },
-      "payments": {
-        "title": "Paiements",
-        "body": "Connectez Stripe ou Square pour que les clients paient à la réservation ou sur facture."
-      }
-    },
-    "steps": {
-      "tour": {
-        "nav": "Aperçu",
-        "title": "Bienvenue dans votre espace",
-        "body": "Ce parcours présente les zones principales du produit, puis les réglages qui changent les dossiers, les rendez-vous et les formulaires."
-      },
-      "profile": {
-        "nav": "Nom",
-        "title": "Votre nom",
-        "body": "Il apparaît dans l’application, dans les courriels aux clients et comme repli sur les formulaires de représentant."
-      },
-      "representative": {
-        "nav": "IMM 5476",
-        "title": "Coordonnées du représentant",
-        "body": "Le IMM 5476 est ajouté à chaque dossier. Vos renseignements CICC et votre adresse postale le remplissent automatiquement."
-      },
-      "hours": {
-        "nav": "Heures",
-        "title": "Quand les clients peuvent vous réserver",
-        "body": "La réservation publique n’offre des plages que dans les heures hebdomadaires que vous publiez."
-      },
-      "calendar": {
-        "nav": "Calendrier",
-        "title": "Garder les rendez-vous dans votre calendrier",
-        "body": "Connectez Google Calendar ou Outlook pour y voir les nouvelles réservations et bloquer les événements externes."
-      },
-      "meeting": {
-        "nav": "Réunions",
-        "title": "Lien de visio",
-        "body": "Choisissez Google Meet, Teams ou Zoom pour que chaque réservation inclue un lien de connexion."
-      },
-      "service": {
-        "nav": "Service",
-        "title": "Ajouter une consultation",
-        "body": "Sans au moins un service actif, la page de réservation publique n’a rien à offrir."
-      },
-      "payments": {
-        "nav": "Paiements",
-        "title": "Encaisser (facultatif)",
-        "body": "Connectez Stripe ou Square quand vous serez prêt. Vous pouvez ignorer cette étape et le faire plus tard."
-      },
-      "team": {
-        "nav": "Équipe",
-        "title": "Inviter un collègue (facultatif)",
-        "body": "Les gestionnaires de cas voient tout le volume. Vous pouvez ignorer cette étape et inviter plus tard depuis la facturation."
-      },
-      "done": {
-        "nav": "Terminé",
-        "title": "Vous pouvez commencer",
-        "body": "Ce qui reste ouvert reste à l’accueil jusqu’à ce que vous le terminiez. Vous pouvez rouvrir ce parcours depuis là."
-      }
-    },
-    "profile": {
-      "label": "Nom complet",
-      "hint": "Le nom que les clients doivent voir dans les courriels et sur les formulaires.",
-      "save": "Enregistrer le nom"
-    },
-    "representative": {
-      "detail": "Ouvrez les paramètres du compte pour entrer le numéro de membre, le téléphone et l’adresse postale. Ces champs remplissent le IMM 5476 sur chaque dossier où vous êtes le représentant.",
-      "cta": "Ouvrir les coordonnées du représentant",
-      "complete": "Les coordonnées du représentant sont enregistrées."
-    },
-    "hours": {
-      "detail": "Appliquez les jours ouvrables 9 h – 17 h, ou définissez une grille personnalisée dans le calendrier.",
-      "preset": "Utiliser les jours ouvrables 9 h – 17 h",
-      "custom": "Heures personnalisées",
-      "applied": "Heures des jours ouvrables enregistrées.",
-      "complete": "Vous avez déjà des heures d’ouverture."
-    },
-    "service": {
-      "titleLabel": "Nom du service",
-      "titleHint": "Exemple : Consultation initiale.",
-      "duration": "Durée (minutes)",
-      "price": "Prix (CAD)",
-      "priceHint": "Indiquez 0 pour une consultation gratuite.",
-      "save": "Ajouter le service",
-      "created": "Service ajouté."
-    },
-    "payments": {
-      "detail": "Stripe et Square se trouvent sous Paramètres → Paiements. Ignorez cette étape si vous n’encaissez pas encore.",
-      "cta": "Ouvrir les paiements"
-    },
-    "team": {
-      "email": "Courriel professionnel",
-      "role": "Rôle",
-      "send": "Envoyer l’invitation",
-      "sent": "Invitation envoyée."
-    },
-    "done": {
-      "profile": "Nom",
-      "representative": "Coordonnées du représentant",
-      "hours": "Heures d’ouverture",
-      "calendar": "Calendrier connecté",
-      "meeting": "Outil de réunion",
-      "service": "Service réservable",
-      "next": "Créez un dossier depuis l’accueil, ou terminez les éléments restants dans la liste de configuration."
     }
   }
 }

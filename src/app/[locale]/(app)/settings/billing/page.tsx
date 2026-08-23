@@ -106,6 +106,7 @@ export default async function BillingSettingsPage({
         <TeamSettings
           locale={locale}
           currentUserId={user?.id ?? ""}
+          currentUserRole={membership.role}
           members={members}
           invitations={invitations}
           subscribed={membership.organization.subscribed}

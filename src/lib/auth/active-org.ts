@@ -20,3 +20,8 @@ export async function setActiveOrganizationId(organizationId: string) {
     secure: process.env.NODE_ENV === "production",
   });
 }
+
+export async function clearActiveOrganizationId() {
+  const store = await cookies();
+  store.delete(ACTIVE_ORG_COOKIE);
+}

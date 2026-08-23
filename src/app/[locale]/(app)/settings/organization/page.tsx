@@ -2,10 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { DeleteOrganizationPanel } from "@/components/settings/delete-organization-panel";
 import { OrganizationDpaPanel } from "@/components/settings/organization-dpa-panel";
 import { OrganizationSettingsForm } from "@/components/settings/organization-settings-form";
-import { canAdministerOrg } from "@/lib/auth/rbac";
+import { canAdministerOrg, canDeleteOrganization, isOwner } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { listOrgMembers } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,6 +38,10 @@ export default async function OrganizationSettingsPage({
   if (!org) redirect(`/${locale}/onboarding`);
 
   const t = await getTranslations("settings");
+  const members = await listOrgMembers();
+  const owner = members.find((member) => isOwner(member.role));
+  const ownerName =
+    owner?.profile.full_name?.trim() || owner?.profile.email || t("ownerContactUnknown");
 
   return (
     <div className="space-y-4">
@@ -43,6 +49,24 @@ export default async function OrganizationSettingsPage({
         <h2 className="font-heading text-lg font-semibold text-brand">
           {t("organization")}
         </h2>
+        <div className="rounded-xl border border-border bg-canvas px-4 py-3">
+          <p className="text-sm font-medium text-brand">{t("ownerContactTitle")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("ownerContactHelp")}</p>
+          <p className="mt-2 text-sm text-brand">
+            {ownerName}
+            {owner?.profile.email && owner?.profile.full_name ? (
+              <>
+                {" · "}
+                <a
+                  href={`mailto:${owner.profile.email}`}
+                  className="font-medium text-action underline-offset-2 hover:underline"
+                >
+                  {owner.profile.email}
+                </a>
+              </>
+            ) : null}
+          </p>
+        </div>
         <OrganizationSettingsForm
           locale={locale}
           initialValues={{
@@ -61,6 +85,23 @@ export default async function OrganizationSettingsPage({
           acceptedVersion={org.dpa_version ?? null}
         />
       </SurfaceCard>
+      {canDeleteOrganization(membership.role) ? (
+        <SurfaceCard className="sm:p-6">
+          <DeleteOrganizationPanel
+            locale={locale}
+            organizationName={org.name ?? ""}
+          />
+        </SurfaceCard>
+      ) : (
+        <SurfaceCard className="sm:p-6">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {t("deleteOrgTitle")}
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {t("deleteOrgOwnerOnly")}
+          </p>
+        </SurfaceCard>
+      )}
     </div>
   );
 }

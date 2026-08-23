@@ -5,8 +5,17 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { setActiveOrganizationId } from "@/lib/auth/active-org";
-import { getUserMemberships } from "@/lib/auth/session";
+import {
+  clearActiveOrganizationId,
+  setActiveOrganizationId,
+} from "@/lib/auth/active-org";
+import { canDeleteOrganization } from "@/lib/auth/rbac";
+import { getPrimaryMembership, getUserMemberships } from "@/lib/auth/session";
+import {
+  cancelOrganizationSubscription,
+  deleteOrganizationStorage,
+  loadOwnerContact,
+} from "@/lib/org/delete-organization";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import {
   FIRM_DPA_VERSION,
@@ -163,4 +172,88 @@ export async function switchOrganizationAction(formData: FormData) {
   await setActiveOrganizationId(next.organization.id);
   revalidatePath("/", "layout");
   redirect(`/${next.organization.defaultLocale}/home`);
+}
+
+export type DeleteOrganizationState = {
+  error?: string;
+};
+
+export async function deleteOrganizationAction(
+  _prev: DeleteOrganizationState,
+  formData: FormData,
+): Promise<DeleteOrganizationState> {
+  const parsed = z
+    .object({
+      locale: z.enum(["en", "fr", "es"]).default("en"),
+      confirmName: z.string().trim().min(1).max(120),
+      ciccBackup: z.literal("yes"),
+      understood: z.literal("yes"),
+      finalConfirm: z.literal("yes"),
+    })
+    .safeParse({
+      locale: formData.get("locale") || "en",
+      confirmName: String(formData.get("confirmName") || ""),
+      ciccBackup: String(formData.get("ciccBackup") || ""),
+      understood: String(formData.get("understood") || ""),
+      finalConfirm: String(formData.get("finalConfirm") || ""),
+    });
+
+  if (!parsed.success) {
+    return { error: "confirmations_required" };
+  }
+
+  const membership = await getPrimaryMembership();
+  if (!membership || !canDeleteOrganization(membership.role)) {
+    return { error: "forbidden" };
+  }
+
+  const orgId = membership.organization.id;
+  const expectedName = membership.organization.name.trim().toLowerCase();
+  if (parsed.data.confirmName.trim().toLowerCase() !== expectedName) {
+    return { error: "name_mismatch" };
+  }
+
+  const admin = createServiceClient();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) {
+    redirect(`/${parsed.data.locale}/login`);
+  }
+
+  const contact = await loadOwnerContact(orgId);
+  await cancelOrganizationSubscription(orgId);
+  await deleteOrganizationStorage(orgId);
+
+  const { error } = await admin.rpc("purge_organization", {
+    p_organization_id: orgId,
+    p_actor_user_id: user.id,
+    p_owner_contact_name: contact.name,
+    p_owner_contact_email: contact.email,
+  });
+
+  if (error) {
+    console.error("purge_organization:", error.message);
+    return { error: "delete_failed" };
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: user.id,
+    actorKind: "staff",
+    action: "organization.delete",
+    resourceType: "organization",
+    resourceId: orgId,
+  });
+
+  const remaining = (await getUserMemberships()).filter(
+    (row) => row.organization.id !== orgId,
+  );
+  if (remaining[0]) {
+    await setActiveOrganizationId(remaining[0].organization.id);
+    revalidatePath("/", "layout");
+    redirect(`/${remaining[0].organization.defaultLocale}/home`);
+  }
+
+  await clearActiveOrganizationId();
+  revalidatePath("/", "layout");
+  redirect(`/${parsed.data.locale}/onboarding`);
 }

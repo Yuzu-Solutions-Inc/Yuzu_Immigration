@@ -1,8 +1,13 @@
-export const ORG_ROLES = ["admin", "case_manager"] as const;
+export const ORG_ROLES = ["owner", "admin", "case_manager"] as const;
 
 export type OrgRole = (typeof ORG_ROLES)[number];
 
 export const DEFAULT_ORG_ROLE: OrgRole = "case_manager";
+
+/** Roles that can be invited or assigned. Owner is transferred, never invited. */
+export const ASSIGNABLE_ORG_ROLES = ["admin", "case_manager"] as const;
+
+export type AssignableOrgRole = (typeof ASSIGNABLE_ORG_ROLES)[number];
 
 export function isOrgRole(value: unknown): value is OrgRole {
   return (
@@ -10,13 +15,27 @@ export function isOrgRole(value: unknown): value is OrgRole {
   );
 }
 
-export function isAdmin(role: OrgRole | null | undefined): boolean {
-  return role === "admin";
+export function isAssignableOrgRole(
+  value: unknown,
+): value is AssignableOrgRole {
+  return (
+    typeof value === "string" &&
+    (ASSIGNABLE_ORG_ROLES as readonly string[]).includes(value)
+  );
 }
 
-/** Admin and case manager: full org caseload, can create records. */
+export function isOwner(role: OrgRole | null | undefined): boolean {
+  return role === "owner";
+}
+
+/** Owner has the same workspace privileges as admin. */
+export function isAdmin(role: OrgRole | null | undefined): boolean {
+  return role === "owner" || role === "admin";
+}
+
+/** Owner, admin, and case manager: full org caseload, can create records. */
 export function canCreateRecords(role: OrgRole | null | undefined): boolean {
-  return role === "admin" || role === "case_manager";
+  return role === "owner" || role === "admin" || role === "case_manager";
 }
 
 /** Org settings, invites, retention destroy, audit log. */
@@ -43,9 +62,14 @@ export function canDeleteRecord(input: {
   return false;
 }
 
-/** @deprecated use canAdministerOrg */
 export function canTransferOwnership(role: OrgRole | null | undefined): boolean {
-  return isAdmin(role);
+  return isOwner(role);
+}
+
+export function canDeleteOrganization(
+  role: OrgRole | null | undefined,
+): boolean {
+  return isOwner(role);
 }
 
 export function assertCanAdministerOrg(role: OrgRole | null | undefined): void {

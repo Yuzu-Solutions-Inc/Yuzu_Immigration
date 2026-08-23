@@ -61,8 +61,9 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
   const orgIds = membershipRows.map((row) => row.organization_id as string);
   const { data: orgs, error: orgError } = await supabase
     .from("organizations")
-    .select("id, name, slug, default_locale, created_at, trial_started_at, subscribed_at")
-    .in("id", orgIds);
+    .select("id, name, slug, default_locale, created_at, trial_started_at, subscribed_at, deleted_at")
+    .in("id", orgIds)
+    .is("deleted_at", null);
 
   if (orgError) {
     console.error("getUserMemberships orgs:", orgError.message);
