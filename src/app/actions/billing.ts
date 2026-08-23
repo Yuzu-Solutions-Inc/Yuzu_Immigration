@@ -305,6 +305,5 @@ export async function addLicensedSeatAction(
   });
 
   revalidatePath(`/${locale}/settings/billing`);
-  revalidatePath(`/${locale}/settings/team`);
   return {};
 }

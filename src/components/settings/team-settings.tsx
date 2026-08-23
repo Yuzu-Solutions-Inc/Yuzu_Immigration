@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldHint, FieldLabel, FieldSuccess } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Link } from "@/i18n/navigation";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { ORG_ROLES } from "@/lib/auth/rbac";
 import type { AppLocale } from "@/lib/i18n/locales";
@@ -123,17 +122,6 @@ export function TeamSettings({
 
   return (
     <section className="space-y-6">
-      {subscribed ? (
-        <p className="text-sm text-muted-foreground">
-          {t("billingSeatUse", {
-            used: occupancy,
-            total: licensedSeats,
-          })}
-          {licensedSeats > occupancy
-            ? ` · ${t("billingSeatUnused", { count: licensedSeats - occupancy })}`
-            : null}
-        </p>
-      ) : null}
       <form action={inviteAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]">
         <input type="hidden" name="locale" value={locale} />
         <Field>
@@ -170,15 +158,7 @@ export function TeamSettings({
           </Button>
         </div>
         {atSeatCap ? (
-          <FieldHint className="sm:col-span-3">
-            {t("teamSeatsFull")}{" "}
-            <Link
-              href="/settings/billing"
-              className="font-medium text-action underline-offset-2 hover:underline"
-            >
-              {t("billing")}
-            </Link>
-          </FieldHint>
+          <FieldHint className="sm:col-span-3">{t("teamSeatsFull")}</FieldHint>
         ) : null}
       </form>
 

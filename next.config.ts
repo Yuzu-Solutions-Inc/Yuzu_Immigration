@@ -44,6 +44,11 @@ const nextConfig: NextConfig = {
         destination: "/:locale/clients/:path*",
         permanent: true,
       },
+      {
+        source: "/:locale/settings/team",
+        destination: "/:locale/settings/billing",
+        permanent: true,
+      },
     ];
   },
   async headers() {
