@@ -29,7 +29,6 @@ import {
   formTitle,
   isPersonScopedForm,
   type FormCode,
-  ALL_FORM_CODES,
 } from "@/lib/ircc/catalog";
 import {
   analyzeAnswerQuality,
@@ -41,11 +40,7 @@ import {
   formEditionAlertsForCodes,
   formatImmCode,
 } from "@/lib/ircc/form-directory";
-import {
-  addableFormsForProgram,
-  isCustomProgram,
-  isFederalPermitProgram,
-} from "@/lib/ircc/kits";
+import { addableFormsForProgram } from "@/lib/ircc/kits";
 import type { ProjectFormLanguage } from "@/lib/ircc/form-language";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
 import type { ProgramFamily } from "@/db/schema";
@@ -242,13 +237,7 @@ export function ProjectFormsPanel({
     [forms],
   );
 
-  const addOptions =
-    isFederalPermitProgram(programFamily) || isCustomProgram(programFamily)
-      ? addable
-      : [
-          ...addable,
-          ...ALL_FORM_CODES.filter((c) => !addable.includes(c)),
-        ];
+  const addOptions = addable;
 
   function handleDownload(formId?: string) {
     const key = formId ?? "all";

@@ -7,7 +7,8 @@ import { md5 } from "js-md5";
 
 export type FormMeta = {
   fileKeyHex: string;
-  datasetsObj: number;
+  /** Null when the blank has no encrypted datasets stream (e.g. IMM 5669). */
+  datasetsObj: number | null;
   datasetsGen: number;
   bytes: number;
 };
@@ -165,6 +166,9 @@ export async function extractDatasetsXml(
   pdf: Uint8Array,
   meta: FormMeta,
 ): Promise<string> {
+  if (meta.datasetsObj == null) {
+    throw new Error(`Form has no datasets object (${meta.fileKeyHex})`);
+  }
   const span = findStreamSpan(pdf, meta.datasetsObj);
   const encrypted = pdf.subarray(span.streamStart, span.streamEnd);
   const okey = objectKey(hexToBytes(meta.fileKeyHex), meta.datasetsObj, meta.datasetsGen);
@@ -177,6 +181,9 @@ export async function fillXfaDatasetsIncremental(
   meta: FormMeta,
   patchXml: (datasetsXml: string) => string,
 ): Promise<Uint8Array> {
+  if (meta.datasetsObj == null) {
+    throw new Error("Form has no datasets object");
+  }
   const datasetsXml = await extractDatasetsXml(blankPdf, meta);
   const patchedXml = patchXml(datasetsXml);
   const compressed = deflate(new TextEncoder().encode(patchedXml));

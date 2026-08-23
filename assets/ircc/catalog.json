@@ -6,7 +6,11 @@
     "work-permit-outside-canada": ["imm1295", "imm5645", "imm5476", "imm5409"],
     "work-permit-inside-canada": ["imm5710", "imm5707", "imm5476", "imm5409"],
     "visitor-outside-canada": ["imm5257", "imm5257sch1", "imm5406", "imm5476", "imm5409"],
-    "visitor-inside-canada": ["imm5708", "imm5707", "imm5476", "imm5409"]
+    "visitor-inside-canada": ["imm5708", "imm5707", "imm5476", "imm5409"],
+    "express-entry-pr": ["imm0008", "imm5669", "imm5406", "imm5476"],
+    "pnp": ["imm0008", "imm5669", "imm5406", "imm5476"],
+    "family-sponsorship": ["imm1344", "imm0008", "imm5669", "imm5406", "imm5476"],
+    "citizenship-adult": ["cit0002", "imm5476"]
   },
   "forms": [
     {

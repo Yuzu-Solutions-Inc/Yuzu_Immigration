@@ -103,7 +103,37 @@ export async function loadBlankPdf(
                     ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5708f.pdf"
                     : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5708e.pdf",
                 ]
-              : [];
+              : key.startsWith("imm0008")
+                ? [
+                    key.endsWith("f")
+                      ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm0008/01-05-2026/imm0008f.pdf"
+                      : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm0008/01-05-2026/imm0008e.pdf",
+                  ]
+                : key.startsWith("imm5669")
+                  ? [
+                      key.endsWith("f")
+                        ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5669/01-05-2021/imm5669f.pdf"
+                        : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5669/01-05-2021/imm5669e.pdf",
+                    ]
+                  : key.startsWith("imm1344")
+                    ? [
+                        key.endsWith("f")
+                          ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm1344/01-09-2024/imm1344f.pdf"
+                          : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm1344/01-09-2024/imm1344e.pdf",
+                      ]
+                    : key.startsWith("imm5562")
+                      ? [
+                          key.endsWith("f")
+                            ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5562/01-07-2024/imm5562f.pdf"
+                            : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5562/01-07-2024/imm5562e.pdf",
+                        ]
+                      : key.startsWith("cit0002")
+                        ? [
+                            key.endsWith("f")
+                              ? "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/cit0002/01-02-2026/cit0002f.pdf"
+                              : "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/cit0002/01-02-2026/cit0002e.pdf",
+                          ]
+                        : [];
   const urls = [
     `${SITE_URL}/assets/forms/ircc/blanks/${key}.pdf`,
     `https://raw.githubusercontent.com/TROCKIN8R/yuzu_websites/main/yuzu_github_page/assets/forms/ircc/blanks/${key}.pdf`,

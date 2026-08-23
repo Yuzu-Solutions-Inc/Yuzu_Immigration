@@ -26,6 +26,14 @@ export const DATASET_TAG_CONTRACT: Record<string, readonly string[]> = {
   imm5646f: ["FamilyName"],
   imm5707e: ["FamilyName"],
   imm5707f: ["FamilyName"],
+  imm0008e: ["PersonalDetails", "FamilyName"],
+  imm0008f: ["PersonalDetails", "FamilyName"],
+  imm1344e: ["SponsorDetails", "FamilyName"],
+  imm1344f: ["SponsorDetails", "FamilyName"],
+  imm5562e: ["FamilyName", "IMM_5562"],
+  imm5562f: ["FamilyName", "IMM_5562"],
+  cit0002e: ["CIT_0002", "familyName"],
+  cit0002f: ["CIT_0002", "familyName"],
 };
 
 export function missingDatasetTags(xml: string, tags: readonly string[]): string[] {

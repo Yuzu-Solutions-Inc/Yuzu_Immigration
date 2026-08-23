@@ -160,6 +160,9 @@ const PRIMARY = [
   "imm5708",
   "imm5709",
   "imm5710",
+  "imm0008",
+  "imm1344",
+  "cit0002",
 ] as const;
 const STUDY = ["imm1294", "imm5709"] as const;
 const STUDY_IN = ["imm5709"] as const;
@@ -167,7 +170,8 @@ const WORK = ["imm1295", "imm5710"] as const;
 const VISITOR = ["imm5257", "imm5257sch1", "imm5708"] as const;
 const VISITOR_IN = ["imm5708"] as const;
 const VISITOR_OUT = ["imm5257", "imm5257sch1"] as const;
-const SCH1 = ["imm5257sch1"] as const;
+/** Schedule A / temporary-residence Schedule 1 background. */
+const SCH1 = ["imm5257sch1", "imm5669"] as const;
 const WORK_IN = ["imm5710"] as const;
 const WORK_OUT = ["imm1295"] as const;
 const IN_CANADA = ["imm5709", "imm5710"] as const;
@@ -176,6 +180,14 @@ const FAMILY_OUT = ["imm5645", "imm5406"] as const;
 const CUSTODIAN = ["imm5646"] as const;
 const DESIGNEE = ["imm5475"] as const;
 const COMMON_LAW = ["imm5409"] as const;
+/** Generic Application Form for Canada (IMM 0008). */
+const PR_PRIMARY = ["imm0008"] as const;
+/** Family sponsorship undertaking (IMM 1344). */
+const SPONSOR = ["imm1344"] as const;
+/** Supplementary travel history (IMM 5562). */
+const TRAVEL = ["imm5562"] as const;
+/** Adult citizenship application (CIT 0002). */
+const CITIZENSHIP = ["cit0002"] as const;
 
 function lovOptions(
   en: Record<string, string>,
@@ -315,6 +327,55 @@ const LANG_OPTS: FieldOption[] = [
 const PREF_LANG_OPTS: FieldOption[] = [
   { value: "English", labelKey: "langEnglish" },
   { value: "French", labelKey: "langFrench" },
+];
+
+const EYE_COLOR_OPTS: FieldOption[] = [
+  { value: "01", labelKey: "eyeBlack" },
+  { value: "02", labelKey: "eyeBlue" },
+  { value: "03", labelKey: "eyeBrown" },
+  { value: "04", labelKey: "eyeGreen" },
+  { value: "05", labelKey: "eyeHazel" },
+  { value: "06", labelKey: "eyeGrey" },
+  { value: "07", labelKey: "eyePink" },
+  { value: "08", labelKey: "eyeSeaGreen" },
+  { value: "09", labelKey: "eyeOther" },
+];
+
+/** IMM 0008 ApplyingProgram LOV. */
+const APPLYING_PROGRAM_OPTS: FieldOption[] = [
+  { value: "01", labelKey: "programFamily" },
+  { value: "02", labelKey: "programEconomic" },
+  { value: "03", labelKey: "programRefugee" },
+  { value: "04", labelKey: "programOther" },
+];
+
+/** IMM 0008 ApplyingCategory LOV (common family + economic codes). */
+const APPLYING_CATEGORY_OPTS: FieldOption[] = [
+  { value: "01", labelKey: "catSpouse" },
+  { value: "02", labelKey: "catCommonLaw" },
+  { value: "03", labelKey: "catConjugal" },
+  { value: "04", labelKey: "catDependentChild" },
+  { value: "05", labelKey: "catChildToAdopt" },
+  { value: "06", labelKey: "catParentsGrandparents" },
+  { value: "07", labelKey: "catOrphanedRelative" },
+  { value: "08", labelKey: "catOtherRelative" },
+  { value: "09", labelKey: "catSkilledWorker" },
+  { value: "29", labelKey: "catSkilledTrades" },
+  { value: "12", labelKey: "catSelfEmployed" },
+  { value: "13", labelKey: "catPnp" },
+  { value: "14", labelKey: "catCec" },
+  { value: "15", labelKey: "catQuebecSkilled" },
+  { value: "30", labelKey: "catStartup" },
+  { value: "31", labelKey: "catCaregivers" },
+  { value: "42", labelKey: "catAgriFood" },
+  { value: "44", labelKey: "catAtlantic" },
+  { value: "46", labelKey: "catEmpp" },
+  { value: "47", labelKey: "catFrancophone" },
+  { value: "22", labelKey: "catRefugeeClaim" },
+  { value: "23", labelKey: "catProtectedPerson" },
+  { value: "28", labelKey: "catRefugeeOutside" },
+  { value: "25", labelKey: "catHc" },
+  { value: "45", labelKey: "catPublicPolicy" },
 ];
 
 const WORK_PERMIT_OPTS: FieldOption[] = [
@@ -863,14 +924,14 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "family",
     type: "text",
     maxLength: 10,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     showWhen: commonLawOnly,
   },
   {
     key: "commonLawStart",
     section: "family",
     type: "date",
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     showWhen: commonLawOnly,
   },
   {
@@ -878,7 +939,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "family",
     type: "text",
     maxLength: 80,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     showWhen: commonLawOnly,
   },
   {
@@ -886,7 +947,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "family",
     type: "text",
     maxLength: 40,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     showWhen: commonLawOnly,
   },
   {
@@ -894,7 +955,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "family",
     type: "select",
     options: COUNTRY_OPTS,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     showWhen: commonLawOnly,
   },
   {
@@ -1699,14 +1760,14 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "bgMilitary",
     section: "background",
     type: "yesno",
-    forms: [...PRIMARY],
+    forms: [...PRIMARY, ...SCH1],
   },
   {
     key: "bgMilitaryDetails",
     section: "background",
     type: "textarea",
     maxLength: 400,
-    forms: [...PRIMARY],
+    forms: [...PRIMARY, ...SCH1],
     showWhen: { key: "bgMilitary", equals: "Y" },
     wide: true,
   },
@@ -1714,7 +1775,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "bgViolence",
     section: "background",
     type: "yesno",
-    forms: [...PRIMARY],
+    forms: [...PRIMARY, ...SCH1],
   },
   {
     key: "bgWitness",
@@ -1746,8 +1807,236 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "traveledOtherCountry",
     section: "background",
     type: "yesno",
-    forms: [...SCH1],
+    forms: [...SCH1, ...TRAVEL],
     helpKey: "previousTravelHelp",
+  },
+
+  // —— Permanent residence (IMM 0008) ——
+  {
+    key: "uci",
+    section: "identity",
+    type: "text",
+    maxLength: 20,
+    forms: [...PR_PRIMARY, ...SPONSOR, ...CITIZENSHIP],
+    helpKey: "uciHelp",
+  },
+  {
+    key: "heightCm",
+    section: "identity",
+    type: "text",
+    maxLength: 3,
+    forms: [...PR_PRIMARY, ...CITIZENSHIP],
+    helpKey: "heightCmHelp",
+  },
+  {
+    key: "eyeColor",
+    section: "identity",
+    type: "select",
+    options: EYE_COLOR_OPTS,
+    forms: [...PR_PRIMARY, ...CITIZENSHIP],
+  },
+  {
+    key: "citizenship2",
+    section: "identity",
+    type: "select",
+    options: COUNTRY_OPTS,
+    forms: [...PR_PRIMARY],
+    helpKey: "citizenship2Help",
+  },
+  {
+    key: "applyingProgram",
+    section: "identity",
+    type: "select",
+    required: true,
+    options: APPLYING_PROGRAM_OPTS,
+    forms: [...PR_PRIMARY],
+    helpKey: "applyingProgramHelp",
+  },
+  {
+    key: "applyingCategory",
+    section: "identity",
+    type: "select",
+    required: true,
+    options: APPLYING_CATEGORY_OPTS,
+    forms: [...PR_PRIMARY],
+    helpKey: "applyingCategoryHelp",
+    showWhen: {
+      key: "applyingProgram",
+      oneOf: ["01", "02", "03", "04"],
+    },
+  },
+  {
+    key: "correspondenceLang",
+    section: "contact",
+    type: "select",
+    options: PREF_LANG_OPTS,
+    forms: [...PR_PRIMARY, ...SPONSOR],
+  },
+  {
+    key: "interviewLang",
+    section: "contact",
+    type: "select",
+    options: PREF_LANG_OPTS,
+    forms: [...PR_PRIMARY],
+  },
+  {
+    key: "interpreterRequested",
+    section: "contact",
+    type: "yesno",
+    forms: [...PR_PRIMARY],
+  },
+  {
+    key: "dateLastEntry",
+    section: "residence",
+    type: "date",
+    forms: [...PR_PRIMARY],
+    helpKey: "dateLastEntryHelp",
+  },
+  {
+    key: "placeLastEntry",
+    section: "residence",
+    type: "text",
+    maxLength: 80,
+    forms: [...PR_PRIMARY],
+  },
+
+  // —— Family sponsorship (IMM 1344) ——
+  {
+    key: "sponsorRelationship",
+    section: "family",
+    type: "text",
+    maxLength: 80,
+    forms: [...SPONSOR],
+    helpKey: "sponsorRelationshipHelp",
+  },
+  {
+    key: "statusInCanada",
+    section: "residence",
+    type: "select",
+    options: STATUS_OPTS,
+    forms: [...SPONSOR],
+  },
+  {
+    key: "dateStatusInCanada",
+    section: "residence",
+    type: "date",
+    forms: [...SPONSOR],
+  },
+  {
+    key: "sponsorIsCitizen",
+    section: "family",
+    type: "yesno",
+    forms: [...SPONSOR],
+    helpKey: "sponsorIsCitizenHelp",
+  },
+  {
+    key: "sponsorLivesInCanada",
+    section: "family",
+    type: "yesno",
+    forms: [...SPONSOR],
+  },
+  {
+    key: "sponsorLivesInQuebec",
+    section: "family",
+    type: "yesno",
+    forms: [...SPONSOR],
+    showWhen: { key: "sponsorLivesInCanada", equals: "Y" },
+  },
+  {
+    key: "sponsorOver18",
+    section: "family",
+    type: "yesno",
+    forms: [...SPONSOR],
+  },
+  {
+    key: "sponsorPrevSponsored",
+    section: "family",
+    type: "yesno",
+    forms: [...SPONSOR],
+    helpKey: "sponsorPrevSponsoredHelp",
+  },
+  {
+    key: "sponsorOnSocialAssist",
+    section: "family",
+    type: "yesno",
+    forms: [...SPONSOR],
+  },
+  {
+    key: "sponsorBankrupt",
+    section: "family",
+    type: "yesno",
+    forms: [...SPONSOR],
+  },
+
+  // —— Citizenship (CIT 0002) ——
+  {
+    key: "citizenshipLanguage",
+    section: "identity",
+    type: "select",
+    options: PREF_LANG_OPTS,
+    forms: [...CITIZENSHIP],
+    helpKey: "citizenshipLanguageHelp",
+  },
+  {
+    key: "needsAccommodation",
+    section: "identity",
+    type: "yesno",
+    forms: [...CITIZENSHIP],
+  },
+  {
+    key: "accommodationType",
+    section: "identity",
+    type: "text",
+    maxLength: 120,
+    forms: [...CITIZENSHIP],
+    showWhen: { key: "needsAccommodation", equals: "Y" },
+  },
+  {
+    key: "eligibilityFrom",
+    section: "residence",
+    type: "date",
+    forms: [...CITIZENSHIP],
+    helpKey: "eligibilityPeriodHelp",
+  },
+  {
+    key: "eligibilityTo",
+    section: "residence",
+    type: "date",
+    forms: [...CITIZENSHIP],
+  },
+  {
+    key: "usedPresenceCalculator",
+    section: "residence",
+    type: "yesno",
+    forms: [...CITIZENSHIP],
+  },
+  {
+    key: "taxesFiled",
+    section: "background",
+    type: "yesno",
+    forms: [...CITIZENSHIP],
+    helpKey: "taxesFiledHelp",
+  },
+  {
+    key: "hasSin",
+    section: "background",
+    type: "yesno",
+    forms: [...CITIZENSHIP],
+  },
+  {
+    key: "sinNumber",
+    section: "background",
+    type: "text",
+    maxLength: 20,
+    forms: [...CITIZENSHIP],
+    showWhen: { key: "hasSin", equals: "Y" },
+  },
+  {
+    key: "policeCertificate",
+    section: "background",
+    type: "yesno",
+    forms: [...CITIZENSHIP],
+    helpKey: "policeCertificateHelp",
   },
 
   // —— Companions (designee, common-law, custodian) ——
@@ -1786,7 +2075,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     key: "isCommonLaw",
     section: "identity",
     type: "yesno",
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     helpKey: "commonLawHelp",
     /** Derived from maritalStatus (03 = common-law). */
     hidden: true,
@@ -1796,7 +2085,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "family",
     type: "text",
     maxLength: 80,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     /** Same person as spouseFamilyName. */
     hidden: true,
   },
@@ -1805,7 +2094,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "family",
     type: "text",
     maxLength: 80,
-    forms: [...WORK, ...STUDY, ...VISITOR, ...COMMON_LAW],
+    forms: [...WORK, ...STUDY, ...VISITOR, ...PR_PRIMARY, ...COMMON_LAW],
     hidden: true,
   },
   {
@@ -2060,9 +2349,9 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
   {
     key: "previousTravelRows",
     section: "background",
-    forms: [...SCH1],
+    forms: [...SCH1, ...TRAVEL],
     showWhen: { key: "traveledOtherCountry", equals: "Y" },
-    maxRows: 4,
+    maxRows: 10,
     minRows: 1,
     helpKey: "previousTravelRowsHelp",
     columns: [
@@ -2071,6 +2360,7 @@ export const REPEATABLE_TABLES: RepeatableTable[] = [
       { key: "country", type: "select", labelKey: "colCountry", options: COUNTRY_OPTS, required: true },
       { key: "location", type: "text", labelKey: "colCity", maxLength: 80 },
       { key: "purpose", type: "text", labelKey: "colPurpose", maxLength: 80 },
+      { key: "details", type: "text", labelKey: "colDetails", maxLength: 200 },
     ],
   },
 ];
@@ -2086,7 +2376,15 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
     "placeBirthCity",
     "placeBirthCountry",
     "citizenship",
+    "citizenship2",
     "maritalStatus",
+    "uci",
+    "heightCm",
+    "eyeColor",
+  ]),
+  subsection("prApplication", "identity", [
+    "applyingProgram",
+    "applyingCategory",
   ]),
   subsection("identityAlias", "identity", [
     "hasAlias",
@@ -2098,6 +2396,9 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
     "ableToCommunicate",
     "preferredLang",
     "langTest",
+    "citizenshipLanguage",
+    "needsAccommodation",
+    "accommodationType",
   ]),
   subsection("designee", "identity", [
     "hasDesignee",
@@ -2120,6 +2421,15 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
     "corFrom",
     "corTo",
     "corOther",
+    "dateLastEntry",
+    "placeLastEntry",
+    "statusInCanada",
+    "dateStatusInCanada",
+  ]),
+  subsection("citizenshipPresence", "residence", [
+    "eligibilityFrom",
+    "eligibilityTo",
+    "usedPresenceCalculator",
   ]),
   subsection("countryWhereApplying", "residence", [
     "cwaCountry",
@@ -2260,6 +2570,27 @@ export const FIELD_GROUPS: QuestionnaireFieldGroup[] = [
     "hasMembership",
     "heldGovPosition",
     "traveledOtherCountry",
+  ]),
+  subsection("bgCitizenship", "background", [
+    "taxesFiled",
+    "hasSin",
+    "sinNumber",
+    "policeCertificate",
+  ]),
+  subsection("sponsorEligibility", "family", [
+    "sponsorRelationship",
+    "sponsorIsCitizen",
+    "sponsorLivesInCanada",
+    "sponsorLivesInQuebec",
+    "sponsorOver18",
+    "sponsorPrevSponsored",
+    "sponsorOnSocialAssist",
+    "sponsorBankrupt",
+  ]),
+  subsection("prLanguages", "contact", [
+    "correspondenceLang",
+    "interviewLang",
+    "interpreterRequested",
   ]),
   {
     key: "phone",

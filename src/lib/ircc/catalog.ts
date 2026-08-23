@@ -15,7 +15,12 @@ export type FormCode =
   | "imm5476"
   | "imm5475"
   | "imm5409"
-  | "imm5646";
+  | "imm5646"
+  | "imm0008"
+  | "imm5669"
+  | "imm1344"
+  | "imm5562"
+  | "cit0002";
 
 /**
  * person — one IRCC form per applicant / participant
@@ -147,6 +152,40 @@ export const IRCC_FORMS: Record<FormCode, IrccFormDefinition> = {
     titleEn: "Custodianship declaration (minors)",
     titleFr: "Déclaration de tutelle (mineurs)",
     scope: "person",
+  },
+  imm0008: {
+    code: "imm0008",
+    titleEn: "Generic Application Form for Canada",
+    titleFr: "Formulaire de demande générique pour le Canada",
+    scope: "person",
+    core: true,
+  },
+  imm5669: {
+    code: "imm5669",
+    titleEn: "Schedule A — Background / Declaration",
+    titleFr: "Annexe A — Antécédents / Déclaration",
+    scope: "person",
+    core: true,
+  },
+  imm1344: {
+    code: "imm1344",
+    titleEn: "Application to Sponsor and Undertaking",
+    titleFr: "Demande de parrainage et engagement",
+    scope: "person",
+    core: true,
+  },
+  imm5562: {
+    code: "imm5562",
+    titleEn: "Supplementary Information — Your travels",
+    titleFr: "Renseignements supplémentaires — Voyages",
+    scope: "person",
+  },
+  cit0002: {
+    code: "cit0002",
+    titleEn: "Application for Canadian Citizenship (adult)",
+    titleFr: "Demande de citoyenneté canadienne (adulte)",
+    scope: "person",
+    core: true,
   },
 };
 

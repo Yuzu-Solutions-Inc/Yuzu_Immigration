@@ -16,6 +16,7 @@ export const PROGRAM_FAMILIES: ProgramFamily[] = [
   "quebec_pstq",
   "quebec_family",
   "quebec_temporary",
+  "citizenship",
   "other",
 ];
 
@@ -36,9 +37,19 @@ export const PERMIT_PROGRAM_FAMILIES: ProgramFamily[] = [
   "visitor",
 ];
 
-/** Create/edit options: the three permits plus a mixed custom file. */
+export const PR_PROGRAM_FAMILIES: ProgramFamily[] = [
+  "express_entry",
+  "pnp",
+  "family_sponsorship",
+];
+
+export const CITIZENSHIP_PROGRAM_FAMILIES: ProgramFamily[] = ["citizenship"];
+
+/** Create/edit options: permits, PR streams, citizenship, or mixed custom file. */
 export const SELECTABLE_PROGRAM_FAMILIES: ProgramFamily[] = [
   ...PERMIT_PROGRAM_FAMILIES,
+  ...PR_PROGRAM_FAMILIES,
+  ...CITIZENSHIP_PROGRAM_FAMILIES,
   "other",
 ];
 

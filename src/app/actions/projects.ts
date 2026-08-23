@@ -169,6 +169,7 @@ function programLabel(family: ProgramFamily, locale: string) {
     quebec_pstq: { en: "Quebec PSTQ", fr: "PSTQ Québec" },
     quebec_family: { en: "Quebec family", fr: "Réunification Québec" },
     quebec_temporary: { en: "Quebec temporary", fr: "Temporaire Québec" },
+    citizenship: { en: "Citizenship", fr: "Citoyenneté" },
     other: { en: "Custom project", fr: "Projet personnalisé" },
   };
   return locale === "fr" ? labels[family].fr : labels[family].en;
@@ -577,6 +578,9 @@ export async function createProjectAction(
               needsCustodian,
             }),
             personIds,
+            Object.fromEntries(
+              resolved.people.map((person) => [person.id, person.role]),
+            ),
           );
     const { error: formsError } = await supabase.from("project_forms").insert(
       seeds.map((seed) => ({

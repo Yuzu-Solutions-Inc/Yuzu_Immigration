@@ -35,6 +35,12 @@ import { fillImm5257Sch1Pdf } from "./fillers/imm5257sch1";
 import { fillImm5708Pdf } from "./fillers/imm5708";
 import { fillImm5709Pdf } from "./fillers/imm5709";
 import { fillImm5710Pdf } from "./fillers/imm5710";
+import {
+  patchCit0002,
+  patchImm0008,
+  patchImm1344,
+  patchImm5562,
+} from "./pr-patchers";
 
 export type FilledForm = {
   code: string;
@@ -67,6 +73,18 @@ function metaFor(code: string, lang: "e" | "f"): FormMeta {
   const meta = (formMeta as Record<string, FormMeta>)[key];
   if (!meta) throw new Error(`Missing form meta for ${key}`);
   return meta;
+}
+
+function cryptoMetaFor(code: string, lang: "e" | "f") {
+  const meta = metaFor(code, lang);
+  if (meta.datasetsObj == null) {
+    throw new Error(`Missing datasets object for ${code}${lang}`);
+  }
+  return {
+    fileKeyHex: meta.fileKeyHex,
+    datasetsObj: meta.datasetsObj,
+    datasetsGen: meta.datasetsGen,
+  };
 }
 
 function toCompanionAnswers(
@@ -203,6 +221,10 @@ async function fillCompanion(
       patchImm5488(xml, answers as WorkKitAnswers),
     imm5556: (xml) =>
       patchImm5556(xml, answers as WorkKitAnswers),
+    imm0008: (xml) => patchImm0008(xml, answers),
+    imm1344: (xml) => patchImm1344(xml, answers),
+    imm5562: (xml) => patchImm5562(xml, answers),
+    cit0002: (xml) => patchCit0002(xml, answers),
   };
 
   const patch = patchers[code];
@@ -334,17 +356,17 @@ export async function fillProjectForms(input: {
       const companion = (
         preview ? blanksForPreview(answers) : answers
       ) as typeof answers;
-      const blank = code.startsWith("imm")
+      const blank = code.startsWith("imm") || code.startsWith("cit")
         ? await loadBlankPdf(code, lang)
         : new Uint8Array();
-      if (code === "imm1294") {
+      if (code === "imm5669") {
+        bytes = blank;
+        warnings.push(
+          `${code}: IMM 5669 uses template-only XFA — blank PDF provided for manual completion in Adobe Reader.`,
+        );
+      } else if (code === "imm1294") {
         const validated = validateAnswers(payload);
-        const meta = metaFor(code, lang);
-        const crypto = {
-          fileKeyHex: meta.fileKeyHex,
-          datasetsObj: meta.datasetsObj,
-          datasetsGen: meta.datasetsGen,
-        };
+        const crypto = cryptoMetaFor(code, lang);
         if (validated.ok) {
           bytes = await fillImm1294Pdf(
             blank,

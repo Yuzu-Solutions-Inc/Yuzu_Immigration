@@ -52,6 +52,7 @@ export const programFamilyEnum = pgEnum("program_family", [
   "quebec_pstq",
   "quebec_family",
   "quebec_temporary",
+  "citizenship",
   "other",
 ]);
 

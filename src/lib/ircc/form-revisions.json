@@ -86,6 +86,31 @@
       "irccUpdated": "2023-09",
       "guideEn": "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/imm5710.html",
       "guideFr": "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm5710.html"
+    },
+    "imm0008": {
+      "irccUpdated": "2026-05",
+      "guideEn": "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/imm0008.html",
+      "guideFr": "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm0008.html"
+    },
+    "imm5669": {
+      "irccUpdated": "2021-05",
+      "guideEn": "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/imm5669.html",
+      "guideFr": "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm5669.html"
+    },
+    "imm1344": {
+      "irccUpdated": "2024-09",
+      "guideEn": "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/imm1344.html",
+      "guideFr": "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm1344.html"
+    },
+    "imm5562": {
+      "irccUpdated": "2024-07",
+      "guideEn": "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/imm5562.html",
+      "guideFr": "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm5562.html"
+    },
+    "cit0002": {
+      "irccUpdated": "2026-02",
+      "guideEn": "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/cit0002.html",
+      "guideFr": "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/cit0002.html"
     }
   }
 }

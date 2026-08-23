@@ -70,9 +70,14 @@ const CATEGORY_BY_FORM: Record<FormCode, FormCategory> = {
   imm5483: "checklists",
   imm5488: "checklists",
   imm5556: "checklists",
+  imm0008: "primary",
+  imm5669: "schedules",
+  imm1344: "primary",
+  imm5562: "schedules",
+  cit0002: "primary",
 };
 
-const VISA_BY_FORM: Record<FormCode, PermitKitFamily[]> = {
+const VISA_BY_FORM: Partial<Record<FormCode, PermitKitFamily[]>> = {
   imm1294: ["study_permit"],
   imm5709: ["study_permit"],
   imm5483: ["study_permit"],
@@ -90,9 +95,18 @@ const VISA_BY_FORM: Record<FormCode, PermitKitFamily[]> = {
   imm5476: ["study_permit", "work_permit", "visitor"],
   imm5475: ["study_permit", "work_permit", "visitor"],
   imm5409: ["study_permit", "work_permit", "visitor"],
+  imm0008: [],
+  imm5669: [],
+  imm1344: [],
+  imm5562: [],
+  cit0002: [],
 };
 
 export function formatImmCode(code: string): string {
+  if (code.toLowerCase().startsWith("cit")) {
+    const rest = code.replace(/^cit/i, "").toUpperCase();
+    return `CIT ${rest}`;
+  }
   const rest = code.replace(/^imm/i, "").toUpperCase();
   if (rest.endsWith("SCH1")) {
     return `IMM ${rest.slice(0, -4)} SCH1`;
@@ -128,7 +142,7 @@ export function getFormVersionRows(): FormVersionRow[] {
     return {
       code,
       category: CATEGORY_BY_FORM[code],
-      visaFamilies: VISA_BY_FORM[code],
+      visaFamilies: VISA_BY_FORM[code] ?? [],
       published,
       livePublished: check?.liveUpdated ?? published,
       lastCheckedAt: status?.checkedAt ?? null,

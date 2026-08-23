@@ -1,4 +1,4 @@
-import type { ProgramFamily } from "@/db/schema";
+import type { ParticipantRole, ProgramFamily } from "@/db/schema";
 
 import { formScope, type FormCode } from "./catalog";
 
@@ -8,6 +8,8 @@ export type KitSeedForm = {
   formCode: FormCode;
   isRequired: boolean;
   sortOrder: number;
+  /** When set, only matching participant roles receive this person-scoped form. */
+  roles?: ParticipantRole[];
 };
 
 export type ExpandedKitSeedForm = KitSeedForm & {
@@ -27,7 +29,14 @@ export const PERMIT_KIT_FAMILIES = [
   "visitor",
 ] as const;
 
+export const PR_KIT_FAMILIES = [
+  "express_entry",
+  "pnp",
+  "family_sponsorship",
+] as const;
+
 export type PermitKitFamily = (typeof PERMIT_KIT_FAMILIES)[number];
+export type PrKitFamily = (typeof PR_KIT_FAMILIES)[number];
 
 export type PersonKitAssignment = {
   personId: string;
@@ -81,6 +90,33 @@ export function isFederalPermitProgram(
   );
 }
 
+export function isPrProgramFamily(
+  programFamily: ProgramFamily | string,
+): boolean {
+  return (
+    programFamily === "express_entry" ||
+    programFamily === "pnp" ||
+    programFamily === "family_sponsorship"
+  );
+}
+
+export function isCitizenshipProgram(
+  programFamily: ProgramFamily | string,
+): boolean {
+  return programFamily === "citizenship";
+}
+
+export function isIrccKitProgram(
+  programFamily: ProgramFamily | string,
+): boolean {
+  return (
+    isFederalPermitProgram(programFamily) ||
+    programFamily === "pgwp" ||
+    isPrProgramFamily(programFamily) ||
+    isCitizenshipProgram(programFamily)
+  );
+}
+
 export function defaultApplicationLocation(
   programFamily: ProgramFamily | string,
 ): ApplicationLocation {
@@ -110,6 +146,10 @@ export function inferApplicationLocationFromForms(
     return "inside";
   }
   if (
+    codes.has("imm0008") ||
+    codes.has("imm5669") ||
+    codes.has("imm1344") ||
+    codes.has("cit0002") ||
     codes.has("imm1295") ||
     codes.has("imm1294") ||
     codes.has("imm5257") ||
@@ -278,6 +318,65 @@ export function visitorKitForms(options?: KitSeedOptions): KitSeedForm[] {
   return seeds;
 }
 
+const SPONSORED_ROLES: ParticipantRole[] = [
+  "principal",
+  "spouse",
+  "partner",
+  "dependent",
+  "accompanying",
+];
+
+/**
+ * Express Entry / PNP / PR kit:
+ * IMM 0008, IMM 5669, IMM 5406, IMM 5476; optional IMM 5562 when travel history applies.
+ */
+export function permanentResidenceKitForms(options?: {
+  includeTravelSupplement?: boolean;
+}): KitSeedForm[] {
+  const seeds: KitSeedForm[] = [
+    { formCode: "imm0008", isRequired: true, sortOrder: 10 },
+    { formCode: "imm5669", isRequired: true, sortOrder: 20 },
+    { formCode: "imm5406", isRequired: true, sortOrder: 30 },
+    { formCode: "imm5476", isRequired: true, sortOrder: 90 },
+  ];
+  if (options?.includeTravelSupplement) {
+    seeds.push({ formCode: "imm5562", isRequired: false, sortOrder: 25 });
+  }
+  return seeds;
+}
+
+/**
+ * Family sponsorship kit:
+ * Sponsor: IMM 1344. Principal and dependents: IMM 0008, IMM 5669, IMM 5406. IMM 5476 always.
+ */
+export function familySponsorshipKitForms(): KitSeedForm[] {
+  return [
+    {
+      formCode: "imm1344",
+      isRequired: true,
+      sortOrder: 5,
+      roles: ["sponsor"],
+    },
+    {
+      formCode: "imm0008",
+      isRequired: true,
+      sortOrder: 10,
+      roles: SPONSORED_ROLES,
+    },
+    { formCode: "imm5669", isRequired: true, sortOrder: 20 },
+    { formCode: "imm5406", isRequired: true, sortOrder: 30 },
+    { formCode: "imm5476", isRequired: true, sortOrder: 90 },
+  ];
+}
+
+/** Canadian citizenship (adult) kit: CIT 0002 + IMM 5476. */
+export function citizenshipKitForms(): KitSeedForm[] {
+  return [
+    { formCode: "cit0002", isRequired: true, sortOrder: 10 },
+    { formCode: "imm5476", isRequired: true, sortOrder: 90 },
+  ];
+}
+
 /**
  * Base IRCC forms seeded when a project is created for a program.
  * IMM 5476 (use of a representative) is always included — the consultant represents the client.
@@ -319,6 +418,13 @@ export function seedFormsForProgram(
         ),
         isCommonLaw: options?.isCommonLaw,
       });
+    case "express_entry":
+    case "pnp":
+      return permanentResidenceKitForms();
+    case "family_sponsorship":
+      return familySponsorshipKitForms();
+    case "citizenship":
+      return citizenshipKitForms();
     default:
       return [alwaysRep];
   }
@@ -332,6 +438,7 @@ export function seedFormsForProgram(
 export function expandSeedsForParticipants(
   seeds: KitSeedForm[],
   personIds: string[],
+  participantRoles?: Record<string, ParticipantRole>,
 ): ExpandedKitSeedForm[] {
   const people = personIds.filter(Boolean);
   const out: ExpandedKitSeedForm[] = [];
@@ -346,11 +453,20 @@ export function expandSeedsForParticipants(
       continue;
     }
     if (formScope(seed.formCode) === "person") {
-      if (people.length === 0) {
-        out.push({ ...seed, personId: null });
+      const eligible = seed.roles?.length
+        ? people.filter(
+            (personId) =>
+              participantRoles?.[personId] &&
+              seed.roles!.includes(participantRoles[personId]!),
+          )
+        : people;
+      if (eligible.length === 0) {
+        if (!seed.roles?.length) {
+          out.push({ ...seed, personId: null });
+        }
         continue;
       }
-      people.forEach((personId, index) => {
+      eligible.forEach((personId, index) => {
         out.push({
           ...seed,
           personId,
@@ -433,6 +549,55 @@ export const ADDABLE_COMPANION_FORMS: FormCode[] = [
   "imm5709",
   "imm5710",
   "imm5483",
+  "imm0008",
+  "imm5669",
+  "imm1344",
+  "imm5562",
+  "cit0002",
+];
+
+/**
+ * Forms the ask-once questionnaire + fillers can drive (excludes checklists).
+ * Always offered in Add form after the program-prioritized list.
+ */
+export const FILLABLE_QUESTIONNAIRE_FORMS: FormCode[] = [
+  "imm1294",
+  "imm1295",
+  "imm5709",
+  "imm5710",
+  "imm5257",
+  "imm5257sch1",
+  "imm5708",
+  "imm5707",
+  "imm5645",
+  "imm5406",
+  "imm5476",
+  "imm5475",
+  "imm5409",
+  "imm5646",
+  "imm0008",
+  "imm5669",
+  "imm1344",
+  "imm5562",
+  "cit0002",
+];
+
+/** PR / citizenship add list (prioritized). */
+export const PR_ADDABLE_FORMS: FormCode[] = [
+  "imm0008",
+  "imm5669",
+  "imm5406",
+  "imm1344",
+  "imm5562",
+  "imm5476",
+  "imm5475",
+  "imm5409",
+];
+
+export const CITIZENSHIP_ADDABLE_FORMS: FormCode[] = [
+  "cit0002",
+  "imm5476",
+  "imm5475",
 ];
 
 /** Work-permit add list: no checklists or unrelated permit forms. */
@@ -441,6 +606,7 @@ export const WORK_PERMIT_ADDABLE_FORMS: FormCode[] = [
   "imm5475",
   "imm5645",
   "imm5707",
+  "imm5562",
 ];
 
 /** Study-permit add list: no checklists or primary swap. */
@@ -450,6 +616,7 @@ export const STUDY_PERMIT_ADDABLE_FORMS: FormCode[] = [
   "imm5646",
   "imm5645",
   "imm5707",
+  "imm5562",
 ];
 
 /** Visitor add list: no primary / schedule swap. */
@@ -458,30 +625,48 @@ export const VISITOR_ADDABLE_FORMS: FormCode[] = [
   "imm5475",
   "imm5406",
   "imm5707",
+  "imm5257sch1",
+  "imm5562",
 ];
+
+function withFillableForms(prioritized: FormCode[]): FormCode[] {
+  const seen = new Set(prioritized);
+  return [
+    ...prioritized,
+    ...FILLABLE_QUESTIONNAIRE_FORMS.filter((code) => !seen.has(code)),
+  ];
+}
 
 export function addableFormsForProgram(
   programFamily: ProgramFamily | string,
 ): FormCode[] {
   if (isWorkPermitProgram(programFamily)) {
-    return WORK_PERMIT_ADDABLE_FORMS;
+    return withFillableForms(WORK_PERMIT_ADDABLE_FORMS);
   }
   if (isStudyPermitProgram(programFamily)) {
-    return STUDY_PERMIT_ADDABLE_FORMS;
+    return withFillableForms(STUDY_PERMIT_ADDABLE_FORMS);
   }
   if (isVisitorProgram(programFamily)) {
-    return VISITOR_ADDABLE_FORMS;
+    return withFillableForms(VISITOR_ADDABLE_FORMS);
+  }
+  if (isPrProgramFamily(programFamily)) {
+    return withFillableForms(PR_ADDABLE_FORMS);
+  }
+  if (isCitizenshipProgram(programFamily)) {
+    return withFillableForms(CITIZENSHIP_ADDABLE_FORMS);
   }
   if (isCustomProgram(programFamily)) {
-    return [
+    return withFillableForms([
       ...new Set([
         ...WORK_PERMIT_ADDABLE_FORMS,
         ...STUDY_PERMIT_ADDABLE_FORMS,
         ...VISITOR_ADDABLE_FORMS,
+        ...PR_ADDABLE_FORMS,
+        ...CITIZENSHIP_ADDABLE_FORMS,
       ]),
-    ];
+    ]);
   }
-  return ADDABLE_COMPANION_FORMS;
+  return withFillableForms(ADDABLE_COMPANION_FORMS);
 }
 
 export function applicationLabelForForms(
@@ -497,6 +682,12 @@ export function applicationLabelForForms(
   }
   if (formCodes.includes("imm5257") || formCodes.includes("imm5708")) {
     return fr ? "Visa de visiteur" : "Visitor visa";
+  }
+  if (formCodes.includes("imm0008") || formCodes.includes("imm1344")) {
+    return fr ? "Demande de résidence permanente" : "Permanent residence";
+  }
+  if (formCodes.includes("cit0002")) {
+    return fr ? "Demande de citoyenneté" : "Citizenship application";
   }
   return fr ? "Demande d'immigration" : "Immigration application";
 }
