@@ -249,11 +249,9 @@ export async function deleteOrganizationAction(
   );
   if (remaining[0]) {
     await setActiveOrganizationId(remaining[0].organization.id);
-    revalidatePath("/", "layout");
-    redirect(`/${remaining[0].organization.defaultLocale}/home`);
+  } else {
+    await clearActiveOrganizationId();
   }
-
-  await clearActiveOrganizationId();
   revalidatePath("/", "layout");
-  redirect(`/${parsed.data.locale}/onboarding`);
+  redirect(`/${parsed.data.locale}`);
 }
