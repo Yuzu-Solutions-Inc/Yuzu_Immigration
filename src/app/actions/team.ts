@@ -242,7 +242,7 @@ export async function updateOrgMemberRoleAction(
     .maybeSingle();
 
   if (!target) return { error: "not_found" };
-  if (target.role === "owner" || parsed.data.role === "owner") {
+  if (target.role === "owner") {
     return { error: "last_owner" };
   }
 
