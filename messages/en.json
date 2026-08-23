@@ -263,7 +263,7 @@
   },
   "pricing": {
     "metaTitle": "Pricing",
-    "metaDescription": "Standard and Team plans for %PRODUCT_NAME%. Standard is free for 30 days from firm creation. Founding rates for the first 100 firms.",
+    "metaDescription": "Standard and Team plans for %PRODUCT_NAME%. Standard is free for 30 days from firm creation. List prices from $69/mo. Promo FOUNDING for the first 100 firms.",
     "eyebrow": "Pricing",
     "title": "Standard or Team",
     "subtitle": "Same product. Extra staff accounts on either plan. Team includes four seats.",
@@ -271,7 +271,7 @@
     "currencyNote": "CAD, plus GST/HST. Yearly billing includes 2 months free.",
     "cta": "Start 30-day trial",
     "extraSeats": "Then {price} per extra staff account",
-    "foundingHelp": "Founding rate for the first {count} firms · first {months} months after the trial",
+    "foundingHelp": "Promo {code} for the first {count} firms: {founding}, applied automatically at checkout.",
     "yearlyPrice": "or {amount} billed yearly ({free} months free)",
     "thenList": "Then",
     "trial": {
@@ -280,7 +280,7 @@
     "teaser": {
       "eyebrow": "Pricing",
       "title": "Try the full product. Stay if it fits.",
-      "subtitle": "Standard is free for 30 days from firm creation. Founding rates for the first 100 firms. Extra staff accounts on Standard or Team.",
+      "subtitle": "Standard is free for 30 days from firm creation. List prices from $69/mo. Promo FOUNDING for the first 100 firms. Extra staff accounts on Standard or Team.",
       "compare": "Compare plans"
     },
     "standard": {
@@ -345,15 +345,15 @@
       },
       "founding": {
         "q": "Who gets founding rates?",
-        "a": "The first {count} firms on Standard or Team, including everyone already using the product. Founding rates last {months} months from when paid billing begins for that firm — after the 30-day trial."
+        "a": "The first {count} firms that create an account. Promo {code} is applied automatically at checkout — Standard {standardFounding} and Team {teamFounding} instead of list — and stays on the subscription."
       },
       "after": {
-        "q": "What happens after 12 months?",
-        "a": "Founding Standard and Team move to the list price then in effect (today, {standardList} and {teamList}). After the founding period, %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
+        "q": "What do later firms pay?",
+        "a": "List prices (today, {standardList} and {teamList}). %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
       },
       "annual": {
         "q": "Is there a yearly price?",
-        "a": "Yes. Pay {paid} months and get {free} months free. Founding Standard is {standardAnnual}; founding Team is {teamAnnual}."
+        "a": "Yes. Pay {paid} months and get {free} months free. List Standard is {standardAnnual}; list Team is {teamAnnual}."
       },
       "difference": {
         "q": "How do the plans differ?",
@@ -708,7 +708,7 @@
     "billingSeats": "Staff seats",
     "billingSeatUse": "{used} of {total} in use",
     "billingFounding": "Founding rate",
-    "billingFoundingHelp": "This firm is in the first 100 and keeps founding prices while subscribed.",
+    "billingFoundingHelp": "Promo {code} is applied automatically at checkout. This firm is in the first {count} and keeps founding rates while subscribed.",
     "billingPlan": "Plan",
     "billingPlanStandard": "Standard · {price}",
     "billingPlanTeam": "Team · {price}",

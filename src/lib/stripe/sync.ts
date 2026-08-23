@@ -2,13 +2,16 @@ import "server-only";
 
 import type Stripe from "stripe";
 
-import { PRICING, type PricingPlanId } from "@/lib/marketing/pricing";
+import { type PricingPlanId } from "@/lib/marketing/pricing";
 import {
   includedSeats,
   totalPaidSeats,
   type BillingInterval,
 } from "@/lib/billing/plans";
-import { parseLookupKey } from "@/lib/stripe/catalog";
+import {
+  isFoundingCouponId,
+  parseLookupKey,
+} from "@/lib/stripe/catalog";
 import { getStripe } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -64,6 +67,21 @@ export function parseSubscriptionItems(subscription: Stripe.Subscription): {
   return { plan, interval, founding, extraSeats, seatQuantity };
 }
 
+export function subscriptionHasFoundingPromo(
+  subscription: Stripe.Subscription,
+): boolean {
+  for (const entry of subscription.discounts ?? []) {
+    if (typeof entry === "string") continue;
+    const coupon = entry.source?.coupon;
+    const id = typeof coupon === "string" ? coupon : coupon?.id;
+    if (isFoundingCouponId(id)) return true;
+    if (typeof coupon === "object" && coupon?.metadata?.founding === "true") {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function foundingCohortOpen(orgId: string): Promise<boolean> {
   const admin = createServiceClient();
   const { data: self } = await admin
@@ -71,17 +89,7 @@ export async function foundingCohortOpen(orgId: string): Promise<boolean> {
     .select("founding_rate")
     .eq("id", orgId)
     .maybeSingle();
-  if (self?.founding_rate) return true;
-
-  const { count, error } = await admin
-    .from("organizations")
-    .select("id", { count: "exact", head: true })
-    .eq("founding_rate", true);
-  if (error) {
-    console.error("founding cohort:", error.message);
-    return false;
-  }
-  return (count ?? 0) < PRICING.foundingCohortSize;
+  return Boolean(self?.founding_rate);
 }
 
 export async function loadOrgBilling(orgId: string): Promise<OrgBillingRow | null> {
@@ -161,9 +169,9 @@ export async function syncOrgFromSubscription(
     .maybeSingle();
 
   const founding =
+    Boolean(current?.founding_rate) ||
     parsed.founding ||
-    subscription.metadata.founding === "true" ||
-    Boolean(current?.founding_rate);
+    subscriptionHasFoundingPromo(subscription);
 
   const { error } = await admin
     .from("organizations")
@@ -198,7 +206,7 @@ export async function reconcileOrgBilling(orgId: string) {
     customer: billing.stripe_customer_id,
     status: "all",
     limit: 10,
-    expand: ["data.items.data.price"],
+    expand: ["data.items.data.price", "data.discounts.source.coupon"],
   });
   const preferred =
     list.data.find((row) => subscriptionEntitlesAccess(row.status)) ??

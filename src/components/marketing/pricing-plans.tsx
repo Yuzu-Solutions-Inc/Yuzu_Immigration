@@ -52,24 +52,19 @@ export async function PricingPlanCards({
         audience={t("standard.audience")}
         badge={t("standard.badge")}
         lead={t("trial.lead", { days: PRICING.trialDays })}
-        price={formatCadMonthly(PRICING.standard.foundingMonthly, locale)}
+        price={formatCadMonthly(PRICING.standard.listMonthly, locale)}
         yearly={t("yearlyPrice", {
           amount: formatCadYearly(
-            annualTotal(PRICING.standard.foundingMonthly),
+            annualTotal(PRICING.standard.listMonthly),
             locale,
           ),
           free: PRICING.annualFreeMonths,
         })}
         footnote={t("foundingHelp", {
-          months: PRICING.promoMonths,
           count: PRICING.foundingCohortSize,
+          code: PRICING.foundingPromoCode,
+          founding: formatCadMonthly(PRICING.standard.foundingMonthly, locale),
         })}
-        thenLabel={t("thenList")}
-        list={formatCadMonthly(PRICING.standard.listMonthly, locale)}
-        listYearly={formatCadYearly(
-          annualTotal(PRICING.standard.listMonthly),
-          locale,
-        )}
         features={
           detailed
             ? STANDARD_FEATURE_KEYS.map((key) =>
@@ -87,24 +82,19 @@ export async function PricingPlanCards({
         name={t("team.name")}
         audience={t("team.audience")}
         badge={t("team.badge")}
-        price={formatCadMonthly(PRICING.team.foundingMonthly, locale)}
+        price={formatCadMonthly(PRICING.team.listMonthly, locale)}
         yearly={t("yearlyPrice", {
           amount: formatCadYearly(
-            annualTotal(PRICING.team.foundingMonthly),
+            annualTotal(PRICING.team.listMonthly),
             locale,
           ),
           free: PRICING.annualFreeMonths,
         })}
         footnote={t("foundingHelp", {
-          months: PRICING.promoMonths,
           count: PRICING.foundingCohortSize,
+          code: PRICING.foundingPromoCode,
+          founding: formatCadMonthly(PRICING.team.foundingMonthly, locale),
         })}
-        thenLabel={t("thenList")}
-        list={formatCadMonthly(PRICING.team.listMonthly, locale)}
-        listYearly={formatCadYearly(
-          annualTotal(PRICING.team.listMonthly),
-          locale,
-        )}
         features={
           detailed
             ? TEAM_FEATURE_KEYS.map((key) =>

@@ -15,7 +15,7 @@ function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
 async function syncFromSubscriptionId(subscriptionId: string) {
   const stripe = getStripe();
   const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
-    expand: ["items.data.price"],
+    expand: ["items.data.price", "discounts.source.coupon"],
   });
   await syncOrgFromSubscription(subscription);
 }

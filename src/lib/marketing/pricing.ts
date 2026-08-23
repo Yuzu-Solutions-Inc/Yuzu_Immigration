@@ -4,6 +4,8 @@ import type { AppLocale } from "@/lib/i18n/locales";
 export const PRICING = {
   currency: "CAD",
   foundingCohortSize: 100,
+  /** Customer-facing Stripe promotion code auto-applied for founding firms. */
+  foundingPromoCode: "FOUNDING",
   promoMonths: 12,
   priceChangeNoticeDays: 30,
   trialDays: 30,
@@ -23,6 +25,18 @@ export const PRICING = {
 } as const;
 
 export type PricingPlanId = "standard" | "team";
+
+/** CAD dollars taken off list price for founding Standard $49 / Team $99. */
+export function foundingAmountOffCad(
+  plan: PricingPlanId,
+  interval: "month" | "year",
+): number {
+  const monthlyOff =
+    plan === "team"
+      ? PRICING.team.listMonthly - PRICING.team.foundingMonthly
+      : PRICING.standard.listMonthly - PRICING.standard.foundingMonthly;
+  return interval === "year" ? annualTotal(monthlyOff) : monthlyOff;
+}
 
 export function formatCadAmount(amount: number, locale: AppLocale): string {
   if (locale === "fr") return `${amount}\u00a0$`;

@@ -263,7 +263,7 @@
   },
   "pricing": {
     "metaTitle": "Tarifs",
-    "metaDescription": "Formules Standard et Équipe de %PRODUCT_NAME%. Standard est gratuit 30 jours dès la création du cabinet. Tarifs de lancement pour les 100 premiers cabinets.",
+    "metaDescription": "Formules Standard et Équipe de %PRODUCT_NAME%. Standard est gratuit 30 jours dès la création du cabinet. Tarifs affichés dès 69 $/mois. Code FOUNDING pour les 100 premiers cabinets.",
     "eyebrow": "Tarifs",
     "title": "Standard ou Équipe",
     "subtitle": "Le même produit. Des comptes supplémentaires sur chaque formule. Équipe inclut quatre sièges.",
@@ -271,7 +271,7 @@
     "currencyNote": "CAD, TPS/TVH en sus. La facturation annuelle offre 2 mois.",
     "cta": "Essai de 30 jours",
     "extraSeats": "Puis {price} par compte supplémentaire",
-    "foundingHelp": "Tarif de lancement pour les {count} premiers cabinets · {months} premiers mois après l’essai",
+    "foundingHelp": "Code {code} pour les {count} premiers cabinets : {founding}, appliqué automatiquement au paiement.",
     "yearlyPrice": "ou {amount} facturé à l’année ({free} mois offerts)",
     "thenList": "Ensuite",
     "trial": {
@@ -280,7 +280,7 @@
     "teaser": {
       "eyebrow": "Tarifs",
       "title": "Essayez le produit complet. Restez s’il vous convient.",
-      "subtitle": "Standard est gratuit 30 jours dès la création du cabinet. Tarifs de lancement pour les 100 premiers cabinets. Comptes supplémentaires sur Standard ou Équipe.",
+      "subtitle": "Standard est gratuit 30 jours dès la création du cabinet. Tarifs affichés dès 69 $/mois. Code FOUNDING pour les 100 premiers cabinets. Comptes supplémentaires sur Standard ou Équipe.",
       "compare": "Comparer les formules"
     },
     "standard": {
@@ -345,15 +345,15 @@
       },
       "founding": {
         "q": "Qui a droit aux tarifs de lancement ?",
-        "a": "Les {count} premiers cabinets sur Standard ou Équipe, y compris toutes les personnes déjà sur le produit. Les tarifs de lancement durent {months} mois à compter du début de la facturation pour ce cabinet — après l’essai de 30 jours."
+        "a": "Les {count} premiers cabinets qui créent un compte. Le code {code} est appliqué automatiquement au paiement — Standard {standardFounding} et Équipe {teamFounding} au lieu du tarif affiché — et reste sur l’abonnement."
       },
       "after": {
-        "q": "Que se passe-t-il après 12 mois ?",
-        "a": "Les formules de lancement Standard et Équipe passent au tarif affiché alors en vigueur (aujourd’hui, {standardList} et {teamList}). Après la période de lancement, %PRODUCT_NAME% peut modifier les tarifs affichés moyennant un préavis d’au moins {days} jours aux administrateurs du cabinet."
+        "q": "Que paient les cabinets suivants ?",
+        "a": "Les tarifs affichés (aujourd’hui, {standardList} et {teamList}). %PRODUCT_NAME% peut modifier les tarifs affichés moyennant un préavis d’au moins {days} jours aux administrateurs du cabinet."
       },
       "annual": {
         "q": "Y a-t-il un tarif annuel ?",
-        "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Le tarif de lancement Standard est de {standardAnnual} ; Équipe, {teamAnnual}."
+        "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Le tarif affiché Standard est de {standardAnnual} ; Équipe, {teamAnnual}."
       },
       "difference": {
         "q": "En quoi les formules diffèrent-elles ?",
@@ -708,7 +708,7 @@
     "billingSeats": "Sièges du personnel",
     "billingSeatUse": "{used} sur {total} utilisés",
     "billingFounding": "Tarif fondateur",
-    "billingFoundingHelp": "Ce cabinet fait partie des 100 premiers et conserve le tarif fondateur tant qu’il est abonné.",
+    "billingFoundingHelp": "Le code {code} est appliqué automatiquement au paiement. Ce cabinet fait partie des {count} premiers et conserve le tarif fondateur tant qu’il est abonné.",
     "billingPlan": "Formule",
     "billingPlanStandard": "Standard · {price}",
     "billingPlanTeam": "Équipe · {price}",

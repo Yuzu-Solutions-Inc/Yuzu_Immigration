@@ -16,6 +16,8 @@ import { recordAuditEvent } from "@/lib/security/audit";
 import {
   ensureBillingPrices,
   extraSeatLookupKey,
+  foundingCouponDiscount,
+  foundingDiscountForCustomer,
   planPriceLookupKey,
 } from "@/lib/stripe/catalog";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
@@ -131,7 +133,7 @@ export async function startCheckoutAction(
 
     const line_items: Array<{ price: string; quantity: number }> = [
       {
-        price: prices[planPriceLookupKey(plan, interval, founding)],
+        price: prices[planPriceLookupKey(plan, interval)],
         quantity: 1,
       },
     ];
@@ -152,6 +154,9 @@ export async function startCheckoutAction(
       : undefined;
 
     const stripe = getStripe();
+    const foundingDiscount = founding
+      ? await foundingDiscountForCustomer(customerId, plan, interval)
+      : null;
     const checkoutParams: Parameters<
       typeof stripe.checkout.sessions.create
     >[0] = {
@@ -161,7 +166,6 @@ export async function startCheckoutAction(
       success_url: `${origin}/${locale}/settings/billing?checkout=success`,
       cancel_url: `${origin}/${locale}/settings/billing?checkout=cancel`,
       line_items,
-      allow_promotion_codes: true,
       billing_address_collection: "required",
       tax_id_collection: { enabled: true },
       customer_update: { address: "auto", name: "auto" },
@@ -180,6 +184,7 @@ export async function startCheckoutAction(
         },
         ...(inAppTrialActive && trialEnd ? { trial_end: trialEnd } : {}),
       },
+      ...(foundingDiscount ? { discounts: [foundingDiscount] } : {}),
     };
 
     let session;
@@ -232,7 +237,7 @@ async function updateSubscription(input: {
   );
 
   const parsed = parseSubscriptionItems(subscription);
-  const planPriceId = prices[planPriceLookupKey(input.plan, input.interval, founding)];
+  const planPriceId = prices[planPriceLookupKey(input.plan, input.interval)];
   const extraPriceId = prices[extraSeatLookupKey(input.interval)];
 
   const items: Array<{
@@ -272,6 +277,9 @@ async function updateSubscription(input: {
     await stripe.subscriptions.update(subscription.id, {
       items,
       proration_behavior: "create_prorations",
+      discounts: founding
+        ? [foundingCouponDiscount(input.plan, input.interval)]
+        : "",
       metadata: {
         organization_id: input.orgId,
         plan: input.plan,

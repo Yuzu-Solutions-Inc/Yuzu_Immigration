@@ -263,7 +263,7 @@
   },
   "pricing": {
     "metaTitle": "Precios",
-    "metaDescription": "Planes Standard y Equipo de %PRODUCT_NAME%. Standard es gratis 30 días desde la creación de la firma. Tarifas de lanzamiento para las primeras 100 firmas.",
+    "metaDescription": "Planes Standard y Equipo de %PRODUCT_NAME%. Standard es gratis 30 días desde la creación de la firma. Precios de lista desde 69 $/mes. Código FOUNDING para las primeras 100 firmas.",
     "eyebrow": "Precios",
     "title": "Standard o Equipo",
     "subtitle": "El mismo producto. Cuentas extra en cualquier plan. Equipo incluye cuatro asientos.",
@@ -271,7 +271,7 @@
     "currencyNote": "CAD, más GST/HST. El pago anual incluye 2 meses gratis.",
     "cta": "Prueba de 30 días",
     "extraSeats": "Luego {price} por cuenta extra",
-    "foundingHelp": "Tarifa de lanzamiento para las primeras {count} firmas · primeros {months} meses después de la prueba",
+    "foundingHelp": "Código {code} para las primeras {count} firmas: {founding}, aplicado automáticamente al pagar.",
     "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
     "thenList": "Después",
     "trial": {
@@ -280,7 +280,7 @@
     "teaser": {
       "eyebrow": "Precios",
       "title": "Pruebe el producto completo. Quédese si encaja.",
-      "subtitle": "Standard es gratis 30 días desde la creación de la firma. Tarifas de lanzamiento para las primeras 100 firmas. Cuentas extra en Standard o Equipo.",
+      "subtitle": "Standard es gratis 30 días desde la creación de la firma. Precios de lista desde 69 $/mes. Código FOUNDING para las primeras 100 firmas. Cuentas extra en Standard o Equipo.",
       "compare": "Comparar planes"
     },
     "standard": {
@@ -345,15 +345,15 @@
       },
       "founding": {
         "q": "¿Quién obtiene las tarifas de lanzamiento?",
-        "a": "Las primeras {count} firmas en Standard o Equipo, incluidas todas las que ya usan el producto. Las tarifas de lanzamiento duran {months} meses desde que empieza la facturación de esa firma — después de la prueba de 30 días."
+        "a": "Las primeras {count} firmas que crean una cuenta. El código {code} se aplica automáticamente al pagar — Standard {standardFounding} y Equipo {teamFounding} en lugar del precio de lista — y permanece en la suscripción."
       },
       "after": {
-        "q": "¿Qué ocurre después de 12 meses?",
-        "a": "Standard y Equipo de lanzamiento pasan al precio de lista entonces vigente (hoy, {standardList} y {teamList}). Tras el periodo de lanzamiento, %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
+        "q": "¿Qué pagan las firmas posteriores?",
+        "a": "Los precios de lista (hoy, {standardList} y {teamList}). %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
       },
       "annual": {
         "q": "¿Hay un precio anual?",
-        "a": "Sí. Paga {paid} meses y {free} meses son gratis. El Standard de lanzamiento es {standardAnnual}; Equipo, {teamAnnual}."
+        "a": "Sí. Paga {paid} meses y {free} meses son gratis. El Standard de lista es {standardAnnual}; Equipo, {teamAnnual}."
       },
       "difference": {
         "q": "¿En qué se diferencian los planes?",
@@ -708,7 +708,7 @@
     "billingSeats": "Plazas de personal",
     "billingSeatUse": "{used} de {total} en uso",
     "billingFounding": "Tarifa fundadora",
-    "billingFoundingHelp": "Este despacho está entre los primeros 100 y conserva la tarifa fundadora mientras esté suscrito.",
+    "billingFoundingHelp": "El código {code} se aplica automáticamente al pagar. Esta firma está entre las primeras {count} y conserva la tarifa fundadora mientras esté suscrita.",
     "billingPlan": "Plan",
     "billingPlanStandard": "Standard · {price}",
     "billingPlanTeam": "Team · {price}",

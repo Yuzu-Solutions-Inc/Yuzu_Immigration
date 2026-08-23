@@ -30,6 +30,7 @@ import {
   annualTotal,
   formatCadMonthly,
   formatCadYearly,
+  PRICING,
   type PricingPlanId,
 } from "@/lib/marketing/pricing";
 
@@ -143,7 +144,12 @@ export function BillingSettingsForm({
             <dt className="text-xs tracking-wide text-muted-foreground uppercase">
               {t("billingFounding")}
             </dt>
-            <dd className="text-brand">{t("billingFoundingHelp")}</dd>
+            <dd className="text-brand">
+              {t("billingFoundingHelp", {
+                count: PRICING.foundingCohortSize,
+                code: PRICING.foundingPromoCode,
+              })}
+            </dd>
           </div>
         ) : null}
       </dl>

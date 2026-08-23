@@ -52,11 +52,15 @@ function faqParams(
     case "founding":
       return {
         count: PRICING.foundingCohortSize,
-        months: PRICING.promoMonths,
+        code: PRICING.foundingPromoCode,
+        standardFounding: formatCadMonthly(
+          PRICING.standard.foundingMonthly,
+          locale,
+        ),
+        teamFounding: formatCadMonthly(PRICING.team.foundingMonthly, locale),
       };
     case "after":
       return {
-        months: PRICING.promoMonths,
         days: PRICING.priceChangeNoticeDays,
         standardList: formatCadMonthly(PRICING.standard.listMonthly, locale),
         teamList: formatCadMonthly(PRICING.team.listMonthly, locale),
@@ -66,11 +70,11 @@ function faqParams(
         paid: PRICING.annualMonthsPaid,
         free: PRICING.annualFreeMonths,
         standardAnnual: formatCadYearly(
-          annualTotal(PRICING.standard.foundingMonthly),
+          annualTotal(PRICING.standard.listMonthly),
           locale,
         ),
         teamAnnual: formatCadYearly(
-          annualTotal(PRICING.team.foundingMonthly),
+          annualTotal(PRICING.team.listMonthly),
           locale,
         ),
       };
