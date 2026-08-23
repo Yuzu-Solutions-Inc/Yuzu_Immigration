@@ -454,7 +454,7 @@ export function ProjectFormsPanel({
               >
                 {addOptions.map((code) => (
                   <option key={code} value={code}>
-                    {formTitle(code, locale)}
+                    {code.toUpperCase()} · {formTitle(code, locale)}
                     {isPersonScopedForm(code)
                       ? ` · ${t("scopePerson")}`
                       : ` · ${t("scopeProject")}`}
