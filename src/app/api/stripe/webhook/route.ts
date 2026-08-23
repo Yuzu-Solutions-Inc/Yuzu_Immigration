@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
 import { getStripe } from "@/lib/stripe/client";
+import { trueUpLicensedSeatsForRenewal } from "@/lib/stripe/seats";
 import { syncOrgFromSubscription } from "@/lib/stripe/sync";
 
 export const runtime = "nodejs";
@@ -65,6 +66,15 @@ export async function POST(request: Request) {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         await syncFromSubscriptionId(event.data.object.id);
+        break;
+      }
+      case "invoice.created": {
+        const invoice = event.data.object;
+        if (invoice.billing_reason !== "subscription_cycle") break;
+        const subscriptionId = invoiceSubscriptionId(invoice);
+        if (subscriptionId) {
+          await trueUpLicensedSeatsForRenewal(subscriptionId);
+        }
         break;
       }
       case "invoice.paid":

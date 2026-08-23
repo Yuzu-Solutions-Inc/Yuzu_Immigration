@@ -11,7 +11,7 @@ import {
   type TeamActionState,
 } from "@/app/actions/team";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel, FieldSuccess } from "@/components/ui/field";
+import { Field, FieldError, FieldHint, FieldLabel, FieldSuccess } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { OrgRole } from "@/lib/auth/rbac";
@@ -46,6 +46,7 @@ function teamErrorMessage(
       already_member: t("errors.alreadyMember"),
       invite_failed: t("errors.inviteFailed"),
       seats_exceeded: t("errors.seatsExceeded"),
+      seat_charge_failed: t("errors.seatChargeFailed"),
       last_admin: t("errors.lastAdmin"),
       cannot_remove_self: t("errors.cannotRemoveSelf"),
       not_found: t("errors.notFound"),
@@ -75,11 +76,15 @@ export function TeamSettings({
   currentUserId,
   members,
   invitations,
+  subscribed,
+  licensedSeats,
 }: {
   locale: AppLocale;
   currentUserId: string;
   members: Member[];
   invitations: Invitation[];
+  subscribed: boolean;
+  licensedSeats: number;
 }) {
   const t = useTranslations("settings");
   const tRoles = useTranslations("orgRoles");
@@ -101,6 +106,9 @@ export function TeamSettings({
   );
   const [copied, setCopied] = useState(false);
 
+  const occupancy = members.length + invitations.length;
+  const willBillSeat =
+    subscribed && occupancy >= Math.max(1, licensedSeats);
   const adminCount = members.filter((m) => m.role === "admin").length;
   const error =
     teamErrorMessage(inviteState.error, t) ||
@@ -115,6 +123,17 @@ export function TeamSettings({
 
   return (
     <section className="space-y-6">
+      {subscribed ? (
+        <p className="text-sm text-muted-foreground">
+          {t("billingSeatUse", {
+            used: occupancy,
+            total: Math.max(licensedSeats, occupancy),
+          })}
+          {licensedSeats > occupancy
+            ? ` · ${t("billingSeatUnused", { count: licensedSeats - occupancy })}`
+            : null}
+        </p>
+      ) : null}
       <form action={inviteAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]">
         <input type="hidden" name="locale" value={locale} />
         <Field>
@@ -148,6 +167,9 @@ export function TeamSettings({
             {invitePending ? t("inviteSending") : t("inviteSend")}
           </Button>
         </div>
+        {willBillSeat ? (
+          <FieldHint className="sm:col-span-3">{t("teamSeatWillBill")}</FieldHint>
+        ) : null}
       </form>
 
       {inviteState.inviteUrl ? (

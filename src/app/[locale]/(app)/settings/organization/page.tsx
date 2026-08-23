@@ -38,28 +38,29 @@ export default async function OrganizationSettingsPage({
   const t = await getTranslations("settings");
 
   return (
-    <SurfaceCard className="space-y-4 sm:p-6">
-      <div>
+    <div className="space-y-4">
+      <SurfaceCard className="space-y-5 sm:p-6">
         <h2 className="font-heading text-lg font-semibold text-brand">
           {t("organization")}
         </h2>
-        <p className="text-sm text-muted-foreground">{t("organizationHelp")}</p>
-      </div>
-      <OrganizationSettingsForm
-        locale={locale}
-        initialValues={{
-          name: org.name ?? "",
-          slug: org.slug ?? "",
-          defaultLocale: toAppLocale(org.default_locale),
-          privacyContactEmail: org.privacy_contact_email ?? "",
-          portalGoogleLoginEnabled: org.portal_google_login_enabled === true,
-        }}
-      />
-      <OrganizationDpaPanel
-        locale={locale}
-        acceptedAt={org.dpa_accepted_at ?? null}
-        acceptedVersion={org.dpa_version ?? null}
-      />
-    </SurfaceCard>
+        <OrganizationSettingsForm
+          locale={locale}
+          initialValues={{
+            name: org.name ?? "",
+            slug: org.slug ?? "",
+            defaultLocale: toAppLocale(org.default_locale),
+            privacyContactEmail: org.privacy_contact_email ?? "",
+            portalGoogleLoginEnabled: org.portal_google_login_enabled === true,
+          }}
+        />
+      </SurfaceCard>
+      <SurfaceCard className="sm:p-6">
+        <OrganizationDpaPanel
+          locale={locale}
+          acceptedAt={org.dpa_accepted_at ?? null}
+          acceptedVersion={org.dpa_version ?? null}
+        />
+      </SurfaceCard>
+    </div>
   );
 }

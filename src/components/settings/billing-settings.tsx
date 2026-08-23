@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -9,20 +9,11 @@ import {
   type BillingActionState,
 } from "@/app/actions/billing";
 import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field";
+import { StatusPill } from "@/components/ui/status-pill";
 import {
-  Field,
-  FieldError,
-  FieldGrid,
-  FieldHint,
-  FieldLabel,
-  FormStack,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import {
-  extraSeatsNeeded,
-  includedSeats,
-  planMonthlyCad,
+  catalogForOccupancy,
+  catalogFromLicensed,
   type BillingInterval,
 } from "@/lib/billing/plans";
 import type { AppLocale } from "@/lib/i18n/locales";
@@ -30,9 +21,9 @@ import {
   annualTotal,
   formatCadMonthly,
   formatCadYearly,
-  PRICING,
   type PricingPlanId,
 } from "@/lib/marketing/pricing";
+import { cn } from "@/lib/utils";
 
 const initial: BillingActionState = {};
 
@@ -41,12 +32,13 @@ export function BillingSettingsForm({
   configured,
   subscribed,
   trialEndsAt,
+  periodEndsAt,
   foundingEligible,
   foundingLockedIn,
   currentPlan,
   currentInterval,
   seatQuantity,
-  memberCount,
+  occupancy,
   hasCustomer,
   checkoutFlash,
 }: {
@@ -54,12 +46,13 @@ export function BillingSettingsForm({
   configured: boolean;
   subscribed: boolean;
   trialEndsAt: string;
+  periodEndsAt: string | null;
   foundingEligible: boolean;
   foundingLockedIn: boolean;
   currentPlan: PricingPlanId | null;
   currentInterval: BillingInterval | null;
   seatQuantity: number;
-  memberCount: number;
+  occupancy: number;
   hasCustomer: boolean;
   checkoutFlash?: string;
 }) {
@@ -72,11 +65,18 @@ export function BillingSettingsForm({
     openBillingPortalAction,
     initial,
   );
+  const [interval, setInterval] = useState<BillingInterval>(
+    currentInterval ?? "month",
+  );
 
   const founding = foundingLockedIn || foundingEligible;
-  const defaultPlan = currentPlan ?? "standard";
-  const defaultInterval = currentInterval ?? "month";
-  const defaultExtra = extraSeatsNeeded(defaultPlan, memberCount);
+  const catalog =
+    subscribed && currentPlan
+      ? catalogFromLicensed(currentPlan, seatQuantity, founding)
+      : catalogForOccupancy(occupancy, founding);
+  const licensed = subscribed ? Math.max(seatQuantity, catalog.seatQuantity) : catalog.seatQuantity;
+  const unused = Math.max(0, licensed - occupancy);
+  const pendingIntervalChange = subscribed && interval !== (currentInterval ?? "month");
 
   const errorKey = checkoutState.error || portalState.error;
   const error =
@@ -92,11 +92,20 @@ export function BillingSettingsForm({
     }[errorKey] ??
       t("errors.generic"));
 
-  const trialDate = new Date(trialEndsAt).toLocaleDateString(locale, {
+  const dateOpts: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "short",
     day: "numeric",
-  });
+  };
+  const trialDate = new Date(trialEndsAt).toLocaleDateString(locale, dateOpts);
+  const renewDate = periodEndsAt
+    ? new Date(periodEndsAt).toLocaleDateString(locale, dateOpts)
+    : null;
+
+  const price =
+    interval === "year"
+      ? formatCadYearly(annualTotal(catalog.monthlyCad), locale)
+      : formatCadMonthly(catalog.monthlyCad, locale);
 
   if (!configured) {
     return (
@@ -105,7 +114,7 @@ export function BillingSettingsForm({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {checkoutFlash === "success" ? (
         <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
           {t("billingCheckoutSuccess")}
@@ -117,131 +126,119 @@ export function BillingSettingsForm({
         </p>
       ) : null}
 
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-xs tracking-wide text-muted-foreground uppercase">
-            {t("billingStatus")}
-          </dt>
-          <dd className="text-brand">
-            {subscribed
-              ? t("billingStatusActive")
-              : t("billingStatusTrial", { date: trialDate })}
-          </dd>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {catalog.plan === "team"
+              ? t("billingPlanNameTeam")
+              : t("billingPlanNameStandard")}
+          </h2>
+          <StatusPill
+            label={
+              subscribed
+                ? t("billingStatusActive")
+                : t("billingStatusTrial", { date: trialDate })
+            }
+            tone={subscribed ? "success" : "warning"}
+          />
+          {founding ? (
+            <StatusPill label={t("billingFoundingBadge")} tone="action" />
+          ) : null}
         </div>
-        <div>
-          <dt className="text-xs tracking-wide text-muted-foreground uppercase">
-            {t("billingSeats")}
-          </dt>
-          <dd className="text-brand">
-            {t("billingSeatUse", {
-              used: memberCount,
-              total: subscribed ? seatQuantity : includedSeats(defaultPlan),
-            })}
-          </dd>
-        </div>
-        {founding ? (
-          <div className="sm:col-span-2">
-            <dt className="text-xs tracking-wide text-muted-foreground uppercase">
-              {t("billingFounding")}
-            </dt>
-            <dd className="text-brand">
-              {t("billingFoundingHelp", {
-                count: PRICING.foundingCohortSize,
-                code: PRICING.foundingPromoCode,
-              })}
-            </dd>
-          </div>
+        <p className="font-heading text-3xl font-semibold tracking-tight text-brand">
+          {price}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t("billingSeatUse", { used: occupancy, total: licensed })}
+          {unused > 0 ? ` · ${t("billingSeatUnused", { count: unused })}` : null}
+        </p>
+        {subscribed && renewDate ? (
+          <p className="text-sm text-muted-foreground">
+            {t("billingRenews", { date: renewDate })}
+          </p>
         ) : null}
-      </dl>
+      </div>
 
-      <FormStack action={checkoutAction} gap="loose">
+      <form action={checkoutAction} className="space-y-4">
         <input type="hidden" name="locale" value={locale} />
-        <FieldGrid>
-          <Field>
-            <FieldLabel htmlFor="plan" required>
-              {t("billingPlan")}
-            </FieldLabel>
-            <NativeSelect
-              id="plan"
-              name="plan"
-              defaultValue={defaultPlan}
-            >
-              <option value="standard">
-                {t("billingPlanStandard", {
-                  price: formatCadMonthly(
-                    planMonthlyCad("standard", founding),
-                    locale,
-                  ),
-                })}
-              </option>
-              <option value="team">
-                {t("billingPlanTeam", {
-                  price: formatCadMonthly(
-                    planMonthlyCad("team", founding),
-                    locale,
-                  ),
-                })}
-              </option>
-            </NativeSelect>
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="interval" required>
-              {t("billingInterval")}
-            </FieldLabel>
-            <NativeSelect
-              id="interval"
-              name="interval"
-              defaultValue={defaultInterval}
-            >
-              <option value="month">{t("billingMonthly")}</option>
-              <option value="year">
-                {t("billingYearly", {
-                  standard: formatCadYearly(
-                    annualTotal(planMonthlyCad("standard", founding)),
-                    locale,
-                  ),
-                })}
-              </option>
-            </NativeSelect>
-            <FieldHint>{t("billingYearlyHelp")}</FieldHint>
-          </Field>
-          <Field className="sm:col-span-2">
-            <FieldLabel htmlFor="extraSeats">
-              {t("billingExtraSeats")}
-            </FieldLabel>
-            <Input
-              id="extraSeats"
-              name="extraSeats"
-              type="number"
-              min={0}
-              max={200}
-              defaultValue={defaultExtra}
+        <input type="hidden" name="interval" value={interval} />
+        <div>
+          <p className="mb-2 text-sm font-medium text-brand">
+            {t("billingInterval")}
+          </p>
+          <div
+            className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-canvas p-1"
+            role="radiogroup"
+            aria-label={t("billingInterval")}
+          >
+            <IntervalChoice
+              selected={interval === "month"}
+              onSelect={() => setInterval("month")}
+              title={t("billingMonthly")}
+              detail={formatCadMonthly(catalog.monthlyCad, locale)}
             />
-            <FieldHint>{t("billingExtraSeatsHelp")}</FieldHint>
-          </Field>
-        </FieldGrid>
+            <IntervalChoice
+              selected={interval === "year"}
+              onSelect={() => setInterval("year")}
+              title={t("billingYearly")}
+              detail={`${formatCadYearly(annualTotal(catalog.monthlyCad), locale)} · ${t("billingYearlySave")}`}
+            />
+          </div>
+        </div>
         {error ? <FieldError>{error}</FieldError> : null}
-        <Button type="submit" disabled={checkoutPending}>
-          {checkoutPending
-            ? t("billingWorking")
-            : subscribed
-              ? t("billingUpdate")
-              : t("billingSubscribe")}
-        </Button>
-      </FormStack>
+        {!subscribed || pendingIntervalChange ? (
+          <Button type="submit" disabled={checkoutPending}>
+            {checkoutPending
+              ? t("billingWorking")
+              : subscribed
+                ? interval === "year"
+                  ? t("billingSwitchYearly")
+                  : t("billingSwitchMonthly")
+                : t("billingSubscribe")}
+          </Button>
+        ) : null}
+      </form>
 
       {hasCustomer ? (
         <form action={portalAction}>
           <input type="hidden" name="locale" value={locale} />
-          <Button
-            type="submit"
-            variant="outline"
-            disabled={portalPending}
-          >
+          <Button type="submit" variant="outline" disabled={portalPending}>
             {portalPending ? t("billingWorking") : t("billingManage")}
           </Button>
         </form>
       ) : null}
     </div>
+  );
+}
+
+function IntervalChoice({
+  selected,
+  onSelect,
+  title,
+  detail,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  title: string;
+  detail: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={cn(
+        "rounded-lg px-3 py-2.5 text-left transition-colors",
+        selected
+          ? "bg-surface text-brand shadow-elevated"
+          : "text-muted-foreground hover:text-brand",
+      )}
+    >
+      <span className="block text-sm font-semibold">{title}</span>
+      <span className="mt-0.5 block text-xs font-medium text-muted-foreground">
+        {detail}
+      </span>
+    </button>
   );
 }

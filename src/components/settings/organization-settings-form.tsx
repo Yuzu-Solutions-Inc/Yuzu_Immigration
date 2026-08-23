@@ -65,61 +65,49 @@ export function OrganizationSettingsForm({
       t("errors.generic"));
 
   return (
-    <FormStack action={action} gap="loose">
+    <FormStack action={action}>
       <input type="hidden" name="locale" value={locale} />
 
-      <section className="space-y-4">
-        <h3 className="font-heading text-base font-semibold text-brand">
-          {t("orgBasics")}
-        </h3>
-        <FieldGrid>
-          <Field className="sm:col-span-2">
-            <FieldLabel htmlFor="name" required>
-              {t("orgName")}
-            </FieldLabel>
-            <Input
-              id="name"
-              name="name"
-              defaultValue={initialValues.name}
-              required
-              maxLength={120}
-            />
-          </Field>
-          <Field className="sm:col-span-2">
-            <FieldLabel htmlFor="slug" required>
-              {t("orgSlug")}
-            </FieldLabel>
-            <Input
-              id="slug"
-              name="slug"
-              defaultValue={initialValues.slug}
-              required
-              maxLength={48}
-            />
-            <FieldHint>{t("orgSlugHelp")}</FieldHint>
-          </Field>
-          <Field className="sm:col-span-2">
-            <FieldLabel htmlFor="defaultLocale">{t("orgDefaultLocale")}</FieldLabel>
-            <NativeSelect
-              id="defaultLocale"
-              name="defaultLocale"
-              defaultValue={initialValues.defaultLocale}
-            >
-              {APP_LOCALES.map((code) => (
-                <option key={code} value={code}>
-                  {LOCALE_LABELS[code]}
-                </option>
-              ))}
-            </NativeSelect>
-            <FieldHint>{t("orgDefaultLocaleHelp")}</FieldHint>
-          </Field>
-        </FieldGrid>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="font-heading text-base font-semibold text-brand">
-          {t("privacyContactTitle")}
-        </h3>
+      <FieldGrid>
+        <Field>
+          <FieldLabel htmlFor="name" required>
+            {t("orgName")}
+          </FieldLabel>
+          <Input
+            id="name"
+            name="name"
+            defaultValue={initialValues.name}
+            required
+            maxLength={120}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="slug" required>
+            {t("orgSlug")}
+          </FieldLabel>
+          <Input
+            id="slug"
+            name="slug"
+            defaultValue={initialValues.slug}
+            required
+            maxLength={48}
+          />
+          <FieldHint>{t("orgSlugHelp")}</FieldHint>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="defaultLocale">{t("orgDefaultLocale")}</FieldLabel>
+          <NativeSelect
+            id="defaultLocale"
+            name="defaultLocale"
+            defaultValue={initialValues.defaultLocale}
+          >
+            {APP_LOCALES.map((code) => (
+              <option key={code} value={code}>
+                {LOCALE_LABELS[code]}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
         <Field>
           <FieldLabel htmlFor="privacyContactEmail" required>
             {t("privacyContactEmail")}
@@ -135,31 +123,26 @@ export function OrganizationSettingsForm({
           />
           <FieldHint>{t("privacyContactEmailHelp")}</FieldHint>
         </Field>
-      </section>
+      </FieldGrid>
 
-      <section className="space-y-4">
-        <h3 className="font-heading text-base font-semibold text-brand">
-          {t("portalGoogleTitle")}
-        </h3>
-        <input
-          type="hidden"
-          name="portalGoogleLoginEnabled"
-          value={googleLoginEnabled ? "on" : "off"}
-        />
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <Label htmlFor="portalGoogleLoginEnabled">
-              {t("portalGoogleLogin")}
-            </Label>
-            <FieldHint>{t("portalGoogleLoginHelp")}</FieldHint>
-          </div>
-          <Switch
-            id="portalGoogleLoginEnabled"
-            checked={googleLoginEnabled}
-            onCheckedChange={setGoogleLoginEnabled}
-          />
+      <input
+        type="hidden"
+        name="portalGoogleLoginEnabled"
+        value={googleLoginEnabled ? "on" : "off"}
+      />
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-canvas px-4 py-3">
+        <div className="min-w-0 space-y-0.5">
+          <Label htmlFor="portalGoogleLoginEnabled">
+            {t("portalGoogleLogin")}
+          </Label>
+          <FieldHint>{t("portalGoogleLoginHelp")}</FieldHint>
         </div>
-      </section>
+        <Switch
+          id="portalGoogleLoginEnabled"
+          checked={googleLoginEnabled}
+          onCheckedChange={setGoogleLoginEnabled}
+        />
+      </div>
 
       {error ? <FieldError>{error}</FieldError> : null}
       {state.success ? <FieldSuccess>{t("saved")}</FieldSuccess> : null}

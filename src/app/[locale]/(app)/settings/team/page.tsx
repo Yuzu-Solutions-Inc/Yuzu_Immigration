@@ -7,6 +7,7 @@ import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { listOrgMembers, listPendingInvitations } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
+import { loadOrgBilling } from "@/lib/stripe/sync";
 
 export default async function TeamSettingsPage({
   params,
@@ -24,26 +25,26 @@ export default async function TeamSettingsPage({
   }
 
   const user = await getSessionUser();
-  const [members, invitations] = await Promise.all([
+  const [members, invitations, billing] = await Promise.all([
     listOrgMembers(),
     listPendingInvitations(),
+    loadOrgBilling(membership.organization.id),
   ]);
 
   const t = await getTranslations("settings");
 
   return (
     <SurfaceCard className="space-y-4 sm:p-6">
-      <div>
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("team")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t("teamHelp")}</p>
-      </div>
+      <h2 className="font-heading text-lg font-semibold text-brand">
+        {t("team")}
+      </h2>
       <TeamSettings
         locale={locale}
         currentUserId={user?.id ?? ""}
         members={members}
         invitations={invitations}
+        subscribed={membership.organization.subscribed}
+        licensedSeats={billing?.billing_seat_quantity ?? 1}
       />
     </SurfaceCard>
   );

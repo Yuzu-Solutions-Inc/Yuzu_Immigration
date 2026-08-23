@@ -9,7 +9,8 @@ import {
 } from "@/app/actions/settings";
 import { FirmDpaConsentFields } from "@/components/legal/legal-consent-fields";
 import { Button } from "@/components/ui/button";
-import { FieldError, FieldHint, FieldSuccess } from "@/components/ui/field";
+import { FieldError, FieldSuccess } from "@/components/ui/field";
+import { StatusPill } from "@/components/ui/status-pill";
 import {
   FIRM_DPA_DOWNLOAD_FILE,
   legalDownloadHref,
@@ -52,8 +53,7 @@ export function OrganizationDpaPanel({
   const acceptedLabel = acceptedAt
     ? t("dpaAcceptedMeta", {
         date: new Date(acceptedAt).toLocaleString(locale, {
-          dateStyle: "long",
-          timeStyle: "short",
+          dateStyle: "medium",
         }),
         version: acceptedVersion ?? FIRM_DPA_VERSION,
       })
@@ -61,26 +61,25 @@ export function OrganizationDpaPanel({
 
   return (
     <section className="space-y-4">
-      <h3 className="font-heading text-base font-semibold text-brand">
-        {t("dpaTitle")}
-      </h3>
-      <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
-        {t("dpaHelp")}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("dpaTitle")}
+        </h2>
+        {accepted ? (
+          <StatusPill label={t("dpaAcceptedBadge")} tone="success" />
+        ) : null}
+      </div>
       {accepted ? (
-        <>
+        <div className="space-y-2">
           <FieldSuccess>{acceptedLabel}</FieldSuccess>
-          <FieldHint>
-            {tl("dpaCountersignHelp")}{" "}
-            <a
-              href={legalDownloadHref(FIRM_DPA_DOWNLOAD_FILE, locale)}
-              download={FIRM_DPA_DOWNLOAD_FILE}
-              className="text-action underline-offset-2 hover:underline"
-            >
-              {tl("dpaDownload")}
-            </a>
-          </FieldHint>
-        </>
+          <a
+            href={legalDownloadHref(FIRM_DPA_DOWNLOAD_FILE, locale)}
+            download={FIRM_DPA_DOWNLOAD_FILE}
+            className="text-sm font-medium text-action underline-offset-2 hover:underline"
+          >
+            {tl("dpaDownload")}
+          </a>
+        </div>
       ) : (
         <form action={action} className="space-y-4">
           <input type="hidden" name="locale" value={locale} />

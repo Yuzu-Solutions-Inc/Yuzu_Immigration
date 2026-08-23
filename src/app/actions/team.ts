@@ -63,21 +63,6 @@ export async function inviteOrgMemberAction(
     .select("user_id")
     .eq("organization_id", orgId);
 
-  if (membership.organization.subscribed) {
-    const { loadOrgBilling } = await import("@/lib/stripe/sync");
-    const billing = await loadOrgBilling(orgId);
-    const seats = billing?.billing_seat_quantity ?? 1;
-    const { count: pending } = await admin
-      .from("organization_invitations")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .is("accepted_at", null)
-      .is("revoked_at", null);
-    if ((members?.length ?? 0) + (pending ?? 0) >= seats) {
-      return { error: "seats_exceeded" };
-    }
-  }
-
   const memberIds = (members ?? []).map((m) => m.user_id as string);
   if (memberIds.length > 0) {
     const { data: profiles } = await supabase
@@ -90,6 +75,35 @@ export async function inviteOrgMemberAction(
     );
     if (already) {
       return { error: "already_member" };
+    }
+  }
+
+  if (membership.organization.subscribed) {
+    const { occupancyCount, ensureLicensedSeats } = await import(
+      "@/lib/stripe/seats"
+    );
+    const occupancy = await occupancyCount(orgId);
+    const { count: pendingForEmail } = await admin
+      .from("organization_invitations")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId)
+      .ilike("email", email)
+      .is("accepted_at", null)
+      .is("revoked_at", null)
+      .gt("expires_at", new Date().toISOString());
+    const billed = await ensureLicensedSeats({
+      orgId,
+      occupancy: occupancy + ((pendingForEmail ?? 0) > 0 ? 0 : 1),
+    });
+    if (!billed.ok) {
+      return {
+        error:
+          billed.error === "seat_charge_failed"
+            ? "seat_charge_failed"
+            : billed.error === "not_configured"
+              ? "invite_failed"
+              : "seats_exceeded",
+      };
     }
   }
 
