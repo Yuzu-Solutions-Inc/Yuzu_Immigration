@@ -16,8 +16,11 @@ import {
   normalizeInviteEmail,
 } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { catalogForOccupancy, type BillingInterval } from "@/lib/billing/plans";
 import { trialExpiredError } from "@/lib/billing/trial";
+import type { PricingPlanId } from "@/lib/marketing/pricing";
 import { recordAuditEvent } from "@/lib/security/audit";
+import { loadOrgBilling } from "@/lib/stripe/sync";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +28,11 @@ export type TeamActionState = {
   error?: string;
   message?: string;
   inviteUrl?: string;
+  needsSeatChargeConfirm?: boolean;
+  nextMonthlyCad?: number;
+  nextSeats?: number;
+  nextPlan?: PricingPlanId;
+  interval?: BillingInterval;
 };
 
 const roleSchema = z.enum(["admin", "case_manager"]);
@@ -88,8 +96,22 @@ export async function inviteOrgMemberAction(
     );
     const allowed = await canReserveInviteSeat(orgId, email);
     if (!allowed) {
-      const { ensureLicensedSeats } = await import("@/lib/stripe/seats");
       const cap = await loadSeatCap(orgId);
+      const billing = await loadOrgBilling(orgId);
+      const founding = Boolean(billing?.founding_rate);
+      const catalog = catalogForOccupancy(cap.occupancy + 1, founding);
+      const interval: BillingInterval =
+        billing?.billing_interval === "year" ? "year" : "month";
+      if (formData.get("confirmSeatCharge") !== "true") {
+        return {
+          needsSeatChargeConfirm: true,
+          nextMonthlyCad: catalog.monthlyCad,
+          nextSeats: catalog.seatQuantity,
+          nextPlan: catalog.plan,
+          interval,
+        };
+      }
+      const { ensureLicensedSeats } = await import("@/lib/stripe/seats");
       const charged = await ensureLicensedSeats({
         orgId,
         occupancy: cap.occupancy + 1,

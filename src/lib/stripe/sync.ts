@@ -5,6 +5,7 @@ import type Stripe from "stripe";
 import { type PricingPlanId } from "@/lib/marketing/pricing";
 import {
   includedSeats,
+  LEGACY_TEAM_INCLUDED_SEATS,
   totalPaidSeats,
   type BillingInterval,
 } from "@/lib/billing/plans";
@@ -57,11 +58,19 @@ export function parseSubscriptionItems(subscription: Stripe.Subscription): {
     if (parsed.plan === "extra_seat") {
       extraSeats += item.quantity ?? 0;
       interval = parsed.interval;
+      if (parsed.founding) founding = true;
       continue;
     }
-    plan = parsed.plan;
+    if (parsed.plan === "team") {
+      extraSeats += LEGACY_TEAM_INCLUDED_SEATS - 1;
+      plan = "standard";
+      interval = parsed.interval;
+      founding = parsed.founding || founding;
+      continue;
+    }
+    plan = "standard";
     interval = parsed.interval;
-    founding = parsed.founding;
+    founding = parsed.founding || founding;
   }
 
   const seatQuantity = plan ? totalPaidSeats(plan, extraSeats) : extraSeats;

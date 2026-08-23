@@ -132,7 +132,7 @@ export async function startCheckoutAction(
     ];
     if (catalog.extraSeats > 0) {
       line_items.push({
-        price: prices[extraSeatLookupKey(interval)],
+        price: prices[extraSeatLookupKey(interval, founding)],
         quantity: catalog.extraSeats,
       });
     }

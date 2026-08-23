@@ -14,6 +14,7 @@ import {
   useActionState,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -41,6 +42,7 @@ import {
   StaffCalendarIntegrations,
   StaffMeetingIntegrations,
 } from "@/components/booking/staff-integrations";
+import { InviteSeatChargeDialog } from "@/components/settings/invite-seat-charge-dialog";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -128,8 +130,18 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
     inviteOrgMemberAction,
     emptyTeam,
   );
+  const inviteFormRef = useRef<HTMLFormElement>(null);
+  const confirmChargeRef = useRef<HTMLInputElement>(null);
+  const [chargeOpen, setChargeOpen] = useState(false);
 
   useEffect(() => {
+    if (inviteState.needsSeatChargeConfirm) {
+      if (confirmChargeRef.current) confirmChargeRef.current.value = "";
+      setChargeOpen(true);
+    }
+    if (inviteState.message || inviteState.error) {
+      setChargeOpen(false);
+    }
     if (
       profileState.success ||
       serviceState.message === "created" ||
@@ -144,6 +156,8 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
     profileState.success,
     serviceState.message,
     inviteState.message,
+    inviteState.error,
+    inviteState.needsSeatChargeConfirm,
     router,
     steps.length,
   ]);
@@ -442,8 +456,15 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
         ) : null}
 
         {step === "team" ? (
-          <FormStack action={inviteAction}>
+          <>
+          <FormStack ref={inviteFormRef} action={inviteAction}>
             <input type="hidden" name="locale" value={locale} />
+            <input
+              ref={confirmChargeRef}
+              type="hidden"
+              name="confirmSeatCharge"
+              defaultValue=""
+            />
             <FieldGrid>
               <Field>
                 <FieldLabel htmlFor="inviteEmail" required>
@@ -481,6 +502,23 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
               </Button>
             </div>
           </FormStack>
+          <InviteSeatChargeDialog
+            locale={locale}
+            open={chargeOpen}
+            onOpenChange={setChargeOpen}
+            monthlyCad={inviteState.nextMonthlyCad ?? 0}
+            seats={inviteState.nextSeats ?? 0}
+            interval={inviteState.interval ?? "month"}
+            pending={invitePending}
+            onConfirm={() => {
+              if (confirmChargeRef.current) {
+                confirmChargeRef.current.value = "true";
+              }
+              setChargeOpen(false);
+              inviteFormRef.current?.requestSubmit();
+            }}
+          />
+          </>
         ) : null}
 
         {step === "done" ? (

@@ -111,6 +111,9 @@ export default async function BillingSettingsPage({
           invitations={invitations}
           subscribed={membership.organization.subscribed}
           licensedSeats={billing?.billing_seat_quantity ?? 1}
+          founding={Boolean(billing?.founding_rate) || foundingEligible}
+          currentPlan={plan}
+          currentInterval={interval}
         />
       </SurfaceCard>
     </div>

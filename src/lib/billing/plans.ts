@@ -1,9 +1,16 @@
-import { PRICING, type PricingPlanId } from "@/lib/marketing/pricing";
+import {
+  extraSeatMonthlyCad,
+  PRICING,
+  type PricingPlanId,
+} from "@/lib/marketing/pricing";
 
 export type BillingInterval = "month" | "year";
 
 /** Max seats an admin can add in one billing update. */
 export const MAX_SEAT_ADD = 10;
+
+/** Former Team plan included this many seats. Used when reading old Stripe items. */
+export const LEGACY_TEAM_INCLUDED_SEATS = 4;
 
 export type SeatCatalog = {
   plan: PricingPlanId;
@@ -14,7 +21,7 @@ export type SeatCatalog = {
 
 export function includedSeats(plan: PricingPlanId): number {
   return plan === "team"
-    ? PRICING.team.includedUsers
+    ? LEGACY_TEAM_INCLUDED_SEATS
     : PRICING.standard.includedUsers;
 }
 
@@ -39,55 +46,40 @@ export function totalPaidSeats(
   return includedSeats(plan) + Math.max(0, extraSeats);
 }
 
-export function planMonthlyCad(
-  plan: PricingPlanId,
-  founding: boolean,
-): number {
-  if (plan === "team") {
-    return founding ? PRICING.team.foundingMonthly : PRICING.team.listMonthly;
-  }
-  return founding
-    ? PRICING.standard.foundingMonthly
-    : PRICING.standard.listMonthly;
-}
-
 export function catalogMonthlyCad(
   catalog: Pick<SeatCatalog, "plan" | "extraSeats">,
   founding: boolean,
 ): number {
+  const extras = Math.max(0, catalog.extraSeats);
+  if (catalog.plan === "team") {
+    return catalogMonthlyCad(
+      {
+        plan: "standard",
+        extraSeats: extras + (LEGACY_TEAM_INCLUDED_SEATS - 1),
+      },
+      founding,
+    );
+  }
   return (
-    planMonthlyCad(catalog.plan, founding) +
-    Math.max(0, catalog.extraSeats) * PRICING.extraSeatMonthly
+    (founding
+      ? PRICING.standard.foundingMonthly
+      : PRICING.standard.listMonthly) +
+    extras * extraSeatMonthlyCad(founding)
   );
 }
 
-/** Cheapest Standard vs Team mix that covers this many occupied seats. */
+/** Standard first seat plus extra seats to cover this occupancy. */
 export function catalogForOccupancy(
   occupancy: number,
   founding: boolean,
 ): SeatCatalog {
-  const seats = Math.max(1, occupancy);
-  const standardExtra = extraSeatsNeeded("standard", seats);
-  const teamExtra = extraSeatsNeeded("team", seats);
-  const standard: SeatCatalog = {
+  const extraSeats = extraSeatsNeeded("standard", Math.max(1, occupancy));
+  return {
     plan: "standard",
-    extraSeats: standardExtra,
-    seatQuantity: totalPaidSeats("standard", standardExtra),
-    monthlyCad: catalogMonthlyCad(
-      { plan: "standard", extraSeats: standardExtra },
-      founding,
-    ),
+    extraSeats,
+    seatQuantity: totalPaidSeats("standard", extraSeats),
+    monthlyCad: catalogMonthlyCad({ plan: "standard", extraSeats }, founding),
   };
-  const team: SeatCatalog = {
-    plan: "team",
-    extraSeats: teamExtra,
-    seatQuantity: totalPaidSeats("team", teamExtra),
-    monthlyCad: catalogMonthlyCad(
-      { plan: "team", extraSeats: teamExtra },
-      founding,
-    ),
-  };
-  return standard.monthlyCad <= team.monthlyCad ? standard : team;
 }
 
 export function catalogFromLicensed(
@@ -95,12 +87,16 @@ export function catalogFromLicensed(
   seatQuantity: number,
   founding: boolean,
 ): SeatCatalog {
-  const extraSeats = billedExtraSeats(plan, seatQuantity);
+  const seats = Math.max(1, seatQuantity);
+  if (plan === "team") {
+    return catalogForOccupancy(seats, founding);
+  }
+  const extraSeats = billedExtraSeats("standard", seats);
   return {
-    plan,
+    plan: "standard",
     extraSeats,
-    seatQuantity: totalPaidSeats(plan, extraSeats),
-    monthlyCad: catalogMonthlyCad({ plan, extraSeats }, founding),
+    seatQuantity: totalPaidSeats("standard", extraSeats),
+    monthlyCad: catalogMonthlyCad({ plan: "standard", extraSeats }, founding),
   };
 }
 
@@ -114,3 +110,4 @@ export function renewalSeatTarget(input: {
   const licensed = Math.max(1, input.licensed);
   return input.trueUp ? occupancy : Math.max(licensed, occupancy);
 }
+

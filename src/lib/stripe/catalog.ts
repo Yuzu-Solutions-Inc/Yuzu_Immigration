@@ -13,19 +13,24 @@ import type Stripe from "stripe";
 export type PriceLookupKey =
   | "standard_list_monthly"
   | "standard_list_yearly"
-  | "team_list_monthly"
-  | "team_list_yearly"
   | "extra_seat_monthly"
-  | "extra_seat_yearly";
+  | "extra_seat_yearly"
+  | "extra_seat_founding_monthly"
+  | "extra_seat_founding_yearly";
 
 const LOOKUP_KEYS: PriceLookupKey[] = [
   "standard_list_monthly",
   "standard_list_yearly",
-  "team_list_monthly",
-  "team_list_yearly",
   "extra_seat_monthly",
   "extra_seat_yearly",
+  "extra_seat_founding_monthly",
+  "extra_seat_founding_yearly",
 ];
+
+const LEGACY_TEAM_LOOKUP_KEYS = [
+  "team_list_monthly",
+  "team_list_yearly",
+] as const;
 
 const LEGACY_FOUNDING_LOOKUP_KEYS = [
   "standard_founding_monthly",
@@ -51,14 +56,15 @@ function cadCents(dollars: number): number {
 }
 
 function specFor(key: PriceLookupKey): {
-  productKey: "standard" | "team" | "extra_seat";
+  productKey: "standard" | "extra_seat";
   unitAmount: number;
   interval: BillingInterval;
 } {
   const extraMonthly = PRICING.extraSeatMonthly;
+  const extraFounding = PRICING.extraSeatFoundingMonthly;
   const map: Record<
     PriceLookupKey,
-    { productKey: "standard" | "team" | "extra_seat"; unitAmount: number; interval: BillingInterval }
+    { productKey: "standard" | "extra_seat"; unitAmount: number; interval: BillingInterval }
   > = {
     standard_list_monthly: {
       productKey: "standard",
@@ -68,16 +74,6 @@ function specFor(key: PriceLookupKey): {
     standard_list_yearly: {
       productKey: "standard",
       unitAmount: cadCents(annualTotal(PRICING.standard.listMonthly)),
-      interval: "year",
-    },
-    team_list_monthly: {
-      productKey: "team",
-      unitAmount: cadCents(PRICING.team.listMonthly),
-      interval: "month",
-    },
-    team_list_yearly: {
-      productKey: "team",
-      unitAmount: cadCents(annualTotal(PRICING.team.listMonthly)),
       interval: "year",
     },
     extra_seat_monthly: {
@@ -90,25 +86,42 @@ function specFor(key: PriceLookupKey): {
       unitAmount: cadCents(annualTotal(extraMonthly)),
       interval: "year",
     },
+    extra_seat_founding_monthly: {
+      productKey: "extra_seat",
+      unitAmount: cadCents(extraFounding),
+      interval: "month",
+    },
+    extra_seat_founding_yearly: {
+      productKey: "extra_seat",
+      unitAmount: cadCents(annualTotal(extraFounding)),
+      interval: "year",
+    },
   };
   return map[key];
 }
 
 const PRODUCT_NAMES = {
-  standard: "Permit OS Standard",
-  team: "Permit OS Team",
+  standard: "Permit OS",
   extra_seat: "Permit OS extra staff seat",
 } as const;
 
 export function planPriceLookupKey(
-  plan: PricingPlanId,
+  _plan: PricingPlanId,
   interval: BillingInterval,
 ): PriceLookupKey {
   const period = interval === "year" ? "yearly" : "monthly";
-  return `${plan}_list_${period}` as PriceLookupKey;
+  return `standard_list_${period}` as PriceLookupKey;
 }
 
-export function extraSeatLookupKey(interval: BillingInterval): PriceLookupKey {
+export function extraSeatLookupKey(
+  interval: BillingInterval,
+  founding = false,
+): PriceLookupKey {
+  if (founding) {
+    return interval === "year"
+      ? "extra_seat_founding_yearly"
+      : "extra_seat_founding_monthly";
+  }
   return interval === "year" ? "extra_seat_yearly" : "extra_seat_monthly";
 }
 
@@ -123,6 +136,12 @@ export function parseLookupKey(key: string | null | undefined): {
   }
   if (key === "extra_seat_yearly") {
     return { plan: "extra_seat", interval: "year", founding: false };
+  }
+  if (key === "extra_seat_founding_monthly") {
+    return { plan: "extra_seat", interval: "month", founding: true };
+  }
+  if (key === "extra_seat_founding_yearly") {
+    return { plan: "extra_seat", interval: "year", founding: true };
   }
   const match = key.match(/^(standard|team)_(founding|list)_(monthly|yearly)$/);
   if (!match) return null;
@@ -144,7 +163,7 @@ function isNotFound(error: unknown): boolean {
 
 async function ensureProduct(
   stripe: Stripe,
-  key: "standard" | "team" | "extra_seat",
+  key: "standard" | "extra_seat",
 ): Promise<string> {
   const product = await stripe.products.create(
     {
@@ -176,19 +195,26 @@ async function archiveLegacyFoundingPrices(stripe: Stripe) {
   }
 }
 
+async function archiveTeamPrices(stripe: Stripe) {
+  const listed = await stripe.prices.list({
+    lookup_keys: [...LEGACY_TEAM_LOOKUP_KEYS],
+    limit: 10,
+    active: true,
+  });
+  for (const price of listed.data) {
+    if (!price.active) continue;
+    await stripe.prices.update(price.id, { active: false });
+  }
+}
+
 async function setListPricesAsDefault(
   stripe: Stripe,
   byKey: Map<string, string>,
 ) {
   const standardMonthly = byKey.get("standard_list_monthly");
-  const teamMonthly = byKey.get("team_list_monthly");
   if (standardMonthly) {
     const productId = await productIdForPrice(stripe, standardMonthly);
     await stripe.products.update(productId, { default_price: standardMonthly });
-  }
-  if (teamMonthly) {
-    const productId = await productIdForPrice(stripe, teamMonthly);
-    await stripe.products.update(productId, { default_price: teamMonthly });
   }
 }
 
@@ -200,8 +226,6 @@ export async function ensureFoundingCoupons(
     stripe,
     prices.standard_list_monthly,
   );
-  const teamProduct = await productIdForPrice(stripe, prices.team_list_monthly);
-
   const specs: Array<{
     plan: PricingPlanId;
     interval: BillingInterval;
@@ -209,8 +233,6 @@ export async function ensureFoundingCoupons(
   }> = [
     { plan: "standard", interval: "month", productId: standardProduct },
     { plan: "standard", interval: "year", productId: standardProduct },
-    { plan: "team", interval: "month", productId: teamProduct },
-    { plan: "team", interval: "year", productId: teamProduct },
   ];
 
   for (const spec of specs) {
@@ -304,7 +326,6 @@ export async function ensureBillingPrices(): Promise<
   if (missing.length > 0) {
     const productIds = {
       standard: await ensureProduct(stripe, "standard"),
-      team: await ensureProduct(stripe, "team"),
       extra_seat: await ensureProduct(stripe, "extra_seat"),
     };
 
@@ -328,6 +349,7 @@ export async function ensureBillingPrices(): Promise<
   }
 
   await archiveLegacyFoundingPrices(stripe);
+  await archiveTeamPrices(stripe);
   if (missing.length > 0) {
     await setListPricesAsDefault(stripe, byKey);
   }

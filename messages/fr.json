@@ -276,34 +276,24 @@
     "finalTitle": "Commencer l’essai de 30 jours",
     "finalSubtitle": "Créez l’espace de votre cabinet en quelques minutes et voyez s’il s’adapte à votre pratique.",
     "finalCta": "Essai de 30 jours",
-    "finalNote": "Le produit Standard complet dès la création du cabinet. Aucune carte de crédit.",
+    "finalNote": "Le produit complet dès le jour où vous créez votre cabinet. Sans carte de crédit.",
     "footerTagline": "Logiciel de pratique pour consultants et avocats en immigration canadienne. Exploité par Yuzu Solutions."
   },
   "pricing": {
     "metaTitle": "Tarifs",
-    "metaDescription": "Formules Standard et Équipe de %PRODUCT_NAME%. Standard est gratuit 30 jours dès la création du cabinet. Tarifs affichés dès 69 $/mois. Code FOUNDING pour les 100 premiers cabinets.",
+    "metaDescription": "%PRODUCT_NAME% coûte 69 $/mois pour le premier utilisateur, puis 29 $ par utilisateur supplémentaire. 100 premiers cabinets : 49 $ et 25 $. Facturation annuelle : 10 mois payés.",
     "eyebrow": "Tarifs",
-    "title": "Standard ou Équipe",
-    "subtitle": "Le même produit. Des comptes supplémentaires sur chaque formule. Équipe inclut quatre sièges.",
-    "testingBanner": "Standard est gratuit 30 jours à compter de la création de votre cabinet.",
-    "currencyNote": "CAD, TPS/TVH en sus. La facturation annuelle offre 2 mois.",
+    "title": "Un prix. Des sièges à mesure que vous embauchez.",
+    "subtitle": "Premier utilisateur 69 $/mois. Utilisateurs supplémentaires 29 $/mois. Facturation annuelle : 10 mois payés, 2 mois offerts.",
+    "testingBanner": "Gratuit 30 jours à compter de la création de votre cabinet. Sans carte de crédit.",
+    "currencyNote": "CAD, TPS/TVH en sus. Facturation annuelle : 10 mois payés, 2 mois offerts.",
     "cta": "Essai de 30 jours",
-    "extraSeats": "Puis {price} par compte supplémentaire",
-    "foundingHelp": "Code {code} pour les {count} premiers cabinets : {founding}, appliqué automatiquement au paiement.",
+    "extraSeats": "Puis {price} par utilisateur supplémentaire",
+    "foundingHelp": "Code {code} pour les {count} premiers cabinets : {founding} pour le premier utilisateur et {extra} par utilisateur supplémentaire, appliqué automatiquement au paiement.",
     "yearlyPrice": "ou {amount} facturé à l’année ({free} mois offerts)",
-    "thenList": "Ensuite",
-    "trial": {
-      "lead": "{days} jours gratuits, puis"
-    },
-    "teaser": {
-      "eyebrow": "Tarifs",
-      "title": "Essayez le produit complet. Restez s’il vous convient.",
-      "subtitle": "Standard est gratuit 30 jours dès la création du cabinet. Tarifs affichés dès 69 $/mois. Code FOUNDING pour les 100 premiers cabinets. Comptes supplémentaires sur Standard ou Équipe.",
-      "compare": "Comparer les formules"
-    },
-    "standard": {
-      "name": "%PRODUCT_NAME% Standard",
-      "audience": "Consultants en solo et petites pratiques",
+    "plan": {
+      "name": "%PRODUCT_NAME%",
+      "audience": "Consultants et avocats en immigration canadienne",
       "badge": "30 jours gratuits",
       "teaser": "Un utilisateur inclus. Le produit complet — clients et dossiers illimités.",
       "features": {
@@ -317,69 +307,40 @@
         "languages": "Anglais, français et espagnol"
       }
     },
-    "team": {
-      "name": "%PRODUCT_NAME% Équipe",
-      "audience": "Cabinets avec plus d’une personne sur les dossiers",
-      "badge": "Pour les cabinets",
-      "teaser": "Jusqu’à 4 utilisateurs inclus. Le même logiciel que Standard.",
-      "features": {
-        "staff": "Jusqu’à 4 utilisateurs inclus (admins ou gestionnaires de cas)",
-        "sameProduct": "Le même logiciel que Standard — rien n’est verrouillé",
-        "extraSeat": "Comptes supplémentaires {price}",
-        "files": "Clients et projets illimités",
-        "payments": "Paiements Square ou Stripe et comptabilité Sage",
-        "languages": "Anglais, français et espagnol"
-      }
+    "trial": {
+      "lead": "{days} jours gratuits, puis"
     },
-    "compare": {
-      "title": "Comparer les formules",
-      "subtitle": "Standard et Équipe sont le même produit. La différence est le nombre de sièges inclus.",
-      "feature": "Inclus",
-      "included": "Inclus",
-      "staffStandard": "{count} utilisateur du personnel",
-      "staffTeam": "Jusqu’à {count} utilisateurs",
-      "filesUnlimited": "Illimité",
-      "meetFull": "Meet, Teams et Zoom",
-      "rows": {
-        "staff": "Utilisateurs du personnel inclus",
-        "extraSeat": "Compte supplémentaire",
-        "files": "Projets actifs",
-        "portal": "Portail client",
-        "forms": "Questionnaires IRCC et remplissage PDF",
-        "booking": "Réservation et calendrier",
-        "meetings": "Liens de réunion",
-        "contracts": "Contrats et signature électronique",
-        "payments": "Square ou Stripe (sans commission plateforme)",
-        "sage": "Comptabilité Sage",
-        "languages": "Anglais, français, espagnol",
-        "canada": "Données principales hébergées au Canada"
-      }
+    "teaser": {
+      "eyebrow": "Tarifs",
+      "title": "Essayez le produit complet. Restez s’il vous convient.",
+      "subtitle": "Premier utilisateur 69 $/mois, utilisateurs supplémentaires 29 $/mois. Cabinets fondateurs : 49 $ et 25 $. Facturation annuelle : 10 mois payés.",
+      "compare": "Voir le détail des tarifs"
     },
     "faq": {
-      "title": "Comment la facturation fonctionnera",
+      "title": "Comment fonctionne la facturation",
       "trial": {
         "q": "Dois-je payer pour commencer ?",
-        "a": "Non. Standard est gratuit {days} jours à compter de la création de votre cabinet, sans carte de crédit. Le produit complet est inclus. Nous écrirons aux administrateurs du cabinet avant le début de la facturation."
+        "a": "Non. Le produit est gratuit {days} jours à compter de la création de votre cabinet, sans carte de crédit. Nous écrivons aux administrateurs avant le début de la facturation."
       },
       "founding": {
         "q": "Qui a droit aux tarifs de lancement ?",
-        "a": "Les {count} premiers cabinets qui créent un compte. Le code {code} est appliqué automatiquement au paiement — Standard {standardFounding} et Équipe {teamFounding} au lieu du tarif affiché — et reste sur l’abonnement."
+        "a": "Les {count} premiers cabinets qui créent un compte. Le code {code} est appliqué automatiquement au paiement — {founding} pour le premier utilisateur et {extraFounding} par utilisateur supplémentaire — et reste sur l’abonnement."
       },
       "after": {
         "q": "Que paient les cabinets suivants ?",
-        "a": "Les tarifs affichés (aujourd’hui, {standardList} et {teamList}). %PRODUCT_NAME% peut modifier les tarifs affichés moyennant un préavis d’au moins {days} jours aux administrateurs du cabinet."
+        "a": "Les tarifs affichés (aujourd’hui, {list} pour le premier utilisateur et {extra} par utilisateur supplémentaire). %PRODUCT_NAME% peut les modifier moyennant un préavis d’au moins {days} jours aux administrateurs."
       },
       "annual": {
         "q": "Y a-t-il un tarif annuel ?",
-        "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Le tarif affiché Standard est de {standardAnnual} ; Équipe, {teamAnnual}."
+        "a": "Oui. Vous payez {paid} mois et {free} mois sont offerts. Le tarif annuel affiché est {annual}."
       },
-      "difference": {
-        "q": "En quoi les formules diffèrent-elles ?",
-        "a": "Le même logiciel. Standard inclut {standardUsers} utilisateur ; Équipe, jusqu’à {teamUsers}. Chaque compte supplémentaire est à {extraSeat} sur les deux formules."
+      "seats": {
+        "q": "Comment fonctionnent les utilisateurs supplémentaires ?",
+        "a": "Le premier utilisateur est inclus. Chaque utilisateur supplémentaire coûte {extraSeat}. Une invitation sans siège disponible facture la différence proratisée après confirmation."
       },
       "roles": {
         "q": "Quelle est la différence entre un admin et un gestionnaire de cas ?",
-        "a": "Les admins gèrent les paramètres de l’espace, les invitations, la conservation et le catalogue de réservation. Les gestionnaires de cas travaillent sur le portefeuille partagé. Chaque membre accède aux dossiers du cabinet."
+        "a": "Les admins gèrent les paramètres, les invitations, la conservation et le catalogue de réservation. Les gestionnaires de cas travaillent le portefeuille partagé. Chaque membre accède aux dossiers du cabinet."
       },
       "currency": {
         "q": "Dans quelle devise ?",
@@ -387,7 +348,7 @@
       },
       "files": {
         "q": "Facturez-vous par client ou par dossier ?",
-        "a": "Non. Standard et Équipe sont pour le cabinet, pas par cas. Clients et projets sont illimités."
+        "a": "Non. Le tarif est par utilisateur du cabinet, pas par cas. Clients et projets sont illimités."
       }
     }
   },
@@ -884,7 +845,7 @@
     "billingYearlySave": "2 mois offerts",
     "billingYearlyHelp": "La facturation annuelle correspond à 10 mois payés et 2 mois offerts. Les sièges supplémentaires suivent la même période.",
     "billingExtraSeats": "Sièges supplémentaires",
-    "billingExtraSeatsHelp": "Standard inclut 1 siège. Équipe en inclut 4. Chaque siège supplémentaire coûte 29 $/mois.",
+    "billingExtraSeatsHelp": "Le premier utilisateur est inclus. Les sièges supplémentaires sont 29 $/mois au tarif affiché, ou 25 $/mois au tarif de lancement.",
     "billingSubscribe": "S’abonner",
     "billingSwitchYearly": "Passer à l’annuel",
     "billingSwitchMonthly": "Passer au mensuel",
@@ -902,12 +863,17 @@
     "billingAddSeats": "Ajouter des sièges",
     "billingAddSeatsSubmit": "Ajouter et payer",
     "billingAddSeatsHint": "Ajoute {count} sièges. Prochaine facture {price} (proratisé aujourd’hui).",
-    "billingAddSeatsPlanHint": "Ajoute {count} sièges et passe à {plan}. Prochaine facture {price} (proratisé aujourd’hui).",
+    "billingAddSeatsPlanHint": "Ajoute {count} sièges licenciés. Prochaine facture {price} (prorata aujourd’hui).",
     "billingSeatTrueUp": "Libérer les sièges inutilisés au renouvellement",
     "billingSeatTrueUpOff": "Les sièges vides restent facturés pour embaucher plus tard. Activez cette option pour aligner les sièges sur l’équipe à la prochaine facture.",
     "billingSeatTrueUpOn": "Quand quelqu’un part, son siège est retiré à la prochaine facture. Pas de crédit cette période.",
     "billingSeatTrueUpOnUnused": "{count} siège(s) inutilisé(s) seront retirés le {date}. Vous paierez alors pour {seats} sièges.",
-    "teamSeatsFull": "Tous les sièges sont utilisés. Envoyer cette invitation ajoute un siège payant (proratisé) et envoie l’invitation.",
+    "teamSeatsFull": "Tous les sièges payés sont utilisés. Vous confirmerez le nouveau montant avant l’envoi de cette invitation.",
+    "inviteChargeTitle": "Confirmer le siège supplémentaire",
+    "inviteChargeBody": "Cette invitation nécessite un siège licencié de plus. Nous facturerons la différence proratisée sur votre carte aujourd’hui. L’abonnement passera à {price} pour {seats} sièges (taxes en sus).",
+    "inviteChargeBodyPlan": "Cette invitation nécessite un siège licencié de plus. Nous facturerons la différence proratisée sur votre carte aujourd’hui. L’abonnement passera à {price} pour {seats} sièges (taxes en sus).",
+    "inviteChargeCancel": "Annuler",
+    "inviteChargeConfirm": "Facturer et envoyer l’invitation",
     "squareTitle": "Paiements Square",
     "squareHelp": "Connectez Square pour encaisser les services tarifés et les liens de paiement de dossier. Un cabinet utilise Square ou Stripe, pas les deux.",
     "squareConnect": "Connecter Square",
@@ -1133,17 +1099,6 @@
     "deleteOrgCancel": "Conserver l’organisation",
     "deleteOrgSubmit": "Supprimer définitivement",
     "deleteOrgDeleting": "Suppression…",
-    "deleteOrgOpen": "Supprimer cette organisation",
-    "deleteOrgDialogTitle": "Supprimer définitivement cette organisation ?",
-    "deleteOrgDialogBody": "Toutes les données clients, projets, rendez-vous et fichiers seront effacées. Nous conservons le nom du cabinet, les dates, le contact confidentialité et le contact du propriétaire au cas où nous devrions vous joindre après un incident.",
-    "deleteOrgBulletClients": "Les personnes, projets, rendez-vous, messages et mots de passe sont supprimés.",
-    "deleteOrgBulletFiles": "Les fichiers téléversés et les clés de chiffrement de cet espace sont détruits.",
-    "deleteOrgBulletKept": "Nous conservons des identifiants anonymisés pour l’analyse, plus le contact du propriétaire pour un avis d’incident.",
-    "deleteOrgCicc": "J’ai une copie de tous les dossiers clients nécessaires pour respecter l’obligation de conservation de 6 ans du CCIC.",
-    "deleteOrgIrreversible": "Je comprends que cette action est irréversible et que toutes les données de l’espace seront perdues.",
-    "deleteOrgTypeName": "Saisissez le nom de l’organisation pour confirmer",
-    "ownerContactTitle": "Propriétaire du compte",
-    "ownerContactHelp": "Le propriétaire est le contact du cabinet pour cet espace, y compris les avis de confidentialité et de sécurité.",
     "errors": {
       "invalid": "Vérifiez le formulaire et réessayez.",
       "slugTaken": "Cet identifiant est déjà pris.",
@@ -1163,11 +1118,9 @@
       "trialExpired": "La période d’essai est terminée. L’espace de travail est en lecture seule jusqu’à ce que votre organisation s’abonne.",
       "deleteConfirmations": "Confirmez chaque énoncé et saisissez le nom de l’organisation.",
       "deleteNameMismatch": "Le nom ne correspond pas à cette organisation.",
-      "deleteFailed": "Impossible de supprimer l’organisation. Réessayez ou écrivez au soutien.",
-      "deleteConfirmations": "Confirmez chaque énoncé et saisissez le nom de l’organisation.",
-      "deleteNameMismatch": "Le nom ne correspond pas à cette organisation.",
       "deleteFailed": "Impossible de supprimer l’organisation. Réessayez ou écrivez au soutien."
-    }
+    },
+    "billingPlanName": "%PRODUCT_NAME%"
   },
   "projects": {
     "title": "Projets",

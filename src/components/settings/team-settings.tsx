@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -11,13 +11,19 @@ import {
   updateOrgMemberRoleAction,
   type TeamActionState,
 } from "@/app/actions/team";
+import { InviteSeatChargeDialog } from "@/components/settings/invite-seat-charge-dialog";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldHint, FieldLabel, FieldSuccess } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { ASSIGNABLE_ORG_ROLES, isOwner } from "@/lib/auth/rbac";
+import {
+  catalogForOccupancy,
+  type BillingInterval,
+} from "@/lib/billing/plans";
 import type { AppLocale } from "@/lib/i18n/locales";
+import type { PricingPlanId } from "@/lib/marketing/pricing";
 
 const empty: TeamActionState = {};
 
@@ -83,6 +89,9 @@ export function TeamSettings({
   invitations,
   subscribed,
   licensedSeats,
+  founding = false,
+  currentPlan = null,
+  currentInterval = null,
 }: {
   locale: AppLocale;
   currentUserId: string;
@@ -91,9 +100,15 @@ export function TeamSettings({
   invitations: Invitation[];
   subscribed: boolean;
   licensedSeats: number;
+  founding?: boolean;
+  currentPlan?: PricingPlanId | null;
+  currentInterval?: BillingInterval | null;
 }) {
   const t = useTranslations("settings");
   const tRoles = useTranslations("orgRoles");
+  const inviteFormRef = useRef<HTMLFormElement>(null);
+  const confirmChargeRef = useRef<HTMLInputElement>(null);
+  const [chargeOpen, setChargeOpen] = useState(false);
   const [inviteState, inviteAction, invitePending] = useActionState(
     inviteOrgMemberAction,
     empty,
@@ -118,6 +133,18 @@ export function TeamSettings({
 
   const occupancy = members.length + invitations.length;
   const atSeatCap = subscribed && occupancy >= Math.max(1, licensedSeats);
+  const previewCatalog = catalogForOccupancy(occupancy + 1, founding);
+  const quote = inviteState.needsSeatChargeConfirm
+    ? {
+        monthlyCad: inviteState.nextMonthlyCad ?? previewCatalog.monthlyCad,
+        seats: inviteState.nextSeats ?? previewCatalog.seatQuantity,
+        interval: inviteState.interval ?? currentInterval ?? "month",
+      }
+    : {
+        monthlyCad: previewCatalog.monthlyCad,
+        seats: previewCatalog.seatQuantity,
+        interval: currentInterval ?? "month",
+      };
   const currentIsOwner = isOwner(currentUserRole);
   const error =
     teamErrorMessage(inviteState.error, t) ||
@@ -132,10 +159,49 @@ export function TeamSettings({
     teamSuccessMessage(revokeState.message, t) ||
     teamSuccessMessage(transferState.message, t);
 
+  useEffect(() => {
+    if (inviteState.needsSeatChargeConfirm) {
+      if (confirmChargeRef.current) confirmChargeRef.current.value = "";
+      setChargeOpen(true);
+    }
+    if (inviteState.message || inviteState.inviteUrl || inviteState.error) {
+      if (confirmChargeRef.current) confirmChargeRef.current.value = "";
+      setChargeOpen(false);
+    }
+  }, [inviteState]);
+
   return (
     <section className="space-y-6">
-      <form action={inviteAction} className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]">
+      <form
+        ref={inviteFormRef}
+        action={inviteAction}
+        onSubmit={(event) => {
+          const email = String(
+            new FormData(event.currentTarget).get("email") || "",
+          )
+            .trim()
+            .toLowerCase();
+          const reinvite = invitations.some(
+            (invite) => invite.email.toLowerCase() === email,
+          );
+          if (
+            atSeatCap &&
+            !reinvite &&
+            confirmChargeRef.current?.value !== "true"
+          ) {
+            event.preventDefault();
+            setChargeOpen(true);
+          }
+        }}
+        className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]"
+      >
         <input type="hidden" name="locale" value={locale} />
+        <input
+          ref={confirmChargeRef}
+          type="hidden"
+          name="confirmSeatCharge"
+          defaultValue=""
+        />
         <Field>
           <FieldLabel htmlFor="inviteEmail" required>
             {t("inviteEmail")}
@@ -175,6 +241,22 @@ export function TeamSettings({
           <FieldHint className="sm:col-span-3">{t("teamSeatsFull")}</FieldHint>
         ) : null}
       </form>
+      <InviteSeatChargeDialog
+        locale={locale}
+        open={chargeOpen}
+        onOpenChange={setChargeOpen}
+        monthlyCad={quote.monthlyCad}
+        seats={quote.seats}
+        interval={quote.interval}
+        pending={invitePending}
+        onConfirm={() => {
+          if (confirmChargeRef.current) {
+            confirmChargeRef.current.value = "true";
+          }
+          setChargeOpen(false);
+          inviteFormRef.current?.requestSubmit();
+        }}
+      />
 
       {inviteState.inviteUrl ? (
         <div className="space-y-2 rounded-xl border border-border bg-canvas p-3">

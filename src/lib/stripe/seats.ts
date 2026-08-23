@@ -36,6 +36,7 @@ function subscriptionItemsForCatalog(
   prices: Record<PriceLookupKey, string>,
   catalog: SeatCatalog,
   interval: BillingInterval,
+  founding: boolean,
 ): Array<{
   id?: string;
   price?: string;
@@ -68,7 +69,7 @@ function subscriptionItemsForCatalog(
   if (catalog.extraSeats > 0) {
     items.push({
       id: extraItemId,
-      price: prices[extraSeatLookupKey(interval)],
+      price: prices[extraSeatLookupKey(interval, founding)],
       quantity: catalog.extraSeats,
     });
   } else if (extraItemId) {
@@ -97,6 +98,7 @@ async function applyCatalog(input: {
       prices,
       input.catalog,
       input.interval,
+      input.founding,
     ),
     proration_behavior: input.proration,
     ...(input.collectPayment

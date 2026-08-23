@@ -174,9 +174,7 @@ export function BillingSettingsForm({
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-heading text-lg font-semibold text-brand">
-            {catalog.plan === "team"
-              ? t("billingPlanNameTeam")
-              : t("billingPlanNameStandard")}
+            {t("billingPlanName")}
           </h2>
           <StatusPill
             label={
@@ -284,19 +282,10 @@ export function BillingSettingsForm({
               {seatPending ? t("billingWorking") : t("billingAddSeatsSubmit")}
             </Button>
             <FieldHint className="sm:col-span-2">
-              {addCatalog.plan !== catalog.plan
-                ? t("billingAddSeatsPlanHint", {
-                    count: addCount,
-                    plan:
-                      addCatalog.plan === "team"
-                        ? t("billingPlanNameTeam")
-                        : t("billingPlanNameStandard"),
-                    price: addPrice,
-                  })
-                : t("billingAddSeatsHint", {
-                    count: addCount,
-                    price: addPrice,
-                  })}
+              {t("billingAddSeatsHint", {
+                count: addCount,
+                price: addPrice,
+              })}
             </FieldHint>
           </form>
 

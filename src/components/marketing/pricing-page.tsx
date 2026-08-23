@@ -10,32 +10,18 @@ import { PricingPlanCards } from "@/components/marketing/pricing-plans";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import {
   annualTotal,
+  extraSeatMonthlyCad,
   formatCadMonthly,
   formatCadYearly,
   PRICING,
 } from "@/lib/marketing/pricing";
-
-const COMPARE_KEYS = [
-  "staff",
-  "extraSeat",
-  "files",
-  "portal",
-  "forms",
-  "booking",
-  "meetings",
-  "contracts",
-  "payments",
-  "sage",
-  "languages",
-  "canada",
-] as const;
 
 const FAQ_KEYS = [
   "trial",
   "founding",
   "after",
   "annual",
-  "difference",
+  "seats",
   "files",
   "roles",
   "currency",
@@ -53,37 +39,26 @@ function faqParams(
       return {
         count: PRICING.foundingCohortSize,
         code: PRICING.foundingPromoCode,
-        standardFounding: formatCadMonthly(
-          PRICING.standard.foundingMonthly,
-          locale,
-        ),
-        teamFounding: formatCadMonthly(PRICING.team.foundingMonthly, locale),
+        founding: formatCadMonthly(PRICING.standard.foundingMonthly, locale),
+        extraFounding: formatCadMonthly(extraSeatMonthlyCad(true), locale),
       };
     case "after":
       return {
         days: PRICING.priceChangeNoticeDays,
-        standardList: formatCadMonthly(PRICING.standard.listMonthly, locale),
-        teamList: formatCadMonthly(PRICING.team.listMonthly, locale),
+        list: formatCadMonthly(PRICING.standard.listMonthly, locale),
+        extra: extraSeat,
       };
     case "annual":
       return {
         paid: PRICING.annualMonthsPaid,
         free: PRICING.annualFreeMonths,
-        standardAnnual: formatCadYearly(
+        annual: formatCadYearly(
           annualTotal(PRICING.standard.listMonthly),
           locale,
         ),
-        teamAnnual: formatCadYearly(
-          annualTotal(PRICING.team.listMonthly),
-          locale,
-        ),
       };
-    case "difference":
-      return {
-        standardUsers: PRICING.standard.includedUsers,
-        teamUsers: PRICING.team.includedUsers,
-        extraSeat,
-      };
+    case "seats":
+      return { extraSeat };
     default:
       return {};
   }
@@ -104,40 +79,6 @@ export async function PricingPage() {
   };
 
   const extraSeat = formatCadMonthly(PRICING.extraSeatMonthly, locale);
-  const included = t("compare.included");
-  const staffOne = t("compare.staffStandard", {
-    count: PRICING.standard.includedUsers,
-  });
-
-  const compareValues: Record<
-    (typeof COMPARE_KEYS)[number],
-    { standard: string; team: string }
-  > = {
-    staff: {
-      standard: staffOne,
-      team: t("compare.staffTeam", { count: PRICING.team.includedUsers }),
-    },
-    extraSeat: {
-      standard: extraSeat,
-      team: extraSeat,
-    },
-    files: {
-      standard: t("compare.filesUnlimited"),
-      team: t("compare.filesUnlimited"),
-    },
-    portal: { standard: included, team: included },
-    forms: { standard: included, team: included },
-    booking: { standard: included, team: included },
-    meetings: {
-      standard: t("compare.meetFull"),
-      team: t("compare.meetFull"),
-    },
-    contracts: { standard: included, team: included },
-    payments: { standard: included, team: included },
-    sage: { standard: included, team: included },
-    languages: { standard: included, team: included },
-    canada: { standard: included, team: included },
-  };
 
   return (
     <main className="relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
@@ -152,48 +93,6 @@ export async function PricingPage() {
 
           <PricingPlanCards variant="page" />
           <p className="text-sm text-muted-foreground">{t("currencyNote")}</p>
-        </div>
-      </section>
-
-      <section className="border-b border-border bg-surface py-16 sm:py-20">
-        <div className="mx-auto w-full max-w-6xl px-6">
-          <h2 className="font-heading text-2xl font-bold tracking-tight text-brand text-pretty sm:text-3xl">
-            {t("compare.title")}
-          </h2>
-
-          <div className="mt-10 overflow-x-auto">
-            <table className="w-full min-w-[32rem] border-collapse text-left text-[15px]">
-              <caption className="sr-only">{t("compare.title")}</caption>
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-3 pr-4 font-heading text-sm font-semibold text-brand">
-                    {t("compare.feature")}
-                  </th>
-                  <th className="px-4 py-3 font-heading text-sm font-semibold text-brand">
-                    {t("standard.name")}
-                  </th>
-                  <th className="px-4 py-3 font-heading text-sm font-semibold text-brand">
-                    {t("team.name")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARE_KEYS.map((key) => (
-                  <tr key={key} className="border-b border-border/80">
-                    <th className="py-3.5 pr-4 font-medium text-brand">
-                      {t(`compare.rows.${key}`)}
-                    </th>
-                    <td className="px-4 py-3.5 text-muted-foreground">
-                      {compareValues[key].standard}
-                    </td>
-                    <td className="px-4 py-3.5 text-muted-foreground">
-                      {compareValues[key].team}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </section>
 

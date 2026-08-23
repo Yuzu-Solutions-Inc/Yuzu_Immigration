@@ -12,29 +12,31 @@ export const PRICING = {
   annualMonthsPaid: 10,
   annualFreeMonths: 2,
   extraSeatMonthly: 29,
+  extraSeatFoundingMonthly: 25,
   standard: {
     foundingMonthly: 49,
     listMonthly: 69,
     includedUsers: 1,
   },
-  team: {
-    foundingMonthly: 99,
-    listMonthly: 129,
-    includedUsers: 4,
-  },
 } as const;
 
+/** Stored on the org row. Legacy `team` subscriptions are billed as Standard seats. */
 export type PricingPlanId = "standard" | "team";
 
-/** CAD dollars taken off list price for founding Standard $49 / Team $99. */
+export function extraSeatMonthlyCad(founding: boolean): number {
+  return founding
+    ? PRICING.extraSeatFoundingMonthly
+    : PRICING.extraSeatMonthly;
+}
+
+/** CAD dollars taken off list price for founding first-seat $49. */
 export function foundingAmountOffCad(
   plan: PricingPlanId,
   interval: "month" | "year",
 ): number {
   const monthlyOff =
-    plan === "team"
-      ? PRICING.team.listMonthly - PRICING.team.foundingMonthly
-      : PRICING.standard.listMonthly - PRICING.standard.foundingMonthly;
+    PRICING.standard.listMonthly - PRICING.standard.foundingMonthly;
+  if (plan === "team") return 0;
   return interval === "year" ? annualTotal(monthlyOff) : monthlyOff;
 }
 

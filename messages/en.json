@@ -276,34 +276,24 @@
     "finalTitle": "Start your 30-day trial",
     "finalSubtitle": "Set up your firm workspace in minutes and see whether it fits how you already practice.",
     "finalCta": "Start 30-day trial",
-    "finalNote": "Full Standard product from the day you create your firm. No credit card.",
+    "finalNote": "The full product from the day you create your firm. No credit card.",
     "footerTagline": "Practice software for Canadian immigration consultants and lawyers. Operated by Yuzu Solutions."
   },
   "pricing": {
     "metaTitle": "Pricing",
-    "metaDescription": "Standard and Team plans for %PRODUCT_NAME%. Standard is free for 30 days from firm creation. List prices from $69/mo. Promo FOUNDING for the first 100 firms.",
+    "metaDescription": "%PRODUCT_NAME% is $69/mo for the first staff user, then $29 per extra user. First 100 firms: $49 and $25. Yearly billing is 10 months paid.",
     "eyebrow": "Pricing",
-    "title": "Standard or Team",
-    "subtitle": "Same product. Extra staff accounts on either plan. Team includes four seats.",
-    "testingBanner": "Standard is free for 30 days from when you create your firm.",
-    "currencyNote": "CAD, plus GST/HST. Yearly billing includes 2 months free.",
+    "title": "One price. Add seats as you hire.",
+    "subtitle": "First staff user $69/mo. Extra users $29/mo. Yearly billing is 10 months paid, 2 months free.",
+    "testingBanner": "Free for 30 days from when you create your firm. No credit card.",
+    "currencyNote": "CAD, plus GST/HST. Yearly billing: pay 10 months, get 2 months free.",
     "cta": "Start 30-day trial",
-    "extraSeats": "Then {price} per extra staff account",
-    "foundingHelp": "Promo {code} for the first {count} firms: {founding}, applied automatically at checkout.",
+    "extraSeats": "Then {price} per extra staff user",
+    "foundingHelp": "Promo {code} for the first {count} firms: {founding} for the first user and {extra} per extra user, applied automatically at checkout.",
     "yearlyPrice": "or {amount} billed yearly ({free} months free)",
-    "thenList": "Then",
-    "trial": {
-      "lead": "{days} days free, then"
-    },
-    "teaser": {
-      "eyebrow": "Pricing",
-      "title": "Try the full product. Stay if it fits.",
-      "subtitle": "Standard is free for 30 days from firm creation. List prices from $69/mo. Promo FOUNDING for the first 100 firms. Extra staff accounts on Standard or Team.",
-      "compare": "Compare plans"
-    },
-    "standard": {
-      "name": "Standard %PRODUCT_NAME%",
-      "audience": "Solo consultants and small practices",
+    "plan": {
+      "name": "%PRODUCT_NAME%",
+      "audience": "Canadian immigration consultants and lawyers",
       "badge": "30 days free",
       "teaser": "One staff user included. The full product — unlimited clients and files.",
       "features": {
@@ -317,65 +307,36 @@
         "languages": "English, French, and Spanish"
       }
     },
-    "team": {
-      "name": "Team %PRODUCT_NAME%",
-      "audience": "Firms with more than one person on the caseload",
-      "badge": "For firms",
-      "teaser": "Up to 4 staff users included. Same software as Standard.",
-      "features": {
-        "staff": "Up to 4 staff users included (admins or case managers)",
-        "sameProduct": "Same software as Standard — nothing gated",
-        "extraSeat": "Additional staff accounts {price}",
-        "files": "Unlimited clients and projects",
-        "payments": "Square or Stripe payments and Sage Accounting",
-        "languages": "English, French, and Spanish"
-      }
+    "trial": {
+      "lead": "{days} days free, then"
     },
-    "compare": {
-      "title": "Compare plans",
-      "subtitle": "Standard and Team are the same product. The difference is how many staff seats are included.",
-      "feature": "Included",
-      "included": "Included",
-      "staffStandard": "{count} staff user",
-      "staffTeam": "Up to {count} staff users",
-      "filesUnlimited": "Unlimited",
-      "meetFull": "Meet, Teams, and Zoom",
-      "rows": {
-        "staff": "Staff users included",
-        "extraSeat": "Additional staff account",
-        "files": "Active projects",
-        "portal": "Client portal",
-        "forms": "IRCC questionnaires and PDF fill",
-        "booking": "Booking and calendar",
-        "meetings": "Meeting links",
-        "contracts": "Contracts and e-sign",
-        "payments": "Square or Stripe (no platform cut)",
-        "sage": "Sage Accounting",
-        "languages": "English, French, Spanish",
-        "canada": "Primary data hosted in Canada"
-      }
+    "teaser": {
+      "eyebrow": "Pricing",
+      "title": "Try the full product. Stay if it fits.",
+      "subtitle": "First user $69/mo, extra users $29/mo. Founding firms: $49 and $25. Yearly billing is 10 months paid.",
+      "compare": "See pricing details"
     },
     "faq": {
-      "title": "How billing will work",
+      "title": "How billing works",
       "trial": {
         "q": "Do I pay anything to start?",
-        "a": "No. Standard is free for {days} days from when you create your firm, with no credit card. The full product is included. We will email firm administrators before billing starts."
+        "a": "No. The product is free for {days} days from when you create your firm, with no credit card. We email firm administrators before billing starts."
       },
       "founding": {
         "q": "Who gets founding rates?",
-        "a": "The first {count} firms that create an account. Promo {code} is applied automatically at checkout — Standard {standardFounding} and Team {teamFounding} instead of list — and stays on the subscription."
+        "a": "The first {count} firms that create an account. Promo {code} is applied automatically at checkout — {founding} for the first user and {extraFounding} per extra user — and stays on the subscription."
       },
       "after": {
         "q": "What do later firms pay?",
-        "a": "List prices (today, {standardList} and {teamList}). %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
+        "a": "List prices (today, {list} for the first user and {extra} per extra user). %PRODUCT_NAME% may update list prices with at least {days} days’ notice to firm administrators."
       },
       "annual": {
         "q": "Is there a yearly price?",
-        "a": "Yes. Pay {paid} months and get {free} months free. List Standard is {standardAnnual}; list Team is {teamAnnual}."
+        "a": "Yes. Pay {paid} months and get {free} months free. List yearly is {annual}."
       },
-      "difference": {
-        "q": "How do the plans differ?",
-        "a": "Same software. Standard includes {standardUsers} staff user; Team includes up to {teamUsers}. Extra staff accounts are {extraSeat} on either plan."
+      "seats": {
+        "q": "How do extra users work?",
+        "a": "The first staff user is included. Each additional staff user is {extraSeat}. Inviting someone when you are out of seats bills the prorated difference after you confirm."
       },
       "roles": {
         "q": "What is an admin vs a case manager?",
@@ -387,7 +348,7 @@
       },
       "files": {
         "q": "Do you meter clients or files?",
-        "a": "No. Standard and Team are for the firm, not per case. Clients and projects are unlimited."
+        "a": "No. Pricing is per firm staff user, not per case. Clients and projects are unlimited."
       }
     }
   },
@@ -884,7 +845,7 @@
     "billingYearlySave": "2 months free",
     "billingYearlyHelp": "Yearly billing is 10 months paid, 2 months free. Extra seats use the same period.",
     "billingExtraSeats": "Extra staff seats",
-    "billingExtraSeatsHelp": "Standard includes 1 seat. Team includes 4. Extra seats are $29/month each.",
+    "billingExtraSeatsHelp": "The first staff user is included. Extra seats are $29/month list, or $25/month on founding rates.",
     "billingSubscribe": "Subscribe",
     "billingSwitchYearly": "Switch to yearly",
     "billingSwitchMonthly": "Switch to monthly",
@@ -902,12 +863,17 @@
     "billingAddSeats": "Add seats",
     "billingAddSeatsSubmit": "Add and pay",
     "billingAddSeatsHint": "Adds {count} licensed seats. Next bill {price} (prorated today).",
-    "billingAddSeatsPlanHint": "Adds {count} seats and switches to {plan}. Next bill {price} (prorated today).",
+    "billingAddSeatsPlanHint": "Adds {count} licensed seats. Next bill {price} (prorated today).",
     "billingSeatTrueUp": "Drop unused seats at renewal",
     "billingSeatTrueUpOff": "Empty seats stay billed so you can hire into them. Turn this on to match seats to your team on the next invoice.",
     "billingSeatTrueUpOn": "When someone leaves, their seat drops on the next invoice. No credit this period.",
     "billingSeatTrueUpOnUnused": "{count} unused seats drop on {date}. You will then pay for {seats} seats.",
-    "teamSeatsFull": "All licensed seats are in use. Sending this invite adds one paid seat (prorated) and sends the invitation.",
+    "teamSeatsFull": "All licensed seats are in use. You’ll confirm the new charge before this invitation is sent.",
+    "inviteChargeTitle": "Confirm extra seat charge",
+    "inviteChargeBody": "This invitation needs another licensed seat. We will charge the prorated difference to your card today. Recurring billing becomes {price} for {seats} seats (tax extra).",
+    "inviteChargeBodyPlan": "This invitation needs another licensed seat. We will charge the prorated difference to your card today. Recurring billing becomes {price} for {seats} seats (tax extra).",
+    "inviteChargeCancel": "Cancel",
+    "inviteChargeConfirm": "Charge and send invite",
     "squareTitle": "Square payments",
     "squareHelp": "Connect Square so clients can pay for priced booking services and project payment links. A firm can use Square or Stripe, not both at once.",
     "squareConnect": "Connect Square",
@@ -1126,17 +1092,9 @@
     "deleteOrgCicc": "I have a backup of all client files needed to meet the CICC 6-year retention duty.",
     "deleteOrgIrreversible": "I understand this cannot be undone and all workspace data will be lost.",
     "deleteOrgTypeName": "Type the organization name to confirm",
-    "ownerContactTitle": "Account owner",
-    "ownerContactHelp": "The owner is the firm contact for this workspace, including privacy and security notices.",
-    "deleteOrgBulletClients": "People, projects, bookings, messages, and passwords are deleted.",
-    "deleteOrgBulletFiles": "Uploaded files and encryption keys for this workspace are destroyed.",
-    "deleteOrgBulletKept": "We keep de-identified IDs for analytics, plus the owner contact for incident notice.",
     "deleteOrgContact": "Questions or concerns? Email {email} before you delete.",
     "deleteOrgMailSubject": "Organization deletion — {name}",
-    "deleteOrgCicc": "I have a backup of all client files needed to meet the CICC 6-year retention duty.",
-    "deleteOrgIrreversible": "I understand this cannot be undone and all workspace data will be lost.",
     "deleteOrgFinal": "I still want to permanently delete this organization.",
-    "deleteOrgTypeName": "Type the organization name to confirm",
     "deleteOrgTypeNameHelp": "Enter “{name}” exactly.",
     "deleteOrgCancel": "Keep organization",
     "deleteOrgSubmit": "Delete permanently",
@@ -1160,11 +1118,9 @@
       "trialExpired": "Your trial has ended. The workspace is read-only until your organization subscribes.",
       "deleteConfirmations": "Confirm every statement and type the organization name.",
       "deleteNameMismatch": "The name does not match this organization.",
-      "deleteFailed": "Could not delete the organization. Try again or email support.",
-      "deleteConfirmations": "Confirm every statement and type the organization name.",
-      "deleteNameMismatch": "The name does not match this organization.",
       "deleteFailed": "Could not delete the organization. Try again or email support."
-    }
+    },
+    "billingPlanName": "%PRODUCT_NAME%"
   },
   "projects": {
     "title": "Projects",

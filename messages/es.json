@@ -276,34 +276,24 @@
     "finalTitle": "Empiece la prueba de 30 días",
     "finalSubtitle": "Configure el espacio de su firma en minutos y vea si encaja con su práctica.",
     "finalCta": "Prueba de 30 días",
-    "finalNote": "El producto Standard completo desde el día que crea su firma. Sin tarjeta de crédito.",
+    "finalNote": "El producto completo desde el día en que crea su firma. Sin tarjeta.",
     "footerTagline": "Software de práctica para consultores y abogados de inmigración canadiense. Operado por Yuzu Solutions."
   },
   "pricing": {
     "metaTitle": "Precios",
-    "metaDescription": "Planes Standard y Equipo de %PRODUCT_NAME%. Standard es gratis 30 días desde la creación de la firma. Precios de lista desde 69 $/mes. Código FOUNDING para las primeras 100 firmas.",
+    "metaDescription": "%PRODUCT_NAME% cuesta 69 $/mes por el primer usuario, luego 29 $ por usuario extra. Primeras 100 firmas: 49 $ y 25 $. Facturación anual: 10 meses pagados.",
     "eyebrow": "Precios",
-    "title": "Standard o Equipo",
-    "subtitle": "El mismo producto. Cuentas extra en cualquier plan. Equipo incluye cuatro asientos.",
-    "testingBanner": "Standard es gratis 30 días desde que crea su firma.",
-    "currencyNote": "CAD, más GST/HST. El pago anual incluye 2 meses gratis.",
+    "title": "Un precio. Añada asientos al contratar.",
+    "subtitle": "Primer usuario 69 $/mes. Usuarios extra 29 $/mes. Facturación anual: 10 meses pagados, 2 meses gratis.",
+    "testingBanner": "Gratis 30 días desde que crea su firma. Sin tarjeta.",
+    "currencyNote": "CAD, más GST/HST. Facturación anual: pague 10 meses, 2 meses gratis.",
     "cta": "Prueba de 30 días",
-    "extraSeats": "Luego {price} por cuenta extra",
-    "foundingHelp": "Código {code} para las primeras {count} firmas: {founding}, aplicado automáticamente al pagar.",
+    "extraSeats": "Luego {price} por usuario extra",
+    "foundingHelp": "Código {code} para las primeras {count} firmas: {founding} por el primer usuario y {extra} por usuario extra, aplicado automáticamente al pagar.",
     "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
-    "thenList": "Después",
-    "trial": {
-      "lead": "{days} días gratis, luego"
-    },
-    "teaser": {
-      "eyebrow": "Precios",
-      "title": "Pruebe el producto completo. Quédese si encaja.",
-      "subtitle": "Standard es gratis 30 días desde la creación de la firma. Precios de lista desde 69 $/mes. Código FOUNDING para las primeras 100 firmas. Cuentas extra en Standard o Equipo.",
-      "compare": "Comparar planes"
-    },
-    "standard": {
-      "name": "%PRODUCT_NAME% Standard",
-      "audience": "Consultores en solitario y prácticas pequeñas",
+    "plan": {
+      "name": "%PRODUCT_NAME%",
+      "audience": "Consultores y abogados de inmigración canadiense",
       "badge": "30 días gratis",
       "teaser": "Un usuario incluido. El producto completo — clientes y expedientes ilimitados.",
       "features": {
@@ -317,69 +307,40 @@
         "languages": "Inglés, francés y español"
       }
     },
-    "team": {
-      "name": "%PRODUCT_NAME% Equipo",
-      "audience": "Firmas con más de una persona en los expedientes",
-      "badge": "Para firmas",
-      "teaser": "Hasta 4 usuarios incluidos. El mismo software que Standard.",
-      "features": {
-        "staff": "Hasta 4 usuarios incluidos (admins o gestores de casos)",
-        "sameProduct": "El mismo software que Standard — nada bloqueado",
-        "extraSeat": "Cuentas adicionales {price}",
-        "files": "Clientes y proyectos ilimitados",
-        "payments": "Pagos Square o Stripe y Sage Accounting",
-        "languages": "Inglés, francés y español"
-      }
+    "trial": {
+      "lead": "{days} días gratis, luego"
     },
-    "compare": {
-      "title": "Comparar planes",
-      "subtitle": "Standard y Equipo son el mismo producto. La diferencia es cuántos asientos de personal están incluidos.",
-      "feature": "Incluido",
-      "included": "Incluido",
-      "staffStandard": "{count} usuario del personal",
-      "staffTeam": "Hasta {count} usuarios",
-      "filesUnlimited": "Ilimitado",
-      "meetFull": "Meet, Teams y Zoom",
-      "rows": {
-        "staff": "Usuarios del personal incluidos",
-        "extraSeat": "Cuenta adicional",
-        "files": "Proyectos activos",
-        "portal": "Portal del cliente",
-        "forms": "Cuestionarios IRCC y relleno de PDF",
-        "booking": "Reservas y calendario",
-        "meetings": "Enlaces de reunión",
-        "contracts": "Contratos y firma electrónica",
-        "payments": "Square o Stripe (sin recorte de la plataforma)",
-        "sage": "Sage Accounting",
-        "languages": "Inglés, francés, español",
-        "canada": "Datos principales alojados en Canadá"
-      }
+    "teaser": {
+      "eyebrow": "Precios",
+      "title": "Pruebe el producto completo. Quédese si encaja.",
+      "subtitle": "Primer usuario 69 $/mes, usuarios extra 29 $/mes. Firmas fundadoras: 49 $ y 25 $. Facturación anual: 10 meses pagados.",
+      "compare": "Ver el detalle de precios"
     },
     "faq": {
-      "title": "Cómo funcionará la facturación",
+      "title": "Cómo funciona la facturación",
       "trial": {
         "q": "¿Pago algo para empezar?",
-        "a": "No. Standard es gratis {days} días desde que crea su firma, sin tarjeta. El producto completo está incluido. Escribiremos a los administradores de la firma antes de empezar a facturar."
+        "a": "No. El producto es gratis {days} días desde que crea su firma, sin tarjeta. Escribimos a los administradores antes de empezar a facturar."
       },
       "founding": {
         "q": "¿Quién obtiene las tarifas de lanzamiento?",
-        "a": "Las primeras {count} firmas que crean una cuenta. El código {code} se aplica automáticamente al pagar — Standard {standardFounding} y Equipo {teamFounding} en lugar del precio de lista — y permanece en la suscripción."
+        "a": "Las primeras {count} firmas que crean una cuenta. El código {code} se aplica automáticamente al pagar — {founding} por el primer usuario y {extraFounding} por usuario extra — y permanece en la suscripción."
       },
       "after": {
         "q": "¿Qué pagan las firmas posteriores?",
-        "a": "Los precios de lista (hoy, {standardList} y {teamList}). %PRODUCT_NAME% puede actualizar los precios de lista con al menos {days} días de aviso a los administradores de la firma."
+        "a": "Los precios de lista (hoy, {list} por el primer usuario y {extra} por usuario extra). %PRODUCT_NAME% puede actualizarlos con al menos {days} días de aviso a los administradores."
       },
       "annual": {
         "q": "¿Hay un precio anual?",
-        "a": "Sí. Paga {paid} meses y {free} meses son gratis. El Standard de lista es {standardAnnual}; Equipo, {teamAnnual}."
+        "a": "Sí. Paga {paid} meses y {free} meses son gratis. El precio anual de lista es {annual}."
       },
-      "difference": {
-        "q": "¿En qué se diferencian los planes?",
-        "a": "El mismo software. Standard incluye {standardUsers} usuario; Equipo, hasta {teamUsers}. Cada cuenta extra cuesta {extraSeat} en cualquiera de los dos planes."
+      "seats": {
+        "q": "¿Cómo funcionan los usuarios extra?",
+        "a": "El primer usuario está incluido. Cada usuario adicional cuesta {extraSeat}. Invitar a alguien sin asientos disponibles cobra la diferencia prorrateada tras confirmar."
       },
       "roles": {
         "q": "¿Qué es un admin frente a un gestor de casos?",
-        "a": "Los admins gestionan la configuración del espacio, las invitaciones, la conservación y el catálogo de reservas. Los gestores de casos trabajan el caseload compartido. Cada miembro accede a los expedientes de la firma."
+        "a": "Los admins gestionan la configuración, las invitaciones, la conservación y el catálogo de reservas. Los gestores de casos trabajan el caseload compartido. Cada miembro accede a los expedientes de la firma."
       },
       "currency": {
         "q": "¿En qué moneda?",
@@ -387,7 +348,7 @@
       },
       "files": {
         "q": "¿Cobráis por cliente o por expediente?",
-        "a": "No. Standard y Equipo son para la firma, no por caso. Clientes y proyectos son ilimitados."
+        "a": "No. El precio es por usuario del personal de la firma, no por caso. Clientes y proyectos son ilimitados."
       }
     }
   },
@@ -884,7 +845,7 @@
     "billingYearlySave": "2 meses gratis",
     "billingYearlyHelp": "La facturación anual son 10 meses pagados y 2 meses gratis. Las plazas extra usan el mismo periodo.",
     "billingExtraSeats": "Plazas extra de personal",
-    "billingExtraSeatsHelp": "Standard incluye 1 plaza. Team incluye 4. Cada plaza extra cuesta 29 $/mes.",
+    "billingExtraSeatsHelp": "El primer usuario está incluido. Los asientos extra cuestan 29 $/mes de lista, o 25 $/mes con tarifa fundadora.",
     "billingSubscribe": "Suscribirse",
     "billingSwitchYearly": "Pasar a anual",
     "billingSwitchMonthly": "Pasar a mensual",
@@ -902,12 +863,17 @@
     "billingAddSeats": "Añadir plazas",
     "billingAddSeatsSubmit": "Añadir y pagar",
     "billingAddSeatsHint": "Añade {count} plazas. Próxima factura {price} (prorrateado hoy).",
-    "billingAddSeatsPlanHint": "Añade {count} plazas y pasa a {plan}. Próxima factura {price} (prorrateado hoy).",
+    "billingAddSeatsPlanHint": "Añade {count} asientos licenciados. Próxima factura {price} (prorrateado hoy).",
     "billingSeatTrueUp": "Liberar plazas sin usar en la renovación",
     "billingSeatTrueUpOff": "Las plazas vacías se siguen cobrando para contratar más adelante. Active esta opción para igualar plazas al equipo en la próxima factura.",
     "billingSeatTrueUpOn": "Cuando alguien se va, su plaza se elimina en la próxima factura. Sin crédito en este periodo.",
     "billingSeatTrueUpOnUnused": "{count} plazas sin usar se eliminan el {date}. Entonces pagará por {seats} plazas.",
-    "teamSeatsFull": "Todas las plazas están en uso. Enviar esta invitación añade una plaza de pago (prorrateada) y envía la invitación.",
+    "teamSeatsFull": "Todas las plazas licenciadas están en uso. Confirmará el nuevo cargo antes de enviar esta invitación.",
+    "inviteChargeTitle": "Confirmar cargo por plaza extra",
+    "inviteChargeBody": "Esta invitación necesita otra plaza licenciada. Cobraremos hoy la diferencia prorrateada en su tarjeta. La facturación recurrente pasa a {price} por {seats} plazas (impuestos aparte).",
+    "inviteChargeBodyPlan": "Esta invitación necesita otra plaza licenciada. Cobraremos hoy la diferencia prorrateada en su tarjeta. La facturación recurrente pasa a {price} por {seats} plazas (impuestos aparte).",
+    "inviteChargeCancel": "Cancelar",
+    "inviteChargeConfirm": "Cobrar y enviar invitación",
     "squareTitle": "Pagos Square",
     "squareHelp": "Conecte Square para cobrar servicios con precio y enlaces de pago de expediente. Una firma usa Square o Stripe, no ambos.",
     "squareConnect": "Conectar Square",
@@ -1133,17 +1099,6 @@
     "deleteOrgCancel": "Conservar la organización",
     "deleteOrgSubmit": "Eliminar definitivamente",
     "deleteOrgDeleting": "Eliminando…",
-    "deleteOrgOpen": "Eliminar esta organización",
-    "deleteOrgDialogTitle": "¿Eliminar esta organización de forma permanente?",
-    "deleteOrgDialogBody": "Se borrarán todos los datos de clientes, proyectos, citas y archivos. Conservamos el nombre del despacho, las fechas, el contacto de privacidad y el contacto del propietario por si debemos avisarle tras un incidente.",
-    "deleteOrgBulletClients": "Se eliminan personas, proyectos, citas, mensajes y contraseñas.",
-    "deleteOrgBulletFiles": "Se destruyen los archivos subidos y las claves de cifrado de este espacio.",
-    "deleteOrgBulletKept": "Conservamos identificadores anonimizados para analítica, más el contacto del propietario para un aviso de incidente.",
-    "deleteOrgCicc": "Tengo una copia de todos los expedientes de clientes necesaria para cumplir la conservación de 6 años del CICC.",
-    "deleteOrgIrreversible": "Entiendo que esta acción no se puede deshacer y que se perderán todos los datos del espacio.",
-    "deleteOrgTypeName": "Escriba el nombre de la organización para confirmar",
-    "ownerContactTitle": "Propietario de la cuenta",
-    "ownerContactHelp": "El propietario es el contacto del despacho para este espacio, incluidos avisos de privacidad y seguridad.",
     "errors": {
       "invalid": "Revisa el formulario e inténtalo de nuevo.",
       "slugTaken": "Ese identificador ya está en uso.",
@@ -1163,11 +1118,9 @@
       "trialExpired": "La prueba ha terminado. El espacio de trabajo es de solo lectura hasta que su organización se suscriba.",
       "deleteConfirmations": "Confirme cada declaración y escriba el nombre de la organización.",
       "deleteNameMismatch": "El nombre no coincide con esta organización.",
-      "deleteFailed": "No se pudo eliminar la organización. Inténtelo de nuevo o escriba a soporte.",
-      "deleteConfirmations": "Confirme cada declaración y escriba el nombre de la organización.",
-      "deleteNameMismatch": "El nombre no coincide con esta organización.",
       "deleteFailed": "No se pudo eliminar la organización. Inténtelo de nuevo o escriba a soporte."
-    }
+    },
+    "billingPlanName": "%PRODUCT_NAME%"
   },
   "projects": {
     "title": "Projects",
