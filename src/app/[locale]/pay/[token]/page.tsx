@@ -13,6 +13,7 @@ import {
   loadPaymentByToken,
   paymentWindowOpen,
   reopenUnexpiredCheckout,
+  type PaymentRequestRow,
 } from "@/lib/square/payments";
 import { cn } from "@/lib/utils";
 
@@ -27,8 +28,7 @@ export default async function PublicPayPage({
   const t = await getTranslations("publicPay");
 
   const loaded = await loadPaymentByToken(token);
-  let payment = loaded;
-  if (!payment) {
+  if (!loaded) {
     return (
       <main className="mx-auto max-w-lg space-y-4 px-4 py-16 text-center">
         <BrandLogo size="sm" href="/" />
@@ -39,6 +39,8 @@ export default async function PublicPayPage({
       </main>
     );
   }
+
+  let payment: PaymentRequestRow = loaded;
 
   if (paymentWindowOpen(payment)) {
     payment = await reopenUnexpiredCheckout(payment);

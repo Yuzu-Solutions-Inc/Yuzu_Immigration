@@ -60,7 +60,7 @@ export type PaymentRequestRow = {
   paid_at: string | null;
   refunded_at: string | null;
   created_at: string;
-  expires_at?: string | null;
+  expires_at: string | null;
 };
 
 export async function createCheckoutPaymentRequest(input: {
@@ -328,9 +328,7 @@ export async function loadPaymentByToken(token: string) {
     console.error("loadPaymentByToken:", error.message);
     return null;
   }
-  return data as
-    | (PaymentRequestRow & { expires_at: string | null })
-    | null;
+  return (data as PaymentRequestRow | null) ?? null;
 }
 
 export async function loadPaymentByOrderId(orderId: string) {
