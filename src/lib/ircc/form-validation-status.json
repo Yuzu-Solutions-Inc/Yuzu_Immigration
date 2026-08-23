@@ -1,16 +1,13 @@
 {
-  "checkedAt": "2026-08-23T14:15:51.999Z",
-  "passed": false,
+  "checkedAt": "2026-08-23T15:30:11.726Z",
+  "passed": true,
   "datesOnly": false,
-  "errorCount": 4,
-  "warningCount": 0,
-  "errors": [
-    "imm5257sch1e: PDF is 1365471 bytes, form-meta expects 538706. Encryption keys and choice lists likely changed.",
-    "imm5257sch1e: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale.",
-    "imm5257sch1f: PDF is 1315819 bytes, form-meta expects 586260. Encryption keys and choice lists likely changed.",
-    "imm5257sch1f: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale."
+  "errorCount": 0,
+  "warningCount": 1,
+  "errors": [],
+  "warnings": [
+    "cit0002: not found on IRCC index (page may have been renamed)."
   ],
-  "warnings": [],
   "forms": {
     "imm1294": {
       "liveUpdated": "2026-06",
@@ -32,13 +29,8 @@
     },
     "imm5257sch1": {
       "liveUpdated": "2023-09",
-      "passed": false,
-      "errors": [
-        "imm5257sch1e: PDF is 1365471 bytes, form-meta expects 538706. Encryption keys and choice lists likely changed.",
-        "imm5257sch1e: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale.",
-        "imm5257sch1f: PDF is 1315819 bytes, form-meta expects 586260. Encryption keys and choice lists likely changed.",
-        "imm5257sch1f: datasets decrypt failed (The operation failed for an operation-specific reason). File key is stale."
-      ],
+      "passed": true,
+      "errors": [],
       "warnings": []
     },
     "imm5406": {
@@ -115,6 +107,36 @@
     },
     "imm5710": {
       "liveUpdated": "2023-09",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    "imm0008": {
+      "liveUpdated": "2026-05",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    "imm5669": {
+      "liveUpdated": "2021-05",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    "imm1344": {
+      "liveUpdated": "2024-09",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    "imm5562": {
+      "liveUpdated": "2024-07",
+      "passed": true,
+      "errors": [],
+      "warnings": []
+    },
+    "cit0002": {
+      "liveUpdated": null,
       "passed": true,
       "errors": [],
       "warnings": []

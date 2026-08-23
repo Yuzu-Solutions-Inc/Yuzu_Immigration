@@ -192,7 +192,7 @@ function resolveHref(href: string): string {
 function pdfStems(blankKey: string): string[] {
   const lang = blankKey.endsWith("f") ? "f" : "e";
   if (blankKey.startsWith("imm5257sch1")) {
-    return [`imm5257_1${lang}`, `imm5257sch1${lang}`];
+    return [`imm5257_1${lang}`, `imm5257sch1${lang}`, `imm5257-sch1${lang}`];
   }
   return [blankKey];
 }
@@ -200,6 +200,10 @@ function pdfStems(blankKey: string): string[] {
 function scorePdfHref(href: string, blankKey: string): number {
   const file = href.split("?")[0].split("/").pop()?.toLowerCase() ?? "";
   if (!file.endsWith(".pdf")) return -1;
+  // Schedule 1 shares the IMM 5257 guide page. Never treat the parent form as a match.
+  if (blankKey.startsWith("imm5257sch1") && /^imm5257[ef]\.pdf$/.test(file)) {
+    return -1;
+  }
   if (
     blankKey.startsWith("imm5257") &&
     !blankKey.includes("sch1") &&
@@ -212,9 +216,8 @@ function scorePdfHref(href: string, blankKey: string): number {
     if (file === `${stem}.pdf`) return 100;
     if (file.startsWith(`${stem}.`)) return 80;
   }
-  const lang = blankKey.endsWith("f") ? "f" : "e";
-  if (file.endsWith(`${lang}.pdf`)) return 10;
-  return 0;
+  // Language-only fallback used to pick imm5257e.pdf for Schedule 1.
+  return -1;
 }
 
 function pickPdfHref(html: string, blankKey: string): string | null {
@@ -239,6 +242,23 @@ function loadLocalBlank(code: string): Uint8Array | null {
 }
 
 function checkIntegrity() {
+  const parentHref =
+    "/content/dam/ircc/documents/pdf/english/kits/forms/imm5257/01-09-2023/imm5257e.pdf";
+  const schHref =
+    "/content/dam/ircc/documents/pdf/english/kits/forms/imm5257-sch1/01-09-2023/imm5257_1e.pdf";
+  if (pickPdfHref(`<a href="${parentHref}">x</a>`, "imm5257sch1e")) {
+    error("picker regression: Schedule 1 must not use the parent IMM 5257 PDF.");
+  }
+  const both = `<a href="${parentHref}">a</a><a href="${schHref}">b</a>`;
+  const pickedSch = pickPdfHref(both, "imm5257sch1e");
+  if (!pickedSch?.endsWith("imm5257_1e.pdf")) {
+    error("picker regression: Schedule 1 should prefer imm5257_1e.pdf.");
+  }
+  const pickedParent = pickPdfHref(both, "imm5257e");
+  if (!pickedParent?.endsWith("imm5257e.pdf")) {
+    error("picker regression: IMM 5257 should ignore the Schedule 1 PDF.");
+  }
+
   for (const code of ALL_FORM_CODES) {
     if (!pins[code]) {
       error(`${code}: in catalog but missing from form-revisions.json.`);
@@ -318,6 +338,14 @@ function loadGuide(url: string): Promise<string> {
 
 type Extracted = Awaited<ReturnType<typeof extractXfaLovs>> | "failed" | "skipped";
 
+/** IMM 5257 Schedule 1 is not linked on the parent guide page. */
+const DIRECT_BLANK_URLS: Record<string, string> = {
+  imm5257sch1e:
+    "https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5257-sch1/01-09-2023/imm5257_1e.pdf",
+  imm5257sch1f:
+    "https://www.canada.ca/content/dam/ircc/documents/pdf/francais/trousses/form/imm5257-sch1/01-09-2023/imm5257_1f.pdf",
+};
+
 async function loadBlankPdf(
   blankKey: string,
   pin: FormRevision,
@@ -329,6 +357,18 @@ async function loadBlankPdf(
     if (local) {
       ok(`${blankKey}: using local blank`);
       return local;
+    }
+  }
+  const direct = DIRECT_BLANK_URLS[blankKey];
+  if (direct) {
+    try {
+      const pdf = await fetchPdf(direct);
+      ok(`${blankKey}: downloaded ${direct} (${pdf.byteLength} bytes)`);
+      return pdf;
+    } catch (err) {
+      warn(
+        `${blankKey}: direct URL failed (${err instanceof Error ? err.message : err}). Trying guide page.`,
+      );
     }
   }
   const guide = lang === "f" ? pin.guideFr : pin.guideEn;
@@ -370,6 +410,12 @@ async function checkBlank(
     );
   } else {
     ok(`${blankKey}: ${pdf.byteLength} bytes (matches form-meta).`);
+  }
+
+  if (entry.datasetsObj == null) {
+    ok(`${blankKey}: no datasets object (template-only XFA); skipped decrypt.`);
+    cache.set(blankKey, "skipped");
+    return;
   }
 
   let datasetsXml: string | null = null;
