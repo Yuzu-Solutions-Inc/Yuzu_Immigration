@@ -104,6 +104,12 @@ export const organizations = pgTable("organizations", {
     .notNull(),
   /** When paid billing began. Null = still on trial / locked after trial. */
   subscribedAt: timestamp("subscribed_at", { withTimezone: true }),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  billingPlan: text("billing_plan"),
+  billingInterval: text("billing_interval"),
+  billingSeatQuantity: integer("billing_seat_quantity").default(1).notNull(),
+  foundingRate: boolean("founding_rate").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

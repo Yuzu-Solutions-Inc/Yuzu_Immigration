@@ -16,6 +16,7 @@ export function SettingsTabs({ canAdminister }: { canAdminister: boolean }) {
     ...(canAdminister
       ? [
           { href: "/settings/organization", label: t("organization") },
+          { href: "/settings/billing", label: t("billing") },
           { href: "/settings/team", label: t("team") },
           { href: "/settings/payments", label: t("payments") },
           { href: "/settings/security", label: t("security") },

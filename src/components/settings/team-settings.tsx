@@ -45,6 +45,7 @@ function teamErrorMessage(
       forbidden: t("errors.forbidden"),
       already_member: t("errors.alreadyMember"),
       invite_failed: t("errors.inviteFailed"),
+      seats_exceeded: t("errors.seatsExceeded"),
       last_admin: t("errors.lastAdmin"),
       cannot_remove_self: t("errors.cannotRemoveSelf"),
       not_found: t("errors.notFound"),

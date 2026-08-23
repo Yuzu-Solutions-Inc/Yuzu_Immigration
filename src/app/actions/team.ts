@@ -57,10 +57,26 @@ export async function inviteOrgMemberAction(
   const orgId = membership.organization.id;
 
   const supabase = await createClient();
+  const admin = createServiceClient();
   const { data: members } = await supabase
     .from("organization_members")
     .select("user_id")
     .eq("organization_id", orgId);
+
+  if (membership.organization.subscribed) {
+    const { loadOrgBilling } = await import("@/lib/stripe/sync");
+    const billing = await loadOrgBilling(orgId);
+    const seats = billing?.billing_seat_quantity ?? 1;
+    const { count: pending } = await admin
+      .from("organization_invitations")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId)
+      .is("accepted_at", null)
+      .is("revoked_at", null);
+    if ((members?.length ?? 0) + (pending ?? 0) >= seats) {
+      return { error: "seats_exceeded" };
+    }
+  }
 
   const memberIds = (members ?? []).map((m) => m.user_id as string);
   if (memberIds.length > 0) {
@@ -77,7 +93,6 @@ export async function inviteOrgMemberAction(
     }
   }
 
-  const admin = createServiceClient();
   await admin
     .from("organization_invitations")
     .update({ revoked_at: new Date().toISOString() })

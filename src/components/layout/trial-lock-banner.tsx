@@ -2,12 +2,11 @@ import { getTranslations } from "next-intl/server";
 
 import { isAdmin } from "@/lib/auth/rbac";
 import type { OrgRole } from "@/lib/auth/rbac";
-import { product } from "@/lib/brand/product";
+import { Link } from "@/i18n/navigation";
 
 export async function TrialLockBanner({ role }: { role: OrgRole }) {
   const t = await getTranslations("trialLock");
   const admin = isAdmin(role);
-  const mailto = `mailto:${product.supportEmail}?subject=${encodeURIComponent("Subscribe to Permit OS")}`;
 
   return (
     <div className="mb-4 rounded-xl border border-border bg-surface px-4 py-3">
@@ -17,12 +16,12 @@ export async function TrialLockBanner({ role }: { role: OrgRole }) {
       </p>
       {admin ? (
         <p className="mt-2 text-sm">
-          <a
-            href={mailto}
+          <Link
+            href="/settings/billing"
             className="font-medium text-action hover:underline"
           >
-            {t("adminCta", { email: product.supportEmail })}
-          </a>
+            {t("adminCta")}
+          </Link>
         </p>
       ) : null}
     </div>

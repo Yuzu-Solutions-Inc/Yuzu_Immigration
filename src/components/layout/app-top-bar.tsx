@@ -40,6 +40,8 @@ const CRUMB_KEYS = {
   services: "crumbServices",
   inbox: "crumbInbox",
   settings: "crumbSettings",
+  payments: "crumbPayments",
+  billing: "crumbBilling",
   account: "crumbAccount",
   organization: "crumbOrganization",
   security: "crumbSecurity",
