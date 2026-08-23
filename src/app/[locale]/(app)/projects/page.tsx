@@ -13,8 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
-import { getProjectsProgress } from "@/lib/crm/progress";
-import { listOrgMembers, listProjects } from "@/lib/crm/queries";
+import { listOrgMembers, listProjectsPage } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
 export default async function ProjectsPage({
@@ -30,14 +29,10 @@ export default async function ProjectsPage({
   const to = await getTranslations("orgPrograms");
   const membership = await getPrimaryMembership();
   const canCreate = canCreateRecords(membership?.role);
-  const projectsPromise = listProjects();
-  const membersPromise = listOrgMembers();
-  const projects = await projectsPromise;
-  const [members, progressMap] = await Promise.all([
-    membersPromise,
-    getProjectsProgress(projects.map((project) => project.id)),
+  const [projects, members] = await Promise.all([
+    listProjectsPage(),
+    listOrgMembers(),
   ]);
-  const progressById = Object.fromEntries(progressMap);
 
   return (
     <div className={listPageClassName}>
@@ -59,15 +54,14 @@ export default async function ProjectsPage({
         </div>
       </div>
 
-      {projects.length === 0 ? (
+      {projects.total === 0 ? (
         <SurfaceCard className="space-y-3">
           <p className="text-[15px] text-muted-foreground">{t("empty")}</p>
           {canCreate ? <NewProjectButton label={th("newProject")} /> : null}
         </SurfaceCard>
       ) : (
         <ProjectsTable
-          projects={projects}
-          progressById={progressById}
+          initial={projects}
           members={members.map((m) => ({
             user_id: m.user_id,
             full_name: m.profile.full_name,

@@ -12,11 +12,12 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import {
   startTransition,
-  useDeferredValue,
+  useCallback,
   useMemo,
   useState,
 } from "react";
 
+import { loadProjectsPageAction } from "@/app/actions/list-pages";
 import { setProjectsStatusAction } from "@/app/actions/projects";
 import { docsPercent, ProgressMeter } from "@/components/home/progress-meter";
 import {
@@ -34,6 +35,7 @@ import {
   listTableStickyHeaderClassName,
   listViewportStackClassName,
 } from "@/components/layout/list-layout";
+import { ListLoadMore } from "@/components/layout/list-load-more";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -45,22 +47,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { usePagedList } from "@/hooks/use-paged-list";
 import type { ProgramFamily, ProjectStatus } from "@/db/schema";
 import { Link, useRouter } from "@/i18n/navigation";
 import { SELECTABLE_PROGRAM_FAMILIES } from "@/lib/crm/programs";
 import type { ProjectProgress } from "@/lib/crm/progress";
-import type { ProjectRow } from "@/lib/crm/queries";
+import type {
+  ProjectRow,
+  ProjectsListPage,
+  ProjectsListSortKey,
+} from "@/lib/crm/queries";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
 import { cn, shouldIgnoreRowClick } from "@/lib/utils";
 
-type SortKey =
-  | "title"
-  | "program_family"
-  | "created_at"
-  | "submit_before"
-  | "representative"
-  | "documents"
-  | "forms";
+type SortKey = ProjectsListSortKey;
 type SortDir = "asc" | "desc";
 
 type MemberOption = {
@@ -81,13 +82,6 @@ function formatDate(isoDate: string | null, locale: string) {
     locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
     { year: "numeric", month: "short", day: "numeric" },
   );
-}
-
-function compareNullableDates(a: string | null, b: string | null) {
-  if (!a && !b) return 0;
-  if (!a) return 1;
-  if (!b) return -1;
-  return a.localeCompare(b);
 }
 
 function SortButton({
@@ -173,13 +167,11 @@ function DocsToReviewIcon({
 }
 
 export function ProjectsTable({
-  projects,
+  initial,
   members,
-  progressById,
 }: {
-  projects: ProjectRow[];
+  initial: ProjectsListPage;
   members: MemberOption[];
-  progressById: Record<string, ProjectProgress>;
 }) {
   const t = useTranslations("projects");
   const tprog = useTranslations("programs");
@@ -187,7 +179,7 @@ export function ProjectsTable({
   const router = useRouter();
 
   const [nameQuery, setNameQuery] = useState("");
-  const deferredName = useDeferredValue(nameQuery);
+  const debouncedName = useDebouncedValue(nameQuery);
   const [programFilter, setProgramFilter] = useState<ProgramFamily | "all">(
     "all",
   );
@@ -197,73 +189,50 @@ export function ProjectsTable({
   const [representativeFilter, setRepresentativeFilter] = useState<
     string | "all" | "unassigned"
   >("all");
-  const [sortKey, setSortKey] = useState<SortKey>("created_at");
+  const [sortKey, setSortKey] = useState<SortKey>("updated_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [progressById, setProgressById] = useState(initial.progressById);
+  const [statusOverrides, setStatusOverrides] = useState<
+    Record<string, ProjectStatus>
+  >({});
 
-  const filteredSorted = useMemo(() => {
-    const q = deferredName.trim().toLowerCase();
-    const rows = projects.filter((project) => {
-      if (q && !project.title.toLowerCase().includes(q)) return false;
-      if (programFilter !== "all" && project.program_family !== programFilter) {
-        return false;
-      }
-      if (statusFilter !== "all" && project.status !== statusFilter) {
-        return false;
-      }
-      if (representativeFilter === "unassigned") {
-        if (project.representative_user_id) return false;
-      } else if (
-        representativeFilter !== "all" &&
-        project.representative_user_id !== representativeFilter
-      ) {
-        return false;
-      }
-      return true;
-    });
-
-    rows.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "title") {
-        cmp = a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
-      } else if (sortKey === "program_family") {
-        cmp = a.program_family.localeCompare(b.program_family);
-      } else if (sortKey === "created_at") {
-        cmp = a.created_at.localeCompare(b.created_at);
-      } else if (sortKey === "representative") {
-        const aLabel =
-          a.representative?.full_name || a.representative?.email || "";
-        const bLabel =
-          b.representative?.full_name || b.representative?.email || "";
-        cmp = aLabel.localeCompare(bLabel, undefined, { sensitivity: "base" });
-      } else if (sortKey === "documents") {
-        const aDocs = progressById[a.id] ?? EMPTY_PROGRESS;
-        const bDocs = progressById[b.id] ?? EMPTY_PROGRESS;
-        cmp =
-          docsPercent(aDocs.docsDone, aDocs.docsTotal) -
-          docsPercent(bDocs.docsDone, bDocs.docsTotal);
-      } else if (sortKey === "forms") {
-        const aForms = progressById[a.id] ?? EMPTY_PROGRESS;
-        const bForms = progressById[b.id] ?? EMPTY_PROGRESS;
-        cmp = aForms.formPercent - bForms.formPercent;
-      } else {
-        cmp = compareNullableDates(a.submit_before, b.submit_before);
-      }
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-
-    return rows;
-  }, [
-    projects,
-    deferredName,
-    programFilter,
-    statusFilter,
-    representativeFilter,
-    sortKey,
-    sortDir,
-    progressById,
-  ]);
+  const filters = useMemo(
+    () => ({
+      titleQuery: debouncedName,
+      program: programFilter,
+      status: statusFilter,
+      representative: representativeFilter,
+      sortKey,
+      sortDir,
+    }),
+    [
+      debouncedName,
+      programFilter,
+      statusFilter,
+      representativeFilter,
+      sortKey,
+      sortDir,
+    ],
+  );
+  const fetchPage = useCallback(
+    async (offset: number) => {
+      const page = await loadProjectsPageAction({ ...filters, offset });
+      setProgressById((prev) =>
+        offset === 0 ? page.progressById : { ...prev, ...page.progressById },
+      );
+      if (offset === 0) setStatusOverrides({});
+      return page;
+    },
+    [filters],
+  );
+  const { items, total, loading, loadingMore, hasMore, loadMore } = usePagedList({
+    initial,
+    depsKey: JSON.stringify(filters),
+    fetchPage,
+  });
+  const filteredSorted = items;
 
   const filtersActive = Boolean(
     nameQuery.trim() ||
@@ -319,21 +288,26 @@ export function ProjectsTable({
         return;
       }
 
+      setStatusOverrides((prev) => {
+        const next = { ...prev };
+        for (const id of projectIds) next[id] = status;
+        return next;
+      });
       router.refresh();
     });
   }
 
+  function rowStatus(project: ProjectRow): ProjectStatus {
+    return statusOverrides[project.id] ?? project.status;
+  }
+
   function onRowStatusChange(project: ProjectRow, nextStatus: ProjectStatus) {
-    if (nextStatus === project.status) return;
+    if (nextStatus === rowStatus(project)) return;
     applyStatus([project.id], nextStatus, todayDateInputValue());
   }
 
-  if (projects.length === 0) {
-    return null;
-  }
-
   return (
-    <div className={listViewportStackClassName}>
+    <div className={listViewportStackClassName} aria-busy={loading || loadingMore}>
       {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}
@@ -401,12 +375,16 @@ export function ProjectsTable({
                         <DocsToReviewIcon count={progress.docsToReview} />
                       </div>
                       <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-brand">
-                        {t(`statuses.${project.status}`)}
+                        {t(`statuses.${rowStatus(project)}`)}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {project.organization_program_name ||
                         tprog(project.program_family)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("columnUpdated")}:{" "}
+                      {formatDate(project.updated_at, locale) ?? "—"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {t("columnSubmitBefore")}:{" "}
@@ -439,12 +417,19 @@ export function ProjectsTable({
             })}
           </ul>
         )}
+        <ListLoadMore
+          hasMore={hasMore}
+          loading={loading || loadingMore}
+          onLoadMore={loadMore}
+          loadMoreLabel={t("loadMore")}
+          loadingLabel={t("loadingMore")}
+        />
       </div>
 
       <ListTableCard
         className={cn("hidden md:block", listTableCardViewportClassName)}
       >
-        <div className={listTableScrollClassName}>
+        <div className={listTableScrollClassName} data-list-scroll="">
         <Table>
           <TableHeader className={cn(listTableStickyHeaderClassName, "[&_tr:first-child]:border-b-0")}>
             <TableRow className="hover:bg-transparent">
@@ -482,8 +467,8 @@ export function ProjectsTable({
               </TableHead>
               <TableHead>
                 <SortButton
-                  column="created_at"
-                  label={t("columnCreated")}
+                  column="updated_at"
+                  label={t("columnUpdated")}
                   sortKey={sortKey}
                   sortDir={sortDir}
                   onToggle={toggleSort}
@@ -644,7 +629,7 @@ export function ProjectsTable({
                     </TableCell>
                     <TableCell>
                       <NativeSelect
-                        value={project.status}
+                        value={rowStatus(project)}
                         disabled={isPending}
                         onChange={(e) =>
                           onRowStatusChange(
@@ -669,7 +654,7 @@ export function ProjectsTable({
                         t("representativeUnassigned")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {formatDate(project.created_at, locale) ?? "—"}
+                      {formatDate(project.updated_at, locale) ?? "—"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(project.submit_before, locale) ??
@@ -703,6 +688,13 @@ export function ProjectsTable({
             )}
           </TableBody>
         </Table>
+        <ListLoadMore
+          hasMore={hasMore}
+          loading={loading || loadingMore}
+          onLoadMore={loadMore}
+          loadMoreLabel={t("loadMore")}
+          loadingLabel={t("loadingMore")}
+        />
         </div>
       </ListTableCard>
 
@@ -710,7 +702,7 @@ export function ProjectsTable({
         <p className="text-sm text-muted-foreground">
           {t("showingCount", {
             shown: filteredSorted.length,
-            total: projects.length,
+            total,
           })}
         </p>
         {filtersActive ? (

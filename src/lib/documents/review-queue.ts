@@ -41,11 +41,27 @@ export async function listDocumentsToReview(): Promise<DocumentReviewQueueItem[]
   if (!orgId) return [];
 
   const supabase = await createClient();
+  const { data: requests, error: requestError } = await supabase
+    .from("project_document_requests")
+    .select("*")
+    .eq("organization_id", orgId)
+    .eq("status", "uploaded")
+    .limit(200);
+
+  if (requestError) {
+    console.error("listDocumentsToReview requests:", requestError.message);
+    return [];
+  }
+
+  const requestList = (requests ?? []) as DocumentRequestRow[];
+  if (requestList.length === 0) return [];
+
+  const projectIds = [...new Set(requestList.map((row) => row.project_id))];
   const { data: projectRows, error: projectError } = await supabase
     .from("immigration_projects")
     .select("id, title, status, destroyed_at")
     .eq("organization_id", orgId)
-    .is("destroyed_at", null);
+    .in("id", projectIds);
 
   if (projectError) {
     console.error("listDocumentsToReview projects:", projectError.message);
@@ -64,25 +80,12 @@ export async function listDocumentsToReview(): Promise<DocumentReviewQueueItem[]
   const projectById = new Map(
     openProjects.map((project) => [project.id, project]),
   );
-  const openIds = openProjects.map((project) => project.id);
+  const openIds = new Set(openProjects.map((project) => project.id));
+  const openRequests = requestList.filter((row) => openIds.has(row.project_id));
+  if (openRequests.length === 0) return [];
 
-  const { data: requests, error: requestError } = await supabase
-    .from("project_document_requests")
-    .select("*")
-    .eq("organization_id", orgId)
-    .in("project_id", openIds)
-    .eq("status", "uploaded");
-
-  if (requestError) {
-    console.error("listDocumentsToReview requests:", requestError.message);
-    return [];
-  }
-
-  const requestList = (requests ?? []) as DocumentRequestRow[];
-  if (requestList.length === 0) return [];
-
-  const requestIds = requestList.map((row) => row.id);
-  const personIds = [...new Set(requestList.map((row) => row.person_id))];
+  const requestIds = openRequests.map((row) => row.id);
+  const personIds = [...new Set(openRequests.map((row) => row.person_id))];
 
   const [{ data: files, error: fileError }, { data: people, error: peopleError }] =
     await Promise.all([
@@ -122,7 +125,7 @@ export async function listDocumentsToReview(): Promise<DocumentReviewQueueItem[]
   );
 
   const items: DocumentReviewQueueItem[] = [];
-  for (const raw of requestList) {
+  for (const raw of openRequests) {
     const file = fileByRequest.get(raw.id);
     if (!file) continue;
     const project = projectById.get(raw.project_id);

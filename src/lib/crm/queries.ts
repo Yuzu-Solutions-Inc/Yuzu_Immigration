@@ -25,6 +25,21 @@ import {
 } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { sortByPrincipalFirst } from "@/lib/crm/programs";
+import { addDaysIso } from "@/lib/crm/dates";
+import { todayDateInputValue } from "@/lib/crm/statuses";
+import {
+  clampListLimit,
+  clampListOffset,
+  compareNullableIsoDates,
+  docsListPercent,
+  emptyListPage,
+  fetchAllInChunks,
+  listRange,
+  sliceListPage,
+  asListFilterQuery,
+  type ListFilterQuery,
+  type ListPage,
+} from "@/lib/lists/pagination";
 
 export type PersonRow = {
   id: string;
@@ -159,34 +174,284 @@ export async function requireOrganizationId() {
   return membership.organization.id;
 }
 
-const ORG_LIST_SCAN_CAP = 5000;
-const ORG_LIST_PAGE_SIZE = 1000;
+type OrgListTable = "people" | "immigration_projects";
 
 async function fetchOrgRows<T>(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  table: "people" | "immigration_projects",
+  table: OrgListTable,
   orgId: string,
   columns: string,
+  apply?: (query: ListFilterQuery) => ListFilterQuery,
 ): Promise<{ rows: T[]; error: string | null }> {
-  const rows: T[] = [];
-  let from = 0;
-  while (rows.length < ORG_LIST_SCAN_CAP) {
-    const to = Math.min(from + ORG_LIST_PAGE_SIZE, ORG_LIST_SCAN_CAP) - 1;
-    const { data, error } = await supabase
+  return fetchAllInChunks<T>(async (from, to) => {
+    let query = supabase
       .from(table)
       .select(columns)
-      .eq("organization_id", orgId)
+      .eq("organization_id", orgId);
+    if (apply) {
+      query = apply(asListFilterQuery(query)) as typeof query;
+    }
+    const { data, error } = await query
       .order("id", { ascending: true })
       .range(from, to);
     if (error) {
       return { rows: [], error: error.message };
     }
-    const page = (data ?? []) as T[];
-    rows.push(...page);
-    if (page.length < to - from + 1) break;
-    from += ORG_LIST_PAGE_SIZE;
+    return { rows: (data ?? []) as T[], error: null };
+  });
+}
+
+export type PeopleListSortKey =
+  | "name"
+  | "email"
+  | "immigration_status"
+  | "status_expires_at"
+  | "updated_at";
+export type PeopleExpiryFilter = "all" | "expired" | "expiring_30" | "no_date";
+
+export type PeopleListFilters = {
+  nameQuery?: string;
+  emailQuery?: string;
+  status?: PersonImmigrationStatus | "all";
+  expiry?: PeopleExpiryFilter;
+  sortKey?: PeopleListSortKey;
+  sortDir?: "asc" | "desc";
+};
+
+const PEOPLE_LIST_COLUMNS =
+  "id, first_name, last_name, email, immigration_status, status_expires_at, created_at, updated_at";
+
+function applyPeopleSqlFilters(
+  query: ListFilterQuery,
+  filters: PeopleListFilters,
+) {
+  const status = filters.status ?? "all";
+  const expiry = filters.expiry ?? "all";
+  const today = todayDateInputValue();
+  if (status !== "all") {
+    query = query.eq("immigration_status", status);
   }
-  return { rows, error: null };
+  if (expiry === "no_date") {
+    query = query.is("status_expires_at", null);
+  } else if (expiry === "expired") {
+    query = query
+      .not("status_expires_at", "is", null)
+      .lt("status_expires_at", today);
+  } else if (expiry === "expiring_30") {
+    query = query
+      .gte("status_expires_at", today)
+      .lte("status_expires_at", addDaysIso(30));
+  }
+  return query;
+}
+
+function peopleNeedsDecryptScan(filters: PeopleListFilters) {
+  const nameQuery = filters.nameQuery?.trim() ?? "";
+  const emailQuery = filters.emailQuery?.trim() ?? "";
+  const sortKey = filters.sortKey ?? "updated_at";
+  if (nameQuery) return true;
+  if (emailQuery && !looksLikeEmail(emailQuery)) return true;
+  return sortKey === "name" || sortKey === "email";
+}
+
+function sortPeopleRows(
+  rows: PersonRow[],
+  sortKey: PeopleListSortKey,
+  sortDir: "asc" | "desc",
+) {
+  const sorted = [...rows];
+  sorted.sort((a, b) => {
+    let cmp = 0;
+    if (sortKey === "name") {
+      cmp = comparePersonSearchName(a, b);
+    } else if (sortKey === "email") {
+      cmp = (a.email ?? "").localeCompare(b.email ?? "", undefined, {
+        sensitivity: "base",
+      });
+    } else if (sortKey === "immigration_status") {
+      cmp = a.immigration_status.localeCompare(b.immigration_status);
+    } else if (sortKey === "status_expires_at") {
+      cmp = compareNullableIsoDates(a.status_expires_at, b.status_expires_at);
+    } else {
+      cmp = compareNullableIsoDates(a.updated_at, b.updated_at);
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+  return sorted;
+}
+
+async function hydratePeopleByIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  ids: string[],
+  key: Buffer,
+): Promise<PersonRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("people")
+    .select("*")
+    .eq("organization_id", orgId)
+    .in("id", ids);
+  if (error) {
+    console.error("hydratePeopleByIds:", error.message);
+    return [];
+  }
+  const byId = new Map(
+    ((data ?? []) as PersonRow[]).map((row) => [
+      row.id,
+      decryptPersonRow(row, key),
+    ]),
+  );
+  return ids
+    .map((id) => byId.get(id))
+    .filter((row): row is PersonRow => Boolean(row));
+}
+
+export async function listPeoplePage(
+  filters: PeopleListFilters = {},
+  page: { offset?: number; limit?: number } = {},
+): Promise<ListPage<PersonRow>> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return emptyListPage();
+
+  const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
+  const offset = clampListOffset(page.offset);
+  const limit = clampListLimit(page.limit);
+  const nameQuery = filters.nameQuery?.trim() ?? "";
+  const emailQuery = filters.emailQuery?.trim() ?? "";
+  const sortKey = filters.sortKey ?? "updated_at";
+  const sortDir = filters.sortDir ?? "desc";
+
+  if (emailQuery && looksLikeEmail(emailQuery)) {
+    const { data, error } = await supabase
+      .from("people")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("email_lookup_hash", hashEmailLookup(orgId, emailQuery, key));
+    if (error) {
+      console.error("listPeoplePage email:", error.message);
+      return emptyListPage();
+    }
+    const rows = sortPeopleRows(
+      ((data ?? []) as PersonRow[])
+        .map((row) => decryptPersonRow(row, key))
+        .filter((person) =>
+          nameQuery
+            ? matchesSearchQuery(
+                `${person.first_name} ${person.last_name}`,
+                nameQuery,
+              )
+            : true,
+        )
+        .filter((person) => {
+          if (
+            filters.status &&
+            filters.status !== "all" &&
+            person.immigration_status !== filters.status
+          ) {
+            return false;
+          }
+          if (filters.expiry === "no_date") return !person.status_expires_at;
+          if (filters.expiry === "expired") {
+            return Boolean(
+              person.status_expires_at &&
+                person.status_expires_at < todayDateInputValue(),
+            );
+          }
+          if (filters.expiry === "expiring_30") {
+            if (!person.status_expires_at) return false;
+            const expires = person.status_expires_at;
+            const today = todayDateInputValue();
+            return expires >= today && expires <= addDaysIso(30);
+          }
+          return true;
+        }),
+      sortKey,
+      sortDir,
+    );
+    return sliceListPage(rows, offset, limit);
+  }
+
+  if (!peopleNeedsDecryptScan(filters)) {
+    const { from, to } = listRange(offset, limit);
+    let query = supabase
+      .from("people")
+      .select("*", { count: "exact" })
+      .eq("organization_id", orgId);
+    query = applyPeopleSqlFilters(asListFilterQuery(query), filters) as typeof query;
+    if (sortKey === "immigration_status") {
+      query = query.order("immigration_status", {
+        ascending: sortDir === "asc",
+      });
+    } else if (sortKey === "status_expires_at") {
+      query = query.order("status_expires_at", {
+        ascending: sortDir === "asc",
+        nullsFirst: false,
+      });
+    } else {
+      query = query.order("updated_at", {
+        ascending: sortDir === "asc",
+      });
+    }
+    query = query.order("id", { ascending: sortDir === "asc" });
+    const { data, error, count } = await query.range(from, to);
+    if (error) {
+      console.error("listPeoplePage:", error.message);
+      return emptyListPage();
+    }
+    return {
+      items: ((data ?? []) as PersonRow[]).map((row) =>
+        decryptPersonRow(row, key),
+      ),
+      total: count ?? 0,
+    };
+  }
+
+  const { rows, error } = await fetchOrgRows<
+    Pick<
+      PersonRow,
+      | "id"
+      | "first_name"
+      | "last_name"
+      | "email"
+      | "immigration_status"
+      | "status_expires_at"
+      | "created_at"
+      | "updated_at"
+    >
+  >(supabase, "people", orgId, PEOPLE_LIST_COLUMNS, (query) =>
+    applyPeopleSqlFilters(query, filters),
+  );
+  if (error) {
+    console.error("listPeoplePage:", error);
+    return emptyListPage();
+  }
+
+  const matched = sortPeopleRows(
+    rows
+      .map((row) => decryptPersonRow(row, key))
+      .filter((person) =>
+        nameQuery
+          ? matchesSearchQuery(
+              `${person.first_name} ${person.last_name}`,
+              nameQuery,
+            )
+          : true,
+      )
+      .filter((person) =>
+        emailQuery
+          ? matchesSearchQuery(person.email ?? "", emailQuery)
+          : true,
+      ) as PersonRow[],
+    sortKey,
+    sortDir,
+  );
+  const pageIds = matched.slice(offset, offset + limit).map((row) => row.id);
+  return {
+    items: await hydratePeopleByIds(supabase, orgId, pageIds, key),
+    total: matched.length,
+  };
 }
 
 export async function listPeople(
@@ -198,16 +463,17 @@ export async function listPeople(
 
   const supabase = await createClient();
   const key = await getOrgDataKey(orgId);
-  const limit = options?.limit ?? ORG_LIST_SCAN_CAP;
+  const limit = options?.limit;
   const q = query?.trim() ?? "";
 
   if (q && looksLikeEmail(q)) {
-    const { data, error } = await supabase
+    let queryBuilder = supabase
       .from("people")
       .select("*")
       .eq("organization_id", orgId)
-      .eq("email_lookup_hash", hashEmailLookup(orgId, q, key))
-      .limit(limit);
+      .eq("email_lookup_hash", hashEmailLookup(orgId, q, key));
+    if (limit != null) queryBuilder = queryBuilder.limit(limit);
+    const { data, error } = await queryBuilder;
     if (error) {
       console.error("listPeople:", error.message);
       return [];
@@ -565,28 +831,100 @@ export async function listOrgMembers(): Promise<OrgMemberRow[]> {
     );
 }
 
-export async function listProjects(): Promise<ProjectRow[]> {
-  const orgId = await requireOrganizationId();
-  if (!orgId) return [];
+export type ProjectsListSortKey =
+  | "title"
+  | "program_family"
+  | "created_at"
+  | "updated_at"
+  | "submit_before"
+  | "representative"
+  | "documents"
+  | "forms";
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("immigration_projects")
-    .select("*")
-    .eq("organization_id", orgId)
-    .order("opened_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(100);
+export type ProjectsListFilters = {
+  titleQuery?: string;
+  program?: ProgramFamily | "all";
+  status?: ProjectStatus | "all";
+  representative?: string | "all" | "unassigned";
+  sortKey?: ProjectsListSortKey;
+  sortDir?: "asc" | "desc";
+};
 
-  if (error) {
-    console.error("listProjects:", error.message);
-    return [];
+export type ProjectListProgress = {
+  docsDone: number;
+  docsTotal: number;
+  docsToReview: number;
+  formPercent: number;
+};
+
+export type ProjectsListPage = ListPage<ProjectRow> & {
+  progressById: Record<string, ProjectListProgress>;
+};
+
+type ProjectListDbRow = ProjectRow & {
+  docs_done?: number | null;
+  docs_total?: number | null;
+  docs_to_review?: number | null;
+  form_percent?: number | null;
+};
+
+const PROJECT_LIST_SLIM_COLUMNS =
+  "id, title, status, submit_before, jurisdiction, program_family, organization_program_id, representative_user_id, opened_at, created_at, updated_at, docs_done, docs_total, docs_to_review, form_percent";
+
+function applyProjectsSqlFilters(
+  query: ListFilterQuery,
+  filters: ProjectsListFilters,
+) {
+  const program = filters.program ?? "all";
+  const status = filters.status ?? "all";
+  const representative = filters.representative ?? "all";
+  if (program !== "all") {
+    query = query.eq("program_family", program);
   }
+  if (status !== "all") {
+    query = query.eq("status", status);
+  }
+  if (representative === "unassigned") {
+    query = query.is("representative_user_id", null);
+  } else if (representative !== "all") {
+    query = query.eq("representative_user_id", representative);
+  }
+  return query;
+}
 
-  const key = await getOrgDataKey(orgId);
-  const projects = ((data ?? []) as ProjectRow[]).map((row) =>
-    decryptProjectRow(row, key),
+function projectsNeedsDecryptScan(filters: ProjectsListFilters) {
+  const titleQuery = filters.titleQuery?.trim() ?? "";
+  const sortKey = filters.sortKey ?? "updated_at";
+  if (titleQuery) return true;
+  return (
+    sortKey === "title" ||
+    sortKey === "representative" ||
+    sortKey === "documents"
   );
+}
+
+function progressFromProjectRow(row: ProjectListDbRow): ProjectListProgress {
+  return {
+    docsDone: row.docs_done ?? 0,
+    docsTotal: row.docs_total ?? 0,
+    docsToReview: row.docs_to_review ?? 0,
+    formPercent: row.form_percent ?? 0,
+  };
+}
+
+function progressMapForProjects(projects: ProjectListDbRow[]) {
+  const progressById: Record<string, ProjectListProgress> = {};
+  for (const project of projects) {
+    progressById[project.id] = progressFromProjectRow(project);
+  }
+  return progressById;
+}
+
+async function withProjectListMeta(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  projects: ProjectRow[],
+): Promise<ProjectRow[]> {
   const repIds = [
     ...new Set(
       projects
@@ -639,6 +977,161 @@ export async function listProjects(): Promise<ProjectRow[]> {
       ? (programNameById.get(p.organization_program_id) ?? null)
       : null,
   }));
+}
+
+function sortProjectRows(
+  rows: ProjectListDbRow[],
+  sortKey: ProjectsListSortKey,
+  sortDir: "asc" | "desc",
+) {
+  const sorted = [...rows];
+  sorted.sort((a, b) => {
+    let cmp = 0;
+    if (sortKey === "title") {
+      cmp = a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    } else if (sortKey === "program_family") {
+      cmp = a.program_family.localeCompare(b.program_family);
+    } else if (sortKey === "created_at") {
+      cmp = a.created_at.localeCompare(b.created_at);
+    } else if (sortKey === "updated_at") {
+      cmp = a.updated_at.localeCompare(b.updated_at);
+    } else if (sortKey === "representative") {
+      const aLabel =
+        a.representative?.full_name || a.representative?.email || "";
+      const bLabel =
+        b.representative?.full_name || b.representative?.email || "";
+      cmp = aLabel.localeCompare(bLabel, undefined, { sensitivity: "base" });
+    } else if (sortKey === "documents") {
+      cmp =
+        docsListPercent(a.docs_done ?? 0, a.docs_total ?? 0) -
+        docsListPercent(b.docs_done ?? 0, b.docs_total ?? 0);
+    } else if (sortKey === "forms") {
+      cmp = (a.form_percent ?? 0) - (b.form_percent ?? 0);
+    } else {
+      cmp = compareNullableIsoDates(a.submit_before, b.submit_before);
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+  return sorted;
+}
+
+async function hydrateProjectsByIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  ids: string[],
+  key: Buffer,
+): Promise<ProjectListDbRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("immigration_projects")
+    .select("*")
+    .eq("organization_id", orgId)
+    .in("id", ids);
+  if (error) {
+    console.error("hydrateProjectsByIds:", error.message);
+    return [];
+  }
+  const byId = new Map(
+    ((data ?? []) as ProjectListDbRow[]).map((row) => [
+      row.id,
+      decryptProjectRow(row, key),
+    ]),
+  );
+  return ids
+    .map((id) => byId.get(id))
+    .filter((row): row is ProjectListDbRow => Boolean(row));
+}
+
+export async function listProjectsPage(
+  filters: ProjectsListFilters = {},
+  page: { offset?: number; limit?: number } = {},
+): Promise<ProjectsListPage> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return { ...emptyListPage(), progressById: {} };
+
+  const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
+  const offset = clampListOffset(page.offset);
+  const limit = clampListLimit(page.limit);
+  const titleQuery = filters.titleQuery?.trim() ?? "";
+  const sortKey = filters.sortKey ?? "updated_at";
+  const sortDir = filters.sortDir ?? "desc";
+
+  if (!projectsNeedsDecryptScan(filters)) {
+    const { from, to } = listRange(offset, limit);
+    let query = supabase
+      .from("immigration_projects")
+      .select("*", { count: "exact" })
+      .eq("organization_id", orgId);
+    query = applyProjectsSqlFilters(asListFilterQuery(query), filters) as typeof query;
+    if (sortKey === "program_family") {
+      query = query.order("program_family", { ascending: sortDir === "asc" });
+    } else if (sortKey === "submit_before") {
+      query = query.order("submit_before", {
+        ascending: sortDir === "asc",
+        nullsFirst: false,
+      });
+    } else if (sortKey === "forms") {
+      query = query.order("form_percent", { ascending: sortDir === "asc" });
+    } else if (sortKey === "created_at") {
+      query = query.order("created_at", { ascending: sortDir === "asc" });
+    } else {
+      query = query.order("updated_at", { ascending: sortDir === "asc" });
+    }
+    query = query.order("id", { ascending: sortDir === "asc" });
+    const { data, error, count } = await query.range(from, to);
+    if (error) {
+      console.error("listProjectsPage:", error.message);
+      return { ...emptyListPage(), progressById: {} };
+    }
+    const decrypted = ((data ?? []) as ProjectListDbRow[]).map((row) =>
+      decryptProjectRow(row, key),
+    );
+    const items = await withProjectListMeta(supabase, orgId, decrypted);
+    return {
+      items,
+      total: count ?? 0,
+      progressById: progressMapForProjects(decrypted),
+    };
+  }
+
+  const { rows, error } = await fetchOrgRows<ProjectListDbRow>(
+    supabase,
+    "immigration_projects",
+    orgId,
+    PROJECT_LIST_SLIM_COLUMNS,
+    (query) => applyProjectsSqlFilters(query, filters),
+  );
+  if (error) {
+    console.error("listProjectsPage:", error);
+    return { ...emptyListPage(), progressById: {} };
+  }
+
+  const decrypted = rows.map((row) => decryptProjectRow(row, key));
+  const filtered = decrypted.filter((project) =>
+    titleQuery ? matchesSearchQuery(project.title, titleQuery) : true,
+  );
+  const sortable =
+    sortKey === "representative"
+      ? ((await withProjectListMeta(supabase, orgId, filtered)) as ProjectListDbRow[])
+      : filtered;
+  const matched = sortProjectRows(sortable, sortKey, sortDir);
+  const pageIds = matched.slice(offset, offset + limit).map((row) => row.id);
+  const hydrated = await hydrateProjectsByIds(supabase, orgId, pageIds, key);
+  const items = await withProjectListMeta(supabase, orgId, hydrated);
+  return {
+    items,
+    total: matched.length,
+    progressById: progressMapForProjects(hydrated),
+  };
+}
+
+export async function listProjects(): Promise<ProjectRow[]> {
+  const page = await listProjectsPage(
+    { sortKey: "updated_at", sortDir: "desc" },
+    { offset: 0, limit: 100 },
+  );
+  return page.items;
 }
 
 export async function searchProjects(

@@ -1,10 +1,12 @@
 "use client";
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { loadPeoplePageAction } from "@/app/actions/list-pages";
 import { DeletePersonButton } from "@/components/people/delete-person-button";
+import { ListLoadMore } from "@/components/layout/list-load-more";
 import {
   ListTableCard,
   listFooterClassName,
@@ -32,23 +34,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { usePagedList } from "@/hooks/use-paged-list";
 import type { PersonImmigrationStatus } from "@/db/schema";
 import { Link, useRouter } from "@/i18n/navigation";
 import { daysUntilIso, formatDisplayDate } from "@/lib/crm/dates";
 import { PERSON_IMMIGRATION_STATUSES } from "@/lib/crm/person-status";
-import type { PersonRow } from "@/lib/crm/queries";
+import type { PeopleExpiryFilter, PeopleListSortKey, PersonRow } from "@/lib/crm/queries";
+import type { ListPage } from "@/lib/lists/pagination";
 import { cn, shouldIgnoreRowClick } from "@/lib/utils";
 
-type SortKey = "name" | "email" | "immigration_status" | "status_expires_at";
+type SortKey = PeopleListSortKey;
 type SortDir = "asc" | "desc";
-type ExpiryFilter = "all" | "expired" | "expiring_30" | "no_date";
-
-function compareNullableDates(a: string | null, b: string | null) {
-  if (!a && !b) return 0;
-  if (!a) return 1;
-  if (!b) return -1;
-  return a.localeCompare(b);
-}
+type ExpiryFilter = PeopleExpiryFilter;
 
 function expiryClass(isoDate: string | null) {
   if (!isoDate) return "text-muted-foreground";
@@ -58,12 +56,43 @@ function expiryClass(isoDate: string | null) {
   return "text-muted-foreground";
 }
 
+function PeopleSortButton({
+  column,
+  label,
+  sortKey,
+  sortDir,
+  onToggle,
+}: {
+  column: SortKey;
+  label: string;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onToggle: (column: SortKey) => void;
+}) {
+  const active = sortKey === column;
+  const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(column)}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
+        "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        active ? "text-brand" : "text-foreground",
+      )}
+    >
+      {label}
+      <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
+    </button>
+  );
+}
+
 export function PeopleList({
   locale,
-  people,
+  initial,
 }: {
   locale: string;
-  people: PersonRow[];
+  initial: ListPage<PersonRow>;
 }) {
   const t = useTranslations("people");
   const ti = useTranslations("immigrationStatus");
@@ -74,78 +103,31 @@ export function PeopleList({
     PersonImmigrationStatus | "all"
   >("all");
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilter>("all");
-  const [sortKey, setSortKey] = useState<SortKey>("name");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const deferredName = useDeferredValue(nameQuery);
-  const deferredEmail = useDeferredValue(emailQuery);
-
-  const filteredSorted = useMemo(() => {
-    const nameQ = deferredName.trim().toLowerCase();
-    const emailQ = deferredEmail.trim().toLowerCase();
-
-    const rows = people.filter((person) => {
-      if (nameQ) {
-        const fullName = `${person.first_name} ${person.last_name}`.toLowerCase();
-        if (!fullName.includes(nameQ)) return false;
-      }
-      if (emailQ) {
-        if (!(person.email ?? "").toLowerCase().includes(emailQ)) return false;
-      }
-      if (statusFilter !== "all" && person.immigration_status !== statusFilter) {
-        return false;
-      }
-      if (expiryFilter === "no_date") {
-        if (person.status_expires_at) return false;
-      } else if (expiryFilter === "expired") {
-        if (
-          !person.status_expires_at ||
-          daysUntilIso(person.status_expires_at) >= 0
-        ) {
-          return false;
-        }
-      } else if (expiryFilter === "expiring_30") {
-        if (!person.status_expires_at) return false;
-        const days = daysUntilIso(person.status_expires_at);
-        if (days < 0 || days > 30) return false;
-      }
-      return true;
-    });
-
-    rows.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "name") {
-        cmp = `${a.last_name} ${a.first_name}`.localeCompare(
-          `${b.last_name} ${b.first_name}`,
-          undefined,
-          { sensitivity: "base" },
-        );
-      } else if (sortKey === "email") {
-        cmp = (a.email ?? "").localeCompare(b.email ?? "", undefined, {
-          sensitivity: "base",
-        });
-      } else if (sortKey === "immigration_status") {
-        cmp = ti(a.immigration_status).localeCompare(
-          ti(b.immigration_status),
-          undefined,
-          { sensitivity: "base" },
-        );
-      } else {
-        cmp = compareNullableDates(a.status_expires_at, b.status_expires_at);
-      }
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-
-    return rows;
-  }, [
-    people,
-    deferredName,
-    deferredEmail,
-    statusFilter,
-    expiryFilter,
-    sortKey,
-    sortDir,
-    ti,
-  ]);
+  const [sortKey, setSortKey] = useState<SortKey>("updated_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const debouncedName = useDebouncedValue(nameQuery);
+  const debouncedEmail = useDebouncedValue(emailQuery);
+  const filters = useMemo(
+    () => ({
+      nameQuery: debouncedName,
+      emailQuery: debouncedEmail,
+      status: statusFilter,
+      expiry: expiryFilter,
+      sortKey,
+      sortDir,
+    }),
+    [debouncedName, debouncedEmail, statusFilter, expiryFilter, sortKey, sortDir],
+  );
+  const fetchPage = useCallback(
+    (offset: number) => loadPeoplePageAction({ ...filters, offset }),
+    [filters],
+  );
+  const { items, total, loading, loadingMore, hasMore, loadMore } = usePagedList({
+    initial,
+    depsKey: JSON.stringify(filters),
+    fetchPage,
+  });
+  const filteredSorted = items;
 
   const filtersActive = Boolean(
     nameQuery.trim() ||
@@ -160,36 +142,18 @@ export function PeopleList({
       return;
     }
     setSortKey(key);
-    setSortDir("asc");
-  }
-
-  function SortButton({
-    column,
-    label,
-  }: {
-    column: SortKey;
-    label: string;
-  }) {
-    const active = sortKey === column;
-    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
-    return (
-      <button
-        type="button"
-        onClick={() => toggleSort(column)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
-          "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-          active ? "text-brand" : "text-foreground",
-        )}
-      >
-        {label}
-        <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
-      </button>
+    setSortDir(
+      key === "name" || key === "email" || key === "immigration_status"
+        ? "asc"
+        : "desc",
     );
   }
 
   return (
-    <div className={listViewportStackClassName}>
+    <div
+      className={listViewportStackClassName}
+      aria-busy={loading || loadingMore}
+    >
       <div className={listMobileFiltersStackClassName}>
         <div className={listMobileFiltersClassName}>
           <Input
@@ -259,6 +223,10 @@ export function PeopleList({
                           ? ` · ${formatDisplayDate(person.status_expires_at, locale)}`
                           : ""}
                       </p>
+                      <p className="text-sm text-muted-foreground">
+                        {t("columnUpdated")}{" "}
+                        {formatDisplayDate(person.updated_at, locale)}
+                      </p>
                     </Link>
                     <DeletePersonButton
                       locale={locale}
@@ -271,6 +239,13 @@ export function PeopleList({
             })}
           </ul>
         )}
+        <ListLoadMore
+          hasMore={hasMore}
+          loading={loading || loadingMore}
+          onLoadMore={loadMore}
+          loadMoreLabel={t("loadMore")}
+          loadingLabel={t("loadingMore")}
+        />
       </div>
 
       <ListTableCard
@@ -279,7 +254,7 @@ export function PeopleList({
           listTableCardViewportClassName,
         )}
       >
-        <div className={listTableScrollClassName}>
+        <div className={listTableScrollClassName} data-list-scroll="">
         <Table>
           <TableHeader className={listTableStickyHeaderClassName}>
             <TableRow className="hover:bg-transparent">
@@ -291,7 +266,13 @@ export function PeopleList({
                 )}
               >
                 <div className="flex flex-col gap-1.5">
-                  <SortButton column="name" label={t("columnName")} />
+                    <PeopleSortButton
+                      column="name"
+                      label={t("columnName")}
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onToggle={toggleSort}
+                    />
                   <Input
                     id="people-filter-name"
                     type="search"
@@ -305,7 +286,13 @@ export function PeopleList({
               </TableHead>
               <TableHead className={cn("min-w-[12rem]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
-                  <SortButton column="email" label={t("columnEmail")} />
+                    <PeopleSortButton
+                      column="email"
+                      label={t("columnEmail")}
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onToggle={toggleSort}
+                    />
                   <Input
                     id="people-filter-email"
                     type="search"
@@ -319,10 +306,13 @@ export function PeopleList({
               </TableHead>
               <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
-                  <SortButton
-                    column="immigration_status"
-                    label={t("columnStatus")}
-                  />
+                    <PeopleSortButton
+                      column="immigration_status"
+                      label={t("columnStatus")}
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onToggle={toggleSort}
+                    />
                   <NativeSelect
                     id="people-filter-status"
                     density="dense"
@@ -345,10 +335,13 @@ export function PeopleList({
               </TableHead>
               <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
-                  <SortButton
-                    column="status_expires_at"
-                    label={t("columnExpires")}
-                  />
+                    <PeopleSortButton
+                      column="status_expires_at"
+                      label={t("columnExpires")}
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onToggle={toggleSort}
+                    />
                   <NativeSelect
                     id="people-filter-expiry"
                     density="dense"
@@ -365,6 +358,15 @@ export function PeopleList({
                   </NativeSelect>
                 </div>
               </TableHead>
+              <TableHead className={cn("min-w-[8rem]", listTableHeadClassName)}>
+                <PeopleSortButton
+                  column="updated_at"
+                  label={t("columnUpdated")}
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
+                />
+              </TableHead>
               <TableHead
                 className={cn(
                   "w-12",
@@ -380,7 +382,7 @@ export function PeopleList({
             {filteredSorted.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className={listTableEmptyCellClassName}
                 >
                   {t("noMatches")}
@@ -420,6 +422,9 @@ export function PeopleList({
                         ? formatDisplayDate(person.status_expires_at, locale)
                         : t("emptyValue")}
                     </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatDisplayDate(person.updated_at, locale)}
+                    </TableCell>
                     <TableCell className={cn("text-right", listTableEdgeEndClassName)}>
                       <DeletePersonButton
                         locale={locale}
@@ -434,6 +439,13 @@ export function PeopleList({
             )}
           </TableBody>
         </Table>
+        <ListLoadMore
+          hasMore={hasMore}
+          loading={loading || loadingMore}
+          onLoadMore={loadMore}
+          loadMoreLabel={t("loadMore")}
+          loadingLabel={t("loadingMore")}
+        />
         </div>
       </ListTableCard>
 
@@ -441,7 +453,7 @@ export function PeopleList({
         <p className="text-sm text-muted-foreground">
           {t("showingCount", {
             shown: filteredSorted.length,
-            total: people.length,
+            total,
           })}
         </p>
         {filtersActive ? (

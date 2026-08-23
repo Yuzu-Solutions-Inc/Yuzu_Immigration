@@ -10,7 +10,14 @@ import {
 } from "@/components/layout/list-layout";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
-import { listOrgBookingsWithPayment } from "@/lib/booking/bookings-list";
+import {
+  countOrgBookings,
+  listOrgBookingsPage,
+  parseBookingPaymentFilter,
+} from "@/lib/booking/bookings-list";
+import { listBookingServices } from "@/lib/booking/queries";
+import { serviceTitle } from "@/lib/booking/service-i18n";
+import { listOrgMembers } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,15 +38,32 @@ export default async function BookingsPage({
   const user = await getSessionUser();
   if (!user) redirect(`/${locale}/login`);
 
+  const orgId = membership.organization.id;
   const supabase = await createClient();
-  const [{ data: settings }, bookings] = await Promise.all([
+  const [{ data: settings }, members, services, orgTotal] = await Promise.all([
     supabase
       .from("booking_settings")
       .select("timezone")
-      .eq("organization_id", membership.organization.id)
+      .eq("organization_id", orgId)
       .maybeSingle(),
-    listOrgBookingsWithPayment(membership.organization.id, { locale }),
+    listOrgMembers(),
+    listBookingServices(),
+    countOrgBookings(orgId),
   ]);
+  const timezone = settings?.timezone ?? "America/Toronto";
+  const paymentFilter = parseBookingPaymentFilter(payment);
+  const timeFilter = paymentFilter === "pending" ? "all" : "upcoming";
+  const bookings = await listOrgBookingsPage(
+    orgId,
+    {
+      time: timeFilter,
+      payment: paymentFilter,
+      timezone,
+      locale,
+      sortKey: "starts_at",
+      sortDir: "asc",
+    },
+  );
   const t = await getTranslations("bookings");
 
   return (
@@ -56,9 +80,22 @@ export default async function BookingsPage({
         locale={locale}
         canManage={canCreateRecords(membership.role)}
         currentUserId={user.id}
-        timezone={settings?.timezone ?? "America/Toronto"}
-        bookings={bookings}
-        initialPayment={payment}
+        timezone={timezone}
+        hasAny={orgTotal > 0}
+        initial={bookings}
+        initialPayment={paymentFilter}
+        initialTime={timeFilter}
+        serviceOptions={services.map((service) => ({
+          id: service.id,
+          title: serviceTitle(service, locale),
+        }))}
+        hostOptions={members.map((member) => ({
+          id: member.user_id,
+          name:
+            member.profile.full_name?.trim() ||
+            member.profile.email ||
+            member.user_id,
+        }))}
       />
     </div>
   );

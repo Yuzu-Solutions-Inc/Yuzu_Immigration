@@ -12,7 +12,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
-import { listPeople } from "@/lib/crm/queries";
+import { listPeoplePage } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
 
 function NewPersonButton({ label }: { label: string }) {
@@ -40,7 +40,7 @@ export default async function PeoplePage({
   const t = await getTranslations("people");
   const membership = await getPrimaryMembership();
   const canCreate = canCreateRecords(membership?.role);
-  const people = await listPeople();
+  const people = await listPeoplePage();
 
   return (
     <div className={listPageClassName}>
@@ -54,13 +54,13 @@ export default async function PeoplePage({
         {canCreate ? <NewPersonButton label={t("new")} /> : null}
       </div>
 
-      {people.length === 0 ? (
+      {people.total === 0 ? (
         <SurfaceCard className="space-y-3">
           <p className="text-[15px] text-muted-foreground">{t("empty")}</p>
           {canCreate ? <NewPersonButton label={t("new")} /> : null}
         </SurfaceCard>
       ) : (
-        <PeopleList locale={locale} people={people} />
+        <PeopleList locale={locale} initial={people} />
       )}
     </div>
   );

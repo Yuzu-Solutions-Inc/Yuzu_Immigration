@@ -10,7 +10,7 @@ import {
   Video,
 } from "lucide-react";
 import {
-  useDeferredValue,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -27,6 +27,7 @@ import {
   type RescheduleSlotOption,
 } from "@/app/actions/booking";
 import { sendBookingPaymentReminderAction } from "@/app/actions/booking-payment-reminder";
+import { loadBookingsPageAction } from "@/app/actions/list-pages";
 import { BookingContractsButton } from "@/components/booking/booking-contracts-button";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import {
@@ -42,6 +43,7 @@ import {
   listTableStickyHeaderClassName,
   listViewportStackClassName,
 } from "@/components/layout/list-layout";
+import { ListLoadMore } from "@/components/layout/list-load-more";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -63,7 +65,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "@/i18n/navigation";
-import type { BookingListItem } from "@/lib/booking/bookings-list";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { usePagedList } from "@/hooks/use-paged-list";
+import {
+  BOOKING_LIST_STATUSES,
+  BOOKING_PAYMENT_STATUSES,
+  type BookingListItem,
+  type BookingPaymentFilter,
+  type BookingTimeFilter,
+} from "@/lib/booking/bookings-list";
+import type { ListPage } from "@/lib/lists/pagination";
 import { meetingJoinUrl as joinUrlInWindow } from "@/lib/booking/join-window";
 import { formatPriceCents } from "@/lib/booking/slots";
 import {
@@ -71,41 +82,14 @@ import {
   formatTimeInZone,
   intlLocale,
   zonedCivilToUtc,
-  zonedDateIso,
 } from "@/lib/booking/timezone";
 import { cn } from "@/lib/utils";
 
-const BOOKING_STATUSES = [
-  "confirmed",
-  "pending_payment",
-  "cancelled",
-  "completed",
-  "no_show",
-] as const;
-
-const PAYMENT_STATUSES = [
-  "pending",
-  "paid",
-  "failed",
-  "cancelled",
-  "expired",
-  "refunded",
-] as const;
-
+const BOOKING_STATUSES = BOOKING_LIST_STATUSES;
+const PAYMENT_STATUSES = BOOKING_PAYMENT_STATUSES;
 type BookingStatus = (typeof BOOKING_STATUSES)[number];
-type PaymentStatusFilter =
-  | "all"
-  | "none"
-  | (typeof PAYMENT_STATUSES)[number];
-type TimeFilter = "all" | "upcoming" | "past" | "today";
-
-function parsePaymentFilter(value: string | undefined): PaymentStatusFilter {
-  if (value === "all" || value === "none") return value;
-  if (value && (PAYMENT_STATUSES as readonly string[]).includes(value)) {
-    return value as PaymentStatusFilter;
-  }
-  return "all";
-}
+type PaymentStatusFilter = BookingPaymentFilter;
+type TimeFilter = BookingTimeFilter;
 type SortKey =
   | "starts_at"
   | "guest"
@@ -150,20 +134,59 @@ function paymentLabel(
   return status;
 }
 
+function BookingSortButton({
+  column,
+  label,
+  sortKey,
+  sortDir,
+  onToggle,
+}: {
+  column: SortKey;
+  label: string;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onToggle: (column: SortKey) => void;
+}) {
+  const active = sortKey === column;
+  const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(column)}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
+        "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        active ? "text-brand" : "text-foreground",
+      )}
+    >
+      {label}
+      <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
+    </button>
+  );
+}
+
 export function BookingsList({
   locale,
   canManage,
   currentUserId,
   timezone,
-  bookings,
+  hasAny,
+  initial,
   initialPayment,
+  initialTime,
+  serviceOptions,
+  hostOptions,
 }: {
   locale: string;
   canManage: boolean;
   currentUserId: string;
   timezone: string;
-  bookings: BookingListItem[];
-  initialPayment?: string;
+  hasAny: boolean;
+  initial: ListPage<BookingListItem>;
+  initialPayment: PaymentStatusFilter;
+  initialTime: TimeFilter;
+  serviceOptions: { id: string; title: string }[];
+  hostOptions: { id: string; name: string }[];
 }) {
   const t = useTranslations("bookings");
   const tc = useTranslations("calendar");
@@ -175,134 +198,62 @@ export function BookingsList({
   const [dateIso, setDateIso] = useState<string | null>(null);
   const [slotStart, setSlotStart] = useState<string | null>(null);
   const [guestQuery, setGuestQuery] = useState("");
-  const startingPayment = parsePaymentFilter(initialPayment);
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>(
-    startingPayment === "pending" ? "all" : "upcoming",
-  );
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>(initialTime);
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [hostFilter, setHostFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">(
     "all",
   );
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatusFilter>(
-    startingPayment,
+    initialPayment,
   );
   const [sortKey, setSortKey] = useState<SortKey>("starts_at");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const deferredGuest = useDeferredValue(guestQuery);
+  const [listEpoch, setListEpoch] = useState(0);
+  const debouncedGuest = useDebouncedValue(guestQuery);
 
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 15_000);
     return () => window.clearInterval(id);
   }, []);
 
-  const serviceOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const booking of bookings) {
-      map.set(booking.serviceId, booking.serviceTitle);
-    }
-    return [...map.entries()]
-      .map(([id, title]) => ({ id, title }))
-      .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
-  }, [bookings]);
-
-  const hostOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const booking of bookings) {
-      map.set(booking.hostUserId, booking.hostName);
-    }
-    return [...map.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-  }, [bookings]);
-
-  const filteredSorted = useMemo(() => {
-    const guestQ = deferredGuest.trim().toLowerCase();
-    const now = Date.now();
-    const todayIso = zonedDateIso(new Date(), timezone);
-
-    const rows = bookings.filter((booking) => {
-      if (guestQ) {
-        const haystack = `${booking.guestName} ${booking.guestEmail}`.toLowerCase();
-        if (!haystack.includes(guestQ)) return false;
-      }
-      if (timeFilter === "upcoming") {
-        if (zonedDateIso(new Date(booking.startsAt), timezone) < todayIso) {
-          return false;
-        }
-      } else if (timeFilter === "past") {
-        if (new Date(booking.startsAt).getTime() >= now) return false;
-      } else if (timeFilter === "today") {
-        if (zonedDateIso(new Date(booking.startsAt), timezone) !== todayIso) {
-          return false;
-        }
-      }
-      if (serviceFilter !== "all" && booking.serviceId !== serviceFilter) {
-        return false;
-      }
-      if (hostFilter !== "all" && booking.hostUserId !== hostFilter) {
-        return false;
-      }
-      if (statusFilter !== "all" && booking.status !== statusFilter) {
-        return false;
-      }
-      if (paymentFilter === "none") {
-        if (booking.paymentStatus) return false;
-      } else if (paymentFilter !== "all") {
-        if (booking.paymentStatus !== paymentFilter) return false;
-      }
-      return true;
-    });
-
-    rows.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "starts_at") {
-        cmp = a.startsAt.localeCompare(b.startsAt);
-      } else if (sortKey === "guest") {
-        cmp = a.guestName.localeCompare(b.guestName, undefined, {
-          sensitivity: "base",
-        });
-      } else if (sortKey === "service") {
-        cmp = a.serviceTitle.localeCompare(b.serviceTitle, undefined, {
-          sensitivity: "base",
-        });
-      } else if (sortKey === "host") {
-        cmp = a.hostName.localeCompare(b.hostName, undefined, {
-          sensitivity: "base",
-        });
-      } else if (sortKey === "status") {
-        cmp = statusLabel(t, a.status).localeCompare(
-          statusLabel(t, b.status),
-          undefined,
-          { sensitivity: "base" },
-        );
-      } else {
-        const aPay = a.paymentStatus
-          ? paymentLabel(t, a.paymentStatus)
-          : t("payment.none");
-        const bPay = b.paymentStatus
-          ? paymentLabel(t, b.paymentStatus)
-          : t("payment.none");
-        cmp = aPay.localeCompare(bPay, undefined, { sensitivity: "base" });
-      }
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-
-    return rows;
-  }, [
-    bookings,
-    deferredGuest,
-    timeFilter,
-    serviceFilter,
-    hostFilter,
-    statusFilter,
-    paymentFilter,
-    sortKey,
-    sortDir,
-    timezone,
-    t,
-  ]);
+  const filters = useMemo(
+    () => ({
+      guestQuery: debouncedGuest,
+      time: timeFilter,
+      serviceId: serviceFilter,
+      hostUserId: hostFilter,
+      status: statusFilter,
+      payment: paymentFilter,
+      sortKey,
+      sortDir,
+      timezone,
+      locale,
+    }),
+    [
+      debouncedGuest,
+      timeFilter,
+      serviceFilter,
+      hostFilter,
+      statusFilter,
+      paymentFilter,
+      sortKey,
+      sortDir,
+      timezone,
+      locale,
+    ],
+  );
+  const fetchPage = useCallback(
+    (offset: number) => loadBookingsPageAction({ ...filters, offset }),
+    [filters],
+  );
+  const { items, total, loading, loadingMore, hasMore, loadMore } = usePagedList({
+    initial,
+    depsKey: `${JSON.stringify(filters)}:${listEpoch}`,
+    fetchPage,
+  });
+  const filteredSorted = items;
 
   const filtersActive = Boolean(
     guestQuery.trim() ||
@@ -320,31 +271,6 @@ export function BookingsList({
     }
     setSortKey(key);
     setSortDir("asc");
-  }
-
-  function SortButton({
-    column,
-    label,
-  }: {
-    column: SortKey;
-    label: string;
-  }) {
-    const active = sortKey === column;
-    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
-    return (
-      <button
-        type="button"
-        onClick={() => toggleSort(column)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 text-left font-medium transition-colors",
-          "hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-          active ? "text-brand" : "text-foreground",
-        )}
-      >
-        {label}
-        <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
-      </button>
-    );
   }
 
   function clearFilters() {
@@ -370,8 +296,8 @@ export function BookingsList({
     (slots ?? []).find((slot) => slot.startsAt === slotStart) ?? null;
 
   const reschedulingBooking = useMemo(
-    () => bookings.find((booking) => booking.id === rescheduleId) ?? null,
-    [bookings, rescheduleId],
+    () => items.find((booking) => booking.id === rescheduleId) ?? null,
+    [items, rescheduleId],
   );
 
   function closeReschedule() {
@@ -400,7 +326,7 @@ export function BookingsList({
     });
   }
 
-  if (bookings.length === 0) {
+  if (!hasAny) {
     return (
       <SurfaceCard>
         <p className="text-sm text-muted-foreground">{t("empty")}</p>
@@ -411,7 +337,10 @@ export function BookingsList({
   const actionColSpan = canManage ? 7 : 6;
 
   return (
-    <div className={listViewportStackClassName}>
+    <div
+      className={listViewportStackClassName}
+      aria-busy={loading || loadingMore}
+    >
       <div className={cn(listMobileFiltersClassName, "shrink-0")}>
         <Input
           type="search"
@@ -486,7 +415,7 @@ export function BookingsList({
       </div>
 
       <ListTableCard className={listTableCardViewportClassName}>
-        <div className={listTableScrollClassName}>
+        <div className={listTableScrollClassName} data-list-scroll="">
         <Table>
           <TableHeader className={listTableStickyHeaderClassName}>
             <TableRow className="hover:bg-transparent">
@@ -498,7 +427,13 @@ export function BookingsList({
                 )}
               >
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <SortButton column="starts_at" label={t("colWhen")} />
+                  <BookingSortButton
+                    column="starts_at"
+                    label={t("colWhen")}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggle={toggleSort}
+                  />
                   <NativeSelect
                     value={timeFilter}
                     onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
@@ -514,7 +449,13 @@ export function BookingsList({
               </TableHead>
               <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <SortButton column="guest" label={t("colGuest")} />
+                  <BookingSortButton
+                    column="guest"
+                    label={t("colGuest")}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggle={toggleSort}
+                  />
                   <Input
                     type="search"
                     value={guestQuery}
@@ -527,7 +468,13 @@ export function BookingsList({
               </TableHead>
               <TableHead className={cn("min-w-[8.5rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <SortButton column="service" label={t("colService")} />
+                  <BookingSortButton
+                    column="service"
+                    label={t("colService")}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggle={toggleSort}
+                  />
                   <NativeSelect
                     value={serviceFilter}
                     onChange={(e) => setServiceFilter(e.target.value)}
@@ -545,7 +492,13 @@ export function BookingsList({
               </TableHead>
               <TableHead className={cn("min-w-[7.5rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <SortButton column="host" label={t("colHost")} />
+                  <BookingSortButton
+                    column="host"
+                    label={t("colHost")}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggle={toggleSort}
+                  />
                   <NativeSelect
                     value={hostFilter}
                     onChange={(e) => setHostFilter(e.target.value)}
@@ -563,7 +516,13 @@ export function BookingsList({
               </TableHead>
               <TableHead className={cn("min-w-[8.5rem]", listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <SortButton column="status" label={t("colStatus")} />
+                  <BookingSortButton
+                    column="status"
+                    label={t("colStatus")}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggle={toggleSort}
+                  />
                   <NativeSelect
                     value={statusFilter}
                     onChange={(e) =>
@@ -588,7 +547,13 @@ export function BookingsList({
                 )}
               >
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <SortButton column="payment" label={t("colPayment")} />
+                  <BookingSortButton
+                    column="payment"
+                    label={t("colPayment")}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onToggle={toggleSort}
+                  />
                   <NativeSelect
                     value={paymentFilter}
                     onChange={(e) =>
@@ -806,6 +771,7 @@ export function BookingsList({
                                 return;
                               }
                               toast.success(t("cancelled"));
+                              setListEpoch((value) => value + 1);
                               router.refresh();
                             });
                           }}
@@ -859,6 +825,13 @@ export function BookingsList({
             )}
           </TableBody>
         </Table>
+        <ListLoadMore
+          hasMore={hasMore}
+          loading={loading || loadingMore}
+          onLoadMore={loadMore}
+          loadMoreLabel={t("loadMore")}
+          loadingLabel={t("loadingMore")}
+        />
         </div>
       </ListTableCard>
 
@@ -979,6 +952,7 @@ export function BookingsList({
                   }
                   toast.success(t("modified"));
                   closeReschedule();
+                  setListEpoch((value) => value + 1);
                   router.refresh();
                 });
               }}
@@ -993,7 +967,7 @@ export function BookingsList({
         <p className="text-sm text-muted-foreground">
           {t("showingCount", {
             shown: filteredSorted.length,
-            total: bookings.length,
+            total,
           })}
         </p>
         {filtersActive ? (
