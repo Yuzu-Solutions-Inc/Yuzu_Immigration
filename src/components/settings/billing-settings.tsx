@@ -127,25 +127,24 @@ export function BillingSettingsForm({
     (nextSeats !== licensed ||
       nextInterval !== (currentInterval ?? "month"));
 
-  const errorKey =
-    checkoutState.error ||
-    portalState.error ||
-    seatState.error ||
-    reduceState.error;
-  const error =
-    errorKey &&
-    ({
-      invalid: t("errors.invalid"),
-      forbidden: t("errors.forbidden"),
-      not_configured: t("billingNotConfigured"),
-      not_found: t("errors.notFound"),
-      checkout_failed: t("billingCheckoutFailed"),
-      update_failed: t("billingUpdateFailed"),
-      too_many_licensed: t("billingTooManyLicensed"),
-      license_roster_failed: t("billingLicenseRosterFailed"),
-      generic: t("errors.generic"),
-    }[errorKey] ??
-      t("errors.generic"));
+  const errorMessage = (errorKey?: string) =>
+    errorKey
+      ? ({
+          invalid: t("errors.invalid"),
+          forbidden: t("errors.forbidden"),
+          not_configured: t("billingNotConfigured"),
+          not_found: t("errors.notFound"),
+          checkout_failed: t("billingCheckoutFailed"),
+          update_failed: t("billingUpdateFailed"),
+          too_many_licensed: t("billingTooManyLicensed"),
+          license_roster_failed: t("billingLicenseRosterFailed"),
+          generic: t("errors.generic"),
+        }[errorKey] ?? t("errors.generic"))
+      : undefined;
+  const checkoutError = errorMessage(checkoutState.error);
+  const portalError = errorMessage(portalState.error);
+  const seatError = errorMessage(seatState.error);
+  const reduceError = errorMessage(reduceState.error);
 
   const dateOpts: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -186,7 +185,6 @@ export function BillingSettingsForm({
           {t("billingCheckoutCancel")}
         </p>
       ) : null}
-      {error ? <FieldError>{error}</FieldError> : null}
 
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -266,6 +264,7 @@ export function BillingSettingsForm({
                 : t("billingSubscribe")}
           </Button>
         ) : null}
+        {checkoutError ? <FieldError>{checkoutError}</FieldError> : null}
       </form>
 
       {subscribed ? (
@@ -303,6 +302,9 @@ export function BillingSettingsForm({
                 price: addPrice,
               })}
             </FieldHint>
+            {seatError ? (
+              <FieldError className="sm:col-span-2">{seatError}</FieldError>
+            ) : null}
           </form>
 
           {nextSeats > 1 ? (
@@ -382,17 +384,19 @@ export function BillingSettingsForm({
                   );
                 })}
               </fieldset>
+              {reduceError ? <FieldError>{reduceError}</FieldError> : null}
             </form>
           ) : null}
         </div>
       ) : null}
 
       {hasCustomer ? (
-        <form action={portalAction}>
+        <form action={portalAction} className="space-y-3">
           <input type="hidden" name="locale" value={locale} />
           <Button type="submit" variant="outline" disabled={portalPending}>
             {portalPending ? t("billingWorking") : t("billingManage")}
           </Button>
+          {portalError ? <FieldError>{portalError}</FieldError> : null}
         </form>
       ) : null}
     </div>

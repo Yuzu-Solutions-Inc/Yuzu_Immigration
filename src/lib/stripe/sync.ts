@@ -61,7 +61,9 @@ export function parseSubscriptionItems(subscription: Stripe.Subscription): {
   let extraSeats = 0;
 
   for (const item of subscription.items.data) {
-    const parsed = parseLookupKey(item.price.lookup_key);
+    const price = item.price;
+    if (!price || typeof price === "string") continue;
+    const parsed = parseLookupKey(price.lookup_key);
     if (!parsed) continue;
     if (parsed.plan === "extra_seat") {
       extraSeats += item.quantity ?? 0;
