@@ -57,12 +57,14 @@ export default async function BillingSettingsPage({
     ]);
 
   let periodEndsAt: string | null = null;
+  let cancelAtPeriodEnd = false;
   if (billing?.stripe_subscription_id && stripeConfigured()) {
     try {
       const subscription = await getStripe().subscriptions.retrieve(
         billing.stripe_subscription_id,
       );
       periodEndsAt = periodEndIso(subscription);
+      cancelAtPeriodEnd = Boolean(subscription.cancel_at_period_end);
     } catch (error) {
       console.error("billing period:", error);
     }
@@ -89,6 +91,7 @@ export default async function BillingSettingsPage({
           writable={membership.organization.writable}
           trialEndsAt={membership.organization.trialEndsAt.toISOString()}
           periodEndsAt={periodEndsAt}
+          cancelAtPeriodEnd={cancelAtPeriodEnd}
           foundingEligible={foundingEligible}
           foundingLockedIn={Boolean(billing?.founding_rate)}
           currentPlan={plan}

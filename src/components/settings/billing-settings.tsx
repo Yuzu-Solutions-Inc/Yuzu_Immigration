@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import {
   cancelSubscriptionAction,
   openBillingPortalAction,
+  resumeSubscriptionAction,
   startCheckoutAction,
   updateLicensedSeatsAction,
   type BillingActionState,
@@ -45,6 +46,7 @@ export function BillingSettingsForm({
   writable,
   trialEndsAt,
   periodEndsAt,
+  cancelAtPeriodEnd,
   foundingEligible,
   foundingLockedIn,
   currentPlan,
@@ -62,6 +64,7 @@ export function BillingSettingsForm({
   writable: boolean;
   trialEndsAt: string;
   periodEndsAt: string | null;
+  cancelAtPeriodEnd: boolean;
   foundingEligible: boolean;
   foundingLockedIn: boolean;
   currentPlan: PricingPlanId | null;
@@ -88,6 +91,10 @@ export function BillingSettingsForm({
   );
   const [cancelState, cancelAction, cancelPending] = useActionState(
     cancelSubscriptionAction,
+    initial,
+  );
+  const [resumeState, resumeAction, resumePending] = useActionState(
+    resumeSubscriptionAction,
     initial,
   );
   const [interval, setInterval] = useState<BillingInterval>(
@@ -121,6 +128,7 @@ export function BillingSettingsForm({
           checkout_failed: t("billingCheckoutFailed"),
           update_failed: t("billingUpdateFailed"),
           cancel_failed: t("billingCancelFailed"),
+          resume_failed: t("billingResumeFailed"),
           seats_in_use: t("billingSeatsInUse"),
           generic: t("errors.generic"),
         }[errorKey] ?? t("errors.generic"))
@@ -148,12 +156,16 @@ export function BillingSettingsForm({
   }
 
   const statusLabel = subscribed
-    ? t("billingStatusActive")
+    ? cancelAtPeriodEnd && renewDate
+      ? t("billingStatusCanceling", { date: renewDate })
+      : t("billingStatusActive")
     : writable
       ? t("billingStatusTrial", { date: trialDate })
       : t("billingStatusLocked");
   const statusTone = subscribed
-    ? "success"
+    ? cancelAtPeriodEnd
+      ? "warning"
+      : "success"
     : writable
       ? "warning"
       : "destructive";
@@ -185,7 +197,7 @@ export function BillingSettingsForm({
         <p className="text-sm text-muted-foreground">{t("billingLockedHelp")}</p>
       ) : null}
 
-      <FieldGrid columns={subscribed ? 2 : 1}>
+      <FieldGrid columns={subscribed && !cancelAtPeriodEnd ? 2 : 1}>
         <section className="space-y-2 rounded-xl border border-border bg-canvas px-4 py-3">
           <h3 className="text-sm font-semibold text-brand">
             {t("billingCurrentTitle")}
@@ -205,12 +217,14 @@ export function BillingSettingsForm({
           </p>
           {subscribed && renewDate ? (
             <p className="text-sm text-muted-foreground">
-              {t("billingRenews", { date: renewDate })}
+              {cancelAtPeriodEnd
+                ? t("billingEnds", { date: renewDate })
+                : t("billingRenews", { date: renewDate })}
             </p>
           ) : null}
         </section>
 
-        {subscribed ? (
+        {subscribed && !cancelAtPeriodEnd ? (
           <section className="space-y-2 rounded-xl border border-border bg-canvas px-4 py-3">
             <h3 className="text-sm font-semibold text-brand">
               {t("billingNextTitle")}
@@ -235,7 +249,7 @@ export function BillingSettingsForm({
         ) : null}
       </FieldGrid>
 
-      {subscribed ? (
+      {subscribed && !cancelAtPeriodEnd ? (
         <FormStack action={seatAction} gap="tight">
           <input type="hidden" name="locale" value={locale} />
           <Field>
@@ -319,20 +333,24 @@ export function BillingSettingsForm({
           >
             <IntervalChoice
               selected={interval === "month"}
-              onSelect={() => setInterval("month")}
+              onSelect={() => {
+                if (!cancelAtPeriodEnd) setInterval("month");
+              }}
               title={t("billingMonthly")}
               detail={formatCadMonthly(nextCatalog.monthlyCad, locale)}
             />
             <IntervalChoice
               selected={interval === "year"}
-              onSelect={() => setInterval("year")}
+              onSelect={() => {
+                if (!cancelAtPeriodEnd) setInterval("year");
+              }}
               title={t("billingYearly")}
               detail={`${formatCadYearly(annualTotal(nextCatalog.monthlyCad), locale)} · ${t("billingYearlySave")}`}
             />
           </div>
           <FieldHint className="mt-2">{t("billingYearlyHelp")}</FieldHint>
         </div>
-        {!subscribed || pendingIntervalChange ? (
+        {!subscribed || (pendingIntervalChange && !cancelAtPeriodEnd) ? (
           <Button type="submit" disabled={checkoutPending}>
             {checkoutPending
               ? t("billingWorking")
@@ -360,7 +378,7 @@ export function BillingSettingsForm({
         </FormStack>
       ) : null}
 
-      {subscribed ? (
+      {subscribed && !cancelAtPeriodEnd ? (
         <FormStack
           action={cancelAction}
           gap="tight"
@@ -382,6 +400,23 @@ export function BillingSettingsForm({
           </Button>
           {errorMessage(cancelState.error) ? (
             <FieldError>{errorMessage(cancelState.error)}</FieldError>
+          ) : null}
+        </FormStack>
+      ) : null}
+
+      {subscribed && cancelAtPeriodEnd ? (
+        <FormStack action={resumeAction} gap="tight">
+          <input type="hidden" name="locale" value={locale} />
+          <FieldHint>
+            {renewDate
+              ? t("billingResumeHelp", { date: renewDate })
+              : t("billingUnsubscribeHelp")}
+          </FieldHint>
+          <Button type="submit" variant="outline" disabled={resumePending}>
+            {resumePending ? t("billingWorking") : t("billingResume")}
+          </Button>
+          {errorMessage(resumeState.error) ? (
+            <FieldError>{errorMessage(resumeState.error)}</FieldError>
           ) : null}
         </FormStack>
       ) : null}

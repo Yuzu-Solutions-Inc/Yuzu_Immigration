@@ -26,6 +26,7 @@ import { getStripe, stripeConfigured } from "@/lib/stripe/client";
 import {
   addLicensedSeats,
   cancelPaidSubscription,
+  resumePaidSubscription,
   scheduleLicensedSeats,
   updateSubscriptionCatalog,
 } from "@/lib/stripe/seats";
@@ -306,7 +307,41 @@ export async function cancelSubscriptionAction(
     organizationId: orgId,
     actorUserId: gate.user.id,
     actorKind: "staff",
-    action: "billing.subscription.cancel",
+    action: "billing.subscription.cancel_at_period_end",
+    resourceType: "organization",
+    resourceId: orgId,
+    metadata: {},
+  });
+
+  revalidatePath(`/${locale}/settings/billing`);
+  revalidatePath(`/${locale}/home`);
+  return {};
+}
+
+export async function resumeSubscriptionAction(
+  _prev: BillingActionState,
+  formData: FormData,
+): Promise<BillingActionState> {
+  const locale = String(formData.get("locale") || "en");
+  const gate = await requireBillingAdmin();
+  if (!gate.ok) return { error: gate.error };
+
+  const orgId = gate.membership.organization.id;
+  const result = await resumePaidSubscription({ orgId });
+  if (!result.ok) {
+    return {
+      error:
+        result.error === "seat_charge_failed"
+          ? "resume_failed"
+          : result.error,
+    };
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: gate.user.id,
+    actorKind: "staff",
+    action: "billing.subscription.resume",
     resourceType: "organization",
     resourceId: orgId,
     metadata: {},

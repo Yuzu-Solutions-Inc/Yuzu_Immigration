@@ -278,8 +278,18 @@ export async function syncOrgFromSubscription(
     return;
   }
 
-  const parsed = parseSubscriptionItems(subscription);
   const entitled = subscriptionEntitlesAccess(subscription.status);
+  if (!entitled) {
+    await lockOrgAfterUnsubscribe(orgId);
+    try {
+      await upsertStripeCustomerId(orgId, customerId);
+    } catch (error) {
+      console.error("syncOrgFromSubscription customer:", error);
+    }
+    return;
+  }
+
+  const parsed = parseSubscriptionItems(subscription);
   const admin = createServiceClient();
   const { data: current } = await admin
     .from("organizations")
@@ -296,16 +306,15 @@ export async function syncOrgFromSubscription(
     .from("organizations")
     .update({
       stripe_customer_id: customerId,
-      stripe_subscription_id: entitled ? subscription.id : null,
+      stripe_subscription_id: subscription.id,
       billing_plan: parsed.plan,
       billing_interval: parsed.interval,
       billing_seat_quantity: parsed.plan
         ? parsed.seatQuantity
         : includedSeats("standard"),
       founding_rate: founding,
-      subscribed_at: entitled
-        ? (current?.subscribed_at as string | null) ?? new Date().toISOString()
-        : null,
+      subscribed_at:
+        (current?.subscribed_at as string | null) ?? new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", orgId);

@@ -798,17 +798,64 @@ export async function cancelPaidSubscription(input: {
       billing.stripe_subscription_id,
       { expand: ["items.data.price"] },
     );
+    if (subscription.status === "canceled") {
+      await lockOrgAfterUnsubscribe(input.orgId);
+      return { ok: true };
+    }
+
     await releaseActiveSchedule(
       subscription,
       billing.stripe_subscription_schedule_id,
     );
-    if (subscription.status !== "canceled") {
-      await stripe.subscriptions.cancel(billing.stripe_subscription_id);
+    if (!subscription.cancel_at_period_end) {
+      await stripe.subscriptions.update(billing.stripe_subscription_id, {
+        cancel_at_period_end: true,
+      });
     }
-    await lockOrgAfterUnsubscribe(input.orgId);
+    try {
+      await clearPendingLicenses(input.orgId);
+      await savePendingBilling({
+        orgId: input.orgId,
+        seatQuantity: null,
+        interval: null,
+        effectiveAt: null,
+        scheduleId: null,
+      });
+    } catch (error) {
+      console.error("cancelPaidSubscription pending clear:", error);
+    }
     return { ok: true };
   } catch (error) {
     console.error("cancelPaidSubscription:", error);
+    return { ok: false, error: "seat_charge_failed" };
+  }
+}
+
+export async function resumePaidSubscription(input: {
+  orgId: string;
+}): Promise<{ ok: true } | { ok: false; error: SeatSyncError }> {
+  if (!stripeConfigured()) return { ok: false, error: "not_configured" };
+  const billing = await loadOrgBilling(input.orgId);
+  if (!billing?.stripe_subscription_id) {
+    return { ok: false, error: "not_found" };
+  }
+
+  try {
+    const stripe = getStripe();
+    const subscription = await stripe.subscriptions.retrieve(
+      billing.stripe_subscription_id,
+    );
+    if (subscription.status === "canceled") {
+      return { ok: false, error: "not_found" };
+    }
+    if (subscription.cancel_at_period_end) {
+      await stripe.subscriptions.update(billing.stripe_subscription_id, {
+        cancel_at_period_end: false,
+      });
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("resumePaidSubscription:", error);
     return { ok: false, error: "seat_charge_failed" };
   }
 }
