@@ -26,6 +26,7 @@ import {
 import {
   clearPendingLicenses,
   loadOrgBilling,
+  lockOrgAfterUnsubscribe,
   parseSubscriptionItems,
   savePendingBilling,
   syncOrgFromSubscription,
@@ -780,6 +781,36 @@ export async function ensurePendingRenewalSchedule(orgId: string) {
       billing.billing_pending_interval === "year" ? "year" : "month",
     founding: Boolean(billing.founding_rate),
   });
+}
+
+export async function cancelPaidSubscription(input: {
+  orgId: string;
+}): Promise<{ ok: true } | { ok: false; error: SeatSyncError }> {
+  if (!stripeConfigured()) return { ok: false, error: "not_configured" };
+  const billing = await loadOrgBilling(input.orgId);
+  if (!billing?.stripe_subscription_id) {
+    return { ok: false, error: "not_found" };
+  }
+
+  try {
+    const stripe = getStripe();
+    const subscription = await stripe.subscriptions.retrieve(
+      billing.stripe_subscription_id,
+      { expand: ["items.data.price"] },
+    );
+    await releaseActiveSchedule(
+      subscription,
+      billing.stripe_subscription_schedule_id,
+    );
+    if (subscription.status !== "canceled") {
+      await stripe.subscriptions.cancel(billing.stripe_subscription_id);
+    }
+    await lockOrgAfterUnsubscribe(input.orgId);
+    return { ok: true };
+  } catch (error) {
+    console.error("cancelPaidSubscription:", error);
+    return { ok: false, error: "seat_charge_failed" };
+  }
 }
 
 export async function updateSubscriptionCatalog(input: {

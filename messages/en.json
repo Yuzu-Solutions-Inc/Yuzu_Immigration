@@ -842,6 +842,12 @@
     "billingStatus": "Status",
     "billingStatusActive": "Active",
     "billingStatusTrial": "Trial until {date}",
+    "billingStatusLocked": "Read-only",
+    "billingLockedHelp": "Creating and editing are locked until you subscribe again. Your data stays available to view and delete.",
+    "billingUnsubscribe": "Cancel subscription",
+    "billingUnsubscribeHelp": "Cancel immediately. The workspace becomes read-only until you subscribe again.",
+    "billingUnsubscribeConfirm": "Cancel the subscription now? The workspace will be read-only until you subscribe again. Your data is kept.",
+    "billingCancelFailed": "Could not cancel the subscription. Try again.",
     "billingSeats": "Staff seats",
     "billingSeatUse": "{used} of {total} seats",
     "billingSeatUnused": "{count} unused this period",
@@ -3557,9 +3563,9 @@
     }
   },
   "trialLock": {
-    "title": "Your trial has ended",
-    "caseManagerBody": "Thanks for testing %PRODUCT_NAME%. You can still read and delete your files. Creating or editing is locked. Ask your organization admin to subscribe so you can keep working.",
-    "adminBody": "Thanks for testing %PRODUCT_NAME%. You can still read and delete your files. Creating or editing is locked until you subscribe.",
+    "title": "Workspace is read-only",
+    "caseManagerBody": "Thanks for using %PRODUCT_NAME%. You can still read and delete your files. Creating or editing is locked. Ask your organization admin to subscribe so you can keep working.",
+    "adminBody": "Thanks for using %PRODUCT_NAME%. You can still read and delete your files. Creating or editing is locked until you subscribe.",
     "adminCta": "Subscribe now"
   },
   "trialEmail": {

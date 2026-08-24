@@ -5,6 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
+  cancelSubscriptionAction,
   openBillingPortalAction,
   startCheckoutAction,
   updateLicensedSeatsAction,
@@ -41,6 +42,7 @@ export function BillingSettingsForm({
   locale,
   configured,
   subscribed,
+  writable,
   trialEndsAt,
   periodEndsAt,
   foundingEligible,
@@ -57,6 +59,7 @@ export function BillingSettingsForm({
   locale: AppLocale;
   configured: boolean;
   subscribed: boolean;
+  writable: boolean;
   trialEndsAt: string;
   periodEndsAt: string | null;
   foundingEligible: boolean;
@@ -81,6 +84,10 @@ export function BillingSettingsForm({
   );
   const [seatState, seatAction, seatPending] = useActionState(
     updateLicensedSeatsAction,
+    initial,
+  );
+  const [cancelState, cancelAction, cancelPending] = useActionState(
+    cancelSubscriptionAction,
     initial,
   );
   const [interval, setInterval] = useState<BillingInterval>(
@@ -113,6 +120,7 @@ export function BillingSettingsForm({
           not_found: t("errors.notFound"),
           checkout_failed: t("billingCheckoutFailed"),
           update_failed: t("billingUpdateFailed"),
+          cancel_failed: t("billingCancelFailed"),
           seats_in_use: t("billingSeatsInUse"),
           generic: t("errors.generic"),
         }[errorKey] ?? t("errors.generic"))
@@ -139,6 +147,17 @@ export function BillingSettingsForm({
     );
   }
 
+  const statusLabel = subscribed
+    ? t("billingStatusActive")
+    : writable
+      ? t("billingStatusTrial", { date: trialDate })
+      : t("billingStatusLocked");
+  const statusTone = subscribed
+    ? "success"
+    : writable
+      ? "warning"
+      : "destructive";
+
   return (
     <div className="space-y-8">
       {checkoutFlash === "success" ? (
@@ -156,19 +175,15 @@ export function BillingSettingsForm({
         <h2 className="font-heading text-lg font-semibold text-brand">
           {t("billingPlanName")}
         </h2>
-        <StatusPill
-          label={
-            subscribed
-              ? t("billingStatusActive")
-              : t("billingStatusTrial", { date: trialDate })
-          }
-          tone={subscribed ? "success" : "warning"}
-        />
+        <StatusPill label={statusLabel} tone={statusTone} />
         {founding ? (
           <StatusPill label={t("billingFoundingBadge")} tone="action" />
         ) : null}
       </div>
       <p className="text-sm text-muted-foreground">{t("billingHelp")}</p>
+      {!subscribed && !writable ? (
+        <p className="text-sm text-muted-foreground">{t("billingLockedHelp")}</p>
+      ) : null}
 
       <FieldGrid columns={subscribed ? 2 : 1}>
         <section className="space-y-2 rounded-xl border border-border bg-canvas px-4 py-3">
@@ -341,6 +356,32 @@ export function BillingSettingsForm({
           </Button>
           {errorMessage(portalState.error) ? (
             <FieldError>{errorMessage(portalState.error)}</FieldError>
+          ) : null}
+        </FormStack>
+      ) : null}
+
+      {subscribed ? (
+        <FormStack
+          action={cancelAction}
+          gap="tight"
+          onSubmit={(event) => {
+            if (!window.confirm(t("billingUnsubscribeConfirm"))) {
+              event.preventDefault();
+            }
+          }}
+        >
+          <input type="hidden" name="locale" value={locale} />
+          <FieldHint>{t("billingUnsubscribeHelp")}</FieldHint>
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={cancelPending}
+            className="text-destructive hover:text-destructive"
+          >
+            {cancelPending ? t("billingWorking") : t("billingUnsubscribe")}
+          </Button>
+          {errorMessage(cancelState.error) ? (
+            <FieldError>{errorMessage(cancelState.error)}</FieldError>
           ) : null}
         </FormStack>
       ) : null}

@@ -842,6 +842,12 @@
     "billingStatus": "État",
     "billingStatusActive": "Actif",
     "billingStatusTrial": "Essai jusqu’au {date}",
+    "billingStatusLocked": "Lecture seule",
+    "billingLockedHelp": "La création et la modification sont verrouillées jusqu’à un nouvel abonnement. Vos données restent consultables et suppressibles.",
+    "billingUnsubscribe": "Résilier l’abonnement",
+    "billingUnsubscribeHelp": "Résiliation immédiate. L’espace de travail passe en lecture seule jusqu’à un nouvel abonnement.",
+    "billingUnsubscribeConfirm": "Résilier l’abonnement maintenant ? L’espace de travail sera en lecture seule jusqu’à un nouvel abonnement. Vos données sont conservées.",
+    "billingCancelFailed": "Impossible de résilier l’abonnement. Réessayez.",
     "billingSeats": "Sièges du personnel",
     "billingSeatUse": "{used} sièges sur {total}",
     "billingSeatUnused": "{count} inutilisé(s) cette période",
@@ -3557,9 +3563,9 @@
     }
   },
   "trialLock": {
-    "title": "Période d’essai terminée",
-    "caseManagerBody": "Merci d’avoir testé %PRODUCT_NAME%. Vous pouvez encore consulter et supprimer vos dossiers. La création et la modification sont verrouillées. Demandez à l’administrateur de votre organisation de s’abonner pour continuer à travailler.",
-    "adminBody": "Merci d’avoir testé %PRODUCT_NAME%. Vous pouvez encore consulter et supprimer vos dossiers. La création et la modification sont verrouillées jusqu’à ce que vous vous abonniez.",
+    "title": "Espace de travail en lecture seule",
+    "caseManagerBody": "Merci d’utiliser %PRODUCT_NAME%. Vous pouvez encore consulter et supprimer vos dossiers. La création et la modification sont verrouillées. Demandez à l’administrateur de votre organisation de s’abonner pour continuer à travailler.",
+    "adminBody": "Merci d’utiliser %PRODUCT_NAME%. Vous pouvez encore consulter et supprimer vos dossiers. La création et la modification sont verrouillées jusqu’à ce que vous vous abonniez.",
     "adminCta": "S’abonner maintenant"
   },
   "trialEmail": {

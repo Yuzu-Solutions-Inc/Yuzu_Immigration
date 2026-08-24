@@ -86,6 +86,7 @@ export default async function BillingSettingsPage({
           locale={locale}
           configured={stripeConfigured()}
           subscribed={Boolean(billing?.subscribed_at)}
+          writable={membership.organization.writable}
           trialEndsAt={membership.organization.trialEndsAt.toISOString()}
           periodEndsAt={periodEndsAt}
           foundingEligible={foundingEligible}

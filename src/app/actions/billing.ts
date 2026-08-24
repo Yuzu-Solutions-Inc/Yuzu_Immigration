@@ -25,6 +25,7 @@ import {
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
 import {
   addLicensedSeats,
+  cancelPaidSubscription,
   scheduleLicensedSeats,
   updateSubscriptionCatalog,
 } from "@/lib/stripe/seats";
@@ -280,6 +281,40 @@ export async function openBillingPortalAction(
   });
 
   redirect(session.url);
+}
+
+export async function cancelSubscriptionAction(
+  _prev: BillingActionState,
+  formData: FormData,
+): Promise<BillingActionState> {
+  const locale = String(formData.get("locale") || "en");
+  const gate = await requireBillingAdmin();
+  if (!gate.ok) return { error: gate.error };
+
+  const orgId = gate.membership.organization.id;
+  const result = await cancelPaidSubscription({ orgId });
+  if (!result.ok) {
+    return {
+      error:
+        result.error === "seat_charge_failed"
+          ? "cancel_failed"
+          : result.error,
+    };
+  }
+
+  await recordAuditEvent({
+    organizationId: orgId,
+    actorUserId: gate.user.id,
+    actorKind: "staff",
+    action: "billing.subscription.cancel",
+    resourceType: "organization",
+    resourceId: orgId,
+    metadata: {},
+  });
+
+  revalidatePath(`/${locale}/settings/billing`);
+  revalidatePath(`/${locale}/home`);
+  return {};
 }
 
 export async function updateLicensedSeatsAction(

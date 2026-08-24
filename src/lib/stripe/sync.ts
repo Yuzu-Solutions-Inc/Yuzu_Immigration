@@ -2,7 +2,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 
-import { type PricingPlanId } from "@/lib/marketing/pricing";
+import { type PricingPlanId, PRICING } from "@/lib/marketing/pricing";
 import {
   includedSeats,
   LEGACY_TEAM_INCLUDED_SEATS,
@@ -18,6 +18,7 @@ import { getStripe } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 const ENTITLED_STATUSES = new Set(["active", "trialing", "past_due"]);
+const DAY_MS = 86_400_000;
 
 export type OrgBillingRow = {
   id: string;
@@ -190,6 +191,40 @@ export async function clearPendingBillingForSchedule(
     effectiveAt: null,
     scheduleId: null,
   });
+}
+
+/**
+ * Drop paid entitlement and expire the in-app trial so the workspace is
+ * read-only until checkout succeeds again. Keeps stripe_customer_id and
+ * founding_rate for a clean resubscribe.
+ */
+export async function lockOrgAfterUnsubscribe(orgId: string) {
+  const admin = createServiceClient();
+  const expiredTrialStart = new Date(
+    Date.now() - (PRICING.trialDays + 1) * DAY_MS,
+  ).toISOString();
+  const { error } = await admin
+    .from("organizations")
+    .update({
+      subscribed_at: null,
+      stripe_subscription_id: null,
+      stripe_subscription_schedule_id: null,
+      billing_plan: null,
+      billing_interval: null,
+      billing_seat_quantity: 1,
+      billing_seat_true_up: false,
+      billing_pending_seat_quantity: null,
+      billing_pending_interval: null,
+      billing_pending_effective_at: null,
+      trial_started_at: expiredTrialStart,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orgId);
+  if (error) {
+    console.error("lockOrgAfterUnsubscribe:", error.message);
+    throw new Error("unsubscribe_lock_failed");
+  }
+  await clearPendingLicenses(orgId);
 }
 
 export async function upsertStripeCustomerId(

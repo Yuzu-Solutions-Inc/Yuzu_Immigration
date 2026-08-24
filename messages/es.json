@@ -842,6 +842,12 @@
     "billingStatus": "Estado",
     "billingStatusActive": "Activo",
     "billingStatusTrial": "Prueba hasta el {date}",
+    "billingStatusLocked": "Solo lectura",
+    "billingLockedHelp": "Crear y editar están bloqueados hasta que se suscriba de nuevo. Sus datos siguen disponibles para consultar y eliminar.",
+    "billingUnsubscribe": "Cancelar suscripción",
+    "billingUnsubscribeHelp": "Cancelación inmediata. El espacio de trabajo queda en solo lectura hasta que se suscriba de nuevo.",
+    "billingUnsubscribeConfirm": "¿Cancelar la suscripción ahora? El espacio de trabajo quedará en solo lectura hasta que se suscriba de nuevo. Se conservan sus datos.",
+    "billingCancelFailed": "No se pudo cancelar la suscripción. Inténtelo de nuevo.",
     "billingSeats": "Plazas de personal",
     "billingSeatUse": "{used} de {total} plazas",
     "billingSeatUnused": "{count} sin usar este periodo",
@@ -3557,9 +3563,9 @@
     }
   },
   "trialLock": {
-    "title": "Su prueba ha terminado",
-    "caseManagerBody": "Gracias por probar %PRODUCT_NAME%. Todavía puede consultar y eliminar sus expedientes. Crear o editar está bloqueado. Pida a la persona administradora de su organización que se suscriba para poder seguir trabajando.",
-    "adminBody": "Gracias por probar %PRODUCT_NAME%. Todavía puede consultar y eliminar sus expedientes. Crear o editar está bloqueado hasta que se suscriba.",
+    "title": "Espacio de trabajo en solo lectura",
+    "caseManagerBody": "Gracias por usar %PRODUCT_NAME%. Todavía puede consultar y eliminar sus expedientes. Crear o editar está bloqueado. Pida a la persona administradora de su organización que se suscriba para poder seguir trabajando.",
+    "adminBody": "Gracias por usar %PRODUCT_NAME%. Todavía puede consultar y eliminar sus expedientes. Crear o editar está bloqueado hasta que se suscriba.",
     "adminCta": "Suscribirse ahora"
   },
   "trialEmail": {
