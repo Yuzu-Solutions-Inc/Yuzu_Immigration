@@ -287,21 +287,50 @@ function phaseItems(phase: Stripe.SubscriptionSchedule.Phase) {
   });
 }
 
-function phaseDiscounts(phase: Stripe.SubscriptionSchedule.Phase) {
-  return (phase.discounts ?? []).flatMap((entry) => {
-    if (typeof entry === "string") return [{ discount: entry }];
+type SchedulePhaseDiscount =
+  Stripe.SubscriptionScheduleUpdateParams.Phase.Discount;
+
+function phaseDiscounts(
+  phase: Stripe.SubscriptionSchedule.Phase,
+): SchedulePhaseDiscount[] {
+  const discounts: SchedulePhaseDiscount[] = [];
+  for (const entry of phase.discounts ?? []) {
+    if (typeof entry === "string") {
+      discounts.push({ discount: entry });
+      continue;
+    }
     const discount = entry.discount;
-    if (typeof discount === "string") return [{ discount }];
-    if (discount && typeof discount === "object" && "id" in discount) {
-      return [{ discount: discount.id }];
+    if (typeof discount === "string") {
+      discounts.push({ discount });
+      continue;
+    }
+    if (discount && typeof discount === "object" && discount.id) {
+      discounts.push({ discount: discount.id });
+      continue;
     }
     const coupon = entry.coupon;
-    if (typeof coupon === "string") return [{ coupon }];
-    if (coupon && typeof coupon === "object" && "id" in coupon) {
-      return [{ coupon: coupon.id }];
+    if (typeof coupon === "string") {
+      discounts.push({ coupon });
+      continue;
     }
-    return [];
-  });
+    if (coupon && typeof coupon === "object" && coupon.id) {
+      discounts.push({ coupon: coupon.id });
+      continue;
+    }
+    const promotionCode = entry.promotion_code;
+    if (typeof promotionCode === "string") {
+      discounts.push({ promotion_code: promotionCode });
+      continue;
+    }
+    if (
+      promotionCode &&
+      typeof promotionCode === "object" &&
+      promotionCode.id
+    ) {
+      discounts.push({ promotion_code: promotionCode.id });
+    }
+  }
+  return discounts;
 }
 
 async function scheduleItemsForCatalog(
@@ -369,7 +398,7 @@ async function createRenewalSchedule(input: {
     input.founding,
   );
   const currentDiscounts = phaseDiscounts(currentPhase);
-  const targetDiscounts =
+  const targetDiscounts: SchedulePhaseDiscount[] =
     input.founding && current.interval !== input.interval
       ? [foundingCouponDiscount(input.catalog.plan, input.interval)]
       : currentDiscounts;
