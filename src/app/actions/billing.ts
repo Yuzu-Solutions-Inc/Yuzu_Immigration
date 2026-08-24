@@ -28,6 +28,7 @@ import {
   scheduleLicensedSeats,
   updateSubscriptionCatalog,
 } from "@/lib/stripe/seats";
+import { isAutomaticTaxSetupError } from "@/lib/stripe/subscription-items";
 import {
   clearPendingLicenses,
   foundingCohortOpen,
@@ -182,7 +183,16 @@ export async function startCheckoutAction(
       ...(foundingDiscount ? { discounts: [foundingDiscount] } : {}),
     };
 
-    const session = await stripe.checkout.sessions.create(checkoutParams);
+    let session: Awaited<
+      ReturnType<typeof stripe.checkout.sessions.create>
+    >;
+    try {
+      session = await stripe.checkout.sessions.create(checkoutParams);
+    } catch (error) {
+      if (!isAutomaticTaxSetupError(error)) throw error;
+      const { automatic_tax: _automaticTax, ...withoutTax } = checkoutParams;
+      session = await stripe.checkout.sessions.create(withoutTax);
+    }
     sessionUrl = session.url;
   } catch (error) {
     console.error("checkout session:", error);
@@ -332,7 +342,11 @@ export async function updateLicensedSeatsAction(
 
   if (transition.currentSeats > currentSeats) {
     const added = transition.currentSeats - currentSeats;
-    const result = await addLicensedSeats({ orgId, quantity: added });
+    const result = await addLicensedSeats({
+      orgId,
+      quantity: added,
+      nextSeats: transition.nextSeats,
+    });
     if (!result.ok) {
       return {
         error:
@@ -345,7 +359,7 @@ export async function updateLicensedSeatsAction(
         seatQuantity: transition.nextSeats,
       });
       if (!scheduled.ok) {
-        return { error: "update_failed" };
+        console.error("schedule seats after add:", scheduled.error);
       }
     }
     await recordAuditEvent({

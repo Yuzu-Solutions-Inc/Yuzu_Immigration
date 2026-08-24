@@ -19,11 +19,15 @@ import {
 } from "@/lib/stripe/catalog";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
 import {
+  catalogItemsNeedReplaceAll,
+  compactCatalogItem,
+  subscriptionAutomaticTaxParams,
+} from "@/lib/stripe/subscription-items";
+import {
   clearPendingLicenses,
   loadOrgBilling,
   parseSubscriptionItems,
   savePendingBilling,
-  subscriptionHasFoundingPromo,
   syncOrgFromSubscription,
 } from "@/lib/stripe/sync";
 
@@ -107,7 +111,8 @@ function existingCatalogItemIds(subscription: Stripe.Subscription): {
  * Classic Stripe billing rejects mixed intervals. Updating a monthly item
  * to a yearly price while adding a new yearly extra-seat item fails, and
  * legacy Team subscriptions have no extra-seat item to update in place.
- * Interval changes therefore replace every item in one request.
+ * Interval changes and Team-to-Standard conversions therefore replace
+ * every item in one request.
  */
 function subscriptionItemsForCatalog(
   subscription: Stripe.Subscription,
@@ -117,7 +122,14 @@ function subscriptionItemsForCatalog(
   founding: boolean,
 ): CatalogSubscriptionItem[] {
   const currentInterval = subscriptionBillingInterval(subscription);
-  const replaceAll = Boolean(currentInterval && currentInterval !== interval);
+  const lookupKeys = subscription.items.data.map(
+    (item) => expandedPrice(item.price)?.lookup_key ?? "",
+  );
+  const replaceAll = catalogItemsNeedReplaceAll(
+    currentInterval,
+    interval,
+    lookupKeys,
+  );
 
   if (replaceAll) {
     const items: CatalogSubscriptionItem[] = subscription.items.data.map(
@@ -133,7 +145,7 @@ function subscriptionItemsForCatalog(
         quantity: catalog.extraSeats,
       });
     }
-    return items;
+    return items.map(compactCatalogItem);
   }
 
   const { planItemId, extraItemId } = existingCatalogItemIds(subscription);
@@ -155,7 +167,7 @@ function subscriptionItemsForCatalog(
     items.push({ id: extraItemId, deleted: true });
   }
 
-  return items;
+  return items.map(compactCatalogItem);
 }
 
 function pendingInvoiceUrl(subscription: Stripe.Subscription): string | null {
@@ -184,7 +196,7 @@ async function applyCatalog(input: {
   const intervalChanged =
     subscriptionBillingInterval(input.subscription) !== input.interval;
   const updated = await stripe.subscriptions.update(input.subscription.id, {
-    automatic_tax: { enabled: true },
+    ...subscriptionAutomaticTaxParams(input.subscription),
     items: subscriptionItemsForCatalog(
       input.subscription,
       prices,
@@ -199,7 +211,7 @@ async function applyCatalog(input: {
     ...(input.collectPayment
       ? { payment_behavior: "allow_incomplete" as const }
       : {}),
-    ...(input.founding && !subscriptionHasFoundingPromo(input.subscription)
+    ...(input.founding
       ? {
           discounts: [
             foundingCouponDiscount(input.catalog.plan, input.interval),
@@ -493,6 +505,7 @@ async function setRenewalCatalog(input: {
 export async function addLicensedSeats(input: {
   orgId: string;
   quantity: number;
+  nextSeats?: number;
 }): Promise<
   | {
       ok: true;
@@ -531,6 +544,11 @@ export async function addLicensedSeats(input: {
     },
     input.quantity,
   );
+  const targetNextSeats = Math.max(
+    1,
+    input.nextSeats ??
+      (hadPending ? transition.nextSeats : transition.currentSeats),
+  );
 
   try {
     const stripe = getStripe();
@@ -557,14 +575,14 @@ export async function addLicensedSeats(input: {
       collectPayment: true,
     });
 
-    if (hadPending) {
+    if (hadPending || targetNextSeats !== transition.currentSeats) {
       try {
         await setRenewalCatalog({
           orgId: input.orgId,
           subscription: applied.subscription,
           catalog: catalogFromLicensed(
             "standard",
-            transition.nextSeats,
+            targetNextSeats,
             founding,
           ),
           interval: nextInterval,
@@ -583,9 +601,7 @@ export async function addLicensedSeats(input: {
     return {
       ok: true,
       currentSeats: transition.currentSeats,
-      nextSeats: hadPending
-        ? transition.nextSeats
-        : transition.currentSeats,
+      nextSeats: targetNextSeats,
       paymentUrl: applied.paymentUrl,
     };
   } catch (error) {
@@ -615,9 +631,7 @@ export async function addLicensedSeats(input: {
           return {
             ok: true,
             currentSeats: transition.currentSeats,
-            nextSeats: hadPending
-              ? transition.nextSeats
-              : transition.currentSeats,
+            nextSeats: targetNextSeats,
             paymentUrl: pendingInvoiceUrl(subscription) ?? undefined,
           };
         }
