@@ -366,16 +366,29 @@ async function scheduleItemsForCatalog(
   return items;
 }
 
+function scheduleIdsToRelease(
+  subscription: Stripe.Subscription,
+  scheduleIdHint?: string | null,
+): string[] {
+  const ids = new Set<string>();
+  const attached = scheduleIdFromSubscription(subscription);
+  if (attached) ids.add(attached);
+  if (scheduleIdHint) ids.add(scheduleIdHint);
+  return [...ids];
+}
+
 async function releaseActiveSchedule(
   subscription: Stripe.Subscription,
   scheduleIdHint?: string | null,
 ): Promise<Stripe.Subscription> {
-  const scheduleId = scheduleIdHint ?? scheduleIdFromSubscription(subscription);
-  if (!scheduleId) return subscription;
+  const scheduleIds = scheduleIdsToRelease(subscription, scheduleIdHint);
+  if (!scheduleIds.length) return subscription;
   const stripe = getStripe();
-  const schedule = await stripe.subscriptionSchedules.retrieve(scheduleId);
-  if (schedule.status === "active" || schedule.status === "not_started") {
-    await stripe.subscriptionSchedules.release(scheduleId);
+  for (const scheduleId of scheduleIds) {
+    const schedule = await stripe.subscriptionSchedules.retrieve(scheduleId);
+    if (schedule.status === "active" || schedule.status === "not_started") {
+      await stripe.subscriptionSchedules.release(scheduleId);
+    }
   }
   return stripe.subscriptions.retrieve(subscription.id, {
     expand: ["items.data.price", "latest_invoice"],
@@ -464,7 +477,7 @@ async function setRenewalCatalog(input: {
   }
 
   const existingScheduleId =
-    input.scheduleId ?? scheduleIdFromSubscription(input.subscription);
+    scheduleIdFromSubscription(input.subscription) ?? input.scheduleId ?? null;
   const noChange =
     catalogsMatch(current.catalog, input.catalog) &&
     current.interval === input.interval;
@@ -792,10 +805,14 @@ export async function updateSubscriptionCatalog(input: {
       { expand: ["items.data.price"] },
     );
     const current = catalogFromSubscription(subscription, founding);
-    const targetSeats =
-      billing.billing_pending_seat_quantity ??
-      current.catalog?.seatQuantity ??
-      Math.max(1, billing.billing_seat_quantity ?? 1);
+    const licensed = Math.max(1, billing.billing_seat_quantity ?? 1);
+    const currentSeats = current.catalog?.seatQuantity ?? licensed;
+    const revertingPendingInterval =
+      Boolean(billing.billing_pending_interval) &&
+      current.interval === input.interval;
+    const targetSeats = revertingPendingInterval
+      ? currentSeats
+      : (billing.billing_pending_seat_quantity ?? currentSeats);
     const catalog = catalogFromLicensed("standard", targetSeats, founding);
 
     await setRenewalCatalog({
