@@ -14,7 +14,7 @@ import {
   MAX_SEAT_ADD,
   type BillingInterval,
 } from "@/lib/billing/plans";
-import { transitionAfterSeatRemoval } from "@/lib/billing/transitions";
+import { transitionToSeatQuantity } from "@/lib/billing/transitions";
 import { recordAuditEvent } from "@/lib/security/audit";
 import {
   ensureBillingPrices,
@@ -29,11 +29,11 @@ import {
   updateSubscriptionCatalog,
 } from "@/lib/stripe/seats";
 import {
+  clearPendingLicenses,
   foundingCohortOpen,
   loadOrgBilling,
   upsertStripeCustomerId,
 } from "@/lib/stripe/sync";
-import { createClient } from "@/lib/supabase/server";
 
 export type BillingActionState = {
   error?: string;
@@ -272,18 +272,18 @@ export async function openBillingPortalAction(
   redirect(session.url);
 }
 
-export async function addLicensedSeatAction(
+export async function updateLicensedSeatsAction(
   _prev: BillingActionState,
   formData: FormData,
 ): Promise<BillingActionState> {
   const parsed = z
     .object({
       locale: z.enum(["en", "fr", "es"]).default("en"),
-      quantity: z.coerce.number().int().min(1).max(MAX_SEAT_ADD),
+      seatQuantity: z.coerce.number().int().min(1).max(100),
     })
     .safeParse({
       locale: formData.get("locale") || "en",
-      quantity: formData.get("quantity") || "1",
+      seatQuantity: formData.get("seatQuantity") || "1",
     });
   if (!parsed.success) return { error: "invalid" };
 
@@ -293,65 +293,9 @@ export async function addLicensedSeatAction(
   const orgId = gate.membership.organization.id;
   const occupancy = await occupancyCount(orgId);
   const billing = await loadOrgBilling(orgId);
-  const licensed = billing?.billing_seat_quantity ?? 1;
-  const result = await addLicensedSeats({
-    orgId,
-    quantity: parsed.data.quantity,
-  });
-  if (!result.ok) {
-    return {
-      error:
-        result.error === "seat_charge_failed" ? "update_failed" : result.error,
-    };
-  }
-  await recordAuditEvent({
-    organizationId: orgId,
-    actorUserId: gate.user.id,
-    actorKind: "staff",
-    action: "billing.seat.add",
-    resourceType: "organization",
-    resourceId: orgId,
-    metadata: {
-      occupancy,
-      licensed,
-      added: parsed.data.quantity,
-    },
-  });
-
-  revalidatePath(`/${parsed.data.locale}/settings/billing`);
-  if (result.paymentUrl) redirect(result.paymentUrl);
-  return {};
-}
-
-export async function scheduleSeatReductionAction(
-  _prev: BillingActionState,
-  formData: FormData,
-): Promise<BillingActionState> {
-  const parsed = z
-    .object({
-      locale: z.enum(["en", "fr", "es"]).default("en"),
-      quantity: z.coerce.number().int().min(1).max(MAX_SEAT_ADD),
-      licensedMemberIds: z.array(z.string().uuid()).min(1),
-    })
-    .safeParse({
-      locale: formData.get("locale") || "en",
-      quantity: formData.get("quantity") || "1",
-      licensedMemberIds: formData
-        .getAll("licensedMemberIds")
-        .map((value) => String(value)),
-    });
-  if (!parsed.success) return { error: "invalid" };
-
-  const gate = await requireBillingAdmin();
-  if (!gate.ok) return { error: gate.error };
-
-  const orgId = gate.membership.organization.id;
-  const billing = await loadOrgBilling(orgId);
   if (!billing?.stripe_subscription_id) return { error: "not_found" };
-  const currentTarget =
-    billing.billing_pending_seat_quantity ??
-    billing.billing_seat_quantity ??
-    1;
+
+  const currentSeats = Math.max(1, billing.billing_seat_quantity ?? 1);
   const currentInterval: BillingInterval =
     billing.billing_interval === "year" ? "year" : "month";
   const nextInterval: BillingInterval =
@@ -360,46 +304,80 @@ export async function scheduleSeatReductionAction(
       : billing.billing_pending_interval === "month"
         ? "month"
         : currentInterval;
-  const nextTarget = transitionAfterSeatRemoval(
+  const currentNextSeats =
+    billing.billing_pending_seat_quantity ?? currentSeats;
+  const transition = transitionToSeatQuantity(
     {
-      currentSeats: billing.billing_seat_quantity ?? 1,
-      nextSeats: currentTarget,
+      currentSeats,
+      nextSeats: currentNextSeats,
       currentInterval,
       nextInterval,
     },
-    parsed.data.quantity,
-  ).nextSeats;
-  if (parsed.data.licensedMemberIds.length > nextTarget) {
-    return { error: "too_many_licensed" };
+    parsed.data.seatQuantity,
+    occupancy,
+  );
+
+  if (parsed.data.seatQuantity < occupancy) {
+    return { error: "seats_in_use" };
+  }
+  if (transition.currentSeats > currentSeats + MAX_SEAT_ADD) {
+    return { error: "invalid" };
+  }
+  if (
+    transition.currentSeats === currentSeats &&
+    transition.nextSeats === currentNextSeats
+  ) {
+    return {};
+  }
+
+  if (transition.currentSeats > currentSeats) {
+    const added = transition.currentSeats - currentSeats;
+    const result = await addLicensedSeats({ orgId, quantity: added });
+    if (!result.ok) {
+      return {
+        error:
+          result.error === "seat_charge_failed" ? "update_failed" : result.error,
+      };
+    }
+    if (result.nextSeats !== transition.nextSeats) {
+      const scheduled = await scheduleLicensedSeats({
+        orgId,
+        seatQuantity: transition.nextSeats,
+      });
+      if (!scheduled.ok) {
+        return { error: "update_failed" };
+      }
+    }
+    await recordAuditEvent({
+      organizationId: orgId,
+      actorUserId: gate.user.id,
+      actorKind: "staff",
+      action: "billing.seat.add",
+      resourceType: "organization",
+      resourceId: orgId,
+      metadata: {
+        occupancy,
+        licensed: currentSeats,
+        added,
+        nextSeats: transition.nextSeats,
+      },
+    });
+    revalidatePath(`/${parsed.data.locale}/settings/billing`);
+    if (result.paymentUrl) redirect(result.paymentUrl);
+    return {};
   }
 
   const result = await scheduleLicensedSeats({
     orgId,
-    seatQuantity: nextTarget,
+    seatQuantity: transition.nextSeats,
   });
   if (!result.ok) {
     return { error: "update_failed" };
   }
-  const supabase = await createClient();
-  const { error: rosterError } = await supabase.rpc("stage_org_renewal_licenses", {
-    p_organization_id: orgId,
-    p_licensed_member_ids: parsed.data.licensedMemberIds,
-  });
-  if (rosterError) {
-    console.error("stage renewal licenses:", rosterError.message);
-    await scheduleLicensedSeats({
-      orgId,
-      seatQuantity: currentTarget,
-      interval:
-        billing.billing_pending_interval === "year"
-          ? "year"
-          : billing.billing_pending_interval === "month"
-            ? "month"
-            : billing.billing_interval === "year"
-              ? "year"
-              : "month",
-    });
-    return { error: "license_roster_failed" };
+  try {
+    await clearPendingLicenses(orgId);
+  } catch (error) {
+    console.error("clear pending licenses after seat update:", error);
   }
 
   await recordAuditEvent({
@@ -410,9 +388,9 @@ export async function scheduleSeatReductionAction(
     resourceType: "organization",
     resourceId: orgId,
     metadata: {
-      currentTarget,
-      nextTarget,
-      licensedMemberIds: parsed.data.licensedMemberIds,
+      occupancy,
+      currentSeats,
+      nextSeats: transition.nextSeats,
     },
   });
 

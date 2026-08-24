@@ -7,6 +7,7 @@ import {
   transitionAfterIntervalChange,
   transitionAfterSeatAdd,
   transitionAfterSeatRemoval,
+  transitionToSeatQuantity,
   type BillingTransition,
 } from "@/lib/billing/transitions";
 
@@ -52,6 +53,30 @@ describe("billing transitions", () => {
     assert.equal(
       transitionAfterSeatRemoval(monthlyFourToTwo, 20).nextSeats,
       1,
+    );
+  });
+
+  it("sets an absolute next quantity without dropping below occupancy", () => {
+    assert.deepEqual(
+      transitionToSeatQuantity(
+        { ...monthlyFourToTwo, nextSeats: 4 },
+        1,
+        1,
+      ),
+      { ...monthlyFourToTwo, nextSeats: 1 },
+    );
+    assert.deepEqual(
+      transitionToSeatQuantity(monthlyFourToTwo, 1, 3),
+      { ...monthlyFourToTwo, nextSeats: 3 },
+    );
+    assert.deepEqual(
+      transitionToSeatQuantity(monthlyFourToTwo, 6, 1),
+      {
+        currentSeats: 6,
+        nextSeats: 6,
+        currentInterval: "month",
+        nextInterval: "month",
+      },
     );
   });
 

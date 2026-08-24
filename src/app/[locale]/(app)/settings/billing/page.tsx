@@ -6,6 +6,7 @@ import { BillingSettingsForm } from "@/components/settings/billing-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { canAdministerOrg } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { occupancyCount } from "@/lib/billing/occupancy";
 import type { BillingInterval } from "@/lib/billing/plans";
 import { listOrgMembers, listPendingInvitations } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
@@ -45,13 +46,14 @@ export default async function BillingSettingsPage({
     }
   }
 
-  const [billing, foundingEligible, members, invitations, user] =
+  const [billing, foundingEligible, members, invitations, user, usedSeats] =
     await Promise.all([
       loadOrgBilling(orgId),
       foundingCohortOpen(orgId),
       listOrgMembers(),
       listPendingInvitations(),
       getSessionUser(),
+      occupancyCount(orgId),
     ]);
 
   let periodEndsAt: string | null = null;
@@ -105,7 +107,7 @@ export default async function BillingSettingsPage({
               ? billing.billing_pending_interval
               : null
           }
-          members={members}
+          usedSeats={usedSeats}
           hasCustomer={Boolean(billing?.stripe_customer_id)}
           checkoutFlash={query.checkout}
         />

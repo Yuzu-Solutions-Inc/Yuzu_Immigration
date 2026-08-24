@@ -30,6 +30,23 @@ export function transitionAfterSeatRemoval(
   };
 }
 
+/** Absolute seat target. Increases bill now; decreases apply at renewal. */
+export function transitionToSeatQuantity(
+  transition: BillingTransition,
+  target: number,
+  occupancy: number,
+): BillingTransition {
+  const seats = Math.max(1, occupancy, Math.trunc(target));
+  if (seats >= transition.currentSeats) {
+    return {
+      ...transition,
+      currentSeats: seats,
+      nextSeats: seats,
+    };
+  }
+  return { ...transition, nextSeats: seats };
+}
+
 export function transitionAfterIntervalChange(
   transition: BillingTransition,
   interval: BillingInterval,

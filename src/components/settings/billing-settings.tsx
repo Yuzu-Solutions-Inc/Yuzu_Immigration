@@ -1,30 +1,31 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
-  addLicensedSeatAction,
   openBillingPortalAction,
-  scheduleSeatReductionAction,
   startCheckoutAction,
+  updateLicensedSeatsAction,
   type BillingActionState,
 } from "@/app/actions/billing";
 import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
+  FieldGrid,
   FieldHint,
   FieldLabel,
+  FormStack,
 } from "@/components/ui/field";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Input } from "@/components/ui/input";
 import { StatusPill } from "@/components/ui/status-pill";
 import {
   catalogFromLicensed,
   MAX_SEAT_ADD,
   type BillingInterval,
 } from "@/lib/billing/plans";
-import type { OrgRole } from "@/lib/auth/rbac";
 import type { AppLocale } from "@/lib/i18n/locales";
 import {
   annualTotal,
@@ -35,8 +36,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const initial: BillingActionState = {};
-
-const ADD_QUANTITIES = Array.from({ length: MAX_SEAT_ADD }, (_, i) => i + 1);
 
 export function BillingSettingsForm({
   locale,
@@ -51,7 +50,7 @@ export function BillingSettingsForm({
   seatQuantity,
   pendingSeatQuantity,
   pendingInterval,
-  members,
+  usedSeats,
   hasCustomer,
   checkoutFlash,
 }: {
@@ -67,18 +66,11 @@ export function BillingSettingsForm({
   seatQuantity: number;
   pendingSeatQuantity: number | null;
   pendingInterval: BillingInterval | null;
-  members: Array<{
-    id: string;
-    role: OrgRole;
-    is_licensed: boolean;
-    licensed_at_renewal: boolean | null;
-    profile: { full_name: string | null; email: string | null };
-  }>;
+  usedSeats: number;
   hasCustomer: boolean;
   checkoutFlash?: string;
 }) {
   const t = useTranslations("settings");
-  const tRoles = useTranslations("orgRoles");
   const [checkoutState, checkoutAction, checkoutPending] = useActionState(
     startCheckoutAction,
     initial,
@@ -88,44 +80,29 @@ export function BillingSettingsForm({
     initial,
   );
   const [seatState, seatAction, seatPending] = useActionState(
-    addLicensedSeatAction,
-    initial,
-  );
-  const [reduceState, reduceAction, reducePending] = useActionState(
-    scheduleSeatReductionAction,
+    updateLicensedSeatsAction,
     initial,
   );
   const [interval, setInterval] = useState<BillingInterval>(
     pendingInterval ?? currentInterval ?? "month",
   );
-  const [addCount, setAddCount] = useState(1);
-  const [removeCount, setRemoveCount] = useState(1);
-
   const founding = foundingLockedIn || foundingEligible;
-  const catalog = catalogFromLicensed(
-    currentPlan ?? "standard",
-    seatQuantity,
-    founding,
-  );
-  const licensed = Math.max(seatQuantity, catalog.seatQuantity);
+  const licensed = Math.max(1, seatQuantity);
   const nextSeats = pendingSeatQuantity ?? licensed;
+  const occupancy = Math.max(1, usedSeats);
+  const minSeats = Math.max(1, Math.min(occupancy, nextSeats));
+  const maxSeats = licensed + MAX_SEAT_ADD;
+  const [draftSeats, setDraftSeats] = useState(nextSeats);
+  const currentCatalog = catalogFromLicensed(
+    currentPlan ?? "standard",
+    licensed,
+    founding,
+  );
+  const nextCatalog = catalogFromLicensed("standard", draftSeats, founding);
   const nextInterval = pendingInterval ?? currentInterval ?? "month";
-  const pendingIntervalChange =
-    subscribed && interval !== nextInterval;
-  const renewalCatalog = catalogFromLicensed(
-    "standard",
-    nextSeats,
-    founding,
-  );
-  const addCatalog = catalogFromLicensed(
-    "standard",
-    licensed + addCount,
-    founding,
-  );
-  const showRenewalShift =
-    subscribed &&
-    (nextSeats !== licensed ||
-      nextInterval !== (currentInterval ?? "month"));
+  const pendingIntervalChange = subscribed && interval !== nextInterval;
+  const seatsDirty = subscribed && draftSeats !== nextSeats;
+  const unused = Math.max(0, licensed - occupancy);
 
   const errorMessage = (errorKey?: string) =>
     errorKey
@@ -136,15 +113,10 @@ export function BillingSettingsForm({
           not_found: t("errors.notFound"),
           checkout_failed: t("billingCheckoutFailed"),
           update_failed: t("billingUpdateFailed"),
-          too_many_licensed: t("billingTooManyLicensed"),
-          license_roster_failed: t("billingLicenseRosterFailed"),
+          seats_in_use: t("billingSeatsInUse"),
           generic: t("errors.generic"),
         }[errorKey] ?? t("errors.generic"))
       : undefined;
-  const checkoutError = errorMessage(checkoutState.error);
-  const portalError = errorMessage(portalState.error);
-  const seatError = errorMessage(seatState.error);
-  const reduceError = errorMessage(reduceState.error);
 
   const dateOpts: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -156,16 +128,10 @@ export function BillingSettingsForm({
     ? new Date(periodEndsAt).toLocaleDateString(locale, dateOpts)
     : null;
 
-  const price = formatCatalogPrice(
-    catalog.monthlyCad,
-    currentInterval ?? "month",
-    locale,
-  );
-  const addPrice = formatCatalogPrice(
-    addCatalog.monthlyCad,
-    currentInterval ?? "month",
-    locale,
-  );
+  function setSeats(value: number) {
+    if (!Number.isFinite(value)) return;
+    setDraftSeats(Math.min(maxSeats, Math.max(minSeats, Math.trunc(value))));
+  }
 
   if (!configured) {
     return (
@@ -186,48 +152,145 @@ export function BillingSettingsForm({
         </p>
       ) : null}
 
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("billingPlanName")}
-          </h2>
-          <StatusPill
-            label={
-              subscribed
-                ? t("billingStatusActive")
-                : t("billingStatusTrial", { date: trialDate })
-            }
-            tone={subscribed ? "success" : "warning"}
-          />
-          {founding ? (
-            <StatusPill label={t("billingFoundingBadge")} tone="action" />
-          ) : null}
-        </div>
-        <p className="text-sm text-muted-foreground">{t("billingHelp")}</p>
-        <p className="font-heading text-3xl font-semibold tracking-tight text-brand">
-          {price}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {t("billingCurrentSeats", { count: licensed })}
-        </p>
-        {subscribed && renewDate ? (
-          <p className="text-sm text-muted-foreground">
-            {showRenewalShift
-              ? t("billingTrueUpRenews", {
-                  date: renewDate,
-                  seats: renewalCatalog.seatQuantity,
-                  price: formatCatalogPrice(
-                    renewalCatalog.monthlyCad,
-                    nextInterval,
-                    locale,
-                  ),
-                })
-              : t("billingRenews", { date: renewDate })}
-          </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="font-heading text-lg font-semibold text-brand">
+          {t("billingPlanName")}
+        </h2>
+        <StatusPill
+          label={
+            subscribed
+              ? t("billingStatusActive")
+              : t("billingStatusTrial", { date: trialDate })
+          }
+          tone={subscribed ? "success" : "warning"}
+        />
+        {founding ? (
+          <StatusPill label={t("billingFoundingBadge")} tone="action" />
         ) : null}
       </div>
+      <p className="text-sm text-muted-foreground">{t("billingHelp")}</p>
 
-      <form action={checkoutAction} className="space-y-4">
+      <FieldGrid columns={subscribed ? 2 : 1}>
+        <section className="space-y-2 rounded-xl border border-border bg-canvas px-4 py-3">
+          <h3 className="text-sm font-semibold text-brand">
+            {t("billingCurrentTitle")}
+          </h3>
+          <p className="font-heading text-2xl font-semibold tracking-tight text-brand">
+            {formatCatalogPrice(
+              currentCatalog.monthlyCad,
+              currentInterval ?? "month",
+              locale,
+            )}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t("billingCurrentSeats", { count: licensed })}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t("billingSeatUse", { used: occupancy, total: licensed })}
+          </p>
+          {subscribed && renewDate ? (
+            <p className="text-sm text-muted-foreground">
+              {t("billingRenews", { date: renewDate })}
+            </p>
+          ) : null}
+        </section>
+
+        {subscribed ? (
+          <section className="space-y-2 rounded-xl border border-border bg-canvas px-4 py-3">
+            <h3 className="text-sm font-semibold text-brand">
+              {t("billingNextTitle")}
+            </h3>
+            <p className="font-heading text-2xl font-semibold tracking-tight text-brand">
+              {formatCatalogPrice(nextCatalog.monthlyCad, interval, locale)}
+            </p>
+            {renewDate ? (
+              <p className="text-sm text-muted-foreground">
+                {t("billingTrueUpRenews", {
+                  date: renewDate,
+                  seats: Math.min(maxSeats, Math.max(minSeats, draftSeats)),
+                  price: formatCatalogPrice(
+                    nextCatalog.monthlyCad,
+                    interval,
+                    locale,
+                  ),
+                })}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
+      </FieldGrid>
+
+      {subscribed ? (
+        <FormStack action={seatAction} gap="tight">
+          <input type="hidden" name="locale" value={locale} />
+          <Field>
+            <FieldLabel htmlFor="seatQuantity">{t("billingSeatCount")}</FieldLabel>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label={t("billingSeatDecrease")}
+                disabled={seatPending || draftSeats <= occupancy}
+                onClick={() => setSeats(draftSeats - 1)}
+              >
+                <Minus />
+              </Button>
+              <Input
+                id="seatQuantity"
+                name="seatQuantity"
+                type="number"
+                inputMode="numeric"
+                min={minSeats}
+                max={maxSeats}
+                step={1}
+                value={draftSeats}
+                onChange={(event) => {
+                  if (event.currentTarget.value === "") {
+                    setDraftSeats(minSeats);
+                    return;
+                  }
+                  const next = Number(event.currentTarget.value);
+                  if (Number.isFinite(next)) setDraftSeats(Math.trunc(next));
+                }}
+                onBlur={() => setSeats(draftSeats)}
+                className="w-20 px-2 text-center tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label={t("billingSeatIncrease")}
+                disabled={seatPending || draftSeats >= maxSeats}
+                onClick={() => setSeats(draftSeats + 1)}
+              >
+                <Plus />
+              </Button>
+            </div>
+            <FieldHint>
+              {unused > 0
+                ? t("billingUnusedSeats", { unused, used: occupancy })
+                : t("billingSeatsInUseHint")}
+            </FieldHint>
+          </Field>
+          {seatsDirty ? (
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={
+                seatPending || draftSeats < minSeats || draftSeats > maxSeats
+              }
+            >
+              {seatPending ? t("billingWorking") : t("billingSeatsSave")}
+            </Button>
+          ) : null}
+          {errorMessage(seatState.error) ? (
+            <FieldError>{errorMessage(seatState.error)}</FieldError>
+          ) : null}
+        </FormStack>
+      ) : null}
+
+      <FormStack action={checkoutAction} gap="tight">
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="interval" value={interval} />
         <div>
@@ -243,15 +306,16 @@ export function BillingSettingsForm({
               selected={interval === "month"}
               onSelect={() => setInterval("month")}
               title={t("billingMonthly")}
-              detail={formatCadMonthly(catalog.monthlyCad, locale)}
+              detail={formatCadMonthly(nextCatalog.monthlyCad, locale)}
             />
             <IntervalChoice
               selected={interval === "year"}
               onSelect={() => setInterval("year")}
               title={t("billingYearly")}
-              detail={`${formatCadYearly(annualTotal(catalog.monthlyCad), locale)} · ${t("billingYearlySave")}`}
+              detail={`${formatCadYearly(annualTotal(nextCatalog.monthlyCad), locale)} · ${t("billingYearlySave")}`}
             />
           </div>
+          <FieldHint className="mt-2">{t("billingYearlyHelp")}</FieldHint>
         </div>
         {!subscribed || pendingIntervalChange ? (
           <Button type="submit" disabled={checkoutPending}>
@@ -264,140 +328,21 @@ export function BillingSettingsForm({
                 : t("billingSubscribe")}
           </Button>
         ) : null}
-        {checkoutError ? <FieldError>{checkoutError}</FieldError> : null}
-      </form>
-
-      {subscribed ? (
-        <div className="space-y-4">
-          <form
-            action={seatAction}
-            className="grid gap-3 sm:grid-cols-[8rem_auto] sm:items-end"
-          >
-            <input type="hidden" name="locale" value={locale} />
-            <Field>
-              <FieldLabel htmlFor="seatAddQuantity">
-                {t("billingAddSeats")}
-              </FieldLabel>
-              <NativeSelect
-                id="seatAddQuantity"
-                name="quantity"
-                value={String(addCount)}
-                onChange={(event) =>
-                  setAddCount(Number(event.currentTarget.value) || 1)
-                }
-              >
-                {ADD_QUANTITIES.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </NativeSelect>
-            </Field>
-            <Button type="submit" variant="outline" disabled={seatPending}>
-              {seatPending ? t("billingWorking") : t("billingAddSeatsSubmit")}
-            </Button>
-            <FieldHint className="sm:col-span-2">
-              {t("billingAddSeatsHint", {
-                count: addCount,
-                price: addPrice,
-              })}
-            </FieldHint>
-            {seatError ? (
-              <FieldError className="sm:col-span-2">{seatError}</FieldError>
-            ) : null}
-          </form>
-
-          {nextSeats > 1 ? (
-            <form
-              action={reduceAction}
-              className="space-y-3 rounded-xl border border-border bg-canvas px-4 py-3"
-            >
-              <input type="hidden" name="locale" value={locale} />
-              <div className="grid gap-3 sm:grid-cols-[8rem_auto] sm:items-end">
-                <Field>
-                  <FieldLabel htmlFor="seatRemoveQuantity">
-                    {t("billingRemoveSeats")}
-                  </FieldLabel>
-                  <NativeSelect
-                    id="seatRemoveQuantity"
-                    name="quantity"
-                    value={String(removeCount)}
-                    onChange={(event) =>
-                      setRemoveCount(Number(event.currentTarget.value) || 1)
-                    }
-                  >
-                    {ADD_QUANTITIES.filter((n) => n < nextSeats).map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </Field>
-                <Button type="submit" variant="outline" disabled={reducePending}>
-                  {reducePending
-                    ? t("billingWorking")
-                    : t("billingRemoveSeatsSubmit")}
-                </Button>
-              </div>
-              <FieldHint>
-                {t("billingRemoveSeatsHint", {
-                  seats: Math.max(1, nextSeats - removeCount),
-                  date: renewDate ?? "",
-                })}
-              </FieldHint>
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-medium text-brand">
-                  {t("billingRenewalRoster")}
-                </legend>
-                {members.map((member) => {
-                  const checked =
-                    member.licensed_at_renewal ?? member.is_licensed;
-                  const owner = member.role === "owner";
-                  const name =
-                    member.profile.full_name ??
-                    member.profile.email ??
-                    member.id;
-                  return (
-                    <label
-                      key={member.id}
-                      className="flex items-center gap-2 text-sm text-brand"
-                    >
-                      {owner ? (
-                        <input
-                          type="hidden"
-                          name="licensedMemberIds"
-                          value={member.id}
-                        />
-                      ) : null}
-                      <input
-                        type="checkbox"
-                        name="licensedMemberIds"
-                        value={member.id}
-                        defaultChecked={checked}
-                        disabled={owner}
-                        className="size-4 rounded border-input"
-                      />
-                      <span>
-                        {name} · {tRoles(member.role)}
-                      </span>
-                    </label>
-                  );
-                })}
-              </fieldset>
-              {reduceError ? <FieldError>{reduceError}</FieldError> : null}
-            </form>
-          ) : null}
-        </div>
-      ) : null}
+        {errorMessage(checkoutState.error) ? (
+          <FieldError>{errorMessage(checkoutState.error)}</FieldError>
+        ) : null}
+      </FormStack>
 
       {hasCustomer ? (
-        <form action={portalAction} className="space-y-3">
+        <FormStack action={portalAction} gap="tight">
           <input type="hidden" name="locale" value={locale} />
           <Button type="submit" variant="outline" disabled={portalPending}>
             {portalPending ? t("billingWorking") : t("billingManage")}
           </Button>
-          {portalError ? <FieldError>{portalError}</FieldError> : null}
-        </form>
+          {errorMessage(portalState.error) ? (
+            <FieldError>{errorMessage(portalState.error)}</FieldError>
+          ) : null}
+        </FormStack>
       ) : null}
     </div>
   );
