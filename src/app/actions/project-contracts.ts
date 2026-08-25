@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { canCreateRecords, canManageBookingCatalog } from "@/lib/auth/rbac";
+import { canCreateRecords } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { trialExpiredError } from "@/lib/billing/trial";
 import { sanitizeContractHtml } from "@/lib/contracts/html";
@@ -21,7 +21,7 @@ import {
 } from "@/lib/contracts/translations";
 import { MAX_CONTRACT_HTML_CHARS } from "@/lib/contracts/types";
 import { voidOpenContractsForProject } from "@/lib/contracts/issue-project";
-import { APP_LOCALES, toAppLocale, type AppLocale } from "@/lib/i18n/locales";
+import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
 
 export type ProjectContractActionState = {
