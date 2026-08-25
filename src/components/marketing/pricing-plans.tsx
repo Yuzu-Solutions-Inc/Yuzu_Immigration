@@ -1,6 +1,5 @@
-import { Check, Link2, LockKeyhole, Package } from "lucide-react";
+import { Check } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
-import type { ComponentType } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -19,8 +18,6 @@ import { cn } from "@/lib/utils";
 const FEATURE_GROUPS = [
   {
     key: "included",
-    Icon: Package,
-    tone: "indigo",
     items: [
       "unlimited",
       "portal",
@@ -32,121 +29,77 @@ const FEATURE_GROUPS = [
       "projectBookings",
       "documents",
       "languages",
-      "roles",
-      "retention",
     ],
   },
   {
     key: "integrations",
-    Icon: Link2,
-    tone: "emerald",
-    items: [
-      "calendar",
-      "meetings",
-      "payments",
-      "sage",
-      "noCut",
-    ],
+    items: ["calendar", "meetings", "payments", "sage", "noCut"],
   },
   {
     key: "security",
-    Icon: LockKeyhole,
-    tone: "amber",
-    items: [
-      "orgEncryption",
-      "transit",
-      "noAi",
-      "canada",
-      "humanReview",
-      "privacy",
-    ],
+    items: ["orgEncryption", "transit", "noAi", "canada", "humanReview"],
   },
 ] as const;
 
-function CadMonthlyPrice({
-  amount,
+const TEASER_HIGHLIGHTS = [
+  ["included", "unlimited"],
+  ["included", "questionnaire"],
+  ["included", "pdfFill"],
+  ["included", "contracts"],
+  ["integrations", "calendar"],
+  ["integrations", "meetings"],
+  ["integrations", "payments"],
+  ["security", "noAi"],
+] as const;
+
+function PriceTile({
+  label,
+  offerMonthly,
+  listMonthly,
   locale,
-  size,
+  saveLabel,
+  yearlyLabel,
   prefix,
 }: {
-  amount: number;
+  label: string;
+  offerMonthly: number;
+  listMonthly: number;
   locale: AppLocale;
-  size: "lg" | "md";
+  saveLabel: string;
+  yearlyLabel: string;
   prefix?: string;
 }) {
   return (
-    <span className="inline-flex items-baseline tabular-nums text-brand">
-      <span
-        className={cn(
-          "font-heading font-bold tracking-tight",
-          size === "lg" ? "text-4xl sm:text-5xl" : "text-3xl sm:text-4xl",
-        )}
-      >
-        {prefix}
-        {formatCadAmount(amount, locale)}
-      </span>
-      <span
-        className={cn(
-          "font-medium text-muted-foreground",
-          size === "lg" ? "text-base" : "text-sm",
-        )}
-      >
-        {cadMonthlyPeriod(locale)}
-      </span>
-    </span>
-  );
-}
-
-function FeatureGroup({
-  title,
-  Icon,
-  items,
-  tone,
-}: {
-  title: string;
-  Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
-  items: string[];
-  tone: "indigo" | "emerald" | "amber";
-}) {
-  const iconClass =
-    tone === "emerald"
-      ? "bg-emerald-100 text-success"
-      : tone === "amber"
-        ? "bg-amber-100 text-warning"
-        : "bg-indigo-100 text-action";
-  return (
-    <section className="rounded-xl border border-border bg-surface px-5 py-5 sm:px-6 sm:py-6">
-      <h3 className="flex items-center gap-2 font-heading text-base font-semibold tracking-tight text-brand">
-        <span
-          className={cn(
-            "inline-flex size-8 items-center justify-center rounded-lg",
-            iconClass,
-          )}
-        >
-          <Icon className="size-4" strokeWidth={2} aria-hidden />
+    <div className="flex flex-col rounded-xl border border-border bg-canvas px-5 py-5 sm:px-6 sm:py-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <span className="inline-flex h-5 items-center rounded-full bg-action px-2 text-[11px] font-medium text-action-foreground">
+          {saveLabel}
         </span>
-        {title}
-      </h3>
-      <ul className="mt-4 space-y-2.5">
-        {items.map((feature) => (
-          <li
-            key={feature}
-            className="flex gap-2.5 text-[15px] leading-relaxed text-muted-foreground"
-          >
-            <Check
-              className="mt-0.5 size-4 shrink-0 text-action"
-              strokeWidth={2}
-              aria-hidden
-            />
-            <span className="text-pretty">{feature}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
+      </div>
+      <p className="mt-3 inline-flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <span className="inline-flex items-baseline tabular-nums text-brand">
+          <span className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
+            {prefix}
+            {formatCadAmount(offerMonthly, locale)}
+          </span>
+          <span className="text-base font-medium text-muted-foreground">
+            {cadMonthlyPeriod(locale)}
+          </span>
+        </span>
+        <span className="text-sm font-medium text-muted-foreground line-through tabular-nums">
+          {prefix}
+          {formatCadMonthly(listMonthly, locale)}
+        </span>
+      </p>
+      <p className="mt-2 text-sm text-muted-foreground">{yearlyLabel}</p>
+    </div>
   );
 }
 
-export async function PricingPlanCards(_props: {
+export async function PricingPlanCards({
+  variant,
+}: {
   variant: "teaser" | "page";
 }) {
   const [t, localeRaw] = await Promise.all([
@@ -154,87 +107,76 @@ export async function PricingPlanCards(_props: {
     getLocale(),
   ]);
   const locale = toAppLocale(localeRaw);
-  const foundingFirst = formatCadMonthly(
-    PRICING.standard.foundingMonthly,
-    locale,
-  );
-  const extraFounding = formatCadMonthly(extraSeatMonthlyCad(true), locale);
+  const firstSave = PRICING.standard.listMonthly - PRICING.standard.foundingMonthly;
+  const extraSave = PRICING.extraSeatMonthly - extraSeatMonthlyCad(true);
 
   return (
     <div className="w-full space-y-8">
-      <article className="rounded-xl border border-action/35 bg-surface p-6 sm:p-8 lg:p-10">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-heading text-xl font-semibold tracking-tight text-brand sm:text-2xl">
-            {t("plan.name")}
-          </h3>
-          <span className="inline-flex h-5 items-center rounded-full bg-action px-2 text-[11px] font-medium text-action-foreground">
-            {t("plan.badge")}
-          </span>
+      <article className="overflow-hidden rounded-xl border border-action/35 bg-surface">
+        <div className="flex flex-col gap-1 bg-action px-5 py-3.5 text-action-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-7">
+          <p className="font-heading text-sm font-semibold tracking-tight">
+            {t("foundingTitle", { count: PRICING.foundingCohortSize })}
+          </p>
+          <p className="text-sm text-white/85 text-pretty">
+            {t("foundingHelp", { code: PRICING.foundingPromoCode })}
+          </p>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{t("plan.audience")}</p>
 
-        <p className="mt-6 text-sm font-medium text-action">
-          {t("trial.lead", { days: PRICING.trialDays })}
-        </p>
-
-        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-border bg-canvas px-5 py-5">
-            <dt className="text-sm font-medium text-muted-foreground">
-              {t("firstSeat")}
-            </dt>
-            <dd className="mt-2">
-              <CadMonthlyPrice
-                amount={PRICING.standard.listMonthly}
-                locale={locale}
-                size="lg"
-              />
-            </dd>
+        <div className="p-5 sm:p-7">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-heading text-xl font-semibold tracking-tight text-brand">
+              {t("plan.name")}
+            </h3>
+            <span className="inline-flex h-5 items-center rounded-full bg-action/10 px-2 text-[11px] font-medium text-action">
+              {t("plan.badge")}
+            </span>
           </div>
-          <div className="rounded-xl border border-border bg-canvas px-5 py-5">
-            <dt className="text-sm font-medium text-muted-foreground">
-              {t("extraSeat")}
-            </dt>
-            <dd className="mt-2">
-              <CadMonthlyPrice
-                amount={PRICING.extraSeatMonthly}
-                locale={locale}
-                size="md"
-                prefix="+"
-              />
-            </dd>
-          </div>
-        </dl>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-          {t("seatHint")}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground text-pretty">
-          {t("yearlyPrice", {
-            amount: formatCadYearly(
-              annualTotal(PRICING.standard.listMonthly),
-              locale,
-            ),
-            free: PRICING.annualFreeMonths,
-          })}
-        </p>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <aside className="rounded-xl border border-action/20 bg-action/5 px-5 py-4">
-            <p className="text-sm font-medium text-brand">
-              {t("foundingTitle", { count: PRICING.foundingCohortSize })}
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground text-pretty">
-              {t("foundingHelp", {
-                code: PRICING.foundingPromoCode,
-                founding: foundingFirst,
-                extra: extraFounding,
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <PriceTile
+              label={t("firstSeat")}
+              offerMonthly={PRICING.standard.foundingMonthly}
+              listMonthly={PRICING.standard.listMonthly}
+              locale={locale}
+              saveLabel={t("save", {
+                amount: formatCadMonthly(firstSave, locale),
               })}
-            </p>
-          </aside>
+              yearlyLabel={t("yearlyOnCard", {
+                amount: formatCadYearly(
+                  annualTotal(PRICING.standard.foundingMonthly),
+                  locale,
+                ),
+                free: PRICING.annualFreeMonths,
+              })}
+            />
+            <PriceTile
+              label={t("extraSeat")}
+              offerMonthly={extraSeatMonthlyCad(true)}
+              listMonthly={PRICING.extraSeatMonthly}
+              locale={locale}
+              prefix="+"
+              saveLabel={t("save", {
+                amount: formatCadMonthly(extraSave, locale),
+              })}
+              yearlyLabel={t("yearlyOnCard", {
+                amount: formatCadYearly(
+                  annualTotal(extraSeatMonthlyCad(true)),
+                  locale,
+                ),
+                free: PRICING.annualFreeMonths,
+              })}
+            />
+          </div>
+
+          <p className="mt-4 text-sm text-muted-foreground text-pretty">
+            {t("seatHint")}
+          </p>
+
           <Link
             href="/login?mode=signup"
             className={cn(
               buttonVariants({ size: "lg" }),
-              "w-full lg:min-w-[16rem] lg:w-auto",
+              "mt-5 w-full sm:w-auto sm:min-w-[16rem]",
             )}
           >
             {t("cta")}
@@ -242,24 +184,70 @@ export async function PricingPlanCards(_props: {
         </div>
       </article>
 
-      <div className="space-y-4">
-        <h3 className="font-heading text-lg font-semibold tracking-tight text-brand sm:text-xl">
-          {t("features.title")}
-        </h3>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {FEATURE_GROUPS.map((group) => (
-            <FeatureGroup
-              key={group.key}
-              title={t(`features.${group.key}.title`)}
-              Icon={group.Icon}
-              tone={group.tone}
-              items={group.items.map((item) =>
-                t(`features.${group.key}.${item}`),
-              )}
-            />
-          ))}
+      {variant === "teaser" ? (
+        <div>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h3 className="font-heading text-lg font-semibold tracking-tight text-brand">
+              {t("features.title")}
+            </h3>
+            <Link
+              href="/pricing"
+              className="text-sm font-medium text-action hover:underline"
+            >
+              {t("teaser.compare")}
+            </Link>
+          </div>
+          <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
+            {TEASER_HIGHLIGHTS.map(([group, item]) => (
+              <li
+                key={`${group}-${item}`}
+                className="flex gap-2.5 text-[15px] leading-snug text-muted-foreground"
+              >
+                <Check
+                  className="mt-0.5 size-4 shrink-0 text-action"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <span className="text-pretty">
+                  {t(`features.${group}.${item}`)}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
+      ) : (
+        <div>
+          <h3 className="font-heading text-lg font-semibold tracking-tight text-brand">
+            {t("features.title")}
+          </h3>
+          <div className="mt-5 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURE_GROUPS.map((group) => (
+              <section key={group.key}>
+                <p className="font-heading text-sm font-semibold tracking-tight text-brand">
+                  {t(`features.${group.key}.title`)}
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {group.items.map((item) => (
+                    <li
+                      key={item}
+                      className="flex gap-2.5 text-sm leading-snug text-muted-foreground"
+                    >
+                      <Check
+                        className="mt-0.5 size-3.5 shrink-0 text-action"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      <span className="text-pretty">
+                        {t(`features.${group.key}.${item}`)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

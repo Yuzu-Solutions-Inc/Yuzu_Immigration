@@ -74,6 +74,52 @@ export function contractMergeVariables(input: {
   };
 }
 
+export function projectContractMergeVariables(input: {
+  locale: string;
+  timeZone: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  projectTitle: string;
+  programName: string;
+  consultantName: string;
+  consultantEmail: string;
+  organizationName: string;
+  formAnswers?: Record<string, string> | null;
+  now?: Date;
+}): Record<string, string> {
+  const signed = input.now ?? new Date();
+  const date = signed.toLocaleDateString(input.locale, {
+    timeZone: input.timeZone,
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const answers = input.formAnswers ?? {};
+  return {
+    customer_name: input.customerName,
+    customer_email: input.customerEmail,
+    customer_phone: input.customerPhone ?? "",
+    customer_address: input.customerAddress ?? "",
+    service_name: input.projectTitle,
+    project_title: input.projectTitle,
+    program_name: input.programName,
+    consultant_name: input.consultantName,
+    consultant_email: input.consultantEmail,
+    organization_name: input.organizationName,
+    date,
+    time: "",
+    datetime: date,
+    timezone: input.timeZone,
+    duration: "",
+    meet_link: "",
+    signed_date: date,
+    signed_at: signed.toISOString(),
+    ...answers,
+  };
+}
+
 export const builtinVariableSet = new Set<string>(CONTRACT_BUILTIN_VARIABLES);
 
 export function isBuiltinContractVariable(

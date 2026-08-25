@@ -505,6 +505,8 @@ async function eraseOrphanPeople(input: {
 /**
  * Erase a project file: storage, documents, answers, forms.
  * Optionally keep a wiped tombstone row (CICC closed-file destruction).
+ * Signed project contracts are retained on the tombstone until the project
+ * row itself is deleted — they are excluded from the six-year purge.
  * People who have no remaining files at the firm are erased too.
  */
 export async function eraseProjectPersonalData(input: {
@@ -519,6 +521,7 @@ export async function eraseProjectPersonalData(input: {
 }): Promise<EraseSummary> {
   const admin = createServiceClient();
   const { organizationId, projectId } = input;
+  const contractsPrefix = `${organizationId}/${projectId}/contracts`;
 
   const { data: files } = await admin
     .from("project_document_files")
@@ -547,7 +550,21 @@ export async function eraseProjectPersonalData(input: {
     admin,
     `${organizationId}/${projectId}`,
   );
-  await removeStoragePaths(admin, [...dbPaths, ...listed]);
+
+  const isContractArchivePath = (path: string) =>
+    path === contractsPrefix || path.startsWith(`${contractsPrefix}/`);
+
+  const storageToRemove = input.keepProjectRow
+    ? [...dbPaths, ...listed].filter((path) => !isContractArchivePath(path))
+    : [...dbPaths, ...listed];
+
+  await removeStoragePaths(admin, storageToRemove);
+
+  if (input.keepProjectRow) {
+    await scrubUnsignedProjectContracts(admin, organizationId, projectId);
+  } else {
+    await eraseAllProjectContracts(admin, organizationId, projectId);
+  }
 
   await admin
     .from("project_document_files")
@@ -658,8 +675,109 @@ export async function eraseProjectPersonalData(input: {
   });
 
   return {
-    documentsRemoved: [...new Set([...dbPaths, ...listed])].length,
+    documentsRemoved: [...new Set(storageToRemove)].length,
     appointmentsRemoved: orphans.appointmentsRemoved,
     peopleErased: orphans.peopleErased,
   };
+}
+
+/** Drop unsigned drafts / open envelopes; keep completed signed archives. */
+async function scrubUnsignedProjectContracts(
+  admin: AdminClient,
+  organizationId: string,
+  projectId: string,
+) {
+  const { data: openContracts } = await admin
+    .from("project_contracts")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId)
+    .in("status", ["draft", "pending_signature"]);
+  const openIds = (openContracts ?? []).map((row) => row.id as string);
+  if (openIds.length === 0) return;
+
+  const { data: envelopes } = await admin
+    .from("contract_envelopes")
+    .select("id, signed_pdf_storage_path")
+    .eq("organization_id", organizationId)
+    .in("project_contract_id", openIds);
+  const envelopeIds = (envelopes ?? []).map((row) => row.id as string);
+  const pdfPaths = (envelopes ?? [])
+    .map((row) => row.signed_pdf_storage_path as string | null)
+    .filter((path): path is string => Boolean(path));
+  if (pdfPaths.length > 0) {
+    const { CONTRACT_ENVELOPES_BUCKET } = await import("@/lib/contracts/types");
+    const { error } = await admin.storage
+      .from(CONTRACT_ENVELOPES_BUCKET)
+      .remove(pdfPaths);
+    if (error) console.error("scrub open contract pdfs:", error.message);
+  }
+  if (envelopeIds.length > 0) {
+    await admin
+      .from("contract_envelopes")
+      .delete()
+      .eq("organization_id", organizationId)
+      .in("id", envelopeIds);
+  }
+  await admin
+    .from("project_contracts")
+    .delete()
+    .eq("organization_id", organizationId)
+    .in("id", openIds);
+}
+
+/** Full delete: remove signed archives and envelopes before project CASCADE. */
+async function eraseAllProjectContracts(
+  admin: AdminClient,
+  organizationId: string,
+  projectId: string,
+) {
+  const { data: archived } = await admin
+    .from("project_contract_files")
+    .select("storage_path")
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await removeStoragePaths(
+    admin,
+    (archived ?? []).map((row) => row.storage_path as string),
+  );
+  await removeStoragePaths(
+    admin,
+    await listStorageUnderPrefix(
+      admin,
+      `${organizationId}/${projectId}/contracts`,
+    ),
+  );
+
+  const { data: envelopes } = await admin
+    .from("contract_envelopes")
+    .select("id, signed_pdf_storage_path")
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  const pdfPaths = (envelopes ?? [])
+    .map((row) => row.signed_pdf_storage_path as string | null)
+    .filter((path): path is string => Boolean(path));
+  if (pdfPaths.length > 0) {
+    const { CONTRACT_ENVELOPES_BUCKET } = await import("@/lib/contracts/types");
+    const { error } = await admin.storage
+      .from(CONTRACT_ENVELOPES_BUCKET)
+      .remove(pdfPaths);
+    if (error) console.error("erase project contract pdfs:", error.message);
+  }
+
+  await admin
+    .from("project_contract_files")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await admin
+    .from("contract_envelopes")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await admin
+    .from("project_contracts")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
 }

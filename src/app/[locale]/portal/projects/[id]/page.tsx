@@ -15,6 +15,7 @@ import {
   assertPortalProjectAccess,
   getPortalSession,
 } from "@/lib/portal/auth";
+import { getProjectContractGate } from "@/lib/contracts/project-contracts";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export default async function PortalProjectPage({
@@ -35,6 +36,12 @@ export default async function PortalProjectPage({
     await assertPortalProjectAccess(session, id);
   } catch {
     notFound();
+  }
+
+  const gate = await getProjectContractGate(id, session.personId);
+  if (gate.locked) {
+    redirect({ href: `/portal/projects/${id}/contract`, locale });
+    return null;
   }
 
   const ctx = await loadProjectFillContext({

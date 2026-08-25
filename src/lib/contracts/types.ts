@@ -21,6 +21,8 @@ export const CONTRACT_BUILTIN_VARIABLES = [
   "customer_phone",
   "customer_address",
   "service_name",
+  "project_title",
+  "program_name",
   "consultant_name",
   "consultant_email",
   "organization_name",
@@ -39,6 +41,7 @@ export type ContractBuiltinVariable =
 export type ContractTemplateRow = {
   id: string;
   organization_id: string;
+  form_id: string | null;
   title: string;
   body_html: string;
   translations: ContractTranslations;
@@ -55,7 +58,9 @@ export type ContractEnvelopeRow = {
   id: string;
   organization_id: string;
   template_id: string;
-  appointment_id: string;
+  appointment_id: string | null;
+  project_id: string | null;
+  project_contract_id: string | null;
   title: string;
   filled_html: string;
   filled_sha256: string;
@@ -124,7 +129,8 @@ export type StaffContractSignature = {
 
 export type ContractEnvelopeSummary = {
   id: string;
-  appointment_id: string;
+  appointment_id: string | null;
+  project_id: string | null;
   title: string;
   status: ContractEnvelopeStatus;
   expires_at: string;

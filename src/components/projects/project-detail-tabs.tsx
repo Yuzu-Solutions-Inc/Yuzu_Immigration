@@ -7,6 +7,7 @@ import { HashDetailTabs } from "@/components/layout/hash-detail-tabs";
 
 const TAB_VALUES = [
   "home",
+  "contract",
   "documents",
   "forms",
   "communication",
@@ -38,6 +39,7 @@ export function ProjectDetailTabs({
       aliases={HASH_ALIASES}
       labels={{
         home: t("home"),
+        contract: t("contract"),
         documents: t("documents"),
         forms: t("forms"),
         communication: t("communication"),

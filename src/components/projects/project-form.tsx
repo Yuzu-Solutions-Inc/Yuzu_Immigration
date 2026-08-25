@@ -137,6 +137,7 @@ export function ProjectForm({
   initial,
   canCreatePeople = true,
   organizationPrograms = [],
+  contractTemplates = [],
 }: {
   locale: string;
   people: ExistingPerson[];
@@ -146,6 +147,7 @@ export function ProjectForm({
   initial?: ProjectFormInitial;
   canCreatePeople?: boolean;
   organizationPrograms?: OrganizationProgram[];
+  contractTemplates?: Array<{ id: string; title: string }>;
 }) {
   const t = useTranslations("projects");
   const tp = useTranslations("programs");
@@ -200,6 +202,7 @@ export function ProjectForm({
   const [needsCustodian, setNeedsCustodian] = useState(
     initial?.needsCustodian ?? false,
   );
+  const [contractTemplateId, setContractTemplateId] = useState("");
   const selectedOrgProgram = useMemo(
     () =>
       organizationProgramId
@@ -390,6 +393,9 @@ export function ProjectForm({
       <input type="hidden" name="title" value={title} />
       <input type="hidden" name="description" value={description} />
       {!isEdit ? <input type="hidden" name="notes" value={notes} /> : null}
+      {!isEdit ? (
+        <input type="hidden" name="contractTemplateId" value={contractTemplateId} />
+      ) : null}
       <input
         type="hidden"
         name="participants"
@@ -920,6 +926,25 @@ export function ProjectForm({
 
       {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
 
+      {!isEdit && contractTemplates.length > 0 ? (
+        <Field>
+          <FieldLabel htmlFor="contractTemplate">{t("contractTemplate")}</FieldLabel>
+          <NativeSelect
+            id="contractTemplate"
+            value={contractTemplateId}
+            onChange={(event) => setContractTemplateId(event.target.value)}
+          >
+            <option value="">{t("contractTemplateNone")}</option>
+            {contractTemplates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.title}
+              </option>
+            ))}
+          </NativeSelect>
+          <FieldHint>{t("contractTemplateHelp")}</FieldHint>
+        </Field>
+      ) : null}
+
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending
           ? isEdit
@@ -942,6 +967,7 @@ export function CreateProjectForm(props: {
   presetPersonId?: string;
   canCreatePeople?: boolean;
   organizationPrograms?: OrganizationProgram[];
+  contractTemplates?: Array<{ id: string; title: string }>;
 }) {
   return <ProjectForm {...props} />;
 }

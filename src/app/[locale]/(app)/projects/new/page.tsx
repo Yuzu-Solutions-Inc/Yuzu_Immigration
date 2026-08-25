@@ -8,6 +8,7 @@ import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { listOrgMembers, listPeople } from "@/lib/crm/queries";
 import { listOrganizationPrograms } from "@/app/actions/org-programs";
+import { listProjectContractsCatalog } from "@/app/actions/project-contracts";
 
 export default async function NewProjectPage({
   params,
@@ -25,11 +26,13 @@ export default async function NewProjectPage({
   if (!canCreateInWorkspace(membership)) {
     redirect(`/${locale}/projects`);
   }
-  const [people, members, user, organizationPrograms] = await Promise.all([
+  const [people, members, user, organizationPrograms, contractTemplates] =
+    await Promise.all([
     listPeople(),
     listOrgMembers(),
     getSessionUser(),
     listOrganizationPrograms(),
+    listProjectContractsCatalog(),
   ]);
 
   return (
@@ -59,6 +62,7 @@ export default async function NewProjectPage({
           currentUserId={user?.id}
           presetPersonId={presetPersonId}
           organizationPrograms={organizationPrograms}
+          contractTemplates={contractTemplates}
         />
       </SurfaceCard>
     </div>

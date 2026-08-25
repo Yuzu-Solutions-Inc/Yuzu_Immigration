@@ -26,6 +26,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import {
   Tabs,
@@ -33,7 +34,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { extraAutomationVariables } from "@/lib/booking/form-fields";
+import { contractVariableCatalog } from "@/lib/contracts/variables";
 import { serviceTitle } from "@/lib/booking/service-i18n";
 import {
   docxBufferToHtml,
@@ -56,6 +57,7 @@ import type {
 } from "@/lib/contracts/types";
 import type {
   BookingFormFieldRow,
+  BookingFormRow,
   BookingServiceRow,
 } from "@/lib/booking/types";
 import {
@@ -148,6 +150,7 @@ function ContractEditor({
   locale,
   orgDefaultLocale,
   services,
+  forms,
   formFields,
   template,
   isActive,
@@ -156,6 +159,7 @@ function ContractEditor({
   locale: string;
   orgDefaultLocale: AppLocale;
   services: BookingServiceRow[];
+  forms: BookingFormRow[];
   formFields: BookingFormFieldRow[];
   template?: ContractTemplateRow;
   isActive: boolean;
@@ -170,6 +174,7 @@ function ContractEditor({
   const [serviceIds, setServiceIds] = useState<string[]>(
     template?.service_ids ?? [],
   );
+  const [formId, setFormId] = useState(template?.form_id ?? "");
   const [requireConsultant, setRequireConsultant] = useState(
     template?.require_consultant_signature ?? true,
   );
@@ -196,28 +201,14 @@ function ContractEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  const extraVariables = useMemo(() => {
-    const formIds = new Set(
-      services
-        .filter((service) => serviceIds.includes(service.id) && service.form_id)
-        .map((service) => service.form_id as string),
-    );
-    const seen = new Set<string>();
-    const fields: BookingFormFieldRow[] = [];
-    for (const field of formFields) {
-      if (!formIds.has(field.form_id) || seen.has(field.field_key)) continue;
-      seen.add(field.field_key);
-      fields.push(field);
-      for (const extraKey of Object.keys(
-        extraAutomationVariables({ [field.field_key]: "" }),
-      )) {
-        if (seen.has(extraKey)) continue;
-        seen.add(extraKey);
-        fields.push({ ...field, field_key: extraKey, id: `${field.id}:${extraKey}` });
-      }
-    }
-    return fields;
-  }, [formFields, serviceIds, services]);
+  const formVariables = useMemo(() => {
+    const keys = formId
+      ? formFields
+          .filter((field) => field.form_id === formId)
+          .map((field) => field.field_key)
+      : [];
+    return contractVariableCatalog(keys).filter((item) => item.kind === "form");
+  }, [formFields, formId]);
 
   function snapshotCopies() {
     const next = { ...copies };
@@ -318,6 +309,7 @@ function ContractEditor({
         value={JSON.stringify(copies)}
       />
       <input type="hidden" name="serviceIds" value={JSON.stringify(serviceIds)} />
+      <input type="hidden" name="formId" value={formId} />
       <input
         type="hidden"
         name="requireConsultantSignature"
@@ -342,6 +334,23 @@ function ContractEditor({
           required
           maxLength={120}
         />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="contract-form">{t("contractFormLabel")}</FieldLabel>
+        <NativeSelect
+          id="contract-form"
+          value={formId}
+          onChange={(event) => setFormId(event.target.value)}
+        >
+          <option value="">{t("contractFormNone")}</option>
+          {forms.map((form) => (
+            <option key={form.id} value={form.id}>
+              {form.title}
+            </option>
+          ))}
+        </NativeSelect>
+        <p className="mt-1 text-xs text-muted-foreground">{t("contractFormHelp")}</p>
       </Field>
 
       <section className="space-y-3 rounded-xl border border-border bg-canvas/60 p-4">
@@ -484,14 +493,14 @@ function ContractEditor({
                 {t.has(`variables.${name}`) ? t(`variables.${name}`) : name}
               </button>
             ))}
-            {extraVariables.map((field) => (
+            {formVariables.map((field) => (
               <button
-                key={field.id}
+                key={field.key}
                 type="button"
                 className="rounded-full border border-action/30 bg-action/5 px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40"
-                onClick={() => insertVariable(field.field_key)}
+                onClick={() => insertVariable(field.key)}
               >
-                {field.label}
+                {field.key}
               </button>
             ))}
             {(["signature_client", "signature_consultant"] as const).map((name) => (
@@ -645,6 +654,7 @@ export function ServiceContractsButton({
   locale,
   orgDefaultLocale,
   services,
+  forms,
   formFields,
   templates,
   signature,
@@ -654,6 +664,7 @@ export function ServiceContractsButton({
   locale: string;
   orgDefaultLocale: AppLocale;
   services: BookingServiceRow[];
+  forms: BookingFormRow[];
   formFields: BookingFormFieldRow[];
   templates: ContractTemplateRow[];
   signature: StaffContractSignature;
@@ -759,6 +770,7 @@ export function ServiceContractsButton({
                 locale={locale}
                 orgDefaultLocale={orgDefaultLocale}
                 services={services}
+                forms={forms}
                 formFields={formFields}
                 template={editing ?? undefined}
                 isActive={formActive}

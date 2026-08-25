@@ -290,10 +290,12 @@
     "cta": "Essai de 30 jours",
     "firstSeat": "Premier utilisateur",
     "extraSeat": "Chaque siège supplémentaire",
-    "seatHint": "Un siège, c’est une personne de votre équipe. Les clients du portail n’occupent pas de siège.",
+    "seatHint": "Un siège est une connexion du personnel. Les clients du portail n’en occupent pas.",
     "extraSeats": "Puis {price} par utilisateur supplémentaire",
-    "foundingTitle": "Tarifs de lancement pour les {count} premiers cabinets",
-    "foundingHelp": "{founding} pour le premier utilisateur et {extra} par siège supplémentaire. Le code {code} s’applique automatiquement au paiement.",
+    "foundingTitle": "Offre de lancement — {count} premiers cabinets",
+    "foundingHelp": "Le code {code} s’applique automatiquement au paiement et reste sur l’abonnement.",
+    "save": "Économisez {amount}",
+    "yearlyOnCard": "{amount} · {free} mois offerts",
     "yearlyPrice": "ou {amount} facturé à l’année ({free} mois offerts)",
     "examples": {
       "title": "Comment les sièges s’additionnent",
@@ -311,38 +313,35 @@
       "teaser": "Clients et dossiers illimités. Le produit complet sur chaque siège."
     },
     "features": {
-      "title": "Tout est inclus sur chaque siège",
+      "title": "Sur chaque siège",
       "included": {
         "title": "Inclus",
-        "unlimited": "Clients, projets, dossiers et utilisateurs du portail illimités",
-        "portal": "Portail client pour documents, questionnaires, factures et rendez-vous",
-        "questionnaire": "Questionnaire unique généré à partir des formulaires IMM du dossier",
-        "pdfFill": "Remplissage automatique des PDF IMM avec règles de validation logique — vous relisez avant le dépôt",
-        "bookingForms": "Formulaires de réservation personnalisés par service de consultation",
-        "contracts": "Contrats personnalisés avec signature électronique, envoyés à la réservation",
-        "reminders": "Courriels de rappel personnalisés pour les rendez-vous et les frais impayés",
-        "projectBookings": "Liez les réservations à un projet d’immigration et ajoutez des notes",
-        "documents": "Collecte et révision des documents — approuver, refuser ou demander un nouvel envoi",
-        "languages": "Anglais, français et espagnol, y compris les parcours côté client",
-        "roles": "Rôles titulaire, admin et gestionnaire de cas sur un portefeuille partagé",
-        "retention": "Outils de conservation des dossiers fermés alignés sur les six ans typiques du CCIC"
+        "unlimited": "Clients, dossiers et portail illimités",
+        "portal": "Portail client : documents, formulaires, factures",
+        "questionnaire": "Questionnaire selon les formulaires IMM du dossier",
+        "pdfFill": "Remplissage PDF IMM avec validation logique",
+        "bookingForms": "Formulaires de réservation personnalisés",
+        "contracts": "Contrats personnalisés avec signature électronique",
+        "reminders": "Courriels de rappel personnalisés",
+        "projectBookings": "Réservations liées à un projet, avec notes",
+        "documents": "Collecte et révision des documents",
+        "languages": "Anglais, français et espagnol"
       },
       "integrations": {
         "title": "Intégrations",
-        "calendar": "Synchronisation avec Google Agenda ou Outlook — les plages occupées bloquent la réservation publique",
-        "meetings": "Lien Google Meet, Teams ou Zoom créé automatiquement à la confirmation",
-        "payments": "Square ou Stripe pour les honoraires de consultation à la réservation ou par lien de paiement sur un dossier",
-        "sage": "Sage Comptabilité pour poster les factures de taxes canadiennes correspondantes (bêta)",
-        "noCut": "Aucun pourcentage prélevé sur les paiements de consultation Square ou Stripe"
+        "calendar": "Google Agenda ou Outlook",
+        "meetings": "Meet, Teams ou Zoom à la réservation",
+        "payments": "Paiements Square ou Stripe",
+        "sage": "Sage Comptabilité (bêta)",
+        "noCut": "Aucun pourcentage sur les consultations"
       },
       "security": {
         "title": "Sécurité",
-        "orgEncryption": "Chiffrement AES-256-GCM par cabinet pour les documents et de nombreux champs d’identité — chaque organisation a sa propre clé",
-        "transit": "Chiffrement TLS en transit pour chaque session, téléversement et appel API",
-        "noAi": "Pas d’IA — questionnaires, remplissage PDF et révision reposent sur des règles logicielles, pas sur des modèles entraînés sur vos dossiers",
-        "canada": "Base de données, authentification et fichiers principaux au Canada",
-        "humanReview": "La validation finale reste humaine — nous ne déposons jamais auprès d’IRCC à votre place",
-        "privacy": "Accès limité à votre cabinet, avec des outils LPRPDE et Loi 25 du Québec"
+        "orgEncryption": "Chiffrement par cabinet — chaque org a sa clé",
+        "transit": "Chiffrement TLS en transit",
+        "noAi": "Pas d’IA. Vos données restent les vôtres",
+        "canada": "Données principales au Canada",
+        "humanReview": "La validation finale reste humaine"
       }
     },
     "trial": {
@@ -1363,11 +1362,15 @@
     "participants": "Participants",
     "detailTabs": {
       "home": "Accueil",
+      "contract": "Contrat",
       "documents": "Documents",
       "forms": "Formulaires",
       "communication": "Appels et notes",
       "payments": "Paiements"
     },
+    "contractTemplate": "Contrat de mandat",
+    "contractTemplateNone": "Aucun contrat",
+    "contractTemplateHelp": "Optionnel. Crée une copie modifiable pour ce dossier. Envoyez-la pour signature depuis l’onglet Contrat.",
     "notFound": "Projet introuvable.",
     "statuses": {
       "new": "Nouveau",
@@ -2582,13 +2585,13 @@
     "closedAt": "Dossier fermé",
     "retainUntil": "Conserver jusqu’au",
     "destroyedOn": "Dossier détruit le {date}",
-    "destroyHelp": "Efface définitivement les documents, les réponses au questionnaire et — si ces clients n’ont plus d’autre dossier au cabinet — leurs fiches, notes, accès au portail et rendez-vous. Tapez DESTROY pour confirmer.",
+    "destroyHelp": "Efface définitivement les documents, les réponses au questionnaire et — si ces clients n’ont plus d’autre dossier au cabinet — leurs fiches, notes, accès au portail et rendez-vous. Les contrats de mandat signés restent sur ce dossier jusqu’à la suppression du projet. Tapez DESTROY pour confirmer.",
     "destroyConfirmLabel": "Tapez DESTROY pour confirmer",
     "destroyNote": "Note facultative",
     "destroy": "Détruire le dossier",
     "destroying": "Destruction…",
     "destroySuccess": "Le dossier a été effacé et inscrit au registre de destruction.",
-    "destroyNotYet": "La destruction sécuritaire sera disponible après la date de conservation.",
+    "destroyNotYet": "La destruction sécuritaire sera disponible après la date de conservation. Les contrats signés restent sur le dossier au-delà de cette date jusqu’à la suppression du projet.",
     "exportPerson": "Exporter les données",
     "exportPersonHelp": "Copie JSON des renseignements personnels de ce client pour les demandes d’accès (Loi 25 / LPRPDE) : identité, notes, réponses aux questionnaires, formulaires, métadonnées de documents, rendez-vous et paiements. Exclut les clés de chiffrement, jetons et hachages.",
     "downloadFile": "Télécharger le dossier complet",

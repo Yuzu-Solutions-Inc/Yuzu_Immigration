@@ -713,6 +713,7 @@ export function ServicesManager({
             locale={locale}
             orgDefaultLocale={orgDefaultLocale}
             services={services}
+            forms={forms}
             formFields={formFields}
             templates={templates}
             signature={signature}

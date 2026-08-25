@@ -120,6 +120,7 @@ const projectFieldsSchema = z.object({
   isCommonLaw: z.enum(["Y", "N"]).optional(),
   needsCustodian: z.enum(["Y", "N"]).optional(),
   participants: z.array(participantInputSchema).min(1),
+  contractTemplateId: z.string().uuid().optional().or(z.literal("")),
 });
 
 export type ProjectActionState = {
@@ -198,6 +199,9 @@ function parseProjectForm(formData: FormData) {
   ).trim();
   const isCommonLawRaw = String(formData.get("isCommonLaw") || "").trim();
   const needsCustodianRaw = String(formData.get("needsCustodian") || "").trim();
+  const contractTemplateIdRaw = String(
+    formData.get("contractTemplateId") || "",
+  ).trim();
 
   const participantsJson = String(formData.get("participants") || "[]");
   let participantsParsed: unknown;
@@ -225,6 +229,7 @@ function parseProjectForm(formData: FormData) {
     isCommonLaw: isCommonLawRaw || undefined,
     needsCustodian: needsCustodianRaw || undefined,
     participants: participantsParsed,
+    contractTemplateId: contractTemplateIdRaw || undefined,
   });
 
   if (!parsed.success) {
@@ -714,6 +719,23 @@ export async function createProjectAction(
     await refreshProjectProgress(orgId, project.id, supabase);
   } catch (error) {
     console.error("project forms bootstrap:", error);
+  }
+
+  if (data.contractTemplateId) {
+    try {
+      const { createProjectContractFromTemplate } = await import(
+        "@/lib/contracts/project-contracts"
+      );
+      await createProjectContractFromTemplate({
+        organizationId: orgId,
+        projectId: project.id as string,
+        templateId: data.contractTemplateId,
+        locale: data.locale,
+        orgDefaultLocale: membership.organization.defaultLocale,
+      });
+    } catch (error) {
+      console.error("project contract bootstrap:", error);
+    }
   }
 
   redirect(`/${data.locale}/projects/${project.id}`);

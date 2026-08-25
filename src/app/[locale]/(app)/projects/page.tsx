@@ -8,20 +8,28 @@ import {
   listPageSubtitleClassName,
   listPageTitleClassName,
 } from "@/components/layout/list-layout";
+import { ProjectsCatalogButtons } from "@/components/projects/projects-catalog-buttons";
 import { ProjectsTable } from "@/components/projects/projects-table";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getPrimaryMembership } from "@/lib/auth/session";
+import { canManageBookingCatalog } from "@/lib/auth/rbac";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
+import { listBookingForms, listBookingServices, listServiceFormFields } from "@/lib/booking/queries";
+import { listContractTemplates, loadStaffContractSignature } from "@/lib/contracts/queries";
 import { listOrgMembers, listProjectsPage } from "@/lib/crm/queries";
 import { cn } from "@/lib/utils";
+import { toAppLocale } from "@/lib/i18n/locales";
 
 export default async function ProjectsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ contracts?: string }>;
 }) {
   const { locale } = await params;
+  const { contracts } = await searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations("projects");
@@ -29,10 +37,17 @@ export default async function ProjectsPage({
   const to = await getTranslations("orgPrograms");
   const membership = await getPrimaryMembership();
   const canCreate = canCreateInWorkspace(membership);
-  const [projects, members] = await Promise.all([
-    listProjectsPage(),
-    listOrgMembers(),
-  ]);
+  const appLocale = toAppLocale(locale);
+  const [projects, members, services, forms, formFields, templates, signature] =
+    await Promise.all([
+      listProjectsPage(),
+      listOrgMembers(),
+      listBookingServices(),
+      listBookingForms(),
+      listServiceFormFields(),
+      listContractTemplates(),
+      loadStaffContractSignature(),
+    ]);
 
   return (
     <div className={listPageClassName}>
@@ -44,6 +59,17 @@ export default async function ProjectsPage({
           <p className={listPageSubtitleClassName}>{t("subtitle")}</p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <ProjectsCatalogButtons
+            locale={locale}
+            orgDefaultLocale={membership?.organization.defaultLocale ?? appLocale}
+            canManage={canManageBookingCatalog(membership?.role)}
+            services={services}
+            forms={forms}
+            formFields={formFields}
+            templates={templates}
+            signature={signature}
+            openContracts={contracts === "1"}
+          />
           <Link
             href="/projects/templates"
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}

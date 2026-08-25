@@ -77,7 +77,8 @@ const saveSchema = z.object({
   title: z.string().trim().min(1).max(120),
   bodyHtml: z.string().max(MAX_CONTRACT_HTML_CHARS).optional(),
   translations: z.string().max(MAX_CONTRACT_HTML_CHARS * 4),
-  serviceIds: z.array(z.string().uuid()).min(1).max(50),
+  serviceIds: z.array(z.string().uuid()).max(50),
+  formId: z.string().uuid().optional().or(z.literal("")),
   requireConsultantSignature: z.boolean(),
   sendOnBooking: z.boolean(),
   isActive: z.boolean(),
@@ -169,7 +170,8 @@ export async function saveContractTemplateAction(
     title: String(formData.get("title") || ""),
     bodyHtml: String(formData.get("bodyHtml") || ""),
     translations: String(formData.get("translations") || "{}"),
-    serviceIds: parseServiceIds(String(formData.get("serviceIds") || "[]")),
+    serviceIds: parseServiceIds(String(formData.get("serviceIds") || "[]")) ?? [],
+    formId: String(formData.get("formId") || ""),
     requireConsultantSignature: formData.get("requireConsultantSignature") === "on",
     sendOnBooking: formData.get("sendOnBooking") !== "off",
     isActive: formData.get("isActive") !== "off",
@@ -191,6 +193,8 @@ export async function saveContractTemplateAction(
   const now = new Date().toISOString();
   let templateId = parsed.data.templateId || "";
 
+  const formId = parsed.data.formId?.trim() || null;
+
   if (templateId) {
     const { error } = await supabase
       .from("contract_templates")
@@ -198,6 +202,7 @@ export async function saveContractTemplateAction(
         title: parsed.data.title,
         body_html: bodyHtml,
         translations: copy.translations,
+        form_id: formId,
         require_consultant_signature: parsed.data.requireConsultantSignature,
         send_on_booking: parsed.data.sendOnBooking,
         is_active: parsed.data.isActive,
@@ -217,6 +222,7 @@ export async function saveContractTemplateAction(
         title: parsed.data.title,
         body_html: bodyHtml || defaultContractBodyHtml(orgDefault),
         translations: copy.translations,
+        form_id: formId,
         require_consultant_signature: parsed.data.requireConsultantSignature,
         send_on_booking: parsed.data.sendOnBooking,
         is_active: parsed.data.isActive,

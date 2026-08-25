@@ -37,7 +37,8 @@ export async function listContractTemplates(): Promise<ContractTemplateRow[]> {
     serviceIdsByTemplate.set(link.template_id, list);
   }
   return (data ?? []).map((row) => ({
-    ...(row as Omit<ContractTemplateRow, "service_ids" | "translations">),
+    ...(row as Omit<ContractTemplateRow, "service_ids" | "translations" | "form_id">),
+    form_id: (row.form_id as string | null) ?? null,
     translations:
       row.translations &&
       typeof row.translations === "object" &&
@@ -86,7 +87,8 @@ export async function listContractSummariesForAppointments(
     const pair = signerByEnvelope.get(row.id) ?? {};
     return {
       id: row.id as string,
-      appointment_id: row.appointment_id as string,
+      appointment_id: (row.appointment_id as string | null) ?? null,
+      project_id: (row.project_id as string | null) ?? null,
       title: row.title as string,
       status: row.status,
       expires_at: row.expires_at as string,

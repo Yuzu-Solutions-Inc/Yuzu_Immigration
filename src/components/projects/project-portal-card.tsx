@@ -27,12 +27,14 @@ export function ProjectPortalCard({
   portalBaseUrl,
   inviteeNames,
   hasAnyInviteeEmail,
+  contractPending = false,
 }: {
   locale: string;
   projectId: string;
   portalBaseUrl: string;
   inviteeNames: string[];
   hasAnyInviteeEmail: boolean;
+  contractPending?: boolean;
 }) {
   const t = useTranslations("projects.portal");
   const [inviteState, inviteAction, invitePending] = useActionState(
@@ -116,6 +118,12 @@ export function ProjectPortalCard({
       ) : (
         <FieldHint>{t("noAdults")}</FieldHint>
       )}
+
+      {contractPending ? (
+        <p className="rounded-xl border border-border bg-canvas/60 px-3 py-2 text-xs text-muted-foreground">
+          {t("contractPending")}
+        </p>
+      ) : null}
       {inviteeNames.length > 0 && !hasAnyInviteeEmail ? (
         <FieldHint>{t("noEmail")}</FieldHint>
       ) : null}

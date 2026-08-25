@@ -803,6 +803,13 @@ export const contractSignatureKindEnum = pgEnum("contract_signature_kind", [
   "drawn",
 ]);
 
+export const projectContractStatusEnum = pgEnum("project_contract_status", [
+  "draft",
+  "pending_signature",
+  "completed",
+  "superseded",
+]);
+
 /** Per-org public booking page (hashed token + encrypted plaintext for recopy). */
 export const bookingSettings = pgTable("booking_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -1046,6 +1053,10 @@ export const contractTemplates = pgTable("contract_templates", {
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
+  /** Optional intake form whose field keys populate {{merge}} variables. */
+  formId: uuid("form_id").references(() => bookingForms.id, {
+    onDelete: "set null",
+  }),
   title: text("title").notNull(),
   bodyHtml: text("body_html").notNull(),
   translations: jsonb("translations").notNull().default({}),
@@ -1081,6 +1092,68 @@ export const contractTemplateServices = pgTable(
   (table) => [unique().on(table.templateId, table.serviceId)],
 );
 
+export const projectContracts = pgTable("project_contracts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  templateId: uuid("template_id").references(() => contractTemplates.id, {
+    onDelete: "set null",
+  }),
+  formId: uuid("form_id").references(() => bookingForms.id, {
+    onDelete: "set null",
+  }),
+  title: text("title").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  translations: jsonb("translations").notNull().default({}),
+  formAnswers: jsonb("form_answers").notNull().default({}),
+  requireConsultantSignature: boolean("require_consultant_signature")
+    .notNull()
+    .default(true),
+  status: projectContractStatusEnum("status").notNull().default("draft"),
+  version: integer("version").notNull().default(1),
+  supersededBy: uuid("superseded_by").references(
+    (): AnyPgColumn => projectContracts.id,
+    { onDelete: "set null" },
+  ),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectContractFiles = pgTable("project_contract_files", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  projectContractId: uuid("project_contract_id")
+    .notNull()
+    .references(() => projectContracts.id, { onDelete: "cascade" }),
+  envelopeId: uuid("envelope_id")
+    .notNull()
+    .references(() => contractEnvelopes.id, { onDelete: "restrict" }),
+  principalPersonId: uuid("principal_person_id").references(() => people.id, {
+    onDelete: "set null",
+  }),
+  title: text("title").notNull(),
+  version: integer("version").notNull(),
+  storagePath: text("storage_path").notNull(),
+  fileSha256: text("file_sha256").notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const contractEnvelopes = pgTable("contract_envelopes", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id")
@@ -1089,9 +1162,17 @@ export const contractEnvelopes = pgTable("contract_envelopes", {
   templateId: uuid("template_id")
     .notNull()
     .references(() => contractTemplates.id, { onDelete: "restrict" }),
-  appointmentId: uuid("appointment_id")
-    .notNull()
-    .references(() => bookingAppointments.id, { onDelete: "cascade" }),
+  appointmentId: uuid("appointment_id").references(
+    () => bookingAppointments.id,
+    { onDelete: "cascade" },
+  ),
+  projectId: uuid("project_id").references(() => immigrationProjects.id, {
+    onDelete: "cascade",
+  }),
+  projectContractId: uuid("project_contract_id").references(
+    () => projectContracts.id,
+    { onDelete: "set null" },
+  ),
   title: text("title").notNull(),
   filledHtml: text("filled_html").notNull(),
   filledSha256: text("filled_sha256").notNull(),
@@ -1823,3 +1904,5 @@ export type ContractSignerStatus =
   (typeof contractSignerStatusEnum.enumValues)[number];
 export type ContractSignatureKind =
   (typeof contractSignatureKindEnum.enumValues)[number];
+export type ProjectContractStatus =
+  (typeof projectContractStatusEnum.enumValues)[number];

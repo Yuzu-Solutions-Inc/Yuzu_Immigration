@@ -6,7 +6,8 @@ export const maxDuration = 60;
 import { listProjectPaymentLinks } from "@/app/actions/project-payment";
 import { getActiveCheckoutProcessor } from "@/lib/payments/processor";
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
-import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
+import { loadProjectContractContext } from "@/app/actions/project-contracts";
+import { ProjectContractPanel } from "@/components/projects/project-contract-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import { ProjectPortalCard } from "@/components/projects/project-portal-card";
 import {
@@ -52,6 +53,7 @@ import {
   listProjectForms,
 } from "@/lib/ircc/project-forms";
 import { buildQuestionnairePeople } from "@/lib/ircc/questionnaire-people";
+import { listServiceFormFields } from "@/lib/booking/queries";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +104,8 @@ export default async function ProjectDetailPage({
     projectPayments,
     processor,
     appBaseUrl,
+    contractContext,
+    formFields,
   ] = await Promise.all([
     getProjectParticipants(id),
     getProjectStatusHistory(id),
@@ -123,6 +127,8 @@ export default async function ProjectDetailPage({
     listProjectPaymentLinks(id),
     getActiveCheckoutProcessor(project.organization_id),
     getAppBaseUrl(),
+    loadProjectContractContext(id),
+    listServiceFormFields(),
   ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
@@ -318,6 +324,9 @@ export default async function ProjectDetailPage({
                     )}
                     inviteeNames={portalInviteeNames}
                     hasAnyInviteeEmail={portalHasEmail}
+                    contractPending={
+                      contractContext.contract?.status === "pending_signature"
+                    }
                   />
                 ) : null
               }
@@ -328,6 +337,17 @@ export default async function ProjectDetailPage({
                   participants={participants}
                 />
               }
+            />
+          ),
+          contract: (
+            <ProjectContractPanel
+              locale={locale}
+              orgDefaultLocale={appLocale}
+              projectId={project.id}
+              contract={contractContext.contract}
+              archivedFiles={contractContext.files}
+              formFields={formFields}
+              canManage={canCreate}
             />
           ),
           documents: (

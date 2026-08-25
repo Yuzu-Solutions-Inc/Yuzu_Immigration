@@ -290,10 +290,12 @@
     "cta": "Prueba de 30 días",
     "firstSeat": "Primer usuario del personal",
     "extraSeat": "Cada asiento extra",
-    "seatHint": "Un asiento es una persona de su equipo. Los clientes del portal no ocupan asiento.",
+    "seatHint": "Un asiento es un inicio de sesión del personal. Los clientes del portal no ocupan asiento.",
     "extraSeats": "Luego {price} por usuario extra",
-    "foundingTitle": "Tarifas de lanzamiento para las primeras {count} firmas",
-    "foundingHelp": "{founding} por el primer usuario y {extra} por asiento extra. El código {code} se aplica automáticamente al pagar.",
+    "foundingTitle": "Oferta de lanzamiento — primeras {count} firmas",
+    "foundingHelp": "El código {code} se aplica automáticamente al pagar y permanece en la suscripción.",
+    "save": "Ahorre {amount}",
+    "yearlyOnCard": "{amount} · {free} meses gratis",
     "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
     "examples": {
       "title": "Cómo se suman los asientos",
@@ -311,38 +313,35 @@
       "teaser": "Clientes y expedientes ilimitados. El producto completo en cada asiento."
     },
     "features": {
-      "title": "Todo incluido en cada asiento",
+      "title": "En cada asiento",
       "included": {
         "title": "Incluido",
-        "unlimited": "Clientes, proyectos, expedientes y usuarios del portal ilimitados",
-        "portal": "Portal del cliente para documentos, cuestionarios, facturas y citas",
-        "questionnaire": "Cuestionario único generado a partir de los formularios IMM del expediente",
-        "pdfFill": "Relleno automático de PDF IMM con reglas de validación lógica — usted revisa antes de presentar",
-        "bookingForms": "Formularios de reserva personalizados por servicio de consulta",
-        "contracts": "Contratos personalizados con firma electrónica, enviados al reservar",
-        "reminders": "Correos de recordatorio personalizados para citas y honorarios impagados",
-        "projectBookings": "Vincule reservas a un proyecto de inmigración y añada notas",
-        "documents": "Recogida y revisión de documentos — aprobar, rechazar o pedir una nueva subida",
-        "languages": "Inglés, francés y español, incluidos los flujos para clientes",
-        "roles": "Roles de titular, admin y gestor de casos en un caseload compartido",
-        "retention": "Herramientas de conservación de expedientes cerrados alineadas con los seis años típicos del CICC"
+        "unlimited": "Clientes, expedientes y portal ilimitados",
+        "portal": "Portal del cliente: documentos, formularios y facturas",
+        "questionnaire": "Cuestionario según los formularios IMM del expediente",
+        "pdfFill": "Relleno de PDF IMM con validación lógica",
+        "bookingForms": "Formularios de reserva personalizados",
+        "contracts": "Contratos personalizados con firma electrónica",
+        "reminders": "Correos de recordatorio personalizados",
+        "projectBookings": "Reservas en un proyecto, con notas",
+        "documents": "Recogida y revisión de documentos",
+        "languages": "Inglés, francés y español"
       },
       "integrations": {
         "title": "Integraciones",
-        "calendar": "Sincronización con Google Calendar u Outlook — los horarios ocupados bloquean la reserva pública",
-        "meetings": "Enlace de Google Meet, Teams o Zoom creado automáticamente al confirmar la reserva",
-        "payments": "Square o Stripe para honorarios de consulta al reservar o como enlace de pago en un expediente",
-        "sage": "Sage Accounting para registrar las facturas de impuestos canadienses correspondientes (beta)",
-        "noCut": "Sin comisión de plataforma sobre los pagos de consulta de Square o Stripe"
+        "calendar": "Sincronización con Google Calendar u Outlook",
+        "meetings": "Meet, Teams o Zoom al reservar",
+        "payments": "Pagos Square o Stripe",
+        "sage": "Sage Accounting (beta)",
+        "noCut": "Sin comisión sobre las consultas"
       },
       "security": {
         "title": "Seguridad",
-        "orgEncryption": "Cifrado AES-256-GCM por firma para documentos y muchos campos de identidad — cada organización tiene su propia clave",
-        "transit": "Cifrado TLS en tránsito para cada sesión, subida y llamada a la API",
-        "noAi": "Sin IA — cuestionarios, relleno de PDF y revisión usan reglas de software, no modelos entrenados con sus expedientes",
-        "canada": "Base de datos, autenticación y almacenamiento de archivos principales en Canadá",
-        "humanReview": "La validación final sigue siendo humana — nunca presentamos ante IRCC por usted",
-        "privacy": "Acceso limitado a su firma, con herramientas de privacidad PIPEDA y Ley 25 de Quebec"
+        "orgEncryption": "Cifrado por firma: cada org tiene su clave",
+        "transit": "Cifrado TLS en tránsito",
+        "noAi": "Sin IA. Sus datos siguen siendo suyos",
+        "canada": "Datos principales en Canadá",
+        "humanReview": "La validación final sigue siendo humana"
       }
     },
     "trial": {
@@ -1364,11 +1363,15 @@
     "participants": "Participantes",
     "detailTabs": {
       "home": "Inicio",
+      "contract": "Contrato",
       "documents": "Documentos",
       "forms": "Formularios",
       "communication": "Llamadas y notas",
       "payments": "Pagos"
     },
+    "contractTemplate": "Contrato de mandato",
+    "contractTemplateNone": "Sin contrato",
+    "contractTemplateHelp": "Opcional. Crea una copia editable para este expediente. Envíela para firma desde la pestaña Contrato.",
     "notFound": "Project not found.",
     "statuses": {
       "new": "New",
@@ -2583,13 +2586,13 @@
     "closedAt": "Expediente cerrado",
     "retainUntil": "Conservar hasta",
     "destroyedOn": "Expediente destruido el {date}",
-    "destroyHelp": "Borra de forma permanente los documentos, las respuestas del cuestionario y — si estos clientes no tienen otro expediente en la firma — sus fichas, notas, acceso al portal y citas. Escriba DESTROY para confirmar.",
+    "destroyHelp": "Borra de forma permanente los documentos, las respuestas del cuestionario y — si estos clientes no tienen otro expediente en la firma — sus fichas, notas, acceso al portal y citas. Los contratos firmados permanecen en este expediente hasta que se elimine el proyecto. Escriba DESTROY para confirmar.",
     "destroyConfirmLabel": "Escriba DESTROY para confirmar",
     "destroyNote": "Nota opcional",
     "destroy": "Destruir expediente",
     "destroying": "Destruyendo…",
     "destroySuccess": "El expediente se borró y se registró en el registro de destrucción.",
-    "destroyNotYet": "La destrucción segura estará disponible después de la fecha de retención.",
+    "destroyNotYet": "La destrucción segura estará disponible después de la fecha de retención. Los contratos firmados permanecen en el expediente más allá de esa fecha hasta que se elimine el proyecto.",
     "exportPerson": "Exportar datos",
     "exportPersonHelp": "Copia JSON de la información personal de este cliente para solicitudes de acceso (Ley 25 / PIPEDA): identidad, notas, respuestas a cuestionarios, formularios, metadatos de documentos, citas y pagos. Omite claves de cifrado, tokens y hashes.",
     "downloadFile": "Descargar expediente completo",

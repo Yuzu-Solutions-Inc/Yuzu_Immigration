@@ -59,6 +59,8 @@ export const PII_AAD = {
     signatureText: "contract_signers.signature_text",
     signatureImage: "contract_signers.signature_image",
     token: "contract_signers.token_encrypted",
+    projectBodyHtml: "project_contracts.body_html",
+    projectFormAnswers: "project_contracts.form_answers",
     staffSignatureText: "staff_contract_signatures.signature_text",
     staffSignatureImage: "staff_contract_signatures.signature_image",
   },
@@ -608,4 +610,41 @@ export function decryptStaffContractSignature<
 export function fieldNeedsSeal(value: string | null | undefined): boolean {
   if (value == null || value === "") return false;
   return !isEncryptedField(value);
+}
+
+export function encryptProjectContractBody(
+  input: { body_html: string; form_answers?: Record<string, string> | null },
+  key: Buffer,
+) {
+  return {
+    body_html: encryptField(input.body_html, PII_AAD.contracts.projectBodyHtml, key),
+    form_answers: encryptJson(
+      input.form_answers ?? {},
+      PII_AAD.contracts.projectFormAnswers,
+      key,
+    ),
+  };
+}
+
+export function decryptProjectContractBody<
+  T extends { body_html?: string | null; form_answers?: unknown },
+>(row: T, key: Buffer): { body_html: string; form_answers: Record<string, string> } {
+  const body_html =
+    decryptFieldMaybe(row.body_html, PII_AAD.contracts.projectBodyHtml, key) ??
+    "";
+  const decoded = decryptJson(row.form_answers, PII_AAD.contracts.projectFormAnswers, key);
+  const form_answers: Record<string, string> = {};
+  if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) {
+    for (const [itemKey, itemValue] of Object.entries(decoded)) {
+      if (typeof itemValue === "string") form_answers[itemKey] = itemValue;
+    }
+  }
+  return { body_html, form_answers };
+}
+
+export function decryptContractSignerToken(
+  tokenEncrypted: string | null | undefined,
+  key: Buffer,
+) {
+  return decryptFieldMaybe(tokenEncrypted, PII_AAD.contracts.token, key);
 }

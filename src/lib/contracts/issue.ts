@@ -494,6 +494,44 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
     metadata: { pdfSha256: pdf.sha256 },
   });
 
+  if (envelope.project_id && envelope.project_contract_id) {
+    const { archiveProjectContractPdf } = await import(
+      "@/lib/contracts/project-contracts"
+    );
+    const completedAtIso = completedAt;
+    await admin
+      .from("project_contracts")
+      .update({ status: "completed", updated_at: completedAtIso })
+      .eq("id", envelope.project_contract_id);
+
+    const { data: principalLink } = await admin
+      .from("project_participants")
+      .select("person_id")
+      .eq("project_id", envelope.project_id)
+      .eq("role", "principal")
+      .is("left_at", null)
+      .maybeSingle();
+
+    const { data: contractRow } = await admin
+      .from("project_contracts")
+      .select("version")
+      .eq("id", envelope.project_contract_id)
+      .maybeSingle();
+
+    await archiveProjectContractPdf({
+      organizationId: envelope.organization_id as string,
+      projectId: envelope.project_id as string,
+      projectContractId: envelope.project_contract_id as string,
+      envelopeId,
+      principalPersonId: (principalLink?.person_id as string | null) ?? null,
+      title: envelope.title as string,
+      version: (contractRow?.version as number) ?? 1,
+      pdfBytes: pdf.bytes,
+      pdfSha256: pdf.sha256,
+      completedAt: completedAtIso,
+    });
+  }
+
   const { sendContractCompletedEmail } = await import(
     "@/lib/email/contract-signature"
   );
@@ -505,7 +543,19 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
         .eq("id", envelope.appointment_id)
         .maybeSingle()
     : { data: null };
-  const hostUserId = (appointment?.host_user_id as string | null) ?? null;
+  const projectId =
+    (envelope.project_id as string | null) ??
+    (appointment?.project_id as string | null) ??
+    null;
+  let hostUserId = (appointment?.host_user_id as string | null) ?? null;
+  if (!hostUserId && envelope.project_id) {
+    const { data: projectRow } = await admin
+      .from("immigration_projects")
+      .select("representative_user_id")
+      .eq("id", envelope.project_id)
+      .maybeSingle();
+    hostUserId = (projectRow?.representative_user_id as string | null) ?? null;
+  }
   for (const signer of decryptedSigners) {
     if (!signer.email?.includes("@")) continue;
     await sendContractCompletedEmail({
@@ -517,7 +567,7 @@ export async function completeEnvelopeIfReady(envelopeId: string) {
       contractTitle: envelope.title as string,
       pdfBytes: pdf.bytes,
       envelopeId,
-      projectId: (appointment?.project_id as string | null) ?? null,
+      projectId,
       replyToUserId: hostUserId,
       role: signer.role === "consultant" ? "consultant" : "client",
     });
