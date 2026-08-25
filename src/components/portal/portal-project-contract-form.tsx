@@ -15,10 +15,8 @@ import { Field, FieldHint, FieldLabel, FormStack } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  formFieldInputName,
-  isCompositeFieldType,
-} from "@/lib/booking/form-fields";
+import { isCompositeFieldType } from "@/lib/booking/composite-fields";
+import { formFieldInputName } from "@/lib/booking/form-fields";
 import type { BookingFormFieldRow } from "@/lib/booking/types";
 
 const initialState: PortalContractFormState = {};
