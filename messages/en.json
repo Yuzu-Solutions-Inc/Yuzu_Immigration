@@ -281,7 +281,7 @@
   },
   "pricing": {
     "metaTitle": "Pricing",
-    "metaDescription": "%PRODUCT_NAME% is $69/mo for the first staff user, then $29 per extra user. First 100 firms: $49 and $25. Yearly billing is 10 months paid.",
+    "metaDescription": "%PRODUCT_NAME% is $79/mo for the first staff user, then $39 per extra user. First 100 firms: $59 and $29. Yearly billing is 10 months paid.",
     "eyebrow": "Pricing",
     "title": "One price. Add seats as you hire.",
     "subtitle": "A seat is a staff login. Pay for the first seat, then add seats as you hire. Clients, files, and portal users are unlimited.",
@@ -308,16 +308,41 @@
       "name": "%PRODUCT_NAME%",
       "audience": "Canadian immigration consultants and lawyers",
       "badge": "30 days free",
-      "teaser": "Unlimited clients and files. The full product on every seat.",
-      "features": {
-        "staff": "1 staff user included",
-        "extraSeat": "Additional staff accounts {price}",
-        "files": "Unlimited clients and projects",
-        "portal": "Client portal, IRCC questionnaires, and PDF fill",
-        "booking": "Public booking, calendar, and Meet / Teams / Zoom",
-        "contracts": "Retainers and electronic signature",
-        "payments": "Square or Stripe payments and Sage Accounting",
-        "languages": "English, French, and Spanish"
+      "teaser": "Unlimited clients and files. The full product on every seat."
+    },
+    "features": {
+      "title": "Everything on every seat",
+      "included": {
+        "title": "Included",
+        "unlimited": "Unlimited clients, projects, files, and portal users",
+        "portal": "Client portal for documents, questionnaires, invoices, and appointments",
+        "questionnaire": "Ask-once questionnaire generated from the IMM forms on the file",
+        "pdfFill": "IMM PDF auto-fill with logical validation rules — you review before filing",
+        "bookingForms": "Custom booking forms per consultation service",
+        "contracts": "Custom contracts with electronic signature, sent when someone books",
+        "reminders": "Custom reminder emails for bookings and unpaid fees",
+        "projectBookings": "Attach bookings to an immigration project and add notes",
+        "documents": "Document collection and review — approve, reject, or request a new upload",
+        "languages": "English, French, and Spanish, including client-facing flows",
+        "roles": "Owner, admin, and case manager roles on a shared caseload",
+        "retention": "Closed-file retention tools aligned to typical CICC six-year duties"
+      },
+      "integrations": {
+        "title": "Integrations",
+        "calendar": "Calendar sync with Google Calendar or Outlook — busy times block public booking",
+        "meetings": "Automatic Google Meet, Teams, or Zoom link when a booking is confirmed",
+        "payments": "Square or Stripe for consultation fees at booking or as a payment link on a file",
+        "sage": "Sage Accounting to post matching Canadian tax invoices (beta)",
+        "noCut": "No platform cut on Square or Stripe consultation payments"
+      },
+      "security": {
+        "title": "Security",
+        "orgEncryption": "Per-firm AES-256-GCM encryption for documents and many identity fields — each organization has its own key",
+        "transit": "TLS encryption in transit for every session, upload, and API call",
+        "noAi": "No AI — questionnaires, PDF fill, and review run on software rules, not models trained on your files",
+        "canada": "Primary database, authentication, and file storage in Canada",
+        "humanReview": "Final validation stays human — we never file with IRCC for you",
+        "privacy": "Access scoped to your firm, with PIPEDA and Quebec Law 25 privacy tools"
       }
     },
     "trial": {
@@ -870,7 +895,7 @@
     "billingYearlySave": "2 months free",
     "billingYearlyHelp": "Yearly billing is 10 months paid, 2 months free. Extra seats use the same period.",
     "billingExtraSeats": "Extra staff seats",
-    "billingExtraSeatsHelp": "The first staff user is included. Extra seats are $29/month list, or $25/month on founding rates.",
+    "billingExtraSeatsHelp": "The first staff user is included. Extra seats are $39/month list, or $29/month on founding rates.",
     "billingSubscribe": "Subscribe",
     "billingSwitchYearly": "Switch to yearly",
     "billingSwitchMonthly": "Switch to monthly",

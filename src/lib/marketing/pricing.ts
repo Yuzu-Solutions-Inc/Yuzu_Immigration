@@ -11,11 +11,11 @@ export const PRICING = {
   trialDays: 30,
   annualMonthsPaid: 10,
   annualFreeMonths: 2,
-  extraSeatMonthly: 29,
-  extraSeatFoundingMonthly: 25,
+  extraSeatMonthly: 39,
+  extraSeatFoundingMonthly: 29,
   standard: {
-    foundingMonthly: 49,
-    listMonthly: 69,
+    foundingMonthly: 59,
+    listMonthly: 79,
     includedUsers: 1,
   },
 } as const;
@@ -29,7 +29,7 @@ export function extraSeatMonthlyCad(founding: boolean): number {
     : PRICING.extraSeatMonthly;
 }
 
-/** CAD dollars taken off list price for founding first-seat $49. */
+/** CAD dollars taken off list price for founding first-seat $59. */
 export function foundingAmountOffCad(
   plan: PricingPlanId,
   interval: "month" | "year",

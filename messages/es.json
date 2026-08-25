@@ -281,7 +281,7 @@
   },
   "pricing": {
     "metaTitle": "Precios",
-    "metaDescription": "%PRODUCT_NAME% cuesta 69 $/mes por el primer usuario, luego 29 $ por usuario extra. Primeras 100 firmas: 49 $ y 25 $. Facturación anual: 10 meses pagados.",
+    "metaDescription": "%PRODUCT_NAME% cuesta 79 $/mes por el primer usuario, luego 39 $ por usuario extra. Primeras 100 firmas: 59 $ y 29 $. Facturación anual: 10 meses pagados.",
     "eyebrow": "Precios",
     "title": "Un precio. Añada asientos al contratar.",
     "subtitle": "Un asiento es un inicio de sesión del personal. Pague el primero y añada asientos al contratar. Clientes, expedientes y portal son ilimitados.",
@@ -308,16 +308,41 @@
       "name": "%PRODUCT_NAME%",
       "audience": "Consultores y abogados de inmigración canadiense",
       "badge": "30 días gratis",
-      "teaser": "Clientes y expedientes ilimitados. El producto completo en cada asiento.",
-      "features": {
-        "staff": "1 usuario del personal incluido",
-        "extraSeat": "Cuentas adicionales {price}",
-        "files": "Clientes y proyectos ilimitados",
-        "portal": "Portal del cliente, cuestionarios IRCC y relleno de PDF",
-        "booking": "Reserva pública, calendario y Meet / Teams / Zoom",
-        "contracts": "Mandatos y firma electrónica",
-        "payments": "Pagos Square o Stripe y Sage Accounting",
-        "languages": "Inglés, francés y español"
+      "teaser": "Clientes y expedientes ilimitados. El producto completo en cada asiento."
+    },
+    "features": {
+      "title": "Todo incluido en cada asiento",
+      "included": {
+        "title": "Incluido",
+        "unlimited": "Clientes, proyectos, expedientes y usuarios del portal ilimitados",
+        "portal": "Portal del cliente para documentos, cuestionarios, facturas y citas",
+        "questionnaire": "Cuestionario único generado a partir de los formularios IMM del expediente",
+        "pdfFill": "Relleno automático de PDF IMM con reglas de validación lógica — usted revisa antes de presentar",
+        "bookingForms": "Formularios de reserva personalizados por servicio de consulta",
+        "contracts": "Contratos personalizados con firma electrónica, enviados al reservar",
+        "reminders": "Correos de recordatorio personalizados para citas y honorarios impagados",
+        "projectBookings": "Vincule reservas a un proyecto de inmigración y añada notas",
+        "documents": "Recogida y revisión de documentos — aprobar, rechazar o pedir una nueva subida",
+        "languages": "Inglés, francés y español, incluidos los flujos para clientes",
+        "roles": "Roles de titular, admin y gestor de casos en un caseload compartido",
+        "retention": "Herramientas de conservación de expedientes cerrados alineadas con los seis años típicos del CICC"
+      },
+      "integrations": {
+        "title": "Integraciones",
+        "calendar": "Sincronización con Google Calendar u Outlook — los horarios ocupados bloquean la reserva pública",
+        "meetings": "Enlace de Google Meet, Teams o Zoom creado automáticamente al confirmar la reserva",
+        "payments": "Square o Stripe para honorarios de consulta al reservar o como enlace de pago en un expediente",
+        "sage": "Sage Accounting para registrar las facturas de impuestos canadienses correspondientes (beta)",
+        "noCut": "Sin comisión de plataforma sobre los pagos de consulta de Square o Stripe"
+      },
+      "security": {
+        "title": "Seguridad",
+        "orgEncryption": "Cifrado AES-256-GCM por firma para documentos y muchos campos de identidad — cada organización tiene su propia clave",
+        "transit": "Cifrado TLS en tránsito para cada sesión, subida y llamada a la API",
+        "noAi": "Sin IA — cuestionarios, relleno de PDF y revisión usan reglas de software, no modelos entrenados con sus expedientes",
+        "canada": "Base de datos, autenticación y almacenamiento de archivos principales en Canadá",
+        "humanReview": "La validación final sigue siendo humana — nunca presentamos ante IRCC por usted",
+        "privacy": "Acceso limitado a su firma, con herramientas de privacidad PIPEDA y Ley 25 de Quebec"
       }
     },
     "trial": {
@@ -871,7 +896,7 @@
     "billingYearlySave": "2 meses gratis",
     "billingYearlyHelp": "La facturación anual son 10 meses pagados y 2 meses gratis. Las plazas extra usan el mismo periodo.",
     "billingExtraSeats": "Plazas extra de personal",
-    "billingExtraSeatsHelp": "El primer usuario está incluido. Los asientos extra cuestan 29 $/mes de lista, o 25 $/mes con tarifa fundadora.",
+    "billingExtraSeatsHelp": "El primer usuario está incluido. Los asientos extra cuestan 39 $/mes de lista, o 29 $/mes con tarifa fundadora.",
     "billingSubscribe": "Suscribirse",
     "billingSwitchYearly": "Pasar a anual",
     "billingSwitchMonthly": "Pasar a mensual",

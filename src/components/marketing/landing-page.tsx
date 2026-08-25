@@ -744,7 +744,7 @@ export async function LandingPage() {
           <LandingReveal className="mt-8">
             <Link
               href="/pricing"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              className={cn(buttonVariants({ variant: "outline" }))}
             >
               {pricing("teaser.compare")}
             </Link>

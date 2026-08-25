@@ -321,42 +321,56 @@ export async function ensureBillingPrices(): Promise<
     limit: 10,
     active: true,
   });
-  const byKey = new Map<string, string>();
+  const existingByKey = new Map<string, Stripe.Price>();
   for (const price of listed.data) {
-    if (price.lookup_key) byKey.set(price.lookup_key, price.id);
+    if (price.lookup_key) existingByKey.set(price.lookup_key, price);
   }
 
-  const missing = LOOKUP_KEYS.filter((key) => !byKey.has(key));
-  if (missing.length > 0) {
-    const productIds = {
-      standard: await ensureProduct(stripe, "standard"),
-      extra_seat: await ensureProduct(stripe, "extra_seat"),
-    };
+  const productIds: Partial<Record<"standard" | "extra_seat", string>> = {};
 
-    for (const key of missing) {
-      const spec = specFor(key);
-      const price = await stripe.prices.create(
-        {
-          currency: "cad",
-          product: productIds[spec.productKey],
-          unit_amount: spec.unitAmount,
-          recurring: { interval: spec.interval },
-          lookup_key: key,
-          transfer_lookup_key: true,
-          tax_behavior: "exclusive",
-          metadata: { lookup: key },
-        },
-        { idempotencyKey: `permitos_price_${key}_v1` },
-      );
-      byKey.set(key, price.id);
+  async function productFor(
+    key: "standard" | "extra_seat",
+    fromPrice?: Stripe.Price,
+  ): Promise<string> {
+    const cached = productIds[key];
+    if (cached) return cached;
+    const id = fromPrice
+      ? await productIdForPrice(stripe, fromPrice.id)
+      : await ensureProduct(stripe, key);
+    productIds[key] = id;
+    return id;
+  }
+
+  const byKey = new Map<string, string>();
+  for (const key of LOOKUP_KEYS) {
+    const spec = specFor(key);
+    const existing = existingByKey.get(key);
+    if (existing && existing.unit_amount === spec.unitAmount) {
+      byKey.set(key, existing.id);
+      continue;
+    }
+    const price = await stripe.prices.create(
+      {
+        currency: "cad",
+        product: await productFor(spec.productKey, existing),
+        unit_amount: spec.unitAmount,
+        recurring: { interval: spec.interval },
+        lookup_key: key,
+        transfer_lookup_key: true,
+        tax_behavior: "exclusive",
+        metadata: { lookup: key },
+      },
+      { idempotencyKey: `permitos_price_${key}_${spec.unitAmount}` },
+    );
+    byKey.set(key, price.id);
+    if (existing?.active && existing.id !== price.id) {
+      await stripe.prices.update(existing.id, { active: false });
     }
   }
 
   await archiveLegacyFoundingPrices(stripe);
   await archiveTeamPrices(stripe);
-  if (missing.length > 0) {
-    await setListPricesAsDefault(stripe, byKey);
-  }
+  await setListPricesAsDefault(stripe, byKey);
 
   const prices = Object.fromEntries(
     LOOKUP_KEYS.map((key) => [key, byKey.get(key)!]),

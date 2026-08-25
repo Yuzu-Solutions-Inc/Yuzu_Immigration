@@ -281,7 +281,7 @@
   },
   "pricing": {
     "metaTitle": "Tarifs",
-    "metaDescription": "%PRODUCT_NAME% coûte 69 $/mois pour le premier utilisateur, puis 29 $ par utilisateur supplémentaire. 100 premiers cabinets : 49 $ et 25 $. Facturation annuelle : 10 mois payés.",
+    "metaDescription": "%PRODUCT_NAME% coûte 79 $/mois pour le premier utilisateur, puis 39 $ par utilisateur supplémentaire. 100 premiers cabinets : 59 $ et 29 $. Facturation annuelle : 10 mois payés.",
     "eyebrow": "Tarifs",
     "title": "Un prix. Des sièges à mesure que vous embauchez.",
     "subtitle": "Un siège est une connexion du personnel. Vous payez le premier siège, puis vous en ajoutez à l’embauche. Clients, dossiers et portail sont illimités.",
@@ -308,16 +308,41 @@
       "name": "%PRODUCT_NAME%",
       "audience": "Consultants et avocats en immigration canadienne",
       "badge": "30 jours gratuits",
-      "teaser": "Clients et dossiers illimités. Le produit complet sur chaque siège.",
-      "features": {
-        "staff": "1 utilisateur du personnel inclus",
-        "extraSeat": "Comptes supplémentaires {price}",
-        "files": "Clients et projets illimités",
-        "portal": "Portail client, questionnaires IRCC et remplissage PDF",
-        "booking": "Réservation publique, calendrier, et Meet / Teams / Zoom",
-        "contracts": "Mandats et signature électronique",
-        "payments": "Paiements Square ou Stripe et comptabilité Sage",
-        "languages": "Anglais, français et espagnol"
+      "teaser": "Clients et dossiers illimités. Le produit complet sur chaque siège."
+    },
+    "features": {
+      "title": "Tout est inclus sur chaque siège",
+      "included": {
+        "title": "Inclus",
+        "unlimited": "Clients, projets, dossiers et utilisateurs du portail illimités",
+        "portal": "Portail client pour documents, questionnaires, factures et rendez-vous",
+        "questionnaire": "Questionnaire unique généré à partir des formulaires IMM du dossier",
+        "pdfFill": "Remplissage automatique des PDF IMM avec règles de validation logique — vous relisez avant le dépôt",
+        "bookingForms": "Formulaires de réservation personnalisés par service de consultation",
+        "contracts": "Contrats personnalisés avec signature électronique, envoyés à la réservation",
+        "reminders": "Courriels de rappel personnalisés pour les rendez-vous et les frais impayés",
+        "projectBookings": "Liez les réservations à un projet d’immigration et ajoutez des notes",
+        "documents": "Collecte et révision des documents — approuver, refuser ou demander un nouvel envoi",
+        "languages": "Anglais, français et espagnol, y compris les parcours côté client",
+        "roles": "Rôles titulaire, admin et gestionnaire de cas sur un portefeuille partagé",
+        "retention": "Outils de conservation des dossiers fermés alignés sur les six ans typiques du CCIC"
+      },
+      "integrations": {
+        "title": "Intégrations",
+        "calendar": "Synchronisation avec Google Agenda ou Outlook — les plages occupées bloquent la réservation publique",
+        "meetings": "Lien Google Meet, Teams ou Zoom créé automatiquement à la confirmation",
+        "payments": "Square ou Stripe pour les honoraires de consultation à la réservation ou par lien de paiement sur un dossier",
+        "sage": "Sage Comptabilité pour poster les factures de taxes canadiennes correspondantes (bêta)",
+        "noCut": "Aucun pourcentage prélevé sur les paiements de consultation Square ou Stripe"
+      },
+      "security": {
+        "title": "Sécurité",
+        "orgEncryption": "Chiffrement AES-256-GCM par cabinet pour les documents et de nombreux champs d’identité — chaque organisation a sa propre clé",
+        "transit": "Chiffrement TLS en transit pour chaque session, téléversement et appel API",
+        "noAi": "Pas d’IA — questionnaires, remplissage PDF et révision reposent sur des règles logicielles, pas sur des modèles entraînés sur vos dossiers",
+        "canada": "Base de données, authentification et fichiers principaux au Canada",
+        "humanReview": "La validation finale reste humaine — nous ne déposons jamais auprès d’IRCC à votre place",
+        "privacy": "Accès limité à votre cabinet, avec des outils LPRPDE et Loi 25 du Québec"
       }
     },
     "trial": {
@@ -870,7 +895,7 @@
     "billingYearlySave": "2 mois offerts",
     "billingYearlyHelp": "La facturation annuelle correspond à 10 mois payés et 2 mois offerts. Les sièges supplémentaires suivent la même période.",
     "billingExtraSeats": "Sièges supplémentaires",
-    "billingExtraSeatsHelp": "Le premier utilisateur est inclus. Les sièges supplémentaires sont 29 $/mois au tarif affiché, ou 25 $/mois au tarif de lancement.",
+    "billingExtraSeatsHelp": "Le premier utilisateur est inclus. Les sièges supplémentaires sont 39 $/mois au tarif affiché, ou 29 $/mois au tarif de lancement.",
     "billingSubscribe": "S’abonner",
     "billingSwitchYearly": "Passer à l’annuel",
     "billingSwitchMonthly": "Passer au mensuel",
