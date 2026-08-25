@@ -8,7 +8,22 @@ import {
 } from "@/lib/marketing/pricing";
 import type { BillingInterval } from "@/lib/billing/plans";
 import { getStripe } from "@/lib/stripe/client";
+import {
+  foundingCouponId,
+  isFoundingCouponId,
+  isLegacyForeverFoundingCouponId,
+  legacyForeverFoundingCouponId,
+  remainingFoundingPromoMonths,
+} from "@/lib/stripe/founding-ids";
 import type Stripe from "stripe";
+
+export {
+  foundingCouponId,
+  isFoundingCouponId,
+  isLegacyForeverFoundingCouponId,
+  legacyForeverFoundingCouponId,
+  remainingFoundingPromoMonths,
+};
 
 export type PriceLookupKey =
   | "standard_list_monthly"
@@ -38,18 +53,6 @@ const LEGACY_FOUNDING_LOOKUP_KEYS = [
   "team_founding_monthly",
   "team_founding_yearly",
 ] as const;
-
-export function foundingCouponId(
-  plan: PricingPlanId,
-  interval: BillingInterval,
-): string {
-  const period = interval === "year" ? "year" : "month";
-  return `permitos_founding_${plan}_${period}`;
-}
-
-export function isFoundingCouponId(id: string | null | undefined): boolean {
-  return Boolean(id?.startsWith("permitos_founding_"));
-}
 
 function cadCents(dollars: number): number {
   return dollars * 100;
@@ -222,6 +225,43 @@ async function setListPricesAsDefault(
   }
 }
 
+async function ensureRepeatingFoundingCoupon(
+  stripe: Stripe,
+  spec: {
+    plan: PricingPlanId;
+    interval: BillingInterval;
+    productId: string;
+    months: number;
+  },
+): Promise<string> {
+  const id = foundingCouponId(spec.plan, spec.interval, spec.months);
+  try {
+    await stripe.coupons.retrieve(id);
+    return id;
+  } catch (error) {
+    if (!isNotFound(error)) throw error;
+  }
+  await stripe.coupons.create(
+    {
+      id,
+      name: PRICING.foundingPromoCode,
+      amount_off: cadCents(foundingAmountOffCad(spec.plan, spec.interval)),
+      currency: "cad",
+      duration: "repeating",
+      duration_in_months: spec.months,
+      applies_to: { products: [spec.productId] },
+      metadata: {
+        founding: "true",
+        plan: spec.plan,
+        interval: spec.interval,
+        months: String(spec.months),
+      },
+    },
+    { idempotencyKey: `${id}_v1` },
+  );
+  return id;
+}
+
 export async function ensureFoundingCoupons(
   stripe: Stripe,
   prices: Record<PriceLookupKey, string>,
@@ -240,29 +280,10 @@ export async function ensureFoundingCoupons(
   ];
 
   for (const spec of specs) {
-    const id = foundingCouponId(spec.plan, spec.interval);
-    try {
-      await stripe.coupons.retrieve(id);
-      continue;
-    } catch (error) {
-      if (!isNotFound(error)) throw error;
-    }
-    await stripe.coupons.create(
-      {
-        id,
-        name: PRICING.foundingPromoCode,
-        amount_off: cadCents(foundingAmountOffCad(spec.plan, spec.interval)),
-        currency: "cad",
-        duration: "forever",
-        applies_to: { products: [spec.productId] },
-        metadata: {
-          founding: "true",
-          plan: spec.plan,
-          interval: spec.interval,
-        },
-      },
-      { idempotencyKey: `${id}_v1` },
-    );
+    await ensureRepeatingFoundingCoupon(stripe, {
+      ...spec,
+      months: PRICING.promoMonths,
+    });
   }
 }
 
@@ -270,13 +291,39 @@ export type StripeDiscountParam =
   | { coupon: string }
   | { promotion_code: string };
 
+export type FoundingDiscountOptions = {
+  forever?: boolean;
+  months?: number;
+};
+
 export async function foundingDiscountForCustomer(
   customerId: string,
   plan: PricingPlanId,
   interval: BillingInterval,
+  options?: FoundingDiscountOptions,
 ): Promise<StripeDiscountParam> {
+  if (options?.forever) {
+    return foundingCouponDiscount(plan, interval, true);
+  }
+
+  const months = options?.months ?? PRICING.promoMonths;
   const stripe = getStripe();
-  const coupon = foundingCouponId(plan, interval);
+  if (months !== PRICING.promoMonths) {
+    const prices = await ensureBillingPrices();
+    const productId = await productIdForPrice(
+      stripe,
+      prices.standard_list_monthly,
+    );
+    const coupon = await ensureRepeatingFoundingCoupon(stripe, {
+      plan,
+      interval,
+      productId,
+      months,
+    });
+    return { coupon };
+  }
+
+  const coupon = foundingCouponId(plan, interval, months);
   try {
     const listed = await stripe.promotionCodes.list({
       customer: customerId,
@@ -296,7 +343,7 @@ export async function foundingDiscountForCustomer(
       code: PRICING.foundingPromoCode,
       customer: customerId,
       promotion: { type: "coupon", coupon },
-      metadata: { founding: "true", plan, interval },
+      metadata: { founding: "true", plan, interval, months: String(months) },
     });
     return { promotion_code: created.id };
   } catch (error) {
@@ -308,8 +355,13 @@ export async function foundingDiscountForCustomer(
 export function foundingCouponDiscount(
   plan: PricingPlanId,
   interval: BillingInterval,
+  forever = false,
 ): { coupon: string } {
-  return { coupon: foundingCouponId(plan, interval) };
+  return {
+    coupon: forever
+      ? legacyForeverFoundingCouponId(plan, interval)
+      : foundingCouponId(plan, interval),
+  };
 }
 
 export async function ensureBillingPrices(): Promise<

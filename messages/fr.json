@@ -281,7 +281,7 @@
   },
   "pricing": {
     "metaTitle": "Tarifs",
-    "metaDescription": "%PRODUCT_NAME% coûte 79 $/mois pour le premier utilisateur, puis 39 $ par utilisateur supplémentaire. 100 premiers cabinets : 59 $ et 29 $. Facturation annuelle : 10 mois payés.",
+    "metaDescription": "%PRODUCT_NAME% coûte 79 $/mois pour le premier utilisateur, puis 39 $ par utilisateur supplémentaire. Les 100 premiers cabinets paient 59 $ et 29 $ pendant 12 mois, puis le tarif affiché. Facturation annuelle : 10 mois payés.",
     "eyebrow": "Tarifs",
     "title": "Un prix. Des sièges à mesure que vous embauchez.",
     "subtitle": "Un siège est une connexion du personnel. Vous payez le premier siège, puis vous en ajoutez à l’embauche. Clients, dossiers et portail sont illimités.",
@@ -294,12 +294,13 @@
     "extraSeats": "Puis {price} par utilisateur supplémentaire",
     "foundingTitle": "Tarif de lancement — {count} premiers cabinets",
     "foundingCut": "{firstOff} de moins sur le premier siège · {extraOff} de moins par siège supplémentaire",
-    "foundingHelp": "Le code {code} s’applique automatiquement et reste sur l’abonnement.",
+    "foundingHelp": "Le code {code} s’applique automatiquement pendant les {months} premiers mois, puis les tarifs affichés.",
+    "thenList": "Puis {price} après {months} mois",
     "save": "Économisez {amount}",
     "yearlyPrice": "ou {amount} facturé à l’année ({free} mois offerts)",
     "examples": {
       "title": "Comment les sièges s’additionnent",
-      "subtitle": "Tarifs de lancement. Vous payez les connexions du personnel, pas les dossiers. L’accès au portail client est gratuit.",
+      "subtitle": "Tarifs de lancement pendant les 12 premiers mois. Vous payez les connexions du personnel, pas les dossiers. L’accès au portail client est gratuit.",
       "seats": "{count, plural, one {# siège} other {# sièges}}",
       "you": "Vous seul",
       "colleague": "Vous et un collègue",
@@ -361,7 +362,7 @@
       },
       "founding": {
         "q": "Qui a droit aux tarifs de lancement ?",
-        "a": "Les {count} premiers cabinets qui créent un compte. Le code {code} est appliqué automatiquement au paiement — {founding} pour le premier utilisateur et {extraFounding} par utilisateur supplémentaire — et reste sur l’abonnement."
+        "a": "Les {count} premiers cabinets qui créent un compte. Le code {code} est appliqué automatiquement au paiement — {founding} pour le premier utilisateur et {extraFounding} par utilisateur supplémentaire — pendant {months} mois, puis le tarif affiché ({list} et {extra})."
       },
       "after": {
         "q": "Que paient les cabinets suivants ?",
@@ -882,7 +883,7 @@
     "billingSeatUnused": "{count} inutilisé(s) cette période",
     "billingFounding": "Tarif fondateur",
     "billingFoundingBadge": "Fondateur",
-    "billingFoundingHelp": "Le code {code} est appliqué automatiquement au paiement. Ce cabinet fait partie des {count} premiers et conserve le tarif fondateur tant qu’il est abonné.",
+    "billingFoundingHelp": "Le code {code} est appliqué automatiquement au paiement. Ce cabinet fait partie des {count} premiers et paie le tarif fondateur pendant les {months} premiers mois, puis le tarif affiché.",
     "billingPlan": "Formule",
     "billingPlanNameStandard": "Standard",
     "billingPlanNameTeam": "Équipe",
@@ -894,7 +895,7 @@
     "billingYearlySave": "2 mois offerts",
     "billingYearlyHelp": "La facturation annuelle correspond à 10 mois payés et 2 mois offerts. Les sièges supplémentaires suivent la même période.",
     "billingExtraSeats": "Sièges supplémentaires",
-    "billingExtraSeatsHelp": "Le premier utilisateur est inclus. Les sièges supplémentaires sont 39 $/mois au tarif affiché, ou 29 $/mois au tarif de lancement.",
+    "billingExtraSeatsHelp": "Le premier utilisateur est inclus. Les sièges supplémentaires sont 39 $/mois au tarif affiché, ou 29 $/mois pendant les 12 premiers mois au tarif de lancement.",
     "billingSubscribe": "S’abonner",
     "billingSwitchYearly": "Passer à l’annuel",
     "billingSwitchMonthly": "Passer au mensuel",

@@ -36,6 +36,7 @@ function PriceTile({
   listMonthly,
   locale,
   saveLabel,
+  thenList,
   prefix,
 }: {
   label: string;
@@ -43,6 +44,7 @@ function PriceTile({
   listMonthly: number;
   locale: AppLocale;
   saveLabel: string;
+  thenList: string;
   prefix?: string;
 }) {
   return (
@@ -69,6 +71,9 @@ function PriceTile({
       <p className="mt-1 text-xs tabular-nums text-muted-foreground">
         {prefix}
         {formatCadYearly(annualTotal(offerMonthly), locale)}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground text-pretty">
+        {thenList}
       </p>
     </div>
   );
@@ -136,7 +141,10 @@ export async function PricingPlanCards({
           })}
         </p>
         <p className="mt-1 text-xs text-white/80 text-pretty">
-          {t("foundingHelp", { code: PRICING.foundingPromoCode })}
+          {t("foundingHelp", {
+            code: PRICING.foundingPromoCode,
+            months: PRICING.promoMonths,
+          })}
         </p>
       </div>
 
@@ -159,6 +167,10 @@ export async function PricingPlanCards({
             saveLabel={t("save", {
               amount: formatCadMonthly(firstSave, locale),
             })}
+            thenList={t("thenList", {
+              price: formatCadMonthly(PRICING.standard.listMonthly, locale),
+              months: PRICING.promoMonths,
+            })}
           />
           <PriceTile
             label={t("extraSeat")}
@@ -168,6 +180,10 @@ export async function PricingPlanCards({
             prefix="+"
             saveLabel={t("save", {
               amount: formatCadMonthly(extraSave, locale),
+            })}
+            thenList={t("thenList", {
+              price: `+${formatCadMonthly(PRICING.extraSeatMonthly, locale)}`,
+              months: PRICING.promoMonths,
             })}
           />
         </div>

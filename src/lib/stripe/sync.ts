@@ -12,7 +12,9 @@ import {
 import { pendingCatalogApplied } from "@/lib/billing/transitions";
 import {
   isFoundingCouponId,
+  isLegacyForeverFoundingCouponId,
   parseLookupKey,
+  remainingFoundingPromoMonths,
 } from "@/lib/stripe/catalog";
 import { getStripe } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -91,16 +93,175 @@ export function parseSubscriptionItems(subscription: Stripe.Subscription): {
 export function subscriptionHasFoundingPromo(
   subscription: Stripe.Subscription,
 ): boolean {
+  for (const id of foundingCouponIdsOnSubscription(subscription)) {
+    if (isFoundingCouponId(id)) return true;
+  }
   for (const entry of subscription.discounts ?? []) {
     if (typeof entry === "string") continue;
     const coupon = entry.source?.coupon;
-    const id = typeof coupon === "string" ? coupon : coupon?.id;
-    if (isFoundingCouponId(id)) return true;
     if (typeof coupon === "object" && coupon?.metadata?.founding === "true") {
       return true;
     }
   }
   return false;
+}
+
+export function subscriptionHasLegacyForeverFoundingPromo(
+  subscription: Stripe.Subscription,
+): boolean {
+  return foundingCouponIdsOnSubscription(subscription).some(
+    isLegacyForeverFoundingCouponId,
+  );
+}
+
+function foundingCouponIdsOnSubscription(
+  subscription: Stripe.Subscription,
+): string[] {
+  const ids: string[] = [];
+  for (const entry of subscription.discounts ?? []) {
+    if (typeof entry === "string") continue;
+    const coupon = entry.source?.coupon;
+    const id = typeof coupon === "string" ? coupon : coupon?.id;
+    if (id) ids.push(id);
+  }
+  return ids;
+}
+
+export function extraSeatsUseFoundingPrice(
+  subscription: Stripe.Subscription,
+): boolean {
+  for (const item of subscription.items.data) {
+    const price = item.price;
+    if (!price || typeof price === "string") continue;
+    const parsed = parseLookupKey(price.lookup_key);
+    if (parsed?.plan === "extra_seat" && parsed.founding) return true;
+  }
+  return false;
+}
+
+export function firstSeatUsesFoundingPrice(
+  subscription: Stripe.Subscription,
+): boolean {
+  for (const item of subscription.items.data) {
+    const price = item.price;
+    if (!price || typeof price === "string") continue;
+    const parsed = parseLookupKey(price.lookup_key);
+    if (parsed && parsed.plan !== "extra_seat" && parsed.founding) return true;
+  }
+  return false;
+}
+
+export function subscriptionHasExtraSeats(
+  subscription: Stripe.Subscription,
+): boolean {
+  for (const item of subscription.items.data) {
+    const price = item.price;
+    if (!price || typeof price === "string") continue;
+    const parsed = parseLookupKey(price.lookup_key);
+    if (parsed?.plan === "extra_seat" && (item.quantity ?? 0) > 0) return true;
+  }
+  return false;
+}
+
+export type FoundingPromoDecision = {
+  apply: boolean;
+  forever: boolean;
+  months: number;
+};
+
+function isFoundingCoupon(
+  coupon: Stripe.Coupon | string | null | undefined,
+): boolean {
+  const id = typeof coupon === "string" ? coupon : coupon?.id;
+  if (isFoundingCouponId(id)) return true;
+  return typeof coupon === "object" && coupon?.metadata?.founding === "true";
+}
+
+function isForeverFoundingCoupon(
+  coupon: Stripe.Coupon | string | null | undefined,
+): boolean {
+  const id = typeof coupon === "string" ? coupon : coupon?.id;
+  if (isLegacyForeverFoundingCouponId(id)) return true;
+  return typeof coupon === "object" && coupon?.duration === "forever";
+}
+
+/**
+ * First 12 months of founding rates, remaining time on resubscribe, or
+ * grandfathered forever coupons. Returns apply:false after the window ends.
+ */
+export async function foundingPromoDecisionForCustomer(
+  customerId: string,
+): Promise<FoundingPromoDecision> {
+  const stripe = getStripe();
+  const list = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "all",
+    limit: 100,
+    expand: ["data.discounts.source.coupon"],
+  });
+
+  let forever = false;
+  let sawRepeating = false;
+  let latestEnd: number | null = null;
+  const now = Math.floor(Date.now() / 1000);
+
+  for (const subscription of list.data) {
+    if (subscriptionHasLegacyForeverFoundingPromo(subscription)) {
+      forever = true;
+    }
+    for (const entry of subscription.discounts ?? []) {
+      if (typeof entry === "string") continue;
+      const coupon = entry.source?.coupon;
+      if (!isFoundingCoupon(coupon)) continue;
+      if (isForeverFoundingCoupon(coupon)) {
+        forever = true;
+        continue;
+      }
+      sawRepeating = true;
+      const end = typeof entry.end === "number" ? entry.end : null;
+      if (end && (latestEnd === null || end > latestEnd)) latestEnd = end;
+    }
+  }
+
+  if (forever) {
+    return { apply: true, forever: true, months: PRICING.promoMonths };
+  }
+  const remaining = remainingFoundingPromoMonths(latestEnd, now);
+  if (remaining > 0) {
+    return { apply: true, forever: false, months: remaining };
+  }
+  if (sawRepeating) {
+    return { apply: false, forever: false, months: 0 };
+  }
+  return { apply: true, forever: false, months: PRICING.promoMonths };
+}
+
+export function remainingFoundingPromoMonthsOnSubscription(
+  subscription: Stripe.Subscription,
+  nowUnix = Math.floor(Date.now() / 1000),
+): number {
+  let latestEnd: number | null = null;
+  for (const entry of subscription.discounts ?? []) {
+    if (typeof entry === "string") continue;
+    const coupon = entry.source?.coupon;
+    if (!isFoundingCoupon(coupon)) continue;
+    if (isForeverFoundingCoupon(coupon)) return PRICING.promoMonths;
+    const end = typeof entry.end === "number" ? entry.end : null;
+    if (end && (latestEnd === null || end > latestEnd)) latestEnd = end;
+  }
+  return remainingFoundingPromoMonths(latestEnd, nowUnix);
+}
+
+export async function foundingRatesApplyAtCheckout(
+  orgId: string,
+): Promise<boolean> {
+  if (!(await foundingCohortOpen(orgId))) return false;
+  const billing = await loadOrgBilling(orgId);
+  if (!billing?.stripe_customer_id) return true;
+  const decision = await foundingPromoDecisionForCustomer(
+    billing.stripe_customer_id,
+  );
+  return decision.apply;
 }
 
 export async function foundingCohortOpen(orgId: string): Promise<boolean> {

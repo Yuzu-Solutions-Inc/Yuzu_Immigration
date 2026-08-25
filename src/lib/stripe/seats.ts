@@ -8,11 +8,11 @@ import {
   type SeatCatalog,
 } from "@/lib/billing/plans";
 import { transitionAfterSeatAdd } from "@/lib/billing/transitions";
-import type { PricingPlanId } from "@/lib/marketing/pricing";
+import { PRICING, type PricingPlanId } from "@/lib/marketing/pricing";
 import {
   ensureBillingPrices,
   extraSeatLookupKey,
-  foundingCouponDiscount,
+  foundingDiscountForCustomer,
   parseLookupKey,
   planPriceLookupKey,
   type PriceLookupKey,
@@ -24,11 +24,17 @@ import {
   subscriptionAutomaticTaxParams,
 } from "@/lib/stripe/subscription-items";
 import {
+  extraSeatsUseFoundingPrice,
+  firstSeatUsesFoundingPrice,
   clearPendingLicenses,
   loadOrgBilling,
   lockOrgAfterUnsubscribe,
   parseSubscriptionItems,
+  remainingFoundingPromoMonthsOnSubscription,
   savePendingBilling,
+  subscriptionHasExtraSeats,
+  subscriptionHasFoundingPromo,
+  subscriptionHasLegacyForeverFoundingPromo,
   syncOrgFromSubscription,
 } from "@/lib/stripe/sync";
 
@@ -36,6 +42,12 @@ export type SeatSyncError =
   | "not_configured"
   | "not_found"
   | "seat_charge_failed";
+
+const SUBSCRIPTION_EXPAND = [
+  "items.data.price",
+  "discounts.source.coupon",
+  "latest_invoice",
+] as const;
 
 type CatalogSubscriptionItem = {
   id?: string;
@@ -183,6 +195,29 @@ function pendingInvoiceUrl(subscription: Stripe.Subscription): string | null {
     : null;
 }
 
+function customerIdFromSubscription(subscription: Stripe.Subscription): string {
+  return typeof subscription.customer === "string"
+    ? subscription.customer
+    : subscription.customer.id;
+}
+
+async function foundingDiscountForIntervalChange(
+  subscription: Stripe.Subscription,
+  plan: PricingPlanId,
+  interval: BillingInterval,
+) {
+  const remaining = remainingFoundingPromoMonthsOnSubscription(subscription);
+  return foundingDiscountForCustomer(
+    customerIdFromSubscription(subscription),
+    plan,
+    interval,
+    {
+      forever: subscriptionHasLegacyForeverFoundingPromo(subscription),
+      months: remaining > 0 ? remaining : PRICING.promoMonths,
+    },
+  );
+}
+
 async function applyCatalog(input: {
   orgId: string;
   subscription: Stripe.Subscription;
@@ -196,6 +231,16 @@ async function applyCatalog(input: {
   const stripe = getStripe();
   const intervalChanged =
     subscriptionBillingInterval(input.subscription) !== input.interval;
+  const promoActive = subscriptionHasFoundingPromo(input.subscription);
+  const foundingPrices = promoActive;
+  const swapFoundingCoupon = promoActive && intervalChanged;
+  const intervalDiscount = swapFoundingCoupon
+    ? await foundingDiscountForIntervalChange(
+        input.subscription,
+        input.catalog.plan,
+        input.interval,
+      )
+    : null;
   const updated = await stripe.subscriptions.update(input.subscription.id, {
     ...subscriptionAutomaticTaxParams(input.subscription),
     items: subscriptionItemsForCatalog(
@@ -203,7 +248,7 @@ async function applyCatalog(input: {
       prices,
       input.catalog,
       input.interval,
-      input.founding,
+      foundingPrices,
     ),
     proration_behavior: input.proration,
     ...(intervalChanged && input.subscription.status !== "trialing"
@@ -212,20 +257,14 @@ async function applyCatalog(input: {
     ...(input.collectPayment
       ? { payment_behavior: "allow_incomplete" as const }
       : {}),
-    ...(input.founding
-      ? {
-          discounts: [
-            foundingCouponDiscount(input.catalog.plan, input.interval),
-          ],
-        }
-      : {}),
+    ...(intervalDiscount ? { discounts: [intervalDiscount] } : {}),
     metadata: {
       organization_id: input.orgId,
       plan: input.catalog.plan,
       interval: input.interval,
-      founding: input.founding ? "true" : "false",
+      founding: foundingPrices ? "true" : "false",
     },
-    expand: ["items.data.price", "latest_invoice"],
+    expand: [...SUBSCRIPTION_EXPAND],
   });
   const paymentUrl = pendingInvoiceUrl(updated) ?? undefined;
   if (!paymentUrl) {
@@ -236,6 +275,69 @@ async function applyCatalog(input: {
     }
   }
   return { subscription: updated, paymentUrl };
+}
+
+/**
+ * Extra seats use founding price IDs while the coupon is active, then list
+ * IDs. Stripe does not change those prices when a repeating coupon expires.
+ */
+export async function alignFoundingCatalogPrices(
+  subscription: Stripe.Subscription,
+): Promise<Stripe.Subscription> {
+  const promoActive = subscriptionHasFoundingPromo(subscription);
+  const extrasFounding = extraSeatsUseFoundingPrice(subscription);
+  const extraNeedsList = extrasFounding && !promoActive;
+  const extraNeedsFounding =
+    promoActive &&
+    subscriptionHasExtraSeats(subscription) &&
+    !extrasFounding;
+  const firstNeedsList =
+    firstSeatUsesFoundingPrice(subscription) && !promoActive;
+  if (!extraNeedsList && !extraNeedsFounding && !firstNeedsList) {
+    return subscription;
+  }
+
+  const parsed = parseSubscriptionItems(subscription);
+  if (!parsed.plan || !parsed.interval) return subscription;
+
+  const foundingPrices = promoActive;
+  const catalog = catalogFromLicensed(
+    parsed.plan,
+    parsed.seatQuantity,
+    foundingPrices,
+  );
+  const released = await releaseActiveSchedule(
+    subscription,
+    scheduleIdFromSubscription(subscription),
+  );
+  const prices = await ensureBillingPrices();
+  const stripe = getStripe();
+  const updated = await stripe.subscriptions.update(released.id, {
+    ...subscriptionAutomaticTaxParams(released),
+    items: subscriptionItemsForCatalog(
+      released,
+      prices,
+      catalog,
+      parsed.interval,
+      foundingPrices,
+    ),
+    proration_behavior: "none",
+    metadata: {
+      ...released.metadata,
+      founding: foundingPrices ? "true" : "false",
+    },
+    expand: [...SUBSCRIPTION_EXPAND],
+  });
+
+  const orgId = updated.metadata.organization_id;
+  if (orgId) {
+    try {
+      await ensurePendingRenewalSchedule(orgId);
+    } catch (error) {
+      console.error("alignFoundingCatalogPrices schedule:", error);
+    }
+  }
+  return updated;
 }
 
 function catalogsMatch(a: SeatCatalog, b: SeatCatalog): boolean {
@@ -392,7 +494,7 @@ async function releaseActiveSchedule(
     }
   }
   return stripe.subscriptions.retrieve(subscription.id, {
-    expand: ["items.data.price", "latest_invoice"],
+    expand: [...SUBSCRIPTION_EXPAND],
   });
 }
 
@@ -421,12 +523,19 @@ async function createRenewalSchedule(input: {
   const targetItems = await scheduleItemsForCatalog(
     input.catalog,
     input.interval,
-    input.founding,
+    subscriptionHasFoundingPromo(input.subscription),
   );
+  const promoActive = subscriptionHasFoundingPromo(input.subscription);
   const currentDiscounts = phaseDiscounts(currentPhase);
   const targetDiscounts: SchedulePhaseDiscount[] =
-    input.founding && current.interval !== input.interval
-      ? [foundingCouponDiscount(input.catalog.plan, input.interval)]
+    promoActive && current.interval !== input.interval
+      ? [
+          await foundingDiscountForIntervalChange(
+            input.subscription,
+            input.catalog.plan,
+            input.interval,
+          ),
+        ]
       : currentDiscounts;
   const automaticTax =
     currentPhase.automatic_tax?.enabled === true
@@ -455,7 +564,7 @@ async function createRenewalSchedule(input: {
           organization_id: input.orgId,
           plan: input.catalog.plan,
           interval: input.interval,
-          founding: input.founding ? "true" : "false",
+          founding: promoActive ? "true" : "false",
         },
       },
     ],
@@ -533,7 +642,6 @@ export async function addLicensedSeats(input: {
   const billing = await loadOrgBilling(input.orgId);
   if (!billing?.stripe_subscription_id) return { ok: false, error: "not_found" };
 
-  const founding = Boolean(billing.founding_rate);
   const currentSeats = Math.max(1, billing.billing_seat_quantity ?? 1);
   const currentInterval: BillingInterval =
     billing.billing_interval === "year" ? "year" : "month";
@@ -568,12 +676,13 @@ export async function addLicensedSeats(input: {
     const stripe = getStripe();
     let subscription: Stripe.Subscription = await stripe.subscriptions.retrieve(
       billing.stripe_subscription_id,
-      { expand: ["items.data.price", "latest_invoice"] },
+      { expand: [...SUBSCRIPTION_EXPAND] },
     );
     subscription = await releaseActiveSchedule(
       subscription,
       billing.stripe_subscription_schedule_id,
     );
+    const founding = subscriptionHasFoundingPromo(subscription);
 
     const applied = await applyCatalog({
       orgId: input.orgId,
@@ -630,9 +739,12 @@ export async function addLicensedSeats(input: {
       if (latest?.stripe_subscription_id) {
         const subscription = await getStripe().subscriptions.retrieve(
           latest.stripe_subscription_id,
-          { expand: ["items.data.price", "latest_invoice"] },
+          { expand: [...SUBSCRIPTION_EXPAND] },
         );
-        const current = catalogFromSubscription(subscription, founding);
+        const current = catalogFromSubscription(
+          subscription,
+          subscriptionHasFoundingPromo(subscription),
+        );
         if (
           current.catalog &&
           current.catalog.seatQuantity >= transition.currentSeats
@@ -668,7 +780,6 @@ export async function scheduleLicensedSeats(input: {
   if (!stripeConfigured()) return { ok: false, error: "not_configured" };
   const billing = await loadOrgBilling(input.orgId);
   if (!billing?.stripe_subscription_id) return { ok: false, error: "not_found" };
-  const founding = Boolean(billing.founding_rate);
   const nextInterval: BillingInterval =
     input.interval ??
     (billing.billing_pending_interval === "year"
@@ -682,8 +793,9 @@ export async function scheduleLicensedSeats(input: {
   try {
     const subscription = await getStripe().subscriptions.retrieve(
       billing.stripe_subscription_id,
-      { expand: ["items.data.price"] },
+      { expand: [...SUBSCRIPTION_EXPAND] },
     );
+    const founding = subscriptionHasFoundingPromo(subscription);
     await setRenewalCatalog({
       orgId: input.orgId,
       subscription,
@@ -767,19 +879,20 @@ export async function ensurePendingRenewalSchedule(orgId: string) {
   }
   const subscription = await getStripe().subscriptions.retrieve(
     billing.stripe_subscription_id,
-    { expand: ["items.data.price"] },
+    { expand: [...SUBSCRIPTION_EXPAND] },
   );
+  const founding = subscriptionHasFoundingPromo(subscription);
   await setRenewalCatalog({
     orgId,
     subscription,
     catalog: catalogFromLicensed(
       "standard",
       billing.billing_pending_seat_quantity,
-      Boolean(billing.founding_rate),
+      founding,
     ),
     interval:
       billing.billing_pending_interval === "year" ? "year" : "month",
-    founding: Boolean(billing.founding_rate),
+    founding,
   });
 }
 
@@ -875,13 +988,13 @@ export async function updateSubscriptionCatalog(input: {
   const billing = await loadOrgBilling(input.orgId);
   if (!billing?.stripe_subscription_id) return { ok: false, error: "not_found" };
 
-  const founding = Boolean(billing.founding_rate);
   try {
     const stripe = getStripe();
     const subscription = await stripe.subscriptions.retrieve(
       billing.stripe_subscription_id,
-      { expand: ["items.data.price"] },
+      { expand: [...SUBSCRIPTION_EXPAND] },
     );
+    const founding = subscriptionHasFoundingPromo(subscription);
     const current = catalogFromSubscription(subscription, founding);
     const licensed = Math.max(1, billing.billing_seat_quantity ?? 1);
     const currentSeats = current.catalog?.seatQuantity ?? licensed;

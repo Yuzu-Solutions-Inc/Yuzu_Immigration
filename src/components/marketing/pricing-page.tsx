@@ -50,8 +50,11 @@ function faqParams(
       return {
         count: PRICING.foundingCohortSize,
         code: PRICING.foundingPromoCode,
+        months: PRICING.promoMonths,
         founding: formatCadMonthly(PRICING.standard.foundingMonthly, locale),
         extraFounding: formatCadMonthly(extraSeatMonthlyCad(true), locale),
+        list: formatCadMonthly(PRICING.standard.listMonthly, locale),
+        extra: extraSeat,
       };
     case "after":
       return {

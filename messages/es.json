@@ -281,7 +281,7 @@
   },
   "pricing": {
     "metaTitle": "Precios",
-    "metaDescription": "%PRODUCT_NAME% cuesta 79 $/mes por el primer usuario, luego 39 $ por usuario extra. Primeras 100 firmas: 59 $ y 29 $. Facturación anual: 10 meses pagados.",
+    "metaDescription": "%PRODUCT_NAME% cuesta 79 $/mes por el primer usuario, luego 39 $ por usuario extra. Las primeras 100 firmas pagan 59 $ y 29 $ durante 12 meses, luego lista. Facturación anual: 10 meses pagados.",
     "eyebrow": "Precios",
     "title": "Un precio. Añada asientos al contratar.",
     "subtitle": "Un asiento es un inicio de sesión del personal. Pague el primero y añada asientos al contratar. Clientes, expedientes y portal son ilimitados.",
@@ -294,12 +294,13 @@
     "extraSeats": "Luego {price} por usuario extra",
     "foundingTitle": "Tarifa fundadora — primeras {count} firmas",
     "foundingCut": "{firstOff} menos en el primer asiento · {extraOff} menos por asiento extra",
-    "foundingHelp": "El código {code} se aplica automáticamente y permanece en la suscripción.",
+    "foundingHelp": "El código {code} se aplica automáticamente durante los primeros {months} meses, luego los precios de lista.",
+    "thenList": "Luego {price} después de {months} meses",
     "save": "Ahorre {amount}",
     "yearlyPrice": "o {amount} facturado al año ({free} meses gratis)",
     "examples": {
       "title": "Cómo se suman los asientos",
-      "subtitle": "Tarifas fundadoras. Paga por inicios de sesión del personal, no por casos. El acceso al portal es gratis.",
+      "subtitle": "Tarifas fundadoras durante los primeros 12 meses. Paga por inicios de sesión del personal, no por casos. El acceso al portal es gratis.",
       "seats": "{count, plural, one {# asiento} other {# asientos}}",
       "you": "Solo usted",
       "colleague": "Usted y un colega",
@@ -361,7 +362,7 @@
       },
       "founding": {
         "q": "¿Quién obtiene las tarifas de lanzamiento?",
-        "a": "Las primeras {count} firmas que crean una cuenta. El código {code} se aplica automáticamente al pagar — {founding} por el primer usuario y {extraFounding} por usuario extra — y permanece en la suscripción."
+        "a": "Las primeras {count} firmas que crean una cuenta. El código {code} se aplica automáticamente al pagar — {founding} por el primer usuario y {extraFounding} por usuario extra — durante {months} meses, luego lista ({list} y {extra})."
       },
       "after": {
         "q": "¿Qué pagan las firmas posteriores?",
@@ -883,7 +884,7 @@
     "billingSeatUnused": "{count} sin usar este periodo",
     "billingFounding": "Tarifa fundadora",
     "billingFoundingBadge": "Fundadora",
-    "billingFoundingHelp": "El código {code} se aplica automáticamente al pagar. Esta firma está entre las primeras {count} y conserva la tarifa fundadora mientras esté suscrita.",
+    "billingFoundingHelp": "El código {code} se aplica automáticamente al pagar. Esta firma está entre las primeras {count} y paga la tarifa fundadora durante los primeros {months} meses, luego lista.",
     "billingPlan": "Plan",
     "billingPlanNameStandard": "Standard",
     "billingPlanNameTeam": "Team",
@@ -895,7 +896,7 @@
     "billingYearlySave": "2 meses gratis",
     "billingYearlyHelp": "La facturación anual son 10 meses pagados y 2 meses gratis. Las plazas extra usan el mismo periodo.",
     "billingExtraSeats": "Plazas extra de personal",
-    "billingExtraSeatsHelp": "El primer usuario está incluido. Los asientos extra cuestan 39 $/mes de lista, o 29 $/mes con tarifa fundadora.",
+    "billingExtraSeatsHelp": "El primer usuario está incluido. Los asientos extra cuestan 39 $/mes de lista, o 29 $/mes durante los primeros 12 meses con tarifa fundadora.",
     "billingSubscribe": "Suscribirse",
     "billingSwitchYearly": "Pasar a anual",
     "billingSwitchMonthly": "Pasar a mensual",

@@ -13,10 +13,11 @@ import { toAppLocale } from "@/lib/i18n/locales";
 import type { PricingPlanId } from "@/lib/marketing/pricing";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
 import {
-  foundingCohortOpen,
+  foundingRatesApplyAtCheckout,
   loadOrgBilling,
   periodEndIso,
   reconcileOrgBilling,
+  subscriptionHasFoundingPromo,
 } from "@/lib/stripe/sync";
 
 export default async function BillingSettingsPage({
@@ -49,7 +50,7 @@ export default async function BillingSettingsPage({
   const [billing, foundingEligible, members, invitations, user, usedSeats] =
     await Promise.all([
       loadOrgBilling(orgId),
-      foundingCohortOpen(orgId),
+      foundingRatesApplyAtCheckout(orgId),
       listOrgMembers(),
       listPendingInvitations(),
       getSessionUser(),
@@ -58,13 +59,16 @@ export default async function BillingSettingsPage({
 
   let periodEndsAt: string | null = null;
   let cancelAtPeriodEnd = false;
+  let foundingLockedIn = false;
   if (billing?.stripe_subscription_id && stripeConfigured()) {
     try {
       const subscription = await getStripe().subscriptions.retrieve(
         billing.stripe_subscription_id,
+        { expand: ["discounts.source.coupon"] },
       );
       periodEndsAt = periodEndIso(subscription);
       cancelAtPeriodEnd = Boolean(subscription.cancel_at_period_end);
+      foundingLockedIn = subscriptionHasFoundingPromo(subscription);
     } catch (error) {
       console.error("billing period:", error);
     }
@@ -93,7 +97,7 @@ export default async function BillingSettingsPage({
           periodEndsAt={periodEndsAt}
           cancelAtPeriodEnd={cancelAtPeriodEnd}
           foundingEligible={foundingEligible}
-          foundingLockedIn={Boolean(billing?.founding_rate)}
+          foundingLockedIn={foundingLockedIn}
           currentPlan={plan}
           currentInterval={interval}
           seatQuantity={

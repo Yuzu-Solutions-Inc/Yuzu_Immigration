@@ -33,6 +33,7 @@ import {
   annualTotal,
   formatCadMonthly,
   formatCadYearly,
+  PRICING,
   type PricingPlanId,
 } from "@/lib/marketing/pricing";
 import { cn } from "@/lib/utils";
@@ -100,7 +101,7 @@ export function BillingSettingsForm({
   const [interval, setInterval] = useState<BillingInterval>(
     pendingInterval ?? currentInterval ?? "month",
   );
-  const founding = foundingLockedIn || foundingEligible;
+  const founding = subscribed ? foundingLockedIn : foundingEligible;
   const licensed = Math.max(1, seatQuantity);
   const nextSeats = pendingSeatQuantity ?? licensed;
   const occupancy = Math.max(1, usedSeats);
@@ -193,6 +194,15 @@ export function BillingSettingsForm({
         ) : null}
       </div>
       <p className="text-sm text-muted-foreground">{t("billingHelp")}</p>
+      {founding ? (
+        <p className="text-sm text-muted-foreground">
+          {t("billingFoundingHelp", {
+            code: PRICING.foundingPromoCode,
+            count: PRICING.foundingCohortSize,
+            months: PRICING.promoMonths,
+          })}
+        </p>
+      ) : null}
       {!subscribed && !writable ? (
         <p className="text-sm text-muted-foreground">{t("billingLockedHelp")}</p>
       ) : null}

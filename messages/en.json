@@ -281,7 +281,7 @@
   },
   "pricing": {
     "metaTitle": "Pricing",
-    "metaDescription": "%PRODUCT_NAME% is $79/mo for the first staff user, then $39 per extra user. First 100 firms: $59 and $29. Yearly billing is 10 months paid.",
+    "metaDescription": "%PRODUCT_NAME% is $79/mo for the first staff user, then $39 per extra user. First 100 firms pay $59 and $29 for 12 months, then list. Yearly billing is 10 months paid.",
     "eyebrow": "Pricing",
     "title": "One price. Add seats as you hire.",
     "subtitle": "A seat is a staff login. Pay for the first seat, then add seats as you hire. Clients, files, and portal users are unlimited.",
@@ -294,12 +294,13 @@
     "extraSeats": "Then {price} per extra staff user",
     "foundingTitle": "Founding rate — first {count} firms",
     "foundingCut": "{firstOff} off the first seat · {extraOff} off extra seats",
-    "foundingHelp": "Promo {code} applies automatically and stays on the subscription.",
+    "foundingHelp": "Promo {code} applies automatically for the first {months} months, then list prices.",
+    "thenList": "Then {price} after {months} months",
     "save": "Save {amount}",
     "yearlyPrice": "or {amount} billed yearly ({free} months free)",
     "examples": {
       "title": "How seats add up",
-      "subtitle": "Founding rates. You pay for staff logins, not cases. Client portal access is free.",
+      "subtitle": "Founding rates for the first 12 months. You pay for staff logins, not cases. Client portal access is free.",
       "seats": "{count, plural, one {# seat} other {# seats}}",
       "you": "Just you",
       "colleague": "You and a colleague",
@@ -361,7 +362,7 @@
       },
       "founding": {
         "q": "Who gets founding rates?",
-        "a": "The first {count} firms that create an account. Promo {code} is applied automatically at checkout — {founding} for the first user and {extraFounding} per extra user — and stays on the subscription."
+        "a": "The first {count} firms that create an account. Promo {code} is applied automatically at checkout — {founding} for the first user and {extraFounding} per extra user — for {months} months, then list ({list} and {extra})."
       },
       "after": {
         "q": "What do later firms pay?",
@@ -882,7 +883,7 @@
     "billingSeatUnused": "{count} unused this period",
     "billingFounding": "Founding rate",
     "billingFoundingBadge": "Founding",
-    "billingFoundingHelp": "Promo {code} is applied automatically at checkout. This firm is in the first {count} and keeps founding rates while subscribed.",
+    "billingFoundingHelp": "Promo {code} is applied automatically at checkout. This firm is in the first {count} and pays founding rates for the first {months} months, then list.",
     "billingPlan": "Plan",
     "billingPlanNameStandard": "Standard",
     "billingPlanNameTeam": "Team",
@@ -894,7 +895,7 @@
     "billingYearlySave": "2 months free",
     "billingYearlyHelp": "Yearly billing is 10 months paid, 2 months free. Extra seats use the same period.",
     "billingExtraSeats": "Extra staff seats",
-    "billingExtraSeatsHelp": "The first staff user is included. Extra seats are $39/month list, or $29/month on founding rates.",
+    "billingExtraSeatsHelp": "The first staff user is included. Extra seats are $39/month list, or $29/month for the first 12 months on founding rates.",
     "billingSubscribe": "Subscribe",
     "billingSwitchYearly": "Switch to yearly",
     "billingSwitchMonthly": "Switch to monthly",

@@ -34,6 +34,7 @@ import { isAutomaticTaxSetupError } from "@/lib/stripe/subscription-items";
 import {
   clearPendingLicenses,
   foundingCohortOpen,
+  foundingPromoDecisionForCustomer,
   loadOrgBilling,
   upsertStripeCustomerId,
 } from "@/lib/stripe/sync";
@@ -119,14 +120,18 @@ export async function startCheckoutAction(
   let catalog = catalogForOccupancy(occupancy, false);
   let sessionUrl: string | null | undefined;
   try {
-    founding = await foundingCohortOpen(orgId);
-    catalog = catalogForOccupancy(occupancy, founding);
-    const prices = await ensureBillingPrices();
     const customerId = await getOrCreateCustomer(
       orgId,
       user.email ?? "",
       membership.organization.name,
     );
+    const inCohort = await foundingCohortOpen(orgId);
+    const promo = inCohort
+      ? await foundingPromoDecisionForCustomer(customerId)
+      : { apply: false, forever: false, months: 0 };
+    founding = promo.apply;
+    catalog = catalogForOccupancy(occupancy, founding);
+    const prices = await ensureBillingPrices();
 
     const line_items: Array<{ price: string; quantity: number }> = [
       {
@@ -151,7 +156,10 @@ export async function startCheckoutAction(
 
     const stripe = getStripe();
     const foundingDiscount = founding
-      ? await foundingDiscountForCustomer(customerId, catalog.plan, interval)
+      ? await foundingDiscountForCustomer(customerId, catalog.plan, interval, {
+          forever: promo.forever,
+          months: promo.months,
+        })
       : null;
     const checkoutParams: Parameters<
       typeof stripe.checkout.sessions.create

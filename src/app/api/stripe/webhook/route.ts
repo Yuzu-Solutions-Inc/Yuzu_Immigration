@@ -7,7 +7,7 @@ import {
   markConnectedCheckoutFailed,
   syncConnectedAccountFromEvent,
 } from "@/lib/stripe/connect-webhooks";
-import { ensurePendingRenewalSchedule } from "@/lib/stripe/seats";
+import { alignFoundingCatalogPrices, ensurePendingRenewalSchedule } from "@/lib/stripe/seats";
 import {
   clearPendingBillingForSchedule,
   finalizePendingBillingIfApplied,
@@ -27,9 +27,10 @@ async function syncFromSubscriptionId(
   restorePendingSchedule = false,
 ) {
   const stripe = getStripe();
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+  const retrieved = await stripe.subscriptions.retrieve(subscriptionId, {
     expand: ["items.data.price", "discounts.source.coupon"],
   });
+  const subscription = await alignFoundingCatalogPrices(retrieved);
   await finalizePendingBillingIfApplied(subscription);
   await syncOrgFromSubscription(subscription);
   const orgId = subscription.metadata.organization_id;
@@ -166,6 +167,11 @@ export async function POST(request: Request) {
             event.type === "invoice.paid",
           );
         }
+        break;
+      }
+      case "customer.discount.deleted": {
+        const subscriptionId = event.data.object.subscription;
+        if (subscriptionId) await syncFromSubscriptionId(subscriptionId);
         break;
       }
       default:
