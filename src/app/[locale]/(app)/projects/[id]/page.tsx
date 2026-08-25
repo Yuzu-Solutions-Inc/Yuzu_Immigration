@@ -54,7 +54,6 @@ import {
   listProjectForms,
 } from "@/lib/ircc/project-forms";
 import { buildQuestionnairePeople } from "@/lib/ircc/questionnaire-people";
-import { listServiceFormFields } from "@/lib/booking/queries";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -106,7 +105,6 @@ export default async function ProjectDetailPage({
     processor,
     appBaseUrl,
     contractContext,
-    formFields,
   ] = await Promise.all([
     getProjectParticipants(id),
     getProjectStatusHistory(id),
@@ -129,7 +127,6 @@ export default async function ProjectDetailPage({
     getActiveCheckoutProcessor(project.organization_id),
     getAppBaseUrl(),
     loadProjectContractContext(id),
-    listServiceFormFields(),
   ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
@@ -347,7 +344,8 @@ export default async function ProjectDetailPage({
               projectId={project.id}
               contract={contractContext.contract}
               archivedFiles={contractContext.files}
-              formFields={formFields}
+              formTitle={contractContext.formTitle}
+              formFields={contractContext.formFields}
               canManage={canCreate}
             />
           ),

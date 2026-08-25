@@ -72,7 +72,37 @@ export async function loadProjectContractContext(projectId: string) {
     getActiveProjectContract(projectId),
     listProjectContractFiles(projectId),
   ]);
-  return { contract, files };
+
+  let formTitle: string | null = null;
+  let formFields: Array<{
+    field_key: string;
+    label: string;
+    form_id: string;
+  }> = [];
+
+  if (contract?.form_id) {
+    const supabase = await createClient();
+    const [{ data: form }, { data: fields }] = await Promise.all([
+      supabase
+        .from("booking_forms")
+        .select("id, title")
+        .eq("id", contract.form_id)
+        .maybeSingle(),
+      supabase
+        .from("booking_service_form_fields")
+        .select("field_key, label, form_id")
+        .eq("form_id", contract.form_id)
+        .order("sort_order", { ascending: true }),
+    ]);
+    formTitle = (form?.title as string | null) ?? null;
+    formFields = (fields ?? []).map((field) => ({
+      field_key: field.field_key as string,
+      label: field.label as string,
+      form_id: field.form_id as string,
+    }));
+  }
+
+  return { contract, files, formTitle, formFields };
 }
 
 export async function saveProjectContractAction(

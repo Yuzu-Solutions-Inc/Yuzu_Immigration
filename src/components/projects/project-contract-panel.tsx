@@ -15,17 +15,20 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldHint, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { extraAutomationVariables } from "@/lib/booking/form-fields";
 import { contractVariableCatalog } from "@/lib/contracts/variables";
 import { defaultContractBodyHtml, sanitizeContractHtml } from "@/lib/contracts/html";
 import {
   hasContractCopy,
   parseContractTranslations,
 } from "@/lib/contracts/translations";
+import {
+  CONTRACT_BUILTIN_VARIABLES,
+} from "@/lib/contracts/types";
 import type {
   ProjectContractFileRow,
   ProjectContractRow,
 } from "@/lib/contracts/project-contracts";
-import type { BookingFormFieldRow } from "@/lib/booking/types";
 import {
   APP_LOCALES,
   LOCALE_LABELS,
@@ -37,11 +40,40 @@ const initialState: ProjectContractActionState = {};
 const EDITOR_CLASS =
   "min-h-[280px] rounded-xl border border-input bg-surface px-6 py-5 text-sm leading-relaxed shadow-elevated outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
+const CHIP_CLASS =
+  "rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40";
+const FORM_CHIP_CLASS =
+  "rounded-full border border-action/30 bg-action/5 px-2.5 py-1 text-xs font-medium text-brand hover:border-action/40";
+
+type LinkedFormField = {
+  field_key: string;
+  label: string;
+  form_id: string;
+};
+
 function statusLabel(
   t: ReturnType<typeof useTranslations>,
   status: ProjectContractRow["status"],
 ) {
   return t(`contractStatus.${status}`);
+}
+
+function insertVariableChip(editor: HTMLElement, key: string) {
+  editor.focus();
+  if (key === "signature_client" || key === "signature_consultant") {
+    const role = key === "signature_client" ? "client" : "consultant";
+    document.execCommand(
+      "insertHTML",
+      false,
+      `<div data-sign="${role}">${role === "client" ? "Client signature" : "Consultant signature"}</div>`,
+    );
+    return;
+  }
+  document.execCommand(
+    "insertHTML",
+    false,
+    `<span data-var="${key}" contenteditable="false">{{${key}}}</span>`,
+  );
 }
 
 export function ProjectContractPanel({
@@ -50,6 +82,7 @@ export function ProjectContractPanel({
   projectId,
   contract,
   archivedFiles,
+  formTitle,
   formFields,
   canManage,
 }: {
@@ -58,10 +91,12 @@ export function ProjectContractPanel({
   projectId: string;
   contract: ProjectContractRow | null;
   archivedFiles: ProjectContractFileRow[];
-  formFields: BookingFormFieldRow[];
+  formTitle: string | null;
+  formFields: LinkedFormField[];
   canManage: boolean;
 }) {
   const t = useTranslations("projects.contracts");
+  const ts = useTranslations("services");
   const router = useRouter();
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [title, setTitle] = useState(contract?.title ?? "");
@@ -96,14 +131,29 @@ export function ProjectContractPanel({
     if (error) toast.error(t(`errors.${error}`));
   }, [saveState, sendState, t, router]);
 
-  const variableKeys = useMemo(() => {
-    const keys =
-      contract?.form_id != null
-        ? formFields
-            .filter((field) => field.form_id === contract.form_id)
-            .map((field) => field.field_key)
-        : [];
-    return contractVariableCatalog(keys).filter((item) => item.kind === "form");
+  const formVariableOptions = useMemo(() => {
+    if (!contract?.form_id) return [] as Array<{ key: string; label: string }>;
+    const linked = formFields.filter((field) => field.form_id === contract.form_id);
+    const seen = new Set<string>();
+    const options: Array<{ key: string; label: string }> = [];
+    for (const field of linked) {
+      if (seen.has(field.field_key)) continue;
+      seen.add(field.field_key);
+      options.push({ key: field.field_key, label: field.label || field.field_key });
+      for (const extraKey of Object.keys(
+        extraAutomationVariables({ [field.field_key]: "" }),
+      )) {
+        if (seen.has(extraKey)) continue;
+        seen.add(extraKey);
+        options.push({ key: extraKey, label: extraKey });
+      }
+    }
+    return contractVariableCatalog(options.map((item) => item.key))
+      .filter((item) => item.kind === "form")
+      .map((item) => ({
+        key: item.key,
+        label: options.find((row) => row.key === item.key)?.label ?? item.key,
+      }));
   }, [contract?.form_id, formFields]);
 
   if (!contract) {
@@ -138,6 +188,13 @@ export function ProjectContractPanel({
     return saveAction(formData);
   }
 
+  function onInsert(key: string) {
+    const editor = editorRef.current;
+    if (!editor || !editable) return;
+    insertVariableChip(editor, key);
+    setBodyHtml(editor.innerHTML);
+  }
+
   return (
     <div className="space-y-4">
       <SurfaceCard className="space-y-4">
@@ -154,6 +211,12 @@ export function ProjectContractPanel({
             {statusLabel(t, contract.status)}
           </span>
         </div>
+
+        <p className="rounded-xl border border-border bg-canvas/60 px-4 py-3 text-sm text-muted-foreground">
+          {contract.form_id
+            ? t("linkedForm", { form: formTitle || t("linkedFormUntitled") })
+            : t("linkedFormNone")}
+        </p>
 
         {contract.status === "pending_signature" ? (
           <p className="rounded-xl border border-border bg-canvas/60 px-4 py-3 text-sm text-muted-foreground">
@@ -202,28 +265,52 @@ export function ProjectContractPanel({
           </Field>
 
           {editable ? (
-            <div className="flex flex-wrap gap-2">
-              {variableKeys.map((item) => (
-                <Button
-                  key={item.key}
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const editor = editorRef.current;
-                    if (!editor) return;
-                    editor.focus();
-                    document.execCommand(
-                      "insertHTML",
-                      false,
-                      `<span data-var="${item.key}" contenteditable="false">{{${item.key}}}</span>`,
-                    );
-                    setBodyHtml(editor.innerHTML);
-                  }}
-                >
-                  {`{{${item.key}}}`}
-                </Button>
-              ))}
+            <div className="space-y-2 border-t border-border/80 pt-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("variables")}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {CONTRACT_BUILTIN_VARIABLES.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    className={CHIP_CLASS}
+                    onClick={() => onInsert(name)}
+                  >
+                    {ts.has(`variables.${name}`)
+                      ? ts(`variables.${name}`)
+                      : name}
+                  </button>
+                ))}
+                {formVariableOptions.map((field) => (
+                  <button
+                    key={field.key}
+                    type="button"
+                    className={FORM_CHIP_CLASS}
+                    onClick={() => onInsert(field.key)}
+                    title={field.key}
+                  >
+                    {field.label}
+                  </button>
+                ))}
+                {(["signature_client", "signature_consultant"] as const).map(
+                  (name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      className={FORM_CHIP_CLASS}
+                      onClick={() => onInsert(name)}
+                    >
+                      {ts(`variables.${name}`)}
+                    </button>
+                  ),
+                )}
+              </div>
+              {contract.form_id && formVariableOptions.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {t("linkedFormEmpty")}
+                </p>
+              ) : null}
             </div>
           ) : null}
 

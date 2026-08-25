@@ -100,10 +100,31 @@ export async function getActiveProjectContract(
       ["draft", "pending_signature"].includes(item.status as string),
     ) ?? (data ?? [])[0];
   if (!row) return null;
+
+  let formId = (row.form_id as string | null) ?? null;
+  const templateId = (row.template_id as string | null) ?? null;
+  // Keep the project copy tied to the template's linked form.
+  if (templateId) {
+    const { data: template } = await admin
+      .from("contract_templates")
+      .select("form_id")
+      .eq("id", templateId)
+      .maybeSingle();
+    const templateFormId = (template?.form_id as string | null) ?? null;
+    if (templateFormId && templateFormId !== formId) {
+      formId = templateFormId;
+      await admin
+        .from("project_contracts")
+        .update({ form_id: formId, updated_at: new Date().toISOString() })
+        .eq("id", row.id);
+    }
+  }
+
   const dek = await getOrgDataKey(row.organization_id as string);
   const decrypted = decryptProjectContractBody(row, dek);
   return {
-    ...(row as Omit<ProjectContractRow, "body_html" | "form_answers">),
+    ...(row as Omit<ProjectContractRow, "body_html" | "form_answers" | "form_id">),
+    form_id: formId,
     body_html: decrypted.body_html,
     form_answers: decryptBookingFormAnswers(row.form_answers, dek),
     translations:
@@ -314,6 +335,8 @@ export async function supersedeAndCreateProjectContractVersion(
         title: input.title,
         ...encrypted,
         translations: input.translations,
+        form_id: existing.form_id,
+        template_id: existing.template_id,
         updated_at: now,
       })
       .eq("id", contractId);
