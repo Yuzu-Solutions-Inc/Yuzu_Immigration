@@ -1,0 +1,17 @@
+---
+description: Typecheck before commit or push so Vercel production builds do not fail
+alwaysApply: true
+---
+
+# Pre-deploy verification
+
+Vercel production deploys run `next build`, which type-checks the whole app. `next dev` does not. Failed production deploys from this repo have almost always been TypeScript errors pushed straight to `main`.
+
+## Required before commit or push
+
+1. Run `npm run typecheck` (same as CI: `tsc --noEmit -p tsconfig.ci.json`).
+2. If you changed tests, Stripe/billing, or i18n keys, also run `npm test`.
+3. If either command fails: fix the errors, re-run until green, then commit/push.
+4. Never push a red typecheck. Never use `--no-verify` on commit or push.
+
+`npm run verify` runs typecheck then tests. A green `next dev` compile is not deploy-ready.

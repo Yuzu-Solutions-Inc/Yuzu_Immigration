@@ -90,7 +90,7 @@ jobs:
               > next-env.d.ts
           fi
       - name: Typecheck
-        run: npx tsc --noEmit --pretty false -p tsconfig.ci.json
+        run: npm run typecheck
 
   notify:
     name: Alert on scheduled failure

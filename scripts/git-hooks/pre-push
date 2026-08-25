@@ -1,0 +1,5 @@
+#!/bin/sh
+# Block pushes that Vercel `next build` would reject for TypeScript.
+# Same command as GitHub Actions job "TypeScript" and `npm run typecheck`.
+set -e
+npm run typecheck

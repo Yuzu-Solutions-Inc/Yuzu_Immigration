@@ -22,7 +22,7 @@ A control **passes** only when its automated test is green. Logging (`security_a
 | CC-12 | Service-role key is not read from client modules | same | PR + daily |
 | CC-13 | SAST (Semgrep OWASP Top 10 + TypeScript + Next.js) | workflow job `sast` | PR + daily |
 | CC-14 | Production npm dependencies have no high/critical advisories | `npm audit --omit=dev --audit-level=high` | PR + daily |
-| CC-15 | TypeScript strict build (`tsc --noEmit`) | workflow job `types` | PR + daily |
+| CC-15 | TypeScript strict build (`npm run typecheck`) | workflow job `types` | PR + daily |
 | CC-16 | Dependency version drift | Dependabot weekly PRs | weekly |
 
 ## Manual (not claimed as automated)
