@@ -1110,6 +1110,7 @@ export const projectContracts = pgTable("project_contracts", {
   bodyHtml: text("body_html").notNull(),
   translations: jsonb("translations").notNull().default({}),
   formAnswers: jsonb("form_answers").notNull().default({}),
+  formSubmittedAt: timestamp("form_submitted_at", { withTimezone: true }),
   requireConsultantSignature: boolean("require_consultant_signature")
     .notNull()
     .default(true),

@@ -448,19 +448,28 @@ export async function staffSignContractAction(
   const supabase = await createClient();
   const { data: envelope } = await supabase
     .from("contract_envelopes")
-    .select("id, appointment_id")
+    .select("id, appointment_id, project_id")
     .eq("id", envelopeId)
     .eq("organization_id", auth.membership.organization.id)
     .maybeSingle();
   if (!envelope) return { error: "not_found" };
-  const { data: appointment } = await supabase
-    .from("booking_appointments")
-    .select("host_user_id")
-    .eq("id", envelope.appointment_id)
-    .eq("organization_id", auth.membership.organization.id)
-    .maybeSingle();
-  if (!appointment) return { error: "not_found" };
-  if (appointment.host_user_id !== user.id) return { error: "not_host" };
+
+  if (envelope.appointment_id) {
+    const { data: appointment } = await supabase
+      .from("booking_appointments")
+      .select("host_user_id")
+      .eq("id", envelope.appointment_id)
+      .eq("organization_id", auth.membership.organization.id)
+      .maybeSingle();
+    if (!appointment) return { error: "not_found" };
+    if (appointment.host_user_id !== user.id) return { error: "not_host" };
+  } else if (envelope.project_id) {
+    // Project retainers: any case manager in the org may validate and countersign.
+    if (!canCreateRecords(auth.membership.role)) return { error: "forbidden" };
+  } else {
+    return { error: "not_found" };
+  }
+
   const { data: signer } = await supabase
     .from("contract_signers")
     .select("id")
@@ -479,6 +488,9 @@ export async function staffSignContractAction(
   });
   if (result.error) return { error: result.error };
   revalidatePath(`/${toAppLocale(locale)}/bookings`);
+  if (envelope.project_id) {
+    revalidatePath(`/${toAppLocale(locale)}/projects/${envelope.project_id}`);
+  }
   return { message: result.message };
 }
 

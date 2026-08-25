@@ -1,11 +1,19 @@
 "use client";
 
 import { FileText, Send } from "lucide-react";
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { staffSignContractAction } from "@/app/actions/contracts";
 import {
   saveProjectContractAction,
   sendProjectContractAction,
@@ -85,6 +93,10 @@ export function ProjectContractPanel({
   formTitle,
   formFields,
   canManage,
+  envelopeId,
+  clientSigned,
+  needsConsultantSign,
+  consultantExpectedName,
 }: {
   locale: string;
   orgDefaultLocale: AppLocale;
@@ -94,6 +106,10 @@ export function ProjectContractPanel({
   formTitle: string | null;
   formFields: LinkedFormField[];
   canManage: boolean;
+  envelopeId: string | null;
+  clientSigned: boolean;
+  needsConsultantSign: boolean;
+  consultantExpectedName: string | null;
 }) {
   const t = useTranslations("projects.contracts");
   const ts = useTranslations("services");
@@ -101,6 +117,8 @@ export function ProjectContractPanel({
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [title, setTitle] = useState(contract?.title ?? "");
   const [bodyHtml, setBodyHtml] = useState(contract?.body_html ?? "");
+  const [consultantTypedName, setConsultantTypedName] = useState("");
+  const [signPending, startSignTransition] = useTransition();
   const [saveState, saveAction, savePending] = useActionState(
     saveProjectContractAction,
     initialState,
@@ -125,6 +143,10 @@ export function ProjectContractPanel({
     }
     if (sendState.message === "sent") {
       toast.success(t("sent"));
+      router.refresh();
+    }
+    if (sendState.message === "awaiting_form") {
+      toast.success(t("sentAwaitingForm"));
       router.refresh();
     }
     const error = saveState.error || sendState.error;
@@ -220,8 +242,65 @@ export function ProjectContractPanel({
 
         {contract.status === "pending_signature" ? (
           <p className="rounded-xl border border-border bg-canvas/60 px-4 py-3 text-sm text-muted-foreground">
-            {t("pendingHelp")}
+            {contract.form_id && !contract.form_submitted_at
+              ? t("pendingHelpForm")
+              : needsConsultantSign && clientSigned
+                ? t("pendingHelpConsultant")
+                : t("pendingHelpClient")}
           </p>
+        ) : null}
+
+        {canManage &&
+        contract.status === "pending_signature" &&
+        needsConsultantSign &&
+        clientSigned &&
+        envelopeId ? (
+          <div className="space-y-3 rounded-xl border border-border bg-canvas/60 px-4 py-3">
+            <Field>
+              <FieldLabel htmlFor="project-consultant-sign" required>
+                {t("consultantSignName")}
+              </FieldLabel>
+              <Input
+                id="project-consultant-sign"
+                value={consultantTypedName}
+                onChange={(event) => setConsultantTypedName(event.target.value)}
+                autoComplete="name"
+              />
+              <FieldHint>
+                {t("consultantSignHint", {
+                  name: consultantExpectedName || "—",
+                })}
+              </FieldHint>
+            </Field>
+            <Button
+              type="button"
+              size="sm"
+              disabled={signPending || consultantTypedName.trim().length < 2}
+              onClick={() => {
+                startSignTransition(async () => {
+                  const result = await staffSignContractAction(
+                    envelopeId,
+                    consultantTypedName,
+                    "typed",
+                    null,
+                    locale,
+                  );
+                  if (result.error) {
+                    toast.error(
+                      t.has(`errors.${result.error}`)
+                        ? t(`errors.${result.error}`)
+                        : t("errors.send_failed"),
+                    );
+                    return;
+                  }
+                  toast.success(t("consultantSigned"));
+                  router.refresh();
+                });
+              }}
+            >
+              {signPending ? t("consultantSigning") : t("signAsConsultant")}
+            </Button>
+          </div>
         ) : null}
 
         {contract.status === "completed" && editable ? (

@@ -3,14 +3,11 @@ import { product } from "@/lib/brand/product";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { extraAutomationVariables } from "@/lib/booking/form-fields";
 import {
-  CONTRACT_CONSENT_VERSION,
   CONTRACT_EXPIRES_DAYS,
-  isPngSignatureDataUrl,
 } from "@/lib/contracts/types";
 import { fillContractHtml } from "@/lib/contracts/html";
 import {
   appendContractAudit,
-  namesMatch,
   sha256Hex,
 } from "@/lib/contracts/issue";
 import { pickContractBody } from "@/lib/contracts/translations";
@@ -24,7 +21,6 @@ import {
   decryptPersonRow,
   decryptProjectContractBody,
   decryptProjectRow,
-  decryptStaffContractSignature,
   encryptContractFilledHtml,
   encryptContractSignerWrite,
   encryptContractSignatureWrite,
@@ -45,6 +41,7 @@ export type ProjectContractRow = {
   body_html: string;
   translations: ContractTranslations;
   form_answers: Record<string, string>;
+  form_submitted_at: string | null;
   require_consultant_signature: boolean;
   status: ProjectContractStatus;
   version: number;
@@ -70,6 +67,7 @@ export type ProjectContractFileRow = {
 
 export type ProjectContractGate = {
   locked: boolean;
+  needsForm: boolean;
   contract?: ProjectContractRow;
   pendingEnvelopeId?: string;
   signToken?: string;
@@ -123,8 +121,12 @@ export async function getActiveProjectContract(
   const dek = await getOrgDataKey(row.organization_id as string);
   const decrypted = decryptProjectContractBody(row, dek);
   return {
-    ...(row as Omit<ProjectContractRow, "body_html" | "form_answers" | "form_id">),
+    ...(row as Omit<
+      ProjectContractRow,
+      "body_html" | "form_answers" | "form_id" | "form_submitted_at"
+    >),
     form_id: formId,
+    form_submitted_at: (row.form_submitted_at as string | null) ?? null,
     body_html: decrypted.body_html,
     form_answers: decryptBookingFormAnswers(row.form_answers, dek),
     translations:
@@ -158,18 +160,48 @@ export async function getProjectContractGate(
 ): Promise<ProjectContractGate> {
   const contract = await getActiveProjectContract(projectId);
   if (!contract || contract.status !== "pending_signature") {
-    return { locked: false, contract: contract ?? undefined };
+    return { locked: false, needsForm: false, contract: contract ?? undefined };
   }
 
   const admin = createServiceClient();
+  const { data: participant } = await admin
+    .from("project_participants")
+    .select("id, role")
+    .eq("project_id", projectId)
+    .eq("person_id", personId)
+    .is("left_at", null)
+    .maybeSingle();
+  if (!participant) {
+    return { locked: false, needsForm: false, contract };
+  }
+
+  const isPrincipal = participant.role === "principal";
+  const needsForm = Boolean(contract.form_id) && !contract.form_submitted_at;
+
+  if (needsForm) {
+    return {
+      locked: true,
+      needsForm: true,
+      contract,
+    };
+  }
+
   const { data: envelope } = await admin
     .from("contract_envelopes")
     .select("id, locale")
     .eq("project_contract_id", contract.id)
-    .in("status", [...OPEN_ENVELOPE_STATUSES])
+    .in("status", [...OPEN_ENVELOPE_STATUSES, "completed"])
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
+
   if (!envelope) {
-    return { locked: false, contract };
+    // Form done (or no form) but envelope not issued yet — still locked for principal.
+    return {
+      locked: true,
+      needsForm: false,
+      contract,
+    };
   }
 
   const { data: clientSigner } = await admin
@@ -178,9 +210,12 @@ export async function getProjectContractGate(
     .eq("envelope_id", envelope.id)
     .eq("role", "client")
     .maybeSingle();
+
+  // Unlock the project as soon as the client has signed (consultant may still be pending).
   if (!clientSigner || clientSigner.status === "signed") {
     return {
       locked: false,
+      needsForm: false,
       contract,
       pendingEnvelopeId: envelope.id as string,
     };
@@ -196,52 +231,13 @@ export async function getProjectContractGate(
       ) ?? undefined;
   }
 
-  const { data: participant } = await admin
-    .from("project_participants")
-    .select("id, role")
-    .eq("project_id", projectId)
-    .eq("person_id", personId)
-    .is("left_at", null)
-    .maybeSingle();
-
-  const isPrincipal = participant?.role === "principal";
-
   return {
-    locked: Boolean(participant),
+    locked: true,
+    needsForm: false,
     contract,
     pendingEnvelopeId: envelope.id as string,
     signToken: isPrincipal ? signToken : undefined,
   };
-}
-
-async function loadHostPresign(
-  organizationId: string,
-  userId: string,
-  consultantName: string,
-  dek: Buffer,
-) {
-  const admin = createServiceClient();
-  const { data } = await admin
-    .from("staff_contract_signatures")
-    .select("presign_all, signature_kind, signature_text, signature_image")
-    .eq("organization_id", organizationId)
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!data?.presign_all || !data.signature_kind) return null;
-  const decrypted = decryptStaffContractSignature(data, dek);
-  const typedName = (decrypted.signature_text ?? "").trim();
-  if (typedName.length < 2 || !namesMatch(typedName, consultantName)) {
-    return null;
-  }
-  if (data.signature_kind === "drawn") {
-    if (!isPngSignatureDataUrl(decrypted.signature_image)) return null;
-    return {
-      kind: "drawn" as const,
-      typedName,
-      image: decrypted.signature_image as string,
-    };
-  }
-  return { kind: "typed" as const, typedName, image: null as string | null };
 }
 
 export async function createProjectContractFromTemplate(input: {
@@ -351,7 +347,7 @@ export async function supersedeAndCreateProjectContractVersion(
     .in("status", [...OPEN_ENVELOPE_STATUSES]);
 
   const encrypted = encryptProjectContractBody(
-    { body_html: input.bodyHtml, form_answers: existing.form_answers },
+    { body_html: input.bodyHtml, form_answers: {} },
     dek,
   );
   const { data: created, error: createError } = await admin
@@ -366,6 +362,7 @@ export async function supersedeAndCreateProjectContractVersion(
       translations: input.translations,
       require_consultant_signature: existing.require_consultant_signature,
       status: "draft",
+      form_submitted_at: null,
       version: (existing.version as number) + 1,
     })
     .select("id")
@@ -384,6 +381,74 @@ export async function supersedeAndCreateProjectContractVersion(
   return created.id as string;
 }
 
+export async function requestProjectContractSignature(contractId: string) {
+  const admin = createServiceClient();
+  const { data: contract, error } = await admin
+    .from("project_contracts")
+    .select("id, status, form_id, form_submitted_at")
+    .eq("id", contractId)
+    .maybeSingle();
+  if (error || !contract) throw new Error("contract_missing");
+  if (contract.status !== "draft") throw new Error("invalid_state");
+
+  const needsForm =
+    Boolean(contract.form_id) && !contract.form_submitted_at;
+
+  if (needsForm) {
+    const now = new Date().toISOString();
+    const { error: updateError } = await admin
+      .from("project_contracts")
+      .update({
+        status: "pending_signature",
+        updated_at: now,
+      })
+      .eq("id", contractId);
+    if (updateError) throw new Error("send_failed");
+    return { issued: false as const, needsForm: true as const };
+  }
+
+  await issueProjectContract(contractId);
+  return { issued: true as const, needsForm: false as const };
+}
+
+export async function saveProjectContractFormAnswers(input: {
+  contractId: string;
+  answers: Record<string, string>;
+}) {
+  const admin = createServiceClient();
+  const { data: contract, error } = await admin
+    .from("project_contracts")
+    .select("*")
+    .eq("id", input.contractId)
+    .maybeSingle();
+  if (error || !contract) throw new Error("contract_missing");
+  if (contract.status !== "pending_signature") throw new Error("invalid_state");
+  if (!contract.form_id) throw new Error("no_form");
+  if (contract.form_submitted_at) throw new Error("already_submitted");
+
+  const dek = await getOrgDataKey(contract.organization_id as string);
+  const encrypted = encryptProjectContractBody(
+    {
+      body_html: decryptProjectContractBody(contract, dek).body_html,
+      form_answers: input.answers,
+    },
+    dek,
+  );
+  const now = new Date().toISOString();
+  const { error: updateError } = await admin
+    .from("project_contracts")
+    .update({
+      ...encrypted,
+      form_submitted_at: now,
+      updated_at: now,
+    })
+    .eq("id", input.contractId);
+  if (updateError) throw new Error("save_failed");
+
+  await issueProjectContract(input.contractId);
+  return { ok: true as const };
+}
+
 export async function issueProjectContract(contractId: string) {
   const admin = createServiceClient();
   const { data: contract, error } = await admin
@@ -392,7 +457,24 @@ export async function issueProjectContract(contractId: string) {
     .eq("id", contractId)
     .maybeSingle();
   if (error || !contract) throw new Error("contract_missing");
-  if (contract.status !== "draft") throw new Error("invalid_state");
+  if (
+    contract.status !== "draft" &&
+    contract.status !== "pending_signature"
+  ) {
+    throw new Error("invalid_state");
+  }
+
+  const { data: existingEnvelope } = await admin
+    .from("contract_envelopes")
+    .select("id")
+    .eq("project_contract_id", contractId)
+    .in("status", [...OPEN_ENVELOPE_STATUSES, "completed"])
+    .maybeSingle();
+  if (existingEnvelope) return { envelopeId: existingEnvelope.id as string };
+
+  if (contract.form_id && !contract.form_submitted_at) {
+    throw new Error("form_required");
+  }
 
   const orgId = contract.organization_id as string;
   const projectId = contract.project_id as string;
@@ -561,33 +643,20 @@ export async function issueProjectContract(contractId: string) {
       { full_name: consultantName, email: consultantEmail || "none@invalid" },
       dek,
     );
-    const presign =
-      repUserId && consultantName
-        ? await loadHostPresign(orgId, repUserId, consultantName, dek)
-        : null;
-    const sealed = presign
-      ? encryptContractSignatureWrite(
-          {
-            signature_text: presign.typedName,
-            signature_image: presign.image,
-          },
-          dek,
-        )
-      : null;
-    const now = new Date().toISOString();
+    // Project retainers: client signs first; case manager validates and countersigns later.
     signers.push({
       organization_id: orgId,
       envelope_id: envelope.id,
       role: "consultant",
       sort_order: 1,
       ...consultantPii,
-      status: presign ? "signed" : "pending",
-      signed_at: presign ? now : null,
-      signature_kind: presign?.kind ?? null,
-      signature_text: sealed?.signature_text ?? null,
-      signature_image: sealed?.signature_image ?? null,
-      consent_accepted_at: presign ? now : null,
-      consent_version: presign ? CONTRACT_CONSENT_VERSION : null,
+      status: "pending",
+      signed_at: null,
+      signature_kind: null,
+      signature_text: null,
+      signature_image: null,
+      consent_accepted_at: null,
+      consent_version: null,
     });
   }
 

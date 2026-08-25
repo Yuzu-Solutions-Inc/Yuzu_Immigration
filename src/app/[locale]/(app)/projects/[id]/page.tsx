@@ -323,7 +323,8 @@ export default async function ProjectDetailPage({
                     inviteeNames={portalInviteeNames}
                     hasAnyInviteeEmail={portalHasEmail}
                     contractPending={
-                      contractContext.contract?.status === "pending_signature"
+                      contractContext.contract?.status === "pending_signature" &&
+                      !contractContext.clientSigned
                     }
                   />
                 ) : null
@@ -347,6 +348,10 @@ export default async function ProjectDetailPage({
               formTitle={contractContext.formTitle}
               formFields={contractContext.formFields}
               canManage={canCreate}
+              envelopeId={contractContext.envelopeId}
+              clientSigned={contractContext.clientSigned}
+              needsConsultantSign={contractContext.needsConsultantSign}
+              consultantExpectedName={contractContext.consultantExpectedName}
             />
           ),
           documents: (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -17,11 +18,15 @@ const initialState: SignContractState = {};
 export function SignContractForm({
   token,
   payload,
+  successHref,
 }: {
   token: string;
   payload: PublicSignPayload;
+  /** When set, navigate here after a successful signature. */
+  successHref?: string;
 }) {
   const t = useTranslations("signContract");
+  const router = useRouter();
   const [kind, setKind] = useState<SignatureCaptureKind>("typed");
   const [typedName, setTypedName] = useState(payload.signerName);
   const [consent, setConsent] = useState(false);
@@ -34,7 +39,17 @@ export function SignContractForm({
   useEffect(() => {
     if (state.error) toast.error(t(`errors.${state.error}`));
     if (state.message === "declined") toast.message(t("declinedToast"));
-  }, [state, t]);
+    if (
+      successHref &&
+      (state.message === "signed" || state.message === "completed")
+    ) {
+      toast.success(
+        state.message === "completed" ? t("completedThanks") : t("signedThanks"),
+      );
+      router.push(successHref);
+      router.refresh();
+    }
+  }, [state, t, successHref, router]);
 
   const closed =
     payload.alreadySigned ||

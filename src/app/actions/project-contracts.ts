@@ -12,6 +12,7 @@ import {
   getActiveProjectContract,
   issueProjectContract,
   listProjectContractFiles,
+  requestProjectContractSignature,
   supersedeAndCreateProjectContractVersion,
 } from "@/lib/contracts/project-contracts";
 import {
@@ -79,9 +80,14 @@ export async function loadProjectContractContext(projectId: string) {
     label: string;
     form_id: string;
   }> = [];
+  let envelopeId: string | null = null;
+  let clientSigned = false;
+  let needsConsultantSign = false;
+  let consultantExpectedName: string | null = null;
+
+  const supabase = await createClient();
 
   if (contract?.form_id) {
-    const supabase = await createClient();
     const [{ data: form }, { data: fields }] = await Promise.all([
       supabase
         .from("booking_forms")
@@ -102,7 +108,51 @@ export async function loadProjectContractContext(projectId: string) {
     }));
   }
 
-  return { contract, files, formTitle, formFields };
+  if (contract && contract.status === "pending_signature") {
+    const { data: envelope } = await supabase
+      .from("contract_envelopes")
+      .select("id, organization_id")
+      .eq("project_contract_id", contract.id)
+      .in("status", ["sent", "viewed", "partially_signed"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (envelope) {
+      envelopeId = envelope.id as string;
+      const { data: signers } = await supabase
+        .from("contract_signers")
+        .select("role, status, full_name")
+        .eq("envelope_id", envelope.id);
+      const { getOrgDataKey } = await import("@/lib/security/org-data-key");
+      const { decryptContractSignerRow } = await import(
+        "@/lib/security/client-pii"
+      );
+      const dek = await getOrgDataKey(envelope.organization_id as string);
+      for (const row of signers ?? []) {
+        const decrypted = decryptContractSignerRow(row, dek);
+        if (row.role === "client") {
+          clientSigned = row.status === "signed";
+        }
+        if (row.role === "consultant") {
+          needsConsultantSign =
+            row.status === "pending" || row.status === "viewed";
+          consultantExpectedName =
+            (decrypted.full_name as string | null)?.trim() || null;
+        }
+      }
+    }
+  }
+
+  return {
+    contract,
+    files,
+    formTitle,
+    formFields,
+    envelopeId,
+    clientSigned,
+    needsConsultantSign,
+    consultantExpectedName,
+  };
 }
 
 export async function saveProjectContractAction(
@@ -192,15 +242,16 @@ export async function sendProjectContractAction(
   if (contract.status !== "draft") return { error: "invalid_state" };
 
   try {
-    await issueProjectContract(parsed.data.contractId);
+    const result = await requestProjectContractSignature(parsed.data.contractId);
+    revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
+    return {
+      message: result.needsForm ? "awaiting_form" : "sent",
+    };
   } catch (err) {
     const code = err instanceof Error ? err.message : "";
     if (code === "client_email_required") return { error: "client_email_required" };
     return { error: "send_failed" };
   }
-
-  revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
-  return { message: "sent" };
 }
 
 export async function assignProjectContractTemplateAction(input: {
