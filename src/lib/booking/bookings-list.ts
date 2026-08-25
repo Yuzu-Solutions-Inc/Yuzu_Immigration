@@ -259,6 +259,7 @@ async function hydrateBookingItems(
   );
   const contractsByAppointment = new Map<string, ContractEnvelopeSummary[]>();
   for (const row of contracts) {
+    if (!row.appointment_id) continue;
     const list = contractsByAppointment.get(row.appointment_id) ?? [];
     list.push(row);
     contractsByAppointment.set(row.appointment_id, list);

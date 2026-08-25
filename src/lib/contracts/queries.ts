@@ -57,7 +57,7 @@ export async function listContractSummariesForAppointments(
   const supabase = await createClient();
   const { data: envelopes, error } = await supabase
     .from("contract_envelopes")
-    .select("id, appointment_id, title, status, expires_at, completed_at")
+    .select("id, appointment_id, project_id, title, status, expires_at, completed_at")
     .eq("organization_id", organizationId)
     .in("appointment_id", appointmentIds);
   if (error) {

@@ -8,6 +8,7 @@ import { getActiveCheckoutProcessor } from "@/lib/payments/processor";
 import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { loadProjectContractContext } from "@/app/actions/project-contracts";
 import { ProjectContractPanel } from "@/components/projects/project-contract-panel";
+import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
 import { ProjectPortalCard } from "@/components/projects/project-portal-card";
 import {
