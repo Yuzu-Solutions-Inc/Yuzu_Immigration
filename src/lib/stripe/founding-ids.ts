@@ -6,7 +6,7 @@ const MONTH_SECS = 30 * 24 * 60 * 60;
 export function foundingCouponId(
   plan: PricingPlanId,
   interval: BillingInterval,
-  months = PRICING.promoMonths,
+  months: number = PRICING.promoMonths,
 ): string {
   const period = interval === "year" ? "year" : "month";
   return `permitos_founding_${plan}_${period}_${months}m`;
