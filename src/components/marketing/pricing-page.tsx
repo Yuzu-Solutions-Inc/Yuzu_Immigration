@@ -31,12 +31,11 @@ const SEAT_EXAMPLES = [1, 2, 3] as const;
 
 const SEAT_EXAMPLE_KEYS = ["you", "colleague", "team"] as const;
 
-function listMonthlyForStaff(count: number): number {
-  return (
-    PRICING.standard.listMonthly +
-    Math.max(0, count - PRICING.standard.includedUsers) *
-      PRICING.extraSeatMonthly
-  );
+function monthlyForStaff(count: number, founding: boolean): number {
+  const extra = Math.max(0, count - PRICING.standard.includedUsers);
+  return founding
+    ? PRICING.standard.foundingMonthly + extra * extraSeatMonthlyCad(true)
+    : PRICING.standard.listMonthly + extra * PRICING.extraSeatMonthly;
 }
 
 function faqParams(
@@ -135,8 +134,16 @@ export async function PricingPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   {t("examples.seats", { count })}
                 </p>
-                <p className="mt-2 font-heading text-3xl font-bold tracking-tight text-brand tabular-nums">
-                  {formatCadMonthly(listMonthlyForStaff(count), locale)}
+                <p className="mt-2 inline-flex items-baseline gap-2 tabular-nums">
+                  <span className="font-heading text-3xl font-bold tracking-tight text-brand">
+                    {formatCadMonthly(monthlyForStaff(count, true), locale)}
+                  </span>
+                  <span className="text-sm font-medium text-muted-foreground line-through">
+                    {formatCadMonthly(monthlyForStaff(count, false), locale)}
+                  </span>
+                </p>
+                <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                  {formatCadYearly(annualTotal(monthlyForStaff(count, true)), locale)}
                 </p>
                 <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground text-pretty">
                   {t(`examples.${SEAT_EXAMPLE_KEYS[index]}`)}

@@ -732,12 +732,12 @@ export async function LandingPage() {
             <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
               {pricing("title")}
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground text-pretty">
+            <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-muted-foreground text-pretty">
               {pricing("subtitle")}
             </p>
           </LandingReveal>
 
-          <LandingReveal className="mt-10">
+          <LandingReveal className="mt-8">
             <PricingPlanCards variant="teaser" />
           </LandingReveal>
         </div>
