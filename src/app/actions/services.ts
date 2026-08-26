@@ -18,7 +18,7 @@ import {
   hasUrgentPricing,
   type BookingRateKind,
 } from "@/lib/booking/pricing";
-import { ensureOrgBookingSettings } from "@/lib/booking/settings";
+import { ensureBookingSettings } from "@/lib/booking/settings";
 import { parsePriceToCents } from "@/lib/booking/slots";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { toAppLocale } from "@/lib/i18n/locales";
@@ -166,7 +166,7 @@ export async function createServiceAction(
     return { error: "save_failed" };
   }
 
-  await ensureOrgBookingSettings(orgId, supabase);
+  if (user) await ensureBookingSettings(orgId, user.id, supabase);
 
   await recordAuditEvent({
     organizationId: orgId,
@@ -333,19 +333,13 @@ export async function copyServiceLinkAction(input: {
 
   const gate = await requireStaff();
   if (!gate.ok) return { error: gate.error };
-  const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
+  if (!user) return { error: "unauthorized" };
+  const orgId = gate.membership.organization.id;
   const supabase = await createClient();
 
-  const { data: settings } = await supabase
-    .from("booking_settings")
-    .select("id")
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!settings) {
-    const ensured = await ensureOrgBookingSettings(orgId, supabase);
-    if (!ensured) return { error: "booking_not_configured" };
-  }
+  const settings = await ensureBookingSettings(orgId, user.id, supabase);
+  if (!settings) return { error: "booking_not_configured" };
 
   const { data: service } = await supabase
     .from("booking_services")
@@ -372,7 +366,7 @@ export async function copyServiceLinkAction(input: {
   const { error } = await supabase.from("booking_service_links").insert({
     organization_id: orgId,
     service_id: input.serviceId,
-    created_by: user?.id ?? null,
+    created_by: user.id,
     rate_kind: input.rateKind,
     token_hash: hashBookingToken(token),
     expires_at: expiresAt,

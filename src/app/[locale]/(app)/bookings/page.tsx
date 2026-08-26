@@ -45,6 +45,7 @@ export default async function BookingsPage({
       .from("booking_settings")
       .select("timezone")
       .eq("organization_id", orgId)
+      .eq("user_id", user.id)
       .maybeSingle(),
     listOrgMembers(),
     listBookingServices(),

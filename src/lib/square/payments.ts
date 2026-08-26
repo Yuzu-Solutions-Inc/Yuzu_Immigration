@@ -481,6 +481,7 @@ async function confirmPaidBookingAppointment(payment: PaymentRequestRow) {
         .from("booking_settings")
         .select("timezone")
         .eq("organization_id", appointment.organization_id)
+        .eq("user_id", appointment.host_user_id)
         .maybeSingle(),
     ]);
 

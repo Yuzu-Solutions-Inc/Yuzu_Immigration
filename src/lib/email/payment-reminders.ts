@@ -2,6 +2,7 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { decryptBookingGuestRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { hostTimezone } from "@/lib/booking/settings";
 import { isAutomationDue } from "@/lib/email/automation-template";
 import { sendBookingPaymentReminderEmail } from "@/lib/email/booking-confirmation";
 import { decryptPaymentToken } from "@/lib/square/payments";
@@ -68,7 +69,7 @@ export async function processDuePaymentReminders(now = new Date()) {
       admin.from("organizations").select("id, name").in("id", orgIds),
       admin
         .from("booking_settings")
-        .select("organization_id, timezone")
+        .select("organization_id, user_id, timezone")
         .in("organization_id", orgIds),
       admin.from("profiles").select("id, full_name, email").in("id", hostIds),
       admin
@@ -89,12 +90,11 @@ export async function processDuePaymentReminders(now = new Date()) {
   const orgName = new Map(
     (orgsRes.data ?? []).map((row) => [row.id as string, row.name as string]),
   );
-  const timezoneByOrg = new Map(
-    (settingsRes.data ?? []).map((row) => [
-      row.organization_id as string,
-      (row.timezone as string) || DEFAULT_TZ,
-    ]),
-  );
+  const timezoneByHost = (settingsRes.data ?? []) as Array<{
+    organization_id: string;
+    user_id: string;
+    timezone: string | null;
+  }>;
   const hostById = new Map(
     (profilesRes.data ?? []).map((row) => [
       row.id as string,
@@ -128,8 +128,12 @@ export async function processDuePaymentReminders(now = new Date()) {
     const checkoutUrl = (payment.checkout_url as string | null) ?? null;
     if (!token && !checkoutUrl) continue;
 
-    const timeZone =
-      timezoneByOrg.get(appointment.organization_id as string) ?? DEFAULT_TZ;
+    const timeZone = hostTimezone(
+      timezoneByHost,
+      appointment.organization_id as string,
+      appointment.host_user_id as string,
+      DEFAULT_TZ,
+    );
     const startsAt = new Date(appointment.starts_at as string);
     const guest = decryptBookingGuestRow(
       {

@@ -14,7 +14,7 @@ import {
   getMyZoomConnection,
   listAvailabilityRules,
 } from "@/lib/booking/queries";
-import { ensureOrgBookingSettings } from "@/lib/booking/settings";
+import { ensureBookingSettings } from "@/lib/booking/settings";
 import { googleCalendarConfigured } from "@/lib/google/oauth";
 import { microsoftCalendarConfigured } from "@/lib/microsoft/oauth";
 import { createClient } from "@/lib/supabase/server";
@@ -56,10 +56,11 @@ export default async function SettingsCalendarPage({
     ]);
 
   let settings = loadedSettings;
-  if (!settings && membership) {
+  if (!settings && membership && user) {
     const supabase = await createClient();
-    settings = await ensureOrgBookingSettings(
+    settings = await ensureBookingSettings(
       membership.organization.id,
+      user.id,
       supabase,
     );
   }

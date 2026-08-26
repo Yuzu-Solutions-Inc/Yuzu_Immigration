@@ -485,7 +485,7 @@ export async function issueProjectContract(contractId: string) {
   const [
     { data: project },
     { data: org },
-    { data: settings },
+    { data: settingsRows },
     { data: principalLink },
   ] = await Promise.all([
     admin
@@ -498,9 +498,8 @@ export async function issueProjectContract(contractId: string) {
     admin.from("organizations").select("name, default_locale").eq("id", orgId).maybeSingle(),
     admin
       .from("booking_settings")
-      .select("timezone")
-      .eq("organization_id", orgId)
-      .maybeSingle(),
+      .select("user_id, timezone")
+      .eq("organization_id", orgId),
     admin
       .from("project_participants")
       .select("person_id, role")
@@ -572,6 +571,12 @@ export async function issueProjectContract(contractId: string) {
   }
 
   const addressParts: string[] = [];
+  const settingsList = (settingsRows ?? []) as Array<{
+    user_id: string;
+    timezone: string | null;
+  }>;
+  const settings =
+    settingsList.find((row) => row.user_id === repUserId) ?? settingsList[0];
   const vars = projectContractMergeVariables({
     locale: picked.locale,
     timeZone: settings?.timezone ?? "America/Toronto",

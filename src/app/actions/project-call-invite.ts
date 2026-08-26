@@ -107,13 +107,6 @@ export async function sendProjectCallInviteAction(
     .maybeSingle();
   if (projectError || !project) return { error: "not_found" };
 
-  const { data: settings } = await supabase
-    .from("booking_settings")
-    .select("id")
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!settings) return { error: "booking_not_configured" };
-
   const { data: principalLink } = await supabase
     .from("project_participants")
     .select("person_id")
@@ -144,6 +137,14 @@ export async function sendProjectCallInviteAction(
     ],
   });
   if (!hostUserId) return { error: "no_availability" };
+
+  const { data: settings } = await supabase
+    .from("booking_settings")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("user_id", hostUserId)
+    .maybeSingle();
+  if (!settings) return { error: "booking_not_configured" };
 
   const service = await ensureProjectCallService(orgId);
   if (!service) return { error: "service_failed" };

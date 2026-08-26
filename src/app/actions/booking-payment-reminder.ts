@@ -106,6 +106,7 @@ export async function sendBookingPaymentReminderAction(
         .from("booking_settings")
         .select("timezone")
         .eq("organization_id", orgId)
+        .eq("user_id", appointment.host_user_id)
         .maybeSingle(),
       supabase
         .from("booking_services")

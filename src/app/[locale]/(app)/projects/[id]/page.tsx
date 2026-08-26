@@ -38,6 +38,7 @@ import {
 import { computeProjectProgressFromDetail } from "@/lib/crm/progress";
 import { isChildParticipantRole } from "@/lib/crm/programs";
 import {
+  getBookingSettings,
   listProjectCallInvites,
   listProjectMeetingHistory,
 } from "@/lib/booking/queries";
@@ -114,15 +115,7 @@ export default async function ProjectDetailPage({
     listProjectNotes(id),
     listProjectMeetingHistory(id, locale),
     listProjectCallInvites(id),
-    (async () => {
-      const supabase = await createClient();
-      const { data } = await supabase
-        .from("booking_settings")
-        .select("timezone")
-        .eq("organization_id", project.organization_id)
-        .maybeSingle();
-      return data;
-    })(),
+    getBookingSettings(),
     listProjectPaymentLinks(id),
     getActiveCheckoutProcessor(project.organization_id),
     getAppBaseUrl(),

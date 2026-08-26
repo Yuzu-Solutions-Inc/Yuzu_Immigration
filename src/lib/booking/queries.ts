@@ -138,6 +138,7 @@ async function loadHostCalendars(input: {
   excludeAppointmentId?: string;
   excludeBusyRange?: { starts_at: string; ends_at: string };
   includeAllMembers?: boolean;
+  hostUserId?: string | null;
 }): Promise<PublicHostCalendar[]> {
   const admin = createServiceClient();
   const now = new Date();
@@ -188,11 +189,15 @@ async function loadHostCalendars(input: {
   );
   const hostIds = [
     ...new Set(
-      input.includeAllMembers
-        ? [...memberIds]
-        : rules
-            .map((rule) => rule.user_id)
-            .filter((userId) => memberIds.has(userId)),
+      input.hostUserId
+        ? memberIds.has(input.hostUserId)
+          ? [input.hostUserId]
+          : []
+        : input.includeAllMembers
+          ? [...memberIds]
+          : rules
+              .map((rule) => rule.user_id)
+              .filter((userId) => memberIds.has(userId)),
     ),
   ];
   if (hostIds.length === 0) return [];
@@ -503,11 +508,14 @@ export async function listServiceFormFields(): Promise<BookingFormFieldRow[]> {
 export async function getBookingSettings(): Promise<BookingSettingsRow | null> {
   const orgId = await orgIdOrNull();
   if (!orgId) return null;
+  const user = await getSessionUser();
+  if (!user) return null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("booking_settings")
     .select("*")
     .eq("organization_id", orgId)
+    .eq("user_id", user.id)
     .maybeSingle();
   if (error) {
     console.error("getBookingSettings:", error.message);
@@ -638,6 +646,7 @@ export async function loadBookingPage(token: string): Promise<BookingPageLoad> {
     settings: row,
     servicesFilter: { activeOnly: true },
     includeAllMembers: false,
+    hostUserId: row.user_id,
     slotMode: "availability",
     rateKind: "standard",
     serviceLinkId: null,
@@ -672,20 +681,26 @@ async function loadServiceLinkBookingPage(
     return { status: "expired" };
   }
 
-  const { data: settings } = await admin
+  const preferredHostId = (link.created_by as string | null) ?? null;
+  const settingsQuery = admin
     .from("booking_settings")
     .select("*")
-    .eq("organization_id", link.organization_id)
-    .maybeSingle();
+    .eq("organization_id", link.organization_id);
+  const { data: settings } = preferredHostId
+    ? await settingsQuery.eq("user_id", preferredHostId).maybeSingle()
+    : await settingsQuery.limit(1).maybeSingle();
   if (!settings) return { status: "missing" };
+  const settingsRow = settings as BookingSettingsRow;
+  const hostUserId = preferredHostId ?? settingsRow.user_id;
 
   const rateKind =
     link.rate_kind === "urgent" ? "urgent" : "standard";
   const ctx = await buildPublicBookingContext({
     organizationId: link.organization_id as string,
-    settings: settings as BookingSettingsRow,
+    settings: settingsRow,
     servicesFilter: { serviceId: link.service_id as string },
-    includeAllMembers: true,
+    includeAllMembers: false,
+    hostUserId,
     slotMode: "unblocked",
     rateKind,
     serviceLinkId: link.id as string,
@@ -698,6 +713,7 @@ async function buildPublicBookingContext(input: {
   settings: BookingSettingsRow;
   servicesFilter: { activeOnly: true } | { serviceId: string };
   includeAllMembers: boolean;
+  hostUserId?: string | null;
   slotMode: PublicBookingSlotMode;
   rateKind: BookingRateKind;
   serviceLinkId: string | null;
@@ -734,6 +750,7 @@ async function buildPublicBookingContext(input: {
       organizationId: input.organizationId,
       bookingWindowDays: input.settings.booking_window_days,
       includeAllMembers: input.includeAllMembers,
+      hostUserId: input.hostUserId,
     }),
     admin
       .from("square_connections")
@@ -810,6 +827,7 @@ export async function loadManageBookingContext(
         .from("booking_settings")
         .select("*")
         .eq("organization_id", row.organization_id)
+        .eq("user_id", row.host_user_id)
         .maybeSingle(),
       admin
         .from("booking_services")
@@ -856,6 +874,7 @@ export async function loadManageBookingContext(
     ? await loadHostCalendars({
         organizationId: row.organization_id,
         bookingWindowDays: settingsRow.booking_window_days,
+        hostUserId: row.host_user_id,
         excludeAppointmentId: row.id,
         excludeBusyRange: {
           starts_at: row.starts_at,
@@ -935,6 +954,7 @@ export async function loadStaffAppointmentContext(
         .from("booking_settings")
         .select("*")
         .eq("organization_id", orgId)
+        .eq("user_id", row.host_user_id)
         .maybeSingle(),
       supabase
         .from("booking_services")
@@ -953,6 +973,7 @@ export async function loadStaffAppointmentContext(
   const hosts = await loadHostCalendars({
     organizationId: orgId,
     bookingWindowDays: settingsRow.booking_window_days,
+    hostUserId: row.host_user_id,
     excludeAppointmentId: row.id,
     excludeBusyRange: {
       starts_at: row.starts_at,
@@ -1477,6 +1498,7 @@ export async function loadProjectCallInviteContext(
       .from("booking_settings")
       .select("*")
       .eq("organization_id", invite.organization_id)
+      .eq("user_id", invite.host_user_id)
       .maybeSingle(),
     admin
       .from("booking_services")
@@ -1503,6 +1525,7 @@ export async function loadProjectCallInviteContext(
   const hosts = await loadHostCalendars({
     organizationId: invite.organization_id as string,
     bookingWindowDays: (settings as BookingSettingsRow).booking_window_days,
+    hostUserId: invite.host_user_id as string,
   });
   const host =
     hosts.find((row) => row.userId === invite.host_user_id) ?? null;

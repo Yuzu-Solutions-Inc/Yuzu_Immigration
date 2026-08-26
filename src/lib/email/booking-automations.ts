@@ -1,6 +1,7 @@
 import { decryptBookingFormAnswers, decryptBookingGuestRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { hostTimezone } from "@/lib/booking/settings";
 import { email } from "@/lib/design-tokens";
 import { product } from "@/lib/brand/product";
 import { sendResendEmail, emailIdempotencyKey } from "@/lib/email/resend";
@@ -110,7 +111,7 @@ export async function processDueBookingAutomations(now = new Date()) {
       admin.from("organizations").select("id, name, default_locale").in("id", orgIds),
       admin
         .from("booking_settings")
-        .select("organization_id, timezone")
+        .select("organization_id, user_id, timezone")
         .in("organization_id", orgIds),
       admin
         .from("booking_services")
@@ -135,12 +136,11 @@ export async function processDueBookingAutomations(now = new Date()) {
       (row.default_locale as string | null) || "en",
     ]),
   );
-  const timezoneByOrg = new Map(
-    (settingsRes.data ?? []).map((row) => [
-      row.organization_id as string,
-      (row.timezone as string) || DEFAULT_TZ,
-    ]),
-  );
+  const timezoneByHost = (settingsRes.data ?? []) as Array<{
+    organization_id: string;
+    user_id: string;
+    timezone: string | null;
+  }>;
   const serviceById = new Map(
     (servicesRes.data ?? []).map((row) => [
       row.id as string,
@@ -189,8 +189,12 @@ export async function processDueBookingAutomations(now = new Date()) {
     );
     if (matching.length === 0) continue;
 
-    const timeZone =
-      timezoneByOrg.get(appointment.organization_id) ?? DEFAULT_TZ;
+    const timeZone = hostTimezone(
+      timezoneByHost,
+      appointment.organization_id,
+      appointment.host_user_id,
+      DEFAULT_TZ,
+    );
     const startsAt = new Date(appointment.starts_at);
     const dek = await dekFor(appointment.organization_id);
     const guest = decryptBookingGuestRow(appointment, dek);

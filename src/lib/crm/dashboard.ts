@@ -1,4 +1,5 @@
 import type { ProjectStatus } from "@/db/schema";
+import { getSessionUser } from "@/lib/auth/session";
 import {
   listProjects,
   requireOrganizationId,
@@ -12,7 +13,7 @@ import {
 } from "@/lib/booking/timezone";
 import type { BookingAppointmentRow } from "@/lib/booking/types";
 import { serviceTitle } from "@/lib/booking/service-i18n";
-import { ensureOrgBookingSettings } from "@/lib/booking/settings";
+import { ensureBookingSettings } from "@/lib/booking/settings";
 import { createClient } from "@/lib/supabase/server";
 import { decryptBookingGuestRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
@@ -198,6 +199,8 @@ export async function getHomeDashboard(
 ): Promise<HomeDashboard> {
   const orgId = await requireOrganizationId();
   if (!orgId) return EMPTY;
+  const user = await getSessionUser();
+  if (!user) return EMPTY;
 
   const supabase = await createClient();
   const now = new Date();
@@ -220,6 +223,7 @@ export async function getHomeDashboard(
       .from("booking_settings")
       .select("timezone, is_enabled")
       .eq("organization_id", orgId)
+      .eq("user_id", user.id)
       .maybeSingle(),
     supabase
       .from("booking_services")
@@ -229,7 +233,8 @@ export async function getHomeDashboard(
     supabase
       .from("booking_availability_rules")
       .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId),
+      .eq("organization_id", orgId)
+      .eq("user_id", user.id),
     getStaffSetupChecklist(orgId),
   ]);
 
@@ -252,7 +257,7 @@ export async function getHomeDashboard(
   const hasAvailability = (rulesResult.count ?? 0) > 0;
   let bookingEnabled = Boolean(settingsResult.data?.is_enabled);
   if (!settingsResult.data && (activeServices > 0 || hasAvailability)) {
-    const settings = await ensureOrgBookingSettings(orgId, supabase);
+    const settings = await ensureBookingSettings(orgId, user.id, supabase);
     bookingEnabled = Boolean(settings?.is_enabled);
   }
   const todayIso = zonedDateIso(now, timezone);

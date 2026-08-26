@@ -193,6 +193,7 @@ export async function issueContractsForAppointment(appointmentId: string) {
       .from("booking_settings")
       .select("timezone")
       .eq("organization_id", appointment.organization_id)
+      .eq("user_id", appointment.host_user_id)
       .maybeSingle(),
     admin
       .from("booking_services")

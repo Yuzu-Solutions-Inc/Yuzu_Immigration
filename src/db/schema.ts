@@ -810,30 +810,33 @@ export const projectContractStatusEnum = pgEnum("project_contract_status", [
   "superseded",
 ]);
 
-/** Per-org public booking page (hashed token + encrypted plaintext for recopy). */
-export const bookingSettings = pgTable("booking_settings", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .unique()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  publicTokenHash: text("public_token_hash").notNull().unique(),
-  publicTokenEncrypted: text("public_token_encrypted"),
-  timezone: text("timezone").notNull().default("America/Toronto"),
-  bookingWindowDays: integer("booking_window_days").notNull().default(14),
-  minNoticeHours: integer("min_notice_hours").notNull().default(24),
-  bufferMinutes: integer("buffer_minutes").notNull().default(0),
-  isEnabled: boolean("is_enabled").notNull().default(false),
-  defaultHostUserId: uuid("default_host_user_id").references(() => profiles.id, {
-    onDelete: "set null",
-  }),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+/** Per-staff public booking page (hashed token + encrypted plaintext for recopy). */
+export const bookingSettings = pgTable(
+  "booking_settings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    publicTokenHash: text("public_token_hash").notNull().unique(),
+    publicTokenEncrypted: text("public_token_encrypted"),
+    timezone: text("timezone").notNull().default("America/Toronto"),
+    bookingWindowDays: integer("booking_window_days").notNull().default(14),
+    minNoticeHours: integer("min_notice_hours").notNull().default(24),
+    bufferMinutes: integer("buffer_minutes").notNull().default(0),
+    isEnabled: boolean("is_enabled").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [unique().on(table.organizationId, table.userId)],
+);
 
 /** Recurring weekly open hours. weekday 0 = Sunday (JS getDay). */
 export const bookingAvailabilityRules = pgTable(

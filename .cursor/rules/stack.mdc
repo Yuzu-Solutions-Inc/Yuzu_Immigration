@@ -26,15 +26,16 @@ Follow `.cursor/rules/design-system.mdc` for every UI/form/email change. Tokens 
 - `customer_portal_access` — portal access_code + access_token on a person; passwords in `private.customer_portal_secrets`
 - Portal login verification is **server-only** via `verify_customer_portal_login` (service_role). Never call from the browser.
 - Client form fill and document upload via `/[locale]/portal` after portal session.
-- `booking_settings` + `booking_availability_rules` — firm timezone, booking window (X days ahead), recurring weekly open hours.
-- `booking_services` — bookable consultation types (title, description, duration, price).
-- `booking_appointments` — public bookings; guest PII org-DEK encrypted. Public page `/[locale]/book/[token]` uses service role after token hash lookup.
+- `booking_settings` — per-staff public booking page (timezone, window, min notice, buffer, accept-bookings, hashed token). Unique `(organization_id, user_id)`.
+- `booking_availability_rules` — per-staff recurring weekly open hours. weekday 0 = Sunday.
+- `booking_services` — bookable consultation types (title, description, duration, price). Org-wide catalog.
+- `booking_appointments` — public bookings; guest PII org-DEK encrypted. Public page `/[locale]/book/[token]` is that staff member’s page (service role after token hash lookup).
+- `booking_blocked_times` — per-staff one-off blocked days/ranges.
 - Outbound notifications via Resend only (no inbound CRM mail). Replies blocked; footers include consultant or org privacy contact email.
 - `google_calendar_connections` + `private.google_calendar_secrets` — per-staff Google Calendar OAuth; also used for Google Meet when that meeting tool is selected.
 - `microsoft_calendar_connections` + `private.microsoft_calendar_secrets` — per-staff Outlook / Microsoft 365 OAuth; also used for Teams when that meeting tool is selected.
 - `zoom_connections` + `private.zoom_secrets` — per-staff Zoom OAuth for meeting join links only (not a calendar).
 - `staff_booking_integrations` — one calendar (`google` | `microsoft`) and one meeting tool (`google_meet` | `teams` | `zoom`) per staff user; they may differ.
-- `booking_blocked_times` — one-off blocked days/ranges on the firm calendar.
 
 ## Layout
 - `src/app/[locale]/(marketing)` — public pages (landing lives at `[locale]/page` until moved)

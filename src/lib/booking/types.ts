@@ -4,6 +4,7 @@ import type { ServiceTranslations } from "@/lib/booking/service-i18n";
 export type BookingSettingsRow = {
   id: string;
   organization_id: string;
+  user_id: string;
   public_token_hash: string;
   public_token_encrypted: string | null;
   timezone: string;
@@ -11,7 +12,6 @@ export type BookingSettingsRow = {
   min_notice_hours: number;
   buffer_minutes: number;
   is_enabled: boolean;
-  default_host_user_id: string | null;
   created_at: string;
   updated_at: string;
 };

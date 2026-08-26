@@ -15,7 +15,7 @@ import {
   type MinuteRange,
 } from "@/lib/booking/availability";
 import {
-  ensureOrgBookingSettings,
+  ensureBookingSettings,
   mintBookingPublicToken,
 } from "@/lib/booking/settings";
 import {
@@ -25,7 +25,6 @@ import {
   minutesFromHm,
   zonedCivilToUtc,
 } from "@/lib/booking/timezone";
-import { requireOrganizationId } from "@/lib/crm/queries";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { PII_AAD } from "@/lib/security/client-pii";
 import { decryptField } from "@/lib/security/field-crypto";
@@ -78,12 +77,12 @@ export async function ensureBookingSettingsAction(
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
 
-  const gate = await requireManager();
+  const gate = await requireMember();
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
 
   const supabase = await createClient();
-  const settings = await ensureOrgBookingSettings(orgId, supabase);
+  const settings = await ensureBookingSettings(orgId, gate.user.id, supabase);
   if (!settings) return { error: "save_failed" };
   revalidateBooking(parsedLocale.data);
   return { message: "ok" };
@@ -95,12 +94,13 @@ export async function copyBookingLinkAction(
   const parsedLocale = localeSchema.safeParse(locale);
   if (!parsedLocale.success) return { error: "invalid" };
 
-  const orgId = await requireOrganizationId();
-  if (!orgId) return { error: "unauthorized" };
+  const gate = await requireMember();
+  if (!gate.ok) return { error: gate.error };
+  const orgId = gate.membership.organization.id;
 
   const supabase = await createClient();
   const dek = await getOrgDataKey(orgId);
-  const settings = await ensureOrgBookingSettings(orgId, supabase);
+  const settings = await ensureBookingSettings(orgId, gate.user.id, supabase);
   if (!settings) return { error: "save_failed" };
 
   const encrypted = settings.public_token_encrypted;
@@ -132,11 +132,13 @@ export async function regenerateBookingLinkAction(
   const supabase = await createClient();
   const dek = await getOrgDataKey(orgId);
   const minted = mintBookingPublicToken(orgId, dek);
+  if (!user) return { error: "unauthorized" };
 
   const { data: existing } = await supabase
     .from("booking_settings")
     .select("id")
     .eq("organization_id", orgId)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (existing) {
@@ -147,7 +149,8 @@ export async function regenerateBookingLinkAction(
         public_token_encrypted: minted.public_token_encrypted,
         updated_at: new Date().toISOString(),
       })
-      .eq("organization_id", orgId);
+      .eq("organization_id", orgId)
+      .eq("user_id", user.id);
     if (error) {
       console.error("regenerateBookingLink update:", error.message);
       return { error: "save_failed" };
@@ -155,6 +158,7 @@ export async function regenerateBookingLinkAction(
   } else {
     const { error } = await supabase.from("booking_settings").insert({
       organization_id: orgId,
+      user_id: user.id,
       public_token_hash: minted.public_token_hash,
       public_token_encrypted: minted.public_token_encrypted,
       is_enabled: false,
@@ -215,6 +219,7 @@ export async function saveBookingSettingsAction(
   if (!gate.ok) return { error: gate.error };
   const orgId = gate.membership.organization.id;
   const user = await getSessionUser();
+  if (!user) return { error: "unauthorized" };
   const supabase = await createClient();
   const dek = await getOrgDataKey(orgId);
 
@@ -222,6 +227,7 @@ export async function saveBookingSettingsAction(
     .from("booking_settings")
     .select("id")
     .eq("organization_id", orgId)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   const payload = {
@@ -237,7 +243,8 @@ export async function saveBookingSettingsAction(
     const { error } = await supabase
       .from("booking_settings")
       .update(payload)
-      .eq("organization_id", orgId);
+      .eq("organization_id", orgId)
+      .eq("user_id", user.id);
     if (error) {
       console.error("saveBookingSettings update:", error.message);
       return { error: "save_failed" };
@@ -246,6 +253,7 @@ export async function saveBookingSettingsAction(
     const minted = mintBookingPublicToken(orgId, dek);
     const { error } = await supabase.from("booking_settings").insert({
       organization_id: orgId,
+      user_id: user.id,
       ...payload,
       public_token_hash: minted.public_token_hash,
       public_token_encrypted: minted.public_token_encrypted,
@@ -305,7 +313,7 @@ export async function addAvailabilityRuleAction(
     console.error("addAvailabilityRule:", error.message);
     return { error: "save_failed" };
   }
-  await ensureOrgBookingSettings(orgId, supabase);
+  await ensureBookingSettings(orgId, gate.user.id, supabase);
   revalidateBooking(parsed.data.locale);
   return { message: "rule_added" };
 }
@@ -403,7 +411,7 @@ export async function addAvailabilityRangeAction(input: {
   ]);
   if (!ok) return { error: "save_failed" };
   const supabase = await createClient();
-  await ensureOrgBookingSettings(orgId, supabase);
+  await ensureBookingSettings(orgId, gate.user.id, supabase);
   revalidateBooking(parsed.data.locale);
   return { message: "rule_added" };
 }
@@ -469,7 +477,7 @@ export async function applyWeekdayHoursPresetAction(
     if (!ok) return { error: "save_failed" };
   }
   const supabase = await createClient();
-  await ensureOrgBookingSettings(orgId, supabase);
+  await ensureBookingSettings(orgId, gate.user.id, supabase);
   revalidateBooking(parsedLocale.data);
   return { message: "preset_applied" };
 }
@@ -516,6 +524,7 @@ export async function blockDayAction(
     .from("booking_settings")
     .select("timezone")
     .eq("organization_id", orgId)
+    .eq("user_id", gate.user.id)
     .maybeSingle();
   const timezone = settings?.timezone ?? "America/Toronto";
   const startsAt = zonedCivilToUtc(dateIso, "00:00", timezone);
@@ -562,6 +571,7 @@ export async function blockRangeAction(input: {
     .from("booking_settings")
     .select("timezone")
     .eq("organization_id", orgId)
+    .eq("user_id", gate.user.id)
     .maybeSingle();
   const timezone = settings?.timezone ?? "America/Toronto";
   const startHm = minutesToPgTime(parsed.data.startMinutes).slice(0, 5);

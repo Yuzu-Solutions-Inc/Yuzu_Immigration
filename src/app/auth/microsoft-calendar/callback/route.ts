@@ -144,15 +144,6 @@ export async function GET(request: Request) {
     });
     await applyCalendarProviderWatches(state.organizationId, user.id);
 
-    await admin
-      .from("booking_settings")
-      .update({
-        default_host_user_id: user.id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("organization_id", state.organizationId)
-      .is("default_host_user_id", null);
-
     return NextResponse.redirect(
       `${origin}${calendarSettingsHref(locale, { microsoft: "connected" })}`,
     );
