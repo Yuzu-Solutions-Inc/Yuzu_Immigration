@@ -66,7 +66,7 @@ export function CalendarSettingsPage({
     initialState,
   );
   const [acceptBookings, setAcceptBookings] = useState(
-    settings?.is_enabled ?? true,
+    settings?.is_enabled ?? false,
   );
 
   useEffect(() => {
@@ -86,21 +86,26 @@ export function CalendarSettingsPage({
               {t("bookingOptionsHelp")}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Label
-              htmlFor="acceptBookings"
-              className="text-sm font-semibold text-brand"
-            >
-              {t("bookingEnabled")}
-            </Label>
-            <Switch
-              id="acceptBookings"
-              form={BOOKING_FORM_ID}
-              name="isEnabled"
-              checked={acceptBookings}
-              disabled={!canManage}
-              onCheckedChange={setAcceptBookings}
-            />
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-3">
+              <Label
+                htmlFor="acceptBookings"
+                className="text-sm font-semibold text-brand"
+              >
+                {t("bookingEnabled")}
+              </Label>
+              <Switch
+                id="acceptBookings"
+                form={BOOKING_FORM_ID}
+                name="isEnabled"
+                checked={acceptBookings}
+                disabled={!canManage}
+                onCheckedChange={setAcceptBookings}
+              />
+            </div>
+            <FieldHint className="max-w-xs text-right">
+              {t("bookingEnabledHelp")}
+            </FieldHint>
           </div>
         </div>
 

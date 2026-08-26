@@ -12,6 +12,7 @@ import {
 } from "@/lib/booking/timezone";
 import type { BookingAppointmentRow } from "@/lib/booking/types";
 import { serviceTitle } from "@/lib/booking/service-i18n";
+import { ensureOrgBookingSettings } from "@/lib/booking/settings";
 import { createClient } from "@/lib/supabase/server";
 import { decryptBookingGuestRow } from "@/lib/security/client-pii";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
@@ -247,9 +248,13 @@ export async function getHomeDashboard(
 
   const timezone =
     (settingsResult.data?.timezone as string | undefined) ?? "America/Toronto";
-  const bookingEnabled = Boolean(settingsResult.data?.is_enabled);
   const activeServices = servicesResult.count ?? 0;
   const hasAvailability = (rulesResult.count ?? 0) > 0;
+  let bookingEnabled = Boolean(settingsResult.data?.is_enabled);
+  if (!settingsResult.data && (activeServices > 0 || hasAvailability)) {
+    const settings = await ensureOrgBookingSettings(orgId, supabase);
+    bookingEnabled = Boolean(settings?.is_enabled);
+  }
   const todayIso = zonedDateIso(now, timezone);
   const rangeEndIso = addDaysToIsoDate(todayIso, 7);
   const appointmentsFrom = zonedCivilToUtc(todayIso, "00:00", timezone);
@@ -569,8 +574,7 @@ export async function getHomeDashboard(
     if (isReadyToSubmit(stats)) readyToSubmit += 1;
     else openInProgress += 1;
   }
-  const needsSetup =
-    !bookingEnabled || activeServices === 0 || !hasAvailability;
+  const needsSetup = activeServices === 0 || !hasAvailability;
 
   return {
     hasCaseload:

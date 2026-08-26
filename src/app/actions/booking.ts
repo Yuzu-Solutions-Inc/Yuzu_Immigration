@@ -14,7 +14,10 @@ import {
   minutesToPgTime,
   type MinuteRange,
 } from "@/lib/booking/availability";
-import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
+import {
+  ensureOrgBookingSettings,
+  mintBookingPublicToken,
+} from "@/lib/booking/settings";
 import {
   BOOKING_TIMEZONES,
   addDaysToIsoDate,
@@ -25,7 +28,7 @@ import {
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { PII_AAD } from "@/lib/security/client-pii";
-import { decryptField, encryptField } from "@/lib/security/field-crypto";
+import { decryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
@@ -69,15 +72,6 @@ function revalidateBooking(locale: string) {
   revalidatePath(`/${locale}/welcome`);
 }
 
-function mintTokenPayload(orgId: string, dek: Buffer) {
-  const token = createBookingToken();
-  return {
-    token,
-    public_token_hash: hashBookingToken(token),
-    public_token_encrypted: encryptField(token, PII_AAD.booking.token, dek),
-  };
-}
-
 export async function ensureBookingSettingsAction(
   locale: string,
 ): Promise<BookingActionState> {
@@ -89,26 +83,10 @@ export async function ensureBookingSettingsAction(
   const orgId = gate.membership.organization.id;
 
   const supabase = await createClient();
-  const { data: existing } = await supabase
-    .from("booking_settings")
-    .select("id")
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (existing) return { message: "ok" };
-
-  const dek = await getOrgDataKey(orgId);
-  const minted = mintTokenPayload(orgId, dek);
-  const { error } = await supabase.from("booking_settings").insert({
-    organization_id: orgId,
-    public_token_hash: minted.public_token_hash,
-    public_token_encrypted: minted.public_token_encrypted,
-  });
-  if (error) {
-    console.error("ensureBookingSettings:", error.message);
-    return { error: "save_failed" };
-  }
+  const settings = await ensureOrgBookingSettings(orgId, supabase);
+  if (!settings) return { error: "save_failed" };
   revalidateBooking(parsedLocale.data);
-  return { message: "created" };
+  return { message: "ok" };
 }
 
 export async function copyBookingLinkAction(
@@ -122,38 +100,10 @@ export async function copyBookingLinkAction(
 
   const supabase = await createClient();
   const dek = await getOrgDataKey(orgId);
-  let { data: settings, error } = await supabase
-    .from("booking_settings")
-    .select("public_token_encrypted")
-    .eq("organization_id", orgId)
-    .maybeSingle();
+  const settings = await ensureOrgBookingSettings(orgId, supabase);
+  if (!settings) return { error: "save_failed" };
 
-  if (error) {
-    console.error("copyBookingLink read:", error.message);
-    return { error: "save_failed" };
-  }
-
-  if (!settings) {
-    const gate = await requireManager();
-    if (!gate.ok) return { error: gate.error };
-    const minted = mintTokenPayload(orgId, dek);
-    const inserted = await supabase
-      .from("booking_settings")
-      .insert({
-        organization_id: orgId,
-        public_token_hash: minted.public_token_hash,
-        public_token_encrypted: minted.public_token_encrypted,
-      })
-      .select("public_token_encrypted")
-      .single();
-    if (inserted.error || !inserted.data) {
-      console.error("copyBookingLink insert:", inserted.error?.message);
-      return { error: "save_failed" };
-    }
-    settings = inserted.data;
-  }
-
-  const encrypted = settings.public_token_encrypted as string | null;
+  const encrypted = settings.public_token_encrypted;
   if (!encrypted) return { error: "save_failed" };
 
   let token: string;
@@ -181,7 +131,7 @@ export async function regenerateBookingLinkAction(
 
   const supabase = await createClient();
   const dek = await getOrgDataKey(orgId);
-  const minted = mintTokenPayload(orgId, dek);
+  const minted = mintBookingPublicToken(orgId, dek);
 
   const { data: existing } = await supabase
     .from("booking_settings")
@@ -207,6 +157,7 @@ export async function regenerateBookingLinkAction(
       organization_id: orgId,
       public_token_hash: minted.public_token_hash,
       public_token_encrypted: minted.public_token_encrypted,
+      is_enabled: false,
     });
     if (error) {
       console.error("regenerateBookingLink insert:", error.message);
@@ -292,7 +243,7 @@ export async function saveBookingSettingsAction(
       return { error: "save_failed" };
     }
   } else {
-    const minted = mintTokenPayload(orgId, dek);
+    const minted = mintBookingPublicToken(orgId, dek);
     const { error } = await supabase.from("booking_settings").insert({
       organization_id: orgId,
       ...payload,
@@ -354,6 +305,7 @@ export async function addAvailabilityRuleAction(
     console.error("addAvailabilityRule:", error.message);
     return { error: "save_failed" };
   }
+  await ensureOrgBookingSettings(orgId, supabase);
   revalidateBooking(parsed.data.locale);
   return { message: "rule_added" };
 }
@@ -450,6 +402,8 @@ export async function addAvailabilityRangeAction(input: {
     { start: parsed.data.startMinutes, end: parsed.data.endMinutes },
   ]);
   if (!ok) return { error: "save_failed" };
+  const supabase = await createClient();
+  await ensureOrgBookingSettings(orgId, supabase);
   revalidateBooking(parsed.data.locale);
   return { message: "rule_added" };
 }
@@ -514,6 +468,8 @@ export async function applyWeekdayHoursPresetAction(
     ]);
     if (!ok) return { error: "save_failed" };
   }
+  const supabase = await createClient();
+  await ensureOrgBookingSettings(orgId, supabase);
   revalidateBooking(parsedLocale.data);
   return { message: "preset_applied" };
 }

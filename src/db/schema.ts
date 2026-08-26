@@ -823,7 +823,7 @@ export const bookingSettings = pgTable("booking_settings", {
   bookingWindowDays: integer("booking_window_days").notNull().default(14),
   minNoticeHours: integer("min_notice_hours").notNull().default(24),
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
-  isEnabled: boolean("is_enabled").notNull().default(true),
+  isEnabled: boolean("is_enabled").notNull().default(false),
   defaultHostUserId: uuid("default_host_user_id").references(() => profiles.id, {
     onDelete: "set null",
   }),

@@ -18,6 +18,7 @@ import {
   hasUrgentPricing,
   type BookingRateKind,
 } from "@/lib/booking/pricing";
+import { ensureOrgBookingSettings } from "@/lib/booking/settings";
 import { parsePriceToCents } from "@/lib/booking/slots";
 import { createBookingToken, hashBookingToken } from "@/lib/booking/token";
 import { toAppLocale } from "@/lib/i18n/locales";
@@ -164,6 +165,8 @@ export async function createServiceAction(
     console.error("createService:", error?.message);
     return { error: "save_failed" };
   }
+
+  await ensureOrgBookingSettings(orgId, supabase);
 
   await recordAuditEvent({
     organizationId: orgId,
@@ -339,7 +342,10 @@ export async function copyServiceLinkAction(input: {
     .select("id")
     .eq("organization_id", orgId)
     .maybeSingle();
-  if (!settings) return { error: "booking_not_configured" };
+  if (!settings) {
+    const ensured = await ensureOrgBookingSettings(orgId, supabase);
+    if (!ensured) return { error: "booking_not_configured" };
+  }
 
   const { data: service } = await supabase
     .from("booking_services")

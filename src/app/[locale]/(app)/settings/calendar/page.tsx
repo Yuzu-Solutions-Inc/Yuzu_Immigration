@@ -14,8 +14,10 @@ import {
   getMyZoomConnection,
   listAvailabilityRules,
 } from "@/lib/booking/queries";
+import { ensureOrgBookingSettings } from "@/lib/booking/settings";
 import { googleCalendarConfigured } from "@/lib/google/oauth";
 import { microsoftCalendarConfigured } from "@/lib/microsoft/oauth";
+import { createClient } from "@/lib/supabase/server";
 import { zoomConfigured } from "@/lib/zoom/oauth";
 
 export default async function SettingsCalendarPage({
@@ -36,7 +38,7 @@ export default async function SettingsCalendarPage({
   const membership = await getPrimaryMembership();
   const user = await getSessionUser();
   const [
-    settings,
+    loadedSettings,
     rules,
     googleConnection,
     microsoftConnection,
@@ -52,6 +54,15 @@ export default async function SettingsCalendarPage({
         ? getStaffBookingIntegrations(membership.organization.id, user.id)
         : Promise.resolve(null),
     ]);
+
+  let settings = loadedSettings;
+  if (!settings && membership) {
+    const supabase = await createClient();
+    settings = await ensureOrgBookingSettings(
+      membership.organization.id,
+      supabase,
+    );
+  }
 
   return (
     <div className="space-y-6">
