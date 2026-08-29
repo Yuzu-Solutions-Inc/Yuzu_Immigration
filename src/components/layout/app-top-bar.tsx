@@ -47,6 +47,7 @@ const CRUMB_KEYS = {
   security: "crumbSecurity",
   forms: "crumbForms",
   new: "crumbNew",
+  new: "crumbNew",
   edit: "crumbEdit",
   templates: "crumbTemplates",
   person: "crumbPerson",
@@ -78,7 +79,9 @@ function useBreadcrumbs(t: ReturnType<typeof useTranslations<"topBar">>): Crumb[
           ? t("crumbPerson")
           : parent === "projects" || parent === "templates"
             ? t("crumbProject")
-            : t("crumbDetail");
+            : parent === "forms"
+              ? t("crumbCustomForms")
+              : t("crumbDetail");
       crumbs.push({
         label,
         href: isLast ? undefined : (acc as "/home"),
@@ -87,7 +90,12 @@ function useBreadcrumbs(t: ReturnType<typeof useTranslations<"topBar">>): Crumb[
     }
 
     const key = CRUMB_KEYS[seg as keyof typeof CRUMB_KEYS];
-    const label = key ? t(key) : seg.replace(/-/g, " ");
+    const label =
+      seg === "forms" && segments[i - 1] === "projects"
+        ? t("crumbCustomForms")
+        : key
+          ? t(key)
+          : seg.replace(/-/g, " ");
     crumbs.push({
       label,
       href: isLast ? undefined : (acc as "/home"),

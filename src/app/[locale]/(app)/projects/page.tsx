@@ -35,6 +35,7 @@ export default async function ProjectsPage({
   const t = await getTranslations("projects");
   const th = await getTranslations("appHome");
   const to = await getTranslations("orgPrograms");
+  const tf = await getTranslations("customForms");
   const membership = await getPrimaryMembership();
   const canCreate = canCreateInWorkspace(membership);
   const appLocale = toAppLocale(locale);
@@ -75,6 +76,12 @@ export default async function ProjectsPage({
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             {to("manageButton")}
+          </Link>
+          <Link
+            href="/projects/forms"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            {tf("manageButton")}
           </Link>
           {canCreate ? <NewProjectButton label={t("new")} /> : null}
         </div>

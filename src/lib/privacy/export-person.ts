@@ -3,8 +3,10 @@ import {
   getProjectAnswers,
   normalizeAnswersStore,
 } from "@/lib/ircc/answers-store";
+import { normalizeCustomAnswersStore } from "@/lib/custom-forms/answers";
 import {
   decryptAnswersValue,
+  decryptCustomAnswersValue,
   decryptBookingFormAnswers,
   decryptBookingGuestRow,
   decryptDocumentFileRow,
@@ -99,6 +101,15 @@ export type PersonDataExportPayload = {
      * Shared file-level questionnaire fields (e.g. couple / common-law).
      * Included because they are part of the person's immigration file.
      */
+    projectScopedAnswers: Record<string, unknown>;
+  }>;
+  customFormAnswers: Array<{
+    project_id: string;
+    project_title: string | null;
+    questionnaire_submitted_at: string | null;
+    current_section: string | null;
+    updated_at: string;
+    personAnswers: Record<string, unknown>;
     projectScopedAnswers: Record<string, unknown>;
   }>;
   documentRequests: Array<{
@@ -458,8 +469,10 @@ export async function buildPersonDataExport(input: {
   let answers: AnswersRow[] = [];
   let scopedForms: FormRow[] = [];
 
+  let customAnswers: AnswersRow[] = [];
+
   if (projectIds.length > 0) {
-    const [answersResult, scopedFormsResult] =
+    const [answersResult, scopedFormsResult, customAnswersResult] =
       await Promise.all([
         supabase
           .from("project_form_answers")
@@ -477,9 +490,17 @@ export async function buildPersonDataExport(input: {
           .in("project_id", projectIds)
           .is("person_id", null)
           .order("sort_order", { ascending: true }),
+        supabase
+          .from("project_custom_form_answers")
+          .select(
+            "project_id, answers, current_section, questionnaire_submitted_at, updated_at",
+          )
+          .eq("organization_id", input.organizationId)
+          .in("project_id", projectIds),
       ]);
     answers = (answersResult.data ?? []) as AnswersRow[];
     scopedForms = (scopedFormsResult.data ?? []) as FormRow[];
+    customAnswers = (customAnswersResult.data ?? []) as AnswersRow[];
   }
 
   const formAnswers = answers.map((row) => {
@@ -494,6 +515,22 @@ export async function buildPersonDataExport(input: {
       updated_at: row.updated_at,
       personAnswers: getPersonAnswers(store, input.personId),
       projectScopedAnswers: getProjectAnswers(store),
+    };
+  });
+
+  const customFormAnswers = customAnswers.map((row) => {
+    const store = normalizeCustomAnswersStore(
+      decryptCustomAnswersValue(row.answers, key),
+      { principalPersonId: principalByProject.get(row.project_id) ?? null },
+    );
+    return {
+      project_id: row.project_id,
+      project_title: projectTitleById.get(row.project_id) ?? null,
+      questionnaire_submitted_at: row.questionnaire_submitted_at,
+      current_section: row.current_section,
+      updated_at: row.updated_at,
+      personAnswers: store.byPerson[input.personId] ?? {},
+      projectScopedAnswers: store.project,
     };
   });
 
@@ -562,6 +599,7 @@ export async function buildPersonDataExport(input: {
     })),
     forms,
     formAnswers,
+    customFormAnswers,
     documentRequests: (docRequests ?? []).map((row) => {
       const decrypted = decryptDocumentRequestRow(
         row as {

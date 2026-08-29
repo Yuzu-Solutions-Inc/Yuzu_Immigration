@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { draftFromOrganizationProgram } from "@/lib/crm/org-programs";
+import { listCustomFormTemplates } from "@/lib/custom-forms/queries";
 
 export default async function EditProjectTemplatePage({
   params,
@@ -27,6 +28,8 @@ export default async function EditProjectTemplatePage({
 
   const program = await getOrganizationProgram(id);
   if (!program || !program.is_active) notFound();
+
+  const catalog = await listCustomFormTemplates(membership.organization.id);
 
   const t = await getTranslations("orgPrograms");
 
@@ -51,6 +54,10 @@ export default async function EditProjectTemplatePage({
           mode="edit"
           programId={program.id}
           initial={draftFromOrganizationProgram(program)}
+          customFormCatalog={catalog.map((row) => ({
+            id: row.id,
+            title: row.title,
+          }))}
         />
       </SurfaceCard>
     </div>

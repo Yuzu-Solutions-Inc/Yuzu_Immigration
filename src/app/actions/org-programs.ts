@@ -13,6 +13,7 @@ import {
   orgProgramFieldsSchema,
   type OrganizationProgram,
 } from "@/lib/crm/org-programs";
+import { normalizeOrgProgramCustomForms } from "@/lib/custom-forms/schema";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,11 +42,14 @@ async function requireWritableOrgMember() {
 function parseOrgProgramForm(formData: FormData) {
   const formsRaw = String(formData.get("forms") || "[]");
   const documentsRaw = String(formData.get("documents") || "[]");
+  const customFormsRaw = String(formData.get("customForms") || "[]");
   let forms: unknown = [];
   let documents: unknown = [];
+  let customForms: unknown = [];
   try {
     forms = JSON.parse(formsRaw);
     documents = JSON.parse(documentsRaw);
+    customForms = JSON.parse(customFormsRaw);
   } catch {
     return null;
   }
@@ -60,6 +64,7 @@ function parseOrgProgramForm(formData: FormData) {
     allowsOutsideCanada: formData.get("allowsOutsideCanada") === "on",
     forms,
     documents,
+    customForms,
   };
 }
 
@@ -130,6 +135,7 @@ export async function createOrganizationProgramAction(
 
   const forms = normalizeOrgProgramForms(parsed.data.forms);
   const documents = normalizeOrgProgramDocuments(parsed.data.documents);
+  const customForms = normalizeOrgProgramCustomForms(parsed.data.customForms);
 
   const { data, error } = await supabase
     .from("organization_programs")
@@ -143,6 +149,7 @@ export async function createOrganizationProgramAction(
       allows_outside_canada: parsed.data.allowsOutsideCanada,
       forms,
       documents,
+      custom_forms: customForms,
       is_active: true,
       created_by: user?.id ?? null,
     })
@@ -192,6 +199,7 @@ export async function updateOrganizationProgramAction(
 
   const forms = normalizeOrgProgramForms(parsed.data.forms);
   const documents = normalizeOrgProgramDocuments(parsed.data.documents);
+  const customForms = normalizeOrgProgramCustomForms(parsed.data.customForms);
 
   const { data, error } = await supabase
     .from("organization_programs")
@@ -204,6 +212,7 @@ export async function updateOrganizationProgramAction(
       allows_outside_canada: parsed.data.allowsOutsideCanada,
       forms,
       documents,
+      custom_forms: customForms,
       updated_at: new Date().toISOString(),
     })
     .eq("organization_id", orgId)

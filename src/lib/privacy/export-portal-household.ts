@@ -4,9 +4,11 @@ import { product } from "@/lib/brand/product";
 
 import { downloadDecryptedDocument } from "@/lib/documents/service";
 import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
+import { normalizeCustomAnswersStore } from "@/lib/custom-forms/answers";
 import { CLOSED_FILE_RETENTION_YEARS } from "@/lib/privacy/retention";
 import {
   decryptAnswersValue,
+  decryptCustomAnswersValue,
   decryptDocumentFileRow,
   decryptPersonRow,
   decryptProjectRow,
@@ -177,6 +179,24 @@ export async function buildPortalHouseholdExport(input: {
     ),
   );
 
+  const { data: customAnswersRows } =
+    liveProjectIds.length > 0
+      ? await admin
+          .from("project_custom_form_answers")
+          .select("project_id, answers")
+          .eq("organization_id", input.organizationId)
+          .in("project_id", liveProjectIds)
+      : { data: [] as Record<string, unknown>[] };
+
+  const customAnswersByProject = new Map(
+    ((customAnswersRows ?? []) as Array<{ project_id: string; answers: unknown }>).map(
+      (row) => [
+        row.project_id,
+        normalizeCustomAnswersStore(decryptCustomAnswersValue(row.answers, key)),
+      ],
+    ),
+  );
+
   const { data: docRows } =
     liveProjectIds.length > 0
       ? await admin
@@ -332,6 +352,12 @@ export async function buildPortalHouseholdExport(input: {
     zip.file(
       `${folder}/answers.json`,
       json(answersByProject.get(project.id) ?? { byPerson: {}, project: {} }),
+    );
+    zip.file(
+      `${folder}/custom-answers.json`,
+      json(
+        customAnswersByProject.get(project.id) ?? { byPerson: {}, project: {} },
+      ),
     );
 
     const files = (

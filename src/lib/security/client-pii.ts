@@ -25,6 +25,7 @@ export const PII_AAD = {
     destructionNote: "immigration_projects.destruction_note",
   },
   answers: "project_form_answers.answers",
+  customAnswers: "project_custom_form_answers.answers",
   documents: {
     originalFilename: "project_document_files.original_filename",
     customLabel: "project_document_requests.custom_label",
@@ -221,6 +222,24 @@ export function decryptAnswersValue(
   key: Buffer,
 ): Record<string, unknown> {
   const decoded = decryptJson(answers, PII_AAD.answers, key);
+  if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) {
+    return decoded as Record<string, unknown>;
+  }
+  return {};
+}
+
+export function encryptCustomAnswersValue(
+  answers: unknown,
+  key: Buffer,
+): EncryptedJsonEnvelope {
+  return encryptJson(answers ?? {}, PII_AAD.customAnswers, key);
+}
+
+export function decryptCustomAnswersValue(
+  answers: unknown,
+  key: Buffer,
+): Record<string, unknown> {
+  const decoded = decryptJson(answers, PII_AAD.customAnswers, key);
   if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) {
     return decoded as Record<string, unknown>;
   }

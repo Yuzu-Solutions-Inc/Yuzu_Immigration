@@ -587,19 +587,21 @@ export async function createProjectAction(
               resolved.people.map((person) => [person.id, person.role]),
             ),
           );
-    const { error: formsError } = await supabase.from("project_forms").insert(
-      seeds.map((seed) => ({
-        organization_id: orgId,
-        project_id: project.id,
-        form_code: seed.formCode,
-        person_id: seed.personId,
-        is_required: seed.isRequired,
-        sort_order: seed.sortOrder,
-        status: "todo",
-      })),
-    );
-    if (formsError) {
-      console.error("seed project forms:", formsError.message);
+    if (seeds.length > 0) {
+      const { error: formsError } = await supabase.from("project_forms").insert(
+        seeds.map((seed) => ({
+          organization_id: orgId,
+          project_id: project.id,
+          form_code: seed.formCode,
+          person_id: seed.personId,
+          is_required: seed.isRequired,
+          sort_order: seed.sortOrder,
+          status: "todo",
+        })),
+      );
+      if (formsError) {
+        console.error("seed project forms:", formsError.message);
+      }
     }
 
     const orgKey = await getOrgDataKey(orgId);
@@ -672,49 +674,85 @@ export async function createProjectAction(
     const { buildInitialAnswersStore } = await import(
       "@/lib/ircc/project-forms"
     );
-    const { data: repProfile } = representativeUserId
-      ? await supabase
-          .from("profiles")
-          .select(PROFILE_REP_SELECT)
-          .eq("id", representativeUserId)
-          .maybeSingle()
-      : { data: null };
 
-    const initialAnswers = buildInitialAnswersStore({
-      people: resolved.people.map((p) => ({
-        id: p.id,
-        displayName: p.displayName,
-        email: p.email,
-        role: p.role,
-      })),
-      formLanguage: toIrccFormLanguage(data.formLanguage),
-      repAnswers: accountRepAnswersFromProfile(repProfile),
-      projectAnswers: {
-        applicationLocation,
-        isCommonLaw: isCommonLaw ? "Y" : "N",
-        needsCustodian: needsCustodian ? "Y" : "N",
-      },
-      personKits: custom ? personKits : undefined,
-    });
+    if (seeds.length > 0) {
+      const { data: repProfile } = representativeUserId
+        ? await supabase
+            .from("profiles")
+            .select(PROFILE_REP_SELECT)
+            .eq("id", representativeUserId)
+            .maybeSingle()
+        : { data: null };
 
-    const { recycleExistingPeopleIntoStore, formCodesByPersonFromSeeds } =
-      await import("@/lib/ircc/recycle-answers");
-    const recycledAnswers = await recycleExistingPeopleIntoStore({
-      supabase,
-      organizationId: orgId,
-      orgKey,
-      store: initialAnswers,
-      people: resolved.people,
-      formCodesByPerson: formCodesByPersonFromSeeds(seeds, resolved.people),
-      excludeProjectId: project.id as string,
-    });
+      const initialAnswers = buildInitialAnswersStore({
+        people: resolved.people.map((p) => ({
+          id: p.id,
+          displayName: p.displayName,
+          email: p.email,
+          role: p.role,
+        })),
+        formLanguage: toIrccFormLanguage(data.formLanguage),
+        repAnswers: accountRepAnswersFromProfile(repProfile),
+        projectAnswers: {
+          applicationLocation,
+          isCommonLaw: isCommonLaw ? "Y" : "N",
+          needsCustodian: needsCustodian ? "Y" : "N",
+        },
+        personKits: custom ? personKits : undefined,
+      });
 
-    await supabase.from("project_form_answers").insert({
-      organization_id: orgId,
-      project_id: project.id,
-      answers: encryptAnswersValue(recycledAnswers, orgKey),
-      current_section: "identity",
-    });
+      const { recycleExistingPeopleIntoStore, formCodesByPersonFromSeeds } =
+        await import("@/lib/ircc/recycle-answers");
+      const recycledAnswers = await recycleExistingPeopleIntoStore({
+        supabase,
+        organizationId: orgId,
+        orgKey,
+        store: initialAnswers,
+        people: resolved.people,
+        formCodesByPerson: formCodesByPersonFromSeeds(seeds, resolved.people),
+        excludeProjectId: project.id as string,
+      });
+
+      await supabase.from("project_form_answers").insert({
+        organization_id: orgId,
+        project_id: project.id,
+        answers: encryptAnswersValue(recycledAnswers, orgKey),
+        current_section: "identity",
+      });
+    }
+
+    if (orgProgram && orgProgram.custom_forms.length > 0) {
+      const { listCustomFormTemplates, snapshotCustomFormOntoProject, upsertProjectCustomFormAnswers } =
+        await import("@/lib/custom-forms/queries");
+      const { emptyCustomAnswersStore } = await import(
+        "@/lib/custom-forms/answers"
+      );
+      const catalog = await listCustomFormTemplates(orgId, {
+        includeInactive: true,
+      });
+      const byId = new Map(catalog.map((row) => [row.id, row]));
+      for (const seed of orgProgram.custom_forms) {
+        const template = byId.get(seed.templateId);
+        if (!template) continue;
+        await snapshotCustomFormOntoProject({
+          organizationId: orgId,
+          projectId: project.id as string,
+          template,
+          scope: seed.scope,
+          personIds,
+          isRequired: seed.isRequired,
+          sortOrder: seed.sortOrder,
+          client: supabase,
+        });
+      }
+      await upsertProjectCustomFormAnswers({
+        organizationId: orgId,
+        projectId: project.id as string,
+        answers: emptyCustomAnswersStore(),
+        client: supabase,
+      });
+    }
+
     const { refreshProjectProgress } = await import("@/lib/crm/progress");
     await refreshProjectProgress(orgId, project.id, supabase);
   } catch (error) {

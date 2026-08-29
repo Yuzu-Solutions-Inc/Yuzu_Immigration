@@ -30,6 +30,7 @@ function metaLine(
     | "allows_outside_canada"
     | "forms"
     | "documents"
+    | "custom_forms"
   >,
   t: ReturnType<typeof useTranslations<"orgPrograms">>,
 ) {
@@ -46,6 +47,7 @@ function metaLine(
     composition.join(" / "),
     location.join(" / "),
     t("formsCount", { count: program.forms.length }),
+    t("customFormsCount", { count: program.custom_forms.length }),
     t("documentsCount", { count: program.documents.length }),
   ]
     .filter(Boolean)

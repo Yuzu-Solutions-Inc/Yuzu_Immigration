@@ -182,7 +182,7 @@ async function computeProgressForProjects(
 
   const key = await getOrgDataKey(orgId);
 
-  const [docsResult, formsResult, answersResult, participantsResult] =
+  const [docsResult, formsResult, answersResult, participantsResult, customResult] =
     await Promise.all([
       supabase
         .from("project_document_requests")
@@ -211,6 +211,11 @@ async function computeProgressForProjects(
         .in("project_id", projectIds)
         .is("left_at", null)
         .limit(2000),
+      supabase
+        .from("immigration_projects")
+        .select("id, custom_form_percent")
+        .eq("organization_id", orgId)
+        .in("id", projectIds),
     ]);
 
   if (docsResult.error) {
@@ -264,17 +269,30 @@ async function computeProgressForProjects(
     }
   }
 
+  const customPercentByProject = new Map<string, number>();
+  for (const row of (customResult.data ?? []) as Array<{
+    id: string;
+    custom_form_percent: number | null;
+  }>) {
+    customPercentByProject.set(row.id, row.custom_form_percent ?? 0);
+  }
+
   for (const projectId of projectIds) {
     const docs = docsByProject.get(projectId);
+    const irccForms = formsByProject.get(projectId) ?? [];
+    const irccPercent = formPercentForProject(
+      irccForms,
+      answersByProject.get(projectId) ?? {},
+      principalByProject.get(projectId) ?? null,
+    );
     progress.set(projectId, {
       docsDone: docs?.done ?? 0,
       docsTotal: docs?.total ?? 0,
       docsToReview: docs?.toReview ?? 0,
-      formPercent: formPercentForProject(
-        formsByProject.get(projectId) ?? [],
-        answersByProject.get(projectId) ?? {},
-        principalByProject.get(projectId) ?? null,
-      ),
+      formPercent:
+        irccForms.length > 0
+          ? irccPercent
+          : (customPercentByProject.get(projectId) ?? 0),
     });
   }
 
@@ -294,6 +312,7 @@ export function computeProjectProgressFromDetail(
   forms: DetailFormRow[],
   answers: unknown,
   principalPersonId: string | null,
+  customFormPercent?: number,
 ): ProjectProgress {
   const requiredDocs = documentRequests.filter((row) => row.is_required);
   const docsDone = requiredDocs.filter((row) =>
@@ -302,15 +321,18 @@ export function computeProjectProgressFromDetail(
   const docsToReview = requiredDocs.filter(
     (row) => row.status === "uploaded",
   ).length;
+  const requiredIrcc = forms.filter((row) => row.is_required);
+  const irccPercent = formPercentForProject(
+    forms,
+    answers,
+    principalPersonId,
+  );
 
   return {
     docsDone,
     docsTotal: requiredDocs.length,
     docsToReview,
-    formPercent: formPercentForProject(
-      forms,
-      answers,
-      principalPersonId,
-    ),
+    formPercent:
+      requiredIrcc.length > 0 ? irccPercent : (customFormPercent ?? 0),
   };
 }

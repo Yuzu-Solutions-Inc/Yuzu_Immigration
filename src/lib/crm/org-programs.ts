@@ -9,6 +9,11 @@ import {
   visitorKitForms,
   workPermitKitForms,
 } from "@/lib/ircc/kits";
+import {
+  normalizeOrgProgramCustomForms,
+  orgProgramCustomFormSchema,
+  type OrgProgramCustomFormSeed,
+} from "@/lib/custom-forms/schema";
 
 export const ORG_PROGRAM_VALUE_PREFIX = "org:" as const;
 
@@ -37,6 +42,7 @@ export type OrganizationProgram = {
   allows_outside_canada: boolean;
   forms: OrgProgramFormSeed[];
   documents: OrgProgramDocumentSeed[];
+  custom_forms: OrgProgramCustomFormSeed[];
   is_active: boolean;
   sort_order: number;
   created_by: string | null;
@@ -86,6 +92,7 @@ export const orgProgramFieldsSchema = z
     allowsOutsideCanada: z.boolean(),
     forms: z.array(orgProgramFormSchema).max(40),
     documents: z.array(orgProgramDocumentSchema).max(40),
+    customForms: z.array(orgProgramCustomFormSchema).max(20).default([]),
   })
   .superRefine((data, ctx) => {
     if (!data.allowsIndividual && !data.allowsCouple && !data.allowsFamily) {
@@ -204,6 +211,7 @@ export function mapOrganizationProgramRow(
     allows_outside_canada: Boolean(row.allows_outside_canada),
     forms: normalizeOrgProgramForms(row.forms),
     documents: normalizeOrgProgramDocuments(row.documents),
+    custom_forms: normalizeOrgProgramCustomForms(row.custom_forms),
     is_active: row.is_active !== false,
     sort_order: Number(row.sort_order ?? 0),
     created_by: (row.created_by as string | null) ?? null,
@@ -216,6 +224,7 @@ export function mapOrganizationProgramRow(
 export function defaultOrgProgramDraft(): {
   forms: OrgProgramFormSeed[];
   documents: OrgProgramDocumentSeed[];
+  custom_forms: OrgProgramCustomFormSeed[];
 } {
   return {
     forms: [
@@ -241,6 +250,7 @@ export function defaultOrgProgramDraft(): {
         sortOrder: 20,
       },
     ],
+    custom_forms: [],
   };
 }
 
@@ -274,6 +284,7 @@ export function builtinProgramTemplateDraft(
   allowsOutsideCanada: boolean;
   forms: OrgProgramFormSeed[];
   documents: OrgProgramDocumentSeed[];
+  custom_forms: OrgProgramCustomFormSeed[];
 } {
   const kitForms =
     key === "study_permit"
@@ -297,6 +308,7 @@ export function builtinProgramTemplateDraft(
       sortOrder: seed.sortOrder,
     })),
     documents: docs,
+    custom_forms: [],
   };
 }
 
@@ -309,6 +321,7 @@ export type OrganizationProgramDraftInput = {
   allows_outside_canada: boolean;
   forms: OrgProgramFormSeed[];
   documents: OrgProgramDocumentSeed[];
+  custom_forms: OrgProgramCustomFormSeed[];
 };
 
 export function draftFromOrganizationProgram(
@@ -322,6 +335,7 @@ export function draftFromOrganizationProgram(
     | "allows_outside_canada"
     | "forms"
     | "documents"
+    | "custom_forms"
   >,
   options?: { nameSuffix?: string },
 ): OrganizationProgramDraftInput {
@@ -335,6 +349,7 @@ export function draftFromOrganizationProgram(
     allows_outside_canada: program.allows_outside_canada,
     forms: program.forms,
     documents: program.documents,
+    custom_forms: program.custom_forms,
   };
 }
 

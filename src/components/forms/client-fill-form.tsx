@@ -12,6 +12,9 @@ import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
+import { CustomIntakePanel } from "@/components/custom-forms/custom-intake-panel";
+import { emptyCustomAnswersStore, type CustomAnswersStore } from "@/lib/custom-forms/answers";
+import type { ProjectCustomFormRow } from "@/lib/custom-forms/schema";
 import type { ProjectFormLanguage } from "@/lib/ircc/form-language";
 
 const initial: FormsActionState = {};
@@ -21,11 +24,21 @@ export function ClientFillForm({
   people,
   formLanguage,
   initialSubmittedAt,
+  customForms = [],
+  customStore,
+  customSubmittedAt = null,
+  fillPersonId = null,
+  uiLocale,
 }: {
   projectId: string;
   people: QuestionnairePerson[];
   formLanguage: ProjectFormLanguage;
   initialSubmittedAt?: string | null;
+  customForms?: ProjectCustomFormRow[];
+  customStore?: CustomAnswersStore;
+  customSubmittedAt?: string | null;
+  fillPersonId?: string | null;
+  uiLocale?: string;
 }) {
   const t = useTranslations("forms");
   const tp = useTranslations("projects");
@@ -104,8 +117,12 @@ export function ClientFillForm({
       ? t("clientSubmitSuccess")
       : null;
 
+  const hasIrcc = localPeople.some((person) => person.formCodes.length > 0);
+
   return (
     <div className="w-full space-y-6">
+      {hasIrcc ? (
+        <>
       {(submittedAt || successMessage) && (
         <div className="max-w-2xl space-y-2">
           {submittedAt ? (
@@ -143,6 +160,24 @@ export function ClientFillForm({
         submitPending={submitPending}
         submittedAt={submittedAt}
       />
+        </>
+      ) : null}
+
+      {customForms.length > 0 ? (
+        <CustomIntakePanel
+          locale={uiLocale ?? formLanguage}
+          projectId={projectId}
+          forms={customForms}
+          people={localPeople.map((person) => ({
+            id: person.id,
+            displayName: person.displayName,
+          }))}
+          store={customStore ?? emptyCustomAnswersStore()}
+          submittedAt={customSubmittedAt}
+          mode="client"
+          fillPersonId={fillPersonId}
+        />
+      ) : null}
     </div>
   );
 }

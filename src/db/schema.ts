@@ -335,6 +335,8 @@ export const immigrationProjects = pgTable("immigration_projects", {
   ),
   /** IRCC PDF blank language: en or fr. */
   formLanguage: text("form_language").notNull().default("en"),
+  /** Completeness of attached custom intake forms. */
+  customFormPercent: integer("custom_form_percent").notNull().default(0),
   representativeUserId: uuid("representative_user_id").references(
     () => profiles.id,
     { onDelete: "set null" },
@@ -651,10 +653,91 @@ export const organizationPrograms = pgTable("organization_programs", {
     >()
     .notNull()
     .default([]),
+  customForms: jsonb("custom_forms")
+    .$type<
+      Array<{
+        templateId: string;
+        scope: "person" | "project";
+        isRequired: boolean;
+        sortOrder: number;
+      }>
+    >()
+    .notNull()
+    .default([]),
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdBy: uuid("created_by").references(() => profiles.id, {
     onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const customFormTemplates = pgTable("custom_form_templates", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  schema: jsonb("schema").$type<Record<string, unknown>>().notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectCustomForms = pgTable("project_custom_forms", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" }),
+  templateId: uuid("template_id").references(() => customFormTemplates.id, {
+    onDelete: "set null",
+  }),
+  title: text("title").notNull(),
+  schema: jsonb("schema").$type<Record<string, unknown>>().notNull(),
+  scope: text("scope").$type<"person" | "project">().notNull().default("person"),
+  personId: uuid("person_id").references(() => people.id, {
+    onDelete: "cascade",
+  }),
+  isRequired: boolean("is_required").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  status: projectFormStatusEnum("status").notNull().default("todo"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectCustomFormAnswers = pgTable("project_custom_form_answers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => immigrationProjects.id, { onDelete: "cascade" })
+    .unique(),
+  answers: jsonb("answers").$type<Record<string, unknown>>().notNull().default({}),
+  currentSection: text("current_section"),
+  questionnaireSubmittedAt: timestamp("questionnaire_submitted_at", {
+    withTimezone: true,
   }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

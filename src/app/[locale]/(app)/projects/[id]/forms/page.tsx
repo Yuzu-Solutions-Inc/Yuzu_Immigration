@@ -7,6 +7,11 @@ import { ensureProjectFormsSeeded } from "@/app/actions/forms";
 import { ProjectQuestionnaire } from "@/components/forms/project-forms-panel";
 import { Link } from "@/i18n/navigation";
 import { getProject, getProjectParticipants } from "@/lib/crm/queries";
+import { emptyCustomAnswersStore } from "@/lib/custom-forms/answers";
+import {
+  getProjectCustomFormAnswers,
+  listProjectCustomForms,
+} from "@/lib/custom-forms/queries";
 import {
   PROFILE_REP_SELECT,
 } from "@/lib/ircc/account-rep";
@@ -34,12 +39,16 @@ export default async function ProjectFormsPage({
     project.organization_id,
     project.id,
     project.program_family,
+    project.organization_program_id,
   );
 
-  const [participants, forms, answersRow, t] = await Promise.all([
+  const [participants, forms, answersRow, customForms, customAnswersRow, t] =
+    await Promise.all([
     getProjectParticipants(id),
     listProjectForms(id),
     getProjectFormAnswers(id),
+    listProjectCustomForms(id),
+    getProjectCustomFormAnswers(id),
     getTranslations("forms"),
   ]);
 
@@ -83,10 +92,13 @@ export default async function ProjectFormsPage({
 
       <ProjectQuestionnaire
         locale={formLocale}
+        uiLocale={locale}
         projectId={project.id}
         people={people}
         formLanguage={toProjectFormLanguage(project.form_language)}
         modificationBlocked={project.status === "granted"}
+        customForms={customForms}
+        customStore={customAnswersRow?.answers ?? emptyCustomAnswersStore()}
       />
     </div>
   );

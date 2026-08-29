@@ -6,9 +6,15 @@ import {
   stripPersonFromAnswersStore,
 } from "@/lib/ircc/answers-store";
 import {
+  normalizeCustomAnswersStore,
+  stripPersonFromCustomAnswersStore,
+} from "@/lib/custom-forms/answers";
+import {
   decryptAnswersValue,
+  decryptCustomAnswersValue,
   decryptPersonRow,
   encryptAnswersValue,
+  encryptCustomAnswersValue,
   encryptDestructionWrite,
   encryptProjectWrite,
 } from "@/lib/security/client-pii";
@@ -199,6 +205,43 @@ async function stripPersonFromProjectAnswers(
   }
 }
 
+async function stripPersonFromCustomProjectAnswers(
+  admin: AdminClient,
+  organizationId: string,
+  personId: string,
+  projectIds: string[],
+) {
+  if (projectIds.length === 0) return;
+  const key = await getOrgDataKey(organizationId);
+  const { data: rows } = await admin
+    .from("project_custom_form_answers")
+    .select("id, project_id, answers")
+    .eq("organization_id", organizationId)
+    .in("project_id", projectIds);
+
+  for (const row of rows ?? []) {
+    const store = normalizeCustomAnswersStore(
+      decryptCustomAnswersValue(row.answers, key),
+    );
+    const next = stripPersonFromCustomAnswersStore(store, personId);
+    const { error } = await admin
+      .from("project_custom_form_answers")
+      .update({
+        answers: encryptCustomAnswersValue(next, key),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id)
+      .eq("organization_id", organizationId);
+    if (error) console.error("strip custom answers:", error.message);
+  }
+
+  await admin
+    .from("project_custom_forms")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("person_id", personId);
+}
+
 async function erasePersonBookings(
   admin: AdminClient,
   organizationId: string,
@@ -348,7 +391,7 @@ export async function erasePersonPersonalData(input: {
     `${decrypted.first_name ?? ""} ${decrypted.last_name ?? ""}`.trim() ||
     "Unknown";
 
-  const [{ data: files }, { data: forms }, { data: participants }] =
+  const [{ data: files }, { data: forms }, { data: customForms }, { data: participants }] =
     await Promise.all([
       admin
         .from("project_document_files")
@@ -358,6 +401,11 @@ export async function erasePersonPersonalData(input: {
       admin
         .from("project_forms")
         .select("id, project_id, generated_storage_path")
+        .eq("organization_id", organizationId)
+        .eq("person_id", personId),
+      admin
+        .from("project_custom_forms")
+        .select("project_id")
         .eq("organization_id", organizationId)
         .eq("person_id", personId),
       admin
@@ -372,6 +420,7 @@ export async function erasePersonPersonalData(input: {
       [
         ...(files ?? []).map((row) => row.project_id as string),
         ...(forms ?? []).map((row) => row.project_id as string),
+        ...(customForms ?? []).map((row) => row.project_id as string),
         ...(participants ?? []).map((row) => row.project_id as string),
       ].filter(Boolean),
     ),
@@ -422,6 +471,12 @@ export async function erasePersonPersonalData(input: {
     .eq("person_id", personId);
 
   await stripPersonFromProjectAnswers(
+    admin,
+    organizationId,
+    personId,
+    projectIds,
+  );
+  await stripPersonFromCustomProjectAnswers(
     admin,
     organizationId,
     personId,
@@ -583,6 +638,16 @@ export async function eraseProjectPersonalData(input: {
     .eq("project_id", projectId);
   await admin
     .from("project_forms")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await admin
+    .from("project_custom_form_answers")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("project_id", projectId);
+  await admin
+    .from("project_custom_forms")
     .delete()
     .eq("organization_id", organizationId)
     .eq("project_id", projectId);

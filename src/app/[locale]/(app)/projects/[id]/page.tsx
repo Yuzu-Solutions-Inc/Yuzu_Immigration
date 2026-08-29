@@ -10,6 +10,13 @@ import { loadProjectContractContext } from "@/app/actions/project-contracts";
 import { ProjectContractPanel } from "@/components/projects/project-contract-panel";
 import { ProjectDocumentsPanel } from "@/components/documents/project-documents-panel";
 import { ProjectFormsPanel } from "@/components/forms/project-forms-panel";
+import { emptyCustomAnswersStore } from "@/lib/custom-forms/answers";
+import { customFormsFillPercent } from "@/lib/custom-forms/completeness";
+import {
+  getProjectCustomFormAnswers,
+  listCustomFormTemplates,
+  listProjectCustomForms,
+} from "@/lib/custom-forms/queries";
 import { ProjectPortalCard } from "@/components/projects/project-portal-card";
 import {
   ExportProjectFileButton,
@@ -84,6 +91,7 @@ export default async function ProjectDetailPage({
       project.organization_id,
       project.id,
       project.program_family,
+      project.organization_program_id,
     );
     await ensureProjectDocumentsSeeded(
       project.organization_id,
@@ -106,6 +114,9 @@ export default async function ProjectDetailPage({
     processor,
     appBaseUrl,
     contractContext,
+    customForms,
+    customAnswersRow,
+    customCatalog,
   ] = await Promise.all([
     getProjectParticipants(id),
     getProjectStatusHistory(id),
@@ -120,6 +131,9 @@ export default async function ProjectDetailPage({
     getActiveCheckoutProcessor(project.organization_id),
     getAppBaseUrl(),
     loadProjectContractContext(id),
+    listProjectCustomForms(id),
+    getProjectCustomFormAnswers(id),
+    listCustomFormTemplates(project.organization_id),
   ]);
   const t = await getTranslations("projects");
   const tprog = await getTranslations("programs");
@@ -166,11 +180,18 @@ export default async function ProjectDetailPage({
     locale === "fr" ? "fr-CA" : locale === "es" ? "es-ES" : "en-CA",
     { year: "numeric", month: "short", day: "numeric" },
   );
+  const customStore = customAnswersRow?.answers ?? emptyCustomAnswersStore();
+  const customPercent = customFormsFillPercent(
+    customForms,
+    customStore,
+    questionnairePeople,
+  );
   const { docsDone, docsTotal, formPercent } = computeProjectProgressFromDetail(
     documentRequests,
     forms,
     store,
     principal?.person?.id ?? null,
+    customPercent,
   );
 
   const programLabel =
@@ -363,11 +384,18 @@ export default async function ProjectDetailPage({
           forms: (
             <ProjectFormsPanel
               locale={formLocale}
+              uiLocale={locale}
               projectId={project.id}
               programFamily={project.program_family}
               modificationBlocked={modificationBlocked}
               forms={todoForms}
               people={questionnairePeople}
+              customForms={customForms}
+              customCatalog={customCatalog.map((row) => ({
+                id: row.id,
+                title: row.title,
+              }))}
+              customStore={customStore}
             />
           ),
           communication: (

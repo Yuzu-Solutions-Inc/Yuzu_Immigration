@@ -30,6 +30,7 @@ import {
   personKitAssignments,
   personKitsFromAnswersStore,
   reconcileProjectKitForms,
+  syncPersonScopedFormsForParticipants,
   upsertProjectFormAnswers,
 } from "@/lib/ircc/project-forms";
 import { requireOrganizationId } from "@/lib/crm/queries";
@@ -446,11 +447,12 @@ export async function previewProjectFormPdfAction(
   }
 }
 
-/** Backfill / reconcile kit forms (always includes IMM 5476). */
+/** Backfill / reconcile kit forms. Custom-only files skip the IRCC kit. */
 export async function ensureProjectFormsSeeded(
   organizationId: string,
   projectId: string,
   programFamily: string,
+  organizationProgramId?: string | null,
 ) {
   const supabase = await createClient();
   if (await assertProjectModifiable(supabase, projectId, organizationId)) {
@@ -459,15 +461,40 @@ export async function ensureProjectFormsSeeded(
 
   const people = await listActiveProjectPeople(supabase, projectId);
   const personIds = people.map((p) => p.id);
-  const answersRow = await getProjectFormAnswers(projectId);
-  const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
-    principalPersonId: people.find((p) => p.role === "principal")?.id,
+
+  const { syncCustomFormsForParticipants, listProjectCustomForms } =
+    await import("@/lib/custom-forms/queries");
+  await syncCustomFormsForParticipants({
+    organizationId,
+    projectId,
+    personIds,
+    client: supabase,
   });
+
+  if (organizationProgramId) {
+    await syncPersonScopedFormsForParticipants({
+      organizationId,
+      projectId,
+      personIds,
+    });
+    return;
+  }
+
   const { data: existingRows } = await supabase
     .from("project_forms")
     .select("form_code")
     .eq("project_id", projectId)
     .eq("organization_id", organizationId);
+
+  const customForms = await listProjectCustomForms(projectId, supabase);
+  if ((existingRows ?? []).length === 0 && customForms.length > 0) {
+    return;
+  }
+
+  const answersRow = await getProjectFormAnswers(projectId);
+  const store = normalizeAnswersStore(answersRow?.answers ?? {}, {
+    principalPersonId: people.find((p) => p.role === "principal")?.id,
+  });
   const kit = kitOptionsFromAnswersStore(
     store,
     programFamily,

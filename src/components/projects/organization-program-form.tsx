@@ -24,12 +24,14 @@ import {
   type OrgProgramDocumentSeed,
   type OrgProgramFormSeed,
 } from "@/lib/crm/org-programs";
+import type { OrgProgramCustomFormSeed } from "@/lib/custom-forms/schema";
 import { formTitle, type FormCode } from "@/lib/ircc/catalog";
 
 const initialState: OrgProgramActionState = {};
 
 type DraftDoc = OrgProgramDocumentSeed & { localId: string };
 type DraftForm = OrgProgramFormSeed & { localId: string };
+type DraftCustomForm = OrgProgramCustomFormSeed & { localId: string };
 
 function newLocalId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -49,12 +51,14 @@ export function OrganizationProgramForm({
   programId,
   initial,
   cancelHref = "/projects/templates",
+  customFormCatalog = [],
 }: {
   locale: string;
   mode: "create" | "edit";
   programId?: string;
   initial?: OrganizationProgramDraftInput | null;
   cancelHref?: string;
+  customFormCatalog?: Array<{ id: string; title: string }>;
 }) {
   const t = useTranslations("orgPrograms");
   const isEdit = mode === "edit";
@@ -68,6 +72,7 @@ export function OrganizationProgramForm({
     allows_outside_canada: true,
     forms: defaults.forms,
     documents: defaults.documents,
+    custom_forms: defaults.custom_forms,
   };
 
   const [name, setName] = useState(seed.name);
@@ -85,6 +90,12 @@ export function OrganizationProgramForm({
   );
   const [documents, setDocuments] = useState<DraftDoc[]>(() =>
     toDraftDocs(seed.documents.length ? seed.documents : defaults.documents),
+  );
+  const [customForms, setCustomForms] = useState<DraftCustomForm[]>(() =>
+    (seed.custom_forms ?? []).map((form) => ({
+      ...form,
+      localId: newLocalId(),
+    })),
   );
   const [customLabel, setCustomLabel] = useState("");
   const [customScope, setCustomScope] = useState<"person" | "project">("person");
@@ -196,6 +207,13 @@ export function OrganizationProgramForm({
           documents.map(({ localId: _id, ...doc }) => doc),
         )}
       />
+      <input
+        type="hidden"
+        name="customForms"
+        value={JSON.stringify(
+          customForms.map(({ localId: _id, ...form }) => form),
+        )}
+      />
       {allowsIndividual ? (
         <input type="hidden" name="allowsIndividual" value="on" />
       ) : null}
@@ -303,6 +321,81 @@ export function OrganizationProgramForm({
             </label>
           ))}
         </div>
+      </Field>
+
+      <Field>
+        <FieldLabel>{t("customForms")}</FieldLabel>
+        <FieldHint>{t("customFormsHelp")}</FieldHint>
+        {customFormCatalog.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t("noCustomForms")}</p>
+        ) : (
+          <div className="max-h-56 space-y-2 overflow-y-auto rounded-xl border border-border bg-canvas p-4">
+            {customFormCatalog.map((template) => {
+              const existing = customForms.find(
+                (form) => form.templateId === template.id,
+              );
+              return (
+                <div
+                  key={template.id}
+                  className="flex flex-wrap items-center gap-2 text-sm"
+                >
+                  <label className="flex min-w-0 flex-1 items-center gap-2 text-brand">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(existing)}
+                      onChange={() => {
+                        setCustomForms((prev) => {
+                          if (prev.some((form) => form.templateId === template.id)) {
+                            return prev.filter(
+                              (form) => form.templateId !== template.id,
+                            );
+                          }
+                          return [
+                            ...prev,
+                            {
+                              localId: newLocalId(),
+                              templateId: template.id,
+                              scope: "person",
+                              isRequired: true,
+                              sortOrder: (prev.length + 1) * 10,
+                            },
+                          ];
+                        });
+                      }}
+                      className="size-4 rounded border-border"
+                    />
+                    {template.title}
+                  </label>
+                  {existing ? (
+                    <NativeSelect
+                      density="dense"
+                      className="w-auto text-xs"
+                      value={existing.scope}
+                      onChange={(event) =>
+                        setCustomForms((prev) =>
+                          prev.map((form) =>
+                            form.localId === existing.localId
+                              ? {
+                                  ...form,
+                                  scope:
+                                    event.target.value === "project"
+                                      ? "project"
+                                      : "person",
+                                }
+                              : form,
+                          ),
+                        )
+                      }
+                    >
+                      <option value="person">{t("scopePerson")}</option>
+                      <option value="project">{t("scopeProject")}</option>
+                    </NativeSelect>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Field>
 
       <div className="space-y-3">

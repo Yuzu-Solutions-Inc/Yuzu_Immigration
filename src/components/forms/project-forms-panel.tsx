@@ -15,6 +15,7 @@ import {
   ModularQuestionnaire,
   type QuestionnairePerson,
 } from "@/components/forms/modular-questionnaire";
+import { CustomIntakePanel } from "@/components/custom-forms/custom-intake-panel";
 import { ProjectFormPdfViewer } from "@/components/forms/project-form-pdf-viewer";
 import {
   qualityIssueKey,
@@ -44,6 +45,8 @@ import { addableFormsForProgram } from "@/lib/ircc/kits";
 import type { ProjectFormLanguage } from "@/lib/ircc/form-language";
 import type { ProjectFormRow } from "@/lib/ircc/project-forms";
 import type { ProgramFamily } from "@/db/schema";
+import { emptyCustomAnswersStore, type CustomAnswersStore } from "@/lib/custom-forms/answers";
+import type { ProjectCustomFormRow } from "@/lib/custom-forms/schema";
 import { cn } from "@/lib/utils";
 
 const initialState: FormsActionState = {};
@@ -151,22 +154,31 @@ function FormAlertsSummary({
 
 export function ProjectFormsPanel({
   locale,
+  uiLocale,
   projectId,
   programFamily,
   forms,
   people,
   modificationBlocked = false,
+  customForms = [],
+  customCatalog = [],
+  customStore,
 }: {
   locale: "en" | "fr";
+  uiLocale?: string;
   projectId: string;
   programFamily: ProgramFamily | string;
   forms: ProjectFormTodoRow[];
   people: QuestionnairePerson[];
   modificationBlocked?: boolean;
+  customForms?: ProjectCustomFormRow[];
+  customCatalog?: Array<{ id: string; title: string }>;
+  customStore?: CustomAnswersStore;
 }) {
   const t = useTranslations("forms");
   const tp = useTranslations("projects");
   const tr = useTranslations("roles");
+  const tc = useTranslations("customForms");
   const [addState, addAction, addPending] = useActionState(
     addFormToProjectAction,
     initialState,
@@ -284,13 +296,39 @@ export function ProjectFormsPanel({
     [forms, peopleById, locale, t],
   );
 
+  const showCustom =
+    customForms.length > 0 || customCatalog.length > 0;
+  const showIrcc = forms.length > 0 || !showCustom;
+  const labelLocale = uiLocale ?? locale;
+
+  const customPanel = showCustom ? (
+    <SurfaceCard className="space-y-4">
+      <CustomIntakePanel
+        locale={labelLocale}
+        projectId={projectId}
+        forms={customForms}
+        catalog={customCatalog}
+        people={people.map((person) => ({
+          id: person.id,
+          displayName: person.displayName,
+        }))}
+        store={customStore ?? emptyCustomAnswersStore()}
+        modificationBlocked={modificationBlocked}
+        mode="staff"
+      />
+    </SurfaceCard>
+  ) : null;
+
   return (
+    <div className="space-y-6">
+    {showIrcc ? (
     <SurfaceCard className="space-y-0 overflow-hidden p-0 sm:p-0">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("todoTitle")}
+          {showCustom ? tc("irccGroup") : t("todoTitle")}
         </h2>
         <div className="flex flex-wrap items-center gap-2">
+          {forms.length > 0 ? (
           <Link
             href={`/projects/${projectId}/forms`}
             className={cn(
@@ -300,6 +338,8 @@ export function ProjectFormsPanel({
           >
             {t("openQuestionnaire")}
           </Link>
+          ) : null}
+          {forms.length > 0 ? (
           <Button
             type="button"
             variant="outline"
@@ -309,6 +349,7 @@ export function ProjectFormsPanel({
           >
             {downloadingKey === "all" ? t("downloading") : t("downloadAll")}
           </Button>
+          ) : null}
         </div>
       </div>
       <FormAlertsSummary
@@ -530,21 +571,30 @@ export function ProjectFormsPanel({
         projectId={projectId}
       />
     </SurfaceCard>
+    ) : null}
+    {customPanel}
+    </div>
   );
 }
 
 export function ProjectQuestionnaire({
   locale,
+  uiLocale,
   projectId,
   people,
   formLanguage,
   modificationBlocked = false,
+  customForms = [],
+  customStore,
 }: {
   locale: "en" | "fr";
+  uiLocale?: string;
   projectId: string;
   people: QuestionnairePerson[];
   formLanguage: ProjectFormLanguage;
   modificationBlocked?: boolean;
+  customForms?: ProjectCustomFormRow[];
+  customStore?: CustomAnswersStore;
 }) {
   const t = useTranslations("forms");
   const tp = useTranslations("projects");
@@ -581,25 +631,47 @@ export function ProjectQuestionnaire({
     `formLanguages.${formLanguage === "fr" ? "fr" : "en"}`,
   );
 
+  const hasIrcc = people.some((person) => person.formCodes.length > 0);
+
   return (
-    <SurfaceCard className="space-y-4">
-      {modificationBlocked ? (
-        <p className="text-sm text-muted-foreground">{tp("grantedLock")}</p>
+    <div className="space-y-6">
+      {hasIrcc ? (
+        <SurfaceCard className="space-y-4">
+          {modificationBlocked ? (
+            <p className="text-sm text-muted-foreground">{tp("grantedLock")}</p>
+          ) : null}
+          <div
+            className="rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
+            role="note"
+          >
+            {t("clientAnswerLanguage", { language: answerLanguageLabel })}
+          </div>
+          <ModularQuestionnaire
+            people={people}
+            onSave={handleSave}
+            pending={savePending}
+            errorMessage={saveError}
+            answerLocale={formLanguage}
+            readOnly={modificationBlocked}
+          />
+        </SurfaceCard>
       ) : null}
-      <div
-        className="rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning-text"
-        role="note"
-      >
-        {t("clientAnswerLanguage", { language: answerLanguageLabel })}
-      </div>
-      <ModularQuestionnaire
-        people={people}
-        onSave={handleSave}
-        pending={savePending}
-        errorMessage={saveError}
-        answerLocale={formLanguage}
-        readOnly={modificationBlocked}
-      />
-    </SurfaceCard>
+      {customForms.length > 0 ? (
+        <SurfaceCard className="space-y-4">
+          <CustomIntakePanel
+            locale={uiLocale ?? locale}
+            projectId={projectId}
+            forms={customForms}
+            people={people.map((person) => ({
+              id: person.id,
+              displayName: person.displayName,
+            }))}
+            store={customStore ?? emptyCustomAnswersStore()}
+            modificationBlocked={modificationBlocked}
+            mode="staff"
+          />
+        </SurfaceCard>
+      ) : null}
+    </div>
   );
 }

@@ -9,6 +9,7 @@ import { OrganizationProgramForm } from "@/components/projects/organization-prog
 import { Link } from "@/i18n/navigation";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
+import { listCustomFormTemplates } from "@/lib/custom-forms/queries";
 import {
   builtinProgramTemplateDraft,
   draftFromOrganizationProgram,
@@ -38,6 +39,8 @@ export default async function NewProjectTemplatePage({
   const t = await getTranslations("orgPrograms");
   const tp = await getTranslations("programs");
 
+  const catalog = await listCustomFormTemplates(membership.organization.id);
+
   let initial: OrganizationProgramDraftInput | null = null;
   let pageTitle = t("createTitle");
 
@@ -60,6 +63,7 @@ export default async function NewProjectTemplatePage({
       allows_outside_canada: draft.allowsOutsideCanada,
       forms: draft.forms,
       documents: draft.documents,
+      custom_forms: draft.custom_forms,
     };
     pageTitle = t("duplicateTitle");
   }
@@ -84,6 +88,10 @@ export default async function NewProjectTemplatePage({
           locale={locale}
           mode="create"
           initial={initial}
+          customFormCatalog={catalog.map((row) => ({
+            id: row.id,
+            title: row.title,
+          }))}
         />
       </SurfaceCard>
     </div>

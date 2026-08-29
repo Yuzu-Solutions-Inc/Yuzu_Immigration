@@ -4,6 +4,11 @@ import { redirect } from "@/i18n/navigation";
 
 import { ClientDocumentsUpload } from "@/components/documents/client-documents-upload";
 import { ClientFillForm } from "@/components/forms/client-fill-form";
+import { emptyCustomAnswersStore } from "@/lib/custom-forms/answers";
+import {
+  getProjectCustomFormAnswers,
+  listProjectCustomForms,
+} from "@/lib/custom-forms/queries";
 import type { QuestionnairePerson } from "@/components/forms/modular-questionnaire";
 import { ClientFillTabs } from "@/components/forms/client-fill-tabs";
 import { Link } from "@/i18n/navigation";
@@ -61,10 +66,12 @@ export default async function PortalProjectPage({
     console.error("PortalProjectPage seed:", err);
   }
 
-  const requests = await listClientDocumentRequests(
-    createServiceClient(),
-    ctx.projectId,
-  );
+  const admin = createServiceClient();
+  const requests = await listClientDocumentRequests(admin, ctx.projectId);
+  const [customForms, customAnswersRow] = await Promise.all([
+    listProjectCustomForms(id, admin),
+    getProjectCustomFormAnswers(id, admin),
+  ]);
   const t = await getTranslations("portal");
   const td = await getTranslations("documents");
 
@@ -113,6 +120,15 @@ export default async function PortalProjectPage({
                 people={questionnairePeople}
                 formLanguage={toProjectFormLanguage(ctx.project.form_language)}
                 initialSubmittedAt={ctx.questionnaireSubmittedAt}
+                customForms={customForms}
+                customStore={
+                  customAnswersRow?.answers ?? emptyCustomAnswersStore()
+                }
+                customSubmittedAt={
+                  customAnswersRow?.questionnaire_submitted_at ?? null
+                }
+                fillPersonId={session.personId}
+                uiLocale={locale}
               />
             ),
           }}
