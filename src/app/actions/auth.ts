@@ -111,7 +111,7 @@ async function sendSignupConfirmationLink(input: {
   }
 
   const tokenHash = data.properties.hashed_token;
-  const confirmUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}`;
+  const confirmUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=signup`;
   const sent = await sendSignupConfirmationEmail({
     locale: input.locale,
     to: input.email,
@@ -241,7 +241,7 @@ export async function requestPasswordReset(
     if (error || !data?.properties?.hashed_token) {
       console.error("password reset generateLink:", error?.message);
     } else {
-      const resetUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}`;
+      const resetUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery`;
       const sent = await sendPasswordResetEmail({
         locale: parsed.data.locale,
         to: parsed.data.email,
