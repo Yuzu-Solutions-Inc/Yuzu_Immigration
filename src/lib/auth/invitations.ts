@@ -1,11 +1,20 @@
 import { createHash, randomBytes } from "node:crypto";
 
+import { setActiveOrganizationId } from "@/lib/auth/active-org";
 import type { OrgRole } from "@/lib/auth/rbac";
 import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
 import { getSessionUser } from "@/lib/auth/session";
 import { canAddMemberSeat } from "@/lib/billing/occupancy";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import { createServiceClient } from "@/lib/supabase/admin";
+
+async function rememberJoinedOrganization(organizationId: string) {
+  try {
+    await setActiveOrganizationId(organizationId);
+  } catch {
+    // Cookie writes are only allowed in Server Actions / Route Handlers.
+  }
+}
 
 export const INVITE_TTL_DAYS = 14;
 
@@ -147,13 +156,19 @@ export async function acceptInvitationByToken(
     })
     .eq("id", row.id);
 
+  await rememberJoinedOrganization(row.organization_id);
   return { ok: true, organizationId: row.organization_id };
 }
 
 /** Join any pending invites for the signed-in user's email. */
-export async function acceptPendingInvitationsForUser(): Promise<number> {
+export async function acceptPendingInvitationsForUser(): Promise<{
+  joined: number;
+  organizationId: string | null;
+}> {
   const user = await getSessionUser();
-  if (!user?.email || !hasAcceptedLegal(user)) return 0;
+  if (!user?.email || !hasAcceptedLegal(user)) {
+    return { joined: 0, organizationId: null };
+  }
 
   const admin = createServiceClient();
   const email = normalizeInviteEmail(user.email);
@@ -168,7 +183,7 @@ export async function acceptPendingInvitationsForUser(): Promise<number> {
 
   if (error) {
     console.error("acceptPendingInvitationsForUser:", error.message);
-    return 0;
+    return { joined: 0, organizationId: null };
   }
 
   const matches = ((data ?? []) as InvitationRow[]).filter(
@@ -176,6 +191,7 @@ export async function acceptPendingInvitationsForUser(): Promise<number> {
   );
 
   let joined = 0;
+  let organizationId: string | null = null;
   for (const row of matches) {
     try {
       await addMembership({
@@ -192,12 +208,17 @@ export async function acceptPendingInvitationsForUser(): Promise<number> {
         })
         .eq("id", row.id);
       joined += 1;
+      organizationId = row.organization_id;
     } catch (err) {
       console.error("acceptPendingInvitationsForUser join:", err);
     }
   }
 
-  return joined;
+  if (organizationId) {
+    await rememberJoinedOrganization(organizationId);
+  }
+
+  return { joined, organizationId };
 }
 
 export async function getInvitationByToken(token: string) {

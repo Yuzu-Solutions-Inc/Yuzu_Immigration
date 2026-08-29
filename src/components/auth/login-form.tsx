@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -43,6 +43,19 @@ export function LoginForm({
   initialError?: string;
 }) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [prefillEmail, setPrefillEmail] = useState("");
+  const [accountExists, setAccountExists] = useState(false);
+
+  const switchMode = useCallback((next: AuthMode) => {
+    if (next !== "signin") setAccountExists(false);
+    setMode(next);
+  }, []);
+
+  const handleAccountExists = useCallback((email: string) => {
+    setPrefillEmail(email);
+    setAccountExists(true);
+    setMode("signin");
+  }, []);
 
   return (
     <LoginFormMode
@@ -51,7 +64,10 @@ export function LoginForm({
       nextPath={nextPath}
       mode={mode}
       initialError={initialError}
-      onModeChange={setMode}
+      prefillEmail={prefillEmail}
+      accountExists={accountExists}
+      onAccountExists={handleAccountExists}
+      onModeChange={switchMode}
     />
   );
 }
@@ -61,12 +77,18 @@ function LoginFormMode({
   nextPath,
   mode,
   initialError,
+  prefillEmail,
+  accountExists,
+  onAccountExists,
   onModeChange,
 }: {
   locale: string;
   nextPath?: string;
   mode: AuthMode;
   initialError?: string;
+  prefillEmail: string;
+  accountExists: boolean;
+  onAccountExists: (email: string) => void;
   onModeChange: (mode: AuthMode) => void;
 }) {
   const t = useTranslations("auth");
@@ -82,6 +104,12 @@ function LoginFormMode({
   const [state, formAction, pending] = useActionState(action, initialState);
   const legalReady = privacyAccepted && termsAccepted;
 
+  useEffect(() => {
+    if (mode === "signup" && state.error === "account_exists") {
+      onAccountExists(state.email ?? "");
+    }
+  }, [mode, state.error, state.email, onAccountExists]);
+
   const errorMessage = state.error
     ? {
         invalid_credentials: t("errors.invalid"),
@@ -90,11 +118,14 @@ function LoginFormMode({
         email_not_confirmed: t("errors.emailNotConfirmed"),
         sign_up_failed: t("errors.signUp"),
         email_send_failed: t("errors.emailSendFailed"),
+        account_exists: t("errors.accountExists"),
         legal_required: tl("legalRequired"),
       }[state.error] ?? t("errors.generic")
-    : initialError === "confirm" || initialError === "auth_callback"
-      ? t("errors.confirm")
-      : null;
+    : accountExists
+      ? t("errors.accountExists")
+      : initialError === "confirm" || initialError === "auth_callback"
+        ? t("errors.confirm")
+        : null;
 
   const awaitingVerification =
     (mode === "signup" && state.success === "check_email") ||
@@ -220,6 +251,7 @@ function LoginFormMode({
                   type="email"
                   autoComplete="email"
                   required
+                  defaultValue={prefillEmail}
                 />
               </Field>
 

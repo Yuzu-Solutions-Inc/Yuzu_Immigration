@@ -429,7 +429,8 @@
       "emailSendFailed": "No se pudo enviar el correo. Inténtelo de nuevo en un minuto.",
       "passwordUpdateFailed": "No se pudo guardar la contraseña nueva. Inténtelo de nuevo.",
       "confirm": "Ese enlace no es válido o ha caducado. Solicite uno nuevo desde la página de inicio de sesión.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "accountExists": "Ya existe una cuenta con este correo. Inicie sesión, o restablezca la contraseña si la olvidó."
     }
   },
   "onboarding": {
@@ -879,7 +880,6 @@
     "billingResumeFailed": "No se pudo mantener la suscripción. Inténtelo de nuevo.",
     "billingEnds": "Termina el {date}",
     "billingSeats": "Plazas de personal",
-    
     "billingSeatUse": "{used} de {total} plazas",
     "billingSeatUnused": "{count} sin usar este periodo",
     "billingFounding": "Tarifa fundadora",
@@ -3712,6 +3712,14 @@
     "intro": "Confirme esta dirección de correo para terminar de crear su cuenta de %PRODUCT_NAME%.",
     "cta": "Verificar correo",
     "footer": "Si no creó esta cuenta, puede ignorar este mensaje."
+  },
+  "orgInviteEmail": {
+    "subject": "{org} le invitó a %PRODUCT_NAME%",
+    "heading": "Unirse a {org}",
+    "greetingGeneric": "Hola,",
+    "intro": "{org} le invitó como {role}. Abra el enlace e inicie sesión con {email} para unirse a este despacho.",
+    "cta": "Unirse al espacio",
+    "footer": "Si no esperaba esta invitación, puede ignorar este correo."
   },
   "passwordResetEmail": {
     "subject": "Restablezca su contraseña de %PRODUCT_NAME%",

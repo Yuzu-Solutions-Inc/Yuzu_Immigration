@@ -56,13 +56,12 @@ export default async function InvitePage({
     }
 
     const result = await acceptInvitationByToken(token);
-    if (result.ok) {
+    if (result.ok || result.error === "already_accepted") {
       redirect(`/${locale}/welcome`);
     }
 
     const errorMessage =
       {
-        already_accepted: t("alreadyAccepted"),
         expired: t("expired"),
         email_mismatch: t("emailMismatch", { email: invitation.email }),
         join_failed: t("joinFailed"),
@@ -79,14 +78,6 @@ export default async function InvitePage({
           {t("title", { org: orgName })}
         </h1>
         <p className="text-[15px] text-muted-foreground">{errorMessage}</p>
-        {result.error === "already_accepted" ? (
-          <Link
-            href="/home"
-            className={cn(buttonVariants(), "bg-action text-action-foreground hover:bg-action/90")}
-          >
-            {t("goHome")}
-          </Link>
-        ) : null}
       </InviteShell>
     );
   }

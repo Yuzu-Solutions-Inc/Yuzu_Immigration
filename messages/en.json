@@ -429,7 +429,8 @@
       "emailSendFailed": "The email could not be sent. Try again in a minute.",
       "passwordUpdateFailed": "Could not save the new password. Try again.",
       "confirm": "That link is invalid or has expired. Request a new one from the sign-in page.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "accountExists": "An account already exists for this email. Sign in, or reset your password if you forgot it."
     }
   },
   "onboarding": {
@@ -3715,6 +3716,14 @@
     "intro": "Confirm this email address to finish creating your %PRODUCT_NAME% account.",
     "cta": "Verify email",
     "footer": "If you did not create this account, you can ignore this email."
+  },
+  "orgInviteEmail": {
+    "subject": "{org} invited you to %PRODUCT_NAME%",
+    "heading": "Join {org}",
+    "greetingGeneric": "Hi,",
+    "intro": "{org} invited you as {role}. Open the link and sign in with {email} to join this firm.",
+    "cta": "Join workspace",
+    "footer": "If you did not expect this invitation, you can ignore this email."
   },
   "passwordResetEmail": {
     "subject": "Reset your %PRODUCT_NAME% password",

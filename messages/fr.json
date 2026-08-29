@@ -429,7 +429,8 @@
       "emailSendFailed": "L’e-mail n’a pas pu être envoyé. Réessayez dans une minute.",
       "passwordUpdateFailed": "Impossible d’enregistrer le nouveau mot de passe. Réessayez.",
       "confirm": "Ce lien est invalide ou a expiré. Demandez-en un nouveau depuis la page de connexion.",
-      "generic": "Une erreur est survenue. Réessayez."
+      "generic": "Une erreur est survenue. Réessayez.",
+      "accountExists": "Un compte existe déjà pour cet e-mail. Connectez-vous, ou réinitialisez votre mot de passe si vous l’avez oublié."
     }
   },
   "onboarding": {
@@ -3711,6 +3712,14 @@
     "intro": "Confirmez cette adresse e-mail pour terminer la création de votre compte %PRODUCT_NAME%.",
     "cta": "Vérifier l’e-mail",
     "footer": "Si vous n’avez pas créé ce compte, vous pouvez ignorer ce message."
+  },
+  "orgInviteEmail": {
+    "subject": "{org} vous invite sur %PRODUCT_NAME%",
+    "heading": "Rejoindre {org}",
+    "greetingGeneric": "Bonjour,",
+    "intro": "{org} vous invite en tant que {role}. Ouvrez le lien et connectez-vous avec {email} pour rejoindre ce cabinet.",
+    "cta": "Rejoindre l’espace",
+    "footer": "Si vous n’attendiez pas cette invitation, vous pouvez ignorer ce message."
   },
   "passwordResetEmail": {
     "subject": "Réinitialisez votre mot de passe %PRODUCT_NAME%",

@@ -17,6 +17,8 @@ import {
 } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { trialExpiredError } from "@/lib/billing/trial";
+import { sendOrgInviteEmail } from "@/lib/email/org-invite";
+import { dictionaries } from "@/lib/i18n/dictionaries";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -119,14 +121,26 @@ export async function inviteOrgMemberAction(
   const locale = parsed.data.locale;
   const invitePath = `/${locale}/invite/${token}`;
   const inviteUrl = `${base}${invitePath}`;
-  const redirectTo = `${base}/auth/callback?next=${encodeURIComponent(invitePath)}`;
+  const roleLabels = dictionaries[locale].orgRoles;
+  const roleLabel =
+    parsed.data.access === "unlicensed"
+      ? roleLabels.unlicensed
+      : parsed.data.access === "admin"
+        ? roleLabels.admin
+        : roleLabels.case_manager;
 
-  const { error: authError } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo,
+  const sent = await sendOrgInviteEmail({
+    locale,
+    to: email,
+    organizationName: membership.organization.name,
+    organizationId: orgId,
+    roleLabel,
+    inviteUrl,
+    invitedByUserId: user?.id ?? null,
   });
 
-  if (authError) {
-    console.error("inviteUserByEmail:", authError.message);
+  if (!sent.sent) {
+    console.error("org invite email:", sent.reason);
   }
 
   await recordAuditEvent({
@@ -138,13 +152,13 @@ export async function inviteOrgMemberAction(
     metadata: {
       email,
       access: parsed.data.access,
-      authInvited: !authError,
+      emailSent: sent.sent,
     },
   });
 
   revalidatePath(`/${locale}/settings/billing`);
   return {
-    message: authError ? "invite_link" : "invited",
+    message: sent.sent ? "invited" : "invite_link",
     inviteUrl,
   };
 }

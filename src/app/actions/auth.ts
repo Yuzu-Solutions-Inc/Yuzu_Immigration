@@ -68,8 +68,7 @@ async function sendSignupConfirmationLink(input: {
 }): Promise<{ error?: string }> {
   const existing = await findAuthUserByEmail(input.email);
   if (existing?.email_confirmed_at) {
-    // Confirmed account already exists — do not leak that.
-    return {};
+    return { error: "account_exists" };
   }
 
   const admin = createServiceClient();
