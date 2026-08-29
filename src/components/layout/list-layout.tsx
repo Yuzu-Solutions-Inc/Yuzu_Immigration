@@ -42,7 +42,7 @@ export const listFooterClassName =
   "flex shrink-0 flex-wrap items-center justify-between gap-2";
 
 export const listMobileFiltersClassName =
-  "grid gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated md:hidden";
+  "grid min-w-0 gap-2 rounded-xl border border-border bg-surface p-3 shadow-elevated md:hidden";
 
 export const listMobileFiltersStackClassName = "space-y-3 md:hidden";
 

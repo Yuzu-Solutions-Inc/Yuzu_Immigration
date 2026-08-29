@@ -301,7 +301,7 @@ export async function LandingPage() {
         />
         <HeroAtmosphere />
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-16 sm:py-20 lg:py-24">
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-20 lg:py-24">
           <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10">
             <div className="max-w-xl space-y-6">
               <p className="lp-fade text-sm font-semibold tracking-[0.16em] text-white/55 uppercase">

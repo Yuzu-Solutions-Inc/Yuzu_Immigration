@@ -279,7 +279,8 @@
 }
 
 .landing-page .landing-stage {
-  min-height: 22rem;
+  min-height: 18rem;
+  overflow: hidden;
 }
 
 .landing-page .lp-stage-glow {
@@ -460,7 +461,7 @@
 @media (max-width: 1023px) {
   .landing-page .lp-stage-card {
     width: min(64%, 15rem);
-    left: -2%;
+    left: 0;
   }
   .landing-page .lp-stage-chip-2,
   .landing-page .lp-stage-chip-4 {
@@ -472,6 +473,24 @@
   }
   .landing-page .lp-steps-line {
     display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .landing-page .landing-stage {
+    min-height: 16rem;
+  }
+  .landing-page .lp-stage-chip {
+    max-width: calc(100% - 1rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .landing-page .lp-stage-chip-1 {
+    right: 0.25rem;
+  }
+  .landing-page .lp-stage-chip-3 {
+    right: 0.5rem;
+    bottom: 0.75rem;
   }
 }
 

@@ -342,7 +342,7 @@ export function MobileSidebarTrigger({
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-72 gap-0 border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
+        className="w-[min(18rem,100%)] gap-0 border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
         showCloseButton
       >
         <SheetHeader className="sr-only">

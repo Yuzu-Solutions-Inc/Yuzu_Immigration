@@ -23,6 +23,9 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { product } from "@/lib/brand/product";
 import { cn } from "@/lib/utils";
 
+const topBarIconClass =
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground sm:size-10";
+
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -182,7 +185,7 @@ function AppSearch() {
   }
 
   return (
-    <div ref={rootRef} className="relative w-full max-w-md">
+    <div ref={rootRef} className="relative w-full min-w-0 max-w-md">
       <label htmlFor={inputId} className="sr-only">
         {t("searchLabel")}
       </label>
@@ -347,7 +350,7 @@ function AppNotifications() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
-        className="relative inline-flex size-10 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className={cn("relative", topBarIconClass)}
         aria-label={t("notificationsAria", { count: unreadCount })}
       >
         <Bell className="size-4" aria-hidden />
@@ -429,7 +432,7 @@ function AppSupportMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="inline-flex size-10 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className={topBarIconClass}
         aria-label={t("supportAria")}
       >
         <CircleHelp className="size-4" aria-hidden />
@@ -462,7 +465,7 @@ function AppSettingsLink() {
     <Link
       href="/settings/account"
       aria-label={t("menuAria")}
-      className="inline-flex size-10 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      className={topBarIconClass}
     >
       <Settings className="size-4" aria-hidden />
     </Link>
@@ -475,19 +478,19 @@ export function AppTopBar({
   mobileTrigger: React.ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 text-sidebar-foreground sm:gap-3 sm:px-4">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
+    <header className="sticky top-0 z-20 flex h-12 min-w-0 shrink-0 items-center gap-1 border-b border-sidebar-border bg-sidebar px-2 text-sidebar-foreground sm:gap-3 sm:px-4">
+      <div className="flex shrink-0 items-center gap-2">
         {mobileTrigger}
         <div className="hidden min-w-0 sm:block">
           <AppBreadcrumbs />
         </div>
       </div>
 
-      <div className="flex min-w-0 max-w-[11rem] flex-1 justify-center sm:max-w-xs md:max-w-md md:flex-1">
+      <div className="min-w-0 flex-1">
         <AppSearch />
       </div>
 
-      <div className="flex flex-1 items-center justify-end gap-0.5 sm:gap-1">
+      <div className="flex shrink-0 items-center justify-end">
         <AppNotifications />
         <AppSupportMenu />
         <AppSettingsLink />

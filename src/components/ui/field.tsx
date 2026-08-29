@@ -93,9 +93,9 @@ export function FieldGrid({
     <div
       data-slot="field-grid"
       className={cn(
-        "grid gap-4",
+        "grid min-w-0 gap-4 [&>*]:min-w-0",
         columns === 2 && "sm:grid-cols-2",
-        columns === 3 && "sm:grid-cols-3",
+        columns === 3 && "sm:grid-cols-2 md:grid-cols-3",
         className,
       )}
       {...props}
@@ -137,7 +137,7 @@ export function FieldGroup({
           {children}
         </div>
       ) : variant === "inline" ? (
-        <div className="flex min-w-0 gap-2">{children}</div>
+        <div className="flex min-w-0 flex-wrap gap-2">{children}</div>
       ) : (
         children
       )}

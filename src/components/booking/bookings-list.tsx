@@ -33,7 +33,10 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import {
   ListTableCard,
   listFooterClassName,
+  listMobileEmptyClassName,
   listMobileFiltersClassName,
+  listMobileFiltersStackClassName,
+  listMobileItemClassName,
   listTableCardViewportClassName,
   listTableEdgeEndClassName,
   listTableEdgeStartClassName,
@@ -341,6 +344,7 @@ export function BookingsList({
       className={listViewportStackClassName}
       aria-busy={loading || loadingMore}
     >
+      <div className={listMobileFiltersStackClassName}>
       <div className={cn(listMobileFiltersClassName, "shrink-0")}>
         <Input
           type="search"
@@ -414,7 +418,190 @@ export function BookingsList({
         </NativeSelect>
       </div>
 
-      <ListTableCard className={listTableCardViewportClassName}>
+      {filteredSorted.length === 0 ? (
+        <p className={listMobileEmptyClassName}>{t("noMatches")}</p>
+      ) : (
+        <ul className="space-y-2">
+          {filteredSorted.map((booking) => {
+            const actionable =
+              booking.status === "confirmed" ||
+              booking.status === "pending_payment";
+            const unpaid =
+              booking.status === "pending_payment" &&
+              booking.paymentStatus === "pending";
+            const start = new Date(booking.startsAt);
+            const joinUrl = meetingJoinUrl(booking, nowMs);
+            return (
+              <li key={booking.id} className={listMobileItemClassName}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="font-medium text-brand">
+                      {new Intl.DateTimeFormat(intlLocale(locale), {
+                        timeZone: timezone,
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }).format(start)}{" "}
+                      <span className="font-normal tabular-nums text-muted-foreground">
+                        {formatTimeInZone(start, timezone, locale)}
+                      </span>
+                    </p>
+                    {booking.personId ? (
+                      <Link
+                        href={`/clients/${booking.personId}`}
+                        className="block truncate text-sm font-medium text-action hover:underline"
+                      >
+                        {booking.guestName}
+                      </Link>
+                    ) : (
+                      <p className="truncate text-sm font-medium text-brand">
+                        {booking.guestName}
+                      </p>
+                    )}
+                    <p className="truncate text-sm text-muted-foreground">
+                      {booking.serviceTitle} · {booking.hostName}
+                    </p>
+                  </div>
+                  {joinUrl ? (
+                    <a
+                      href={joinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        buttonVariants({ size: "xs" }),
+                        "shrink-0 bg-action text-action-foreground hover:bg-action/90",
+                      )}
+                    >
+                      <Video className="size-3.5" aria-hidden />
+                      {t("joinNow")}
+                    </a>
+                  ) : null}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <Badge variant="secondary">
+                    {statusLabel(t, booking.status)}
+                  </Badge>
+                  {booking.paymentStatus ? (
+                    <Badge
+                      variant={
+                        booking.paymentStatus === "paid" ? "default" : "outline"
+                      }
+                    >
+                      {paymentLabel(t, booking.paymentStatus)}
+                    </Badge>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      {t("payment.none")}
+                    </span>
+                  )}
+                  {booking.paymentAmountCents != null ? (
+                    <span className="text-xs text-muted-foreground">
+                      {formatPriceCents(
+                        booking.paymentAmountCents,
+                        locale,
+                        booking.paymentCurrency ?? "CAD",
+                      )}
+                    </span>
+                  ) : null}
+                </div>
+                {canManage ? (
+                  <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
+                    <BookingContractsButton
+                      locale={locale}
+                      appointmentId={booking.id}
+                      guestName={booking.guestName}
+                      hostName={booking.hostName}
+                      isHost={booking.hostUserId === currentUserId}
+                      contracts={booking.contracts}
+                    />
+                    {actionable ? (
+                      <>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={pending || slotsPending}
+                          className="text-muted-foreground"
+                          onClick={() => openReschedule(booking.id)}
+                          aria-label={t("modify")}
+                          title={t("modify")}
+                        >
+                          <CalendarClock className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={pending}
+                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={t("cancel")}
+                          title={t("cancel")}
+                          onClick={() => {
+                            if (!window.confirm(t("cancelConfirm"))) return;
+                            startTransition(async () => {
+                              const result = await cancelAppointmentAction(
+                                booking.id,
+                                locale,
+                              );
+                              if (result.error) {
+                                toast.error(t(`errors.${result.error}`));
+                                return;
+                              }
+                              toast.success(t("cancelled"));
+                              setListEpoch((value) => value + 1);
+                              router.refresh();
+                            });
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                        {unpaid ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon-sm"
+                            disabled={pending}
+                            aria-label={t("sendReminder")}
+                            title={t("sendReminder")}
+                            onClick={() => {
+                              startTransition(async () => {
+                                const result =
+                                  await sendBookingPaymentReminderAction(
+                                    booking.id,
+                                    locale,
+                                  );
+                                if (result.error) {
+                                  toast.error(t(`errors.${result.error}`));
+                                  return;
+                                }
+                                toast.success(t("reminderSent"));
+                              });
+                            }}
+                          >
+                            <Mail className="size-4" />
+                          </Button>
+                        ) : null}
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <ListLoadMore
+        hasMore={hasMore}
+        loading={loading || loadingMore}
+        onLoadMore={loadMore}
+        loadMoreLabel={t("loadMore")}
+        loadingLabel={t("loadingMore")}
+      />
+      </div>
+
+      <ListTableCard
+        className={cn("hidden md:block", listTableCardViewportClassName)}
+      >
         <div className={listTableScrollClassName} data-list-scroll="">
         <Table>
           <TableHeader className={listTableStickyHeaderClassName}>

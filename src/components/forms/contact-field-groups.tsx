@@ -6,6 +6,7 @@ import { FieldControl } from "@/components/forms/field-control";
 import { FieldGroup } from "@/components/ui/field";
 import {
   canonicalFieldsByKeys,
+  contactFieldGridClassName,
   contactFieldGridSpan,
   contactFieldInlineClass,
   contactFieldLabel,
@@ -74,7 +75,7 @@ export function MailingAddressFieldGroup({
 
   return (
     <FieldGroup title={title} hint={help} required={binding.required} variant="boxed">
-      <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
+      <div className={contactFieldGridClassName}>
         {fields.map((field) =>
           renderField(field, binding, t, th, contactFieldGridSpan(field.key)),
         )}

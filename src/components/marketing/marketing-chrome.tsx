@@ -30,9 +30,9 @@ export function MarketingHeader({
 }) {
   return (
     <header className="relative z-20 border-b border-brand/5 bg-canvas/80 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
+      <div className="mx-auto flex w-full max-w-6xl min-w-0 items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
         <div className="flex min-w-0 items-center gap-5">
-          <BrandLogo size="md" />
+          <BrandLogo size="md" className="shrink-0" />
           <Link
             href="/pricing"
             className={cn(
@@ -46,11 +46,11 @@ export function MarketingHeader({
             {copy.pricing}
           </Link>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-3">
           <Link
             href="/pricing"
             className={cn(
-              "text-sm font-medium sm:hidden",
+              "hidden text-sm font-medium min-[400px]:inline sm:hidden",
               active === "pricing"
                 ? "text-brand"
                 : "text-muted-foreground hover:text-brand",
@@ -62,7 +62,10 @@ export function MarketingHeader({
           <LocaleSwitcher compact className="hidden sm:inline-flex" />
           <Link
             href="/login"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "hidden min-[360px]:inline-flex",
+            )}
           >
             {copy.signIn}
           </Link>

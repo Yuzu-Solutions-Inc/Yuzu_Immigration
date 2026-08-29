@@ -492,7 +492,7 @@ export function OrganizationProgramForm({
               className="min-w-[10rem] flex-1 rounded-xl"
             />
             <NativeSelect
-              className="w-auto"
+              className="min-w-0 max-w-full sm:w-auto"
               value={customScope}
               onChange={(e) =>
                 setCustomScope(

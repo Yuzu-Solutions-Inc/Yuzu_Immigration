@@ -31,9 +31,9 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className={`${fontClassName} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
+      <body className="flex min-h-full min-w-0 flex-col bg-background font-sans text-foreground">
         <NextIntlClientProvider messages={messages}>
-          <div className="flex min-h-full flex-1 flex-col">{children}</div>
+          <div className="flex min-h-full min-w-0 flex-1 flex-col">{children}</div>
           <Toaster />
           <AnalyticsConsent />
         </NextIntlClientProvider>

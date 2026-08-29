@@ -323,7 +323,7 @@ export function ProjectDocumentsPanel({
                   value={personId}
                   onChange={(e) => setPersonId(e.target.value)}
                   aria-label={t("assignPerson")}
-                  className="min-w-[140px]"
+                  className="min-w-0 w-full flex-1 sm:min-w-[140px] sm:w-auto"
                 >
                   {people.map((person) => (
                     <option key={person.id} value={person.id}>
@@ -340,14 +340,14 @@ export function ProjectDocumentsPanel({
                 maxLength={120}
                 aria-label={t("label")}
                 placeholder={t("labelPlaceholder")}
-                className="h-10 min-w-[180px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
+                className="h-10 min-w-0 w-full flex-1 rounded-xl border border-input bg-surface px-3 text-sm sm:min-w-[180px]"
               />
               <input
                 name="consultantNote"
                 maxLength={240}
                 aria-label={t("note")}
                 placeholder={t("notePlaceholder")}
-                className="h-10 min-w-[160px] flex-1 rounded-xl border border-input bg-surface px-3 text-sm"
+                className="h-10 min-w-0 w-full flex-1 rounded-xl border border-input bg-surface px-3 text-sm sm:min-w-[160px]"
               />
               <Button type="submit" disabled={addPending || !personId}>
                 {addPending ? t("adding") : t("add")}

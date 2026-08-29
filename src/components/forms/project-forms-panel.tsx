@@ -491,7 +491,7 @@ export function ProjectFormsPanel({
                 value={formCode}
                 onChange={(e) => setFormCode(e.target.value as FormCode)}
                 aria-label={t("addForm")}
-                className="min-w-[140px] flex-1"
+                className="min-w-0 w-full flex-1 sm:min-w-[140px]"
               >
                 {addOptions.map((code) => (
                   <option key={code} value={code}>
@@ -508,7 +508,7 @@ export function ProjectFormsPanel({
                   value={personId}
                   onChange={(e) => setPersonId(e.target.value)}
                   aria-label={t("assignPerson")}
-                  className="min-w-[160px]"
+                  className="min-w-0 w-full sm:min-w-[160px] sm:w-auto"
                 >
                   {people.map((person) => (
                     <option key={person.id} value={person.id}>

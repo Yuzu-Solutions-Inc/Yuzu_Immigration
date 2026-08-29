@@ -128,10 +128,13 @@
 
   html {
     @apply font-sans antialiased;
+    overflow-x: clip;
   }
 
   body {
     @apply bg-background text-foreground;
+    max-width: 100%;
+    overflow-x: clip;
     font-size: 15px;
     line-height: 1.6;
   }

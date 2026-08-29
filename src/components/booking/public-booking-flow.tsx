@@ -612,7 +612,7 @@ export function PublicBookingFlow({
                     <p className="text-sm text-muted-foreground">{t("noSlotsDay")}</p>
                   ) : (
                     <div className="min-h-0 flex-1 overflow-y-auto">
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-1">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
                         {daySlots.map((slot) => (
                           <button
                             key={slot.startsAt}

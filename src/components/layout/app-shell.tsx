@@ -58,7 +58,7 @@ export async function DashboardShell({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <AppTopBar mobileTrigger={mobileTrigger} />
 
-        <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 lg:py-4">
+        <main className="mx-auto flex min-h-0 w-full min-w-0 max-w-6xl flex-1 flex-col overflow-x-hidden overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 lg:py-4">
           {!writable && role ? <TrialLockBanner role={role} /> : null}
           {children}
         </main>

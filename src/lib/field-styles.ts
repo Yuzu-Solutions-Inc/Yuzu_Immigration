@@ -5,7 +5,7 @@ import type { FieldDensity, FieldType } from "@/lib/design-tokens";
 export type { FieldDensity, FieldType };
 
 export const fieldControlVariants = cva(
-  "w-full min-w-0 border border-input bg-surface text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
+  "w-full min-w-0 max-w-full border border-input bg-surface text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
   {
     variants: {
       density: {
@@ -62,7 +62,7 @@ export const fieldLabelVariants = cva("select-none", {
 export const fieldStackVariants = cva("", {
   variants: {
     density: {
-      default: "space-y-2",
+      default: "min-w-0 space-y-2",
       compact: "min-w-0 space-y-1",
       dense: "min-w-0 space-y-1",
     },

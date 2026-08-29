@@ -536,7 +536,7 @@ export function ProjectForm({
 
       <Field>
         <FieldLabel>{t("composition")}</FieldLabel>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="flex flex-wrap gap-2">
           {(["individual", "couple", "family"] as const).map((value) => {
             const allowed = selectedOrgProgram
               ? compositionAllowed(selectedOrgProgram, value)
@@ -547,7 +547,7 @@ export function ProjectForm({
                 type="button"
                 disabled={!allowed}
                 onClick={() => setComposition(value)}
-                className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                className={`min-w-0 flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors min-[22rem]:min-w-[6.5rem] ${
                   composition === value
                     ? "border-action bg-accent text-accent-foreground"
                     : "border-border bg-surface text-muted-foreground hover:bg-muted"

@@ -216,7 +216,7 @@ function FieldGroupEditor({
         {t(`groups.${group.key}`)}
       </h4>
       {group.layout === "inline" ? (
-        <div className="flex min-w-0 gap-2">{controls}</div>
+        <div className="flex min-w-0 flex-wrap gap-2">{controls}</div>
       ) : (
         <div className="rounded-xl border border-border bg-surface px-3 py-3">
           <div
@@ -224,7 +224,7 @@ function FieldGroupEditor({
               "grid min-w-0 gap-x-3 gap-y-3",
               twoCol
                 ? "grid-cols-1 sm:grid-cols-2"
-                : "grid-cols-2 sm:grid-cols-3",
+                : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
             )}
           >
             {controls}
@@ -352,7 +352,7 @@ function TableEditor({
               ) : null}
               <span className="text-sm font-medium text-brand">{rowIndex + 1}</span>
             </div>
-            <div className="grid min-w-0 flex-1 grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3">
+            <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-2 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
               {table.columns.map((col) => (
                 <div key={col.key} className={fieldColSpan(col)}>
                   <FieldControl
@@ -1247,7 +1247,7 @@ export function ModularQuestionnaire({
                     aria-selected={selected}
                     onClick={() => setActivePersonId(person.id)}
                     className={cn(
-                      "flex min-h-12 min-w-[10rem] flex-1 cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2 text-left shadow-elevated transition-colors sm:flex-none",
+                      "flex min-h-12 min-w-0 w-full flex-1 cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2 text-left shadow-elevated transition-colors sm:w-auto sm:min-w-[10rem] sm:flex-none",
                       selected
                         ? "border-action bg-surface text-brand"
                         : "border-border bg-surface text-brand hover:border-action hover:bg-white",

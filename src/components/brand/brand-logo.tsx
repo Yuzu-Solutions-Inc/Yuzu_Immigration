@@ -8,7 +8,7 @@ const sizeClass = {
   sidebar: "text-[17px] leading-none",
   md: "text-xl leading-none",
   lg: "text-3xl leading-none",
-  hero: "text-5xl leading-[1.05] sm:text-6xl",
+  hero: "text-4xl leading-[1.05] sm:text-5xl lg:text-6xl",
 } as const;
 
 type BrandLogoProps = {

@@ -23,7 +23,10 @@ import { SurfaceCard } from "@/components/layout/surface-card";
 import {
   ListTableCard,
   listFooterClassName,
+  listMobileEmptyClassName,
   listMobileFiltersClassName,
+  listMobileFiltersStackClassName,
+  listMobileItemClassName,
   listPageClassName,
   listPageHeaderClassName,
   listPageSubtitleClassName,
@@ -755,6 +758,7 @@ export function ServicesManager({
         </SurfaceCard>
       ) : (
         <div className={listViewportStackClassName}>
+          <div className={listMobileFiltersStackClassName}>
           <div className={cn(listMobileFiltersClassName, "shrink-0")}>
             <Input
               type="search"
@@ -792,7 +796,66 @@ export function ServicesManager({
             </NativeSelect>
           </div>
 
-          <ListTableCard className={listTableCardViewportClassName}>
+          {filteredSorted.length === 0 ? (
+            <p className={listMobileEmptyClassName}>{t("noMatches")}</p>
+          ) : (
+            <ul className="space-y-2">
+              {filteredSorted.map((service) => {
+                const copy = serviceCopy(service, locale, orgDefaultLocale);
+                return (
+                  <li
+                    key={service.id}
+                    className={cn(
+                      listMobileItemClassName,
+                      canManage && "cursor-pointer",
+                    )}
+                    onClick={
+                      canManage ? () => setEditing(service) : undefined
+                    }
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="min-w-0 font-medium text-brand">
+                        {copy.title}
+                      </p>
+                      <Badge
+                        variant={service.is_active ? "default" : "secondary"}
+                      >
+                        {service.is_active ? t("active") : t("inactive")}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {t("durationMinutes", {
+                        minutes: service.duration_minutes,
+                      })}{" "}
+                      ·{" "}
+                      {formatPriceCents(
+                        service.price_cents,
+                        locale,
+                        service.currency,
+                      )}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {service.form_id
+                        ? (formById.get(service.form_id)?.title ??
+                          t("noneAssigned"))
+                        : t("noneAssigned")}
+                    </p>
+                    <div
+                      className="mt-2 flex items-center justify-end"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <CopyServiceLinkButton locale={locale} service={service} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          </div>
+
+          <ListTableCard
+            className={cn("hidden md:block", listTableCardViewportClassName)}
+          >
             <div className={listTableScrollClassName}>
             <Table>
               <TableHeader className={listTableStickyHeaderClassName}>

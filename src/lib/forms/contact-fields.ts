@@ -38,10 +38,13 @@ export function canonicalFieldsByKeys(
 }
 
 export function contactFieldInlineClass(key: string) {
-  if (key === "phoneCountryCode") return "w-[5.25rem] shrink-0";
-  if (key === "phoneType") return "w-[10.5rem] shrink-0";
-  return "min-w-0 flex-1";
+  if (key === "phoneCountryCode") return "w-[4.75rem] shrink-0";
+  if (key === "phoneType") return "min-w-0 w-full sm:w-[10.5rem] sm:shrink-0";
+  return "min-w-0 min-[22rem]:flex-1 basis-full min-[22rem]:basis-32";
 }
+
+export const contactFieldGridClassName =
+  "grid min-w-0 grid-cols-1 gap-x-3 gap-y-3 [&>*]:min-w-0 sm:grid-cols-2 lg:grid-cols-3";
 
 export function contactFieldGridSpan(key: string) {
   if (

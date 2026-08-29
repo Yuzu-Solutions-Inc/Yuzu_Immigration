@@ -200,7 +200,7 @@ export function CustomIntakePanel({
               <NativeSelect
                 name="templateId"
                 aria-label={t("addToProject")}
-                className="min-w-[160px] flex-1"
+                className="min-w-0 w-full flex-1 sm:min-w-[160px]"
                 defaultValue={addable[0]?.id}
               >
                 {addable.map((row) => (

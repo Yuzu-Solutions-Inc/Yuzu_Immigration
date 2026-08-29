@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { resolveCountryLic } from "@/lib/ircc/codes/resolve-lic";
+import { contactFieldGridClassName } from "@/lib/forms/contact-fields";
 import {
   QUESTIONNAIRE_LOVS,
   fieldOptionLabel,
@@ -405,7 +406,7 @@ function RepresentativeSettingsForm({
             type="tel"
             maxLength={6}
             placeholder="+"
-            className="w-[5.25rem] shrink-0"
+            className="w-[4.75rem] shrink-0"
             required
             invalid={fieldInvalid("repPhoneCountryCode")}
             error={fieldMessage("repPhoneCountryCode")}
@@ -417,7 +418,7 @@ function RepresentativeSettingsForm({
             defaultValue={values.repPhone}
             type="tel"
             maxLength={40}
-            className="min-w-0 flex-1"
+            className="min-w-0 min-[22rem]:flex-1 basis-full min-[22rem]:basis-32"
             required
             invalid={fieldInvalid("repPhone")}
             error={fieldMessage("repPhone")}
@@ -425,7 +426,7 @@ function RepresentativeSettingsForm({
         </FieldGroup>
 
         <FieldGroup title={tf("groups.mailingAddress")} required variant="boxed">
-          <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
+          <div className={contactFieldGridClassName}>
             <CompactField
               id="repStreetNum"
               name="repStreetNum"
