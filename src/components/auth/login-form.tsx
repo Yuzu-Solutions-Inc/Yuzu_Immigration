@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
+  FieldHint,
   FieldLabel,
   FormStack,
 } from "@/components/ui/field";
@@ -114,6 +115,7 @@ function LoginFormMode({
     ? {
         invalid_credentials: t("errors.invalid"),
         password_mismatch: t("errors.passwordMismatch"),
+        password_weak: t("errors.passwordWeak"),
         sign_in_failed: t("errors.signIn"),
         email_not_confirmed: t("errors.emailNotConfirmed"),
         sign_up_failed: t("errors.signUp"),
@@ -270,6 +272,9 @@ function LoginFormMode({
                     minLength={8}
                     required
                   />
+                  {mode === "signup" ? (
+                    <FieldHint>{t("passwordHint")}</FieldHint>
+                  ) : null}
                 </Field>
               )}
 

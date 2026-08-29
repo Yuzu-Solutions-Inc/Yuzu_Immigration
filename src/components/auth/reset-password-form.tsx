@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
+  FieldHint,
   FieldLabel,
   FormStack,
 } from "@/components/ui/field";
@@ -31,6 +32,9 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
     ? {
         invalid_credentials: t("errors.invalid"),
         password_mismatch: t("errors.passwordMismatch"),
+        password_weak: t("errors.passwordWeak"),
+        password_reuse: t("errors.passwordReuse"),
+        password_leaked: t("errors.passwordLeaked"),
         password_update_failed: t("errors.passwordUpdateFailed"),
       }[state.error] ?? t("errors.generic")
     : null;
@@ -60,6 +64,7 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
               minLength={8}
               required
             />
+            <FieldHint>{t("passwordHint")}</FieldHint>
           </Field>
           <Field>
             <FieldLabel htmlFor="confirmPassword" required>

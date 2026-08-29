@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
+  FieldHint,
   FieldLabel,
   FieldSuccess,
   FormStack,
@@ -29,6 +30,9 @@ export function ChangePasswordForm({ locale }: { locale: AppLocale }) {
     ({
       invalid: t("passwordErrors.invalid"),
       password_mismatch: t("passwordErrors.mismatch"),
+      password_weak: t("passwordErrors.weak"),
+      password_reuse: t("passwordErrors.reuse"),
+      password_leaked: t("passwordErrors.leaked"),
       wrong_password: t("passwordErrors.wrongPassword"),
       password_update_failed: t("passwordErrors.updateFailed"),
     }[state.error] ??
@@ -74,6 +78,7 @@ export function ChangePasswordForm({ locale }: { locale: AppLocale }) {
           minLength={8}
           required
         />
+        <FieldHint>{t("passwordHint")}</FieldHint>
       </Field>
 
       <Field>

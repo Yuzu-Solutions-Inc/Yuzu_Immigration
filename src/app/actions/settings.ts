@@ -4,8 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
+import {
+  classifyPasswordUpdateError,
+  passwordSchema,
+} from "@/lib/auth/password-policy";
 import { canAdministerOrg } from "@/lib/auth/rbac";
+import { getSessionUser, getPrimaryMembership } from "@/lib/auth/session";
 import { trialExpiredError } from "@/lib/billing/trial";
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { APP_LOCALES, type AppLocale } from "@/lib/i18n/locales";
@@ -381,7 +385,7 @@ const changePasswordSchema = z
   .object({
     locale: localeEnum,
     currentPassword: z.string().min(1).max(128),
-    newPassword: z.string().min(8).max(128),
+    newPassword: passwordSchema,
     confirmPassword: z.string().min(8).max(128),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -404,6 +408,9 @@ export async function changePasswordAction(
     const issue = parsed.error.issues[0];
     if (issue?.message === "password_mismatch") {
       return { error: "password_mismatch" };
+    }
+    if (issue?.message === "password_weak") {
+      return { error: "password_weak" };
     }
     return { error: "invalid" };
   }
@@ -429,7 +436,7 @@ export async function changePasswordAction(
 
   if (updateError) {
     console.error("change password:", updateError.message);
-    return { error: "password_update_failed" };
+    return { error: classifyPasswordUpdateError(updateError) };
   }
 
   const membership = await getPrimaryMembership();

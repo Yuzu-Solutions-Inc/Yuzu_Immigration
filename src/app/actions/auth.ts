@@ -9,6 +9,10 @@ import { findAuthUserByEmail } from "@/lib/auth/admin-users";
 import { finishSignedInRedirect } from "@/lib/auth/finish-login";
 import { safeInternalPath } from "@/lib/auth/next-path";
 import {
+  classifyPasswordUpdateError,
+  passwordSchema,
+} from "@/lib/auth/password-policy";
+import {
   clearPasswordResetRequired,
   isPasswordResetRequired,
 } from "@/lib/auth/password-reset";
@@ -30,6 +34,7 @@ const credentialsSchema = z.object({
 
 const signUpSchema = credentialsSchema
   .extend({
+    password: passwordSchema,
     confirmPassword: z.string().min(8).max(128),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -44,7 +49,7 @@ const resetRequestSchema = z.object({
 
 const newPasswordSchema = z
   .object({
-    password: z.string().min(8).max(128),
+    password: passwordSchema,
     confirmPassword: z.string().min(8).max(128),
     locale: z.enum(["en", "fr", "es"]).default("en"),
   })
@@ -189,6 +194,9 @@ export async function signUpWithPassword(
     if (issue?.message === "password_mismatch") {
       return { error: "password_mismatch" };
     }
+    if (issue?.message === "password_weak") {
+      return { error: "password_weak" };
+    }
     return { error: "invalid_credentials" };
   }
 
@@ -272,6 +280,9 @@ export async function setNewPassword(
     if (issue?.message === "password_mismatch") {
       return { error: "password_mismatch" };
     }
+    if (issue?.message === "password_weak") {
+      return { error: "password_weak" };
+    }
     return { error: "invalid_credentials" };
   }
 
@@ -286,7 +297,7 @@ export async function setNewPassword(
 
   if (error) {
     console.error("setNewPassword:", error.message);
-    return { error: "password_update_failed" };
+    return { error: classifyPasswordUpdateError(error) };
   }
 
   await clearPasswordResetRequired();
