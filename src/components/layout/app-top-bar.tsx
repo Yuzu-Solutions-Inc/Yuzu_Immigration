@@ -47,7 +47,6 @@ const CRUMB_KEYS = {
   security: "crumbSecurity",
   forms: "crumbForms",
   new: "crumbNew",
-  new: "crumbNew",
   edit: "crumbEdit",
   templates: "crumbTemplates",
   person: "crumbPerson",

@@ -177,7 +177,18 @@ export async function snapshotCustomFormOntoProject(input: {
   const schema = parseCustomFormSchema(input.template.schema);
   const isRequired = input.isRequired !== false;
   const sortOrder = input.sortOrder ?? 0;
-  const rows =
+  const rows: {
+    organization_id: string;
+    project_id: string;
+    template_id: string;
+    title: string;
+    schema: ReturnType<typeof parseCustomFormSchema>;
+    scope: CustomFormScope;
+    person_id: string | null;
+    is_required: boolean;
+    sort_order: number;
+    status: "todo";
+  }[] =
     input.scope === "project"
       ? [
           {
@@ -186,11 +197,11 @@ export async function snapshotCustomFormOntoProject(input: {
             template_id: input.template.id,
             title: input.template.title,
             schema,
-            scope: "project" as const,
+            scope: "project",
             person_id: null,
             is_required: isRequired,
             sort_order: sortOrder,
-            status: "todo" as const,
+            status: "todo",
           },
         ]
       : input.personIds.map((personId, index) => ({
@@ -199,11 +210,11 @@ export async function snapshotCustomFormOntoProject(input: {
           template_id: input.template.id,
           title: input.template.title,
           schema,
-          scope: "person" as const,
+          scope: "person",
           person_id: personId,
           is_required: isRequired,
           sort_order: sortOrder * 100 + index,
-          status: "todo" as const,
+          status: "todo",
         }));
 
   if (rows.length === 0) return 0;
