@@ -3,6 +3,7 @@
  * These never block save or PDF download — they highlight likely entry errors.
  */
 
+import { acrobatLmoValue, localIsoToday } from "@/lib/ircc/acrobat-constraints";
 import {
   CHECKLIST_FORM_CODES,
   fieldsForFormCodes,
@@ -45,7 +46,10 @@ export type QualityIssueId =
   | "postalCodeUs"
   | "moneyNotNumeric"
   | "commonLawUnderOneYear"
-  | "studyMinorNoCustodian";
+  | "studyMinorNoCustodian"
+  | "lmiaNumberInvalid"
+  | "cwaToNotAfterToday"
+  | "corToNotAfterToday";
 
 const CANADA = "511";
 const UNITED_STATES = "461";
@@ -358,6 +362,21 @@ export function analyzeAnswerQuality(
   );
   flagRange(issues, answers.corFrom, answers.corTo, "residence", "cor");
   flagRange(issues, answers.cwaFrom, answers.cwaTo, "residence", "cwa");
+  const today = localIsoToday(asOf);
+  if (filled(answers.corTo) && String(answers.corTo) <= today) {
+    push(issues, "corToNotAfterToday", "residence");
+  }
+  if (String(answers.sameAsCor ?? "").toUpperCase() === "N" && filled(answers.cwaTo) && String(answers.cwaTo) <= today) {
+    push(issues, "cwaToNotAfterToday", "residence");
+  }
+  const permit = String(answers.workPermitType || answers.workPurposeType || "");
+  if (
+    filled(answers.lmiaNumber) &&
+    (permit === "LMOS" || permit === "ELMO") &&
+    !acrobatLmoValue(permit, String(answers.lmiaNumber))
+  ) {
+    push(issues, "lmiaNumberInvalid", "work");
+  }
   flagRange(
     issues,
     answers.prevSpouseFrom,

@@ -25,9 +25,11 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      - name: Validate IRCC form dates, structure, and choice lists
+      - name: Validate IRCC form dates, structure, fill, and certification
         id: validate
         continue-on-error: true
+        env:
+          IRCC_BLANKS_LOCAL: "1"
         run: npm run ircc:validate
       - name: Record validation status
         if: always()
@@ -74,7 +76,7 @@ jobs:
               "3. Re-extract choice lists (`npx tsx scripts/extract-xfa-choices.ts imm1294e --write-json`)",
               "4. Update questionnaire options in `src/lib/ircc/fields.ts`",
               "5. Set the new `irccUpdated` month in `src/lib/ircc/form-revisions.json`",
-              "6. Run `npm run ircc:validate -- --local` and `npm run ircc:verify-fill`",
+              "6. Run `npm run ircc:validate -- --local` (includes fill + certify + unfilled cells)",
               "",
               `Workflow: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             ].join("\n");

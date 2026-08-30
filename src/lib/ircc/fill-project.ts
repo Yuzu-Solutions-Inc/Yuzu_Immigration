@@ -278,6 +278,12 @@ function buildPrimaryPayload(
   if (!merged.employer && answers.employerName) {
     merged.employer = answers.employerName;
   }
+  if (!merged.workPurposeType && answers["workPermitType"]) {
+    merged.workPurposeType = answers["workPermitType"];
+  }
+  if (!merged.workPermitType && answers["workPurposeType"]) {
+    merged.workPermitType = answers["workPurposeType"];
+  }
   if (!merged.passportCountry && answers.citizenship) {
     merged.passportCountry = answers.citizenship;
   }

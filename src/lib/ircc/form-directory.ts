@@ -35,6 +35,9 @@ export type FormValidationFile = {
       passed: boolean;
       errors: string[];
       warnings: string[];
+      fillCertified?: boolean | null;
+      unfilled?: string[];
+      fillCases?: Record<string, "ok" | "fail">;
     }
   >;
 };
@@ -50,6 +53,8 @@ export type FormVersionRow = {
   lastCheckedAt: string | null;
   validation: "passed" | "failed" | "pending";
   errors: string[];
+  fillCertified: boolean | null;
+  unfilled: string[];
 };
 
 const CATEGORY_BY_FORM: Record<FormCode, FormCategory> = {
@@ -148,6 +153,8 @@ export function getFormVersionRows(): FormVersionRow[] {
       lastCheckedAt: status?.checkedAt ?? null,
       validation,
       errors: check?.errors ?? [],
+      fillCertified: check?.fillCertified ?? null,
+      unfilled: check?.unfilled ?? [],
     };
   });
 }

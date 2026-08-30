@@ -145,6 +145,11 @@ export function expandAnswersForFill(
   expandPrefixedDate(out, "usCardExpiry", "usCardExpiry");
   expandPrefixedDate(out, "corFrom", "corFrom");
   expandPrefixedDate(out, "corTo", "corTo");
+  expandPrefixedDate(out, "cwaFrom", "cwaFrom");
+  expandPrefixedDate(out, "cwaTo", "cwaTo");
+  expandPrefixedDate(out, "prevSpouseDob", "prevSpouseDob");
+  expandPrefixedDate(out, "prevSpouseFrom", "prevSpouseFrom");
+  expandPrefixedDate(out, "prevSpouseTo", "prevSpouseTo");
   expandPrefixedDate(out, "studyFrom", "studyFrom");
   expandPrefixedDate(out, "studyTo", "studyTo");
   expandPrefixedDate(out, "workFrom", "workFrom");

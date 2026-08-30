@@ -769,6 +769,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     type: "date",
     forms: [...PRIMARY],
     showWhen: { key: "sameAsCor", equals: "N" },
+    helpKey: "cwaToHelp",
   },
 
   // —— Passport & ID ——
@@ -1301,7 +1302,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "study",
     type: "text",
     maxLength: 40,
-    forms: [...STUDY_IN],
+    forms: [...STUDY],
   },
   {
     key: "studyNeedsWorkPermit",
@@ -1821,7 +1822,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
     section: "identity",
     type: "text",
     maxLength: 20,
-    forms: [...PR_PRIMARY, ...SPONSOR, ...CITIZENSHIP],
+    forms: [...PRIMARY, ...SPONSOR, ...CITIZENSHIP],
     helpKey: "uciHelp",
   },
   {

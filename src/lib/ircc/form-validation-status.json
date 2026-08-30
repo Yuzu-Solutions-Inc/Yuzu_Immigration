@@ -1,145 +1,720 @@
 {
-  "checkedAt": "2026-08-30T17:52:28.564Z",
+  "checkedAt": "2026-08-30T18:14:44.562Z",
   "passed": true,
   "datesOnly": false,
   "errorCount": 0,
-  "warningCount": 1,
+  "warningCount": 0,
   "errors": [],
-  "warnings": [
-    "cit0002: not found on IRCC index (page may have been renamed)."
-  ],
+  "warnings": [],
   "forms": {
     "imm1294": {
       "liveUpdated": "2026-06",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Page3/Contacts_Row1/CAQ/CertNum",
+        "Page3/Contacts_Row1/CAQ/CertExpiry",
+        "Page4/PageWrapper/BackgroundInfo3/Details",
+        "Page4/Notice",
+        "Page4/disclosureText",
+        "Page5/TextField1",
+        "TextField"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm1295": {
       "liveUpdated": "2023-09",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Page4/BackgroundInfo/Choice",
+        "Page4/Consent0/hand",
+        "Page5/TextField1",
+        "TextField"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5257": {
       "liveUpdated": "2023-09",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Page1/PersonalDetails/UCIClientID",
+        "Page3/PageWrapper/BackgroundInfo3/details",
+        "Page5/TextField1",
+        "TextField"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5257sch1": {
       "liveUpdated": "2023-09",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "xfa/xfa/Schedule1/MilitaryServiceInfo/MilitaryServiceDetails/MilitaryServiceDetail",
+        "xfa/xfa/Schedule1/WarHumanityCrimesInfo/WarHumanityCrimesDetails/WarHumanityCrimesDetail",
+        "xfa/xfa/Schedule1/MembershipAssociationInfo/MembershipAssociationDetails/MembershipAssociationDetail",
+        "xfa/xfa/Schedule1/GovernmentPositionsInfo/GovernmentPositionsDetails/GovernmentPositionsDetail",
+        "xfa/xfa/Schedule1/PreviousTravelInfo/PreviousTravelDetails/PreviousTravelDetail"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5406": {
       "liveUpdated": "2026-05",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5406/page1/SectionA/SectionAinfo/Applicant/PaddedEntry/MarriageInPerson/MarriageInPerson/yesno",
+        "xfa/xfa/IMM_5406/page1/SectionA/SectionAinfo/Spouse/Relationship",
+        "xfa/xfa/IMM_5406/page1/SectionA/SectionAinfo/Spouse/PaddedEntry/MarriageInPerson/MarriageInPerson/yesno",
+        "xfa/xfa/IMM_5406/page1/SectionA/SectionAinfo/Parent1/PaddedEntry/PersonalData/Row/Email",
+        "xfa/xfa/IMM_5406/page1/SectionA/SectionAinfo/Parent2/PaddedEntry/PersonalData/Row/Email",
+        "xfa/xfa/IMM_5406/page1/SectionB/SectionBinfo/Child/PaddedEntry/buttons",
+        "xfa/xfa/IMM_5406/page1/SectionB/SectionBinfo/Child/PaddedEntry/PersonalData/Row/Email",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/buttons",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/Email",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/Relationship",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/FamilyName",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/GivenNames",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/DOB",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/COB",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/Address",
+        "xfa/xfa/IMM_5406/page1/SectionC/SectionCinfo/Sibling/PaddedEntry/PersonalData/Row/MaritalStatus",
+        "xfa/xfa/IMM_5406/page1/SectionD/Privacy"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5409": {
       "liveUpdated": "2023-01",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5409/Page1/Info/County",
+        "xfa/xfa/IMM_5409/Page1/Section1/Options/Sec/yesno",
+        "xfa/xfa/IMM_5409/Page1/Section2/yesno",
+        "xfa/xfa/IMM_5409/Page1/Section3/yesno",
+        "xfa/xfa/IMM_5409/Page1/Section5/AdminDecl",
+        "xfa/xfa/IMM_5409/Page1/Section5/County",
+        "xfa/xfa/IMM_5409/Page1/Section5/Province",
+        "xfa/xfa/IMM_5409/Page1/Section5/Country",
+        "xfa/xfa/IMM_5409/Page1/Section5/Day",
+        "xfa/xfa/IMM_5409/Page1/Section5/Month",
+        "xfa/xfa/IMM_5409/Page1/Section5/Year",
+        "xfa/xfa/IMM_5409/Page1/Privacy"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5475": {
       "liveUpdated": "2021-05",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5475/Page1/Five/apt",
+        "xfa/xfa/IMM_5475/Page1/Five/city",
+        "xfa/xfa/IMM_5475/Page1/Five/Rextension",
+        "xfa/xfa/IMM_5475/Page1/Five/Rphone",
+        "xfa/xfa/IMM_5475/Page1/Seven/List/Item",
+        "xfa/xfa/IMM_5475/Page1/Seven/currentDate",
+        "xfa/xfa/IMM_5475/Page1/Seven/Positioned"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5476": {
       "liveUpdated": "2025-11",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5476/Page1/SectionA/office",
+        "xfa/xfa/IMM_5476/Page1/SectionA/UCI",
+        "xfa/xfa/IMM_5476/Page1/SectionB/List/S1",
+        "xfa/xfa/IMM_5476/Page1/SectionB/List/S2",
+        "xfa/xfa/IMM_5476/Page1/SectionB/List/S3",
+        "xfa/xfa/IMM_5476/Page1/SectionB/givenName",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionI/membership",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionI/province2",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionI/membership2",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionI/uncompensated",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionI/otherRep",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionII/compensated",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionII/ICCRCMember",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionII/province",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionII/membership",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question6/questionII/quebecLaw",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/organization",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/lawyer",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/membershipID",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/unit",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/streetNo",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/streetName",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/city",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/province",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/country",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/postalcode",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/phoneCountryCode",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/phoneNumber",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/faxCountryCode",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/faxNumber",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question7/email",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question8/List/s1",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question8/List/s2",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question8/signatrureApplicant",
+        "xfa/xfa/IMM_5476/Page1/SectionB/question8/dateSigned",
+        "xfa/xfa/IMM_5476/Page1/sectionC/givenName",
+        "xfa/xfa/IMM_5476/Page1/sectionC/organization",
+        "xfa/xfa/IMM_5476/Page1/sectionD/givenName",
+        "xfa/xfa/IMM_5476/Page1/sectionD/organization",
+        "xfa/xfa/IMM_5476/Page1/sectionD/signatrureApplicant"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5483": {
       "liveUpdated": "2025-08",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [],
+      "fillCases": {
+        "required": "ok",
+        "full": "ok"
+      }
     },
     "imm5488": {
       "liveUpdated": "2024-10",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [],
+      "fillCases": {
+        "required": "ok",
+        "full": "ok"
+      }
     },
     "imm5556": {
       "liveUpdated": "2024-03",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5556/page1/row6/Text/List1/s1",
+        "xfa/xfa/IMM_5556/page2/row14/Text/List1/s1",
+        "xfa/xfa/IMM_5556/page2/row14/Text/List1/s2",
+        "xfa/xfa/IMM_5556/page2/row17/Text/List1/s1",
+        "xfa/xfa/IMM_5556/page2/row17/Text/List1/s2",
+        "xfa/xfa/IMM_5556/page2/row18/Text/List1/s1",
+        "xfa/xfa/IMM_5556/page2/row21",
+        "xfa/xfa/IMM_5556/page2/row28/Text/List1/s1",
+        "xfa/xfa/IMM_5556/page2/row28/Text/List1/s2",
+        "xfa/xfa/IMM_5556/Page3/row34/Text",
+        "xfa/xfa/IMM_5556/Page3/row36/Text/List1/s1",
+        "xfa/xfa/IMM_5556/Page3/row36/Text/List1/s2",
+        "xfa/xfa/IMM_5556/Page3/row38/Text/List1/s1",
+        "xfa/xfa/IMM_5556/Page3/row38/Text/List1/s2",
+        "xfa/xfa/IMM_5556/Page3/row40/Text/List1/s1",
+        "xfa/xfa/IMM_5556/Page3/row40/Text/List1/s2",
+        "xfa/xfa/IMM_5556/Page3/row41/Text/List1/s1",
+        "xfa/xfa/IMM_5556/Page3/row41/Text/List1/s2",
+        "xfa/xfa/IMM_5556/Page3/row44/Text/List1/s1",
+        "xfa/xfa/IMM_5556/Page3/row44/Text/List1/s2"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "full": "ok"
+      }
     },
     "imm5645": {
       "liveUpdated": "2021-01",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5645/page1/SectionA/Spouse/ChildMStatus",
+        "xfa/xfa/IMM_5645/page1/SectionA/Mother/ChildMStatus",
+        "xfa/xfa/IMM_5645/page1/SectionA/Father/ChildMStatus",
+        "xfa/xfa/IMM_5645/page1/SectionB/Child/ChildName",
+        "xfa/xfa/IMM_5645/page1/SectionB/Child/ChildMStatus",
+        "xfa/xfa/IMM_5645/page1/SectionB/Child/ChildRelationship",
+        "xfa/xfa/IMM_5645/page1/SectionB/Child/ChildDOB",
+        "xfa/xfa/IMM_5645/page1/SectionB/Child/ChildCOB",
+        "xfa/xfa/IMM_5645/page1/SectionB/Child/ChildAddress",
+        "xfa/xfa/IMM_5645/page1/SectionB/Child/ChildOccupation",
+        "xfa/xfa/IMM_5645/page1/SectionC/Child/ChildOccupation",
+        "xfa/xfa/IMM_5645/page1/SectionC/Child/ChildName",
+        "xfa/xfa/IMM_5645/page1/SectionC/Child/ChildMStatus",
+        "xfa/xfa/IMM_5645/page1/SectionC/Child/ChildRelationship",
+        "xfa/xfa/IMM_5645/page1/SectionC/Child/ChildDOB",
+        "xfa/xfa/IMM_5645/page1/SectionC/Child/ChildCOB",
+        "xfa/xfa/IMM_5645/page1/SectionC/Child/ChildAddress",
+        "xfa/xfa/IMM_5645/page1/SectionC/Subform2"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5646": {
       "liveUpdated": "2023-01",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5646/Page1/subStudentInfo/DOB/iDate/d",
+        "xfa/xfa/IMM_5646/Page1/subStudentInfo/schoolAddress",
+        "xfa/xfa/IMM_5646/Page1/subParent/Parents/Parent/parentDOB/iDate/d",
+        "xfa/xfa/IMM_5646/Page1/subCustodian/DOB/iDate/d",
+        "xfa/xfa/IMM_5646/Page1/subDeclaration/parentSig1",
+        "xfa/xfa/IMM_5646/Page1/subDeclaration/subParentSig1date/iDate/d",
+        "xfa/xfa/IMM_5646/Page1/subDeclaration/subParentSig1date/theDate",
+        "xfa/xfa/IMM_5646/Page1/subDeclaration/notarySig",
+        "xfa/xfa/IMM_5646/Page2/subStudentInfo/DOB/iDate/d",
+        "xfa/xfa/IMM_5646/Page2/subStudentInfo/schoolAddress",
+        "xfa/xfa/IMM_5646/Page2/subParent/Parents/Parent/parentDOB/iDate/d",
+        "xfa/xfa/IMM_5646/Page2/subCustodian/DOB/iDate/d",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/childResideGroup",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/nameOther",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/parentSig1",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/subParentSig1date/iDate/d",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/subParentSig1date/theDate",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/parentSig2",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/subParentSig2date/iDate/d",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/subParentSig2date/theDate",
+        "xfa/xfa/IMM_5646/Page2/subDeclaration/notarySig",
+        "xfa/xfa/IMM_5646/Page2/subPNS"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5707": {
       "liveUpdated": "2023-01",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5707/page1/SectionA/Applicant/PaddedEntry/PersonalData/NativeName",
+        "xfa/xfa/IMM_5707/page1/SectionA/Spouse/Relationship",
+        "xfa/xfa/IMM_5707/page1/SectionA/Spouse/PaddedEntry/PersonalData/NativeName",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/buttons",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/Accompanying/yesno",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/Relationship",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/FamilyName",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/GivenNames",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/DOB",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/COB",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/Address",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/MaritalStatus",
+        "xfa/xfa/IMM_5707/page1/SectionB/Child/PaddedEntry/PersonalData/Occupation",
+        "xfa/xfa/IMM_5707/page1/SectionC/SectionCdate",
+        "xfa/xfa/IMM_5707/page1/SectionC/infolinksub"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5708": {
       "liveUpdated": "2023-09",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Page1/MaritalStatus/Current/b/DateOfMarriage",
+        "Page1/MaritalStatus/d/SpouseStatus",
+        "Page2/natID/natIDdocs/IssueDate/IssueDate",
+        "Page2/natID/natIDdocs/ExpiryDate",
+        "Page2/USCard/usCarddocs/ExpiryDate",
+        "Page2/ContactInformation/Mailing/AddrLine2/City",
+        "Page2/ContactInformation/Mailing/AddrLine2/Prov",
+        "Page2/ContactInformation/Mailing/AddrLine2/PostalCode",
+        "Page2/ContactInformation/Resi/AddrLine1/AptUnit",
+        "Page2/ContactInformation/Resi/AddrLine1/StreetNum",
+        "Page2/ContactInformation/Resi/AddrLine1/Streetname",
+        "Page2/ContactInformation/Resi/AddrLine2/City",
+        "Page2/ContactInformation/Resi/AddrLine2/Prov",
+        "Page2/ContactInformation/Resi/AddrLine2/PostalCode",
+        "Page3/ComingIntoCda/PurposeOfVisit/PurposeOfVisit",
+        "Page3/ComingIntoCda/PurposeOfVisit/Other",
+        "Page3/DetailsOfVisit/Purpose/Other",
+        "Page3/DetailsOfVisit/Funds/Other",
+        "Page4/Employment2/EmpRec3/Line1/From/YYYY",
+        "Page4/Employment2/EmpRec3/Line1/From/MM",
+        "Page4/Employment2/EmpRec3/Line1/Occupation",
+        "Page4/Employment2/EmpRec3/Line1/Employer",
+        "Page4/Employment2/EmpRec3/Line2/To/YYYY",
+        "Page4/Employment2/EmpRec3/Line2/To/MM",
+        "Page4/Employment2/EmpRec3/Line2/City",
+        "Page4/Employment2/EmpRec3/Line2/Country",
+        "Page4/Employment2/EmpRec3/Line2/ProvState",
+        "Page4/BackgroundInfo/Criminal/refusedDetails",
+        "Page4/BackgroundInfo/Occupation/Choice",
+        "Page4/Important",
+        "Page5/TextField1",
+        "TextField"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5709": {
       "liveUpdated": "2026-06",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Page1/MaritalStatus/Current/b/DateOfMarriage",
+        "Page1/MaritalStatus/d/SpouseStatus",
+        "Page2/natID/natIDdocs/IssueDate/IssueDate",
+        "Page2/natID/natIDdocs/ExpiryDate",
+        "Page2/USCard/usCarddocs/ExpiryDate",
+        "Page2/ContactInformation/Mailing/text",
+        "Page2/ContactInformation/Mailing/AddrLine2/City",
+        "Page2/ContactInformation/Mailing/AddrLine2/Prov",
+        "Page2/ContactInformation/Mailing/AddrLine2/PostalCode",
+        "Page2/ContactInformation/Resi/AddrLine1/AptUnit",
+        "Page2/ContactInformation/Resi/AddrLine1/StreetNum",
+        "Page2/ContactInformation/Resi/AddrLine1/Streetname",
+        "Page2/ContactInformation/Resi/AddrLine2/City",
+        "Page2/ContactInformation/Resi/AddrLine2/Prov",
+        "Page2/ContactInformation/Resi/AddrLine2/PostalCode",
+        "Page3/ComingIntoCda/PurposeOfVisit/Other",
+        "Page3/DetailsOfStudy/SchoolDetails/Funds/Other",
+        "Page3/CAQ/CertNum",
+        "Page3/CAQ/CertExpiry",
+        "Page4/EmpRec3/Line1/From/YYYY",
+        "Page4/EmpRec3/Line1/From/MM",
+        "Page4/EmpRec3/Line1/Occupation",
+        "Page4/EmpRec3/Line1/Employer",
+        "Page4/EmpRec3/Line2/To/YYYY",
+        "Page4/EmpRec3/Line2/To/MM",
+        "Page4/EmpRec3/Line2/City",
+        "Page4/EmpRec3/Line2/Country",
+        "Page4/EmpRec3/Line2/ProvState",
+        "Page4/BackgroundInfo/Criminal/refusedDetails",
+        "Page4/BackgroundInfo/Occupation/Choice",
+        "Page4/Important",
+        "Page5/TextField1",
+        "TextField"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5710": {
       "liveUpdated": "2023-09",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Page1/MaritalStatus/Current/b/DateOfMarriage",
+        "Page1/MaritalStatus/d/SpouseStatus",
+        "Page2/natID/natIDdocs/IssueDate/IssueDate",
+        "Page2/natID/natIDdocs/ExpiryDate",
+        "Page2/USCard/usCarddocs/ExpiryDate",
+        "Page2/ContactInformation/Mailing/text",
+        "Page2/ContactInformation/Mailing/AddrLine2/City",
+        "Page2/ContactInformation/Mailing/AddrLine2/Prov",
+        "Page2/ContactInformation/Mailing/AddrLine2/PostalCode",
+        "Page2/ContactInformation/Resi/AddrLine1/AptUnit",
+        "Page2/ContactInformation/Resi/AddrLine1/StreetNum",
+        "Page2/ContactInformation/Resi/AddrLine1/Streetname",
+        "Page2/ContactInformation/Resi/AddrLine2/City",
+        "Page2/ContactInformation/Resi/AddrLine2/Prov",
+        "Page2/ContactInformation/Resi/AddrLine2/PostalCode",
+        "Page3/ComingIntoCda/PurposeOfVisit/Other",
+        "Page4/EmpRec3/Line1/From/YYYY",
+        "Page4/EmpRec3/Line1/From/MM",
+        "Page4/EmpRec3/Line1/Occupation",
+        "Page4/EmpRec3/Line1/Employer",
+        "Page4/EmpRec3/Line2/To/YYYY",
+        "Page4/EmpRec3/Line2/To/MM",
+        "Page4/EmpRec3/Line2/City",
+        "Page4/EmpRec3/Line2/Country",
+        "Page4/EmpRec3/Line2/ProvState",
+        "Page4/BackgroundInfo/Criminal/refusedDetails",
+        "Page4/BackgroundInfo/Occupation/Choice",
+        "Page4/Important",
+        "Page5/TextField1",
+        "TextField"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm0008": {
       "liveUpdated": "2026-05",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Page1/genDetails/q1/ApplicationValidatedFlagMirror",
+        "Page1/genDetails/q3/NumberOfApps",
+        "Page1/genDetails/q4",
+        "Page1/genDetails/q6/Prov",
+        "Page1/genDetails/q6/CityTown",
+        "Page1/genDetails/q7/CSQInd",
+        "Page1/genDetails/q7/CSQNum",
+        "Page1/genDetails/q7/CSQDate",
+        "Page1/PersonalDetails/q3/heightFT",
+        "Page1/PersonalDetails/q3/heightIN",
+        "Page1/PersonalDetails/q10/CurrentCOR/Row2/Country",
+        "Page1/PersonalDetails/q10/CurrentCOR/Row2/Status",
+        "Page1/PersonalDetails/q10/CurrentCOR/Row2/FromDate",
+        "Page1/PersonalDetails/q10/CurrentCOR/Row2/ToDate",
+        "Page1/PersonalDetails/q13/PCRIndicator",
+        "Page1/PersonalDetails/q13/PreviousCOR/Row2/Country",
+        "Page1/PersonalDetails/q13/PreviousCOR/Row2/Status",
+        "Page1/PersonalDetails/q13/PreviousCOR/Row2/Other",
+        "Page1/PersonalDetails/q13/PreviousCOR/Row2/FromDate",
+        "Page1/PersonalDetails/q13/PreviousCOR/Row2/ToDate",
+        "Page1/PersonalDetails/q15/PrevMarriedIndicator",
+        "Page1/PersonalDetails/q15/PMFamilyName",
+        "Page1/PersonalDetails/q15/PMGivenName",
+        "Page1/PersonalDetails/q15/TypeOfRelationship",
+        "Page1/PersonalDetails/q15/FromDate",
+        "Page1/PersonalDetails/q15/ToDate",
+        "Page1/contactInformation/q1/AddressRow1/Apt/AptUnit",
+        "Page1/contactInformation/q2/SameAsMailingIndicator",
+        "Page1/contactInformation/q2/ResidentialAddressRow1/AptUnit/AptUnit",
+        "Page1/contactInformation/q2/ResidentialAddressRow1/StreetNum/StreetNum",
+        "Page1/contactInformation/q2/ResidentialAddressRow1/StreetName/Streetname",
+        "Page1/contactInformation/q2/ResidentialAddressRow1/CityTown/CityTown",
+        "Page1/contactInformation/q2/ResidentialAddressRow2/Country/Country",
+        "Page1/contactInformation/q2/ResidentialAddressRow2/ProvinceState/ProvinceState",
+        "Page1/contactInformation/q2/ResidentialAddressRow2/PostalCode/PostalCode",
+        "Page1/contactInformation/q3/Phone/Type",
+        "Page1/contactInformation/q3/Phone/IntlNumber/IntlNumber",
+        "Page1/contactInformation/q5/FaxPhone/NumberCountry",
+        "Page1/contactInformation/q5/FaxPhone/ActualNumber",
+        "Page1/contactInformation/q5/FaxPhone/IntlNumber/IntlNumber"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5669": {
       "liveUpdated": "2021-05",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [],
+      "fillCases": {}
     },
     "imm1344": {
       "liveUpdated": "2024-09",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": true,
+      "unfilled": [
+        "Part1/Header/titleSF/crcNum",
+        "Part1/Header/privacyNotice",
+        "Part1/SponsorDetails/genDetails/q1/Proceed",
+        "Part1/SponsorDetails/genDetails/q1/ApplicationValidatedFlagMirror",
+        "Part1/SponsorDetails/genDetails/q2/LangPref",
+        "Part1/SponsorDetails/genDetails/q3/CoSignerInd",
+        "Part1/SponsorDetails/genDetails/q4/PAFamilyName",
+        "Part1/SponsorDetails/genDetails/q4/PAGivenName",
+        "Part1/SponsorDetails/genDetails/q5New/Other",
+        "Part1/SponsorDetails/genDetails/q5New/RelationFrom",
+        "Part1/SponsorDetails/q3/dob/DOBDay",
+        "Part1/SponsorDetails/q3/dob/DOBMonth",
+        "Part1/SponsorDetails/q3/dob/DOBYear",
+        "Part1/SponsorDetails/q7New/StatusDates/FromYr",
+        "Part1/SponsorDetails/q7New/StatusDates/FromMM",
+        "Part1/SponsorDetails/q7New/StatusDates/FromDD",
+        "Part1/SponsorDetails/q7cNew/SameNameInd",
+        "Part1/SponsorDetails/q7cNew/FamilyName",
+        "Part1/SponsorDetails/q7cNew/GivenName",
+        "Part1/SponsorDetails/q8New/a/DateOfMarriage",
+        "Part1/SponsorDetails/q8New/a/MarriageDate/FromYr",
+        "Part1/SponsorDetails/q8New/a/MarriageDate/FromMM",
+        "Part1/SponsorDetails/q8New/a/MarriageDate/FromDD",
+        "Part1/SponsorDetails/q8New/c/FamilyName",
+        "Part1/SponsorDetails/q8New/c/GivenName",
+        "Part1/SponsorDetails/q9New/fullname/PrevMarriedIndicator",
+        "Part1/SponsorDetails/q9New/fullname/PMFamilyName",
+        "Part1/SponsorDetails/q9New/fullname/PMGivenName",
+        "Part1/SponsorDetails/PrevSpouseDOB/DOBYear",
+        "Part1/SponsorDetails/PrevSpouseDOB/DOBMonth",
+        "Part1/SponsorDetails/PrevSpouseDOB/DOBDay",
+        "Part1/SponsorDetails/q9bNew/TypeOfRelationship",
+        "Part1/SponsorDetails/q9bNew/ToDate",
+        "Part1/SponsorDetails/q9bNew/FromDate",
+        "Part1/SponsorDetails/q9bNew/PreviouslyMarriedDates/FromYr",
+        "Part1/SponsorDetails/q9bNew/PreviouslyMarriedDates/FromMM",
+        "Part1/SponsorDetails/q9bNew/PreviouslyMarriedDates/FromDD",
+        "Part1/SponsorDetails/q9bNew/PreviouslyMarriedDates/ToYr",
+        "Part1/SponsorDetails/q9bNew/PreviouslyMarriedDates/ToMM",
+        "Part1/SponsorDetails/q9bNew/PreviouslyMarriedDates/ToDD"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "imm5562": {
       "liveUpdated": "2024-07",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/IMM_5562/Page1/Item2Info/List2/s1",
+        "xfa/xfa/IMM_5562/Page1/Item2A/PaddedList2A/List2A/s1/Duration",
+        "xfa/xfa/IMM_5562/Page1/Item2A/PaddedList2A/List2A/s1/buttons",
+        "xfa/xfa/IMM_5562/Page1/Item2A/PaddedList2A/List2A/s1/fromDate",
+        "xfa/xfa/IMM_5562/Page1/Item2A/PaddedList2A/List2A/s1/toDate",
+        "xfa/xfa/IMM_5562/Page1/Item2A/PaddedList2A/List2A/s1/Destination",
+        "xfa/xfa/IMM_5562/Page1/Item2A/PaddedList2A/List2A/s1/PurposeofTravel",
+        "xfa/xfa/IMM_5562/Page1/Item2A/PaddedList2A/List2A/s1/Details",
+        "xfa/xfa/IMM_5562/Page1/Item2B/PaddedList2B/List2B/s1/fromDate",
+        "xfa/xfa/IMM_5562/Page1/Item2B/PaddedList2B/List2B/s1/toDate",
+        "xfa/xfa/IMM_5562/Page1/Item2B/PaddedList2B/List2B/s1/Duration",
+        "xfa/xfa/IMM_5562/Page1/Item2B/PaddedList2B/List2B/s1/Destination",
+        "xfa/xfa/IMM_5562/Page1/Item2B/PaddedList2B/List2B/s1/PurposeofTravel",
+        "xfa/xfa/IMM_5562/Page1/Item2B/PaddedList2B/List2B/s1/Details",
+        "xfa/xfa/IMM_5562/Page1/Item2B/PaddedList2B/List2B/s1/buttons",
+        "xfa/xfa/IMM_5562/Page1/Item2C/Item2X/PaddedList2X/List2X/s1/fromDate",
+        "xfa/xfa/IMM_5562/Page1/Item2C/Item2X/PaddedList2X/List2X/s1/toDate",
+        "xfa/xfa/IMM_5562/Page1/Item2C/Item2X/PaddedList2X/List2X/s1/Duration",
+        "xfa/xfa/IMM_5562/Page1/Item2C/Item2X/PaddedList2X/List2X/s1/Destination",
+        "xfa/xfa/IMM_5562/Page1/Item2C/Item2X/PaddedList2X/List2X/s1/PurposeofTravel",
+        "xfa/xfa/IMM_5562/Page1/Item2C/Item2X/PaddedList2X/List2X/s1/Details",
+        "xfa/xfa/IMM_5562/Page1/Item2C/Item2X/PaddedList2X/List2X/s1/buttons",
+        "xfa/xfa/IMM_5562/Page1/Item2C/buttons",
+        "xfa/xfa/IMM_5562/Page2/Item3/SignedDate",
+        "xfa/xfa/IMM_5562/Page2/Privacy"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     },
     "cit0002": {
-      "liveUpdated": null,
+      "liveUpdated": "2026-02",
       "passed": true,
       "errors": [],
-      "warnings": []
+      "warnings": [],
+      "fillCertified": false,
+      "unfilled": [
+        "xfa/xfa/CIT_0002/content/introduction",
+        "xfa/xfa/CIT_0002/content/q1/helpQ1",
+        "xfa/xfa/CIT_0002/content/q2/helpQ2/list/s1",
+        "xfa/xfa/CIT_0002/content/q2/helpQ2/list/s2",
+        "xfa/xfa/CIT_0002/content/q2/helpQ2/list/s3",
+        "xfa/xfa/CIT_0002/content/q2/helpQ2/list/s4",
+        "xfa/xfa/CIT_0002/content/q2/otherAccommodation",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list1/s1",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list1/s2",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list1/s3",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list/s1",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list/s2",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list/s3",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list/s4",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list/s5",
+        "xfa/xfa/CIT_0002/content/q3/helpQ3b/list/s6",
+        "xfa/xfa/CIT_0002/content/q3/q3C/helpQ3C/List/s1",
+        "xfa/xfa/CIT_0002/content/q3/q3C/helpQ3C/List/s2",
+        "xfa/xfa/CIT_0002/content/q3/q3C/helpQ3C/List/s3",
+        "xfa/xfa/CIT_0002/content/q4/helpQ4A/List/s1",
+        "xfa/xfa/CIT_0002/content/q4/helpQ4A/List/s2",
+        "xfa/xfa/CIT_0002/content/q4/helpQ4A/List/s3",
+        "xfa/xfa/CIT_0002/content/q4/q4B/nameChange",
+        "xfa/xfa/CIT_0002/content/q4/q4B/familyName",
+        "xfa/xfa/CIT_0002/content/q4/q4B/givenName",
+        "xfa/xfa/CIT_0002/content/q4/q4C/gender",
+        "xfa/xfa/CIT_0002/content/q4/q4C/height/heightCM",
+        "xfa/xfa/CIT_0002/content/q4/q4C/height/heightFT",
+        "xfa/xfa/CIT_0002/content/q4/q4C/height/heightIN",
+        "xfa/xfa/CIT_0002/content/q4/q4C/eyeColour",
+        "xfa/xfa/CIT_0002/content/q4/q4C/txt",
+        "xfa/xfa/CIT_0002/content/q4/q4D/Text/Txt",
+        "xfa/xfa/CIT_0002/content/q4/q4D/DOB_old",
+        "xfa/xfa/CIT_0002/content/q4/q4D/DOBYear",
+        "xfa/xfa/CIT_0002/content/q4/q4D/DOBMonth",
+        "xfa/xfa/CIT_0002/content/q4/q4D/DOBDay",
+        "xfa/xfa/CIT_0002/content/q4/q4D/hiddenAge",
+        "xfa/xfa/CIT_0002/content/q4/q4D/HiddenDOB",
+        "xfa/xfa/CIT_0002/content/q4E/birthCountry",
+        "xfa/xfa/CIT_0002/contentPart2/q5/helpQ5"
+      ],
+      "fillCases": {
+        "required": "ok",
+        "typical": "ok",
+        "full": "ok"
+      }
     }
   }
 }

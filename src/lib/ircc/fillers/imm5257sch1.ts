@@ -5,6 +5,7 @@ import { resolveCountryLic } from "../codes/resolve-lic";
 import formMeta from "../form-meta.json";
 import {
   fillXfaDatasetsIncremental,
+  setEmptyTag,
   setTag,
   xmlEscape,
   type FormMeta,
@@ -78,6 +79,7 @@ function setYnNil(xml: string, tag: string, value: "Y" | "N"): string {
 export type Imm5257Sch1Answers = {
   familyName: string;
   givenName: string;
+  uci?: string;
   dobYear: string;
   dobMonth: string;
   dobDay: string;
@@ -114,6 +116,7 @@ export function patchSchedule1(xml: string, a: Imm5257Sch1Answers): string {
     d = setTag(d, "FamilyName", a.familyName);
     d = setTag(d, "GivenName", a.givenName);
   }
+  if (a.uci) d = setEmptyTag(d, "UCI", a.uci);
 
   d = setYnNil(d, "ServedInMilitary", yn(a.bgMilitary));
   d = setYnNil(d, "HaveWitnessedParticipated", yn(a.bgViolence) === "Y" || yn(a.bgWitness) === "Y" ? "Y" : "N");

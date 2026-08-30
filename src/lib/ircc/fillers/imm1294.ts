@@ -10,6 +10,10 @@ import { md5 } from "js-md5";
 import cityCodes from "../codes/city-codes.json";
 import { resolveCountryLic, resolveLanguageLic } from "../codes/resolve-lic";
 import {
+  ensureAfterToday,
+  splitIsoDate,
+} from "../acrobat-constraints";
+import {
   type CorRow,
   type EducationRow,
   type JobRow,
@@ -26,6 +30,7 @@ export type Imm1294Answers = {
   email: string;
   familyName: string;
   givenName: string;
+  uci?: string;
   sex: "Male" | "Female" | "Unknown" | "Unspecified";
   dobYear: string;
   dobMonth: string;
@@ -104,6 +109,7 @@ export type Imm1294Answers = {
   schoolCity: string;
   schoolAddress: string;
   dli: string;
+  studentId?: string;
   studyFromYear: string;
   studyFromMonth: string;
   studyFromDay: string;
@@ -341,8 +347,8 @@ function corRowXml(row: CorRow): string {
     `<Country\n>${esc(row.country)}</Country\n>` +
     `<Status\n>${esc(row.status)}</Status\n>` +
     other +
-    `<FromDate\n>${esc(from)}</FromDate\n>` +
-    `<ToDate\n>${esc(to)}</ToDate\n>`
+    (from ? `<FromDate\n>${esc(from)}</FromDate\n>` : `<FromDate\n/>`) +
+    (to ? `<ToDate\n>${esc(to)}</ToDate\n>` : `<ToDate\n/>`)
   );
 }
 
@@ -560,6 +566,7 @@ export function buildFilledForm1(template: string, a: Imm1294Answers): string {
   let xml = template;
 
   xml = fillNested(xml, "ServiceIn", serviceLic);
+  xml = fillEmpty(xml, "UCIClientID", a.uci || "", "><VisaType");
   xml = fillEmpty(xml, "FamilyName", a.familyName, "><Name\n>");
   xml = fillEmpty(xml, "GivenName", a.givenName, "><Name\n>");
   xml = fillNested(xml, "AliasNameIndicator", a.hasAlias === "Y" ? "Y" : "N");
@@ -581,7 +588,10 @@ export function buildFilledForm1(template: string, a: Imm1294Answers): string {
   }
   if (a.corFromYear && a.corToYear) {
     const from = isoDate(a.corFromYear, a.corFromMonth || "", a.corFromDay || "");
-    const to = isoDate(a.corToYear, a.corToMonth || "", a.corToDay || "");
+    const to = ensureAfterToday(
+      isoDate(a.corToYear, a.corToMonth || "", a.corToDay || ""),
+    );
+    const toParts = splitIsoDate(to);
     xml = fillEmpty(xml, "FromDate", from, "><CurrentCOR\n>");
     xml = fillEmpty(xml, "ToDate", to, "><CurrentCOR\n>");
     xml = xml.replace(
@@ -590,9 +600,9 @@ export function buildFilledForm1(template: string, a: Imm1294Answers): string {
         a.corFromYear,
         a.corFromMonth || "",
         a.corFromDay || "",
-        a.corToYear,
-        a.corToMonth || "",
-        a.corToDay || "",
+        toParts.year || a.corToYear,
+        toParts.month || a.corToMonth || "",
+        toParts.day || a.corToDay || "",
       )}`,
     );
   }
@@ -649,7 +659,14 @@ export function buildFilledForm1(template: string, a: Imm1294Answers): string {
 
   xml = fillEmpty(xml, "SameAsCORIndicator", a.sameAsCor);
   if (a.sameAsCor === "N" && a.cwaRow) {
-    const row = a.cwaRow;
+    const row = { ...a.cwaRow };
+    const to = ensureAfterToday(isoDate(row.toYear, row.toMonth, row.toDay));
+    const toParts = splitIsoDate(to);
+    if (to) {
+      row.toYear = toParts.year;
+      row.toMonth = toParts.month;
+      row.toDay = toParts.day;
+    }
     const block =
       `<CountryWhereApplying\n><Row1 xfa:dataNode="dataGroup"\n/><Row2\n>${corRowXml(row)}</Row2\n></CountryWhereApplying\n>` +
       `<CWADates\n>${
@@ -815,6 +832,7 @@ export function buildFilledForm1(template: string, a: Imm1294Answers): string {
   xml = fillEmpty(xml, "SchoolName", a.schoolName, "><schoolName\n>");
   xml = fillEmpty(xml, "Level", a.studyLevel, "><schoolName\n>");
   xml = fillEmpty(xml, "Program", a.fieldOfStudy, "><schoolName\n>");
+  xml = fillEmpty(xml, "StudentNo", a.studentId || "", "><DLI");
   xml = fillEmpty(xml, "Prov", a.schoolProvince, "><ProvinceState\n>");
   xml = fillNested(xml, "CityTown", a.schoolCity, "><PurposeRow1\n>");
   xml = fillNested(xml, "Address", a.schoolAddress, "><PurposeRow1\n>");

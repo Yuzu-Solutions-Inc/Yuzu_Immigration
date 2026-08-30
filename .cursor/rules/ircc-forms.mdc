@@ -16,21 +16,24 @@ Ask-once questionnaire → one `project_form_answers` jsonb bag per project → 
 4. **Store** `answers-store.ts` — `byPerson[id]` + `project`. Never flatten into a new shape.
 5. **Expand** `expand-answers.ts` — ISO dates → Year/Month/Day the fillers expect.
 6. **Fill** `fill-project.ts` — `preview: true` for on-screen view and staff downloads (partial answers OK). Filing-quality gates stay off for those paths.
-7. **PDFs** — primary: `fillers/imm*.ts`. Companions: `patch-companions.ts` / `study-patchers.ts` / `work-patchers.ts` via `fillXfaDatasetsIncremental`. Blanks: `blanks.ts` (Storage `ircc-blanks`, then `assets/ircc/blanks`, then canada.ca). Crypto + datasets object: `form-meta.json`.
+7. **PDFs** — primary: `fillers/imm*.ts`. Companions: `patch-companions.ts` / `study-patchers.ts` / `work-patchers.ts` via `fillXfaDatasetsIncremental`. Blanks: `blanks.ts` (Storage `ircc-blanks`, then `assets/ircc/blanks`, then canada.ca). Crypto + datasets object: `form-meta.json`. Weekly validate saves any missing EN/FR blank it downloads.
+8. **Acrobat constraints** `acrobat-constraints.ts` — empty LMIA must stay null; CWA / current-COR To must be after today.
+
+Unfilled PDF cells and uncertified companion blanks are inventory on the form row (`unfilled[]`, `fillCertified`), not weekly warnings. Warnings are for live edition mismatches, missing blanks/meta, or fill/certify failures.
 
 Downloads: `generateProjectPdfsAction` / `previewProjectFormPdfAction`. Completeness for pills: `form-readiness.ts`. Entry warnings (not blockers): `data-quality.ts`.
 
 ## When IRCC publishes a new PDF
 
-1. `npm run ircc:validate` — canada.ca month vs `form-revisions.json`; live PDF size vs `form-meta.json`; decrypt datasets; `tag-contract.ts`; LOVs vs `lov-contract.ts`.
+1. `npm run ircc:validate` — canada.ca month vs `form-revisions.json`; live PDF size vs `form-meta.json`; decrypt datasets; `tag-contract.ts`; LOVs vs `lov-contract.ts`; fill 2–3 questionnaire cases per form (`fill-fixtures.ts`), keep DocMDP, flag unfilled PDF cells.
 2. Save EN+FR blanks as `assets/ircc/blanks/{code}{e|f}.pdf` and upload to `ircc-blanks`.
 3. Update `form-meta.json`: `bytes`, `datasetsObj` (XFA datasets EmbeddedFile), `fileKeyHex` (empty-user AES file key, same method as existing blanks). Decrypt failure = stale key or wrong object number.
 4. `npx tsx scripts/extract-xfa-choices.ts {blankKey}` — if `lic` codes changed, update `fields.ts` options **and** `lov-contract.ts` together. Do not invent new codes.
 5. If XML tags renamed, update `tag-contract.ts` and the filler/patcher that writes them.
 6. Pin `irccUpdated` (YYYY-MM) in `form-revisions.json`.
-7. `npm run ircc:verify-fill`.
+7. `npm run ircc:verify-fill` (same fill/certify/coverage cases; `ircc:validate -- --local` already runs them).
 
-Reuse existing field keys for the same IRCC question. New question → add to `fields.ts` first, then map in expand + filler. Checklists (`imm5483` / `5488` / `5556`) do not drive questionnaire fields.
+Reuse existing field keys for the same IRCC question. New question → add to `fields.ts` first, then map in expand + filler. Checklists (`imm5483` / `5488` / `5556`) do not drive questionnaire fields. Unfilled-cell flags from the weekly run are the list of PDF tags still missing a mapping.
 
 ## Data quality
 

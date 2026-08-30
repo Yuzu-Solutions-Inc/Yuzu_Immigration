@@ -142,6 +142,21 @@ export async function FormVersionsPanel({
                     <dd>{formatCheckedAt(row.lastCheckedAt, intlLocale)}</dd>
                   </div>
                 </dl>
+                {row.fillCertified ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t("formsCertified")}
+                    {row.unfilled.length
+                      ? ` · ${t("formsUnfilled", { count: row.unfilled.length })}`
+                      : ""}
+                  </p>
+                ) : row.fillCertified === false ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t("formsUncertified")}
+                    {row.unfilled.length
+                      ? ` · ${t("formsUnfilled", { count: row.unfilled.length })}`
+                      : ""}
+                  </p>
+                ) : null}
                 {row.livePublished &&
                 row.published &&
                 row.livePublished !== row.published ? (

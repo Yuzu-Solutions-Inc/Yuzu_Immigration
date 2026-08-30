@@ -1,18 +1,27 @@
 /**
- * Weekly IRCC form watch (fast fail, canada.ca only, no PDF writes):
+ * Weekly IRCC form watch:
  * 1. Catalog / form-meta / revisions integrity (no network)
  * 2. canada.ca index months vs form-revisions.json
  * 3. Live EN/FR PDFs: size, datasets decrypt, filler tags
  * 4. Questionnaire choice codes still on those PDFs (LOV extract, early-exit)
+ * 5. Fill 2–3 questionnaire cases per form, keep DocMDP, flag unfilled cells
  *
  *   npm run ircc:validate
  *   npm run ircc:validate -- --dates-only
  *   npm run ircc:validate -- --local
+ *   npm run ircc:validate -- --skip-fill
  */
-import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 
 import { ALL_FORM_CODES } from "../src/lib/ircc/catalog";
+import { runFillCertification, type FormFillReport } from "../src/lib/ircc/fill-certify";
 import formMeta from "../src/lib/ircc/form-meta.json";
 import revisions from "../src/lib/ircc/form-revisions.json";
 import { LOV_CONTRACT } from "../src/lib/ircc/lov-contract";
@@ -48,12 +57,16 @@ type FormResult = {
   liveUpdated: string | null;
   errors: string[];
   warnings: string[];
+  fillCertified?: boolean | null;
+  unfilled?: string[];
+  fillCases?: Record<string, "ok" | "fail">;
 };
 
 const findings: Finding[] = [];
 const formResults = new Map<string, FormResult>();
 const pins = revisions.forms as Record<string, FormRevision>;
 const meta = formMeta as Record<string, MetaEntry>;
+let fillReports: FormFillReport[] = [];
 
 function ensureForm(code: string): FormResult {
   const existing = formResults.get(code);
@@ -167,18 +180,23 @@ async function fetchPdf(url: string): Promise<Uint8Array> {
 function parseIndexDates(html: string): Map<string, string> {
   const out = new Map<string, string>();
   const tableRe =
-    /<td[^>]*>\s*IMM\s*([0-9]{4})(?:\s*SCH\s*([0-9]+))?\s*<\/td>\s*<td[^>]*>[\s\S]*?<\/td>\s*<td[^>]*>\s*(\d{4}-\d{2})\s*<\/td>/gi;
+    /<td[^>]*>\s*(IMM|CIT)\s*([0-9]{4})(?:\s*SCH\s*([0-9]+))?\s*<\/td>\s*<td[^>]*>[\s\S]*?<\/td>\s*<td[^>]*>\s*(\d{4}-\d{2})\s*<\/td>/gi;
   let m: RegExpExecArray | null;
   while ((m = tableRe.exec(html))) {
-    const code = m[2] ? `imm${m[1].toLowerCase()}sch${m[2]}` : `imm${m[1].toLowerCase()}`;
-    out.set(code, m[3]);
+    const prefix = m[1]!.toLowerCase();
+    const code = m[3]
+      ? `${prefix}${m[2]!.toLowerCase()}sch${m[3]}`
+      : `${prefix}${m[2]!.toLowerCase()}`;
+    out.set(code, m[4]!);
   }
-  if (out.size > 0) return out;
   const looseRe =
-    /IMM\s*([0-9]{4})(?:\s*SCH\s*([0-9]+))?[\s\S]{0,280}?(\d{4}-\d{2})/gi;
+    /(IMM|CIT)\s*([0-9]{4})(?:\s*SCH\s*([0-9]+))?[\s\S]{0,280}?(\d{4}-\d{2})/gi;
   while ((m = looseRe.exec(html))) {
-    const code = m[2] ? `imm${m[1].toLowerCase()}sch${m[2]}` : `imm${m[1].toLowerCase()}`;
-    if (!out.has(code)) out.set(code, m[3]);
+    const prefix = m[1]!.toLowerCase();
+    const code = m[3]
+      ? `${prefix}${m[2]!.toLowerCase()}sch${m[3]}`
+      : `${prefix}${m[2]!.toLowerCase()}`;
+    if (!out.has(code)) out.set(code, m[4]!);
   }
   return out;
 }
@@ -231,14 +249,25 @@ function pickPdfHref(html: string, blankKey: string): string | null {
   return best ? resolveHref(best.href) : null;
 }
 
+function localBlankPath(code: string): string {
+  return path.join(process.cwd(), "assets", "ircc", "blanks", `${code}.pdf`);
+}
+
 function loadLocalBlank(code: string): Uint8Array | null {
-  const file = path.join(process.cwd(), "assets", "ircc", "blanks", `${code}.pdf`);
   try {
-    const bytes = new Uint8Array(readFileSync(file));
+    const bytes = new Uint8Array(readFileSync(localBlankPath(code)));
     return bytes.byteLength > 1000 && isPdfMagic(bytes) ? bytes : null;
   } catch {
     return null;
   }
+}
+
+function persistBlank(blankKey: string, pdf: Uint8Array) {
+  const file = localBlankPath(blankKey);
+  if (existsSync(file)) return;
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(file, pdf);
+  ok(`${blankKey}: saved local blank (${pdf.byteLength} bytes)`);
 }
 
 function checkIntegrity() {
@@ -364,6 +393,7 @@ async function loadBlankPdf(
     try {
       const pdf = await fetchPdf(direct);
       ok(`${blankKey}: downloaded ${direct} (${pdf.byteLength} bytes)`);
+      persistBlank(blankKey, pdf);
       return pdf;
     } catch (err) {
       warn(
@@ -380,6 +410,7 @@ async function loadBlankPdf(
     } else {
       const pdf = await fetchPdf(href);
       ok(`${blankKey}: downloaded ${href} (${pdf.byteLength} bytes)`);
+      persistBlank(blankKey, pdf);
       return pdf;
     }
   } catch (err) {
@@ -526,12 +557,46 @@ async function checkPdfsAndChoices(preferLocal: boolean) {
   }
 }
 
+function mergeFillReports(reports: FormFillReport[]) {
+  fillReports = reports;
+  for (const report of reports) {
+    const row = ensureForm(report.code);
+    row.fillCertified = report.fillCertified;
+    row.unfilled = report.unfilled;
+    row.fillCases = {};
+    for (const [id, result] of Object.entries(report.cases)) {
+      row.fillCases[id] = result.ok ? "ok" : "fail";
+    }
+    for (const message of report.errors) error(message);
+    for (const message of report.warnings) warn(message);
+  }
+}
+
+async function checkFillAndCertify() {
+  process.env.IRCC_BLANKS_LOCAL = "1";
+  const result = await runFillCertification();
+  mergeFillReports(result.reports);
+  if (result.passed) {
+    ok(
+      `filled ${result.reports.length} form(s); DocMDP and Acrobat checks passed.`,
+    );
+  }
+}
+
 function writeStatusFile(datesOnly: boolean) {
   const errors = findings.filter((f) => f.level === "error");
   const warns = findings.filter((f) => f.level === "warn");
   const forms: Record<
     string,
-    { liveUpdated: string | null; passed: boolean; errors: string[]; warnings: string[] }
+    {
+      liveUpdated: string | null;
+      passed: boolean;
+      errors: string[];
+      warnings: string[];
+      fillCertified?: boolean | null;
+      unfilled?: string[];
+      fillCases?: Record<string, "ok" | "fail">;
+    }
   > = {};
   const codes = new Set([...Object.keys(pins), ...ALL_FORM_CODES]);
   for (const code of codes) {
@@ -545,6 +610,9 @@ function writeStatusFile(datesOnly: boolean) {
       passed: row.errors.length === 0,
       errors: row.errors,
       warnings: row.warnings,
+      fillCertified: row.fillCertified ?? null,
+      unfilled: row.unfilled ?? [],
+      fillCases: row.fillCases ?? {},
     };
   }
   const payload = {
@@ -584,12 +652,36 @@ function writeGithubSummary(datesOnly: boolean) {
     for (const item of warns) lines.push(`- ${item.message}`);
     lines.push("");
   }
+  if (fillReports.length) {
+    lines.push("### Fill and certification", "");
+    for (const report of fillReports) {
+      const cases = Object.entries(report.cases)
+        .map(([id, row]) => `${id} ${row.ok ? "ok" : "fail"}`)
+        .join(", ");
+      const cert =
+        report.blankCertified == null
+          ? "no blank"
+          : report.blankCertified
+            ? report.fillCertified
+              ? "certified"
+              : "certification lost"
+            : "uncertified blank";
+      lines.push(`- **${report.code}** — ${cert}${cases ? `; ${cases}` : ""}`);
+      if (report.unfilled.length) {
+        lines.push(
+          `  - ${report.unfilled.length} unfilled cell(s): ${report.unfilled.slice(0, 6).join(", ")}`,
+        );
+      }
+    }
+    lines.push("");
+  }
   appendFileSync(file, `${lines.join("\n")}\n`);
 }
 
 async function main() {
   const datesOnly = process.argv.includes("--dates-only");
   const preferLocal = process.argv.includes("--local");
+  const skipFill = process.argv.includes("--skip-fill");
   checkIntegrity();
   try {
     await checkDates();
@@ -605,6 +697,15 @@ async function main() {
       error(
         `IRCC PDF / choice-list check failed (${err instanceof Error ? err.message : err}).`,
       );
+    }
+    if (!skipFill) {
+      try {
+        await checkFillAndCertify();
+      } catch (err) {
+        error(
+          `IRCC fill / certify check failed (${err instanceof Error ? err.message : err}).`,
+        );
+      }
     }
   }
   const errors = findings.filter((f) => f.level === "error");

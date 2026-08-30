@@ -28,12 +28,6 @@ export async function loadBlankPdf(
   const cached = blankCache.get(key);
   if (cached) return cached;
 
-  const fromStorage = await loadBlankFromStorage(key);
-  if (fromStorage) {
-    blankCache.set(key, fromStorage);
-    return fromStorage;
-  }
-
   const localPath = path.join(
     process.cwd(),
     "assets",
@@ -41,15 +35,35 @@ export async function loadBlankPdf(
     "blanks",
     `${key}.pdf`,
   );
-  try {
-    const buf = await fs.readFile(localPath);
-    if (buf.byteLength > 1000) {
-      const bytes = new Uint8Array(buf);
-      blankCache.set(key, bytes);
-      return bytes;
+
+  async function readLocal(): Promise<Uint8Array | null> {
+    try {
+      const buf = await fs.readFile(localPath);
+      if (buf.byteLength > 1000) return new Uint8Array(buf);
+    } catch {
+      /* missing */
     }
-  } catch {
-    // fall through to remote
+    return null;
+  }
+
+  if (process.env.IRCC_BLANKS_LOCAL === "1") {
+    const local = await readLocal();
+    if (local) {
+      blankCache.set(key, local);
+      return local;
+    }
+  }
+
+  const fromStorage = await loadBlankFromStorage(key);
+  if (fromStorage) {
+    blankCache.set(key, fromStorage);
+    return fromStorage;
+  }
+
+  const local = await readLocal();
+  if (local) {
+    blankCache.set(key, local);
+    return local;
   }
 
   const dated = key.startsWith("imm5645")

@@ -1,5 +1,7 @@
 /** Conditional IMM 1294 answer shapes (Valider branches). */
 
+import { completeIsoDate } from "../acrobat-constraints";
+
 export type YesNo = "Y" | "N";
 
 export type CorRow = {
@@ -69,7 +71,7 @@ export function isoDate(
   m?: string | null,
   d?: string | null,
 ): string {
-  return [y, m, d].filter(Boolean).join("-");
+  return completeIsoDate(y, m, d);
 }
 
 export function yn(value: unknown, fallback: YesNo = "N"): YesNo {

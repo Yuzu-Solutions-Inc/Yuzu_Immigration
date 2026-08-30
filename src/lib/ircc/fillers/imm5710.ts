@@ -1,6 +1,7 @@
 /**
  * Fill IMM 5710 — application to change conditions / extend stay (work permit inside Canada).
  */
+import { acrobatLmoValue, ensureAfterToday } from "../acrobat-constraints";
 import { resolveCountryLic, resolveLanguageLic } from "../codes/resolve-lic";
 import {
   type CorRow,
@@ -23,6 +24,7 @@ export type Imm5710Answers = {
   email: string;
   familyName: string;
   givenName: string;
+  uci?: string;
   sex: "Male" | "Female" | "Unknown" | "Unspecified";
   dobYear: string;
   dobMonth: string;
@@ -306,7 +308,8 @@ export function buildFilledForm5710(template: string, raw: Imm5710Answers): stri
   const jobs = a.jobs.slice(0, 3);
   let xml = template;
 
-  xml = fillNested(xml, "ServiceIn", serviceLic, "><ServiceIn\n>");
+  xml = fillEmpty(xml, "ServiceIn", serviceLic, "><PersonalDetails\n>");
+  xml = fillEmpty(xml, "UCIClientID", a.uci || "", "><PersonalDetails\n>");
   xml = fillEmpty(xml, "FamilyName", a.familyName, "><Name\n>");
   xml = fillEmpty(xml, "GivenName", a.givenName, "><Name\n>");
 
@@ -338,14 +341,17 @@ export function buildFilledForm5710(template: string, raw: Imm5710Answers): stri
   xml = fillEmpty(xml, "PlaceBirthCountry", a.placeBirthCountry, "><pob\n>");
   xml = fillNested(xml, "Citizenship", a.citizenship);
 
-    xml = fillEmpty(xml, "Country", a.currentCountry, "><CurrentCOR\n><Row2\n>");
-  xml = fillEmpty(xml, "Status", a.currentStatus, "><CurrentCOR\n><Row2\n>");
-  if (a.corOther) xml = fillEmpty(xml, "Other", a.corOther, "><CurrentCOR\n><Row2\n>");
+  const corInner = "><CurrentCOR\n><CurrentCOR\n>";
+  xml = fillEmpty(xml, "Country", a.currentCountry, corInner);
+  xml = fillEmpty(xml, "Status", a.currentStatus, corInner);
+  if (a.corOther) xml = fillEmpty(xml, "Other", a.corOther, corInner);
   if (a.corFromYear && a.corToYear) {
     const from = isoDate(a.corFromYear, a.corFromMonth || "01", a.corFromDay || "01");
-    const to = isoDate(a.corToYear, a.corToMonth || "01", a.corToDay || "01");
-    xml = fillEmpty(xml, "FromDate", from, "><CurrentCOR\n><Row2\n>");
-    xml = fillEmpty(xml, "ToDate", to, "><CurrentCOR\n><Row2\n>");
+    const to = ensureAfterToday(
+      isoDate(a.corToYear, a.corToMonth || "01", a.corToDay || "01"),
+    );
+    xml = fillEmpty(xml, "FromDate", from, corInner);
+    xml = fillEmpty(xml, "ToDate", to, corInner);
     xml = xml.replace(
       /<CORDates\n><FromYr\n\/><FromMM\n\/><FromDD\n\/><ToDD\n\/><ToYr\n\/><ToMM\n\/>/,
       `<CORDates\n><FromYr\n>${esc(a.corFromYear)}</FromYr\n><FromMM\n>${esc(a.corFromMonth || "01")}</FromMM\n>` +
@@ -469,19 +475,25 @@ export function buildFilledForm5710(template: string, raw: Imm5710Answers): stri
   if (a.prevDocNum) xml = fillEmpty(xml, "docNum", a.prevDocNum, "><PrevDocNum\n>");
 
   const workFrom = isoDate(a.workFromYear, a.workFromMonth, a.workFromDay);
-  const workTo = isoDate(a.workToYear, a.workToMonth, a.workToDay);
+  const workTo = ensureAfterToday(isoDate(a.workToYear, a.workToMonth, a.workToDay));
+  const permitType = (a.workPurposeType || "").trim();
+  const permitXml = permitType ? `<Type\n>${esc(permitType)}</Type\n>` : `<Type\n/>`;
+  const lmo = acrobatLmoValue(permitType, a.lmiaNumber);
+  const lmoXml = lmo ? `<LMO\n>${esc(lmo)}</LMO\n>` : `<LMO\n/>`;
+  const fromXml = workFrom ? `<FromDate\n>${esc(workFrom)}</FromDate\n>` : `<FromDate\n/>`;
+  const toXml = workTo ? `<ToDate\n>${esc(workTo)}</ToDate\n>` : `<ToDate\n/>`;
   if (variant !== "work") {
     // Study / visitor inland forms use DetailsOfStudy or DetailsOfVisit instead.
   } else xml = xml.replace(
     /<DetailsOfWork\n>[\s\S]*?<\/DetailsOfWork\n>/,
-      `<DetailsOfWork\n><Purpose\n><Type\n>${esc(a.workPurposeType || "LMOS")}</Type\n>` +
+      `<DetailsOfWork\n><Purpose\n>${permitXml}` +
       (a.workPurposeOther ? `<Other\n>${esc(a.workPurposeOther)}</Other\n>` : `<Other\n/>`) +
       `</Purpose\n><Employer\n><Name\n>${esc(a.employerName)}</Name\n><Addr\n>${esc(a.employerAddress)}</Addr\n></Employer\n>` +
       `<Location\n><Prov\n>${esc(a.workProvince)}</Prov\n><City\n>${esc(a.workCity)}</City\n>` +
       (a.workLocationAddress ? `<Addr\n>${esc(a.workLocationAddress)}</Addr\n>` : `<Addr\n/>`) +
       `</Location\n><Occupation\n><Job\n>${esc(a.jobTitle)}</Job\n><Desc\n>${esc(a.jobDescription)}</Desc\n></Occupation\n>` +
-      `<Duration\n><FromDate\n>${esc(workFrom)}</FromDate\n><ToDate\n>${esc(workTo)}</ToDate\n>` +
-      `<LMO\n>${esc(String(a.lmiaNumber || "").replace(/\D/g, ""))}</LMO\n></Duration\n>` +
+      `<Duration\n>${fromXml}${toXml}` +
+      `${lmoXml}</Duration\n>` +
       (a.caqNumber
         ? `<CAQ\n><CertNum\n>${esc(a.caqNumber)}</CertNum\n>` +
           (a.caqExpiryYear

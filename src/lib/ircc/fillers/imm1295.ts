@@ -1,6 +1,12 @@
 /**
  * Fill IMM 1295 (work permit outside Canada) — shares XFA structure with IMM 1294.
  */
+import {
+  acrobatLmoValue,
+  completeIsoDate,
+  ensureAfterToday,
+  ensureOnOrAfterToday,
+} from "../acrobat-constraints";
 import cityCodes from "../codes/city-codes.json";
 import {
   type Imm1294Answers,
@@ -74,16 +80,7 @@ function esc(value: string | null | undefined): string {
     .replace(/>/g, "&gt;");
 }
 
-function isoDate(
-  y: string | null | undefined,
-  m: string | null | undefined,
-  d: string | null | undefined,
-): string {
-  if (!y) return "";
-  return [y, m, d].filter(Boolean).join("-");
-}
-
-function resolveWorkPermitType(raw: string): WorkPermitTypeLic {
+function resolveWorkPermitType(raw: string): WorkPermitTypeLic | "" {
   const v = String(raw || "").trim().toUpperCase();
   const map: Record<string, WorkPermitTypeLic> = {
     ELMO: "ELMO",
@@ -100,7 +97,7 @@ function resolveWorkPermitType(raw: string): WorkPermitTypeLic {
   if (["ELMO", "LMOS", "OWP", "Other", "SAWP", "SBC"].includes(raw)) {
     return raw as WorkPermitTypeLic;
   }
-  return "LMOS";
+  return "";
 }
 
 function toImm1294Shim(a: Imm1295Answers): Imm1294Answers {
@@ -152,16 +149,27 @@ function resolveCityLic(value: string | null | undefined): string {
 function patchWorkSections(xml: string, a: Imm1295Answers): string {
   let out = xml;
   const permitType = resolveWorkPermitType(a.workPermitType);
-  const workFrom = isoDate(a.workFromYear, a.workFromMonth, a.workFromDay);
-  const workTo = isoDate(a.workToYear, a.workToMonth, a.workToDay);
-  // Acrobat validates LMIA No. as an integer in [6000000, 99999999].
-  const lmo = String(a.lmiaNumber || "").replace(/\D/g, "").trim();
+  const workFrom = ensureOnOrAfterToday(
+    completeIsoDate(a.workFromYear, a.workFromMonth, a.workFromDay),
+  );
+  const workTo = ensureAfterToday(
+    completeIsoDate(a.workToYear, a.workToMonth, a.workToDay),
+  );
+  const lmo = acrobatLmoValue(permitType, a.lmiaNumber);
   const workProv = resolveProvinceLic(a.workProvince);
   const workCity = resolveCityLic(a.workCity);
+  const lmoXml = lmo
+    ? `<LMO\n><LMO\n>${esc(lmo)}</LMO\n></LMO\n>`
+    : `<LMO\n><LMO\n/></LMO\n>`;
+  const fromXml = workFrom ? `<FromDate\n>${esc(workFrom)}</FromDate\n>` : `<FromDate\n/>`;
+  const toXml = workTo ? `<ToDate\n>${esc(workTo)}</ToDate\n>` : `<ToDate\n/>`;
+  const permitXml = permitType
+    ? `<WorkPermitType\n>${esc(permitType)}</WorkPermitType\n>`
+    : `<WorkPermitType\n/>`;
 
   out = out.replace(
     /<DetailsOfIntendedWork\n>[\s\S]*?<\/DetailsOfIntendedWork\n>/,
-    `<DetailsOfIntendedWork\n><DetailsOfWork\n><TypeofWork\n><WorkPermitType\n>${esc(permitType)}</WorkPermitType\n></TypeofWork\n>` +
+    `<DetailsOfIntendedWork\n><DetailsOfWork\n><TypeofWork\n>${permitXml}</TypeofWork\n>` +
       `<PurposeRow1\n><EmployerName\n><EmployerName\n>${esc(a.employerName)}</EmployerName\n></EmployerName\n>` +
       `<Address\n><Address\n>${esc(a.employerAddress)}</Address\n></Address\n></PurposeRow1\n></DetailsOfWork\n></DetailsOfIntendedWork\n>`,
   );
@@ -181,8 +189,8 @@ function patchWorkSections(xml: string, a: Imm1295Answers): string {
     /<DetailsOfWorkCont\n>[\s\S]*?<\/DetailsOfWorkCont\n>/,
     `<DetailsOfWorkCont\n><details\n><jobTitle\n>${esc(a.jobTitle)}</jobTitle\n>` +
       `<posDesc\n>${esc(a.jobDescription)}</posDesc\n>` +
-      `<HowLongStudy\n><FromDate\n>${esc(workFrom)}</FromDate\n><ToDate\n>${esc(workTo)}</ToDate\n></HowLongStudy\n>` +
-      `<LMO\n><LMO\n>${esc(lmo)}</LMO\n></LMO\n></details\n></DetailsOfWorkCont\n>`,
+      `<HowLongStudy\n>${fromXml}${toXml}</HowLongStudy\n>` +
+      `${lmoXml}</details\n></DetailsOfWorkCont\n>`,
   );
 
   const child = a.lcpChildCare ? "1" : "0";
@@ -206,7 +214,7 @@ function patchWorkSections(xml: string, a: Imm1295Answers): string {
 
   if (a.caqNumber) {
     const caqExp = a.caqExpiryYear
-      ? isoDate(a.caqExpiryYear, a.caqExpiryMonth || "01", a.caqExpiryDay || "01")
+      ? completeIsoDate(a.caqExpiryYear, a.caqExpiryMonth || "01", a.caqExpiryDay || "01")
       : "";
     out = out.replace(
       /<CAQ\n>[\s\S]*?<\/CAQ\n>/,
