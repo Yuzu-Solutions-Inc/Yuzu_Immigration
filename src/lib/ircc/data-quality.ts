@@ -362,11 +362,11 @@ export function analyzeAnswerQuality(
   );
   flagRange(issues, answers.corFrom, answers.corTo, "residence", "cor");
   flagRange(issues, answers.cwaFrom, answers.cwaTo, "residence", "cwa");
-  const today = localIsoToday(asOf);
-  if (filled(answers.corTo) && String(answers.corTo) <= today) {
+  const todayIso = localIsoToday(asOf);
+  if (filled(answers.corTo) && String(answers.corTo) <= todayIso) {
     push(issues, "corToNotAfterToday", "residence");
   }
-  if (String(answers.sameAsCor ?? "").toUpperCase() === "N" && filled(answers.cwaTo) && String(answers.cwaTo) <= today) {
+  if (String(answers.sameAsCor ?? "").toUpperCase() === "N" && filled(answers.cwaTo) && String(answers.cwaTo) <= todayIso) {
     push(issues, "cwaToNotAfterToday", "residence");
   }
   const permit = String(answers.workPermitType || answers.workPurposeType || "");
