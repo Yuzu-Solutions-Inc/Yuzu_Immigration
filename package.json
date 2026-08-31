@@ -61,7 +61,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/jszip": "^3.4.0",
     "@types/node": "^20",
-    "@types/pako": "^2.0.4",
+    "@types/pako": "^3.0.0",
     "@types/pg": "^8.21.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
