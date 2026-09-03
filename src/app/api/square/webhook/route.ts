@@ -5,7 +5,10 @@ import {
   loadPaymentByOrderId,
   markPaymentPaid,
 } from "@/lib/square/payments";
-import { verifySquareWebhookSignature } from "@/lib/square/oauth";
+import {
+  squareWebhookNotificationUrlCandidates,
+  verifySquareWebhookRequest,
+} from "@/lib/square/oauth";
 import { getAppBaseUrl } from "@/lib/app-url";
 
 type SquareWebhookBody = {
@@ -32,13 +35,16 @@ export async function POST(request: Request) {
   const body = await request.text();
   const signature = request.headers.get("x-square-hmacsha256-signature");
   const origin = await getAppBaseUrl();
-  const notificationUrl = `${origin.replace(/\/$/, "")}/api/square/webhook`;
+  const notificationUrls = squareWebhookNotificationUrlCandidates(
+    origin,
+    request.url,
+  );
 
   if (
-    !verifySquareWebhookSignature({
+    !verifySquareWebhookRequest({
       signatureHeader: signature,
       body,
-      notificationUrl,
+      notificationUrls,
     })
   ) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 401 });

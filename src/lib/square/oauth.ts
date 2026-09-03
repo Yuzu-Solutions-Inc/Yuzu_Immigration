@@ -48,6 +48,35 @@ export function squareOAuthRedirectUri(origin: string) {
   return `${origin.replace(/\/$/, "")}/auth/square/callback`;
 }
 
+export function squareWebhookNotificationUrl(origin: string) {
+  return `${origin.replace(/\/$/, "")}/api/square/webhook`;
+}
+
+/** Square HMAC is over the exact registered notification URL. Try APP_URL, the request host, and www/apex. */
+export function squareWebhookNotificationUrlCandidates(
+  primaryOrigin: string,
+  requestUrl: string,
+): string[] {
+  const origins = new Set<string>();
+  const addOrigin = (raw: string) => {
+    try {
+      const url = new URL(raw);
+      origins.add(url.origin);
+      const host = url.hostname;
+      if (host.startsWith("www.")) {
+        origins.add(`${url.protocol}//${host.slice(4)}`);
+      } else if (host !== "localhost" && host !== "127.0.0.1") {
+        origins.add(`${url.protocol}//www.${host}`);
+      }
+    } catch {
+      // ignore invalid origins
+    }
+  };
+  addOrigin(primaryOrigin);
+  addOrigin(requestUrl);
+  return [...origins].map((origin) => squareWebhookNotificationUrl(origin));
+}
+
 export function squareAuthUrl(input: { origin: string; state: string }) {
   const config = squareClientConfig();
   if (!config) throw new Error("square_not_configured");
@@ -56,6 +85,7 @@ export function squareAuthUrl(input: { origin: string; state: string }) {
     scope: SQUARE_OAUTH_SCOPES.replaceAll("+", " "),
     session: "false",
     state: input.state,
+    redirect_uri: squareOAuthRedirectUri(input.origin),
   });
   return `${squareConnectBaseUrl(config.environment)}/oauth2/authorize?${params.toString()}`;
 }
@@ -192,4 +222,18 @@ export function verifySquareWebhookSignature(input: {
   const received = Buffer.from(input.signatureHeader);
   if (expected.length !== received.length) return false;
   return timingSafeEqual(expected, received);
+}
+
+export function verifySquareWebhookRequest(input: {
+  signatureHeader: string | null;
+  body: string;
+  notificationUrls: string[];
+}): boolean {
+  return input.notificationUrls.some((notificationUrl) =>
+    verifySquareWebhookSignature({
+      signatureHeader: input.signatureHeader,
+      body: input.body,
+      notificationUrl,
+    }),
+  );
 }

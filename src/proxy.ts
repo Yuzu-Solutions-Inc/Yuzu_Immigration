@@ -12,6 +12,14 @@ export async function proxy(request: NextRequest) {
     return updateSession(request);
   }
 
+  // If Supabase falls back to Site URL (marketing `/` or `/en`) after Google,
+  // the PKCE `code` lands on the landing page and is never exchanged.
+  if (request.nextUrl.searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   const sessionResponse = await updateSession(request);
 
   // Auth redirects already decided the response.
