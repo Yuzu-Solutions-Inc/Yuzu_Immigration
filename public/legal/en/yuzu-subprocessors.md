@@ -1,7 +1,7 @@
 # Subprocessors — %PRODUCT_NAME%
 
 **Yuzu Solutions Inc.**  
-**Privacy Officer:** Adrien Yvin — privacy@yuzu.solutions  
+**Privacy Officer:** Adrien Yvin — %PRIVACY_EMAIL%  
 **Last updated:** 17 August 2026
 
 This list is for consulting firms completing a privacy impact assessment or vendor review.
@@ -21,4 +21,4 @@ Primary records (database, auth, stored files) stay in Canada. Application compu
 
 Yuzu personnel who hold the platform wrap key can decrypt firm data in order to operate or restore the service.
 
-Questions: privacy@yuzu.solutions
+Questions: %PRIVACY_EMAIL%

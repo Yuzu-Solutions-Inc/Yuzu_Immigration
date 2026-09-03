@@ -4,12 +4,12 @@ Keep this register for **all** incidents, including those you do not report to t
 
 **Firm:** ________________________________  
 **Person in charge:** ________________________________  
-**Yuzu Privacy Officer (vendor):** Adrien Yvin — privacy@yuzu.solutions
+**Yuzu Privacy Officer (vendor):** Adrien Yvin — %PRIVACY_EMAIL%
 
 | ID | Detected | Occurred | What happened (no extra PI) | Categories of PI | # people | Serious injury / RRSH? | Contained | CAI | OPC | Individuals notified | Closed |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | INC- |  |  |  |  |  |  |  |  |  |  |  |
 
-If the incident involves %PRODUCT_NAME% itself (platform, portal, vendor), email privacy@yuzu.solutions the same day and keep this row.
+If the incident involves %PRODUCT_NAME% itself (platform, portal, vendor), email %PRIVACY_EMAIL% the same day and keep this row.
 
 Product audit log: Settings → Security in %PRODUCT_NAME%.

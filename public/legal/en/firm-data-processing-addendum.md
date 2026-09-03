@@ -4,7 +4,7 @@
 **Parties:** the consulting **Firm** (controller of client personal information) and **Yuzu Solutions Inc.** (processor / service provider), operator of %PRODUCT_NAME%.  
 **Aligned with:** PIPEDA; Québec *Act respecting the protection of personal information in the private sector* (Law 25); CICC file-management duties.
 
-**Privacy Officer (processor):** Adrien Yvin — privacy@yuzu.solutions
+**Privacy Officer (processor):** Adrien Yvin — %PRIVACY_EMAIL%
 
 ## 1. Subject matter and duration
 
@@ -69,7 +69,7 @@ This addendum is governed by the laws of Québec and the federal laws of Canada 
 
 This addendum is a written contract. It is executed when a firm administrator (1) opens this addendum, (2) confirms authority to bind the Firm, and (3) agrees to this version, at workspace creation or later in Settings. %PRODUCT_NAME% records the administrator’s user id, the timestamp, and the addendum version (`2026-08-16`).
 
-A wet-ink or electronic countersignature is optional. If the Firm wants a countersigned copy, download this addendum and send it to privacy@yuzu.solutions.
+A wet-ink or electronic countersignature is optional. If the Firm wants a countersigned copy, download this addendum and send it to %PRIVACY_EMAIL%.
 
 ## Signatures (optional countersignature)
 
@@ -81,6 +81,6 @@ Signature: ________________________________
 
 **Yuzu Solutions Inc. (processor)**  
 Signatory: Adrien Yvin, Privacy Officer (or other authorized officer)  
-Email: privacy@yuzu.solutions  
+Email: %PRIVACY_EMAIL%  
 Date: ______________  
 Signature: ________________________________

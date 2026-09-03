@@ -30,6 +30,6 @@ Comment le cabinet a vérifié l’identité (évitez d’y copier des numéros 
 
 - [ ] Demandée traitée (date, moyen — p. ex. Export des données / Télécharger le dossier)  
 - [ ] Refus ou limite (motif juridique) : ________________________________  
-- [ ] Transmise à Yuzu Solutions Inc. pour des données de plateforme seulement (privacy@yuzu.solutions)
+- [ ] Transmise à Yuzu Solutions Inc. pour des données de plateforme seulement (%PRIVACY_EMAIL%)
 
 Traité par : ________________________________ Date : ______________

@@ -1,4 +1,4 @@
-# Permit OS
+# Dossierly
 
 Canadian immigration consultant CRM by Yuzu Solutions.
 
@@ -50,7 +50,7 @@ Staff Google **sign-in** is separate from **Calendar sync**. Each staff member c
 - Outlook / Teams: Entra ID app with `Calendars.ReadWrite` and `OnlineMeetings.ReadWrite`, `MICROSOFT_CALENDAR_CLIENT_ID` / `MICROSOFT_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/microsoft-calendar/callback`.
 - Zoom: Zoom Marketplace General app with meeting write/update/delete and user read scopes, `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`, redirect `{APP_URL}/auth/zoom/callback`.
 
-Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` on a verified **subdomain** (e.g. `Permit OS <bookings@mail.yourdomain.com>`). Point the Resend webhook to `/api/resend/webhook` and set `RESEND_WEBHOOK_SECRET` so bounces and spam complaints are recorded.
+Booking confirmation emails use Resend. Set `RESEND_API_KEY` and `BOOKING_FROM_EMAIL` on a verified **subdomain** (e.g. `Dossierly <bookings@mail.dossierly.ca>`). Point the Resend webhook to `/api/resend/webhook` and set `RESEND_WEBHOOK_SECRET` so bounces and spam complaints are recorded.
 
 Resend is for **outbound notifications only**. Client replies are blocked (no Reply-To). Every firm notification footer includes a consultant or organization contact email (`profiles.rep_email` / `profiles.email`, else `organizations.privacy_contact_email`). Do not enable Resend Receiving for CRM messaging.
 

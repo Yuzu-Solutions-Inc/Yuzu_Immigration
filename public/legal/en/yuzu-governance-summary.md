@@ -1,7 +1,7 @@
 # Governance of personal information — public summary
 
 **Yuzu Solutions Inc.** — operator of %PRODUCT_NAME%  
-**Privacy Officer:** Adrien Yvin — privacy@yuzu.solutions  
+**Privacy Officer:** Adrien Yvin — %PRIVACY_EMAIL%  
 **Last updated:** 16 August 2026
 
 This is the plain-language description of our governance policies required under Québec’s *Act respecting the protection of personal information in the private sector* (Law 25). The full internal policies live in our compliance records. The binding public rules for users are in the [Privacy Policy](/en/privacy).
@@ -22,7 +22,7 @@ Immigration files can include names, contact details, passports, questionnaires,
 3. Encrypt data in transit. Keep the database, auth, and files in Canada (Montréal region). Encrypt many client fields and documents with a key per firm.  
 4. Keep optional tools (Google, Microsoft, Zoom, Square, product analytics) **off** until someone opts in.  
 5. Retain closed files by default for six years to support typical College rules, then allow secure destruction.  
-6. Help firms answer access, correction, portability, and deletion requests. You can also write to privacy@yuzu.solutions. We aim to respond within 30 days.  
+6. Help firms answer access, correction, portability, and deletion requests. You can also write to %PRIVACY_EMAIL%. We aim to respond within 30 days.  
 7. Log confidentiality incidents. If the law requires, we notify the Commission d’accès à l’information, the Office of the Privacy Commissioner of Canada, affected firms, and individuals.  
 8. Assess privacy impacts before major system changes and before sending personal information outside Québec.
 

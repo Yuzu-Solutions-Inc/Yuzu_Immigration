@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 
-import { product } from "@/lib/brand/product";
+import { product, productFileSlug } from "@/lib/brand/product";
 
 import { downloadDecryptedDocument } from "@/lib/documents/service";
 import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
@@ -411,7 +411,7 @@ export async function buildPortalHouseholdExport(input: {
 
   return {
     bytes,
-    filename: `yuzu-portal-export-${safeName}.zip`,
+    filename: `${productFileSlug()}-portal-export-${safeName}.zip`,
     personCount: people.length,
     projectCount: liveProjects.length,
     documentCount,

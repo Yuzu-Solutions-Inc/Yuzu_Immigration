@@ -7,6 +7,7 @@ import {
   type PricingPlanId,
 } from "@/lib/marketing/pricing";
 import type { BillingInterval } from "@/lib/billing/plans";
+import { product as brandProduct } from "@/lib/brand/product";
 import { getStripe } from "@/lib/stripe/client";
 import {
   foundingCouponId,
@@ -104,12 +105,12 @@ function specFor(key: PriceLookupKey): {
 }
 
 const PRODUCT_NAMES = {
-  standard: "Permit OS",
-  extra_seat: "Permit OS extra staff seat",
+  standard: brandProduct.name,
+  extra_seat: `${brandProduct.name} extra staff seat`,
 } as const;
 
 // Stripe's "Software as a service (SaaS) — business use" tax code.
-const PERMIT_OS_TAX_CODE = "txcd_10103001";
+const SAAS_TAX_CODE = "txcd_10103001";
 
 export function planPriceLookupKey(
   _plan: PricingPlanId,
@@ -171,15 +172,18 @@ async function ensureProduct(
   stripe: Stripe,
   key: "standard" | "extra_seat",
 ): Promise<string> {
-  const product = await stripe.products.create(
+  const created = await stripe.products.create(
     {
       name: PRODUCT_NAMES[key],
-      tax_code: PERMIT_OS_TAX_CODE,
+      tax_code: SAAS_TAX_CODE,
       metadata: { plan: key },
     },
     { idempotencyKey: `permitos_product_${key}_v2` },
   );
-  return product.id;
+  if (created.name !== PRODUCT_NAMES[key]) {
+    await stripe.products.update(created.id, { name: PRODUCT_NAMES[key] });
+  }
+  return created.id;
 }
 
 async function productIdForPrice(
@@ -423,10 +427,30 @@ export async function ensureBillingPrices(): Promise<
   await archiveLegacyFoundingPrices(stripe);
   await archiveTeamPrices(stripe);
   await setListPricesAsDefault(stripe, byKey);
+  await syncCatalogProductNames(stripe, byKey);
 
   const prices = Object.fromEntries(
     LOOKUP_KEYS.map((key) => [key, byKey.get(key)!]),
   ) as Record<PriceLookupKey, string>;
   await ensureFoundingCoupons(stripe, prices);
   return prices;
+}
+
+async function syncCatalogProductNames(
+  stripe: Stripe,
+  byKey: Map<string, string>,
+) {
+  const targets: Array<[string, keyof typeof PRODUCT_NAMES]> = [
+    ["standard_list_monthly", "standard"],
+    ["extra_seat_monthly", "extra_seat"],
+  ];
+  const seen = new Set<string>();
+  for (const [lookup, productKey] of targets) {
+    const priceId = byKey.get(lookup);
+    if (!priceId) continue;
+    const productId = await productIdForPrice(stripe, priceId);
+    if (seen.has(productId)) continue;
+    seen.add(productId);
+    await stripe.products.update(productId, { name: PRODUCT_NAMES[productKey] });
+  }
 }

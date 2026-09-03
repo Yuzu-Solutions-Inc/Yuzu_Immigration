@@ -1,7 +1,7 @@
 # Gouvernance des renseignements personnels — résumé public
 
 **Yuzu Solutions Inc.** — exploitant de %PRODUCT_NAME%  
-**Responsable de la protection des renseignements personnels :** Adrien Yvin — privacy@yuzu.solutions  
+**Responsable de la protection des renseignements personnels :** Adrien Yvin — %PRIVACY_EMAIL%  
 **Dernière mise à jour :** 16 août 2026
 
 Ceci est la description claire des politiques de gouvernance exigée par la *Loi sur la protection des renseignements personnels dans le secteur privé* du Québec (Loi 25). Les règles opposables aux utilisateurs figurent dans la [politique de confidentialité](/fr/privacy).
@@ -22,7 +22,7 @@ Les dossiers peuvent comprendre des noms, coordonnées, passeports, questionnair
 3. Chiffrement en transit. Base de données, authentification et fichiers au Canada (région de Montréal). Chiffrement applicatif de nombreux champs et documents, clé par cabinet.  
 4. Outils facultatifs (Google, Microsoft, Zoom, Square, analytique) **désactivés** tant que personne n’y consent.  
 5. Conservation des dossiers fermés six ans par défaut (Collège), puis destruction sécurisée.  
-6. Aide aux cabinets pour l’accès, la rectification, la portabilité et la suppression. Vous pouvez aussi écrire à privacy@yuzu.solutions. Objectif : 30 jours.  
+6. Aide aux cabinets pour l’accès, la rectification, la portabilité et la suppression. Vous pouvez aussi écrire à %PRIVACY_EMAIL%. Objectif : 30 jours.  
 7. Registre des incidents de confidentialité. Avis à la CAI, au CPVP, aux cabinets et aux personnes lorsque la loi l’exige.  
 8. Évaluation des facteurs relatifs à la vie privée avant un changement majeur de système et avant une communication hors Québec.
 

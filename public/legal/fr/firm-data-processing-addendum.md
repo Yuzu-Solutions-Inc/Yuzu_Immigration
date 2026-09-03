@@ -4,7 +4,7 @@
 **Parties :** le **cabinet** (responsable du traitement des renseignements clients) et **Yuzu Solutions Inc.** (sous-traitant / fournisseur de services), exploitant de %PRODUCT_NAME%.  
 **Cadre :** LPRPDE ; *Loi sur la protection des renseignements personnels dans le secteur privé* du Québec (Loi 25) ; devoirs de gestion des dossiers du Collège.
 
-**Responsable chez le sous-traitant :** Adrien Yvin — privacy@yuzu.solutions
+**Responsable chez le sous-traitant :** Adrien Yvin — %PRIVACY_EMAIL%
 
 ## 1. Objet et durée
 
@@ -67,7 +67,7 @@ Le présent avenant est régi par les lois du Québec et les lois fédérales du
 
 Le présent avenant est un contrat écrit. Il est conclu lorsqu’un administrateur du cabinet (1) ouvre cet avenant, (2) confirme qu’il a le pouvoir de lier le cabinet, et (3) accepte cette version, à la création de l’espace ou plus tard dans Réglages. %PRODUCT_NAME% consigne l’identifiant de l’administrateur, l’horodatage et la version de l’avenant (`2026-08-16`).
 
-Une contre-signature manuscrite ou électronique est facultative. Si le cabinet veut une copie contresignée, téléchargez cet avenant et envoyez-le à privacy@yuzu.solutions.
+Une contre-signature manuscrite ou électronique est facultative. Si le cabinet veut une copie contresignée, téléchargez cet avenant et envoyez-le à %PRIVACY_EMAIL%.
 
 ## Signatures (contre-signature facultative)
 
@@ -79,6 +79,6 @@ Signature : ________________________________
 
 **Yuzu Solutions Inc. (sous-traitant)**  
 Signataire : Adrien Yvin, responsable de la protection des renseignements personnels (ou autre dirigeant autorisé)  
-Courriel : privacy@yuzu.solutions  
+Courriel : %PRIVACY_EMAIL%  
 Date : ______________  
 Signature : ________________________________

@@ -3,7 +3,7 @@
 **For:** consulting firms that use %PRODUCT_NAME%  
 **Why:** Québec Law 25 requires an EFVP before acquiring, developing, or overhauling an information system that involves personal information, and before communicating personal information outside Québec.  
 **Vendor pack:** read `vendor-due-diligence-pack.pdf` and `yuzu-subprocessors.pdf` first.  
-**This is a template, not legal advice.** Sections 1–5 describe **facts** about the product and ask the firm to record facts about its own use. Yuzu Solutions Inc. does **not** propose a conclusion, a residual-risk rating, or a decision to proceed. The person in charge at **your** firm must write the conclusions in section 6. Keep the signed copy in your privacy file. You may send a high-level copy to Yuzu Solutions Inc. at privacy@yuzu.solutions if you wish; you are not required to.
+**This is a template, not legal advice.** Sections 1–5 describe **facts** about the product and ask the firm to record facts about its own use. Yuzu Solutions Inc. does **not** propose a conclusion, a residual-risk rating, or a decision to proceed. The person in charge at **your** firm must write the conclusions in section 6. Keep the signed copy in your privacy file. You may send a high-level copy to Yuzu Solutions Inc. at %PRIVACY_EMAIL% if you wish; you are not required to.
 
 **Firm legal name:** ________________________________  
 **Person in charge of personal information:** ________________________________  

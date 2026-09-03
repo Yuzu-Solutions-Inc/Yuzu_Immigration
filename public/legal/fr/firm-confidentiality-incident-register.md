@@ -4,12 +4,12 @@ Tenez ce registre pour **tous** les incidents, y compris ceux qui ne sont pas d�
 
 **Cabinet :** ________________________________  
 **Personne responsable :** ________________________________  
-**Responsable chez Yuzu :** Adrien Yvin — privacy@yuzu.solutions
+**Responsable chez Yuzu :** Adrien Yvin — %PRIVACY_EMAIL%
 
 | ID | Détecté | Survenu | Faits (sans RP superflus) | Catégories | # personnes | Préjudice sérieux / RRSH ? | Contenu | CAI | CPVP | Personnes avisées | Fermé |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | INC- |  |  |  |  |  |  |  |  |  |  |  |
 
-Si l’incident implique %PRODUCT_NAME%, écrivez à privacy@yuzu.solutions le jour même.
+Si l’incident implique %PRODUCT_NAME%, écrivez à %PRIVACY_EMAIL% le jour même.
 
 Journal d’audit du produit : Paramètres → Sécurité.

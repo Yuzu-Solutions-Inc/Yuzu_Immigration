@@ -163,7 +163,7 @@ export const profiles = pgTable("profiles", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  /** When set, skip Permit OS trial sequence emails for this staff user. */
+  /** When set, skip Dossierly trial sequence emails for this staff user. */
   trialEmailUnsubscribedAt: timestamp("trial_email_unsubscribed_at", {
     withTimezone: true,
   }),

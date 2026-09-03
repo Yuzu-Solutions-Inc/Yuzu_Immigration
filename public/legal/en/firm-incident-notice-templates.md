@@ -1,6 +1,6 @@
 # Firm incident notice templates
 
-Use when **your firm** is the controller. Coordinate with Yuzu Solutions Inc. (privacy@yuzu.solutions, Adrien Yvin) if the platform is involved.
+Use when **your firm** is the controller. Coordinate with Yuzu Solutions Inc. (%PRIVACY_EMAIL%, Adrien Yvin) if the platform is involved.
 
 ---
 
@@ -15,7 +15,7 @@ We are writing because [Firm name] became aware on [date] of a confidentiality i
 - What we have done: [password reset, new link, monitoring]  
 - What you can do: [beware of phishing; contact us at …]
 
-You may contact [firm privacy contact]. If the software platform was involved, you may also contact Yuzu Solutions Inc., Privacy Officer Adrien Yvin, privacy@yuzu.solutions.
+You may contact [firm privacy contact]. If the software platform was involved, you may also contact Yuzu Solutions Inc., Privacy Officer Adrien Yvin, %PRIVACY_EMAIL%.
 
 You may complain to the Office of the Privacy Commissioner of Canada and, in Québec, to the Commission d’accès à l’information.
 

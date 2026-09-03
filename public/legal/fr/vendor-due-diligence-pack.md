@@ -2,7 +2,7 @@
 
 **Fournisseur :** Yuzu Solutions Inc.  
 **Produit :** %PRODUCT_NAME%  
-**Responsable :** Adrien Yvin — privacy@yuzu.solutions  
+**Responsable :** Adrien Yvin — %PRIVACY_EMAIL%  
 **Date :** 16 août 2026  
 
 Remettez ce document à votre responsable de la protection des renseignements personnels ou à votre conseiller pour une EFVP Loi 25 ou une revue LPRPDE. Ce n’est **pas** une certification.
@@ -63,7 +63,7 @@ Dossiers fermés : six ans dans le produit, puis destruction par un admin. Sauve
 - Suppression / destruction après la date de conservation  
 - Personnes qui réservent : liens de modification / annulation dans le courriel  
 
-Les demandes vous sont adressées. Les enjeux de plateforme : privacy@yuzu.solutions.
+Les demandes vous sont adressées. Les enjeux de plateforme : %PRIVACY_EMAIL%.
 
 ## 8. Incidents
 

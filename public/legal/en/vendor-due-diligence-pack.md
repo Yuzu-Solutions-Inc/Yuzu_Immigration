@@ -2,7 +2,7 @@
 
 **Vendor:** Yuzu Solutions Inc.  
 **Product:** %PRODUCT_NAME%  
-**Privacy Officer:** Adrien Yvin — privacy@yuzu.solutions  
+**Privacy Officer:** Adrien Yvin — %PRIVACY_EMAIL%  
 **Date:** 16 August 2026  
 
 Give this document to your privacy officer or counsel when completing a Law 25 EFVP or a PIPEDA accountability review. It describes the product as built; it is **not** a certification.
@@ -63,7 +63,7 @@ Closed files: six years in-product, then admin destroy. Backups/PITR, sent email
 - Delete person / destroy closed file after retain-until  
 - Booking guests: change/cancel links in confirmation email  
 
-Requests should come to **you**. Escalate platform issues to privacy@yuzu.solutions.
+Requests should come to **you**. Escalate platform issues to %PRIVACY_EMAIL%.
 
 ## 8. Incidents
 

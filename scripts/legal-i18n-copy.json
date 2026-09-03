@@ -15,7 +15,7 @@
       },
       "officer": {
         "title": "2. Privacy officer",
-        "body": "The person in charge of the protection of personal information at Yuzu Solutions Inc. is Adrien Yvin, Privacy Officer, privacy@yuzu.solutions.\n\nThat contact is published as required by Québec Law 25. You may write to the same address for PIPEDA inquiries about the platform. If you are a client of a consulting firm, contact that firm first about your immigration file."
+        "body": "The person in charge of the protection of personal information at Yuzu Solutions Inc. is Adrien Yvin, Privacy Officer, %PRIVACY_EMAIL%.\n\nThat contact is published as required by Québec Law 25. You may write to the same address for PIPEDA inquiries about the platform. If you are a client of a consulting firm, contact that firm first about your immigration file."
       },
       "purposes": {
         "title": "3. Purposes",
@@ -75,7 +75,7 @@
       },
       "contact": {
         "title": "17. Contact",
-        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — privacy@yuzu.solutions\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file or booking. Templates for firms are available for download on this page."
+        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — %PRIVACY_EMAIL%\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file or booking. Templates for firms are available for download on this page."
       }
     },
     "termsSections": {
@@ -165,7 +165,7 @@
       },
       "contact": {
         "title": "22. Contact",
-        "body": "Questions about these terms: Yuzu Solutions Inc. — privacy@yuzu.solutions (Adrien Yvin, Privacy Officer).\n\nIf you are a client of a consulting firm, contact that firm for your file, booking, or the firm’s own retainer."
+        "body": "Questions about these terms: Yuzu Solutions Inc. — %PRIVACY_EMAIL% (Adrien Yvin, Privacy Officer).\n\nIf you are a client of a consulting firm, contact that firm for your file, booking, or the firm’s own retainer."
       }
     }
   },
@@ -185,7 +185,7 @@
       },
       "officer": {
         "title": "2. Responsable de la protection des renseignements personnels",
-        "body": "La personne responsable de la protection des renseignements personnels chez Yuzu Solutions Inc. est Adrien Yvin, privacy@yuzu.solutions.\n\nCe contact est publié comme l’exige la Loi 25 du Québec. Vous pouvez écrire à la même adresse pour les demandes LPRPDE concernant la plateforme. Si vous êtes client d’un cabinet, contactez d’abord ce cabinet au sujet de votre dossier d’immigration."
+        "body": "La personne responsable de la protection des renseignements personnels chez Yuzu Solutions Inc. est Adrien Yvin, %PRIVACY_EMAIL%.\n\nCe contact est publié comme l’exige la Loi 25 du Québec. Vous pouvez écrire à la même adresse pour les demandes LPRPDE concernant la plateforme. Si vous êtes client d’un cabinet, contactez d’abord ce cabinet au sujet de votre dossier d’immigration."
       },
       "purposes": {
         "title": "3. Fins",
@@ -245,7 +245,7 @@
       },
       "contact": {
         "title": "17. Contact",
-        "body": "Responsable de la protection des renseignements personnels, Yuzu Solutions Inc. : Adrien Yvin — privacy@yuzu.solutions\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier ou à votre rendez-vous. Des modèles pour les cabinets sont téléchargeables sur cette page."
+        "body": "Responsable de la protection des renseignements personnels, Yuzu Solutions Inc. : Adrien Yvin — %PRIVACY_EMAIL%\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier ou à votre rendez-vous. Des modèles pour les cabinets sont téléchargeables sur cette page."
       }
     },
     "termsSections": {
@@ -335,7 +335,7 @@
       },
       "contact": {
         "title": "22. Contact",
-        "body": "Questions sur ces conditions : Yuzu Solutions Inc. — privacy@yuzu.solutions (Adrien Yvin, responsable de la protection des renseignements personnels).\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour votre dossier, votre rendez-vous ou le mandat du cabinet."
+        "body": "Questions sur ces conditions : Yuzu Solutions Inc. — %PRIVACY_EMAIL% (Adrien Yvin, responsable de la protection des renseignements personnels).\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour votre dossier, votre rendez-vous ou le mandat du cabinet."
       }
     }
   },
@@ -355,7 +355,7 @@
       },
       "officer": {
         "title": "2. Responsable de privacidad",
-        "body": "La persona encargada de la protección de la información personal en Yuzu Solutions Inc. es Adrien Yvin, Privacy Officer, privacy@yuzu.solutions.\n\nEse contacto se publica como exige la Ley 25 de Quebec. Puede escribir a la misma dirección para consultas PIPEDA sobre la plataforma. Si es cliente de una firma, contacte primero a esa firma sobre su expediente."
+        "body": "La persona encargada de la protección de la información personal en Yuzu Solutions Inc. es Adrien Yvin, Privacy Officer, %PRIVACY_EMAIL%.\n\nEse contacto se publica como exige la Ley 25 de Quebec. Puede escribir a la misma dirección para consultas PIPEDA sobre la plataforma. Si es cliente de una firma, contacte primero a esa firma sobre su expediente."
       },
       "purposes": {
         "title": "3. Finalidades",
@@ -415,7 +415,7 @@
       },
       "contact": {
         "title": "17. Contacto",
-        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — privacy@yuzu.solutions\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente o su cita. Hay plantillas para despachos descargables en esta página."
+        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — %PRIVACY_EMAIL%\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente o su cita. Hay plantillas para despachos descargables en esta página."
       }
     },
     "termsSections": {
@@ -505,7 +505,7 @@
       },
       "contact": {
         "title": "22. Contacto",
-        "body": "Preguntas sobre estos términos: Yuzu Solutions Inc. — privacy@yuzu.solutions (Adrien Yvin, Privacy Officer).\n\nSi es cliente de una firma, contacte a esa firma para su expediente, cita o el contrato de la firma."
+        "body": "Preguntas sobre estos términos: Yuzu Solutions Inc. — %PRIVACY_EMAIL% (Adrien Yvin, Privacy Officer).\n\nSi es cliente de una firma, contacte a esa firma para su expediente, cita o el contrato de la firma."
       }
     }
   }

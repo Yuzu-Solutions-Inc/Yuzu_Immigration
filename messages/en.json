@@ -160,13 +160,13 @@
       "orgName": "North Star Immigration",
       "userName": "Amélie",
       "userFullName": "Amélie Chen",
-      "urlHome": "app.yuzu.solutions/en/home",
-      "urlProject": "app.yuzu.solutions/en/projects/chen-family",
-      "urlCalendar": "app.yuzu.solutions/en/calendar",
-      "urlPortal": "yuzu.solutions/en/portal/home",
-      "urlBook": "yuzu.solutions/en/book/north-star",
-      "urlPay": "yuzu.solutions/en/pay/consultation",
-      "urlBookConfirm": "yuzu.solutions/en/book/confirmed",
+      "urlHome": "app.dossierly.ca/en/home",
+      "urlProject": "app.dossierly.ca/en/projects/chen-family",
+      "urlCalendar": "app.dossierly.ca/en/calendar",
+      "urlPortal": "dossierly.ca/en/portal/home",
+      "urlBook": "dossierly.ca/en/book/north-star",
+      "urlPay": "dossierly.ca/en/pay/consultation",
+      "urlBookConfirm": "dossierly.ca/en/book/confirmed",
       "projectChen": "Chen family — Express Entry",
       "projectDubois": "Dubois — Study permit",
       "projectOkonkwo": "Okonkwo — Work permit",
@@ -447,7 +447,7 @@
     "privacyContactEmail": "Legal or security contact email",
     "privacyContactEmailPlaceholder": "privacy@yourfirm.com",
     "privacyContactEmailHelp": "Client portal deletion requests are sent here. Use an inbox your firm monitors.",
-    "dpaHelp": "This is the written processor contract with Yuzu Solutions Inc. A countersigned copy is optional — email privacy@yuzu.solutions if your firm needs one.",
+    "dpaHelp": "This is the written processor contract with Yuzu Solutions Inc. A countersigned copy is optional — email %PRIVACY_EMAIL% if your firm needs one.",
     "create": "Create organization",
     "creating": "Creating…",
     "errors": {
@@ -2798,7 +2798,7 @@
     "dpaVersionNote": "(version {version}).",
     "agreeDpaAuthority": "I have authority to bind this firm to that addendum.",
     "dpaDownload": "Download the addendum",
-    "dpaCountersignHelp": "If your firm needs a wet-ink or DocuSign copy, download the addendum and email it to privacy@yuzu.solutions.",
+    "dpaCountersignHelp": "If your firm needs a wet-ink or DocuSign copy, download the addendum and email it to %PRIVACY_EMAIL%.",
     "legalRequired": "Accept the Terms and Conditions and Privacy Policy to continue.",
     "acceptTitle": "Accept to continue",
     "acceptSubtitle": "To create your %PRODUCT_NAME% account, you must agree to both documents.",
@@ -2813,7 +2813,7 @@
       },
       "officer": {
         "title": "2. Privacy officer",
-        "body": "The person in charge of the protection of personal information at Yuzu Solutions Inc. is Adrien Yvin, Privacy Officer, privacy@yuzu.solutions.\n\nThat contact is published as required by Québec Law 25. You may write to the same address for PIPEDA inquiries about the platform. If you are a client of a consulting firm, contact that firm first about your immigration file."
+        "body": "The person in charge of the protection of personal information at Yuzu Solutions Inc. is Adrien Yvin, Privacy Officer, %PRIVACY_EMAIL%.\n\nThat contact is published as required by Québec Law 25. You may write to the same address for PIPEDA inquiries about the platform. If you are a client of a consulting firm, contact that firm first about your immigration file."
       },
       "purposes": {
         "title": "3. Purposes",
@@ -2873,7 +2873,7 @@
       },
       "contact": {
         "title": "17. Contact",
-        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — privacy@yuzu.solutions\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file or booking. Templates for firms are available for download on this page."
+        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — %PRIVACY_EMAIL%\n\nIf you are a client of a consulting firm, contact that firm for requests about your immigration file or booking. Templates for firms are available for download on this page."
       }
     },
     "termsSections": {
@@ -2963,7 +2963,7 @@
       },
       "contact": {
         "title": "22. Contact",
-        "body": "Questions about these terms: Yuzu Solutions Inc. — privacy@yuzu.solutions (Adrien Yvin, Privacy Officer).\n\nIf you are a client of a consulting firm, contact that firm for your file, booking, or the firm’s own retainer."
+        "body": "Questions about these terms: Yuzu Solutions Inc. — %PRIVACY_EMAIL% (Adrien Yvin, Privacy Officer).\n\nIf you are a client of a consulting firm, contact that firm for your file, booking, or the firm’s own retainer."
       }
     },
     "downloads": {

@@ -17,6 +17,7 @@ import {
   FieldSuccess,
 } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
+import { productFileSlug } from "@/lib/brand/product";
 import type { AppLocale } from "@/lib/i18n/locales";
 import { CLOSED_FILE_RETENTION_YEARS } from "@/lib/privacy/retention";
 
@@ -73,7 +74,7 @@ export function PortalSecurityPanel({ locale }: { locale: AppLocale }) {
               const blob = await response.blob();
               const header = response.headers.get("Content-Disposition") ?? "";
               const match = /filename="([^"]+)"/.exec(header);
-              const filename = match?.[1] ?? "yuzu-portal-export.zip";
+              const filename = match?.[1] ?? `${productFileSlug()}-portal-export.zip`;
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");
               a.href = url;

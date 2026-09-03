@@ -1,7 +1,7 @@
 # Sous-traitants — %PRODUCT_NAME%
 
 **Yuzu Solutions Inc.**  
-**Responsable :** Adrien Yvin — privacy@yuzu.solutions  
+**Responsable :** Adrien Yvin — %PRIVACY_EMAIL%  
 **Dernière mise à jour :** 17 août 2026
 
 Liste destinée aux cabinets qui préparent une EFVP ou une revue de fournisseurs.
@@ -21,4 +21,4 @@ Les dossiers principaux restent au Canada. Le calcul applicatif, le courriel et 
 
 Le personnel Yuzu qui détient la clé d’enveloppe de la plateforme peut déchiffrer les données d’un cabinet pour exploiter ou restaurer le service.
 
-Questions : privacy@yuzu.solutions
+Questions : %PRIVACY_EMAIL%

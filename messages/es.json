@@ -160,13 +160,13 @@
       "orgName": "North Star Immigration",
       "userName": "Amélie",
       "userFullName": "Amélie Chen",
-      "urlHome": "app.yuzu.solutions/es/home",
-      "urlProject": "app.yuzu.solutions/es/projects/chen-family",
-      "urlCalendar": "app.yuzu.solutions/es/calendar",
-      "urlPortal": "yuzu.solutions/es/portal/home",
-      "urlBook": "yuzu.solutions/es/book/north-star",
-      "urlPay": "yuzu.solutions/es/pay/consultation",
-      "urlBookConfirm": "yuzu.solutions/es/book/confirmed",
+      "urlHome": "app.dossierly.ca/es/home",
+      "urlProject": "app.dossierly.ca/es/projects/chen-family",
+      "urlCalendar": "app.dossierly.ca/es/calendar",
+      "urlPortal": "dossierly.ca/es/portal/home",
+      "urlBook": "dossierly.ca/es/book/north-star",
+      "urlPay": "dossierly.ca/es/pay/consultation",
+      "urlBookConfirm": "dossierly.ca/es/book/confirmed",
       "projectChen": "Familia Chen — Entrada exprés",
       "projectDubois": "Dubois — Permiso de estudios",
       "projectOkonkwo": "Okonkwo — Permiso de trabajo",
@@ -447,7 +447,7 @@
     "privacyContactEmail": "Correo jurídico o de seguridad",
     "privacyContactEmailPlaceholder": "privacidad@su-despacho.com",
     "privacyContactEmailHelp": "Las solicitudes de supresión del portal del cliente se envían aquí. Use un buzón que el despacho vigile.",
-    "dpaHelp": "Este es el contrato escrito de encargado con Yuzu Solutions Inc. Una copia firmada en papel es opcional: escriba a privacy@yuzu.solutions si su despacho la necesita.",
+    "dpaHelp": "Este es el contrato escrito de encargado con Yuzu Solutions Inc. Una copia firmada en papel es opcional: escriba a %PRIVACY_EMAIL% si su despacho la necesita.",
     "create": "Create organization",
     "creating": "Creating…",
     "errors": {
@@ -2798,7 +2798,7 @@
     "dpaVersionNote": "(versión {version}).",
     "agreeDpaAuthority": "Tengo autoridad para vincular a este despacho a ese addendum.",
     "dpaDownload": "Descargar el addendum",
-    "dpaCountersignHelp": "Si su despacho necesita una copia manuscrita o DocuSign, descargue el addendum y envíelo a privacy@yuzu.solutions.",
+    "dpaCountersignHelp": "Si su despacho necesita una copia manuscrita o DocuSign, descargue el addendum y envíelo a %PRIVACY_EMAIL%.",
     "legalRequired": "Acepte los Términos y condiciones y la Política de privacidad para continuar.",
     "acceptTitle": "Aceptar para continuar",
     "acceptSubtitle": "Para crear su cuenta de %PRODUCT_NAME%, debe aceptar ambos documentos.",
@@ -2813,7 +2813,7 @@
       },
       "officer": {
         "title": "2. Responsable de privacidad",
-        "body": "La persona encargada de la protección de la información personal en Yuzu Solutions Inc. es Adrien Yvin, Privacy Officer, privacy@yuzu.solutions.\n\nEse contacto se publica como exige la Ley 25 de Quebec. Puede escribir a la misma dirección para consultas PIPEDA sobre la plataforma. Si es cliente de una firma, contacte primero a esa firma sobre su expediente."
+        "body": "La persona encargada de la protección de la información personal en Yuzu Solutions Inc. es Adrien Yvin, Privacy Officer, %PRIVACY_EMAIL%.\n\nEse contacto se publica como exige la Ley 25 de Quebec. Puede escribir a la misma dirección para consultas PIPEDA sobre la plataforma. Si es cliente de una firma, contacte primero a esa firma sobre su expediente."
       },
       "purposes": {
         "title": "3. Finalidades",
@@ -2873,7 +2873,7 @@
       },
       "contact": {
         "title": "17. Contacto",
-        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — privacy@yuzu.solutions\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente o su cita. Hay plantillas para despachos descargables en esta página."
+        "body": "Privacy Officer, Yuzu Solutions Inc.: Adrien Yvin — %PRIVACY_EMAIL%\n\nSi es cliente de una firma, contacte a esa firma para solicitudes sobre su expediente o su cita. Hay plantillas para despachos descargables en esta página."
       }
     },
     "termsSections": {
@@ -2963,7 +2963,7 @@
       },
       "contact": {
         "title": "22. Contacto",
-        "body": "Preguntas sobre estos términos: Yuzu Solutions Inc. — privacy@yuzu.solutions (Adrien Yvin, Privacy Officer).\n\nSi es cliente de una firma, contacte a esa firma para su expediente, cita o el contrato de la firma."
+        "body": "Preguntas sobre estos términos: Yuzu Solutions Inc. — %PRIVACY_EMAIL% (Adrien Yvin, Privacy Officer).\n\nSi es cliente de una firma, contacte a esa firma para su expediente, cita o el contrato de la firma."
       }
     },
     "downloads": {

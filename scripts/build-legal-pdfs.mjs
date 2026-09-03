@@ -5,7 +5,8 @@
  *
  *   npm run legal:pdf
  *
- * `%PRODUCT_NAME%` in the markdown is expanded from `src/lib/brand/product.ts`.
+ * `%PRODUCT_NAME%` and `%PRIVACY_EMAIL%` in the markdown are expanded from
+ * `src/lib/brand/product.ts`.
  */
 import { spawn } from "node:child_process";
 import { copyFile, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -24,16 +25,20 @@ const FOOTERS = {
   fr: "Yuzu Solutions Inc. — dossier cabinets",
 };
 
-function readProductName(source) {
-  const match = source.match(/^\s*name:\s*"([^"]+)"/m);
+function readProductField(source, key) {
+  const match = source.match(new RegExp(`^\\s*${key}:\\s*"([^"]+)"`, "m"));
   if (!match) {
-    throw new Error("Could not read product.name from src/lib/brand/product.ts");
+    throw new Error(`Could not read product.${key} from src/lib/brand/product.ts`);
   }
   return match[1];
 }
 
-function applyProductCopy(text, productName) {
-  return text.replaceAll("%PRODUCT_NAME%", productName);
+function applyProductCopy(text, identity) {
+  return text
+    .replaceAll("%PRODUCT_NAME%", identity.name)
+    .replaceAll("%OPERATOR_NAME%", identity.operator)
+    .replaceAll("%SUPPORT_EMAIL%", identity.supportEmail)
+    .replaceAll("%PRIVACY_EMAIL%", identity.privacyEmail);
 }
 
 function pdfOptions(footerLabel) {
@@ -62,7 +67,7 @@ function run(command, args, cwd) {
   });
 }
 
-async function buildLocale(locale, productName) {
+async function buildLocale(locale, identity) {
   const dir = path.join(root, "public/legal", locale);
   const files = (await readdir(dir))
     .filter((name) => name.endsWith(".md"))
@@ -71,10 +76,10 @@ async function buildLocale(locale, productName) {
     throw new Error(`No markdown templates in ${dir}`);
   }
 
-  const work = await mkdtemp(path.join(os.tmpdir(), `permit-os-legal-${locale}-`));
+  const work = await mkdtemp(path.join(os.tmpdir(), `dossierly-legal-${locale}-`));
   for (const name of files) {
     const source = await readFile(path.join(dir, name), "utf8");
-    await writeFile(path.join(work, name), applyProductCopy(source, productName));
+    await writeFile(path.join(work, name), applyProductCopy(source, identity));
   }
 
   const footer = FOOTERS[locale] ?? FOOTERS.en;
@@ -107,12 +112,19 @@ async function buildLocale(locale, productName) {
   }
 }
 
-const productName = readProductName(
-  await readFile(path.join(root, "src/lib/brand/product.ts"), "utf8"),
+const productSource = await readFile(
+  path.join(root, "src/lib/brand/product.ts"),
+  "utf8",
 );
+const identity = {
+  name: readProductField(productSource, "name"),
+  operator: readProductField(productSource, "operator"),
+  supportEmail: readProductField(productSource, "supportEmail"),
+  privacyEmail: readProductField(productSource, "privacyEmail"),
+};
 
 for (const locale of ["en", "fr"]) {
-  await buildLocale(locale, productName);
+  await buildLocale(locale, identity);
 }
 
 console.log("Done. Markdown templates were left in place.");

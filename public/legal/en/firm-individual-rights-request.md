@@ -30,7 +30,7 @@ Describe how the firm verified identity (do not copy ID numbers into this form i
 
 - [ ] Fulfilled (date, method — e.g. in-product Export data / Download full file)  
 - [ ] Refused or limited (legal reason): ________________________________  
-- [ ] Referred to Yuzu Solutions Inc. for platform-only data (privacy@yuzu.solutions)
+- [ ] Referred to Yuzu Solutions Inc. for platform-only data (%PRIVACY_EMAIL%)
 
 Handler: ________________________________ Date: ______________
 

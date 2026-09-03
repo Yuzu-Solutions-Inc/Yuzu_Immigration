@@ -13,14 +13,14 @@ export type BrandMarkId = "paperPlane" | "none";
 
 export const product = {
   /** Full public name. Used in titles, emails, legal copy, aria-labels. */
-  name: "Permit OS",
+  name: "Dossierly",
   /** Short line for metadata / social. */
   tagline: "Canadian immigration consultant CRM by Yuzu Solutions",
   wordmark: {
     /** Text before the accent pill. */
-    primary: "Permit",
+    primary: "Dossierly",
     /** Accent pill. Empty string hides the pill. */
-    accent: "OS",
+    accent: "",
   },
   /**
    * Logo mark. Marks live in `src/components/brand/brand-mark.tsx`.
@@ -30,7 +30,15 @@ export const product = {
   /** Legal operator — not the product name. */
   operator: "Yuzu Solutions Inc.",
   operatorShort: "Yuzu Solutions",
-  supportEmail: "support@yuzu.solutions",
+  supportEmail: "info@dossierly.ca",
+  /** Law 25 / PIPEDA public contact (may be the same mailbox as support). */
+  privacyEmail: "info@dossierly.ca",
+  domain: "dossierly.ca",
+  siteUrl: "https://dossierly.ca",
 } as const;
 
 export type ProductIdentity = typeof product;
+
+export function productFileSlug() {
+  return product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}

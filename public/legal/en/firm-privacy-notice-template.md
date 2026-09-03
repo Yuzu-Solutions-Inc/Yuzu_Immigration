@@ -10,7 +10,7 @@ Use this in retainers, your website, or a handout. Replace bracketed text. **You
 
 [Firm name] provides Canadian immigration consulting / legal services. We use **%PRODUCT_NAME%**, software operated by **Yuzu Solutions Inc.**, to keep your file, questionnaires, documents, appointments, and messages.
 
-Yuzu Solutions Inc. is not your consultant. Questions about your file, fees, or immigration advice go to us. Platform privacy questions can also be sent to Yuzu’s Privacy Officer, Adrien Yvin, privacy@yuzu.solutions.
+Yuzu Solutions Inc. is not your consultant. Questions about your file, fees, or immigration advice go to us. Platform privacy questions can also be sent to Yuzu’s Privacy Officer, Adrien Yvin, %PRIVACY_EMAIL%.
 
 ## 2. What we collect and why
 

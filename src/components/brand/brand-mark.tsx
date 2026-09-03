@@ -9,7 +9,7 @@ type BrandMarkProps = {
   mark?: BrandMarkId;
 };
 
-/** Paper plane from the Permit OS lockup (exploration 46). */
+/** Paper plane from the Dossierly lockup (exploration 46). */
 function PaperPlaneMark({
   className,
   inverted,

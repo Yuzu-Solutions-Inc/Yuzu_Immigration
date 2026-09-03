@@ -160,13 +160,13 @@
       "orgName": "North Star Immigration",
       "userName": "Amélie",
       "userFullName": "Amélie Chen",
-      "urlHome": "app.yuzu.solutions/fr/home",
-      "urlProject": "app.yuzu.solutions/fr/projects/chen-family",
-      "urlCalendar": "app.yuzu.solutions/fr/calendar",
-      "urlPortal": "yuzu.solutions/fr/portal/home",
-      "urlBook": "yuzu.solutions/fr/book/north-star",
-      "urlPay": "yuzu.solutions/fr/pay/consultation",
-      "urlBookConfirm": "yuzu.solutions/fr/book/confirmed",
+      "urlHome": "app.dossierly.ca/fr/home",
+      "urlProject": "app.dossierly.ca/fr/projects/chen-family",
+      "urlCalendar": "app.dossierly.ca/fr/calendar",
+      "urlPortal": "dossierly.ca/fr/portal/home",
+      "urlBook": "dossierly.ca/fr/book/north-star",
+      "urlPay": "dossierly.ca/fr/pay/consultation",
+      "urlBookConfirm": "dossierly.ca/fr/book/confirmed",
       "projectChen": "Famille Chen — Entrée express",
       "projectDubois": "Dubois — Permis d’études",
       "projectOkonkwo": "Okonkwo — Permis de travail",
@@ -447,7 +447,7 @@
     "privacyContactEmail": "Courriel juridique ou de sécurité",
     "privacyContactEmailPlaceholder": "confidentialite@votre-cabinet.com",
     "privacyContactEmailHelp": "Les demandes de suppression du portail client sont envoyées ici. Utilisez une boîte que le cabinet surveille.",
-    "dpaHelp": "C’est le contrat écrit de sous-traitance avec Yuzu Solutions Inc. Une copie contresignée est facultative — écrivez à privacy@yuzu.solutions si votre cabinet en a besoin.",
+    "dpaHelp": "C’est le contrat écrit de sous-traitance avec Yuzu Solutions Inc. Une copie contresignée est facultative — écrivez à %PRIVACY_EMAIL% si votre cabinet en a besoin.",
     "create": "Créer l’organisation",
     "creating": "Création…",
     "errors": {
@@ -2797,7 +2797,7 @@
     "dpaVersionNote": "(version {version}).",
     "agreeDpaAuthority": "J’ai le pouvoir de lier ce cabinet à cet avenant.",
     "dpaDownload": "Télécharger l’avenant",
-    "dpaCountersignHelp": "Si votre cabinet a besoin d’une copie manuscrite ou DocuSign, téléchargez l’avenant et envoyez-le à privacy@yuzu.solutions.",
+    "dpaCountersignHelp": "Si votre cabinet a besoin d’une copie manuscrite ou DocuSign, téléchargez l’avenant et envoyez-le à %PRIVACY_EMAIL%.",
     "legalRequired": "Acceptez les conditions générales et la politique de confidentialité pour continuer.",
     "acceptTitle": "Accepter pour continuer",
     "acceptSubtitle": "Pour créer votre compte %PRODUCT_NAME%, vous devez accepter les deux documents.",
@@ -2812,7 +2812,7 @@
       },
       "officer": {
         "title": "2. Responsable de la protection des renseignements personnels",
-        "body": "La personne responsable de la protection des renseignements personnels chez Yuzu Solutions Inc. est Adrien Yvin, privacy@yuzu.solutions.\n\nCe contact est publié comme l’exige la Loi 25 du Québec. Vous pouvez écrire à la même adresse pour les demandes LPRPDE concernant la plateforme. Si vous êtes client d’un cabinet, contactez d’abord ce cabinet au sujet de votre dossier d’immigration."
+        "body": "La personne responsable de la protection des renseignements personnels chez Yuzu Solutions Inc. est Adrien Yvin, %PRIVACY_EMAIL%.\n\nCe contact est publié comme l’exige la Loi 25 du Québec. Vous pouvez écrire à la même adresse pour les demandes LPRPDE concernant la plateforme. Si vous êtes client d’un cabinet, contactez d’abord ce cabinet au sujet de votre dossier d’immigration."
       },
       "purposes": {
         "title": "3. Fins",
@@ -2872,7 +2872,7 @@
       },
       "contact": {
         "title": "17. Contact",
-        "body": "Responsable de la protection des renseignements personnels, Yuzu Solutions Inc. : Adrien Yvin — privacy@yuzu.solutions\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier ou à votre rendez-vous. Des modèles pour les cabinets sont téléchargeables sur cette page."
+        "body": "Responsable de la protection des renseignements personnels, Yuzu Solutions Inc. : Adrien Yvin — %PRIVACY_EMAIL%\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour les demandes relatives à votre dossier ou à votre rendez-vous. Des modèles pour les cabinets sont téléchargeables sur cette page."
       }
     },
     "termsSections": {
@@ -2962,7 +2962,7 @@
       },
       "contact": {
         "title": "22. Contact",
-        "body": "Questions sur ces conditions : Yuzu Solutions Inc. — privacy@yuzu.solutions (Adrien Yvin, responsable de la protection des renseignements personnels).\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour votre dossier, votre rendez-vous ou le mandat du cabinet."
+        "body": "Questions sur ces conditions : Yuzu Solutions Inc. — %PRIVACY_EMAIL% (Adrien Yvin, responsable de la protection des renseignements personnels).\n\nSi vous êtes client d’un cabinet, contactez ce cabinet pour votre dossier, votre rendez-vous ou le mandat du cabinet."
       }
     },
     "downloads": {

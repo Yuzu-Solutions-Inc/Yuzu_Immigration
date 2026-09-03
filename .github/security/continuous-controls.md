@@ -1,6 +1,6 @@
-# Continuous control monitoring — Yuzu Immigration
+# Continuous control monitoring — Dossierly
 
-**Owner:** Adrien Yvin — privacy@yuzu.solutions  
+**Owner:** Adrien Yvin — info@dossierly.ca  
 **Evidence:** GitHub Actions → *Continuous controls* (every PR, every push to `main`, daily 08:00 America/Toronto)  
 **Alert:** scheduled failures open or comment on GitHub issue “Continuous control monitoring failed”
 
@@ -30,7 +30,7 @@ A control **passes** only when its automated test is green. Logging (`security_a
 Configure once, then confirm they still hold during the annual review:
 
 - Supabase org MFA and leaked-password protection  
-- Vercel / Supabase alerts to privacy@yuzu.solutions  
+- Vercel / Supabase alerts to info@dossierly.ca  
 - GitHub secret scanning on this private repo  
 
 ## How to run locally

@@ -1,8 +1,10 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import { product } from "@/lib/brand/product";
+
 const blankCache = new Map<string, Uint8Array>();
-const SITE_URL = "https://yuzu.solutions";
+const SITE_URL = product.siteUrl;
 export const IRCC_BLANKS_BUCKET = "ircc-blanks";
 
 async function loadBlankFromStorage(key: string): Promise<Uint8Array | null> {
@@ -150,6 +152,7 @@ export async function loadBlankPdf(
                         : [];
   const urls = [
     `${SITE_URL}/assets/forms/ircc/blanks/${key}.pdf`,
+    `https://yuzu.solutions/assets/forms/ircc/blanks/${key}.pdf`,
     `https://raw.githubusercontent.com/TROCKIN8R/yuzu_websites/main/yuzu_github_page/assets/forms/ircc/blanks/${key}.pdf`,
     ...dated,
   ];
