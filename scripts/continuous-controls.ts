@@ -291,7 +291,7 @@ function cc07WebhookVerification() {
   for (const file of webhookRoutes) {
     const source = readFileSync(file, "utf8");
     const verified =
-      /verifySquareWebhookSignature/.test(source) ||
+      /verifySquareWebhook(?:Signature|Request)/.test(source) ||
       /verifyGoogleChannelToken/.test(source) ||
       /verifyMicrosoftChannelToken/.test(source) ||
       /resend\.webhooks\.verify/.test(source) ||
