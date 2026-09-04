@@ -9,13 +9,15 @@ export async function HeroProductStage({
   chips: readonly { key: string; label: string }[];
 }) {
   return (
-    <div className="landing-stage relative mx-auto w-full max-w-xl pt-4 pb-6 lg:max-w-none lg:pt-8">
+    <div className="landing-stage relative mx-auto w-full max-w-xl px-2 pt-8 pb-10 lg:max-w-none lg:px-4 lg:pt-10 lg:pb-12">
       <div className="lp-stage-glow" />
-      <div className="lp-stage-main">
-        <AppCalendarPreview />
-      </div>
-      <div className="lp-stage-card">
-        <ClientPortalPreview />
+      <div className="lp-stage-shots">
+        <div className="lp-stage-main">
+          <AppCalendarPreview />
+        </div>
+        <div className="lp-stage-card">
+          <ClientPortalPreview />
+        </div>
       </div>
       <ul className="lp-stage-chips">
         {chips.map((chip, index) => (

@@ -341,7 +341,7 @@ export async function LandingPage() {
               </p>
             </div>
 
-            <div className="lp-fade lp-delay-3 overflow-visible">
+            <div className="lp-fade lp-delay-3 min-w-0 overflow-visible">
               <HeroProductStage
                 chips={STAGE_CHIP_KEYS.map((key) => ({
                   key,

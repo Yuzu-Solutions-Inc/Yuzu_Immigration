@@ -21,7 +21,7 @@
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(6%, 8%) scale(1.12);
+    transform: translate(4%, 5%) scale(1.08);
   }
 }
 
@@ -31,7 +31,7 @@
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(-10%, 4%) scale(1.08);
+    transform: translate(-6%, 3%) scale(1.06);
   }
 }
 
@@ -41,57 +41,57 @@
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(4%, -8%) scale(1.16);
+    transform: translate(3%, -5%) scale(1.1);
   }
 }
 
 @keyframes lp-plane-a {
   0% {
-    transform: translate(-18%, 78%) rotate(-16deg);
+    transform: translate(4%, 72%) rotate(-16deg);
     opacity: 0;
   }
-  10% {
-    opacity: 0.5;
+  18% {
+    opacity: 0.45;
   }
-  90% {
-    opacity: 0.35;
+  82% {
+    opacity: 0.3;
   }
   100% {
-    transform: translate(112%, 6%) rotate(14deg);
+    transform: translate(78%, 10%) rotate(14deg);
     opacity: 0;
   }
 }
 
 @keyframes lp-plane-b {
   0% {
-    transform: translate(108%, 62%) rotate(28deg) scaleX(-1);
+    transform: translate(76%, 58%) rotate(28deg) scaleX(-1);
     opacity: 0;
   }
-  12% {
-    opacity: 0.28;
+  18% {
+    opacity: 0.26;
   }
-  88% {
-    opacity: 0.2;
+  82% {
+    opacity: 0.18;
   }
   100% {
-    transform: translate(-20%, 18%) rotate(8deg) scaleX(-1);
+    transform: translate(8%, 16%) rotate(8deg) scaleX(-1);
     opacity: 0;
   }
 }
 
 @keyframes lp-plane-c {
   0% {
-    transform: translate(-10%, 40%) rotate(-8deg);
+    transform: translate(10%, 44%) rotate(-8deg);
     opacity: 0;
   }
-  15% {
-    opacity: 0.22;
+  20% {
+    opacity: 0.2;
   }
-  85% {
-    opacity: 0.18;
+  80% {
+    opacity: 0.16;
   }
   100% {
-    transform: translate(80%, -8%) rotate(18deg);
+    transform: translate(68%, 12%) rotate(18deg);
     opacity: 0;
   }
 }
@@ -180,10 +180,19 @@
 .landing-page .lp-atmosphere {
   --lp-mx: 0;
   --lp-my: 0;
+  overflow: hidden;
+}
+
+.landing-page .lp-hero-edge-fade {
+  background-image:
+    linear-gradient(to bottom, var(--graphite-900), transparent),
+    linear-gradient(to top, var(--graphite-900), transparent);
+  background-repeat: no-repeat;
+  background-size: 100% 7rem, 100% 5.5rem;
+  background-position: top, bottom;
 }
 
 .landing-page .lp-parallax {
-  will-change: transform;
   transition: transform 0.5s ease-out;
 }
 
@@ -236,8 +245,8 @@
 .landing-page .lp-orb-indigo {
   width: min(52vw, 34rem);
   height: min(48vw, 30rem);
-  left: -8%;
-  top: -16%;
+  left: 4%;
+  top: 6%;
   background: color-mix(in srgb, var(--indigo-500) 42%, transparent);
   animation: lp-orb-drift 18s ease-in-out infinite;
 }
@@ -245,8 +254,8 @@
 .landing-page .lp-orb-emerald {
   width: min(38vw, 22rem);
   height: min(38vw, 22rem);
-  right: -6%;
-  top: 8%;
+  right: 4%;
+  top: 14%;
   background: color-mix(in srgb, var(--emerald-500) 22%, transparent);
   animation: lp-orb-drift-b 22s ease-in-out infinite;
 }
@@ -254,33 +263,39 @@
 .landing-page .lp-orb-amber {
   width: min(32vw, 18rem);
   height: min(28vw, 16rem);
-  right: 18%;
-  bottom: 6%;
+  right: 22%;
+  bottom: 10%;
   background: color-mix(in srgb, var(--amber-500) 16%, transparent);
   animation: lp-orb-drift-c 16s ease-in-out infinite;
 }
 
 .landing-page .lp-plane {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 12%;
+  left: 8%;
   color: white;
-  will-change: transform, opacity;
+  opacity: 0;
 }
 
 .landing-page .lp-plane-a {
-  animation: lp-plane-a 22s linear infinite;
+  animation: lp-plane-a 22s linear infinite both;
 }
 .landing-page .lp-plane-b {
-  animation: lp-plane-b 28s linear infinite 4s;
+  animation: lp-plane-b 28s linear infinite 4s both;
 }
 .landing-page .lp-plane-c {
-  animation: lp-plane-c 18s linear infinite 9s;
+  animation: lp-plane-c 18s linear infinite 9s both;
 }
 
 .landing-page .landing-stage {
   min-height: 18rem;
-  overflow: hidden;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.landing-page .lp-stage-shots {
+  position: relative;
+  z-index: 1;
 }
 
 .landing-page .lp-stage-glow {
@@ -304,8 +319,8 @@
   position: absolute;
   z-index: 3;
   width: min(58%, 17rem);
-  left: -6%;
-  bottom: 4%;
+  left: 0;
+  bottom: 6%;
   animation: lp-card-idle 6.5s ease-in-out infinite;
   filter: drop-shadow(
     0 18px 40px color-mix(in srgb, var(--graphite-900) 45%, transparent)
@@ -314,7 +329,7 @@
 
 .landing-page .lp-stage-chips {
   position: absolute;
-  inset: 0;
+  inset: 1.5rem 1.25rem 2rem;
   z-index: 4;
   pointer-events: none;
 }
@@ -335,24 +350,29 @@
 }
 
 .landing-page .lp-stage-chip-1 {
-  top: 6%;
-  right: 2%;
+  top: 4%;
+  right: 6%;
   animation-delay: 0s;
 }
 .landing-page .lp-stage-chip-2 {
-  top: 32%;
-  right: -2%;
+  top: 34%;
+  right: 2%;
   animation-delay: 0.7s;
 }
 .landing-page .lp-stage-chip-3 {
-  bottom: 18%;
-  right: 8%;
+  bottom: 20%;
+  right: 12%;
   animation-delay: 1.3s;
 }
 .landing-page .lp-stage-chip-4 {
-  top: 18%;
-  left: 2%;
+  top: 16%;
+  left: 6%;
   animation-delay: 1.9s;
+}
+.landing-page .lp-stage-chip-5 {
+  bottom: 8%;
+  left: 20%;
+  animation-delay: 2.4s;
 }
 
 .landing-page .lp-marquee-wrap {
@@ -461,10 +481,11 @@
 @media (max-width: 1023px) {
   .landing-page .lp-stage-card {
     width: min(64%, 15rem);
-    left: 0;
+    left: 4%;
   }
   .landing-page .lp-stage-chip-2,
-  .landing-page .lp-stage-chip-4 {
+  .landing-page .lp-stage-chip-4,
+  .landing-page .lp-stage-chip-5 {
     display: none;
   }
   .landing-page .lp-shot-frame,
@@ -480,17 +501,21 @@
   .landing-page .landing-stage {
     min-height: 16rem;
   }
+  .landing-page .lp-stage-chips {
+    inset: 1rem 0.75rem 1.25rem;
+  }
   .landing-page .lp-stage-chip {
     max-width: calc(100% - 1rem);
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .landing-page .lp-stage-chip-1 {
-    right: 0.25rem;
+    top: 2%;
+    right: 0;
   }
   .landing-page .lp-stage-chip-3 {
-    right: 0.5rem;
-    bottom: 0.75rem;
+    right: 4%;
+    bottom: 4%;
   }
 }
 
@@ -499,7 +524,6 @@
   .landing-page .lp-dark-grid,
   .landing-page .lp-light-grid,
   .landing-page .lp-orb,
-  .landing-page .lp-plane,
   .landing-page .lp-stage-glow,
   .landing-page .lp-stage-main,
   .landing-page .lp-stage-card,
@@ -512,6 +536,12 @@
   .landing-page .lp-integration-card {
     animation: none !important;
     opacity: 1;
+    transform: none;
+  }
+
+  .landing-page .lp-plane {
+    animation: none !important;
+    opacity: 0 !important;
     transform: none;
   }
 }
