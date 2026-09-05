@@ -75,7 +75,7 @@ export async function startGoogleCalendarConnectAction(formData: FormData) {
     origin,
     intent,
   });
-  redirect(googleAuthUrl({ origin, state }));
+  redirect(googleAuthUrl({ origin, state, intent }));
 }
 
 export async function useGoogleCalendarAction(

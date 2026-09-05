@@ -3165,7 +3165,7 @@
     "googleUnknownAccount": "Google Agenda",
     "googleLastSynced": "Dernière synchro {when}",
     "googleNotConnected": "Non connecté. Connectez votre compte Google pour synchroniser votre agenda dans les deux sens.",
-    "googleNotConfigured": "Ajoutez GOOGLE_CALENDAR_CLIENT_ID et GOOGLE_CALENDAR_CLIENT_SECRET à l’environnement serveur, activez les API Google Calendar et Google Meet, et définissez l’URI de redirection OAuth /auth/google-calendar/callback.",
+    "googleNotConfigured": "Ajoutez GOOGLE_CALENDAR_CLIENT_ID et GOOGLE_CALENDAR_CLIENT_SECRET à l’environnement serveur, activez l’API Google Calendar, n’ajoutez que la portée calendar.events à l’écran de consentement OAuth, et définissez l’URI de redirection OAuth /auth/google-calendar/callback.",
     "microsoftTitle": "Calendrier Outlook",
     "microsoftHelp": "Connectez votre calendrier Microsoft 365. Les événements Outlook bloquent uniquement vos créneaux publics, et les rendez-vous avec vous y sont ajoutés.",
     "microsoftConnect": "Connecter Outlook",

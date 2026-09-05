@@ -118,9 +118,11 @@ async function persistMeetingFields(input: {
 async function createStandaloneMeeting(input: {
   organizationId: string;
   hostUserId: string;
+  appointmentId: string;
   meeting: MeetingProvider;
   calendar: CalendarProvider | null;
   title: string;
+  description: string;
   startsAt: string;
   endsAt: string;
 }): Promise<{ meetJoinUrl: string | null; conferenceId: string | null }> {
@@ -134,8 +136,21 @@ async function createStandaloneMeeting(input: {
       return await createGoogleMeetSpace(google.id);
     } catch (error) {
       console.error("standalone google meet:", error);
-      return { meetJoinUrl: null, conferenceId: null };
     }
+    const created = await pushAppointmentToGoogleCalendar({
+      organizationId: input.organizationId,
+      hostUserId: input.hostUserId,
+      appointmentId: input.appointmentId,
+      title: input.title,
+      description: input.description,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      createMeet: true,
+    });
+    return {
+      meetJoinUrl: created?.meetJoinUrl ?? null,
+      conferenceId: null,
+    };
   }
   if (input.meeting === "teams" && input.calendar !== "microsoft") {
     const microsoft = await getUserMicrosoftConnection(
@@ -197,9 +212,11 @@ export async function pushAppointmentToHostCalendars(
     ? await createStandaloneMeeting({
         organizationId: input.organizationId,
         hostUserId: input.hostUserId,
+        appointmentId: input.appointmentId,
         meeting,
         calendar,
         title: input.title,
+        description: input.description,
         startsAt: input.startsAt,
         endsAt: input.endsAt,
       })

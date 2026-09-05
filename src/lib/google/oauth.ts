@@ -2,13 +2,24 @@ import { randomBytes } from "node:crypto";
 
 import { decryptField, encryptField } from "@/lib/security/field-crypto";
 
-export const GOOGLE_CALENDAR_SCOPES = [
+/**
+ * Google shows the unverified-app screen when the authorize request includes
+ * sensitive scopes that are not yet approved on the OAuth consent screen.
+ * `calendar.events` covers event CRUD, free/busy, and Meet conference data.
+ * Do not add `calendar.freebusy` or `meetings.space.created` here unless those
+ * scopes are verified in Google Cloud — they are redundant for our usage.
+ */
+export const GOOGLE_OAUTH_SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/calendar.freebusy",
-  "https://www.googleapis.com/auth/meetings.space.created",
   "openid",
   "email",
-].join(" ");
+] as const;
+
+export function googleScopesForIntent(
+  _intent: "calendar" | "meetings" = "calendar",
+) {
+  return GOOGLE_OAUTH_SCOPES.join(" ");
+}
 
 export const GOOGLE_CALENDAR_AAD = {
   refreshToken: "google_calendar_secrets.refresh_token",
@@ -35,6 +46,7 @@ export function googleOAuthRedirectUri(origin: string) {
 export function googleAuthUrl(input: {
   origin: string;
   state: string;
+  intent?: "calendar" | "meetings";
 }) {
   const config = googleCalendarClientConfig();
   if (!config) {
@@ -44,7 +56,7 @@ export function googleAuthUrl(input: {
     client_id: config.clientId,
     redirect_uri: googleOAuthRedirectUri(input.origin),
     response_type: "code",
-    scope: GOOGLE_CALENDAR_SCOPES,
+    scope: googleScopesForIntent(input.intent ?? "calendar"),
     access_type: "offline",
     prompt: "consent",
     include_granted_scopes: "true",

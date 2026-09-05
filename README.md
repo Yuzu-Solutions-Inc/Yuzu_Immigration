@@ -46,7 +46,7 @@ Add redirect URL: `http://localhost:3000/auth/callback` (and production URL late
 
 Staff Google **sign-in** is separate from **Calendar sync**. Each staff member connects one calendar (Google **or** Outlook) and one meeting tool (Google Meet, Teams, **or** Zoom) independently under **Settings → Calendar**. Calendar events block public slots; the meeting tool supplies the join link.
 
-- Google Calendar / Meet: Google Cloud OAuth client, Calendar API + Meet API, `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/google-calendar/callback`. Push notifications require HTTPS (they will not arrive on localhost).
+- Google Calendar / Meet: Google Cloud OAuth client, Calendar API, `calendar.events` + `openid` + `email` on the consent screen, `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/google-calendar/callback`. Do not request `calendar.freebusy` or Meet scopes unless Google has verified them. Push notifications require HTTPS (they will not arrive on localhost).
 - Outlook / Teams: Entra ID app with `Calendars.ReadWrite` and `OnlineMeetings.ReadWrite`, `MICROSOFT_CALENDAR_CLIENT_ID` / `MICROSOFT_CALENDAR_CLIENT_SECRET`, redirect `{APP_URL}/auth/microsoft-calendar/callback`.
 - Zoom: Zoom Marketplace General app with meeting write/update/delete and user read scopes, `ZOOM_CLIENT_ID` / `ZOOM_CLIENT_SECRET`, redirect `{APP_URL}/auth/zoom/callback`.
 

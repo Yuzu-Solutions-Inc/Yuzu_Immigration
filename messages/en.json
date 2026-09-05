@@ -3166,7 +3166,7 @@
     "googleUnknownAccount": "Google Calendar",
     "googleLastSynced": "Last synced {when}",
     "googleNotConnected": "Not connected. Connect your Google account to sync your calendar both ways.",
-    "googleNotConfigured": "Add GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET to the server environment, enable the Google Calendar API and Google Meet API, and set the OAuth redirect URI to /auth/google-calendar/callback.",
+    "googleNotConfigured": "Add GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET to the server environment, enable the Google Calendar API, add only the calendar.events scope on the OAuth consent screen, and set the OAuth redirect URI to /auth/google-calendar/callback.",
     "microsoftTitle": "Outlook Calendar",
     "microsoftHelp": "Connect your Microsoft 365 calendar. Outlook events block only your public slots, and bookings with you are added to this calendar.",
     "microsoftConnect": "Connect Outlook Calendar",
