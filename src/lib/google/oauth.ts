@@ -59,7 +59,6 @@ export function googleAuthUrl(input: {
     scope: googleScopesForIntent(input.intent ?? "calendar"),
     access_type: "offline",
     prompt: "consent",
-    include_granted_scopes: "true",
     state: input.state,
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

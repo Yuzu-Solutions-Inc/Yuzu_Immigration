@@ -66,6 +66,7 @@ describe("Google OAuth scopes", () => {
         url.searchParams.get("scope"),
         googleScopesForIntent("calendar"),
       );
+      assert.equal(url.searchParams.get("include_granted_scopes"), null);
       for (const extra of EXTRA_UNVERIFIED_SCOPES) {
         assert.equal(url.searchParams.get("scope")?.includes(extra), false);
       }
