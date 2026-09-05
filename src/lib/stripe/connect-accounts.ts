@@ -27,6 +27,7 @@ export function payCheckoutIntegrationId() {
 type V2MerchantAccount = {
   id: string;
   display_name?: string | null;
+  object?: string;
   configuration?: {
     merchant?: {
       capabilities?: {
@@ -37,6 +38,41 @@ type V2MerchantAccount = {
   };
   requirements?: { summary?: { minimum_deadline?: unknown } };
 };
+
+const V2_ACCOUNT_INCLUDE = [
+  "configuration.merchant",
+  "identity",
+  "requirements",
+] as const;
+
+type V2AccountsApi = {
+  create: (params: Record<string, unknown>) => Promise<V2MerchantAccount>;
+  retrieve: (
+    id: string,
+    params?: Record<string, unknown>,
+  ) => Promise<V2MerchantAccount>;
+};
+
+type V2AccountLinksApi = {
+  create: (params: {
+    account: string;
+    use_case: {
+      type: "account_onboarding";
+      account_onboarding: {
+        configurations: Array<"merchant">;
+        return_url: string;
+        refresh_url: string;
+      };
+    };
+  }) => Promise<{ url?: string | null }>;
+};
+
+function v2Core(stripe: Stripe) {
+  return stripe.v2.core as {
+    accounts: V2AccountsApi;
+    accountLinks: V2AccountLinksApi;
+  };
+}
 
 function isMerchantChargesReady(account: Stripe.Account | V2MerchantAccount) {
   const v2 = account as V2MerchantAccount;
@@ -76,43 +112,31 @@ async function createConnectedAccount(input: {
   businessName?: string | null;
 }) {
   const stripe = getStripe();
-  const v2Create = (
-    stripe as unknown as {
-      v2?: {
-        core?: {
-          accounts?: {
-            create: (params: Record<string, unknown>) => Promise<V2MerchantAccount>;
-          };
-        };
-      };
-    }
-  ).v2?.core?.accounts?.create;
-
-  if (v2Create) {
-    try {
-      return await v2Create({
-        display_name: input.businessName || undefined,
-        contact_email: input.email || undefined,
-        dashboard: "full",
-        identity: { country: "ca" },
-        defaults: {
-          responsibilities: {
-            fees_collector: "stripe",
-            losses_collector: "stripe",
+  try {
+    return await v2Core(stripe).accounts.create({
+      display_name: input.businessName || undefined,
+      contact_email: input.email || undefined,
+      dashboard: "full",
+      identity: { country: "ca" },
+      defaults: {
+        currency: "cad",
+        responsibilities: {
+          fees_collector: "stripe",
+          losses_collector: "stripe",
+        },
+      },
+      configuration: {
+        merchant: {
+          capabilities: {
+            card_payments: { requested: true },
           },
         },
-        configuration: {
-          merchant: {
-            capabilities: {
-              card_payments: { requested: true },
-            },
-          },
-        },
-        metadata: { organization_id: input.organizationId },
-      });
-    } catch (error) {
-      console.error("v2 connected account create, using accounts.create:", error);
-    }
+      },
+      metadata: { organization_id: input.organizationId },
+      include: [...V2_ACCOUNT_INCLUDE],
+    });
+  } catch (error) {
+    console.error("v2 connected account create, using accounts.create:", error);
   }
 
   return stripe.accounts.create({
@@ -130,36 +154,18 @@ async function createConnectedAccount(input: {
     },
     capabilities: {
       card_payments: { requested: true },
-      transfers: { requested: true },
     },
   });
 }
 
 async function retrieveConnectedAccount(accountId: string) {
   const stripe = getStripe();
-  const v2Retrieve = (
-    stripe as unknown as {
-      v2?: {
-        core?: {
-          accounts?: {
-            retrieve: (
-              id: string,
-              params?: Record<string, unknown>,
-            ) => Promise<V2MerchantAccount>;
-          };
-        };
-      };
-    }
-  ).v2?.core?.accounts?.retrieve;
-
-  if (v2Retrieve) {
-    try {
-      return await v2Retrieve(accountId, {
-        include: ["configuration", "requirements", "identity"],
-      });
-    } catch (error) {
-      console.error("v2 account retrieve:", error);
-    }
+  try {
+    return await v2Core(stripe).accounts.retrieve(accountId, {
+      include: [...V2_ACCOUNT_INCLUDE],
+    });
+  } catch (error) {
+    console.error("v2 account retrieve:", error);
   }
   return stripe.accounts.retrieve(accountId);
 }
@@ -195,10 +201,30 @@ export async function createStripeAccountOnboardingLink(input: {
   const stripe = getStripe();
   const origin = await getAppBaseUrl();
   const base = `${origin.replace(/\/$/, "")}/${input.locale}/settings/payments`;
+  const refreshUrl = `${base}?stripe=refresh`;
+  const returnUrl = `${base}?stripe=return`;
+
+  try {
+    const link = await v2Core(stripe).accountLinks.create({
+      account: input.accountId,
+      use_case: {
+        type: "account_onboarding",
+        account_onboarding: {
+          configurations: ["merchant"],
+          refresh_url: refreshUrl,
+          return_url: returnUrl,
+        },
+      },
+    });
+    if (link.url) return link.url;
+  } catch (error) {
+    console.error("v2 account link, using accountLinks.create:", error);
+  }
+
   const link = await stripe.accountLinks.create({
     account: input.accountId,
-    refresh_url: `${base}?stripe=refresh`,
-    return_url: `${base}?stripe=return`,
+    refresh_url: refreshUrl,
+    return_url: returnUrl,
     type: "account_onboarding",
   });
   if (!link.url) throw new Error("stripe_onboarding_link_failed");

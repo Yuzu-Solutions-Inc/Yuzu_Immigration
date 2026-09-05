@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { persistSquareConnection } from "@/app/actions/square";
+import { canAdministerOrg } from "@/lib/auth/rbac";
 import {
   decodeSquareOAuthState,
   exchangeSquareCode,
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
     .eq("organization_id", state.organizationId)
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!membership || membership.role !== "admin") {
+  if (!membership || !canAdministerOrg(membership.role)) {
     return fail("forbidden");
   }
 
