@@ -23,7 +23,7 @@ Vous pouvez porter plainte au Commissariat à la protection de la vie privée du
 
 ## 2. Trame d’avis à la CAI (Québec)
 
-Inclure : identité du cabinet et contact ; dates ; description ; catégories ; nombre de personnes ; risque de préjudice sérieux et motifs ; mesures ; avis aux personnes et à Yuzu le cas échéant.
+Inclure : identité du cabinet et contact ; dates ; description ; catégories ; nombre de personnes ; risque de préjudice sérieux et motifs ; mesures ; avis aux personnes et à %OPERATOR_NAME% le cas échéant.
 
 https://www.cai.gouv.qc.ca/
 
