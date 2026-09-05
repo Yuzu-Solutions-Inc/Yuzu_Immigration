@@ -3,17 +3,17 @@
 **Pour :** les cabinets qui utilisent %PRODUCT_NAME%  
 **Pourquoi :** la Loi 25 exige une EFVP avant d’acquérir, de développer ou de refondre un système d’information impliquant des renseignements personnels, et avant de communiquer des renseignements hors Québec.  
 **Dossier fournisseur :** lire d’abord `vendor-due-diligence-pack.pdf` et `yuzu-subprocessors.pdf`.  
-**Ceci est un modèle, pas un avis juridique.** Les sections 1 à 5 décrivent des **faits** sur le produit et demandent au cabinet de consigner des faits sur son propre usage. Yuzu Solutions Inc. ne propose **aucune** conclusion, cotation du risque résiduel ni décision d’aller de l’avant. La personne responsable au **cabinet** rédige les conclusions à la section 6. Conservez l’exemplaire signé dans votre dossier de confidentialité.
+**Ceci est un modèle, pas un avis juridique.** Les sections 1 à 5 décrivent des **faits** sur le produit et demandent au cabinet de consigner des faits sur son propre usage. %OPERATOR_AS% ne propose **aucune** conclusion, cotation du risque résiduel ni décision d’aller de l’avant. La personne responsable au **cabinet** rédige les conclusions à la section 6. Conservez l’exemplaire signé dans votre dossier de confidentialité.
 
 **Raison sociale du cabinet :** ________________________________  
 **Personne responsable de la protection des renseignements personnels :** ________________________________  
 **Courriel :** ________________________________  
 **Date :** ______________  
-**Produit évalué :** %PRODUCT_NAME%, exploité par Yuzu Solutions Inc.
+**Produit évalué :** %PRODUCT_NAME%, exploité par %OPERATOR_NAME%
 
 ## 1. Projet (faits)
 
-%PRODUCT_NAME% est un système de gestion de pratique (dossiers, questionnaires, formulaires, documents, portail, calendrier, réservation publique).
+%PRODUCT_NAME% est un système de gestion de pratique (dossiers, questionnaires, formulaires, documents, portail, calendrier, réservation publique, paiements et comptabilité facultatifs).
 
 La présente évaluation porte sur :
 
@@ -44,7 +44,7 @@ ________________________________________________________________
 
 ## 4. Communications hors Québec (faits)
 
-Yuzu héberge le système d’enregistrement au Canada (région de Montréal). L’hébergement applicatif, le courriel et les outils facultatifs Google / Microsoft / Zoom / Square peuvent traiter des données aux États-Unis.
+%OPERATOR_NAME% héberge le système d’enregistrement au Canada (région de Montréal). L’hébergement applicatif, le courriel, la facturation Stripe et les outils facultatifs Google / Microsoft / Zoom / Square / Stripe / Sage peuvent traiter des données hors Québec, y compris aux États-Unis (et, pour Sage, généralement au Royaume-Uni).
 
 Ce cabinet activera (cochez ce qui s’applique) :
 
@@ -53,6 +53,9 @@ Ce cabinet activera (cochez ce qui s’applique) :
 - [ ] Outlook / Teams
 - [ ] Zoom
 - [ ] Paiements Square
+- [ ] Paiements Stripe (honoraires de consultation)
+- [ ] Facturation Stripe (abonnement du cabinet à %PRODUCT_NAME%)
+- [ ] Sage Business Cloud Accounting
 
 Pour chaque case cochée, des renseignements personnels (p. ex. nom, courriel, téléphone sur un événement d’agenda) sont envoyés à ce fournisseur. Voir le résumé des transferts dans le dossier fournisseur. L’évaluation de ces communications par le cabinet appartient à la section 6.
 
@@ -71,7 +74,7 @@ Ce sont des fonctionnalités du produit. Ce n’est pas une conclusion que le ri
 
 ## 6. Conclusions du cabinet (à insérer ici)
 
-**Ne laissez pas cette section à Yuzu Solutions Inc.** Yuzu ne la remplit pas et n’en propose pas le libellé. La personne responsable de la protection des renseignements personnels au cabinet doit rédiger l’analyse et la décision du cabinet. Joignez des pages supplémentaires au besoin.
+**Ne laissez pas cette section à %OPERATOR_NAME%** %OPERATOR_NAME% ne la remplit pas et n’en propose pas le libellé. La personne responsable de la protection des renseignements personnels au cabinet doit rédiger l’analyse et la décision du cabinet. Joignez des pages supplémentaires au besoin.
 
 ### 6.1 Nécessité et proportionnalité
 
@@ -91,7 +94,7 @@ ________________________________________________________________
 
 ### 6.3 Risques et mesures que le cabinet prendra
 
-Risques que le cabinet identifie, et mesures que le cabinet — et non Yuzu — mettra en œuvre :
+Risques que le cabinet identifie, et mesures que le cabinet — et non %OPERATOR_NAME% — mettra en œuvre :
 
 ________________________________________________________________
 ________________________________________________________________

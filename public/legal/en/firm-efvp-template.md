@@ -3,17 +3,17 @@
 **For:** consulting firms that use %PRODUCT_NAME%  
 **Why:** Québec Law 25 requires an EFVP before acquiring, developing, or overhauling an information system that involves personal information, and before communicating personal information outside Québec.  
 **Vendor pack:** read `vendor-due-diligence-pack.pdf` and `yuzu-subprocessors.pdf` first.  
-**This is a template, not legal advice.** Sections 1–5 describe **facts** about the product and ask the firm to record facts about its own use. Yuzu Solutions Inc. does **not** propose a conclusion, a residual-risk rating, or a decision to proceed. The person in charge at **your** firm must write the conclusions in section 6. Keep the signed copy in your privacy file. You may send a high-level copy to Yuzu Solutions Inc. at %PRIVACY_EMAIL% if you wish; you are not required to.
+**This is a template, not legal advice.** Sections 1–5 describe **facts** about the product and ask the firm to record facts about its own use. %OPERATOR_AS% does **not** propose a conclusion, a residual-risk rating, or a decision to proceed. The person in charge at **your** firm must write the conclusions in section 6. Keep the signed copy in your privacy file. You may send a high-level copy to %OPERATOR_NAME% at %PRIVACY_EMAIL% if you wish; you are not required to.
 
 **Firm legal name:** ________________________________  
 **Person in charge of personal information:** ________________________________  
 **Email:** ________________________________  
 **Date:** ______________  
-**Product assessed:** %PRODUCT_NAME%, operated by Yuzu Solutions Inc.
+**Product assessed:** %PRODUCT_NAME%, operated by %OPERATOR_NAME%
 
 ## 1. Project (facts)
 
-%PRODUCT_NAME% is a practice-management system (client records, questionnaires, form fill, documents, portal, calendar, public booking).
+%PRODUCT_NAME% is a practice-management system (client records, questionnaires, form fill, documents, portal, calendar, public booking, optional payments and accounting).
 
 This assessment covers:
 
@@ -44,7 +44,7 @@ ________________________________________________________________
 
 ## 4. Extra-Québec communications (facts)
 
-Yuzu hosts the system of record in Canada (Montréal region). Application hosting, email, and optional Google / Microsoft / Zoom / Square tools may process data in the United States.
+%OPERATOR_NAME% hosts the system of record in Canada (Montréal region). Application hosting, email, Stripe billing, and optional Google / Microsoft / Zoom / Square / Stripe / Sage tools may process data outside Québec, including the United States (and, for Sage, typically the United Kingdom).
 
 This firm will enable (check what applies):
 
@@ -53,8 +53,11 @@ This firm will enable (check what applies):
 - [ ] Outlook / Teams
 - [ ] Zoom
 - [ ] Square payments
+- [ ] Stripe payments (consultation fees)
+- [ ] Stripe billing (firm subscription to %PRODUCT_NAME%)
+- [ ] Sage Business Cloud Accounting
 
-For each box checked, personal information (for example guest name, email, phone on a calendar event) is sent to that provider. See Yuzu’s transfer summary in the vendor pack. The firm’s assessment of those communications belongs in section 6.
+For each box checked, personal information (for example guest name, email, phone on a calendar event) is sent to that provider. See %OPERATOR_NAME%’s transfer summary in the vendor pack. The firm’s assessment of those communications belongs in section 6.
 
 ## 5. Product controls available to the firm (facts)
 
@@ -71,7 +74,7 @@ These are features of the product. They are not a conclusion that residual risk 
 
 ## 6. Firm conclusions (insert here)
 
-**Do not leave this section to Yuzu Solutions Inc.** Yuzu does not complete it and does not propose wording. The person in charge of personal information at the firm must write the firm’s own analysis and decision. Attach extra pages if needed.
+**Do not leave this section to %OPERATOR_NAME%** %OPERATOR_NAME% does not complete it and does not propose wording. The person in charge of personal information at the firm must write the firm’s own analysis and decision. Attach extra pages if needed.
 
 ### 6.1 Necessity and proportionality
 
@@ -91,7 +94,7 @@ ________________________________________________________________
 
 ### 6.3 Risks and measures the firm will take
 
-Risks the firm identifies, and measures the firm — not Yuzu — will implement:
+Risks the firm identifies, and measures the firm — not %OPERATOR_NAME% — will implement:
 
 ________________________________________________________________
 ________________________________________________________________

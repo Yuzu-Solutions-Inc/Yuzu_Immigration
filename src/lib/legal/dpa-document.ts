@@ -64,5 +64,5 @@ export async function loadFirmDpaMarkdown(locale: string) {
     pack,
     "firm-data-processing-addendum.md",
   );
-  return applyProductCopy(await readFile(file, "utf8"));
+  return applyProductCopy(await readFile(file, "utf8"), pack);
 }

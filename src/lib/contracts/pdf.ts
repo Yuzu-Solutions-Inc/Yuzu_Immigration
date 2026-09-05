@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
+import { product } from "@/lib/brand/product";
 import { decodeXmlEntities } from "@/lib/contracts/html";
 import {
   removeDangerousHtmlBlocks,
@@ -228,7 +229,7 @@ export async function buildContractPdf(input: {
   const doc = await PDFDocument.create();
   doc.setTitle(input.title);
   doc.setAuthor(input.organizationName);
-  doc.setSubject(`Yuzu contract envelope ${input.envelopeId}`);
+  doc.setSubject(`${product.name} contract envelope ${input.envelopeId}`);
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const pager = new Pager(doc, font, bold);

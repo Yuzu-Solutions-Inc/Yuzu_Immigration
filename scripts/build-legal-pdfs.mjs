@@ -5,8 +5,8 @@
  *
  *   npm run legal:pdf
  *
- * `%PRODUCT_NAME%` and `%PRIVACY_EMAIL%` in the markdown are expanded from
- * `src/lib/brand/product.ts`.
+ * `%PRODUCT_NAME%`, `%OPERATOR_NAME%`, `%OPERATOR_AS%`, and `%PRIVACY_EMAIL%`
+ * in the markdown are expanded from `src/lib/brand/product.ts`.
  */
 import { spawn } from "node:child_process";
 import { copyFile, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -20,9 +20,14 @@ const chrome =
   process.env.CHROME_PATH ||
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const FOOTERS = {
-  en: "Yuzu Solutions Inc. — consulting firm pack",
-  fr: "Yuzu Solutions Inc. — dossier cabinets",
+const FOOTER_SUFFIX = {
+  en: "consulting firm pack",
+  fr: "dossier cabinets",
+};
+
+const OPERATOR_AS = {
+  en: "Les Solutions Yuzu Inc., operating as Yuzu Solutions Inc.",
+  fr: "Les Solutions Yuzu Inc., faisant affaire sous le nom Yuzu Solutions Inc.",
 };
 
 function readProductField(source, key) {
@@ -33,10 +38,12 @@ function readProductField(source, key) {
   return match[1];
 }
 
-function applyProductCopy(text, identity) {
+function applyProductCopy(text, identity, locale) {
   return text
     .replaceAll("%PRODUCT_NAME%", identity.name)
+    .replaceAll("%OPERATOR_AS%", identity.operatorAs[locale] ?? identity.operatorAs.en)
     .replaceAll("%OPERATOR_NAME%", identity.operator)
+    .replaceAll("%OPERATOR_TRADE_NAME%", identity.tradeName)
     .replaceAll("%SUPPORT_EMAIL%", identity.supportEmail)
     .replaceAll("%PRIVACY_EMAIL%", identity.privacyEmail);
 }
@@ -79,10 +86,10 @@ async function buildLocale(locale, identity) {
   const work = await mkdtemp(path.join(os.tmpdir(), `dossierly-legal-${locale}-`));
   for (const name of files) {
     const source = await readFile(path.join(dir, name), "utf8");
-    await writeFile(path.join(work, name), applyProductCopy(source, identity));
+    await writeFile(path.join(work, name), applyProductCopy(source, identity, locale));
   }
 
-  const footer = FOOTERS[locale] ?? FOOTERS.en;
+  const footer = `${identity.operator} — ${FOOTER_SUFFIX[locale] ?? FOOTER_SUFFIX.en}`;
   console.log(`Building ${files.length} PDFs in public/legal/${locale}/`);
   try {
     await run(
@@ -119,6 +126,8 @@ const productSource = await readFile(
 const identity = {
   name: readProductField(productSource, "name"),
   operator: readProductField(productSource, "operator"),
+  tradeName: readProductField(productSource, "tradeName"),
+  operatorAs: OPERATOR_AS,
   supportEmail: readProductField(productSource, "supportEmail"),
   privacyEmail: readProductField(productSource, "privacyEmail"),
 };

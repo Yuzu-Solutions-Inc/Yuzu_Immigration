@@ -6,6 +6,13 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 const intlMiddleware = createMiddleware(routing);
 
+const UNPREFIXED_PUBLIC_PAGES = new Set(["/help", "/docs"]);
+
+function unprefixedPublicPath(pathname: string) {
+  if (UNPREFIXED_PUBLIC_PAGES.has(pathname)) return pathname;
+  return null;
+}
+
 export async function proxy(request: NextRequest) {
   // Keep auth callback outside locale routing.
   if (request.nextUrl.pathname.startsWith("/auth")) {
@@ -25,6 +32,18 @@ export async function proxy(request: NextRequest) {
   // Auth redirects already decided the response.
   if (sessionResponse.status >= 300 && sessionResponse.status < 400) {
     return sessionResponse;
+  }
+
+  // Zoom and other listings use unprefixed URLs such as /help and /docs.
+  const unprefixedPublicPage = unprefixedPublicPath(request.nextUrl.pathname);
+  if (unprefixedPublicPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${routing.defaultLocale}${unprefixedPublicPage}`;
+    const rewriteResponse = NextResponse.rewrite(url);
+    sessionResponse.cookies.getAll().forEach((cookie) => {
+      rewriteResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return rewriteResponse;
   }
 
   const intlResponse = intlMiddleware(request);

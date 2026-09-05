@@ -1,5 +1,5 @@
 /** Current Firm DPA text version. Bump when the addendum substance changes. */
-export const FIRM_DPA_VERSION = "2026-08-16";
+export const FIRM_DPA_VERSION = "2026-09-05";
 
 export function formAcceptedFirmDpa(formData: FormData) {
   return (

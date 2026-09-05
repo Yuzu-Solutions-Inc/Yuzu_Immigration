@@ -7,11 +7,11 @@
 
 ## A. Services professionnels (toujours)
 
-☐ Je comprends que **[cabinet]** est mon consultant / représentant en immigration. **Yuzu Solutions Inc.** fournit seulement le logiciel utilisé par le cabinet. Yuzu ne me conseille pas et n’est pas partie au présent mandat.
+☐ Je comprends que **[cabinet]** est mon consultant / représentant en immigration. **%OPERATOR_AS%** fournit seulement le logiciel **%PRODUCT_NAME%** utilisé par le cabinet. %OPERATOR_NAME% ne me conseille pas et n’est pas partie au présent mandat.
 
 ☐ Je consens à ce que [cabinet] recueille, utilise et conserve mes renseignements personnels — y compris des renseignements **sensibles** (pièces d’identité, historique d’immigration, réponses aux questionnaires) — pour fournir les services du mandat, me joindre, prendre rendez-vous et respecter les devoirs professionnels et légaux.
 
-☐ Je consens à ce que ces renseignements soient inscrits dans **%PRODUCT_NAME%** (Yuzu Solutions Inc.), avec conservation principale au Canada, et traités par les fournisseurs techniques décrits dans l’avis de confidentialité du cabinet.
+☐ Je consens à ce que ces renseignements soient inscrits dans **%PRODUCT_NAME%** (exploité par %OPERATOR_NAME%), avec conservation principale au Canada, et traités par les fournisseurs techniques décrits dans l’avis de confidentialité du cabinet (hébergement, courriel, facturation, et tout outil d’agenda, de réunion, de paiement ou de comptabilité utilisé par le cabinet).
 
 ## B. Famille / enfants (le cas échéant)
 
@@ -21,7 +21,8 @@
 ## C. Outils facultatifs (cocher seulement si le cabinet les utilisera)
 
 ☐ Agenda / visioconférence (Google, Microsoft ou Zoom) : je consens à ce que mon nom, courriel, téléphone et l’heure du rendez-vous soient envoyés à ce fournisseur.  
-☐ Paiement (p. ex. Square) : je consens au traitement des données de paiement pour facturer les honoraires convenus.
+☐ Paiement (Square ou Stripe) : je consens au traitement des données de paiement pour facturer les honoraires convenus.  
+☐ Sage Comptabilité : je consens à ce que mon nom, courriel, adresse de facturation et les montants de facture soient envoyés à Sage pour que le cabinet poste les factures fiscales.
 
 ## D. Traitement hors Québec (recommandé pour les clients du Québec)
 
@@ -35,4 +36,4 @@ Signature : ______________________ Date : ______________
 
 ---
 
-%PRODUCT_NAME% exige déjà l’acceptation de sa politique et de ses conditions sur le portail client et la réservation. **Cela ne remplace pas** le consentement de votre relation professionnelle. Conservez ce formulaire au dossier.
+%PRODUCT_NAME% exige déjà l’acceptation de la politique de confidentialité et des conditions de %OPERATOR_NAME% sur le portail client et la réservation. **Cela ne remplace pas** le consentement de votre relation professionnelle. Conservez ce formulaire au dossier.

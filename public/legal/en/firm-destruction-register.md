@@ -6,7 +6,7 @@
 
 | Client name (or file ID) | Service summary | File closed | Destroyed on | Destroyed by (admin) | Method | Notes (no extra PI) |
 |---|---|---|---|---|---|---|
-|  |  |  |  |  | Yuzu “Destroy file” |  |
+|  |  |  |  |  | %PRODUCT_NAME% “Destroy file” |  |
 
 Default product rule: destroy only after **closed_at + 6 years** (`retain_until`), unless another legal rule requires earlier action. After purposes are fulfilled, Québec Law 25 expects destruction or anonymization.
 

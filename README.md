@@ -1,6 +1,6 @@
 # Dossierly
 
-Canadian immigration consultant CRM by Yuzu Solutions.
+Canadian immigration consultant CRM by Les Solutions Yuzu Inc., operating as Yuzu Solutions Inc.
 
 ## Stack
 

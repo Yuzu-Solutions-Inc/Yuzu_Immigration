@@ -5,9 +5,9 @@ import es from "../../../messages/es.json";
 import fr from "../../../messages/fr.json";
 
 export const dictionaries = {
-  en: applyProductCopy(en),
-  fr: applyProductCopy(fr),
-  es: applyProductCopy(es),
+  en: applyProductCopy(en, "en"),
+  fr: applyProductCopy(fr, "fr"),
+  es: applyProductCopy(es, "es"),
 } as const;
 
 export function messagesFor(locale: AppLocale) {

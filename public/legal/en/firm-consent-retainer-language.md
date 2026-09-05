@@ -7,11 +7,11 @@ Insert into your service agreement or a standalone consent form. Have counsel ad
 
 ## A. Professional services (always)
 
-☐ I understand that **[Firm name]** is my immigration consultant / representative. **Yuzu Solutions Inc.** only provides software that the firm uses. Yuzu does not advise me and is not a party to this retainer.
+☐ I understand that **[Firm name]** is my immigration consultant / representative. **%OPERATOR_AS%** only provides the **%PRODUCT_NAME%** software that the firm uses. %OPERATOR_NAME% does not advise me and is not a party to this retainer.
 
 ☐ I consent to [Firm name] collecting, using, and storing my personal information — including **sensitive** information such as identity documents, immigration history, and questionnaire answers — to provide the services described in the retainer, to contact me, to book appointments, and to meet professional and legal duties.
 
-☐ I consent to this information being entered into **%PRODUCT_NAME%** (Yuzu Solutions Inc.), with primary storage in Canada, and to the technical providers described in the firm’s privacy notice (hosting, email, and any calendar or payment tool the firm uses).
+☐ I consent to this information being entered into **%PRODUCT_NAME%** (operated by %OPERATOR_NAME%), with primary storage in Canada, and to the technical providers described in the firm’s privacy notice (hosting, email, billing, and any calendar, meeting, payment, or accounting tool the firm uses).
 
 ## B. Family members / children (if applicable)
 
@@ -21,7 +21,8 @@ Insert into your service agreement or a standalone consent form. Have counsel ad
 ## C. Optional tools (check only if the firm will use them for this client)
 
 ☐ Calendar / video meeting (Google, Microsoft, or Zoom): I consent to my name, email, phone, and appointment time being sent to that provider to create the event or meeting.  
-☐ Payment processing (e.g. Square): I consent to payment details being processed by that provider to charge the fees I agree to.
+☐ Payment processing (Square or Stripe): I consent to payment details being processed by that provider to charge the fees I agree to.  
+☐ Sage Accounting: I consent to my name, email, billing address, and invoice amounts being sent to Sage so the firm can post tax invoices.
 
 ## D. Extra-Québec processing (recommended for Québec clients)
 
@@ -35,6 +36,6 @@ Signature: ______________________ Date: ______________
 
 ---
 
-## Short in-product notice (already used by Yuzu)
+## Short in-product notice (already used by %PRODUCT_NAME%)
 
-%PRODUCT_NAME% already requires clients to accept Yuzu’s Privacy Policy and Terms on the client portal and booking. **That does not replace** this firm-level consent for your professional relationship. Keep this form in the paper or PDF retainer file.
+%PRODUCT_NAME% already requires clients to accept %OPERATOR_NAME%’s Privacy Policy and Terms on the client portal and booking. **That does not replace** this firm-level consent for your professional relationship. Keep this form in the paper or PDF retainer file.

@@ -6,7 +6,7 @@
 
 | Nom du client (ou ID) | Résumé du service | Dossier fermé | Détruit le | Par (admin) | Méthode | Notes (sans RP superflus) |
 |---|---|---|---|---|---|---|
-|  |  |  |  |  | « Détruire le dossier » dans Yuzu |  |
+|  |  |  |  |  | « Détruire le dossier » dans %PRODUCT_NAME% |  |
 
 Règle par défaut du produit : détruire seulement après **fermeture + 6 ans**, sauf autre règle de droit. Lorsque les fins sont atteintes, la Loi 25 du Québec vise la destruction ou l’anonymisation.
 

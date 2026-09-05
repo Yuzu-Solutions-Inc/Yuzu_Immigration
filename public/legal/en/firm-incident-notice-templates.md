@@ -1,6 +1,6 @@
 # Firm incident notice templates
 
-Use when **your firm** is the controller. Coordinate with Yuzu Solutions Inc. (%PRIVACY_EMAIL%, Adrien Yvin) if the platform is involved.
+Use when **your firm** is the controller. Coordinate with %OPERATOR_AS% (%PRIVACY_EMAIL%, Adrien Yvin) if the platform is involved.
 
 ---
 
@@ -15,7 +15,7 @@ We are writing because [Firm name] became aware on [date] of a confidentiality i
 - What we have done: [password reset, new link, monitoring]  
 - What you can do: [beware of phishing; contact us at …]
 
-You may contact [firm privacy contact]. If the software platform was involved, you may also contact Yuzu Solutions Inc., Privacy Officer Adrien Yvin, %PRIVACY_EMAIL%.
+You may contact [firm privacy contact]. If the software platform was involved, you may also contact %OPERATOR_NAME%, Privacy Officer Adrien Yvin, %PRIVACY_EMAIL%.
 
 You may complain to the Office of the Privacy Commissioner of Canada and, in Québec, to the Commission d’accès à l’information.
 
@@ -23,7 +23,7 @@ You may complain to the Office of the Privacy Commissioner of Canada and, in Qu�
 
 ## 2. Outline for a CAI notice (Québec)
 
-Include: your firm identity and privacy contact; dates; description; categories of PI; number of persons; risk of serious injury and why; measures taken; whether individuals and Yuzu were notified.
+Include: your firm identity and privacy contact; dates; description; categories of PI; number of persons; risk of serious injury and why; measures taken; whether individuals and %OPERATOR_NAME% were notified.
 
 File through the CAI’s current incident channel: https://www.cai.gouv.qc.ca/
 

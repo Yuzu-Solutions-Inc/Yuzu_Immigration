@@ -1,6 +1,6 @@
 # Firm privacy notice template (for your clients)
 
-Use this in retainers, your website, or a handout. Replace bracketed text. **You** are the organization responsible for the client file. Yuzu Solutions Inc. only hosts the software.
+Use this in retainers, your website, or a handout. Replace bracketed text. **You** are the organization responsible for the client file. %OPERATOR_AS% only hosts the software.
 
 **Firm name:** [legal name]  
 **Person in charge of personal information:** [name] — [email]  
@@ -8,9 +8,9 @@ Use this in retainers, your website, or a handout. Replace bracketed text. **You
 
 ## 1. Who we are
 
-[Firm name] provides Canadian immigration consulting / legal services. We use **%PRODUCT_NAME%**, software operated by **Yuzu Solutions Inc.**, to keep your file, questionnaires, documents, appointments, and messages.
+[Firm name] provides Canadian immigration consulting / legal services. We use **%PRODUCT_NAME%**, software operated by **%OPERATOR_NAME%**, to keep your file, questionnaires, documents, appointments, messages, and — if we enable them — payments or accounting records.
 
-Yuzu Solutions Inc. is not your consultant. Questions about your file, fees, or immigration advice go to us. Platform privacy questions can also be sent to Yuzu’s Privacy Officer, Adrien Yvin, %PRIVACY_EMAIL%.
+%OPERATOR_NAME% is not your consultant. Questions about your file, fees, or immigration advice go to us. Platform privacy questions can also be sent to %OPERATOR_NAME%’s Privacy Officer, Adrien Yvin, %PRIVACY_EMAIL%.
 
 ## 2. What we collect and why
 
@@ -24,11 +24,11 @@ If your file includes a **child under 14**, we need authorization from a parent 
 
 You may refuse to provide information, but we may then be unable to act. You may withdraw consent, subject to professional retention rules and legal obligations.
 
-Optional: if we connect a calendar or meeting tool (Google, Microsoft, or Zoom), that provider will receive appointment details (such as your name, email, and phone). We will not connect those tools to your file without a professional need.
+Optional: if we connect a calendar or meeting tool (Google, Microsoft, or Zoom), that provider will receive appointment details (such as your name, email, and phone). If we connect Square or Stripe for consultation fees, that processor will receive the amount and the contact details needed to complete payment. If we connect Sage Accounting, Sage will receive your name, email, billing address, and invoice amounts for our own bookkeeping. We will not connect those tools to your file without a professional need.
 
 ## 4. Where information is stored
 
-Primary records are stored in Canada. Some technical providers (application hosting, email, and optional calendars, meetings, or payments) may process information outside Québec, including the United States. We have considered that risk as required by Québec Law 25.
+Primary records are stored in Canada. Some technical providers (application hosting, email, billing, and optional calendars, meetings, payments, or accounting) may process information outside Québec, including the United States. We have considered that risk as required by Québec Law 25.
 
 ## 5. How long we keep it
 
@@ -46,4 +46,4 @@ If a confidentiality incident creates a risk of serious injury (Québec) or a re
 
 ## 8. More detail
 
-Yuzu’s public policy: [your locale]/privacy on the %PRODUCT_NAME% site, or ask us for a copy.
+%OPERATOR_NAME%’s public policy for %PRODUCT_NAME%: [your locale]/privacy on the %PRODUCT_NAME% site, or ask us for a copy.

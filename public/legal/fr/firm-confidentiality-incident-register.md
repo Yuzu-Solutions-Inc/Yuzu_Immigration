@@ -4,7 +4,7 @@ Tenez ce registre pour **tous** les incidents, y compris ceux qui ne sont pas d�
 
 **Cabinet :** ________________________________  
 **Personne responsable :** ________________________________  
-**Responsable chez Yuzu :** Adrien Yvin — %PRIVACY_EMAIL%
+**Responsable chez %OPERATOR_AS% :** Adrien Yvin — %PRIVACY_EMAIL%
 
 | ID | Détecté | Survenu | Faits (sans RP superflus) | Catégories | # personnes | Préjudice sérieux / RRSH ? | Contenu | CAI | CPVP | Personnes avisées | Fermé |
 |---|---|---|---|---|---|---|---|---|---|---|---|

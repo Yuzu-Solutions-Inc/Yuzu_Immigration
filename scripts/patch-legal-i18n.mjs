@@ -11,16 +11,16 @@ const downloads = {
   en: {
     title: "Downloads for consulting firms",
     help: "Templates to help your firm meet PIPEDA and Québec Law 25 duties toward your clients. They are not legal advice. A firm administrator accepts the data processing addendum in-product when creating the workspace. French versions are used when the site language is French.",
-    groupYuzu: "Yuzu Solutions Inc.",
+    groupYuzu: "%OPERATOR_NAME%",
     groupFirm: "Templates for your firm",
     items: {
       governance: {
         label: "Governance summary",
-        hint: "Public description of how Yuzu Solutions Inc. governs personal information.",
+        hint: "Public description of how %OPERATOR_AS% governs personal information.",
       },
       subprocessors: {
         label: "Subprocessors and locations",
-        hint: "Where Yuzu and its vendors process personal information.",
+        hint: "Where %OPERATOR_AS% and its vendors process personal information for %PRODUCT_NAME%.",
       },
       vendorPack: {
         label: "Vendor due-diligence pack",
@@ -63,16 +63,16 @@ const downloads = {
   fr: {
     title: "Téléchargements pour les cabinets",
     help: "Modèles pour aider votre cabinet à respecter la LPRPDE et la Loi 25 du Québec envers vos clients. Ce ne sont pas des avis juridiques. Un administrateur accepte l’avenant de traitement dans le produit à la création de l’espace. Les versions françaises s’affichent lorsque le site est en français.",
-    groupYuzu: "Yuzu Solutions Inc.",
+    groupYuzu: "%OPERATOR_NAME%",
     groupFirm: "Modèles pour votre cabinet",
     items: {
       governance: {
         label: "Résumé de gouvernance",
-        hint: "Description publique de la gouvernance des renseignements personnels chez Yuzu Solutions Inc.",
+        hint: "Description publique de la gouvernance des renseignements personnels chez %OPERATOR_AS%",
       },
       subprocessors: {
         label: "Sous-traitants et lieux",
-        hint: "Où Yuzu et ses fournisseurs traitent les renseignements personnels.",
+        hint: "Où %OPERATOR_AS% et ses fournisseurs traitent les renseignements personnels pour %PRODUCT_NAME%.",
       },
       vendorPack: {
         label: "Dossier de diligence du fournisseur",
@@ -115,16 +115,16 @@ const downloads = {
   es: {
     title: "Descargas para despachos",
     help: "Plantillas para ayudar a su despacho a cumplir PIPEDA y la Ley 25 de Quebec frente a sus clientes. No son asesoramiento jurídico. Un administrador acepta el addendum de tratamiento en el producto al crear el espacio. El paquete en francés se sirve cuando el sitio está en francés; en otros idiomas se sirve el inglés.",
-    groupYuzu: "Yuzu Solutions Inc.",
+    groupYuzu: "%OPERATOR_NAME%",
     groupFirm: "Plantillas para su despacho",
     items: {
       governance: {
         label: "Resumen de gobernanza",
-        hint: "Descripción pública de cómo Yuzu Solutions Inc. gobierna la información personal.",
+        hint: "Descripción pública de cómo %OPERATOR_AS% gobierna la información personal.",
       },
       subprocessors: {
         label: "Subencargados y ubicaciones",
-        hint: "Dónde Yuzu y sus proveedores tratan información personal.",
+        hint: "Dónde %OPERATOR_AS% y sus proveedores tratan información personal para %PRODUCT_NAME%.",
       },
       vendorPack: {
         label: "Paquete de diligencia del proveedor",

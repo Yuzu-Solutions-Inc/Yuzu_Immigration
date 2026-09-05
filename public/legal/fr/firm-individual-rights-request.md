@@ -1,6 +1,6 @@
 # Formulaire de demande relative aux droits d’une personne
 
-Pour l’accès, la rectification, la portabilité ou une autre demande concernant un dossier **tenu par le cabinet**. Le cabinet est responsable. Yuzu Solutions Inc. aide le cabinet via les outils d’export lorsqu’un admin autorisé le demande.
+Pour l’accès, la rectification, la portabilité ou une autre demande concernant un dossier **tenu par le cabinet**. Le cabinet est responsable. %OPERATOR_AS% aide le cabinet via les outils d’export lorsqu’un admin autorisé le demande.
 
 **Cabinet :** ________________________________  
 **Date de réception :** ______________  
@@ -17,7 +17,7 @@ Pour l’accès, la rectification, la portabilité ou une autre demande concerna
 
 - [ ] Accès à mes renseignements personnels  
 - [ ] Rectification (préciser) : ________________________________  
-- [ ] Copie portable des renseignements informatisés (JSON / ZIP disponibles dans Yuzu)  
+- [ ] Copie portable des renseignements informatisés (JSON / ZIP disponibles dans %PRODUCT_NAME%)  
 - [ ] Information sur l’utilisation ou la communication  
 - [ ] Retrait du consentement / suppression (sous réserve du délai de six ans et des devoirs légaux)  
 - [ ] Autre : ________________________________
@@ -30,6 +30,6 @@ Comment le cabinet a vérifié l’identité (évitez d’y copier des numéros 
 
 - [ ] Demandée traitée (date, moyen — p. ex. Export des données / Télécharger le dossier)  
 - [ ] Refus ou limite (motif juridique) : ________________________________  
-- [ ] Transmise à Yuzu Solutions Inc. pour des données de plateforme seulement (%PRIVACY_EMAIL%)
+- [ ] Transmise à %OPERATOR_NAME% pour des données de plateforme seulement (%PRIVACY_EMAIL%)
 
 Traité par : ________________________________ Date : ______________

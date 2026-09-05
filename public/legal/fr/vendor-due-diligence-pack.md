@@ -1,9 +1,9 @@
 # Dossier de diligence — %PRODUCT_NAME%
 
-**Fournisseur :** Yuzu Solutions Inc.  
+**Fournisseur :** %OPERATOR_AS%  
 **Produit :** %PRODUCT_NAME%  
 **Responsable :** Adrien Yvin — %PRIVACY_EMAIL%  
-**Date :** 16 août 2026  
+**Date :** 5 septembre 2026  
 
 Remettez ce document à votre responsable de la protection des renseignements personnels ou à votre conseiller pour une EFVP Loi 25 ou une revue LPRPDE. Ce n’est **pas** une certification.
 
@@ -12,22 +12,25 @@ Remettez ce document à votre responsable de la protection des renseignements pe
 | Partie | Rôle |
 |---|---|
 | Votre cabinet | Responsable des dossiers clients / personnes qui réservent |
-| Yuzu Solutions Inc. | Sous-traitant pour ces dossiers ; responsable des données de compte du personnel nécessaires au service |
+| %OPERATOR_NAME% | Sous-traitant pour ces dossiers ; responsable des données de compte du personnel nécessaires au service |
 
 ## 2. Schéma des données (simplifié)
 
 ```
-Client / personne qui réserve → portail ou réservation → appli Yuzu (Vercel)
+Client / personne qui réserve → portail ou réservation → appli %PRODUCT_NAME% (Vercel)
                                               ↓
                     Champs et fichiers chiffrés → Supabase (AWS Montréal)
                                               ↓
-              Facultatif : courriel Resend, Google / Microsoft / Zoom, Square
+     Facultatif : courriel Resend, Google / Microsoft / Zoom,
+                  paiements Square ou Stripe, Sage Comptabilité
+     Si abonné : facturation Stripe du cabinet
 ```
 
 ## 3. Catégories
 
 Personnel : nom, courriel, rôle, champs IMM 5476, identifiants, courriel du compte connecté.  
-Clients : identité, coordonnées, langue, statut, questionnaires, documents, notes, rendez-vous, liens de réunion.  
+Clients : identité, coordonnées, langue, statut, questionnaires, documents, notes, rendez-vous, liens de réunion, identifiants de paiement si un processeur est connecté.  
+Comptabilité (si Sage est connecté) : nom, courriel, adresse de facturation, montants de facture.  
 Technique : IP et agent utilisateur pour certains audits ; hachage courriel/IP pour les abus de réservation (~14 jours).  
 Absent du produit : appariement biométrique.
 
@@ -42,19 +45,19 @@ Absent du produit : appariement biométrique.
 - Journal d’audit et registre de destruction  
 - Analytique sur consentement seulement  
 
-**Résiduel :** les opérateurs Yuzu qui détiennent la clé d’enveloppe peuvent déchiffrer pour exploiter ou restaurer le service.
+**Résiduel :** les opérateurs de %OPERATOR_NAME% qui détiennent la clé d’enveloppe peuvent déchiffrer pour exploiter ou restaurer le service.
 
 ## 5. Lieux
 
 - Système d’enregistrement : Canada (`ca-central-1`)  
 - Calcul / journaux : Vercel (souvent États-Unis)  
-- Courriel / agendas / réunions / paiements facultatifs : généralement États-Unis  
+- Courriel / agendas / réunions / paiements / comptabilité facultatifs : généralement États-Unis (Sage : généralement Royaume-Uni / États-Unis)  
 
-Voir `yuzu-subprocessors.pdf`. Yuzu a des EFVP internes. **Votre cabinet doit faire la sienne** (`firm-efvp-template.pdf`).
+Voir `yuzu-subprocessors.pdf`. %OPERATOR_NAME% a des EFVP internes. **Votre cabinet doit faire la sienne** (`firm-efvp-template.pdf`).
 
 ## 6. Conservation
 
-Dossiers fermés : six ans dans le produit, puis destruction par un admin. Sauvegardes, courriels et copies d’agenda chez Google/Microsoft/Zoom peuvent durer plus longtemps.
+Dossiers fermés : six ans dans le produit, puis destruction par un admin. Sauvegardes, courriels, copies d’agenda chez Google/Microsoft/Zoom, dossiers de paiement chez Square ou Stripe, et factures chez Sage peuvent durer plus longtemps.
 
 ## 7. Droits des personnes
 
@@ -67,7 +70,7 @@ Les demandes vous sont adressées. Les enjeux de plateforme : %PRIVACY_EMAIL%.
 
 ## 8. Incidents
 
-Yuzu tient un registre et avisera votre cabinet sans délai injustifié. Vous restez responsable d’aviser vos clients et, le cas échéant, la CAI et le CPVP.
+%OPERATOR_NAME% tient un registre et avisera votre cabinet sans délai injustifié. Vous restez responsable d’aviser vos clients et, le cas échéant, la CAI et le CPVP.
 
 ## 9. Contrats
 

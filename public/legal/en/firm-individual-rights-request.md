@@ -1,6 +1,6 @@
 # Individual rights request form
 
-For access, correction, portability, or other privacy requests about a **firm-held** immigration file. The consulting firm is the controller. Yuzu Solutions Inc. will assist the firm using product export tools when asked by an authorized firm admin.
+For access, correction, portability, or other privacy requests about a **firm-held** immigration file. The consulting firm is the controller. %OPERATOR_AS% will assist the firm using product export tools when asked by an authorized firm admin.
 
 **Firm:** ________________________________  
 **Date received:** ______________  
@@ -17,7 +17,7 @@ For access, correction, portability, or other privacy requests about a **firm-he
 
 - [ ] Access to my personal information  
 - [ ] Correction of inaccurate information (describe): ________________________________  
-- [ ] Portable copy of computerized personal information (JSON / ZIP as available in Yuzu)  
+- [ ] Portable copy of computerized personal information (JSON / ZIP as available in %PRODUCT_NAME%)  
 - [ ] Information about how my information is used or shared  
 - [ ] Withdrawal of consent / deletion (subject to six-year closed-file hold and legal duties)  
 - [ ] Other: ________________________________
@@ -30,7 +30,7 @@ Describe how the firm verified identity (do not copy ID numbers into this form i
 
 - [ ] Fulfilled (date, method — e.g. in-product Export data / Download full file)  
 - [ ] Refused or limited (legal reason): ________________________________  
-- [ ] Referred to Yuzu Solutions Inc. for platform-only data (%PRIVACY_EMAIL%)
+- [ ] Referred to %OPERATOR_NAME% for platform-only data (%PRIVACY_EMAIL%)
 
 Handler: ________________________________ Date: ______________
 
