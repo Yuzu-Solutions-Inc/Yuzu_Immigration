@@ -11,6 +11,8 @@ type MarketingNavCopy = {
   signIn: string;
   cta: string;
   footerTagline: string;
+  skipToContent: string;
+  navLabel: string;
 };
 
 export function MarketingTestingBanner({ children }: { children: string }) {
@@ -30,7 +32,16 @@ export function MarketingHeader({
 }) {
   return (
     <header className="relative z-20 border-b border-brand/5 bg-canvas/80 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-6xl min-w-0 items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand focus:shadow-lg"
+      >
+        {copy.skipToContent}
+      </a>
+      <nav
+        aria-label={copy.navLabel}
+        className="mx-auto flex w-full max-w-6xl min-w-0 items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4"
+      >
         <div className="flex min-w-0 items-center gap-5">
           <BrandLogo size="md" className="shrink-0" />
           <Link
@@ -76,7 +87,7 @@ export function MarketingHeader({
             {copy.cta}
           </Link>
         </div>
-      </div>
+      </nav>
     </header>
   );
 }

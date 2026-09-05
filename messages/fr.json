@@ -23,6 +23,10 @@
     "error": "Ce PDF n’a pas pu s’afficher ici. Téléchargez-le et ouvrez-le dans Adobe Acrobat."
   },
   "home": {
+    "metaTitle": "%PRODUCT_NAME% — CRM pour consultants en immigration canadienne",
+    "metaDescription": "CRM de pratique pour consultants et avocats en immigration canadienne. Clients, formulaires IRCC, réservation et paiements, données au Canada. Essai 30 jours, sans carte.",
+    "skipToContent": "Aller au contenu",
+    "navLabel": "Principal",
     "audience": "Pour les consultants et avocats en immigration",
     "title": "Gérez votre pratique d’immigration dans un espace sécurisé",
     "subtitle": "Clients, dossiers, formulaires IRCC, réservation et paiements — pensé pour l’immigration canadienne.",
@@ -273,6 +277,29 @@
       }
     },
     "securityCta": "Lire la politique de confidentialité",
+    "faq": {
+      "title": "Questions des consultants en immigration",
+      "audience": {
+        "q": "%PRODUCT_NAME% s’adresse-t-il aux consultants en immigration canadienne ?",
+        "a": "Oui. C’est un logiciel de pratique pour consultants et avocats en immigration canadienne — clients, formulaires IRCC, réservation et paiements dans un même espace."
+      },
+      "ai": {
+        "q": "%PRODUCT_NAME% utilise-t-il l’IA avec les dossiers clients ?",
+        "a": "Non. Les questionnaires, le remplissage des PDF, les réservations et la révision des documents reposent sur de la logique logicielle. Nous n’envoyons pas les dossiers clients à des fournisseurs d’IA générative."
+      },
+      "data": {
+        "q": "Où sont stockées les données clients ?",
+        "a": "La base de données, l’authentification et les fichiers sont sur Supabase au Canada (AWS Canada Central)."
+      },
+      "trial": {
+        "q": "Comment fonctionne l’essai de 30 jours ?",
+        "a": "Standard est gratuit 30 jours à compter de la création de votre cabinet. Aucune carte de crédit n’est requise."
+      },
+      "languages": {
+        "q": "Mon cabinet peut-il travailler en français ou en espagnol ?",
+        "a": "Oui. Les espaces du personnel et les parcours clients fonctionnent en anglais, en français et en espagnol."
+      }
+    },
     "finalTitle": "Commencer l’essai de 30 jours",
     "finalSubtitle": "Créez l’espace de votre cabinet en quelques minutes et voyez s’il s’adapte à votre pratique.",
     "finalCta": "Essai de 30 jours",
@@ -2839,6 +2866,7 @@
     "disclaimer": "Portail d’immigration privé. Non affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni au Ministère de l’Immigration, de la Francisation et de l’Intégration (MIFI).",
     "privacyLink": "Confidentialité",
     "privacyTitle": "Politique de confidentialité",
+    "privacyMetaDescription": "Comment %PRODUCT_NAME% recueille, utilise et protège les renseignements personnels des cabinets, des clients et des personnes qui réservent. Rédigé pour la LPRPDE et la Loi 25 du Québec.",
     "privacyUpdated": "Dernière mise à jour : 5 septembre 2026",
     "privacyIntro": "%PRODUCT_NAME% est un logiciel de gestion de pratique exploité par %OPERATOR_AS% pour les consultants en immigration au Canada. Cette politique décrit comment les renseignements personnels sont recueillis, utilisés, communiqués et protégés lorsque vous utilisez %PRODUCT_NAME% — y compris l’espace de travail du cabinet, le portail client et les pages de réservation publiques. L’utilisation du service est aussi régie par nos conditions générales.\n\nCette politique appuie l’obligation de rendre compte prévue par la LPRPDE et par la Loi sur la protection des renseignements personnels dans le secteur privé du Québec (Loi 25). Elle ne constitue ni une certification, ni un avis juridique, ni un mandat d’immigration avec %OPERATOR_NAME%",
     "backHome": "Retour à l’accueil",
@@ -2848,6 +2876,7 @@
     "viewTerms": "Voir les conditions générales",
     "termsLink": "Conditions",
     "termsTitle": "Conditions générales",
+    "termsMetaDescription": "Conditions qui régissent l’utilisation de %PRODUCT_NAME% pour les cabinets, le personnel, les clients et les personnes qui réservent. Exploité par %OPERATOR_AS%",
     "termsUpdated": "Dernière mise à jour : 5 septembre 2026",
     "termsIntro": "Ces conditions régissent l’utilisation de %PRODUCT_NAME%, logiciel de gestion de pratique exploité par %OPERATOR_AS% Elles s’appliquent aux cabinets et à leur personnel, ainsi qu’aux clients et aux personnes qui réservent via les liens d’un cabinet.\n\nElles ne constituent pas un avis juridique. Elles ne créent pas de mandat, d’engagement ni de relation professionnelle avec %OPERATOR_NAME% pour des services de consultation, de représentation ou des services juridiques en immigration. Les services d’immigration sont fournis uniquement par le cabinet avec lequel vous transigez.",
     "termsName": "Conditions générales",
@@ -2855,6 +2884,7 @@
     "agreeTerms": "J’ai lu et j’accepte les",
     "agreePrivacy": "J’ai lu et j’accepte la",
     "dpaTitle": "Avenant relatif au traitement des données",
+    "dpaMetaDescription": "Contrat de sous-traitance entre votre cabinet et %OPERATOR_AS% pour %PRODUCT_NAME%. Appuie la responsabilité LPRPDE et Loi 25.",
     "dpaName": "l’avenant relatif au traitement des données",
     "dpaUpdated": "Version {version} · Dernière mise à jour : 5 septembre 2026",
     "agreeDpa": "J’ai lu et j’accepte",

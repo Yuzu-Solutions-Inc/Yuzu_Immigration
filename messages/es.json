@@ -23,6 +23,10 @@
     "error": "No se pudo mostrar este PDF aquí. Descárguelo y ábralo en Adobe Acrobat."
   },
   "home": {
+    "metaTitle": "%PRODUCT_NAME% — CRM para consultores de inmigración canadiense",
+    "metaDescription": "CRM de práctica para consultores y abogados de inmigración canadiense. Clientes, formularios IRCC, reservas y pagos, datos en Canadá. Prueba de 30 días, sin tarjeta.",
+    "skipToContent": "Saltar al contenido",
+    "navLabel": "Principal",
     "audience": "Para consultores y abogados de inmigración",
     "title": "Gestione su práctica de inmigración en un espacio seguro",
     "subtitle": "Clientes, expedientes, formularios IRCC, reservas y pagos — pensado para inmigración canadiense.",
@@ -273,6 +277,29 @@
       }
     },
     "securityCta": "Leer la política de privacidad",
+    "faq": {
+      "title": "Preguntas de consultores de inmigración",
+      "audience": {
+        "q": "¿%PRODUCT_NAME% es para consultores de inmigración canadiense?",
+        "a": "Sí. Es software de práctica para consultores y abogados de inmigración canadiense: clientes, formularios IRCC, reservas y pagos en un mismo espacio."
+      },
+      "ai": {
+        "q": "¿%PRODUCT_NAME% usa IA con los expedientes de clientes?",
+        "a": "No. Los cuestionarios, el relleno de PDF, las reservas y la revisión de documentos funcionan con lógica de software. No enviamos expedientes a proveedores de IA generativa."
+      },
+      "data": {
+        "q": "¿Dónde se almacenan los datos de los clientes?",
+        "a": "La base de datos, la autenticación y los archivos están en Supabase en Canadá (AWS Canada Central)."
+      },
+      "trial": {
+        "q": "¿Cómo funciona la prueba de 30 días?",
+        "a": "Standard es gratis 30 días desde que crea su firma. No se requiere tarjeta de crédito."
+      },
+      "languages": {
+        "q": "¿Puede su firma trabajar en francés o español?",
+        "a": "Sí. El espacio del personal y los flujos para clientes funcionan en inglés, francés y español."
+      }
+    },
     "finalTitle": "Empiece la prueba de 30 días",
     "finalSubtitle": "Configure el espacio de su firma en minutos y vea si encaja con su práctica.",
     "finalCta": "Prueba de 30 días",
@@ -2839,6 +2866,7 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacidad",
     "privacyTitle": "Política de privacidad",
+    "privacyMetaDescription": "Cómo %PRODUCT_NAME% recopila, usa y protege la información personal de firmas, clientes y personas que reservan. Redactado para PIPEDA y la Ley 25 de Quebec.",
     "privacyUpdated": "Última actualización: 5 de septiembre de 2026",
     "privacyIntro": "%PRODUCT_NAME% es un software de gestión de práctica operado por %OPERATOR_AS% para consultores de inmigración en Canadá. Esta política describe cómo se recopila, usa, divulga y protege la información personal cuando usa %PRODUCT_NAME% — incluido el espacio de trabajo del consultor, el portal del cliente y las páginas públicas de reserva. El uso del servicio también se rige por nuestros Términos y condiciones.\n\nEsta política apoya la rendición de cuentas prevista por PIPEDA y por la Ley sobre la protección de los datos personales en el sector privado de Quebec (Ley 25). No es una certificación, ni asesoramiento jurídico, ni un contrato de representación con %OPERATOR_NAME%",
     "backHome": "Volver al inicio",
@@ -2848,6 +2876,7 @@
     "viewTerms": "Ver los términos y condiciones",
     "termsLink": "Términos",
     "termsTitle": "Términos y condiciones",
+    "termsMetaDescription": "Términos que rigen el uso de %PRODUCT_NAME% para firmas, personal, clientes y personas que reservan. Operado por %OPERATOR_AS%",
     "termsUpdated": "Última actualización: 5 de septiembre de 2026",
     "termsIntro": "Estos términos rigen el uso de %PRODUCT_NAME%, software de gestión de práctica operado por %OPERATOR_AS% Aplican a las firmas consultoras y su personal, y a los clientes y personas que reservan mediante los enlaces de una firma.\n\nNo son asesoramiento jurídico. No son un mandato, encargo ni relación profesional con %OPERATOR_NAME% para consulta, representación o servicios jurídicos de inmigración. Los servicios de inmigración los presta únicamente la firma con la que usted trata.",
     "termsName": "Términos y condiciones",
@@ -2855,6 +2884,7 @@
     "agreeTerms": "He leído y acepto los",
     "agreePrivacy": "He leído y acepto la",
     "dpaTitle": "Addendum de tratamiento de datos",
+    "dpaMetaDescription": "Contrato de encargado entre su firma y %OPERATOR_AS% para %PRODUCT_NAME%. Apoya la responsabilidad PIPEDA y Ley 25.",
     "dpaName": "Addendum de tratamiento de datos",
     "dpaUpdated": "Versión {version} · Última actualización: 5 de septiembre de 2026",
     "agreeDpa": "He leído y acepto el",

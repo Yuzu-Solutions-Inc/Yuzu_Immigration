@@ -7,6 +7,7 @@ import {
   MarketingTestingBanner,
 } from "@/components/marketing/marketing-chrome";
 import { PricingPlanCards } from "@/components/marketing/pricing-plans";
+import { JsonLd } from "@/components/seo/json-ld";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
 import {
   annualTotal,
@@ -15,6 +16,7 @@ import {
   formatCadYearly,
   PRICING,
 } from "@/lib/marketing/pricing";
+import { faqPageJsonLd } from "@/lib/seo";
 
 const FAQ_KEYS = [
   "trial",
@@ -90,14 +92,23 @@ export async function PricingPage() {
     signIn: home("navSignIn"),
     cta: home("navCta"),
     footerTagline: home("footerTagline"),
+    skipToContent: home("skipToContent"),
+    navLabel: home("navLabel"),
   };
 
   const extraSeat = formatCadMonthly(PRICING.extraSeatMonthly, locale);
+  const faqs = FAQ_KEYS.map((key) => ({
+    question: t(`faq.${key}.q`),
+    answer: t(`faq.${key}.a`, faqParams(key, extraSeat, locale)),
+  }));
 
   return (
-    <main className="relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
+    <div className="relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
+      <JsonLd data={faqPageJsonLd(locale, "/pricing", faqs)} />
       <MarketingHeader copy={nav} active="pricing" />
       <MarketingTestingBanner>{t("testingBanner")}</MarketingTestingBanner>
+
+      <main id="main-content">
 
       <section className="border-b border-border bg-canvas py-12 sm:py-16">
         <div className="mx-auto w-full max-w-6xl space-y-10 px-6">
@@ -160,19 +171,26 @@ export async function PricingPage() {
         </div>
       </section>
 
-      <section className="border-b border-border bg-canvas py-16 sm:py-20">
+      <section
+        id="faq"
+        aria-labelledby="pricing-faq-heading"
+        className="border-b border-border bg-canvas py-16 sm:py-20"
+      >
         <div className="mx-auto w-full max-w-6xl px-6">
-          <h2 className="font-heading text-2xl font-bold tracking-tight text-brand text-pretty sm:text-3xl">
+          <h2
+            id="pricing-faq-heading"
+            className="font-heading text-2xl font-bold tracking-tight text-brand text-pretty sm:text-3xl"
+          >
             {t("faq.title")}
           </h2>
           <dl className="mt-10 grid gap-10 sm:grid-cols-2">
-            {FAQ_KEYS.map((key) => (
-              <div key={key} className="space-y-2">
+            {faqs.map((faq) => (
+              <div key={faq.question} className="space-y-2">
                 <dt className="font-heading text-base font-semibold text-brand">
-                  {t(`faq.${key}.q`)}
+                  {faq.question}
                 </dt>
                 <dd className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
-                  {t(`faq.${key}.a`, faqParams(key, extraSeat, locale))}
+                  {faq.answer}
                 </dd>
               </div>
             ))}
@@ -187,7 +205,8 @@ export async function PricingPage() {
         secondaryCta={home("secondaryCta")}
         note={home("finalNote")}
       />
+      </main>
       <MarketingFooter copy={nav} />
-    </main>
+    </div>
   );
 }

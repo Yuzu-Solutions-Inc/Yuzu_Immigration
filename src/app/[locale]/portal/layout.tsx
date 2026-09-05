@@ -2,8 +2,11 @@ import { cookies } from "next/headers";
 import { setRequestLocale } from "next-intl/server";
 
 import { PortalTopBar } from "@/components/portal/portal-top-bar";
-import { PORTAL_SESSION_COOKIE } from "@/lib/portal/session";
 import { loadPortalHeader } from "@/lib/portal/queries";
+import { PORTAL_SESSION_COOKIE } from "@/lib/portal/session";
+import { noIndexMetadata } from "@/lib/seo";
+
+export const metadata = noIndexMetadata;
 
 export default async function PortalLayout({
   children,

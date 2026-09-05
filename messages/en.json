@@ -23,6 +23,10 @@
     "error": "This PDF could not be displayed here. Download it and open it in Adobe Acrobat."
   },
   "home": {
+    "metaTitle": "%PRODUCT_NAME% — CRM for Canadian immigration consultants",
+    "metaDescription": "Practice CRM for Canadian immigration consultants and lawyers. Clients, IRCC forms, booking, and payments in one Canadian workspace. 30-day trial, no credit card.",
+    "skipToContent": "Skip to content",
+    "navLabel": "Primary",
     "audience": "For immigration consultants and lawyers",
     "title": "Run your immigration practice in one secure workspace",
     "subtitle": "Clients, files, IRCC forms, booking, and payments — built for Canadian immigration work.",
@@ -273,6 +277,29 @@
       }
     },
     "securityCta": "Read the privacy policy",
+    "faq": {
+      "title": "Questions from immigration consultants",
+      "audience": {
+        "q": "Is %PRODUCT_NAME% for Canadian immigration consultants?",
+        "a": "Yes. It is practice software for Canadian immigration consultants and lawyers — clients, IRCC forms, booking, and payments in one workspace."
+      },
+      "ai": {
+        "q": "Does %PRODUCT_NAME% use AI with client files?",
+        "a": "No. Questionnaires, PDF fill, booking, and document review run on software logic. We do not send client files to generative AI providers."
+      },
+      "data": {
+        "q": "Where is client data stored?",
+        "a": "Database, authentication, and file storage run on Supabase in Canada (AWS Canada Central)."
+      },
+      "trial": {
+        "q": "How does the 30-day trial work?",
+        "a": "Standard is free for 30 days from when you create your firm. No credit card is required."
+      },
+      "languages": {
+        "q": "Can my firm work in French or Spanish?",
+        "a": "Yes. Staff and client-facing flows work in English, French, and Spanish."
+      }
+    },
     "finalTitle": "Start your 30-day trial",
     "finalSubtitle": "Set up your firm workspace in minutes and see whether it fits how you already practice.",
     "finalCta": "Start 30-day trial",
@@ -2840,6 +2867,7 @@
     "disclaimer": "Private immigration portal. Not affiliated with Immigration, Refugees and Citizenship Canada (IRCC) or Ministère de l'Immigration, de la Francisation et de l'Intégration (MIFI).",
     "privacyLink": "Privacy",
     "privacyTitle": "Privacy Policy",
+    "privacyMetaDescription": "How %PRODUCT_NAME% collects, uses, and protects personal information for consulting firms, clients, and booking guests. Written for PIPEDA and Québec Law 25.",
     "privacyUpdated": "Last updated: 5 September 2026",
     "privacyIntro": "%PRODUCT_NAME% is practice-management software operated by %OPERATOR_AS% for Canadian immigration consultants. This policy describes how personal information is collected, used, disclosed, and protected when you use %PRODUCT_NAME% — including the consultant workspace, the client portal, and public booking pages. Use of the service is also governed by our Terms and Conditions.\n\nThis policy supports accountability under the federal Personal Information Protection and Electronic Documents Act (PIPEDA) and Québec’s Act respecting the protection of personal information in the private sector (Law 25). It is not a certification, not legal advice, and not a retainer with %OPERATOR_NAME% for immigration services.",
     "backHome": "Back to home",
@@ -2849,6 +2877,7 @@
     "viewTerms": "View terms and conditions",
     "termsLink": "Terms",
     "termsTitle": "Terms and Conditions",
+    "termsMetaDescription": "Terms that govern use of %PRODUCT_NAME% for consulting firms, staff, clients, and booking guests. Operated by %OPERATOR_AS%",
     "termsUpdated": "Last updated: 5 September 2026",
     "termsIntro": "These terms govern use of %PRODUCT_NAME%, practice-management software operated by %OPERATOR_AS% They apply to consulting firms and their staff, and to clients and booking guests who use a firm’s links.\n\nThey are not legal advice. They are not a retainer, engagement, or professional relationship with %OPERATOR_NAME% for immigration consulting, representation, or legal services. Immigration services are provided solely by the consulting firm you deal with.",
     "termsName": "Terms and Conditions",
@@ -2856,6 +2885,7 @@
     "agreeTerms": "I have read and agree to the",
     "agreePrivacy": "I have read and agree to the",
     "dpaTitle": "Firm Data Processing Addendum",
+    "dpaMetaDescription": "Processor contract between your firm and %OPERATOR_AS% for %PRODUCT_NAME%. Supports PIPEDA and Québec Law 25 accountability.",
     "dpaName": "Firm Data Processing Addendum",
     "dpaUpdated": "Version {version} · Last updated: 5 September 2026",
     "agreeDpa": "I have read and agree to the",

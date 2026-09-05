@@ -6,6 +6,9 @@ import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { getSessionUser, getWorkspaceContext } from "@/lib/auth/session";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
+import { noIndexMetadata } from "@/lib/seo";
+
+export const metadata = noIndexMetadata;
 
 export default async function AppDashboardLayout({
   children,

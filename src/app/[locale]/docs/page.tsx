@@ -8,6 +8,7 @@ import {
 } from "@/components/legal/public-info-page";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { publicPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 const ADD_STEPS = ["one", "two", "three", "four", "five"] as const;
@@ -21,10 +22,12 @@ export async function generateMetadata({
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "docs" });
-  return {
+  return publicPageMetadata({
+    locale,
+    path: "/docs",
     title: t("metaTitle"),
     description: t("metaDescription"),
-  };
+  });
 }
 
 export default async function DocsPage({

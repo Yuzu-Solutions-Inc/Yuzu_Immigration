@@ -19,6 +19,11 @@ export async function proxy(request: NextRequest) {
     return updateSession(request);
   }
 
+  const pathname = request.nextUrl.pathname;
+  if (pathname === "/icon" || pathname === "/apple-icon") {
+    return updateSession(request);
+  }
+
   // If Supabase falls back to Site URL (marketing `/` or `/en`) after Google,
   // the PKCE `code` lands on the landing page and is never exchanged.
   if (request.nextUrl.searchParams.has("code")) {
@@ -56,5 +61,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|.*\\..*|api).*)"],
+  matcher: ["/((?!_next|.*\\..*|api|icon|apple-icon).*)"],
 };

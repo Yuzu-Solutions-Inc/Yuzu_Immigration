@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PricingPage } from "@/components/marketing/pricing-page";
+import { publicPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -9,10 +10,12 @@ export async function generateMetadata({
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "pricing" });
-  return {
+  return publicPageMetadata({
+    locale,
+    path: "/pricing",
     title: t("metaTitle"),
     description: t("metaDescription"),
-  };
+  });
 }
 
 export default async function MarketingPricingPage({

@@ -17,7 +17,7 @@ import {
   UsersRound,
   Workflow,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { ComponentType } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -38,6 +38,7 @@ import {
 import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
 import { HeroProductStage } from "@/components/marketing/hero-product-stage";
 import { PricingPlanCards } from "@/components/marketing/pricing-plans";
+import { JsonLd } from "@/components/seo/json-ld";
 import {
   AppHomePreview,
   AppProjectPreview,
@@ -46,6 +47,7 @@ import {
 } from "@/components/marketing/product-previews";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { landingJsonLd } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 const CAPABILITY_KEYS = [
@@ -155,6 +157,8 @@ const INTEGRATION_MARQUEE: IntegrationItem[] = INTEGRATION_GROUPS.flatMap(
 
 const HOW_KEYS = ["one", "two", "three", "four"] as const;
 
+const FAQ_KEYS = ["audience", "ai", "data", "trial", "languages"] as const;
+
 const SECURITY_KEYS = ["canada", "encryption", "access", "privacy"] as const;
 
 const SECURITY_ICONS = {
@@ -227,13 +231,19 @@ function DarkBand({
   children,
   planes = false,
   className,
+  id,
+  "aria-labelledby": ariaLabelledBy,
 }: {
   children: React.ReactNode;
   planes?: boolean;
   className?: string;
+  id?: string;
+  "aria-labelledby"?: string;
 }) {
   return (
     <section
+      id={id}
+      aria-labelledby={ariaLabelledBy}
       className={cn(
         "relative isolate overflow-hidden bg-graphite-900 text-white",
         className,
@@ -274,23 +284,39 @@ function featureIconClass(
 }
 
 export async function LandingPage() {
-  const [t, pricing] = await Promise.all([
+  const [t, pricing, locale] = await Promise.all([
     getTranslations("home"),
     getTranslations("pricing"),
+    getLocale(),
   ]);
   const nav = {
     pricing: t("navPricing"),
     signIn: t("navSignIn"),
     cta: t("navCta"),
     footerTagline: t("footerTagline"),
+    skipToContent: t("skipToContent"),
+    navLabel: t("navLabel"),
   };
+  const faqs = FAQ_KEYS.map((key) => ({
+    question: t(`faq.${key}.q`),
+    answer: t(`faq.${key}.a`),
+  }));
 
   return (
-    <main className="landing-page relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
+    <div className="landing-page relative flex min-h-full flex-1 flex-col overflow-x-hidden bg-canvas">
+      <JsonLd
+        data={landingJsonLd({
+          locale,
+          title: t("metaTitle"),
+          description: t("metaDescription"),
+          faqs,
+        })}
+      />
       <MarketingHeader copy={nav} active="home" />
       <MarketingTestingBanner>{pricing("testingBanner")}</MarketingTestingBanner>
 
-      <section className="relative isolate overflow-hidden bg-graphite-900 text-white">
+      <main id="main-content">
+      <section className="relative isolate overflow-hidden bg-graphite-900 text-white" aria-labelledby="hero-heading">
         <div
           aria-hidden
           className="lp-dark-veil pointer-events-none absolute inset-0"
@@ -310,7 +336,7 @@ export async function LandingPage() {
               <div className="lp-fade lp-delay-1">
                 <BrandLogo size="hero" href={null} inverted />
               </div>
-              <h1 className="lp-fade lp-delay-2 font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+              <h1 id="hero-heading" className="lp-fade lp-delay-2 font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
                 {t("title")}
               </h1>
               <p className="lp-fade lp-delay-3 max-w-xl text-base leading-relaxed text-pretty text-white/70 sm:text-lg">
@@ -366,14 +392,21 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-b border-border bg-canvas py-20 sm:py-24">
+      <section
+        id="product"
+        aria-labelledby="showcases-heading"
+        className="relative overflow-hidden border-b border-border bg-canvas py-20 sm:py-24"
+      >
         <div
           aria-hidden
           className="lp-light-grid pointer-events-none absolute inset-0 opacity-70"
         />
         <div className="relative mx-auto w-full max-w-6xl space-y-20 px-6">
           <LandingReveal>
-            <h2 className="max-w-3xl font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+            <h2
+              id="showcases-heading"
+              className="max-w-3xl font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl"
+            >
               {t("showcases.title")}
             </h2>
           </LandingReveal>
@@ -420,6 +453,7 @@ export async function LandingPage() {
                         ? "order-first"
                         : "order-first lg:order-last",
                     )}
+                    aria-hidden
                   >
                     <div
                       className={cn(
@@ -444,12 +478,15 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <DarkBand>
+      <DarkBand id="integrations" aria-labelledby="integrations-heading">
         <LandingReveal>
           <p className="text-sm font-semibold tracking-[0.16em] text-white/55 uppercase">
             {t("integrations.eyebrow")}
           </p>
-          <h2 className="mt-3 max-w-3xl font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
+          <h2
+            id="integrations-heading"
+            className="mt-3 max-w-3xl font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl"
+          >
             {t("integrations.title")}
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-pretty text-white/70">
@@ -573,14 +610,21 @@ export async function LandingPage() {
         </div>
       </DarkBand>
 
-      <section className="relative overflow-hidden border-b border-border bg-surface py-20 sm:py-24">
+      <section
+        id="features"
+        aria-labelledby="features-heading"
+        className="relative overflow-hidden border-b border-border bg-surface py-20 sm:py-24"
+      >
         <div
           aria-hidden
           className="lp-light-grid pointer-events-none absolute inset-0 opacity-50"
         />
         <div className="relative mx-auto w-full max-w-6xl px-6">
           <LandingReveal>
-            <h2 className="max-w-2xl font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+            <h2
+              id="features-heading"
+              className="max-w-2xl font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl"
+            >
               {t("featuresTitle")}
             </h2>
           </LandingReveal>
@@ -624,10 +668,17 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-b border-border bg-canvas py-20 sm:py-24">
+      <section
+        id="how"
+        aria-labelledby="how-heading"
+        className="relative overflow-hidden border-b border-border bg-canvas py-20 sm:py-24"
+      >
         <div className="relative mx-auto w-full max-w-6xl px-6">
           <LandingReveal>
-            <h2 className="max-w-2xl font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+            <h2
+              id="how-heading"
+              className="max-w-2xl font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl"
+            >
               {t("howTitle")}
             </h2>
           </LandingReveal>
@@ -655,9 +706,12 @@ export async function LandingPage() {
         </div>
       </section>
 
-      <DarkBand>
+      <DarkBand id="security" aria-labelledby="security-heading">
         <LandingReveal>
-          <h2 className="max-w-3xl font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl">
+          <h2
+            id="security-heading"
+            className="max-w-3xl font-heading text-3xl font-bold tracking-tight text-pretty text-white sm:text-4xl"
+          >
             {t("securityTitle")}
           </h2>
         </LandingReveal>
@@ -722,14 +776,21 @@ export async function LandingPage() {
         </LandingReveal>
       </DarkBand>
 
-      <section className="relative overflow-hidden border-b border-border bg-canvas py-20 sm:py-24">
+      <section
+        id="pricing"
+        aria-labelledby="pricing-heading"
+        className="relative overflow-hidden border-b border-border bg-canvas py-20 sm:py-24"
+      >
         <div
           aria-hidden
           className="lp-light-grid pointer-events-none absolute inset-0 opacity-60"
         />
         <div className="relative mx-auto w-full max-w-6xl px-6">
           <LandingReveal>
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl">
+            <h2
+              id="pricing-heading"
+              className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl"
+            >
               {pricing("title")}
             </h2>
             <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-muted-foreground text-pretty">
@@ -743,6 +804,35 @@ export async function LandingPage() {
         </div>
       </section>
 
+      <section
+        id="faq"
+        aria-labelledby="faq-heading"
+        className="relative overflow-hidden border-b border-border bg-surface py-20 sm:py-24"
+      >
+        <div className="relative mx-auto w-full max-w-6xl px-6">
+          <LandingReveal>
+            <h2
+              id="faq-heading"
+              className="font-heading text-3xl font-bold tracking-tight text-brand text-pretty sm:text-4xl"
+            >
+              {t("faq.title")}
+            </h2>
+          </LandingReveal>
+          <dl className="mt-10 grid gap-10 sm:grid-cols-2">
+            {faqs.map((faq) => (
+              <div key={faq.question} className="space-y-2">
+                <dt className="font-heading text-base font-semibold text-brand">
+                  {faq.question}
+                </dt>
+                <dd className="text-[15px] leading-relaxed text-muted-foreground text-pretty">
+                  {faq.answer}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       <MarketingFinalCta
         title={t("finalTitle")}
         subtitle={t("finalSubtitle")}
@@ -751,7 +841,8 @@ export async function LandingPage() {
         note={t("finalNote")}
         atmosphere
       />
+      </main>
       <MarketingFooter copy={nav} />
-    </main>
+    </div>
   );
 }

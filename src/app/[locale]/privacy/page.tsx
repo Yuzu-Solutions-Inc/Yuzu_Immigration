@@ -2,6 +2,22 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LegalDocument } from "@/components/legal/legal-document";
 import { LegalDownloads } from "@/components/legal/legal-downloads";
+import { publicPageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "legal" });
+  return publicPageMetadata({
+    locale,
+    path: "/privacy",
+    title: t("privacyTitle"),
+    description: t("privacyMetaDescription"),
+  });
+}
 
 const SECTIONS = [
   "controller",

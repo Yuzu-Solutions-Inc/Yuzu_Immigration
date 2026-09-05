@@ -2,6 +2,9 @@ import { setRequestLocale } from "next-intl/server";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { LegalLinks } from "@/components/legal/legal-links";
+import { noIndexMetadata } from "@/lib/seo";
+
+export const metadata = noIndexMetadata;
 
 export default async function LoginPage({
   params,

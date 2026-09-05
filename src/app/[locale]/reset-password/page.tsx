@@ -6,6 +6,9 @@ import { LegalLinks } from "@/components/legal/legal-links";
 import { isPasswordResetRequired } from "@/lib/auth/password-reset";
 import { getSessionUser } from "@/lib/auth/session";
 import { toAppLocale } from "@/lib/i18n/locales";
+import { noIndexMetadata } from "@/lib/seo";
+
+export const metadata = noIndexMetadata;
 
 export default async function ResetPasswordPage({
   params,

@@ -2,13 +2,16 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { CreateOrganizationForm } from "@/components/org/create-organization-form";
-import { LegalLinks } from "@/components/legal/legal-links";
 import { SurfaceCard } from "@/components/layout/surface-card";
+import { LegalLinks } from "@/components/legal/legal-links";
+import { CreateOrganizationForm } from "@/components/org/create-organization-form";
 import { acceptPendingInvitationsForUser } from "@/lib/auth/invitations";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
-import { hasAcceptedLegal } from "@/lib/legal/acceptance";
 import { toAppLocale } from "@/lib/i18n/locales";
+import { hasAcceptedLegal } from "@/lib/legal/acceptance";
+import { noIndexMetadata } from "@/lib/seo";
+
+export const metadata = noIndexMetadata;
 
 export default async function OnboardingPage({
   params,

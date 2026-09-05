@@ -8,7 +8,9 @@ import {
   trialEmailUnsubscribed,
   verifyTrialUnsubscribeToken,
 } from "@/lib/email/trial-unsubscribe";
+import { noIndexMetadata } from "@/lib/seo";
 
+export const metadata = noIndexMetadata;
 export const dynamic = "force-dynamic";
 
 export default async function TrialUnsubscribePage({

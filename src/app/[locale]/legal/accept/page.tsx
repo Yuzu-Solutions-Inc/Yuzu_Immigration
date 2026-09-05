@@ -2,11 +2,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { SurfaceCard } from "@/components/layout/surface-card";
 import { AcceptLegalForm } from "@/components/legal/accept-legal-form";
 import { LegalLinks } from "@/components/legal/legal-links";
-import { SurfaceCard } from "@/components/layout/surface-card";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
+import { noIndexMetadata } from "@/lib/seo";
+
+export const metadata = noIndexMetadata;
 
 export const dynamic = "force-dynamic";
 

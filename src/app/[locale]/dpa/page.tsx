@@ -5,6 +5,7 @@ import {
   FIRM_DPA_DOWNLOAD_FILE,
   legalDownloadHref,
 } from "@/lib/legal/downloads";
+import { publicPageMetadata } from "@/lib/seo";
 import { FIRM_DPA_VERSION } from "@/lib/legal/dpa";
 import {
   loadFirmDpaMarkdown,
@@ -52,5 +53,10 @@ export async function generateMetadata({
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "legal" });
-  return { title: t("dpaTitle") };
+  return publicPageMetadata({
+    locale,
+    path: "/dpa",
+    title: t("dpaTitle"),
+    description: t("dpaMetaDescription"),
+  });
 }

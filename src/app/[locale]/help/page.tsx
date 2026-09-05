@@ -8,6 +8,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { product } from "@/lib/brand/product";
+import { publicPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata({
@@ -17,10 +18,12 @@ export async function generateMetadata({
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "help" });
-  return {
+  return publicPageMetadata({
+    locale,
+    path: "/help",
     title: t("metaTitle"),
     description: t("metaDescription"),
-  };
+  });
 }
 
 export default async function HelpPage({
