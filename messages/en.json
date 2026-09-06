@@ -494,6 +494,12 @@
     "saved": "Modules updated.",
     "disableKeepsData": "Turning a module off hides it from the app. Existing records stay in the database.",
     "financeComingSoon": "Finance screens from Yuzu Finance are being ported onto this design system. Partners and billing projects will land here.",
+    "groups": {
+      "practice": {
+        "name": "Services, bookings, and contracts",
+        "help": "Public booking pages, the service catalog, and e-sign. These depend on each other, so they turn on as one set."
+      }
+    },
     "items": {
       "finance": {
         "name": "Dossierly Finance",

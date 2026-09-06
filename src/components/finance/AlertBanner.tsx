@@ -14,5 +14,5 @@ export function AlertBanner({
         ? 'border-border bg-surface text-foreground'
         : 'border-border bg-muted text-foreground'
 
-  return <div className={`rounded-xl border px-4 py-3 text-sm ${styles}`}>{children}</div>
+  return <div className={`rounded-xl border px-4 py-3 text-sm shadow-elevated ${styles}`}>{children}</div>
 }

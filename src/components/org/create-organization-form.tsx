@@ -19,7 +19,12 @@ import {
   FormStack,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { MODULE_IDS, ONBOARDING_DEFAULT_MODULES, type ModuleId } from "@/lib/modules/catalog";
+import { ModulePicker } from "@/components/settings/module-picker";
+import {
+  ONBOARDING_DEFAULT_MODULES,
+  normalizeModuleSelection,
+  type ModuleId,
+} from "@/lib/modules/catalog";
 
 const initialState: CreateOrgState = {};
 
@@ -105,35 +110,12 @@ export function CreateOrganizationForm({ locale }: { locale: AppLocale }) {
         <legend className="text-sm font-medium text-brand">{tm("title")}</legend>
         <FieldHint>{tm("onboardingHelp")}</FieldHint>
         <input type="hidden" name="modulesPresent" value="1" />
-        {MODULE_IDS.map((id) => (
-          <label
-            key={id}
-            className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-canvas px-4 py-3"
-          >
-            <input
-              type="checkbox"
-              name="module"
-              value={id}
-              checked={modules.has(id)}
-              onChange={(event) => {
-                setModules((prev) => {
-                  const next = new Set(prev);
-                  if (event.target.checked) next.add(id);
-                  else next.delete(id);
-                  return next;
-                });
-              }}
-              className="mt-1 size-4 accent-action"
-            />
-            <span>
-              <span className="block text-sm font-medium text-brand">
-                {tm(`items.${id}.name`)}
-              </span>
-              <span className="mt-0.5 block text-sm text-muted-foreground">
-                {tm(`items.${id}.help`)}
-              </span>
-            </span>
-          </label>
+        <ModulePicker
+          enabled={modules}
+          onChange={(next) => setModules(new Set(normalizeModuleSelection([...next])))}
+        />
+        {[...modules].map((id) => (
+          <input key={id} type="hidden" name="module" value={id} />
         ))}
       </fieldset>
 

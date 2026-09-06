@@ -20,8 +20,8 @@ function dueLabel(dueDate: string, t: ReturnType<typeof useTranslations>) {
 
 function toneClass(dueDate: string) {
   const t = urgencyTone(dueDate)
-  if (t === 'overdue') return 'text-red-700'
-  if (t === 'soon') return 'text-amber-800'
+  if (t === 'overdue') return 'text-destructive'
+  if (t === 'soon') return 'text-warning-text'
   return 'text-muted-foreground'
 }
 

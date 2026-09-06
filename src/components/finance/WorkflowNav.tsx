@@ -53,7 +53,7 @@ function StepPill({
       <div className="flex items-center gap-2">
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-            active ? 'bg-action text-foreground' : 'bg-muted text-muted-foreground'
+            active ? 'bg-action text-action-foreground' : 'bg-muted text-muted-foreground'
           }`}
         >
           {stepNumber}
@@ -244,7 +244,7 @@ export function StepPanelHeader({
     <div className="ui-card p-4 mb-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3 min-w-0">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-action text-sm font-semibold text-foreground">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-action text-sm font-semibold text-action-foreground">
             {step}
           </span>
           <div className="min-w-0">

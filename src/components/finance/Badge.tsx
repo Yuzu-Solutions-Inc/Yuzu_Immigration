@@ -26,7 +26,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${styles[tone] ?? styles.draft}`}
+      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${styles[tone] ?? styles.draft}`}
     >
       {label}
     </span>

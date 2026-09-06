@@ -2,7 +2,11 @@
 
 import { useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
-import { inputClass } from './Field'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { NativeSelect } from '@/components/ui/native-select'
+import { cn } from '@/lib/utils'
 
 export function ListToolbar({
   search,
@@ -42,51 +46,46 @@ export function ListToolbar({
     <div
       className={
         plain
-          ? 'mb-3 space-y-2'
-          : 'ui-card p-3 sm:p-4 mb-4 space-y-3'
+          ? 'space-y-2'
+          : 'space-y-3 rounded-xl border border-border bg-surface p-3 shadow-elevated sm:p-4'
       }
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
         {!hideSearch && (
-          <div className="relative flex-1 w-full sm:max-w-sm">
-            <input
+          <div className="w-full flex-1 sm:max-w-sm">
+            <Input
               type="search"
-              className={`${inputClass} pl-9`}
+              density="dense"
               placeholder={placeholder}
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               aria-label={t('common.search')}
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none" aria-hidden>
-              ⌕
-            </span>
           </div>
         )}
 
-        <div className="flex items-center gap-2 flex-wrap sm:ml-auto">
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
           {hasFilterControls && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className="sm:hidden"
               onClick={() => setFiltersOpen((o) => !o)}
-              className="sm:hidden min-h-[44px] px-3 rounded-lg border border-border bg-surface text-sm font-medium flex items-center gap-2"
               aria-expanded={filtersOpen}
             >
               {t('common.filters')}
               {activeFilterCount > 0 && (
-                <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-action text-[11px] font-semibold text-foreground px-1">
+                <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-action px-1 text-[11px] font-semibold text-action-foreground">
                   {activeFilterCount}
                 </span>
               )}
-            </button>
+            </Button>
           )}
           {clearVisible && onClearFilters && (
-            <button
-              type="button"
-              onClick={onClearFilters}
-              className="min-h-[44px] sm:min-h-[36px] px-3 rounded-lg border border-border bg-muted text-sm text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
+            <Button type="button" variant="outline" size="sm" onClick={onClearFilters}>
               {t('common.reset')}
-            </button>
+            </Button>
           )}
           {trailing}
         </div>
@@ -94,14 +93,14 @@ export function ListToolbar({
 
       {hasFilterControls && (
         <div
-          className={`${
-            filtersOpen ? 'block' : 'hidden'
-          } sm:block ${plain ? '' : 'pt-1 sm:pt-0 border-t sm:border-t-0 border-border sm:border-0'}`}
+          className={cn(
+            filtersOpen ? 'block' : 'hidden',
+            'sm:block',
+            !plain && 'border-t border-border pt-3 sm:border-0 sm:pt-0',
+          )}
         >
           <div
-            className={`flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end ${
-              plain ? 'sm:pt-0' : 'pt-3 sm:pt-0 gap-3'
-            }`}
+            className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-3"
           >
             {children}
           </div>
@@ -109,7 +108,7 @@ export function ListToolbar({
       )}
 
       {showCount && (
-        <p className={`text-xs text-muted-foreground ${plain ? '' : 'pt-0.5 border-t border-border sm:border-0'}`}>
+        <p className={cn('text-xs text-muted-foreground', !plain && 'sm:pt-0')}>
           {resultCount === totalCount
             ? totalCount === 1
               ? t('common.resultsOne', { count: totalCount })
@@ -135,15 +134,19 @@ export function FilterSelect({
   className?: string
 }) {
   return (
-    <label className={`flex flex-col gap-1 text-sm min-w-[9rem] ${className}`}>
-      <span className="text-muted-foreground text-xs font-medium">{label}</span>
-      <select className="ui-filter-input w-full" value={value} onChange={(e) => onChange(e.target.value)}>
+    <label className={`flex min-w-[9rem] flex-col gap-1 text-sm ${className}`}>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <NativeSelect
+        density="dense"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   )
 }
@@ -162,16 +165,18 @@ export function FilterChips<T extends string>({
   const t = useTranslations('financeApp')
   const resolvedLabel = label ?? t('common.display')
   return (
-    <div className="flex flex-col gap-1 min-w-[12rem]">
-      <span className="text-muted-foreground text-xs font-medium">{resolvedLabel}</span>
+    <div className="flex min-w-[12rem] flex-col gap-1">
+      <span className="text-xs font-medium text-muted-foreground">{resolvedLabel}</span>
       <div className="flex flex-wrap gap-1">
         {options.map((o) => (
           <button
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
-            className={`min-h-[44px] sm:min-h-[36px] px-3 py-2 sm:py-1.5 rounded-lg text-sm transition-colors active:scale-[0.98] ${
-              value === o.value ? 'bg-action/10 font-medium text-foreground ring-1 ring-yuzu/30' : 'text-muted-foreground hover:bg-muted border border-transparent hover:border-border'
+            className={`min-h-[44px] rounded-lg px-3 py-2 text-sm transition-colors active:scale-[0.98] sm:min-h-[36px] sm:py-1.5 ${
+              value === o.value
+                ? 'bg-action/10 font-medium text-foreground ring-1 ring-ring/30'
+                : 'border border-transparent text-muted-foreground hover:border-border hover:bg-muted'
             }`}
           >
             {o.label}
@@ -198,16 +203,16 @@ export function DateRangeFilter({
   const t = useTranslations('financeApp')
   const resolvedLabel = label ?? t('common.period')
   return (
-    <div className="flex flex-col gap-1 min-w-[14rem]">
-      <span className="text-muted-foreground text-xs font-medium">{resolvedLabel}</span>
-      <div className="flex flex-wrap items-center gap-2 ui-card px-2 py-1.5">
+    <div className="flex min-w-[14rem] flex-col gap-1">
+      <span className="text-xs font-medium text-muted-foreground">{resolvedLabel}</span>
+      <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-1.5 text-sm">
-          <span className="text-muted-foreground text-xs">{t('common.from')}</span>
-          <input type="date" className="ui-filter-input py-1.5" value={from} onChange={(e) => onFromChange(e.target.value)} />
+          <span className="text-xs text-muted-foreground">{t('common.from')}</span>
+          <Input type="date" density="dense" value={from} onChange={(e) => onFromChange(e.target.value)} />
         </label>
         <label className="flex items-center gap-1.5 text-sm">
-          <span className="text-muted-foreground text-xs">{t('common.to')}</span>
-          <input type="date" className="ui-filter-input py-1.5" value={to} onChange={(e) => onToChange(e.target.value)} />
+          <span className="text-xs text-muted-foreground">{t('common.to')}</span>
+          <Input type="date" density="dense" value={to} onChange={(e) => onToChange(e.target.value)} />
         </label>
       </div>
     </div>
@@ -219,13 +224,9 @@ export function ClearFiltersButton({ onClick, visible }: { onClick: () => void; 
   const t = useTranslations('financeApp')
   if (!visible) return null
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="min-h-[44px] sm:min-h-[36px] px-3 rounded-lg border border-border bg-muted text-sm text-muted-foreground hover:text-foreground"
-    >
+    <Button type="button" variant="outline" size="sm" onClick={onClick}>
       {t('common.reset')}
-    </button>
+    </Button>
   )
 }
 

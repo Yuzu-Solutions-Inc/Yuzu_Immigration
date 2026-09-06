@@ -494,6 +494,12 @@
     "saved": "Modules mis à jour.",
     "disableKeepsData": "Désactiver un module le masque dans l’application. Les enregistrements restent dans la base.",
     "financeComingSoon": "Les écrans Finance de Yuzu Finance sont en cours de portage sur ce design system. Les partenaires et projets de facturation arriveront ici.",
+    "groups": {
+      "practice": {
+        "name": "Services, réservations et contrats",
+        "help": "Pages de réservation, catalogue de services et signature électronique. Ils dépendent les uns des autres, donc ils s’activent ensemble."
+      }
+    },
     "items": {
       "finance": {
         "name": "Dossierly Finance",

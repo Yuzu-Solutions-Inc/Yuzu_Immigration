@@ -2,14 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   isModuleId,
-  parseModuleIds,
+  normalizeModuleSelection,
   validateModuleSelection,
   type ModuleId,
 } from "@/lib/modules/catalog";
-
-function uniqueSorted(ids: ModuleId[]): ModuleId[] {
-  return [...new Set(ids)];
-}
 
 export async function loadEnabledModules(
   supabase: SupabaseClient,
@@ -25,7 +21,9 @@ export async function loadEnabledModules(
     return [];
   }
 
-  return uniqueSorted((data ?? []).map((row) => row.module_id).filter(isModuleId));
+  return normalizeModuleSelection(
+    (data ?? []).map((row) => row.module_id).filter(isModuleId),
+  );
 }
 
 export async function replaceOrganizationModules(
@@ -33,7 +31,7 @@ export async function replaceOrganizationModules(
   organizationId: string,
   moduleIds: ModuleId[],
 ): Promise<{ error?: string }> {
-  const parsed = uniqueSorted(parseModuleIds(moduleIds));
+  const parsed = normalizeModuleSelection(moduleIds);
   const invalid = validateModuleSelection(parsed);
   if (invalid) {
     return { error: invalid };

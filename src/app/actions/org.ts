@@ -25,7 +25,7 @@ import {
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyOrganizationName } from "@/lib/org/slug";
-import { ONBOARDING_DEFAULT_MODULES, parseModuleIds, validateModuleSelection } from "@/lib/modules/catalog";
+import { ONBOARDING_DEFAULT_MODULES, normalizeModuleSelection, validateModuleSelection } from "@/lib/modules/catalog";
 import { replaceOrganizationModules } from "@/lib/modules/org-modules";
 import { recordAuditEvent } from "@/lib/security/audit";
 
@@ -73,7 +73,7 @@ export async function createOrganizationAction(
   }
 
   const selectedModules = formData.get("modulesPresent")
-    ? parseModuleIds(formData.getAll("module"))
+    ? normalizeModuleSelection(formData.getAll("module"))
     : [...ONBOARDING_DEFAULT_MODULES];
   if (validateModuleSelection(selectedModules)) {
     return { error: "invalid_org" };

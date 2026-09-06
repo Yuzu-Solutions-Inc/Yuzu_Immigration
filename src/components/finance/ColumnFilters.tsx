@@ -2,8 +2,10 @@
 
 import type { ReactNode } from 'react'
 
-const headerControlClass =
-  'w-full min-w-0 min-h-[32px] px-2 py-1 rounded-md border border-border bg-surface text-xs text-foreground font-normal focus:outline-none focus:ring-2 focus:ring-yuzu/40'
+import { Input } from '@/components/ui/input'
+import { NativeSelect } from '@/components/ui/native-select'
+import { listTableHeadClassName } from '@/components/layout/list-layout'
+import { cn } from '@/lib/utils'
 
 export function FilterTh({
   label,
@@ -15,9 +17,9 @@ export function FilterTh({
   className?: string
 }) {
   return (
-    <th className={`px-3 py-2.5 font-medium text-left align-bottom ${className}`}>
-      <div className="flex flex-col gap-1.5 min-w-0">
-        <span className="text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
+    <th className={cn(listTableHeadClassName, 'px-3 text-left font-medium', className)}>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <span className="text-xs tracking-wide text-muted-foreground uppercase">{label}</span>
         {children}
       </div>
     </th>
@@ -26,7 +28,13 @@ export function FilterTh({
 
 export function PlainTh({ children, className = '' }: { children?: ReactNode; className?: string }) {
   return (
-    <th className={`px-3 py-2.5 font-medium text-left align-bottom text-muted-foreground text-xs uppercase tracking-wide ${className}`}>
+    <th
+      className={cn(
+        listTableHeadClassName,
+        'px-3 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase',
+        className,
+      )}
+    >
       {children}
     </th>
   )
@@ -44,9 +52,9 @@ export function HeaderSearch({
   'aria-label'?: string
 }) {
   return (
-    <input
+    <Input
       type="search"
-      className={headerControlClass}
+      density="dense"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
@@ -67,8 +75,8 @@ export function HeaderSelect({
   'aria-label'?: string
 }) {
   return (
-    <select
-      className={headerControlClass}
+    <NativeSelect
+      density="dense"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       aria-label={ariaLabel}
@@ -78,7 +86,7 @@ export function HeaderSelect({
           {o.label}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   )
 }
 
@@ -96,17 +104,17 @@ export function HeaderDateRange({
   'aria-label'?: string
 }) {
   return (
-    <div className="flex flex-col gap-1 min-w-[7.5rem]" aria-label={ariaLabel}>
-      <input
+    <div className="flex min-w-[7.5rem] flex-col gap-1" aria-label={ariaLabel}>
+      <Input
         type="date"
-        className={headerControlClass}
+        density="dense"
         value={from}
         onChange={(e) => onFromChange(e.target.value)}
         aria-label="Du"
       />
-      <input
+      <Input
         type="date"
-        className={headerControlClass}
+        density="dense"
         value={to}
         onChange={(e) => onToChange(e.target.value)}
         aria-label="Au"
@@ -130,7 +138,7 @@ export function FilterSummary({
   actions?: ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 min-h-[2.25rem]">
+    <div className="flex min-h-[2.25rem] items-center justify-between gap-3">
       <p className="text-xs text-muted-foreground">
         {resultCount === totalCount
           ? `${totalCount} résultat${totalCount !== 1 ? 's' : ''}`
@@ -138,13 +146,13 @@ export function FilterSummary({
         {hasFilters && (
           <>
             {' · '}
-            <button type="button" onClick={onClear} className="text-brand hover:underline font-medium">
+            <button type="button" onClick={onClear} className="font-medium text-brand hover:underline">
               Réinitialiser
             </button>
           </>
         )}
       </p>
-      {actions && <div className="flex flex-wrap gap-2 shrink-0">{actions}</div>}
+      {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
     </div>
   )
 }

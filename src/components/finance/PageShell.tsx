@@ -2,13 +2,9 @@
 
 import type { ReactNode } from 'react'
 
-type Width = 'full' | 'wide' | 'narrow'
+import { cn } from '@/lib/utils'
 
-const widthClass: Record<Width, string> = {
-  full: '',
-  wide: 'max-w-6xl',
-  narrow: 'max-w-2xl',
-}
+type Width = 'full' | 'wide' | 'narrow'
 
 export function PageShell({
   children,
@@ -19,6 +15,15 @@ export function PageShell({
   width?: Width
   className?: string
 }) {
-  const spacing = /\bspace-y-/.test(className) ? '' : 'space-y-5'
-  return <div className={`${spacing} ${widthClass[width]} ${className}`.trim()}>{children}</div>
+  return (
+    <div
+      className={cn(
+        'min-w-0 space-y-5',
+        width === 'narrow' && 'max-w-2xl',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
 }

@@ -10,7 +10,7 @@ export function HubSection({ title, children }: { title: string; children: React
   return (
     <section>
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 px-0.5">{title}</h2>
-      <ul className="ui-card divide-y divide-border overflow-hidden">{children}</ul>
+      <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">{children}</ul>
     </section>
   )
 }

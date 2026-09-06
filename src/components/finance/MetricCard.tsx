@@ -21,9 +21,9 @@ export function TrendBadge({ change, label = 'vs mois prec.' }: { change: MomCha
 
   const color =
     change.direction === 'up'
-      ? 'text-emerald-700 bg-emerald-50'
+      ? 'text-success-text bg-success-bg'
       : change.direction === 'down'
-        ? 'text-red-700 bg-red-50'
+        ? 'text-destructive bg-destructive/10'
         : 'text-muted-foreground bg-muted'
 
   const arrow = change.direction === 'up' ? '↑' : change.direction === 'down' ? '↓' : '→'
@@ -80,7 +80,7 @@ export function KpiCard({
 
   if (to) {
     return (
-      <Link href={to} className="block h-full hover:ring-2 hover:ring-yuzu/30 rounded-xl transition-shadow">
+      <Link href={to} className="block h-full rounded-xl transition-shadow hover:ring-2 hover:ring-ring/30">
         {inner}
       </Link>
     )

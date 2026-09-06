@@ -11,6 +11,11 @@ import { ExecutiveBreakdownPanel } from '@/components/finance/ExecutiveBreakdown
 import { TrendBadge } from '@/components/finance/MetricCard'
 import { UpcomingDeadlinesCard } from '@/components/finance/UpcomingDeadlinesCard'
 import { NativeSelect } from '@/components/ui/native-select'
+import {
+  listPageHeaderClassName,
+  listPageSubtitleClassName,
+  listPageTitleClassName,
+} from '@/components/layout/list-layout'
 import { useTranslations } from 'next-intl'
 
 function ActivityMetricRow({
@@ -115,7 +120,7 @@ export function ExecutiveDashboardPage({
 
   if (error) {
     return (
-      <div className="max-w-xl mx-auto ui-card p-6 space-y-3">
+      <div className="mx-auto max-w-xl space-y-3 rounded-xl border border-border bg-surface p-6 shadow-elevated">
         <h1 className="text-lg font-semibold">{t('dashboard.executiveTitle')}</h1>
         <p className="text-sm text-destructive">{error}</p>
       </div>
@@ -126,11 +131,11 @@ export function ExecutiveDashboardPage({
     dues.estimatedRemaining < 0 ? 'text-destructive' : dues.totalDue > 0 ? 'text-foreground' : 'text-brand'
 
   return (
-    <div className={`max-w-[1440px] mx-auto space-y-3 pb-3 ${pending ? "opacity-70" : ""}`}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold leading-tight">{t('dashboard.executiveTitle')}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.executiveSubtitle')}</p>
+    <div className={`space-y-5 ${pending ? "opacity-70" : ""}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className={listPageHeaderClassName}>
+          <h1 className={listPageTitleClassName}>{t('dashboard.executiveTitle')}</h1>
+          <p className={listPageSubtitleClassName}>{t('dashboard.executiveSubtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <NativeSelect

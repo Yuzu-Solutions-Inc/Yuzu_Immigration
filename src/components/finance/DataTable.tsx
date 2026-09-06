@@ -2,6 +2,12 @@
 
 import type { ReactNode } from 'react'
 
+import {
+  ListTableCard,
+  listTableScrollClassName,
+} from '@/components/layout/list-layout'
+import { cn } from '@/lib/utils'
+
 export function DataTable({
   children,
   minWidth = 720,
@@ -12,12 +18,12 @@ export function DataTable({
   className?: string
 }) {
   return (
-    <div className={`bg-surface border border-border rounded-xl overflow-hidden ${className}`}>
-      <div className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+    <ListTableCard className={className}>
+      <div className={cn('overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]', listTableScrollClassName)}>
         <table className="w-full text-sm" style={{ minWidth }}>
           {children}
         </table>
       </div>
-    </div>
+    </ListTableCard>
   )
 }

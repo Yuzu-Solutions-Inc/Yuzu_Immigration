@@ -31,7 +31,7 @@ function ChartShell({
   compact?: boolean
 }) {
   return (
-    <div className={`bg-surface border border-border rounded-xl h-full flex flex-col ${compact ? 'p-3' : 'p-4 sm:p-5'}`}>
+    <div className={`flex h-full flex-col rounded-xl border border-border bg-surface shadow-elevated ${compact ? 'p-3' : 'p-4 sm:p-5'}`}>
       <div className={compact ? 'mb-2' : 'mb-3'}>
         <h3 className="font-semibold text-sm">{title}</h3>
         {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
@@ -75,8 +75,8 @@ function gridLines(min: number, max: number, height: number, width: number) {
     const y = yPos(v, min, max - min || 1, height)
     lines.push(
       <g key={i}>
-        <line x1={0} y1={y} x2={width} y2={y} stroke="#e7e5e4" strokeWidth={1} />
-        <text x={-6} y={y + 4} textAnchor="end" className="fill-stone-400" fontSize={9}>
+        <line x1={0} y1={y} x2={width} y2={y} stroke="var(--border)" strokeWidth={1} />
+        <text x={-6} y={y + 4} textAnchor="end" className="fill-muted-foreground" fontSize={9}>
           {compactCad(v)}
         </text>
       </g>
@@ -135,13 +135,13 @@ export function RevenueTrendChart({
       legend={
         <>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-sky-600" /> Prestations
+            <span className="h-0.5 w-2.5 bg-action" /> Prestations
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-action" /> Facturé
+            <span className="h-0.5 w-2.5 bg-amber" /> Facturé
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-emerald-600" /> Encaissé
+            <span className="h-0.5 w-2.5 bg-success" /> Encaissé
           </span>
         </>
       }
@@ -154,15 +154,15 @@ export function RevenueTrendChart({
             </g>
           ))}
         </g>
-        <path d={workedPath} fill="none" stroke="#0284c7" strokeWidth={2} strokeLinejoin="round" strokeDasharray="5 3" />
-        <path d={invoicedPath} fill="none" stroke="#e5a817" strokeWidth={2.5} strokeLinejoin="round" />
-        <path d={collectedPath} fill="none" stroke="#059669" strokeWidth={2} strokeLinejoin="round" strokeDasharray="2 2" />
+        <path d={workedPath} fill="none" stroke="var(--action)" strokeWidth={2} strokeLinejoin="round" strokeDasharray="5 3" />
+        <path d={invoicedPath} fill="none" stroke="var(--highlight)" strokeWidth={2.5} strokeLinejoin="round" />
+        <path d={collectedPath} fill="none" stroke="var(--success)" strokeWidth={2} strokeLinejoin="round" strokeDasharray="2 2" />
         {points.map((p, i) => {
           const x = pad.left + xPos(i, points.length, innerW)
           const show = points.length <= 6 || i % Math.ceil(points.length / 6) === 0 || i === points.length - 1
           if (!show) return null
           return (
-            <text key={p.month} x={x} y={chartH - 6} textAnchor="middle" className="fill-stone-500" fontSize={9}>
+            <text key={p.month} x={x} y={chartH - 6} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
               {p.label}
             </text>
           )
@@ -196,10 +196,10 @@ export function ProfitabilityChart({ points }: { points: MonthlySeriesPoint[] })
             <span className="w-2.5 h-2.5 rounded-sm bg-action" /> Revenus
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-orange-400" /> Coûts
+            <span className="h-2.5 w-2.5 rounded-sm bg-amber" /> Coûts
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-violet-500" /> Résultat
+            <span className="h-2.5 w-2.5 rounded-sm bg-action" /> Résultat
           </span>
         </>
       }
@@ -209,8 +209,8 @@ export function ProfitabilityChart({ points }: { points: MonthlySeriesPoint[] })
           const y = PAD.top + innerH * (1 - t)
           return (
             <g key={t}>
-              <line x1={PAD.left} y1={y} x2={width - PAD.right} y2={y} stroke="#e7e5e4" strokeWidth={1} />
-              <text x={PAD.left - 6} y={y + 4} textAnchor="end" className="fill-stone-400" fontSize={9}>
+              <line x1={PAD.left} y1={y} x2={width - PAD.right} y2={y} stroke="var(--border)" strokeWidth={1} />
+              <text x={PAD.left - 6} y={y + 4} textAnchor="end" className="fill-muted-foreground" fontSize={9}>
                 {compactCad(maxVal * t)}
               </text>
             </g>
@@ -225,11 +225,11 @@ export function ProfitabilityChart({ points }: { points: MonthlySeriesPoint[] })
           const opY = p.operatingIncome >= 0 ? baseY - opH : baseY
           return (
             <g key={p.month}>
-              <rect x={gx - barW * 1.5 - 2} y={baseY - revH} width={barW} height={revH || 0} rx={2} fill="#e5a817" />
-              <rect x={gx - barW / 2} y={baseY - costH} width={barW} height={costH || 0} rx={2} fill="#fb923c" />
-              <rect x={gx + barW / 2 + 2} y={opY} width={barW} height={opH || 0} rx={2} fill={p.operatingIncome >= 0 ? '#8b5cf6' : '#f87171'} />
+              <rect x={gx - barW * 1.5 - 2} y={baseY - revH} width={barW} height={revH || 0} rx={2} fill="var(--highlight)" />
+              <rect x={gx - barW / 2} y={baseY - costH} width={barW} height={costH || 0} rx={2} fill="var(--highlight)" />
+              <rect x={gx + barW / 2 + 2} y={opY} width={barW} height={opH || 0} rx={2} fill={p.operatingIncome >= 0 ? 'var(--action)' : 'var(--error)'} />
               {(points.length <= 8 || i % Math.ceil(points.length / 8) === 0) && (
-                <text x={gx} y={CHART_H - 8} textAnchor="middle" className="fill-stone-500" fontSize={9}>
+                <text x={gx} y={CHART_H - 8} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
                   {p.label}
                 </text>
               )}
@@ -269,19 +269,19 @@ export function PayrollTrendChart({ points }: { points: MonthlySeriesPoint[] }) 
             </g>
           ))}
         </g>
-        <path d={areaPath} fill="#fff7ed" />
-        <path d={linePath} fill="none" stroke="#ea580c" strokeWidth={2.5} strokeLinejoin="round" />
+        <path d={areaPath} fill="var(--indigo-50)" />
+        <path d={linePath} fill="none" stroke="var(--action)" strokeWidth={2.5} strokeLinejoin="round" />
         {points.map((p, i) => {
           const x = PAD.left + xPos(i, points.length, innerW)
           const y = PAD.top + yPos(p.payrollCost, min, span, innerH)
-          return <circle key={p.month} cx={x} cy={y} r={3.5} fill="#ea580c" />
+          return <circle key={p.month} cx={x} cy={y} r={3.5} fill="var(--action)" />
         })}
         {points.map((p, i) => {
           const x = PAD.left + xPos(i, points.length, innerW)
           const show = points.length <= 6 || i % Math.ceil(points.length / 6) === 0 || i === points.length - 1
           if (!show) return null
           return (
-            <text key={`lbl-${p.month}`} x={x} y={CHART_H - 8} textAnchor="middle" className="fill-stone-500" fontSize={9}>
+            <text key={`lbl-${p.month}`} x={x} y={CHART_H - 8} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
               {p.label}
             </text>
           )
@@ -309,7 +309,7 @@ export function CashFlowChart({ points }: { points: MonthlySeriesPoint[] }) {
             <span className="w-2.5 h-2.5 rounded-sm bg-action" /> Encaissements
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-red-400" /> Décaissements
+            <span className="h-2.5 w-2.5 rounded-sm bg-destructive" /> Décaissements
           </span>
         </>
       }
@@ -319,8 +319,8 @@ export function CashFlowChart({ points }: { points: MonthlySeriesPoint[] }) {
           const y = PAD.top + innerH * (1 - t)
           return (
             <g key={t}>
-              <line x1={PAD.left} y1={y} x2={width - PAD.right} y2={y} stroke="#e7e5e4" strokeWidth={1} />
-              <text x={PAD.left - 6} y={y + 4} textAnchor="end" className="fill-stone-400" fontSize={9}>
+              <line x1={PAD.left} y1={y} x2={width - PAD.right} y2={y} stroke="var(--border)" strokeWidth={1} />
+              <text x={PAD.left - 6} y={y + 4} textAnchor="end" className="fill-muted-foreground" fontSize={9}>
                 {compactCad(maxVal * t)}
               </text>
             </g>
@@ -333,10 +333,10 @@ export function CashFlowChart({ points }: { points: MonthlySeriesPoint[] }) {
           const baseY = PAD.top + innerH
           return (
             <g key={p.month}>
-              <rect x={gx - barW - 1} y={baseY - inH} width={barW} height={inH || 0} rx={2} fill="#e5a817" />
-              <rect x={gx + 1} y={baseY - outH} width={barW} height={outH || 0} rx={2} fill="#f87171" />
+              <rect x={gx - barW - 1} y={baseY - inH} width={barW} height={inH || 0} rx={2} fill="var(--highlight)" />
+              <rect x={gx + 1} y={baseY - outH} width={barW} height={outH || 0} rx={2} fill="var(--error)" />
               {(points.length <= 8 || i % Math.ceil(points.length / 8) === 0) && (
-                <text x={gx} y={CHART_H - 8} textAnchor="middle" className="fill-stone-500" fontSize={9}>
+                <text x={gx} y={CHART_H - 8} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
                   {p.label}
                 </text>
               )}
@@ -398,10 +398,10 @@ export function CapitalChart({
       legend={
         <>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-violet-600" /> Avoir total
+            <span className="h-0.5 w-2.5 bg-action" /> Avoir total
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-emerald-600" /> Trésorerie
+            <span className="h-0.5 w-2.5 bg-success" /> Trésorerie
           </span>
         </>
       }
@@ -414,14 +414,14 @@ export function CapitalChart({
             </g>
           ))}
         </g>
-        {line(equityValues, '#7c3aed', 'equity')}
-        {line(cashValues, '#059669', 'cash')}
+        {line(equityValues, 'var(--action)', 'equity')}
+        {line(cashValues, 'var(--success)', 'cash')}
         {points.map((p, i) => {
           const x = PAD.left + xPos(i, points.length, innerW)
           const show = points.length <= 6 || i % Math.ceil(points.length / 6) === 0 || i === points.length - 1
           if (!show) return null
           return (
-            <text key={p.month} x={x} y={CHART_H - 8} textAnchor="middle" className="fill-stone-500" fontSize={9}>
+            <text key={p.month} x={x} y={CHART_H - 8} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
               {p.label}
             </text>
           )
@@ -434,9 +434,9 @@ export function CapitalChart({
         </div>
         <div className="h-3 rounded-full overflow-hidden flex bg-muted">
           {capPct > 0 && (
-            <div className="bg-violet-500 h-full" style={{ width: `${capPct}%` }} title={`Capital-actions ${formatCad(equity.shareCapital)}`} />
+            <div className="h-full bg-action" style={{ width: `${capPct}%` }} title={`Capital-actions ${formatCad(equity.shareCapital)}`} />
           )}
-          <div className="bg-violet-300 h-full" style={{ width: `${rePct}%` }} title={`BNR ${formatCad(reTotal)}`} />
+          <div className="h-full bg-action/40" style={{ width: `${rePct}%` }} title={`BNR ${formatCad(reTotal)}`} />
         </div>
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>Capital-actions {formatCad(equity.shareCapital)}</span>

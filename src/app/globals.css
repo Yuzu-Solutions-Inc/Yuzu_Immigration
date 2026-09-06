@@ -290,6 +290,50 @@
   .animate-save-pulse {
     animation: save-pulse 1.1s ease-in-out infinite;
   }
+
+  /* Finance port: map leftover Yuzu Finance classes onto Dossierly surface chrome. */
+  .ui-card {
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .ui-metric-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .ui-metric-value {
+    font-family: var(--font-heading), var(--font-sans), sans-serif;
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    color: var(--brand);
+  }
+
+  .ui-filter-input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: var(--field-height-dense);
+    border-radius: 0.5rem;
+    border: 1px solid var(--input);
+    background-color: var(--surface);
+    padding: 0 0.5rem;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    outline: none;
+  }
+
+  .ui-filter-input:focus-visible {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent);
+  }
 }
 
 @keyframes save-pulse {

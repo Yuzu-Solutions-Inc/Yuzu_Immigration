@@ -2,6 +2,12 @@
 
 import type { ReactNode } from 'react'
 import { Link } from '@/i18n/navigation'
+import {
+  listPageHeaderClassName,
+  listPageSubtitleClassName,
+  listPageTitleClassName,
+} from '@/components/layout/list-layout'
+import { cn } from '@/lib/utils'
 
 export function PageHeader({
   title,
@@ -17,21 +23,27 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <div className={`flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between ${className}`}>
-      <div className="min-w-0">
+    <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between', className)}>
+      <div className={listPageHeaderClassName}>
         {backTo && (
-          <Link href={backTo.to} className="inline-flex items-center text-sm text-brand hover:underline mb-1 min-h-[44px] sm:min-h-0">
+          <Link href={backTo.to} className="inline-flex min-h-[44px] items-center text-sm text-brand hover:underline sm:min-h-0">
             ← {backTo.label}
           </Link>
         )}
         {typeof title === 'string' ? (
-          <h1 className="text-2xl font-semibold text-foreground lg:text-xl">{title}</h1>
+          <h1 className={listPageTitleClassName}>{title}</h1>
         ) : (
           title
         )}
-        {subtitle && <div className="hidden text-[15px] text-muted-foreground mt-1 sm:block lg:text-sm">{subtitle}</div>}
+        {subtitle ? (
+          typeof subtitle === 'string' ? (
+            <p className={listPageSubtitleClassName}>{subtitle}</p>
+          ) : (
+            <div className={listPageSubtitleClassName}>{subtitle}</div>
+          )
+        ) : null}
       </div>
-      {actions && <div className="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto">{actions}</div>}
+      {actions && <div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto">{actions}</div>}
     </div>
   )
 }

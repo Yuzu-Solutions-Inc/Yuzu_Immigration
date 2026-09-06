@@ -382,7 +382,7 @@ export function PipelinePage() {
                               min={0}
                               step={0.25}
                               aria-label={`Heures ${project.name} ${week}`}
-                              className="w-full max-w-[72px] mx-auto block px-1.5 py-1 rounded-md border border-border bg-surface text-center text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-yuzu/40 focus:border-ring"
+                              className="mx-auto block w-full max-w-[72px] rounded-lg border border-input bg-surface px-1.5 py-1 text-center text-sm tabular-nums outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                               value={displayHours(project.id, week)}
                               disabled={savingKey === key}
                               onChange={(e) => onHoursChange(project.id, week, e.target.value)}

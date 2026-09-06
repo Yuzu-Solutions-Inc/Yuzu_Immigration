@@ -11,6 +11,15 @@ export const MODULE_IDS = [
 
 export type ModuleId = (typeof MODULE_IDS)[number];
 
+/** Bookings, services, and contracts share catalog, calendar, and e-sign. */
+export const PRACTICE_MODULE_IDS = [
+  "services",
+  "bookings",
+  "contracts",
+] as const satisfies readonly ModuleId[];
+
+export type PracticeModuleId = (typeof PRACTICE_MODULE_IDS)[number];
+
 export type ModuleManifest = {
   id: ModuleId;
   /** i18n key under `modules.items` */
@@ -42,7 +51,7 @@ export const MODULE_CATALOG: Record<ModuleId, ModuleManifest> = {
   bookings: {
     id: "bookings",
     nameKey: "bookings",
-    dependsOn: [],
+    dependsOn: ["services", "contracts"],
     nav: [
       { href: "/calendar", navKey: "calendar" },
       { href: "/bookings", navKey: "bookings" },
@@ -51,13 +60,13 @@ export const MODULE_CATALOG: Record<ModuleId, ModuleManifest> = {
   services: {
     id: "services",
     nameKey: "services",
-    dependsOn: [],
+    dependsOn: ["bookings", "contracts"],
     nav: [{ href: "/services", navKey: "services" }],
   },
   contracts: {
     id: "contracts",
     nameKey: "contracts",
-    dependsOn: [],
+    dependsOn: ["services", "bookings"],
     nav: [],
   },
   payments: {
@@ -78,13 +87,71 @@ export function isModuleId(value: unknown): value is ModuleId {
   );
 }
 
+export function isPracticeModuleId(value: unknown): value is PracticeModuleId {
+  return (
+    typeof value === "string" &&
+    (PRACTICE_MODULE_IDS as readonly string[]).includes(value)
+  );
+}
+
 export function parseModuleIds(values: unknown[]): ModuleId[] {
   return [...new Set(values.filter(isModuleId))];
 }
 
+export function isPracticeBundleEnabled(
+  selected: ReadonlyArray<ModuleId> | ReadonlySet<ModuleId>,
+): boolean {
+  for (const id of PRACTICE_MODULE_IDS) {
+    let found = false;
+    for (const value of selected) {
+      if (value === id) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) return false;
+  }
+  return true;
+}
+
+export function hasAnyPracticeModule(
+  selected: ReadonlyArray<ModuleId> | ReadonlySet<ModuleId>,
+): boolean {
+  for (const value of selected) {
+    if (isPracticeModuleId(value)) return true;
+  }
+  return false;
+}
+
+/** Expand the practice bundle so services, bookings, and contracts stay in sync. */
+export function normalizeModuleSelection(
+  ids: ReadonlyArray<unknown>,
+): ModuleId[] {
+  const set = new Set(parseModuleIds([...ids]));
+  if (hasAnyPracticeModule(set)) {
+    for (const id of PRACTICE_MODULE_IDS) set.add(id);
+  }
+  return MODULE_IDS.filter((id) => set.has(id));
+}
+
+export function togglePracticeBundle(
+  selected: ReadonlySet<ModuleId>,
+  on: boolean,
+): Set<ModuleId> {
+  const next = new Set(selected);
+  for (const id of PRACTICE_MODULE_IDS) {
+    if (on) next.add(id);
+    else next.delete(id);
+  }
+  if (!on && !next.has("finance")) {
+    next.delete("payments");
+  }
+  return next;
+}
+
 export function validateModuleSelection(selected: ModuleId[]): string | null {
-  const set = new Set(selected);
-  for (const id of selected) {
+  const set = new Set(normalizeModuleSelection(selected));
+  for (const id of set) {
     for (const dep of MODULE_CATALOG[id].dependsOn) {
       if (!set.has(dep)) return "missing_dependency";
     }

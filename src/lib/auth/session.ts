@@ -7,7 +7,11 @@ import {
   type OrgRole,
 } from "@/lib/auth/rbac";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
-import { isModuleId, type ModuleId } from "@/lib/modules/catalog";
+import {
+  isModuleId,
+  normalizeModuleSelection,
+  type ModuleId,
+} from "@/lib/modules/catalog";
 
 export type OrgMembership = {
   id: string;
@@ -135,7 +139,9 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
           ),
         },
         enabledModules: modulesTableReady
-          ? (modulesByOrg.get(organization.id as string) ?? [])
+          ? normalizeModuleSelection(
+              modulesByOrg.get(organization.id as string) ?? [],
+            )
           : [],
       };
     })
