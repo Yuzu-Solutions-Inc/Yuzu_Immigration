@@ -24,6 +24,9 @@ const CSP_REPORT_ONLY = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["pdfjs-dist"],
+  typescript: {
+    tsconfigPath: "tsconfig.build.json",
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "6mb",

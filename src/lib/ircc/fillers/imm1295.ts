@@ -7,7 +7,7 @@ import {
   ensureAfterToday,
   ensureOnOrAfterToday,
 } from "../acrobat-constraints";
-import cityCodes from "../codes/city-codes.json";
+import cityCodes from "../codes/city-codes-data";
 import {
   type Imm1294Answers,
   buildFilledForm1,
