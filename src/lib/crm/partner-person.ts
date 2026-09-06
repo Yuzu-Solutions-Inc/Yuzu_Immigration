@@ -29,6 +29,8 @@ type PartnerPersonCtx = {
 
 const PERSON_SELECT =
   "id, partner_id, first_name, last_name, email, phone, preferred_locale, immigration_status, status_expires_at";
+
+function preferredLocaleFromPartner(partner: {
   preferred_locale?: string | null;
   language?: string | null;
 }) {
