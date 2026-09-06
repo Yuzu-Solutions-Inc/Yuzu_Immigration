@@ -6,6 +6,7 @@ import { useFinanceOutlet } from '@/components/finance/finance-outlet'
 import type { Employee, PayFrequency } from '@/lib/finance/types'
 import { formatCad } from '@/lib/finance/format'
 import { employeeDisplayName, grossPerPeriod, payFrequencyLabel, periodsPerYear } from '@/lib/finance/payrollCalc'
+import { CA_PROVINCES } from '@/lib/sage/tax-regions'
 import { Badge } from '@/components/finance/Badge'
 import { Button, tableActionClass } from '@/components/finance/Button'
 import { DataTable } from '@/components/finance/DataTable'
@@ -29,6 +30,9 @@ const emptyEmployee = {
   hire_date: '',
   notes: '',
   over_40_percent_voting: false,
+  province_of_employment: 'QC',
+  td1_federal_claim: '',
+  td1_provincial_claim: '',
 }
 
 export function EmployeesPage() {
@@ -67,6 +71,9 @@ export function EmployeesPage() {
       hire_date: e.hire_date ?? '',
       notes: e.notes ?? '',
       over_40_percent_voting: Boolean(e.over_40_percent_voting),
+      province_of_employment: e.province_of_employment ?? 'QC',
+      td1_federal_claim: e.td1_federal_claim != null ? String(e.td1_federal_claim) : '',
+      td1_provincial_claim: e.td1_provincial_claim != null ? String(e.td1_provincial_claim) : '',
     })
     setEditingId(e.id)
     setOpen(true)
@@ -85,6 +92,9 @@ export function EmployeesPage() {
       hire_date: form.hire_date || null,
       notes: form.notes || null,
       over_40_percent_voting: form.over_40_percent_voting,
+      province_of_employment: form.province_of_employment || 'QC',
+      td1_federal_claim: form.td1_federal_claim ? Number(form.td1_federal_claim) : null,
+      td1_provincial_claim: form.td1_provincial_claim ? Number(form.td1_provincial_claim) : null,
     }
     if (editingId) await db.from('employees').update(payload).eq('id', editingId)
     else await db.from('employees').insert(payload)
@@ -124,6 +134,7 @@ export function EmployeesPage() {
               <th className="px-4 py-3">{t('employees.frequency')}</th>
               <th className="px-4 py-3">{t('employees.grossPerPeriod')}</th>
               <th className="px-4 py-3">{t('employees.estIncome')}</th>
+              <th className="px-4 py-3">{t('employees.province')}</th>
               <th className="px-4 py-3">{t('employees.status')}</th>
               <th className="px-4 py-3" />
             </tr>
@@ -138,6 +149,7 @@ export function EmployeesPage() {
                 <td className="px-4 py-3 text-muted-foreground">
                   {e.estimated_yearly_income != null ? formatCad(e.estimated_yearly_income) : t('common.dash')}
                 </td>
+                <td className="px-4 py-3 text-muted-foreground">{e.province_of_employment ?? 'QC'}</td>
                 <td className="px-4 py-3">
                   <Badge label={e.active ? t('employees.active') : t('employees.inactive')} tone={e.active ? 'active' : 'archived'} />
                 </td>
@@ -214,6 +226,44 @@ export function EmployeesPage() {
               </select>
             </Field>
           </div>
+          <Field label={t('employees.provinceOfEmployment')}>
+            <select
+              className={inputClass}
+              value={form.province_of_employment}
+              onChange={(e) => setForm({ ...form, province_of_employment: e.target.value })}
+            >
+              {CA_PROVINCES.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.code} — {p.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label={t('employees.td1Federal')}>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                className={inputClass}
+                placeholder={t('employees.td1Default')}
+                value={form.td1_federal_claim}
+                onChange={(e) => setForm({ ...form, td1_federal_claim: e.target.value })}
+              />
+            </Field>
+            <Field label={t('employees.td1Provincial')}>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                className={inputClass}
+                placeholder={t('employees.td1Default')}
+                value={form.td1_provincial_claim}
+                onChange={(e) => setForm({ ...form, td1_provincial_claim: e.target.value })}
+              />
+            </Field>
+          </div>
+          <p className="text-xs text-muted-foreground">{t('employees.td1Hint')}</p>
           <label className="flex items-start gap-2 text-sm">
             <input
               type="checkbox"

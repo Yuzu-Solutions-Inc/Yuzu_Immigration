@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import type { SalesTaxPeriod, TaxPeriodStatus } from '@/lib/finance/types'
 import { formatCad, formatDate, todayIso } from '@/lib/finance/format'
 import { matchesSearch, countActiveFilters } from '@/lib/finance/filters'
-import { calculateSalesTaxPeriod } from '@/lib/finance/salesTaxCalc'
+import { calculateSalesTaxPeriod, periodTaxableSupplies } from '@/lib/finance/salesTaxCalc'
+import { buildGst34Worksheet, buildVd458Worksheet } from '@/lib/finance/taxReturns'
 import { Badge } from '@/components/finance/Badge'
 import { Button, tableActionClass } from '@/components/finance/Button'
 import { DataTable } from '@/components/finance/DataTable'
@@ -43,6 +44,10 @@ export function SalesTaxPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [worksheets, setWorksheets] = useState<{
+    gst34: ReturnType<typeof buildGst34Worksheet>
+    vd458: ReturnType<typeof buildVd458Worksheet>
+  } | null>(null)
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -61,24 +66,31 @@ export function SalesTaxPage() {
   }
 
   async function calculateFromData() {
-    const totals = await fetchPeriodTotals(form.period_start, form.period_end)
+    const { totals, supplies } = await fetchPeriodTotals(form.period_start, form.period_end)
     setForm({ ...form, ...totals })
+    setWorksheets({
+      gst34: buildGst34Worksheet({ supplies, totals }),
+      vd458: buildVd458Worksheet({ supplies, totals }),
+    })
   }
 
   async function fetchPeriodTotals(periodStart: string, periodEnd: string) {
     const [inv, exp, ee] = await Promise.all([
-      db.from('invoices').select('gst, qst, invoice_date, status').gte('invoice_date', periodStart).lte('invoice_date', periodEnd),
+      db.from('invoices').select('gst, qst, subtotal, invoice_date, status').gte('invoice_date', periodStart).lte('invoice_date', periodEnd),
       db.from('expenses').select('gst, qst, expense_date, category, payroll_run_id').gte('expense_date', periodStart).lte('expense_date', periodEnd),
       db.from('employee_expenses').select('gst, qst, expense_date, taxable, payroll_run_id').gte('expense_date', periodStart).lte('expense_date', periodEnd),
     ])
-    return calculateSalesTaxPeriod(periodStart, periodEnd, inv.data ?? [], exp.data ?? [], ee.data ?? [])
+    const invoices = inv.data ?? []
+    const totals = calculateSalesTaxPeriod(periodStart, periodEnd, invoices, exp.data ?? [], ee.data ?? [])
+    const supplies = periodTaxableSupplies(periodStart, periodEnd, invoices)
+    return { totals, supplies }
   }
 
   async function save(ev: React.FormEvent) {
     ev.preventDefault()
     const prior = editingId ? rows.find((r) => r.id === editingId) : undefined
     if (blockIfClosed(prior?.period_start, prior?.period_end, form.period_start, form.period_end)) return
-    const totals = await fetchPeriodTotals(form.period_start, form.period_end)
+    const { totals, supplies } = await fetchPeriodTotals(form.period_start, form.period_end)
     const { gst_net, qst_net } = nets(totals.gst_collected, totals.qst_collected, totals.gst_itc, totals.qst_itr)
     const payload = {
       ...form,
@@ -91,6 +103,10 @@ export function SalesTaxPage() {
     }
     if (editingId) await db.from('sales_tax_periods').update(payload).eq('id', editingId)
     else await db.from('sales_tax_periods').insert(payload)
+    setWorksheets({
+      gst34: buildGst34Worksheet({ supplies, totals }),
+      vd458: buildVd458Worksheet({ supplies, totals }),
+    })
     setOpen(false)
     load()
   }
@@ -106,6 +122,7 @@ export function SalesTaxPage() {
   function openNew() {
     setForm(empty)
     setEditingId(null)
+    setWorksheets(null)
     setOpen(true)
   }
 
@@ -122,6 +139,7 @@ export function SalesTaxPage() {
       notes: r.notes ?? '',
     })
     setEditingId(r.id)
+    setWorksheets(null)
     setOpen(true)
   }
 
@@ -202,6 +220,24 @@ export function SalesTaxPage() {
             <Field label={t('salesTax.filingDue')}><input type="date" className={inputClass} value={form.filing_due_date} onChange={(e) => setForm({ ...form, filing_due_date: e.target.value })} /></Field>
           </div>
           <Button type="button" variant="secondary" onClick={calculateFromData}>{t('salesTax.calcFromBooks')}</Button>
+          {worksheets && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl border border-border p-3 space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('salesTax.gst34Title')}</p>
+                <div className="flex justify-between"><span>{t('salesTax.gst34Line101')}</span><span>{formatCad(worksheets.gst34.line101_supplies)}</span></div>
+                <div className="flex justify-between"><span>{t('salesTax.gst34Line103')}</span><span>{formatCad(worksheets.gst34.line103_gstCollected)}</span></div>
+                <div className="flex justify-between"><span>{t('salesTax.gst34Line106')}</span><span>{formatCad(worksheets.gst34.line106_itc)}</span></div>
+                <div className="flex justify-between font-medium"><span>{t('salesTax.gst34Line109')}</span><span>{formatCad(worksheets.gst34.line109_net)}</span></div>
+              </div>
+              <div className="rounded-xl border border-border p-3 space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('salesTax.vd458Title')}</p>
+                <div className="flex justify-between"><span>{t('salesTax.vd458Supplies')}</span><span>{formatCad(worksheets.vd458.totalTaxableSupplies)}</span></div>
+                <div className="flex justify-between"><span>{t('salesTax.vd458Collected')}</span><span>{formatCad(worksheets.vd458.qstCollected)}</span></div>
+                <div className="flex justify-between"><span>{t('salesTax.vd458Itr')}</span><span>{formatCad(worksheets.vd458.itr)}</span></div>
+                <div className="flex justify-between font-medium"><span>{t('salesTax.vd458Net')}</span><span>{formatCad(worksheets.vd458.net)}</span></div>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label={t('salesTax.gstCollected')}><input type="number" step="0.01" className={inputClass} value={form.gst_collected} onChange={(e) => setForm({ ...form, gst_collected: Number(e.target.value) })} /></Field>
             <Field label={t('salesTax.qstCollected')}><input type="number" step="0.01" className={inputClass} value={form.qst_collected} onChange={(e) => setForm({ ...form, qst_collected: Number(e.target.value) })} /></Field>

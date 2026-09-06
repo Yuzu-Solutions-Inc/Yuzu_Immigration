@@ -1,8 +1,12 @@
 import type { Project, TimeEntry } from './types'
 import { effectiveRate, formatCad, lineAmount } from './format'
-import { computeSalesTaxes, round2, type TaxSettings } from './taxes'
+import { computePlaceOfSupply, type PlaceOfSupplyResult } from './placeOfSupply'
+import { normalizeCaRegion } from '../sage/tax-regions'
+import { round2, type TaxBreakdown, type TaxSettings } from './taxes'
 
-export type LineTaxes = ReturnType<typeof computeSalesTaxes>
+export type LineTaxes = TaxBreakdown & {
+  placeOfSupply?: PlaceOfSupplyResult
+}
 
 export interface InvoiceLineDraft {
   project_id: string | null
@@ -25,16 +29,87 @@ export function htLineTotals(subtotal: number): LineTaxes {
   return { subtotal: base, gst: 0, qst: 0, total: base }
 }
 
-export function computeInvoiceTotals(subtotal: number, settings: TaxSettings): LineTaxes {
-  return computeSalesTaxes(subtotal, settings)
+function toInvoiceTaxColumns(pos: PlaceOfSupplyResult, settings: TaxSettings): LineTaxes {
+  if (pos.regime === 'hst') {
+    const gst = settings.charge_gst ? pos.hst : 0
+    return { subtotal: pos.subtotal, gst, qst: 0, total: round2(pos.subtotal + gst), placeOfSupply: pos }
+  }
+  const gst = settings.charge_gst ? pos.gst : 0
+  const qst = settings.charge_qst && pos.regime === 'gst_qst' ? pos.qst : 0
+  return { subtotal: pos.subtotal, gst, qst, total: round2(pos.subtotal + gst + qst), placeOfSupply: pos }
+}
+
+export function computeInvoiceTotals(
+  subtotal: number,
+  settings: TaxSettings,
+  partnerProvince?: string | null
+): LineTaxes {
+  if (!settings.charge_gst && !settings.charge_qst) {
+    const base = round2(subtotal)
+    return { subtotal: base, gst: 0, qst: 0, total: base }
+  }
+  const province = normalizeCaRegion(partnerProvince) ?? 'QC'
+  return toInvoiceTaxColumns(computePlaceOfSupply(subtotal, province), settings)
 }
 
 export function invoiceTotalsFromLines(
   lines: Pick<LineTaxes, 'subtotal'>[],
-  settings: TaxSettings
+  settings: TaxSettings,
+  partnerProvince?: string | null
 ): LineTaxes {
   const subtotal = round2(lines.reduce((s, l) => s + Number(l.subtotal), 0))
-  return computeSalesTaxes(subtotal, settings)
+  return computeInvoiceTotals(subtotal, settings, partnerProvince)
+}
+
+export function invoiceTaxDisplayRows(
+  amounts: { gst: number; qst: number },
+  partnerProvince: string | null | undefined,
+  labels: { gst: string; qst: string; hst: string }
+): { label: string; amount: number }[] {
+  const gst = round2(Number(amounts.gst) || 0)
+  const qst = round2(Number(amounts.qst) || 0)
+  const regime = computePlaceOfSupply(1, normalizeCaRegion(partnerProvince) ?? 'QC').regime
+  const rows: { label: string; amount: number }[] = []
+  if (gst > 0) rows.push({ label: regime === 'hst' ? labels.hst : labels.gst, amount: gst })
+  if (qst > 0) rows.push({ label: labels.qst, amount: qst })
+  return rows
+}
+
+export function salesTaxLinesForInvoice(
+  invoiceId: string,
+  totals: LineTaxes
+): Array<{
+  source_type: 'invoice'
+  source_id: string
+  province: string | null
+  tax_code: string
+  rate: number
+  amount: number
+  recoverable_kind: string
+  recoverable_amount: number
+  collected_account: string | null
+  recoverable_account: string | null
+}> {
+  const pos = totals.placeOfSupply
+  if (!pos || totals.gst + totals.qst <= 0) return []
+  return pos.lines
+    .filter((line) => {
+      if (line.amount <= 0 || line.code === 'PST') return false
+      if (line.code === 'QST') return totals.qst > 0
+      return totals.gst > 0
+    })
+    .map((line) => ({
+      source_type: 'invoice' as const,
+      source_id: invoiceId,
+      province: pos.province,
+      tax_code: line.code,
+      rate: line.rate,
+      amount: line.amount,
+      recoverable_kind: line.recoverableKind,
+      recoverable_amount: 0,
+      collected_account: line.collectedAccount,
+      recoverable_account: line.recoverableAccount,
+    }))
 }
 
 export function buildLineFromTimeEntry(entry: TimeEntry, sortOrder: number): InvoiceLineDraft {

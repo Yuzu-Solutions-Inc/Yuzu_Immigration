@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import type { Partner, Invoice, InvoiceLineItem, OrganizationSettings } from './types'
 import { DEFAULT_CURRENCY, formatCadCode, formatDate } from './format'
-import type { InvoiceLineDraft } from './invoice'
+import { invoiceTaxDisplayRows, type InvoiceLineDraft } from './invoice'
 import { invoiceCopy, partnerInvoiceLanguage } from './invoiceI18n'
 import { formatPartnerPaymentTerms } from './partners'
 import { resolvePaymentInstructions } from './paymentInstructions'
@@ -200,11 +200,20 @@ export async function buildInvoicePdfBlob({
   const rightX = 195
   doc.setFontSize(10)
   if (showTaxes) {
-    doc.text(`${t.subtotal} : ${formatCadCode(Number(invoice.subtotal), lang)}`, rightX, finalY, { align: 'right' })
-    doc.text(`${t.gst} : ${formatCadCode(Number(invoice.gst), lang)}`, rightX, finalY + 6, { align: 'right' })
-    doc.text(`${t.qst} : ${formatCadCode(Number(invoice.qst), lang)}`, rightX, finalY + 12, { align: 'right' })
+    let yTax = finalY
+    doc.text(`${t.subtotal} : ${formatCadCode(Number(invoice.subtotal), lang)}`, rightX, yTax, { align: 'right' })
+    yTax += 6
+    const taxRows = invoiceTaxDisplayRows(
+      { gst: Number(invoice.gst), qst: Number(invoice.qst) },
+      partner.province,
+      { gst: t.gst, qst: t.qst, hst: t.hst }
+    )
+    for (const row of taxRows) {
+      doc.text(`${row.label} : ${formatCadCode(row.amount, lang)}`, rightX, yTax, { align: 'right' })
+      yTax += 6
+    }
     doc.setFontSize(12)
-    doc.text(`${t.total} : ${formatCadCode(Number(invoice.total), lang)}`, rightX, finalY + 20, { align: 'right' })
+    doc.text(`${t.total} : ${formatCadCode(Number(invoice.total), lang)}`, rightX, yTax + 2, { align: 'right' })
   } else {
     doc.setFontSize(12)
     doc.text(`${t.total} : ${formatCadCode(Number(invoice.total), lang)}`, rightX, finalY, { align: 'right' })
@@ -215,7 +224,14 @@ export async function buildInvoicePdfBlob({
     doc.setFontSize(8)
     doc.setTextColor(100)
     const instructionLines = doc.splitTextToSize(paymentInstructions, 180)
-    doc.text(instructionLines, margin, finalY + (showTaxes ? 28 : 12))
+    const taxRowCount = showTaxes
+      ? invoiceTaxDisplayRows(
+          { gst: Number(invoice.gst), qst: Number(invoice.qst) },
+          partner.province,
+          { gst: t.gst, qst: t.qst, hst: t.hst }
+        ).length
+      : 0
+    doc.text(instructionLines, margin, finalY + (showTaxes ? 16 + taxRowCount * 6 : 12))
   }
 
   return doc.output('blob')

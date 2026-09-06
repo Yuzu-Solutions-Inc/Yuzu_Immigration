@@ -231,6 +231,11 @@ export interface PayrollRun {
   hsf_employer: number
   cnesst_employer: number
   cnt_employer?: number
+  qpp2_employee?: number
+  qpp2_employer?: number
+  engine_year?: number | null
+  t4_boxes?: Record<string, number>
+  rl1_boxes?: Record<string, number>
   notes: string | null
   remittance_status: RemittanceStatus
   remittance_date: string | null

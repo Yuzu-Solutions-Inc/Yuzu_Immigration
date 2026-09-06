@@ -18,7 +18,9 @@ import {
   buildLegacyLinesFromTimeEntries,
   buildLineFromFixedProject,
   distinctPoNumbers,
+  invoiceTaxDisplayRows,
   invoiceTotalsFromLines,
+  salesTaxLinesForInvoice,
   type InvoiceLineDraft,
 } from '@/lib/finance/invoice'
 import { DEFAULT_CURRENCY, addDays, formatCad, formatDate, todayIso } from '@/lib/finance/format'
@@ -243,7 +245,8 @@ export function InvoicesPage() {
   function previewTotals() {
     const taxSettings = taxSettingsForCreate()
     if (!taxSettings) return { subtotal: 0, gst: 0, qst: 0, total: 0 }
-    return invoiceTotalsFromLines(previewLines(), taxSettings)
+    const partner = partners.find((p) => p.id === createPartnerId)
+    return invoiceTotalsFromLines(previewLines(), taxSettings, partner?.province)
   }
 
   async function createInvoice() {
@@ -262,7 +265,7 @@ export function InvoicesPage() {
     }
 
     const taxSettings = effectiveTaxSettings(settings, includeSalesTax)
-    const totals = invoiceTotalsFromLines(lines, taxSettings)
+    const totals = invoiceTotalsFromLines(lines, taxSettings, partner.province)
     const invoiceDate = todayIso()
     const entryDates = unbilled.filter((x) => selectedEntryIds.has(x.id)).map((x) => x.entry_date)
     if (blockIfClosed(invoiceDate, ...entryDates)) return
@@ -313,6 +316,14 @@ export function InvoicesPage() {
       alert(lineErr.message)
       await db.from('invoices').delete().eq('id', inv.id)
       return
+    }
+
+    const taxLines = salesTaxLinesForInvoice(inv.id, totals)
+    if (taxLines.length > 0) {
+      const { error: taxLineErr } = await db.from('sales_tax_lines').insert(taxLines)
+      if (taxLineErr) {
+        console.warn('sales_tax_lines insert skipped', taxLineErr.message)
+      }
     }
 
     const entryIds = [...selectedEntryIds]
@@ -539,16 +550,15 @@ export function InvoicesPage() {
               onChange={(e) => setIncludeSalesTax(e.target.checked)}
             />
             <span>
-              <span className="font-medium">Inclure TPS / TVQ sur cette facture</span>
+              <span className="font-medium">{t('invoices.includeTax')}</span>
               <span className="block text-xs text-muted-foreground mt-0.5">
-                Coché par défaut si les numéros TPS/TVQ sont dans Paramètres. Décochez pour une fourniture
-                détaxée ou hors Québec. TPS 5 % et TVQ 9,975 % s&apos;appliquent chacune sur le hors taxes.
+                {t('invoices.includeTaxHint')}
               </span>
             </span>
           </label>
           {includeSalesTax && !taxesEnabledInSettings && (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              Aucune taxe ne sera ajoutée tant que TPS/TVQ ne sont pas activées dans Paramètres.
+              {t('invoices.taxNotEnabled')}
             </p>
           )}
 
@@ -646,14 +656,18 @@ export function InvoicesPage() {
                     </table>
                   </div>
                   <div className="text-right space-y-0.5 pt-2 border-t border-border">
-                    <div>Sous-total : {formatCad(preview.subtotal)}</div>
-                    {showTaxesOnInvoice && (
-                      <>
-                        <div>TPS : {formatCad(preview.gst)}</div>
-                        <div>TVQ : {formatCad(preview.qst)}</div>
-                      </>
-                    )}
-                    <div className="font-semibold">Total : {formatCad(preview.total)}</div>
+                    <div>{t('invoices.subtotal')} : {formatCad(preview.subtotal)}</div>
+                    {showTaxesOnInvoice &&
+                      invoiceTaxDisplayRows(
+                        preview,
+                        partners.find((p) => p.id === createPartnerId)?.province,
+                        { gst: t('invoices.taxGst'), qst: t('invoices.taxQst'), hst: t('invoices.taxHst') }
+                      ).map((row) => (
+                        <div key={row.label}>
+                          {row.label} : {formatCad(row.amount)}
+                        </div>
+                      ))}
+                    <div className="font-semibold">{t('invoices.total')} : {formatCad(preview.total)}</div>
                   </div>
                 </div>
               )}
@@ -704,15 +718,19 @@ export function InvoicesPage() {
             <LineItemsTable lines={lineItems} />
 
             <div className="text-right space-y-1 border-t border-border pt-3">
-              <div>Sous-total : {formatCad(selected.subtotal)}</div>
+              <div>{t('invoices.subtotal')} : {formatCad(selected.subtotal)}</div>
               {(selected.include_sales_tax ?? false) &&
-                (Number(selected.gst) > 0 || Number(selected.qst) > 0) && (
-                <>
-                  <div>TPS : {formatCad(selected.gst)}</div>
-                  <div>TVQ : {formatCad(selected.qst)}</div>
-                </>
-              )}
-              <div className="font-semibold text-lg">Total : {formatCad(selected.total)}</div>
+                (Number(selected.gst) > 0 || Number(selected.qst) > 0) &&
+                invoiceTaxDisplayRows(
+                  { gst: Number(selected.gst), qst: Number(selected.qst) },
+                  partners.find((p) => p.id === selected.partner_id)?.province,
+                  { gst: t('invoices.taxGst'), qst: t('invoices.taxQst'), hst: t('invoices.taxHst') }
+                ).map((row) => (
+                  <div key={row.label}>
+                    {row.label} : {formatCad(row.amount)}
+                  </div>
+                ))}
+              <div className="font-semibold text-lg">{t('invoices.total')} : {formatCad(selected.total)}</div>
             </div>
 
             <DocumentAttachments

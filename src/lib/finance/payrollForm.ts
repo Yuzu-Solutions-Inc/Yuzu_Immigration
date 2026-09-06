@@ -1,10 +1,25 @@
 import type { Employee, EmployeeExpense, PayrollRun, Shareholder } from './types'
-import { payPeriodRange, calculatePayrollDeductions, isEiExemptOver40Voting } from './payrollCalc'
+import {
+  payPeriodRange,
+  calculatePayrollDeductions,
+  employmentProvince,
+  isEiExemptOver40Voting,
+} from './payrollCalc'
 import { ytdFromPayrollRuns } from './payroll'
 import { grossWithTaxableReimbursement, reimbursementTotals } from './reimbursement'
 
 export function recalculatePayrollWithReimbursements(params: {
-  emp: Pick<Employee, 'id' | 'yearly_salary' | 'pay_frequency' | 'estimated_yearly_income' | 'over_40_percent_voting'>
+  emp: Pick<
+    Employee,
+    | 'id'
+    | 'yearly_salary'
+    | 'pay_frequency'
+    | 'estimated_yearly_income'
+    | 'over_40_percent_voting'
+    | 'province_of_employment'
+    | 'td1_federal_claim'
+    | 'td1_provincial_claim'
+  >
   salaryGrossBase: number
   expenses: Pick<EmployeeExpense, 'id' | 'amount' | 'total' | 'taxable'>[]
   selectedIds: Set<string>
@@ -33,6 +48,9 @@ export function recalculatePayrollWithReimbursements(params: {
     eiExempt,
     paymentDate,
     ytd,
+    provinceOfEmployment: employmentProvince(emp),
+    td1FederalClaim: emp.td1_federal_claim ?? null,
+    td1ProvincialClaim: emp.td1_provincial_claim ?? null,
   })
   return {
     pay_period_start: range.start,

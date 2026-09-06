@@ -1,9 +1,11 @@
 import type { PayFrequency } from './types'
 import { addDays } from './format'
 import { round2 } from './taxes'
+import { normalizeCaRegion } from '../sage/tax-regions'
 import {
   calculatePayPeriod,
   EMPTY_PAYROLL_YTD,
+  loadPayrollRates,
   PAYROLL_RATES_YEAR as ENGINE_YEAR,
   periodsPerYear as enginePeriods,
   type CaProvinceCode,
@@ -53,6 +55,19 @@ export interface PayrollDeductions {
   ei_employer: number
   qpip_employer: number
   net_pay: number
+  qpp2_employee: number
+  qpp2_employer: number
+  cnt_employer: number
+  engine_year: number
+  t4_boxes: Record<string, number>
+  rl1_boxes: Record<string, number>
+}
+
+export function employmentProvince(
+  emp: { province_of_employment?: string | null } | string | null | undefined
+): CaProvinceCode {
+  const raw = typeof emp === 'object' && emp ? emp.province_of_employment : emp
+  return normalizeCaRegion(raw) ?? 'QC'
 }
 
 export function calculatePayrollDeductions(params: {
@@ -65,7 +80,9 @@ export function calculatePayrollDeductions(params: {
   extraTaxableAnnual?: number
   /** EI Act s. 5(2)(b): more than 40% of voting shares — not insurable. */
   eiExempt?: boolean
-  provinceOfEmployment?: CaProvinceCode
+  provinceOfEmployment?: CaProvinceCode | string | null
+  td1FederalClaim?: number | null
+  td1ProvincialClaim?: number | null
   paymentDate?: string
   ytd?: PayrollYtd
   rrspThisPeriod?: number
@@ -78,7 +95,7 @@ export function calculatePayrollDeductions(params: {
       : 0
   const extra = Math.max(0, Number(params.extraTaxableThisPeriod ?? extraFromAnnual ?? 0))
   const salaryGross = grossPerPeriod(yearlySalary, payFrequency)
-  const province = params.provinceOfEmployment ?? 'QC'
+  const province = employmentProvince(params.provinceOfEmployment)
   const result = calculatePayPeriod({
     paymentDate: params.paymentDate ?? `${PAYROLL_RATES_YEAR}-06-15`,
     payFrequency,
@@ -89,8 +106,8 @@ export function calculatePayrollDeductions(params: {
     additionalTaxRequested: 0,
     additionalQuebecTaxRequested: 0,
     provinceOfEmployment: province,
-    td1FederalClaim: null,
-    td1ProvincialClaim: null,
+    td1FederalClaim: params.td1FederalClaim ?? null,
+    td1ProvincialClaim: params.td1ProvincialClaim ?? null,
     projectedAnnualIncome: params.estimatedYearlyIncome ?? null,
     pensionableMonths: 12,
     cppQppExempt: false,
@@ -106,6 +123,8 @@ export function calculatePayrollDeductions(params: {
   })
   const pensionEmployee = province === 'QC' ? result.qpp.employeeCombined : result.cpp.employeeCombined
   const pensionEmployer = province === 'QC' ? result.qpp.employerCombined : result.cpp.employerCombined
+  const qpp2Employee = province === 'QC' ? result.qpp.employeeSecond : result.cpp.employeeSecond
+  const qpp2Employer = province === 'QC' ? result.qpp.employerSecond : result.cpp.employerSecond
   return {
     gross_pay: result.grossPay,
     federal_tax: result.federalTax,
@@ -117,6 +136,12 @@ export function calculatePayrollDeductions(params: {
     ei_employer: result.ei.employer,
     qpip_employer: result.qpip.employer,
     net_pay: result.netPay,
+    qpp2_employee: qpp2Employee,
+    qpp2_employer: qpp2Employer,
+    cnt_employer: result.levies.cnt,
+    engine_year: result.year,
+    t4_boxes: result.t4,
+    rl1_boxes: result.rl1,
   }
 }
 
@@ -232,9 +257,16 @@ export function sumEmployerContributions(f: {
   )
 }
 
-export function calculateEmployerLevies(grossPay: number, hsfRate: number, cnesstRate: number) {
+export function calculateEmployerLevies(
+  grossPay: number,
+  hsfRate: number,
+  cnesstRate: number,
+  quebec = true
+) {
+  const rates = loadPayrollRates()
   return {
     hsf_employer: round2(grossPay * hsfRate),
     cnesst_employer: round2(grossPay * cnesstRate),
+    cnt_employer: quebec ? round2(grossPay * rates.cnt.rate) : 0,
   }
 }

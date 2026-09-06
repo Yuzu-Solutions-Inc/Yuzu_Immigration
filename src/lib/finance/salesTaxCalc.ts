@@ -40,6 +40,18 @@ export function invoicePaidThroughDate(
   return paid + 0.005 >= Number(invoice.total)
 }
 
+export function periodTaxableSupplies(
+  periodStart: string,
+  periodEnd: string,
+  invoices: { subtotal?: number; invoice_date: string; status: string }[]
+): number {
+  return round2(
+    invoices
+      .filter((i) => isRevenueInvoice(i.status) && inRange(i.invoice_date, periodStart, periodEnd))
+      .reduce((s, i) => s + Number(i.subtotal ?? 0), 0)
+  )
+}
+
 export function calculateSalesTaxPeriod(
   periodStart: string,
   periodEnd: string,

@@ -13,6 +13,7 @@ import {
   employeeDisplayName,
   EMPLOYEE_DEDUCTION_FIELDS,
   EMPLOYER_CONTRIBUTION_FIELDS,
+  employmentProvince,
   PAYROLL_RATES_YEAR,
   payFrequencyLabel,
   payPeriodRange,
@@ -28,6 +29,7 @@ import {
 } from '@/lib/finance/reimbursement'
 import { round2 } from '@/lib/finance/taxes'
 import { recalculatePayrollWithReimbursements } from '@/lib/finance/payrollForm'
+import { ytdFromPayrollRuns } from '@/lib/finance/payroll'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { payrollLeviesRemittance, payrollRemittancesTotal } from '@/lib/finance/payrollRemittance'
 import { EXPENSE_CATEGORY_LABELS } from '@/lib/finance/chartOfAccounts'
@@ -105,6 +107,10 @@ function payrollFormFromEmployee(
     payFrequency: emp.pay_frequency,
     estimatedYearlyIncome: emp.estimated_yearly_income,
     eiExempt,
+    paymentDate,
+    provinceOfEmployment: employmentProvince(emp),
+    td1FederalClaim: emp.td1_federal_claim ?? null,
+    td1ProvincialClaim: emp.td1_provincial_claim ?? null,
   })
   return {
     employee_id: emp.id,
@@ -339,6 +345,10 @@ export function PayrollPage() {
         employeeId: emp.id,
         shareholders,
       }),
+      paymentDate: form.payment_date,
+      provinceOfEmployment: employmentProvince(emp),
+      td1FederalClaim: emp.td1_federal_claim ?? null,
+      td1ProvincialClaim: emp.td1_provincial_claim ?? null,
     })
     setSalaryGrossBase(calc.gross_pay)
     setForm(applyPayrollRecalc(emp, calc.gross_pay, reimbursableExpenses, selectedExpenseIds, form))
@@ -378,11 +388,40 @@ export function PayrollPage() {
 
     const reimb = reimbursementTotals(reimbursableExpenses, selectedExpenseIds)
     const gross_pay = grossWithTaxableReimbursement(salaryGrossBase, reimb.taxable)
-    const levies = calculateEmployerLevies(gross_pay, levyRates.hsf, levyRates.cnesst)
+    const emp = employees.find((e) => e.id === form.employee_id)
+    const levies = calculateEmployerLevies(
+      gross_pay,
+      levyRates.hsf,
+      levyRates.cnesst,
+      emp ? employmentProvince(emp) === 'QC' : true
+    )
+    const extras = emp
+      ? calculatePayrollDeductions({
+          yearlySalary: Number(emp.yearly_salary),
+          payFrequency: emp.pay_frequency,
+          estimatedYearlyIncome: emp.estimated_yearly_income,
+          extraTaxableThisPeriod: reimb.taxable,
+          eiExempt: isEiExemptOver40Voting({
+            over_40_percent_voting: emp.over_40_percent_voting,
+            employeeId: emp.id,
+            shareholders,
+          }),
+          paymentDate: form.payment_date,
+          provinceOfEmployment: employmentProvince(emp),
+          td1FederalClaim: emp.td1_federal_claim ?? null,
+          td1ProvincialClaim: emp.td1_provincial_claim ?? null,
+          ytd: ytdFromPayrollRuns(
+            rows.filter((r) => r.employee_id === emp.id && r.id !== payEditingId),
+            Number(form.payment_date.slice(0, 4)),
+            form.payment_date
+          ),
+        })
+      : null
     const formWithGross = {
       ...form,
       gross_pay,
       ...levies,
+      cnt_employer: extras?.cnt_employer ?? levies.cnt_employer,
     }
     const salaryNet = calcNet(formWithGross)
     const net_pay = netPayWithReimbursement(salaryNet, reimb.nonTaxable)
@@ -393,6 +432,11 @@ export function PayrollPage() {
       employee_id: form.employee_id,
       remittance_date: form.remittance_date || null,
       remittance_reference: form.remittance_reference || null,
+      qpp2_employee: extras?.qpp2_employee ?? 0,
+      qpp2_employer: extras?.qpp2_employer ?? 0,
+      engine_year: extras?.engine_year ?? PAYROLL_RATES_YEAR,
+      t4_boxes: extras?.t4_boxes ?? {},
+      rl1_boxes: extras?.rl1_boxes ?? {},
     }
     const selectedIds = [...selectedExpenseIds]
     if (payEditingId) {
@@ -438,7 +482,15 @@ export function PayrollPage() {
   const reimbPreview = reimbursementTotals(reimbursableExpenses, selectedExpenseIds)
   const previewSalaryNet = form ? calcNet(form) : 0
   const previewNetPay = netPayWithReimbursement(previewSalaryNet, reimbPreview.nonTaxable)
-  const previewLevies = form ? calculateEmployerLevies(form.gross_pay, levyRates.hsf, levyRates.cnesst) : { hsf_employer: 0, cnesst_employer: 0 }
+  const previewEmp = form ? employees.find((e) => e.id === form.employee_id) : undefined
+  const previewLevies = form
+    ? calculateEmployerLevies(
+        form.gross_pay,
+        levyRates.hsf,
+        levyRates.cnesst,
+        previewEmp ? employmentProvince(previewEmp) === 'QC' : true
+      )
+    : { hsf_employer: 0, cnesst_employer: 0, cnt_employer: 0 }
   const previewRemittance = form
     ? payrollRemittancesTotal({ ...form, ...previewLevies, employer_benefits: form.employer_benefits }) +
       payrollLeviesRemittance(previewLevies)
@@ -726,8 +778,11 @@ export function PayrollPage() {
                     Le FSS s&apos;applique au salaire (y compris actionnaire-dirigeant). Pas d&apos;exclusion 40 %.
                   </p>
                 </Field>
-                <Field label="CNESST (estim.)">
+                <Field label={t('payroll.cnesstEst')}>
                   <input type="number" step="0.01" className={inputClass} readOnly value={previewLevies.cnesst_employer} />
+                </Field>
+                <Field label={t('payroll.cntEst')}>
+                  <input type="number" step="0.01" className={inputClass} readOnly value={previewLevies.cnt_employer} />
                 </Field>
               </div>
               <div className="px-4 pb-3 text-sm text-right text-muted-foreground">
@@ -808,9 +863,9 @@ export function PayrollPage() {
                 <span className="text-muted-foreground">Cotisations employeur</span>
                 <span>{formatCad(sumEmployerContributions({ ...form, ...previewLevies }))}</span>
               </div>
-              {(previewLevies.hsf_employer > 0 || previewLevies.cnesst_employer > 0) && (
+              {(previewLevies.hsf_employer > 0 || previewLevies.cnesst_employer > 0 || previewLevies.cnt_employer > 0) && (
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>HSF + CNESST (estim.)</span>
+                  <span>{t('payroll.hsfCnesstEst')}</span>
                   <span>{formatCad(payrollLeviesRemittance(previewLevies))}</span>
                 </div>
               )}
