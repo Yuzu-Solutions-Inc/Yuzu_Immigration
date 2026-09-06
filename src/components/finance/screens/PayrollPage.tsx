@@ -54,6 +54,7 @@ import { WorkflowFooter } from '@/components/finance/WorkflowFooter'
 import { PageShell } from '@/components/finance/PageShell'
 import { AlertBanner } from '@/components/finance/AlertBanner'
 import { db } from '@/lib/finance/db'
+import { fetchPayrollScreen, type PayrollScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 type CompensationOutletContext = { refreshMetrics?: () => void }
@@ -136,13 +137,13 @@ function payrollFormFromEmployee(
   }
 }
 
-export function PayrollPage() {
+export function PayrollPage({ initial }: { initial?: PayrollScreenData }) {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
   const embedded = pathname.startsWith('/compensation')
   const { refreshMetrics } = useFinanceOutlet<CompensationOutletContext>() ?? {}
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [rows, setRows] = useState<PayrollRun[]>([])
+  const [employees, setEmployees] = useState<Employee[]>(initial?.employees ?? [])
+  const [rows, setRows] = useState<PayrollRun[]>(initial?.rows ?? [])
   const [payOpen, setPayOpen] = useState(false)
   const [form, setForm] = useState<PayrollForm | null>(null)
   const [payEditingId, setPayEditingId] = useState<string | null>(null)
@@ -153,10 +154,10 @@ export function PayrollPage() {
   const [reimbursableExpenses, setReimbursableExpenses] = useState<EmployeeExpense[]>([])
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<string>>(new Set())
   const [salaryGrossBase, setSalaryGrossBase] = useState(0)
-  const [levyRates, setLevyRates] = useState({ hsf: 0.0165, cnesst: 0.01 })
+  const [levyRates, setLevyRates] = useState(initial?.levyRates ?? { hsf: 0.0165, cnesst: 0.01 })
   const [shareholders, setShareholders] = useState<
     Pick<Shareholder, 'employee_id' | 'shares_held' | 'active'>[]
-  >([])
+  >(initial?.shareholders ?? [])
   const { blockIfClosed, isClosed } = usePeriodCloseGuard()
 
   const activeEmployees = useMemo(() => employees.filter((e) => e.active), [employees])
@@ -182,28 +183,16 @@ export function PayrollPage() {
   const hasFilters = !!(search || employeeFilter || dateFrom || dateTo)
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const [emp, pay, settings, sh] = await Promise.all([
-      db.from('employees').select('*').order('last_name').order('first_name'),
-      db
-        .from('payroll_runs')
-        .select('*, employees(first_name, last_name)')
-        .order('payment_date', { ascending: false }),
-      db.from('organization_settings').select('hsf_rate, cnesst_rate').maybeSingle(),
-      db.from('shareholders').select('employee_id, shares_held, active'),
-    ])
-    setEmployees((emp.data as Employee[]) ?? [])
-    setRows((pay.data as PayrollRun[]) ?? [])
-    setShareholders(sh.data ?? [])
-    if (settings.data) {
-      setLevyRates({
-        hsf: Number(settings.data.hsf_rate ?? 0.0165),
-        cnesst: Number(settings.data.cnesst_rate ?? 0.01),
-      })
-    }
+    const data = await fetchPayrollScreen(db)
+    setEmployees(data.employees)
+    setRows(data.rows)
+    setShareholders(data.shareholders)
+    setLevyRates(data.levyRates)
     refreshMetrics?.()
   }
 
@@ -562,11 +551,11 @@ export function PayrollPage() {
             onClear={clearFilters}
             actions={embedded ? payrollActions : undefined}
           />
-          <DataTable minWidth={1100}>
+          <DataTable>
             <thead className="bg-muted text-left">
               <tr>
                 <FilterTh label="Employé">
-                  <div className="flex flex-col gap-1 min-w-[8rem]">
+                  <div className="flex min-w-0 flex-col gap-1">
                     <HeaderSelect
                       value={employeeFilter}
                       onChange={setEmployeeFilter}
@@ -661,7 +650,7 @@ export function PayrollPage() {
         {form && (
           <form onSubmit={savePayroll} className="space-y-3 text-sm">
             <div className="flex flex-wrap items-end gap-3">
-              <Field label={t('common.employee')} className="flex-1 min-w-[200px]">
+              <Field label={t('common.employee')} className="min-w-0 flex-1">
                 <select className={inputClass} required value={form.employee_id} onChange={(e) => onPayrollEmployeeChange(e.target.value)}>
                   {activeEmployees.map((e) => (
                     <option key={e.id} value={e.id}>{employeeDisplayName(e)}</option>

@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 
 import { PeriodCloseProvider } from "@/components/finance/contexts/PeriodCloseContext";
 import { AmountPrivacyProvider } from "@/components/finance/contexts/AmountPrivacyContext";
+import { runFinanceQueryAction } from "@/app/actions/finance-query";
 import { createClient } from "@/lib/supabase/client";
 import { bindFinanceDb, createFinanceDb } from "@/lib/finance/org-db";
 import type { OrgAccessLevel } from "@/lib/auth/rbac";
@@ -18,7 +19,10 @@ export function FinanceSessionProvider({
   role: OrgAccessLevel;
   children: ReactNode;
 }) {
-  const db = useMemo(() => createFinanceDb(createClient(), orgId), [orgId]);
+  const db = useMemo(
+    () => createFinanceDb(createClient(), orgId, { runRead: runFinanceQueryAction }),
+    [orgId],
+  );
   bindFinanceDb(db);
 
   return (

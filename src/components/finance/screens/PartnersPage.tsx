@@ -183,7 +183,7 @@ export function PartnersPage({
             hasFilters={hasFilters}
             onClear={clearFilters}
           />
-          <DataTable minWidth={960}>
+          <DataTable>
             <thead className="bg-muted text-left">
               <tr>
                 <FilterTh label={t('partners.name')}>

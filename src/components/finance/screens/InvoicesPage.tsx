@@ -51,6 +51,7 @@ import { StepActionBar } from '@/components/finance/WorkflowNav'
 import { WorkflowFooter } from '@/components/finance/WorkflowFooter'
 import { PageShell } from '@/components/finance/PageShell'
 import { db } from '@/lib/finance/db'
+import { fetchInvoicesScreen, type InvoicesScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 import { requireOrgId } from '@/lib/finance/workspaceStore'
 
@@ -58,22 +59,22 @@ type BillingOutletContext = { refreshMetrics?: () => void }
 
 function LineItemsTable({ lines }: { lines: (InvoiceLineItem | InvoiceLineDraft)[] }) {
   return (
-    <div className="overflow-x-auto -mx-1">
-      <table className="w-full min-w-[640px] text-sm">
+    <div className="min-w-0">
+      <table className="w-full table-fixed text-sm">
         <thead className="text-muted-foreground text-left border-b border-border">
           <tr>
-            <th className="py-2 pr-2">Date</th>
+            <th className="w-[7rem] py-2 pr-2">Date</th>
             <th className="py-2 pr-2">Description</th>
-            <th className="py-2 pr-2 text-right">Qté</th>
-            <th className="py-2 pr-2 text-right">Prix unit.</th>
-            <th className="py-2 text-right">Montant</th>
+            <th className="w-[4.5rem] py-2 pr-2 text-right">Qté</th>
+            <th className="w-[7rem] py-2 pr-2 text-right">Prix unit.</th>
+            <th className="w-[7rem] py-2 text-right">Montant</th>
           </tr>
         </thead>
         <tbody>
           {lines.map((line, i) => (
             <tr key={'id' in line ? line.id : i} className="border-b border-border">
               <td className="py-2 pr-2 text-muted-foreground">{line.line_date ? formatDate(line.line_date) : '—'}</td>
-              <td className="py-2 pr-2">{line.description}</td>
+              <td className="py-2 pr-2 whitespace-normal break-words">{line.description}</td>
               <td className="py-2 pr-2 text-right text-muted-foreground">
                 {line.unit_label === 'h' ? `${Number(line.quantity).toFixed(2)} h` : '1'}
               </td>
@@ -89,15 +90,15 @@ function LineItemsTable({ lines }: { lines: (InvoiceLineItem | InvoiceLineDraft)
   )
 }
 
-export function InvoicesPage() {
+export function InvoicesPage({ initial }: { initial?: InvoicesScreenData }) {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
   const embedded = pathname.startsWith('/engagements') || pathname.startsWith('/billing')
   const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
   const { blockIfClosed } = usePeriodCloseGuard()
-  const [rows, setRows] = useState<Invoice[]>([])
-  const [partners, setPartners] = useState<Partner[]>([])
-  const [settings, setSettings] = useState<OrganizationSettings | null>(null)
+  const [rows, setRows] = useState<Invoice[]>(initial?.invoices ?? [])
+  const [partners, setPartners] = useState<Partner[]>(initial?.partners ?? [])
+  const [settings, setSettings] = useState<OrganizationSettings | null>(initial?.settings ?? null)
   const [createOpen, setCreateOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [savingPdf, setSavingPdf] = useState(false)
@@ -105,7 +106,9 @@ export function InvoicesPage() {
   const [selected, setSelected] = useState<Invoice | null>(null)
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([])
   const [invoicePoNumbers, setInvoicePoNumbers] = useState<string[]>([])
-  const [createPartnerId, setCreatePartnerId] = useState('')
+  const [createPartnerId, setCreatePartnerId] = useState(
+    () => customerPartners(initial?.partners ?? [])[0]?.id ?? '',
+  )
   const [unbilled, setUnbilled] = useState<TimeEntryWithLines[]>([])
   const [unbilledFixed, setUnbilledFixed] = useState<Project[]>([])
   const [selectedEntryIds, setSelectedEntryIds] = useState<Set<string>>(new Set())
@@ -131,19 +134,16 @@ export function InvoicesPage() {
   const hasFilters = !!(search || partnerFilter || statusFilter || dateFrom || dateTo)
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const [inv, cli, set] = await Promise.all([
-      db.from('invoices').select('*, partners(legal_name)').order('invoice_date', { ascending: false }),
-      db.from('partners').select('*').order('legal_name'),
-      db.from('organization_settings').select('*').maybeSingle(),
-    ])
-    setRows((inv.data as Invoice[]) ?? [])
-    setPartners(cli.data ?? [])
-    setSettings(set.data)
-    const billable = customerPartners(cli.data ?? [])
+    const data = await fetchInvoicesScreen(db)
+    setRows(data.invoices)
+    setPartners(data.partners)
+    setSettings(data.settings)
+    const billable = customerPartners(data.partners)
     if (billable[0]) setCreatePartnerId(billable[0].id)
     refreshMetrics?.()
   }
@@ -633,8 +633,8 @@ export function InvoicesPage() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Aperçu
                   </p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[520px] text-xs">
+                  <div className="min-w-0">
+                    <table className="w-full table-fixed text-xs">
                       <thead className="text-muted-foreground">
                         <tr>
                           <th className="text-left py-1">Description</th>

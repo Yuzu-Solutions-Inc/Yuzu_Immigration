@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/finance/PageHeader'
 import { PageShell } from '@/components/finance/PageShell'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { db } from '@/lib/finance/db'
+import { fetchAdjustmentsScreen, type AdjustmentsScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 const typeKeys: Record<AdjustmentType, string> = {
@@ -47,33 +48,36 @@ function emptyForm(type: AdjustmentType = 'prepaid') {
   }
 }
 
-export function AdjustmentsPage() {
+export function AdjustmentsPage({ initial }: { initial?: AdjustmentsScreenData }) {
   const t = useTranslations('financeApp')
   const { blockIfClosed } = usePeriodCloseGuard()
-  const [rows, setRows] = useState<AccountingAdjustment[]>([])
+  const [rows, setRows] = useState<AccountingAdjustment[]>(initial?.rows ?? [])
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(emptyForm())
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(
+    initial?.error === 'missing'
+      ? t('adjustments.missingTable')
+      : initial?.error ?? null,
+  )
 
   const isManual = form.adjustment_type === 'manual'
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const { data, error } = await db.from('accounting_adjustments').select('*').order('start_date', { ascending: false })
-    if (error) {
+    const data = await fetchAdjustmentsScreen(db)
+    if (data.error) {
       setSaveError(
-        error.message.includes('accounting_adjustments')
-          ? t('adjustments.missingTable')
-          : error.message
+        data.error === 'missing' ? t('adjustments.missingTable') : data.error,
       )
       setRows([])
       return
     }
     setSaveError(null)
-    setRows((data as AccountingAdjustment[]) ?? [])
+    setRows(data.rows)
   }
 
   function setAdjustmentType(type: AdjustmentType) {
@@ -198,7 +202,7 @@ export function AdjustmentsPage() {
         </DataTable>
       )}
 
-      <Modal title={t('adjustments.new')} open={open} onClose={() => setOpen(false)}>
+      <Modal title={t('adjustments.new')} open={open} onClose={() => setOpen(false)} wide>
         <form onSubmit={save} className="space-y-3">
           <Field label={t('adjustments.type')}>
             <select

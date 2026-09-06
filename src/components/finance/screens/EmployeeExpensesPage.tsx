@@ -25,6 +25,10 @@ import { PageHeader } from '@/components/finance/PageHeader'
 import { PageShell } from '@/components/finance/PageShell'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { db } from '@/lib/finance/db'
+import {
+  fetchEmployeeExpensesScreen,
+  type EmployeeExpensesScreenData,
+} from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 const CATEGORIES: ExpenseCategory[] = [
@@ -57,12 +61,12 @@ const empty = {
   notes: '',
 }
 
-export function EmployeeExpensesPage() {
+export function EmployeeExpensesPage({ initial }: { initial?: EmployeeExpensesScreenData }) {
   const t = useTranslations('financeApp')
   const { blockIfClosed } = usePeriodCloseGuard()
-  const [rows, setRows] = useState<EmployeeExpense[]>([])
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [settings, setSettings] = useState<OrganizationSettings | null>(null)
+  const [rows, setRows] = useState<EmployeeExpense[]>(initial?.rows ?? [])
+  const [employees, setEmployees] = useState<Employee[]>(initial?.employees ?? [])
+  const [settings, setSettings] = useState<OrganizationSettings | null>(initial?.settings ?? null)
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(empty)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -102,7 +106,8 @@ export function EmployeeExpensesPage() {
   const unreimbursedTotal = rows.filter((e) => !e.payroll_run_id).reduce((s, e) => s + Number(e.total), 0)
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   useEffect(() => {
@@ -125,17 +130,10 @@ export function EmployeeExpensesPage() {
   }, [open, settings, form.applyTax, taxEntryMode])
 
   async function load() {
-    const [{ data }, { data: emp }, { data: set }] = await Promise.all([
-      db
-        .from('employee_expenses')
-        .select('*, employees(first_name, last_name), payroll_runs(payment_date)')
-        .order('expense_date', { ascending: false }),
-      db.from('employees').select('*').eq('active', true).order('last_name').order('first_name'),
-      db.from('organization_settings').select('*').maybeSingle(),
-    ])
-    setRows((data as EmployeeExpense[]) ?? [])
-    setEmployees((emp as Employee[]) ?? [])
-    setSettings(set.data)
+    const data = await fetchEmployeeExpensesScreen(db)
+    setRows(data.rows)
+    setEmployees(data.employees)
+    setSettings(data.settings)
   }
 
   function onTotalChange(total: number) {

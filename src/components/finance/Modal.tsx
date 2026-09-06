@@ -25,7 +25,7 @@ export function Modal({
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
       <DialogContent
-        className={wide ? "sm:max-w-2xl" : "sm:max-w-md"}
+        className={wide ? "overflow-x-hidden sm:max-w-3xl" : "overflow-x-hidden sm:max-w-xl"}
         showCloseButton
       >
         <DialogHeader>

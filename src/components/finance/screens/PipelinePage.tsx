@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useFinanceOutlet } from '@/components/finance/finance-outlet'
 import type { Project, ProjectWeekPlan } from '@/lib/finance/types'
-import { addDays, formatCad, numberFieldValue, parseNumberField, relationOne, todayIso } from '@/lib/finance/format'
+import { formatCad, numberFieldValue, parseNumberField, relationOne, todayIso } from '@/lib/finance/format'
 import { projectAmountLabel } from '@/lib/finance/invoice'
 import type { TimeEntrySheetSource } from '@/lib/finance/timeEntries'
 import {
@@ -26,6 +26,7 @@ import { Badge } from '@/components/finance/Badge'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { WorkflowFooter } from '@/components/finance/WorkflowFooter'
 import { db } from '@/lib/finance/db'
+import { fetchPipelineScreen, type PipelineScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 type BillingOutletContext = { refreshMetrics?: () => void }
@@ -74,15 +75,15 @@ function VarianceCell({
   )
 }
 
-export function PipelinePage() {
+export function PipelinePage({ initial }: { initial?: PipelineScreenData }) {
   const t = useTranslations('financeApp')
   const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
-  const [projects, setProjects] = useState<PipelineProject[]>([])
-  const [plans, setPlans] = useState<ProjectWeekPlan[]>([])
-  const [timeEntries, setTimeEntries] = useState<TimeEntrySheetSource[]>([])
+  const [projects, setProjects] = useState<PipelineProject[]>(initial?.projects ?? [])
+  const [plans, setPlans] = useState<ProjectWeekPlan[]>(initial?.plans ?? [])
+  const [timeEntries, setTimeEntries] = useState<TimeEntrySheetSource[]>(initial?.timeEntries ?? [])
   const [savingKey, setSavingKey] = useState<string | null>(null)
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState(Boolean(initial) && !initial?.error)
+  const [error, setError] = useState<string | null>(initial?.error ?? null)
   const draftRef = useRef<Map<string, string>>(new Map())
   const scrollerRef = useRef<HTMLDivElement>(null)
   const currentWeekRef = useRef<HTMLTableCellElement>(null)
@@ -142,8 +143,23 @@ export function PipelinePage() {
   }, [visibleProjects, completedWeeks, hoursMap, actualHoursMap])
 
   useEffect(() => {
-    load()
+    if (initial && !initial.error) return
+    void load()
   }, [])
+
+  async function load() {
+    setError(null)
+    const data = await fetchPipelineScreen(db)
+    if (data.error) {
+      setError(data.error)
+      return
+    }
+    setProjects(data.projects)
+    setPlans(data.plans)
+    setTimeEntries(data.timeEntries)
+    setLoaded(true)
+    refreshMetrics?.()
+  }
 
   // Past weeks push the current week off-screen, so land the view on it once data is in.
   useEffect(() => {
@@ -155,40 +171,6 @@ export function PipelinePage() {
     scroller.scrollLeft += offset - PROJECT_COL_WIDTH
     didScrollToCurrentWeek.current = true
   }, [loaded, weeks])
-
-  async function load() {
-    setError(null)
-    const periodEnd = addDays(horizonWeeks[horizonWeeks.length - 1], 6)
-    const [p, w, t] = await Promise.all([
-      db.from('projects').select('id, name, billing_type, default_hourly_rate, fixed_price, status, partner_id, partners(legal_name)').order('name'),
-      db.from('project_week_plans').select('*'),
-      db
-        .from('time_entries')
-        .select('id, entry_date, hours, rate_override, billable, invoice_id, project_id, description, time_entry_lines(hours, billable, item_name)')
-        .lte('entry_date', periodEnd),
-    ])
-    if (p.error) {
-      setError(p.error.message)
-      return
-    }
-    if (w.error) {
-      setError(
-        w.error.message.includes('project_week_plans')
-          ? 'Table project_week_plans manquante — exécutez la migration supabase/migrations/20260724230000_project_week_plans.sql'
-          : w.error.message
-      )
-      return
-    }
-    if (t.error) {
-      setError(t.error.message)
-      return
-    }
-    setProjects((p.data as PipelineProject[]) ?? [])
-    setPlans((w.data as ProjectWeekPlan[]) ?? [])
-    setTimeEntries((t.data as TimeEntrySheetSource[]) ?? [])
-    setLoaded(true)
-    refreshMetrics?.()
-  }
 
   function displayHours(projectId: string, week: string): string {
     const key = hoursKey(projectId, week)

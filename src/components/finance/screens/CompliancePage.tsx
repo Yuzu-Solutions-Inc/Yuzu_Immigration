@@ -51,9 +51,9 @@ function statusTone(status: ComplianceDeadlineStatus, dueDate: string) {
   return 'active'
 }
 
-export function CompliancePage() {
+export function CompliancePage({ initial }: { initial?: ComplianceDeadline[] }) {
   const t = useTranslations('financeApp')
-  const [rows, setRows] = useState<ComplianceDeadline[]>([])
+  const [rows, setRows] = useState<ComplianceDeadline[]>(initial ?? [])
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(empty)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -77,6 +77,7 @@ export function CompliancePage() {
   const overdueCount = rows.filter((r) => r.status === 'open' && daysUntilDue(r.due_date) < 0).length
 
   useEffect(() => {
+    if (initial) return
     void load()
   }, [])
 
@@ -267,7 +268,7 @@ export function CompliancePage() {
           {filtered.length === 0 ? (
             <EmptyState message={t('compliance.noneMatch')} />
           ) : (
-            <DataTable minWidth={900}>
+            <DataTable>
               <thead className="bg-muted text-muted-foreground text-left">
                 <tr>
                   <th className="px-4 py-3 font-medium">Échéance</th>
@@ -314,7 +315,7 @@ export function CompliancePage() {
         </>
       )}
 
-      <Modal title={editingId ? t('compliance.edit') : t('compliance.new')} open={open} onClose={() => setOpen(false)}>
+      <Modal title={editingId ? t('compliance.edit') : t('compliance.new')} open={open} onClose={() => setOpen(false)} wide>
         <form onSubmit={(e) => void save(e)} className="space-y-3">
           <Field label={t('compliance.titleStar')}>
             <input

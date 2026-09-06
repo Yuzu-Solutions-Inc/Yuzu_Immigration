@@ -72,7 +72,7 @@ export const fieldStackVariants = cva("", {
   },
 });
 
-export const formStackVariants = cva("flex flex-col", {
+export const formStackVariants = cva("flex min-w-0 flex-col", {
   variants: {
     gap: {
       tight: "space-y-4",

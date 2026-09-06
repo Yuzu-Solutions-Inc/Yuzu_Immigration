@@ -134,7 +134,7 @@ export function FilterSelect({
   className?: string
 }) {
   return (
-    <label className={`flex min-w-[9rem] flex-col gap-1 text-sm ${className}`}>
+    <label className={`flex min-w-0 flex-1 flex-col gap-1 text-sm ${className}`}>
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <NativeSelect
         density="dense"
@@ -165,7 +165,7 @@ export function FilterChips<T extends string>({
   const t = useTranslations('financeApp')
   const resolvedLabel = label ?? t('common.display')
   return (
-    <div className="flex min-w-[12rem] flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1">
       <span className="text-xs font-medium text-muted-foreground">{resolvedLabel}</span>
       <div className="flex flex-wrap gap-1">
         {options.map((o) => (
@@ -203,7 +203,7 @@ export function DateRangeFilter({
   const t = useTranslations('financeApp')
   const resolvedLabel = label ?? t('common.period')
   return (
-    <div className="flex min-w-[14rem] flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1">
       <span className="text-xs font-medium text-muted-foreground">{resolvedLabel}</span>
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-1.5 text-sm">

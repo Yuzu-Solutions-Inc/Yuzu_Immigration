@@ -3,13 +3,14 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { formatCad } from '@/lib/finance/format'
-import { computeUnbilledWip, type MetricsProject } from '@/lib/finance/billingMetrics'
-import { FIXED_PROJECT_SELECT, TIME_ENTRY_SELECT } from '@/lib/finance/dashboardData'
-import { entriesToMetrics } from '@/lib/finance/timeEntries'
 import { PageHeader } from '@/components/finance/PageHeader'
 import { PageShell } from '@/components/finance/PageShell'
 import { BillingWorkflowNav, type BillingStep } from '@/components/finance/BillingWorkflowNav'
 import { db } from '@/lib/finance/db'
+import {
+  fetchBillingMetrics,
+  type BillingMetrics,
+} from '@/lib/finance/screen-data'
 import { FinanceOutletProvider } from '@/components/finance/finance-outlet'
 import { useTranslations } from 'next-intl'
 
@@ -30,35 +31,31 @@ function MetricChip({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
-export function BillingPage({ children }: { children?: ReactNode }) {
+export function BillingPage({
+  children,
+  initialMetrics,
+}: {
+  children?: ReactNode
+  initialMetrics?: BillingMetrics
+}) {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
   const current = stepFromPath(pathname)
-  const [metrics, setMetrics] = useState({ unbilledHours: 0, unbilledAmount: 0, fixedWip: 0, draftInvoices: 0 })
+  const [metrics, setMetrics] = useState<BillingMetrics>(
+    initialMetrics ?? { unbilledHours: 0, unbilledAmount: 0, fixedWip: 0, draftInvoices: 0 },
+  )
 
   useEffect(() => {
-    loadMetrics()
-  }, [pathname])
+    if (initialMetrics) return
+    void loadMetrics()
+  }, [])
 
   async function loadMetrics() {
-    const [{ data: entries }, { data: fixedProjects }, { data: drafts }] = await Promise.all([
-      db.from('time_entries').select(TIME_ENTRY_SELECT),
-      db.from('projects').select(FIXED_PROJECT_SELECT),
-      db.from('invoices').select('id').eq('status', 'draft'),
-    ])
-
-    const wip = computeUnbilledWip(entriesToMetrics(entries ?? []), (fixedProjects ?? []) as MetricsProject[])
-
-    setMetrics({
-      unbilledHours: wip.hours,
-      unbilledAmount: wip.amount,
-      fixedWip: wip.fixedAmount,
-      draftInvoices: drafts?.length ?? 0,
-    })
+    setMetrics(await fetchBillingMetrics(db))
   }
 
   return (
-    <PageShell width="wide" className="space-y-4">
+    <PageShell width="wide" className="w-full min-w-0 space-y-4">
       <PageHeader
         title={t('billing.title')}
         subtitle={

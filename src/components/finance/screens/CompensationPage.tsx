@@ -3,11 +3,14 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { usePathname } from '@/i18n/navigation'
 import { formatCad } from '@/lib/finance/format'
-import { payrollEmployerTotal } from '@/lib/finance/financials'
 import { PageHeader } from '@/components/finance/PageHeader'
 import { PageShell } from '@/components/finance/PageShell'
 import { CompensationWorkflowNav, type CompensationStep } from '@/components/finance/CompensationWorkflowNav'
 import { db } from '@/lib/finance/db'
+import {
+  fetchCompensationMetrics,
+  type CompensationMetrics,
+} from '@/lib/finance/screen-data'
 import { FinanceOutletProvider } from '@/components/finance/finance-outlet'
 import { useTranslations } from 'next-intl'
 
@@ -26,39 +29,32 @@ function MetricChip({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
-export function CompensationPage({ children }: { children?: ReactNode }) {
+export function CompensationPage({
+  children,
+  initialMetrics,
+}: {
+  children?: ReactNode
+  initialMetrics?: CompensationMetrics
+}) {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
   const current = stepFromPath(pathname)
   const onEmployees = pathname.endsWith('/employees')
-  const [metrics, setMetrics] = useState({
-    activeEmployees: 0,
-    payrollCostYtd: 0,
-    dividendsYtd: 0,
-  })
+  const [metrics, setMetrics] = useState<CompensationMetrics>(
+    initialMetrics ?? {
+      activeEmployees: 0,
+      payrollCostYtd: 0,
+      dividendsYtd: 0,
+    },
+  )
 
   useEffect(() => {
-    loadMetrics()
-  }, [pathname])
+    if (initialMetrics) return
+    void loadMetrics()
+  }, [])
 
   async function loadMetrics() {
-    const yearStart = `${new Date().getFullYear()}-01-01`
-    const [{ data: employees }, { data: payroll }, { data: dividends }] = await Promise.all([
-      db.from('employees').select('id, active'),
-      db
-        .from('payroll_runs')
-        .select(
-          'payment_date, gross_pay, cpp_employer, ei_employer, qpip_employer, employer_benefits, federal_tax, provincial_tax, cpp_employee, ei_employee, qpip_employee, other_deductions'
-        )
-        .gte('payment_date', yearStart),
-      db.from('dividends').select('total_amount, declared_date').gte('declared_date', yearStart),
-    ])
-
-    setMetrics({
-      activeEmployees: (employees ?? []).filter((e) => e.active).length,
-      payrollCostYtd: (payroll ?? []).reduce((s, p) => s + payrollEmployerTotal(p), 0),
-      dividendsYtd: (dividends ?? []).reduce((s, d) => s + Number(d.total_amount), 0),
-    })
+    setMetrics(await fetchCompensationMetrics(db))
   }
 
   if (onEmployees || pathname.endsWith('/shareholders')) {

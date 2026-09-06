@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 
 export function DataTable({
   children,
-  minWidth = 720,
+  minWidth,
   className = '',
 }: {
   children: ReactNode
@@ -19,8 +19,16 @@ export function DataTable({
 }) {
   return (
     <ListTableCard className={className}>
-      <div className={cn('overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]', listTableScrollClassName)}>
-        <table className="w-full text-sm" style={{ minWidth }}>
+      <div
+        className={cn(
+          'min-w-0',
+          listTableScrollClassName,
+          minWidth
+            ? 'overflow-x-auto overscroll-x-contain lg:overflow-x-auto [-webkit-overflow-scrolling:touch]'
+            : null,
+        )}
+      >
+        <table className="w-full text-sm" style={minWidth ? { minWidth } : undefined}>
           {children}
         </table>
       </div>

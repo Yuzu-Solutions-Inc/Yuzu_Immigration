@@ -260,7 +260,6 @@ export function PeopleList({
             <TableRow className="hover:bg-transparent">
               <TableHead
                 className={cn(
-                  "min-w-[12rem]",
                   listTableHeadClassName,
                   listTableEdgeStartClassName,
                 )}
@@ -284,7 +283,7 @@ export function PeopleList({
                   />
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[12rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                     <PeopleSortButton
                       column="email"
@@ -304,7 +303,7 @@ export function PeopleList({
                   />
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                     <PeopleSortButton
                       column="immigration_status"
@@ -333,7 +332,7 @@ export function PeopleList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <div className="flex flex-col gap-1.5">
                     <PeopleSortButton
                       column="status_expires_at"
@@ -358,7 +357,7 @@ export function PeopleList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[8rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <PeopleSortButton
                   column="updated_at"
                   label={t("columnUpdated")}

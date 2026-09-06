@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/auth/active-org";
 import { orgAllowsWrites, trialEndsAt } from "@/lib/billing/trial";
@@ -31,13 +33,13 @@ export type OrgMembership = {
   enabledModules: ModuleId[];
 };
 
-export async function getSessionUser() {
+export const getSessionUser = cache(async function getSessionUser() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return user;
-}
+});
 
 export async function requireUser() {
   const user = await getSessionUser();
@@ -47,7 +49,7 @@ export async function requireUser() {
   return user;
 }
 
-export async function getUserMemberships(): Promise<OrgMembership[]> {
+export const getUserMemberships = cache(async function getUserMemberships(): Promise<OrgMembership[]> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -146,7 +148,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
       };
     })
     .filter((row): row is OrgMembership => row !== null);
-}
+});
 
 export async function getWorkspaceContext(): Promise<{
   membership: OrgMembership | null;

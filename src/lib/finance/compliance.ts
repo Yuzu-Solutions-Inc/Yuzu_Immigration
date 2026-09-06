@@ -116,8 +116,10 @@ export function buildSeedDeadlines(
   return rows
 }
 
-export async function fetchComplianceDeadlines(): Promise<ComplianceDeadline[]> {
-  const { data, error } = await db
+export async function fetchComplianceDeadlines(
+  client: FinanceDb = db,
+): Promise<ComplianceDeadline[]> {
+  const { data, error } = await client
     .from('compliance_deadlines')
     .select('*')
     .order('due_date', { ascending: true })

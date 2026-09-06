@@ -16,6 +16,7 @@ import { Field, inputClass } from '@/components/finance/Field'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { PageHeader } from '@/components/finance/PageHeader'
 import { db } from '@/lib/finance/db'
+import { fetchEmployeesScreen, type EmployeesScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 type CompensationOutletContext = { refreshMetrics?: () => void }
@@ -36,21 +37,22 @@ const emptyEmployee = {
   td1_provincial_claim: '',
 }
 
-export function EmployeesPage() {
+export function EmployeesPage({ initial }: { initial?: EmployeesScreenData }) {
   const t = useTranslations('financeApp')
   const { refreshMetrics } = useFinanceOutlet<CompensationOutletContext>() ?? {}
-  const [employees, setEmployees] = useState<Employee[]>([])
+  const [employees, setEmployees] = useState<Employee[]>(initial?.employees ?? [])
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(emptyEmployee)
   const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const { data } = await db.from('employees').select('*').order('last_name').order('first_name')
-    setEmployees((data as Employee[]) ?? [])
+    const data = await fetchEmployeesScreen(db)
+    setEmployees(data.employees)
     refreshMetrics?.()
   }
 
@@ -127,7 +129,7 @@ export function EmployeesPage() {
       {employees.length === 0 ? (
         <EmptyState message={t('employees.empty')} />
       ) : (
-        <DataTable minWidth={960}>
+        <DataTable>
           <thead className="bg-muted text-muted-foreground text-left">
             <tr>
               <th className="px-4 py-3">{t('employees.name')}</th>

@@ -22,18 +22,23 @@ import { PageShell } from '@/components/finance/PageShell'
 import { Button } from '@/components/finance/Button'
 import { useTranslations } from 'next-intl'
 
-export function GeneralLedgerPage() {
+export function GeneralLedgerPage({
+  initial,
+}: {
+  initial?: { data: GeneralLedgerBuildInput; warnings: string[] }
+}) {
   const t = useTranslations('financeApp')
-  const [glData, setGlData] = useState<GeneralLedgerBuildInput | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [glData, setGlData] = useState<GeneralLedgerBuildInput | null>(initial?.data ?? null)
+  const [loading, setLoading] = useState(!initial)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [accountFilter, setAccountFilter] = useState('')
   const [view, setView] = useState<'journal' | 'trial'>('journal')
-  const [loadWarnings, setLoadWarnings] = useState<string[]>([])
+  const [loadWarnings, setLoadWarnings] = useState<string[]>(initial?.warnings ?? [])
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
@@ -167,7 +172,7 @@ export function GeneralLedgerPage() {
           <EmptyState message={t('ledger.noEntries')} />
         ) : (
           <>
-            <DataTable minWidth={960}>
+            <DataTable>
               <thead className="bg-muted text-muted-foreground text-left text-xs">
                 <tr>
                   <th className="px-3 py-3">{t('ledger.date')}</th>
@@ -205,7 +210,7 @@ export function GeneralLedgerPage() {
       ) : (
         <>
           <p className="text-xs text-muted-foreground mb-3">{trialAsOfLabel}</p>
-          <DataTable minWidth={720}>
+          <DataTable>
             <thead className="bg-muted text-muted-foreground text-left text-xs">
               <tr>
                 <th className="px-3 py-3">{t('ledger.account')}</th>

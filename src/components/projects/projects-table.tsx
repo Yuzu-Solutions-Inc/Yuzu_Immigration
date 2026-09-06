@@ -433,7 +433,7 @@ export function ProjectsTable({
         <Table>
           <TableHeader className={cn(listTableStickyHeaderClassName, "[&_tr:first-child]:border-b-0")}>
             <TableRow className="hover:bg-transparent">
-              <TableHead className={cn("min-w-[12rem]", listTableEdgeStartClassName)}>
+              <TableHead className={cn(listTableEdgeStartClassName)}>
                 <SortButton
                   column="title"
                   label={t("columnName")}
@@ -442,7 +442,7 @@ export function ProjectsTable({
                   onToggle={toggleSort}
                 />
               </TableHead>
-              <TableHead className="min-w-[10rem]">
+              <TableHead>
                 <SortButton
                   column="program_family"
                   label={t("columnProgram")}
@@ -451,12 +451,12 @@ export function ProjectsTable({
                   onToggle={toggleSort}
                 />
               </TableHead>
-              <TableHead className="min-w-[10rem]">
+              <TableHead>
                 <span className="px-0.5 py-0.5 font-medium">
                   {t("columnStatus")}
                 </span>
               </TableHead>
-              <TableHead className="min-w-[10rem]">
+              <TableHead>
                 <SortButton
                   column="representative"
                   label={t("columnRepresentative")}
@@ -505,7 +505,7 @@ export function ProjectsTable({
               </TableHead>
             </TableRow>
             <TableRow className="hover:bg-transparent">
-              <TableHead className={cn("h-auto min-w-[12rem] pb-2.5 pt-0", listTableEdgeStartClassName)}>
+              <TableHead className={cn("h-auto pb-2.5 pt-0", listTableEdgeStartClassName)}>
                 <Input
                   id="projects-filter-name"
                   type="search"
@@ -516,7 +516,7 @@ export function ProjectsTable({
                   density="dense"
                 />
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
+              <TableHead className="h-auto pb-2.5 pt-0">
                 <NativeSelect
                   id="projects-filter-program"
                   value={programFilter}
@@ -534,7 +534,7 @@ export function ProjectsTable({
                   ))}
                 </NativeSelect>
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
+              <TableHead className="h-auto pb-2.5 pt-0">
                 <NativeSelect
                   id="projects-filter-status"
                   value={statusFilter}
@@ -552,7 +552,7 @@ export function ProjectsTable({
                   ))}
                 </NativeSelect>
               </TableHead>
-              <TableHead className="h-auto min-w-[10rem] pb-2.5 pt-0">
+              <TableHead className="h-auto pb-2.5 pt-0">
                 <NativeSelect
                   id="projects-filter-rep"
                   value={representativeFilter}
@@ -604,7 +604,7 @@ export function ProjectsTable({
                       router.push(`/projects/${project.id}`);
                     }}
                   >
-                    <TableCell className={cn("max-w-[18rem] whitespace-normal", listTableEdgeStartClassName)}>
+                    <TableCell className={cn("whitespace-normal", listTableEdgeStartClassName)}>
                       <div className="flex items-start gap-1.5">
                         <Link
                           href={`/projects/${project.id}`}
@@ -638,7 +638,7 @@ export function ProjectsTable({
                           )
                         }
                         density="dense"
-                        className="min-w-[8.5rem]"
+                        className="w-full min-w-0"
                         aria-label={t("editStatusAria")}
                         >
                         {PROJECT_STATUSES.map((value) => (

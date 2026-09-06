@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/finance/PageHeader'
 import { PageShell } from '@/components/finance/PageShell'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { db } from '@/lib/finance/db'
+import { fetchCorporateTaxScreen, type CorporateTaxScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 const empty = {
@@ -30,10 +31,10 @@ const empty = {
   notes: '',
 }
 
-export function CorporateTaxPage() {
+export function CorporateTaxPage({ initial }: { initial?: CorporateTaxScreenData }) {
   const t = useTranslations('financeApp')
   const { blockIfClosed } = usePeriodCloseGuard()
-  const [rows, setRows] = useState<CorporateTaxRecord[]>([])
+  const [rows, setRows] = useState<CorporateTaxRecord[]>(initial?.rows ?? [])
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(empty)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -56,11 +57,14 @@ export function CorporateTaxPage() {
 
   const hasFilters = !!(search || statusFilter || fiscalYearFilter)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    if (initial) return
+    void load()
+  }, [])
 
   async function load() {
-    const { data } = await db.from('corporate_tax_records').select('*').order('due_date', { ascending: true })
-    setRows((data as CorporateTaxRecord[]) ?? [])
+    const data = await fetchCorporateTaxScreen(db)
+    setRows(data.rows)
   }
 
   function openNew() {

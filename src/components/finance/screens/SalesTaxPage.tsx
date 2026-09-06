@@ -18,6 +18,7 @@ import { PageHeader } from '@/components/finance/PageHeader'
 import { PageShell } from '@/components/finance/PageShell'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { db } from '@/lib/finance/db'
+import { fetchSalesTaxScreen, type SalesTaxScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 const empty = {
@@ -36,10 +37,10 @@ function nets(gstC: number, qstC: number, gstI: number, qstI: number) {
   return { gst_net: gstC - gstI, qst_net: qstC - qstI }
 }
 
-export function SalesTaxPage() {
+export function SalesTaxPage({ initial }: { initial?: SalesTaxScreenData }) {
   const t = useTranslations('financeApp')
   const { blockIfClosed } = usePeriodCloseGuard()
-  const [rows, setRows] = useState<SalesTaxPeriod[]>([])
+  const [rows, setRows] = useState<SalesTaxPeriod[]>(initial?.rows ?? [])
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(empty)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -59,11 +60,14 @@ export function SalesTaxPage() {
 
   const hasFilters = !!(search || statusFilter)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    if (initial) return
+    void load()
+  }, [])
 
   async function load() {
-    const { data } = await db.from('sales_tax_periods').select('*').order('period_end', { ascending: false })
-    setRows((data as SalesTaxPeriod[]) ?? [])
+    const data = await fetchSalesTaxScreen(db)
+    setRows(data.rows)
   }
 
   async function calculateFromData() {

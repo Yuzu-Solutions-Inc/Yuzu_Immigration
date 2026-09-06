@@ -862,7 +862,6 @@ export function ServicesManager({
                 <TableRow className="hover:bg-transparent">
                   <TableHead
                     className={cn(
-                      "min-w-[12rem]",
                       listTableHeadClassName,
                       listTableEdgeStartClassName,
                     )}
@@ -879,10 +878,10 @@ export function ServicesManager({
                       />
                     </div>
                   </TableHead>
-                  <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
+                  <TableHead className={cn(listTableHeadClassName)}>
                     <SortButton column="duration" label={t("duration")} />
                   </TableHead>
-                  <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
+                  <TableHead className={cn(listTableHeadClassName)}>
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="price" label={t("price")} />
                       <NativeSelect
@@ -899,7 +898,7 @@ export function ServicesManager({
                       </NativeSelect>
                     </div>
                   </TableHead>
-                  <TableHead className={cn("min-w-[9rem]", listTableHeadClassName)}>
+                  <TableHead className={cn(listTableHeadClassName)}>
                     <div className="flex flex-col gap-1.5">
                       <span className="font-medium">{t("columnForm")}</span>
                       <NativeSelect
@@ -916,11 +915,11 @@ export function ServicesManager({
                       </NativeSelect>
                     </div>
                   </TableHead>
-                  <TableHead className={cn("min-w-[7rem]", listTableHeadClassName)}>
+                  <TableHead className={cn(listTableHeadClassName)}>
                     {t("columnReminders")}
                   </TableHead>
                   <TableHead
-                    className={cn("min-w-[7rem]", listTableHeadClassName)}
+                    className={cn(listTableHeadClassName)}
                   >
                     <div className="flex flex-col gap-1.5">
                       <SortButton column="is_active" label={t("active")} />
