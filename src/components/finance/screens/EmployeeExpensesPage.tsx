@@ -11,7 +11,8 @@ import { EXPENSE_CATEGORY_LABELS } from '@/lib/finance/chartOfAccounts'
 import { deleteEntityDocuments, uploadDocument } from '@/lib/finance/documents'
 import type { ReceiptPurchaseFields } from '@/lib/finance/receiptOcr'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { DocumentAttachments } from '@/components/finance/DocumentAttachments'
 import { ReceiptScanField } from '@/components/finance/ReceiptScanField'
@@ -409,13 +410,11 @@ export function EmployeeExpensesPage() {
                           <Badge label="À rembourser" tone="draft" />
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right space-x-1">
-                        <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(e)}>
-                          Mod.
-                        </Button>
-                        <Button variant="danger" className={tableActionClass} onClick={() => remove(e)}>
-                          Suppr.
-                        </Button>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-0.5">
+                          <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEdit(e)} />
+                          <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(e)} />
+                        </div>
                       </td>
                     </tr>
                   )

@@ -47,6 +47,7 @@ import { bankImportSetupHint, errorMessage } from '@/lib/finance/errors'
 import { matchesSearch } from '@/lib/finance/filters'
 import { Badge } from '@/components/finance/Badge'
 import { Button, tableActionClass } from '@/components/finance/Button'
+import { DeleteIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { DocumentAttachments } from '@/components/finance/DocumentAttachments'
@@ -617,14 +618,14 @@ export function BankPage() {
 
   async function handleIgnore(tx: BankTransaction) {
     if (blockIfClosed(tx.transaction_date)) return
-    if (!confirm('Ignorer cette transaction (virement interne, doublon, etc.) ?')) return
+    if (!confirm(t('bank.confirmIgnore'))) return
     await ignoreBankTransaction(tx.id)
     load()
   }
 
   async function handleUnassign(tx: BankTransaction) {
     if (blockIfClosed(tx.transaction_date)) return
-    if (!confirm('Retirer l\'affectation ? Les enregistrements liés seront annulés ou supprimés selon le type.')) return
+    if (!confirm(t('bank.confirmUnassign'))) return
     try {
       await unassignBankTransaction(tx.id, tx.match_source, tx.match_id)
       load()
@@ -857,33 +858,33 @@ export function BankPage() {
                         {label ? (
                           <Badge label={label} tone={r.match_source === 'manual' ? 'draft' : 'paid'} />
                         ) : (
-                          <span className="text-amber-700 text-xs font-medium">À affecter</span>
+                          <span className="text-amber-700 text-xs font-medium">{t('bank.toAssign')}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap space-x-1">
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="flex flex-wrap items-center justify-end gap-0.5">
                         {!r.match_source && (
                           <>
                             <Button variant="ghost" className={tableActionClass} onClick={() => openAssign(r)}>
-                              Affecter
+                              {t('bank.assign')}
                             </Button>
                             <Button variant="ghost" className={tableActionClass} onClick={() => handleIgnore(r)}>
-                              Ignorer
+                              {t('bank.ignore')}
                             </Button>
                           </>
                         )}
                         {r.match_source && r.match_source !== 'manual' && (
                           <Button variant="ghost" className={tableActionClass} onClick={() => handleUnassign(r)}>
-                            Retirer
+                            {t('bank.remove')}
                           </Button>
                         )}
                         {r.match_source === 'expense' && r.match_id && (
                           <Button variant="ghost" className={tableActionClass} onClick={() => setExpenseDocId(r.match_id)}>
-                            Facture
+                            {t('bank.invoice')}
                           </Button>
                         )}
-                        <Button variant="danger" className={tableActionClass} onClick={() => handleDelete(r)}>
-                          Suppr.
-                        </Button>
+                        <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => handleDelete(r)} />
+                        </div>
                       </td>
                     </tr>
                   )
@@ -926,7 +927,7 @@ export function BankPage() {
         <form onSubmit={saveAssignment} className="space-y-3">
           {(assignKind === 'payment' || assignKind === 'capital' || assignKind === 'opening' || assignKind === 'interest') ? (
             <>
-              <Field label="Affecter à *">
+              <Field label={t('bank.assignTo')}>
                 <select
                   className={inputClass}
                   required

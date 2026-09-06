@@ -7,7 +7,8 @@ import { matchesSearch, countActiveFilters } from '@/lib/finance/filters'
 import { calculateSalesTaxPeriod, periodTaxableSupplies } from '@/lib/finance/salesTaxCalc'
 import { buildGst34Worksheet, buildVd458Worksheet } from '@/lib/finance/taxReturns'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { Field, inputClass } from '@/components/finance/Field'
@@ -196,14 +197,16 @@ export function SalesTaxPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((r) => (
-                <tr key={r.id}>
+                <tr key={r.id} className="group">
                   <td className="px-4 py-3">{formatDate(r.period_start)} – {formatDate(r.period_end)}</td>
                   <td className="px-4 py-3">{formatCad(r.gst_net)}</td>
                   <td className="px-4 py-3">{formatCad(r.qst_net)}</td>
                   <td className="px-4 py-3"><Badge label={r.status} tone={r.status} /></td>
-                  <td className="px-4 py-3 text-right space-x-1">
-                    <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(r)}>{t('common.editShort')}</Button>
-                    <Button variant="danger" className={tableActionClass} onClick={() => remove(r.id)}>{t('common.deleteShort')}</Button>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-0.5">
+                      <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEdit(r)} />
+                      <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(r.id)} />
+                    </div>
                   </td>
                 </tr>
               ))}

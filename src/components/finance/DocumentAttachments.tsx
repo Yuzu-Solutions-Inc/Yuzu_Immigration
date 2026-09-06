@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { DocumentAttachment, DocumentEntityType } from '@/lib/finance/types'
 import {
   deleteAttachment,
@@ -11,6 +12,7 @@ import {
   uploadDocument,
 } from '@/lib/finance/documents'
 import { Button } from './Button'
+import { DeleteIconButton, ViewIconButton } from '@/components/layout/icon-action-button'
 
 type Props = {
   entityType: DocumentEntityType
@@ -26,10 +28,11 @@ export function DocumentAttachments({
   entityType,
   entityId,
   disabled = false,
-  label = 'Documents',
+  label,
   hint,
   pdfOnly = false,
 }: Props) {
+  const t = useTranslations('financeApp')
   const fileRef = useRef<HTMLInputElement>(null)
   const [rows, setRows] = useState<DocumentAttachment[]>([])
   const [loading, setLoading] = useState(false)
@@ -49,7 +52,7 @@ export function DocumentAttachments({
         if (!cancelled) setRows(data)
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Erreur de chargement.')
+        if (!cancelled) setError(e instanceof Error ? e.message : t('common.loadError'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -57,7 +60,7 @@ export function DocumentAttachments({
     return () => {
       cancelled = true
     }
-  }, [entityType, entityId])
+  }, [entityType, entityId, t])
 
   async function handleUpload(file: File) {
     if (!entityId || disabled) return
@@ -66,12 +69,12 @@ export function DocumentAttachments({
     try {
       const mime = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : file.type)
       if (pdfOnly && mime !== 'application/pdf') {
-        throw new Error('Seuls les fichiers PDF sont acceptés.')
+        throw new Error(t('common.pdfOnly'))
       }
       const attachment = await uploadDocument(file, file.name, mime, entityType, entityId)
       setRows((prev) => [attachment, ...prev])
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Téléversement échoué.')
+      setError(e instanceof Error ? e.message : t('common.uploadFailed'))
     } finally {
       setUploading(false)
     }
@@ -83,28 +86,28 @@ export function DocumentAttachments({
       const url = await getSignedDocumentUrl(attachment.storage_path)
       window.open(url, '_blank', 'noopener,noreferrer')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ouverture impossible.')
+      setError(e instanceof Error ? e.message : t('common.openFailed'))
     }
   }
 
   async function handleDelete(attachment: DocumentAttachment) {
     if (disabled) return
-    if (!confirm(`Supprimer « ${attachment.filename} » ?`)) return
+    if (!confirm(t('common.confirmDeleteNamed', { filename: attachment.filename }))) return
     setError(null)
     try {
       await deleteAttachment(attachment)
       setRows((prev) => prev.filter((r) => r.id !== attachment.id))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Suppression échouée.')
+      setError(e instanceof Error ? e.message : t('common.deleteFailed'))
     }
   }
 
   return (
-    <div className="border border-border rounded-lg p-3 space-y-2 bg-muted/50">
+    <div className="space-y-2 rounded-lg border border-border bg-muted/50 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-sm font-medium">{label}</div>
-          {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
+          <div className="text-sm font-medium">{label ?? t('common.documents')}</div>
+          {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
         </div>
         <div>
           <input
@@ -126,22 +129,20 @@ export function DocumentAttachments({
             disabled={disabled || !entityId || uploading}
             onClick={() => fileRef.current?.click()}
           >
-            {uploading ? 'Envoi…' : pdfOnly ? 'Joindre un PDF' : 'Joindre un fichier'}
+            {uploading ? t('common.uploading') : pdfOnly ? t('common.attachPdf') : t('common.attach')}
           </Button>
         </div>
       </div>
 
       {!entityId && (
-        <p className="text-xs text-muted-foreground">Enregistrez d&apos;abord l&apos;enregistrement pour joindre un document.</p>
+        <p className="text-xs text-muted-foreground">{t('common.saveFirstToAttach')}</p>
       )}
 
-      {loading && <p className="text-xs text-muted-foreground">Chargement…</p>}
+      {loading && <p className="text-xs text-muted-foreground">{t('common.loading')}</p>}
 
       {!loading && entityId && rows.length === 0 && (
         <p className="text-xs text-muted-foreground">
-          {pdfOnly
-            ? 'Aucun contrat PDF — max 10 Mo.'
-            : 'Aucun document — PDF ou photo de facture/reçu (max 10 Mo).'}
+          {pdfOnly ? t('common.noPdfContract') : t('common.noDocuments')}
         </p>
       )}
 
@@ -150,17 +151,13 @@ export function DocumentAttachments({
           {rows.map((doc) => (
             <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
               <div className="min-w-0">
-                <div className="font-medium truncate">{doc.filename}</div>
+                <div className="truncate font-medium">{doc.filename}</div>
                 <div className="text-xs text-muted-foreground">{formatDocumentSize(Number(doc.size_bytes))}</div>
               </div>
-              <div className="flex gap-1 shrink-0">
-                <Button type="button" variant="ghost" className="!text-xs" onClick={() => void handleView(doc)}>
-                  Voir
-                </Button>
+              <div className="flex shrink-0 items-center gap-0.5">
+                <ViewIconButton label={t('common.view')} onClick={() => void handleView(doc)} />
                 {!disabled && (
-                  <Button type="button" variant="danger" className="!text-xs" onClick={() => void handleDelete(doc)}>
-                    Suppr.
-                  </Button>
+                  <DeleteIconButton label={t('common.delete')} onClick={() => void handleDelete(doc)} />
                 )}
               </div>
             </li>
@@ -168,7 +165,7 @@ export function DocumentAttachments({
         </ul>
       )}
 
-      {error && <p className="text-xs text-red-700">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
 }

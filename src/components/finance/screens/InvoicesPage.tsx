@@ -30,7 +30,8 @@ import { deleteInvoice } from '@/lib/finance/invoiceActions'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { downloadInvoicePdf, saveInvoicePdfToStorage } from '@/lib/finance/invoicePdf'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, ViewIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { InvoiceStripeLinkButton } from '@/components/finance/invoice-stripe-link-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { DocumentAttachments } from '@/components/finance/DocumentAttachments'
@@ -504,13 +505,11 @@ export function InvoicesPage() {
                     <td className="px-3 py-3">
                       <Badge label={inv.status} tone={inv.status} />
                     </td>
-                    <td className="px-3 py-3 text-right space-x-1">
-                      <Button variant="ghost" className={tableActionClass} onClick={() => viewDetail(inv)}>
-                        Voir
-                      </Button>
-                      <Button variant="danger" className={tableActionClass} onClick={() => handleDelete(inv)}>
-                        Suppr.
-                      </Button>
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <ViewIconButton className={iconActionRevealClassName} label={t('common.view')} onClick={() => viewDetail(inv)} />
+                        <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => handleDelete(inv)} />
+                      </div>
                     </td>
                   </tr>
                 ))

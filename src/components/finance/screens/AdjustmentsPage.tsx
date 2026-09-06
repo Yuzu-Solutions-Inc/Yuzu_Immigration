@@ -5,6 +5,7 @@ import type { AccountingAdjustment, AdjustmentType } from '@/lib/finance/types'
 import { CHART_OF_ACCOUNTS } from '@/lib/finance/chartOfAccounts'
 import { formatCad, formatDate, todayIso } from '@/lib/finance/format'
 import { Button, tableActionClass } from '@/components/finance/Button'
+import { DeleteIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { Field, inputClass } from '@/components/finance/Field'
@@ -183,13 +184,13 @@ export function AdjustmentsPage() {
                   {r.total_amount != null ? formatCad(r.total_amount) : r.monthly_amount != null ? `${formatCad(r.monthly_amount)}/mois` : t('common.dash')}
                 </td>
                 <td className="px-4 py-3">{r.active ? t('common.yes') : t('common.no')}</td>
-                <td className="px-4 py-3 text-right space-x-2">
-                  <Button variant="ghost" className={tableActionClass} onClick={() => toggleActive(r)}>
-                    {r.active ? t('common.deactivate') : t('common.activate')}
-                  </Button>
-                  <Button variant="danger" className={tableActionClass} onClick={() => remove(r.id)}>
-                    {t('common.deleteShort')}
-                  </Button>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-0.5">
+                    <Button variant="ghost" className={tableActionClass} onClick={() => toggleActive(r)}>
+                      {r.active ? t('common.deactivate') : t('common.activate')}
+                    </Button>
+                    <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(r.id)} />
+                  </div>
                 </td>
               </tr>
             ))}

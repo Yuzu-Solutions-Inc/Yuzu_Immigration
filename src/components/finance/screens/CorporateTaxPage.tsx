@@ -5,7 +5,8 @@ import type { CorporateTaxRecord, CorpTaxStatus } from '@/lib/finance/types'
 import { formatCad, formatDate } from '@/lib/finance/format'
 import { matchesSearch, countActiveFilters } from '@/lib/finance/filters'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { Field, inputClass } from '@/components/finance/Field'
@@ -181,16 +182,18 @@ export function CorporateTaxPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((r) => (
-                <tr key={r.id}>
+                <tr key={r.id} className="group">
                   <td className="px-4 py-3">{r.fiscal_year}</td>
                   <td className="px-4 py-3 font-medium">{r.label}</td>
                   <td className="px-4 py-3 text-muted-foreground">{r.tax_authority}</td>
                   <td className="px-4 py-3">{r.due_date ? formatDate(r.due_date) : t('common.dash')}</td>
                   <td className="px-4 py-3">{formatCad(r.amount)}</td>
                   <td className="px-4 py-3"><Badge label={r.status} tone={r.status === 'paid' ? 'paid' : 'draft'} /></td>
-                  <td className="px-4 py-3 text-right space-x-1">
-                    <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(r)}>{t('common.editShort')}</Button>
-                    <Button variant="danger" className={tableActionClass} onClick={() => remove(r.id)}>{t('common.deleteShort')}</Button>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-0.5">
+                      <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEdit(r)} />
+                      <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(r.id)} />
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { documentAcceptAttribute } from '@/lib/finance/documents'
 import {
   extractReceiptFromFile,
@@ -11,6 +12,7 @@ import {
 import type { TaxSettings } from '@/lib/finance/taxes'
 import { Button } from './Button'
 import { Field } from './Field'
+import { DeleteIconButton } from '@/components/layout/icon-action-button'
 
 type Props = {
   file: File | null
@@ -31,11 +33,12 @@ export function ReceiptScanField({
   onExtracted,
   applyTax,
   settings,
-  label = 'Reçu / facture',
-  hint = 'PDF ou image (max 10 Mo). Ce fichier sera joint à l’enregistrement.',
+  label,
+  hint,
   disabled = false,
   autoScan = true,
 }: Props) {
+  const t = useTranslations('financeApp')
   const inputRef = useRef<HTMLInputElement>(null)
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -52,11 +55,11 @@ export function ReceiptScanField({
       onExtracted(fields, raw)
       const conf =
         raw.confidence !== null && raw.confidence !== undefined
-          ? ` Confiance ~${Math.round(raw.confidence * 100)} %.`
+          ? t('common.confidence', { pct: Math.round(raw.confidence * 100) })
           : ''
-      setScanNote(`Champs préremplis — vérifiez avant d’enregistrer.${conf}`)
+      setScanNote(`${t('common.receiptPrefill')}${conf}`)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Extraction échouée.')
+      setError(e instanceof Error ? e.message : t('common.extractFailed'))
     } finally {
       setScanning(false)
     }
@@ -72,7 +75,7 @@ export function ReceiptScanField({
   }
 
   return (
-    <Field label={label}>
+    <Field label={label ?? t('common.receiptInvoice')}>
       <input
         ref={inputRef}
         type="file"
@@ -93,12 +96,12 @@ export function ReceiptScanField({
           disabled={disabled || scanning}
           onClick={() => inputRef.current?.click()}
         >
-          {scanning ? 'Analyse…' : file ? 'Changer le fichier' : 'Joindre et scanner'}
+          {scanning ? t('common.scanning') : file ? t('common.changeFile') : t('common.scan')}
         </Button>
         {file ? (
-          <span className="text-xs truncate max-w-[240px]">{file.name}</span>
+          <span className="max-w-[240px] truncate text-xs">{file.name}</span>
         ) : (
-          <span className="text-xs text-muted-foreground">{hint}</span>
+          <span className="text-xs text-muted-foreground">{hint ?? t('common.receiptHint')}</span>
         )}
         {file && !scanning && (
           <>
@@ -109,26 +112,22 @@ export function ReceiptScanField({
               disabled={disabled}
               onClick={() => void runScan(file)}
             >
-              Rescanner
+              {t('common.rescan')}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="!text-xs"
+            <DeleteIconButton
+              label={t('common.remove')}
               disabled={disabled}
               onClick={() => {
                 onFileChange(null)
                 setError(null)
                 setScanNote(null)
               }}
-            >
-              Retirer
-            </Button>
+            />
           </>
         )}
       </div>
-      {scanNote && <p className="mt-1.5 text-xs text-emerald-800">{scanNote}</p>}
-      {error && <p className="mt-1.5 text-xs text-red-700">{error}</p>}
+      {scanNote && <p className="mt-1.5 text-xs text-success">{scanNote}</p>}
+      {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
     </Field>
   )
 }

@@ -7,7 +7,8 @@ import type { Dividend, Shareholder } from '@/lib/finance/types'
 import { formatCad, formatDate, todayIso } from '@/lib/finance/format'
 import { inDateRange, matchesSearch } from '@/lib/finance/filters'
 import { splitDividendByShares } from '@/lib/finance/payrollCalc'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, ViewIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { Badge } from '@/components/finance/Badge'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
@@ -284,13 +285,11 @@ export function DividendsPage() {
                     <td className="px-3 py-3 text-muted-foreground">{d.employee_count}</td>
                     <td className="px-3 py-3">{formatCad(d.amount_per_employee)}</td>
                     <td className="px-3 py-3 text-muted-foreground">{d.description ?? '—'}</td>
-                    <td className="px-3 py-3 text-right space-x-1">
-                      <Button variant="ghost" className={tableActionClass} onClick={() => viewDetail(d)}>
-                        Détail
-                      </Button>
-                      <Button variant="danger" className={tableActionClass} onClick={() => remove(d.id)}>
-                        Suppr.
-                      </Button>
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <ViewIconButton className={iconActionRevealClassName} label={t('common.view')} onClick={() => viewDetail(d)} />
+                        <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(d.id)} />
+                      </div>
                     </td>
                   </tr>
                 ))

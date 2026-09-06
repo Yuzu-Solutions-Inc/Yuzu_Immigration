@@ -162,10 +162,6 @@ export function deriveInvoiceStatus(
   return current === 'draft' ? 'draft' : 'sent'
 }
 
-export function billingTypeLabel(type: string): string {
-  return type === 'fixed' ? 'Forfait' : 'Horaire'
-}
-
 export function projectAmountLabel(project: Pick<Project, 'billing_type' | 'default_hourly_rate' | 'fixed_price'>): string {
   if (project.billing_type === 'fixed') {
     return project.fixed_price != null ? formatCad(project.fixed_price) : '—'

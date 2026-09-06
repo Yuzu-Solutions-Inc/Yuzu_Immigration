@@ -22,6 +22,7 @@ import type {
 import { AlertBanner } from '@/components/finance/AlertBanner'
 import { Badge } from '@/components/finance/Badge'
 import { Button, tableActionClass } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { Field, inputClass } from '@/components/finance/Field'
@@ -292,20 +293,18 @@ export function CompliancePage() {
                     <td className="px-4 py-3">
                       {r.amount != null && Number(r.amount) !== 0 ? formatCad(Number(r.amount)) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                      {r.status === 'open' && (
-                        <Button variant="ghost" className={tableActionClass} onClick={() => void markDone(r.id)}>
-                          Fait
-                        </Button>
-                      )}
-                      <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(r)}>
-                        Modifier
-                      </Button>
-                      {r.source === 'manual' && (
-                        <Button variant="danger" className={tableActionClass} onClick={() => void remove(r.id)}>
-                          Suppr.
-                        </Button>
-                      )}
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex flex-wrap items-center justify-end gap-0.5 whitespace-nowrap">
+                        {r.status === 'open' && (
+                          <Button variant="ghost" className={tableActionClass} onClick={() => void markDone(r.id)}>
+                            {t('common.markDone')}
+                          </Button>
+                        )}
+                        <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEdit(r)} />
+                        {r.source === 'manual' && (
+                          <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => void remove(r.id)} />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

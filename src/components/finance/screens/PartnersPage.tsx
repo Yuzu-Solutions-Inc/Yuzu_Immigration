@@ -13,6 +13,7 @@ import { PERSON_IMMIGRATION_STATUSES } from '@/lib/crm/person-status'
 import type { PersonImmigrationStatus } from '@/db/schema'
 import { Badge } from '@/components/finance/Badge'
 import { Button, tableActionClass } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { EmptyState } from '@/components/finance/EmptyState'
@@ -256,19 +257,15 @@ export function PartnersPage({
                     ) : null}
                     <td className="px-3 py-3 text-muted-foreground">{p.city ?? t('common.dash')}</td>
                     <td className="px-3 py-3 text-right">
-                      <div className="flex flex-wrap gap-1 justify-end">
+                      <div className="flex flex-wrap items-center justify-end gap-0.5">
                         <Link
                           href={`/partners/${p.id}`}
                           className={`${tableActionClass} inline-flex items-center justify-center text-sm font-medium text-action hover:underline`}
                         >
                           {t('partners.open')}
                         </Link>
-                        <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(p)}>
-                          {t('common.edit')}
-                        </Button>
-                        <Button variant="danger" className={tableActionClass} onClick={() => remove(p.id)}>
-                          {t('common.deleteShort')}
-                        </Button>
+                        <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEdit(p)} />
+                        <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(p.id)} />
                       </div>
                     </td>
                   </tr>

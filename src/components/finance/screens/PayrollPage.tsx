@@ -34,7 +34,8 @@ import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseCo
 import { payrollLeviesRemittance, payrollRemittancesTotal } from '@/lib/finance/payrollRemittance'
 import { EXPENSE_CATEGORY_LABELS } from '@/lib/finance/chartOfAccounts'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { Field, inputClass } from '@/components/finance/Field'
@@ -636,13 +637,11 @@ export function PayrollPage() {
                         tone={p.remittance_status === 'remitted' ? 'active' : 'draft'}
                       />
                     </td>
-                    <td className="px-3 py-3 text-right space-x-1">
-                      <Button variant="ghost" className={tableActionClass} onClick={() => openEditPayroll(p)}>
-                        Mod.
-                      </Button>
-                      <Button variant="danger" className={tableActionClass} onClick={() => removePayroll(p.id)}>
-                        Suppr.
-                      </Button>
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEditPayroll(p)} />
+                        <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => removePayroll(p.id)} />
+                      </div>
                     </td>
                   </tr>
                 ))
