@@ -5,7 +5,11 @@ import { CalendarSettingsPage } from "@/components/booking/calendar-settings-pag
 import { GoogleCallbackToast } from "@/components/booking/google-callback-toast";
 import { MicrosoftCallbackToast } from "@/components/booking/microsoft-callback-toast";
 import { ZoomCallbackToast } from "@/components/booking/zoom-callback-toast";
-import { AccountSettingsForm } from "@/components/settings/account-settings-form";
+import {
+  AccountProfileForm,
+  RepresentativeSettingsForm,
+} from "@/components/settings/account-settings-form";
+import { AccountSettingsSections } from "@/components/settings/account-settings-sections";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { hasEmailPasswordAuth } from "@/lib/auth/providers";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
@@ -54,58 +58,69 @@ export default async function AccountSettingsPage({
   ]);
 
   const t = await getTranslations("settings");
+  const oauthReturn = Boolean(googleStatus || microsoftStatus || zoomStatus);
 
   return (
     <div className="space-y-4">
       <GoogleCallbackToast status={googleStatus} />
       <MicrosoftCallbackToast status={microsoftStatus} />
       <ZoomCallbackToast status={zoomStatus} />
-      <SurfaceCard className="space-y-4 sm:p-6">
-        <div>
-          <h2 className="font-heading text-lg font-semibold text-brand">
-            {t("account")}
-          </h2>
-          <p className="text-sm text-muted-foreground">{t("accountHelp")}</p>
-        </div>
-        <AccountSettingsForm
-          locale={locale}
-          email={profile?.email || user.email || ""}
-          fullName={profile?.full_name || ""}
-          canChangePassword={hasEmailPasswordAuth(user)}
-          representative={{
-            repFamilyName: profile?.rep_family_name ?? "",
-            repGivenName: profile?.rep_given_name ?? "",
-            repOrganization: profile?.rep_organization ?? "",
-            repEmail: profile?.rep_email ?? "",
-            repPhone: profile?.rep_phone ?? "",
-            repPhoneCountryCode: profile?.rep_phone_country_code ?? "",
-            repMembershipId: profile?.rep_membership_id ?? "",
-            repStreetNum: profile?.rep_street_num ?? "",
-            repStreetName: profile?.rep_street_name ?? "",
-            repCity: profile?.rep_city ?? "",
-            repProvince: profile?.rep_province ?? "",
-            repCountry: profile?.rep_country ?? "Canada",
-            repPostalCode: profile?.rep_postal_code ?? "",
-          }}
-          representativeComplete={isAccountRepComplete(profile)}
-        />
-      </SurfaceCard>
-      {calendar ? (
-        <CalendarSettingsPage
-          locale={localeParam}
-          canManage={calendar.canManage}
-          settings={calendar.settings}
-          rules={calendar.rules}
-          googleConfigured={calendar.googleConfigured}
-          googleConnection={calendar.googleConnection}
-          microsoftConfigured={calendar.microsoftConfigured}
-          microsoftConnection={calendar.microsoftConnection}
-          zoomConfigured={calendar.zoomConfigured}
-          zoomConnection={calendar.zoomConnection}
-          calendarProvider={calendar.calendarProvider}
-          meetingProvider={calendar.meetingProvider}
-        />
-      ) : null}
+      <AccountSettingsSections
+        defaultValue={calendar && oauthReturn ? "calendar" : "profile"}
+        profile={
+          <SurfaceCard className="space-y-4 sm:p-6">
+            <p className="text-sm text-muted-foreground">{t("accountHelp")}</p>
+            <AccountProfileForm
+              locale={locale}
+              email={profile?.email || user.email || ""}
+              fullName={profile?.full_name || ""}
+              canChangePassword={hasEmailPasswordAuth(user)}
+            />
+          </SurfaceCard>
+        }
+        representative={
+          <SurfaceCard className="sm:p-6">
+            <RepresentativeSettingsForm
+              locale={locale}
+              email={profile?.email || user.email || ""}
+              representative={{
+                repFamilyName: profile?.rep_family_name ?? "",
+                repGivenName: profile?.rep_given_name ?? "",
+                repOrganization: profile?.rep_organization ?? "",
+                repEmail: profile?.rep_email ?? "",
+                repPhone: profile?.rep_phone ?? "",
+                repPhoneCountryCode: profile?.rep_phone_country_code ?? "",
+                repMembershipId: profile?.rep_membership_id ?? "",
+                repStreetNum: profile?.rep_street_num ?? "",
+                repStreetName: profile?.rep_street_name ?? "",
+                repCity: profile?.rep_city ?? "",
+                repProvince: profile?.rep_province ?? "",
+                repCountry: profile?.rep_country ?? "Canada",
+                repPostalCode: profile?.rep_postal_code ?? "",
+              }}
+              representativeComplete={isAccountRepComplete(profile)}
+            />
+          </SurfaceCard>
+        }
+        calendar={
+          calendar ? (
+            <CalendarSettingsPage
+              locale={localeParam}
+              canManage={calendar.canManage}
+              settings={calendar.settings}
+              rules={calendar.rules}
+              googleConfigured={calendar.googleConfigured}
+              googleConnection={calendar.googleConnection}
+              microsoftConfigured={calendar.microsoftConfigured}
+              microsoftConnection={calendar.microsoftConnection}
+              zoomConfigured={calendar.zoomConfigured}
+              zoomConnection={calendar.zoomConnection}
+              calendarProvider={calendar.calendarProvider}
+              meetingProvider={calendar.meetingProvider}
+            />
+          ) : undefined
+        }
+      />
     </div>
   );
 }

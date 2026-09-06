@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { syncStripeConnectReturnAction, resumeStripeOnboardingAction } from "@/app/actions/stripe-connect";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { CancelPolicySettings } from "@/components/settings/cancel-policy-settings";
+import { PaymentsSettingsSections } from "@/components/settings/payments-settings-sections";
 import { SageSettings } from "@/components/settings/sage-settings";
 import { SquareSettings } from "@/components/settings/square-settings";
 import { StripeSettings } from "@/components/settings/stripe-settings";
@@ -107,8 +108,7 @@ export default async function PaymentsSettingsPage({
   const policyValues = stripeEnabled ? stripe : squareEnabled ? square : null;
 
   return (
-    <SurfaceCard className="space-y-8 sm:p-6">
-      <p className="text-sm text-muted-foreground">{t("processorExclusiveHelp")}</p>
+    <div className="space-y-4">
       {squareFlash === "connected" ? (
         <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
           {t("squareConnectedFlash")}
@@ -154,29 +154,43 @@ export default async function PaymentsSettingsPage({
           })}
         </p>
       ) : null}
-      <SquareSettings
-        locale={locale}
-        configured={squareConfigured()}
-        connection={square}
-        otherProcessorConnected={stripeEnabled}
+      <PaymentsSettingsSections
+        defaultValue={sageFlash ? "sage" : "processors"}
+        processors={
+          <SurfaceCard className="space-y-8 sm:p-6">
+            <p className="text-sm text-muted-foreground">
+              {t("processorExclusiveHelp")}
+            </p>
+            <SquareSettings
+              locale={locale}
+              configured={squareConfigured()}
+              connection={square}
+              otherProcessorConnected={stripeEnabled}
+            />
+            <StripeSettings
+              locale={locale}
+              configured={stripeConfigured()}
+              connection={stripe}
+              otherProcessorConnected={squareEnabled}
+            />
+            {policyValues ? (
+              <CancelPolicySettings locale={locale} values={policyValues} />
+            ) : null}
+          </SurfaceCard>
+        }
+        sage={
+          <SurfaceCard className="sm:p-6">
+            <SageSettings
+              locale={locale}
+              configured={sageConfigured()}
+              connection={sageConnection}
+              ledgers={ledgers}
+              taxRates={taxRates}
+              mappings={mappings ?? []}
+            />
+          </SurfaceCard>
+        }
       />
-      <StripeSettings
-        locale={locale}
-        configured={stripeConfigured()}
-        connection={stripe}
-        otherProcessorConnected={squareEnabled}
-      />
-      {policyValues ? (
-        <CancelPolicySettings locale={locale} values={policyValues} />
-      ) : null}
-      <SageSettings
-        locale={locale}
-        configured={sageConfigured()}
-        connection={sageConnection}
-        ledgers={ledgers}
-        taxRates={taxRates}
-        mappings={mappings ?? []}
-      />
-    </SurfaceCard>
+    </div>
   );
 }

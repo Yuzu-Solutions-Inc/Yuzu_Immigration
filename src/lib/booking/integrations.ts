@@ -11,7 +11,8 @@ export function calendarSettingsHref(
     if (value) params.set(key, value);
   }
   const qs = params.toString();
-  return `/${locale}${SETTINGS_CALENDAR_PATH}${qs ? `?${qs}` : ""}`;
+  const hash = qs ? "#calendar" : "";
+  return `/${locale}${SETTINGS_CALENDAR_PATH}${qs ? `?${qs}` : ""}${hash}`;
 }
 
 export type CalendarProvider = "google" | "microsoft";
