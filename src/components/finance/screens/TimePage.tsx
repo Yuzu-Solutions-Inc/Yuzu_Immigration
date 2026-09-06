@@ -109,7 +109,7 @@ function ItemNameInput({
 export function TimePage() {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
-  const embedded = pathname.startsWith('/billing')
+  const embedded = pathname.startsWith('/engagements') || pathname.startsWith('/billing')
   const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
   const [rows, setRows] = useState<TimeEntryWithLines[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
@@ -719,7 +719,7 @@ export function TimePage() {
       </Modal>
 
       {embedded && unbilledCount > 0 && (
-        <WorkflowFooter to="/billing/invoices" label={t('time.createInvoice')}>
+        <WorkflowFooter to="/engagements/invoices" label={t('time.createInvoice')}>
           {t('time.toBillCount', { count: unbilledCount })}
         </WorkflowFooter>
       )}

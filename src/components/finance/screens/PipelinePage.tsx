@@ -456,7 +456,7 @@ export function PipelinePage() {
         début. Forfaits : montant réparti au prorata de toutes les heures planifiées du projet.
       </p>
 
-      <WorkflowFooter to="/billing/time" label={t('pipeline.logTime')}>
+      <WorkflowFooter to="/engagements/time" label={t('pipeline.logTime')}>
         {t('pipeline.readyToLog')}
       </WorkflowFooter>
     </div>

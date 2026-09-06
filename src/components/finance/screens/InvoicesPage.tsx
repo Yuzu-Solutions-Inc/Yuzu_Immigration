@@ -92,7 +92,7 @@ function LineItemsTable({ lines }: { lines: (InvoiceLineItem | InvoiceLineDraft)
 export function InvoicesPage() {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
-  const embedded = pathname.startsWith('/billing')
+  const embedded = pathname.startsWith('/engagements') || pathname.startsWith('/billing')
   const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
   const { blockIfClosed } = usePeriodCloseGuard()
   const [rows, setRows] = useState<Invoice[]>([])

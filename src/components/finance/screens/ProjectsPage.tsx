@@ -68,7 +68,7 @@ type BillingOutletContext = { refreshMetrics?: () => void }
 export function ProjectsPage() {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
-  const embedded = pathname.startsWith('/billing')
+  const embedded = pathname.startsWith('/engagements') || pathname.startsWith('/billing')
   const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
   const [rows, setRows] = useState<Project[]>([])
   const [partners, setPartners] = useState<Partner[]>([])
@@ -527,7 +527,7 @@ export function ProjectsPage() {
       {rows.length === 0 ? <EmptyState message={t('projects.empty')} /> : list}
       {formModal}
       {embedded && rows.some((p) => p.status === 'active') ? (
-        <WorkflowFooter to="/billing/pipeline" label={t('projects.planPipeline')}>
+        <WorkflowFooter to="/engagements/pipeline" label={t('projects.planPipeline')}>
           {t('projects.confirmActive')}
         </WorkflowFooter>
       ) : null}

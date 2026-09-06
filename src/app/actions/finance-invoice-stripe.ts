@@ -53,8 +53,8 @@ export async function createInvoiceStripeLinkAction(
       amount: Number(invoice.total),
       currency: (invoice.currency as string) || "CAD",
       customerEmail: (partner?.email as string | null) ?? null,
-      successUrl: `${origin}/${locale}/billing/invoices?paid=${invoice.id}`,
-      cancelUrl: `${origin}/${locale}/billing/invoices`,
+      successUrl: `${origin}/${locale}/engagements/invoices?paid=${invoice.id}`,
+      cancelUrl: `${origin}/${locale}/engagements/invoices`,
     });
     return { url: checkout.url };
   } catch (cause) {

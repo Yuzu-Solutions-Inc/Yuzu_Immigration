@@ -1,19 +1,20 @@
 import { setRequestLocale } from "next-intl/server";
 
 import { FinanceRouteGuard } from "@/components/finance/finance-route-guard";
+import { BillingPage } from "@/components/finance/screens/BillingPage";
 
-import { InvoicesPage } from "@/components/finance/screens/InvoicesPage";
-
-export default async function Page({
+export default async function EngagementsLayout({
+  children,
   params,
 }: {
+  children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
   return (
     <FinanceRouteGuard locale={locale}>
-      <InvoicesPage />
+      <BillingPage>{children}</BillingPage>
     </FinanceRouteGuard>
   );
 }

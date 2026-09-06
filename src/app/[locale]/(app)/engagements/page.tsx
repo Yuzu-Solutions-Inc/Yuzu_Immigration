@@ -1,18 +1,10 @@
-import { setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 
-import { FinanceRouteGuard } from "@/components/finance/finance-route-guard";
-import { ProjectsPage } from "@/components/finance/screens/ProjectsPage";
-
-export default async function Page({
+export default async function EngagementsIndexPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  setRequestLocale(locale);
-  return (
-    <FinanceRouteGuard locale={locale}>
-      <ProjectsPage />
-    </FinanceRouteGuard>
-  );
+  redirect(`/${locale}/engagements/projects`);
 }

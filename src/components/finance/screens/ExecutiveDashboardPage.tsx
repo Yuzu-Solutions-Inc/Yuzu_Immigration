@@ -171,14 +171,14 @@ export function ExecutiveDashboardPage({
               value={formatCad(worked.total)}
               sub={t('dashboard.workedHoursFixed', { hours: worked.hours, fixed: formatCad(worked.fixed) })}
               trend={trends.workedRevenue}
-              to="/billing/time"
+              to="/engagements/time"
             />
             <ActivityMetricRow
               label={t('dashboard.invoicedRevenue')}
               value={formatCad(invoiced)}
               sub={t('dashboard.invoicedHtGl', { amount: formatCad(recognized) })}
               trend={trends.invoicedRevenue}
-              to="/billing/invoices"
+              to="/engagements/invoices"
             />
             <ActivityMetricRow
               label={t('dashboard.collections')}
@@ -189,7 +189,7 @@ export function ExecutiveDashboardPage({
                   : t('dashboard.clientPayments')
               }
               trend={trends.cashCollected}
-              to="/billing/invoices"
+              to="/engagements/invoices"
             />
           </div>
         </div>

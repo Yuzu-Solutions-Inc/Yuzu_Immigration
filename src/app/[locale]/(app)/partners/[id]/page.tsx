@@ -100,7 +100,7 @@ export default async function PartnerDetailPage({
           </div>
           {financeOn ? (
             <Link
-              href="/engagements"
+              href="/engagements/projects"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               {t("engagementsLink")}
