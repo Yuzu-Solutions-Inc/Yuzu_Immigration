@@ -1,8 +1,8 @@
 import { setRequestLocale } from "next-intl/server";
 
 import { FinanceRouteGuard } from "@/components/finance/finance-route-guard";
-
 import { CompensationPage } from "@/components/finance/screens/CompensationPage";
+import { loadCompensationMetrics } from "@/lib/finance/load-screens";
 
 export default async function CompensationLayout({
   children,
@@ -15,7 +15,12 @@ export default async function CompensationLayout({
   setRequestLocale(locale);
   return (
     <FinanceRouteGuard locale={locale}>
-      <CompensationPage>{children}</CompensationPage>
+      <CompensationLayoutBody>{children}</CompensationLayoutBody>
     </FinanceRouteGuard>
   );
+}
+
+async function CompensationLayoutBody({ children }: { children: React.ReactNode }) {
+  const metrics = await loadCompensationMetrics();
+  return <CompensationPage initialMetrics={metrics}>{children}</CompensationPage>;
 }

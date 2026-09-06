@@ -28,6 +28,7 @@ import { PageShell } from '@/components/finance/PageShell'
 import { AlertBanner } from '@/components/finance/AlertBanner'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { db } from '@/lib/finance/db'
+import { fetchDividendsScreen, type DividendsScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 type CompensationOutletContext = { refreshMetrics?: () => void }
@@ -39,14 +40,14 @@ const emptyForm = {
   notes: '',
 }
 
-export function DividendsPage() {
+export function DividendsPage({ initial }: { initial?: DividendsScreenData }) {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
   const embedded = pathname.startsWith('/compensation')
   const { refreshMetrics } = useFinanceOutlet<CompensationOutletContext>() ?? {}
   const { blockIfClosed } = usePeriodCloseGuard()
-  const [rows, setRows] = useState<Dividend[]>([])
-  const [shareholders, setShareholders] = useState<Shareholder[]>([])
+  const [rows, setRows] = useState<Dividend[]>(initial?.rows ?? [])
+  const [shareholders, setShareholders] = useState<Shareholder[]>(initial?.shareholders ?? [])
   const [open, setOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [selected, setSelected] = useState<Dividend | null>(null)
@@ -72,19 +73,14 @@ export function DividendsPage() {
       : 0
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const [div, sh] = await Promise.all([
-      db
-        .from('dividends')
-        .select('*, dividend_allocations(id, amount, shareholder_id, employee_id, shareholders(legal_name), employees(first_name, last_name))')
-        .order('declared_date', { ascending: false }),
-      db.from('shareholders').select('*').eq('active', true).order('legal_name'),
-    ])
-    setRows((div.data as Dividend[]) ?? [])
-    setShareholders((sh.data as Shareholder[]) ?? [])
+    const data = await fetchDividendsScreen(db)
+    setRows(data.rows)
+    setShareholders(data.shareholders)
     refreshMetrics?.()
   }
 
@@ -229,7 +225,7 @@ export function DividendsPage() {
             onClear={clearFilters}
             actions={embedded ? declareBtn : undefined}
           />
-          <DataTable minWidth={900}>
+          <DataTable>
             <thead className="bg-muted text-left">
               <tr>
                 <FilterTh label="Déclaré le">
@@ -299,7 +295,7 @@ export function DividendsPage() {
         </>
       )}
 
-      <Modal title={t('dividends.declare')} open={open} onClose={() => setOpen(false)}>
+      <Modal title={t('dividends.declare')} open={open} onClose={() => setOpen(false)} wide>
         <form onSubmit={save} className="space-y-3 text-sm">
           <p className="text-sm text-muted-foreground">
             La déclaration réduit les bénéfices non répartis. Le paiement sera enregistré lors de la réconciliation bancaire.
@@ -329,7 +325,7 @@ export function DividendsPage() {
         </form>
       </Modal>
 
-      <Modal title={t('dividends.detailTitle')} open={detailOpen} onClose={() => setDetailOpen(false)}>
+      <Modal title={t('dividends.detailTitle')} open={detailOpen} onClose={() => setDetailOpen(false)} wide>
         {selected && (
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

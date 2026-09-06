@@ -104,7 +104,7 @@ export function HeaderDateRange({
   'aria-label'?: string
 }) {
   return (
-    <div className="flex min-w-[7.5rem] flex-col gap-1" aria-label={ariaLabel}>
+    <div className="flex min-w-0 flex-col gap-1" aria-label={ariaLabel}>
       <Input
         type="date"
         density="dense"

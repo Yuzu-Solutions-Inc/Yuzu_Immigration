@@ -28,7 +28,7 @@ function stepClass(isActive: boolean, dashed?: boolean) {
     : isActive
       ? 'border-ring bg-action/10 shadow-sm'
       : 'border-border bg-surface hover:border-ring/40 hover:bg-muted'
-  return `flex-1 min-w-[8.5rem] rounded-lg border px-3 py-2.5 text-left transition-colors ${base}`
+  return `flex-1 min-w-0 rounded-lg border px-3 py-2.5 text-left transition-colors ${base}`
 }
 
 function StepPill({
@@ -68,7 +68,7 @@ function StepPill({
 }
 
 function tabClass(isActive: boolean, dashed?: boolean) {
-  const base = 'flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap rounded-lg transition-colors'
+  const base = 'flex w-full min-w-0 items-center gap-1.5 px-2 py-2 text-sm rounded-lg transition-colors'
   if (dashed) {
     return `${base} text-muted-foreground hover:text-foreground hover:bg-muted`
   }
@@ -103,7 +103,7 @@ function StepTab({
       >
         {stepNumber}
       </span>
-      {label}
+      <span className="min-w-0 leading-tight">{label}</span>
     </NavLink>
   )
 }
@@ -127,9 +127,9 @@ export function WorkflowNav({
   if (variant === 'tabs') {
     return (
       <nav aria-label={ariaLabel} className="flex items-center gap-2 min-w-0">
-        <ol className="flex flex-1 min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-border bg-surface p-0.5 snap-x snap-mandatory">
+        <ol className="flex min-w-0 flex-1 items-stretch gap-0.5 overflow-x-hidden rounded-xl border border-border bg-surface p-0.5">
           {steps.map((s, i) => (
-            <li key={s.to} className="shrink-0 snap-start">
+            <li key={s.to} className="min-w-0 flex-1">
               <StepTab
                 stepNumber={i + 1}
                 label={s.label}
@@ -139,7 +139,7 @@ export function WorkflowNav({
             </li>
           ))}
           {terminalSteps.map((t) => (
-            <li key={t.to} className="shrink-0 snap-start ml-0.5 pl-1 border-l border-border">
+            <li key={t.to} className="ml-0.5 min-w-0 flex-1 border-l border-border pl-1">
               <StepTab
                 stepNumber={t.stepNumber}
                 label={t.label}
@@ -175,9 +175,9 @@ export function WorkflowNav({
           </Link>
         )}
       </div>
-      <ol className="ui-workflow-scroll">
+      <ol className="flex min-w-0 flex-wrap items-stretch gap-2">
         {steps.map((s, i) => (
-          <li key={s.to} className="flex items-stretch gap-2 shrink-0 snap-start">
+          <li key={s.to} className="flex min-w-0 flex-1 basis-[10rem] items-stretch gap-2">
             <StepPill
               stepNumber={i + 1}
               label={s.label}
@@ -193,7 +193,7 @@ export function WorkflowNav({
           </li>
         ))}
         {terminalSteps.map((t) => (
-          <li key={t.to} className="flex items-stretch shrink-0 snap-start">
+          <li key={t.to} className="flex min-w-0 flex-1 basis-[10rem] items-stretch">
             <StepPill
               stepNumber={t.stepNumber}
               label={t.label}

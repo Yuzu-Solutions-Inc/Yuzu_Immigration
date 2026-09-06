@@ -15,10 +15,7 @@ import type {
   SalesTaxPeriod,
 } from '@/lib/finance/types'
 import { formatCad, formatDate, relationOne, todayIso } from '@/lib/finance/format'
-import { buildFinancialSnapshot, payrollAllRemittancesTotal, statementBalanceFromImport } from '@/lib/finance/financials'
-import { fetchGeneralLedgerData } from '@/lib/finance/glDataLoader'
-import { allTimeRange } from '@/lib/finance/fiscalPeriod'
-import { invoiceBalance } from '@/lib/finance/invoice'
+import { payrollAllRemittancesTotal, statementBalanceFromImport } from '@/lib/finance/financials'
 import { providerPartners } from '@/lib/finance/partners'
 import { EXPENSE_CATEGORY_LABELS } from '@/lib/finance/chartOfAccounts'
 import { employeeDisplayName } from '@/lib/finance/payrollCalc'
@@ -62,6 +59,7 @@ import { MetricCard, MetricGrid } from '@/components/finance/MetricCard'
 import { AlertBanner } from '@/components/finance/AlertBanner'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { db } from '@/lib/finance/db'
+import { fetchBankScreen, type BankScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 const CATEGORIES: ExpenseCategory[] = [
@@ -171,21 +169,23 @@ function sourceLabel(tx: BankTransaction) {
   return 'Manuel'
 }
 
-export function BankPage() {
+export function BankPage({ initial }: { initial?: BankScreenData }) {
   const t = useTranslations('financeApp')
   const fileRef = useRef<HTMLInputElement>(null)
   const { blockIfClosed } = usePeriodCloseGuard()
-  const [rows, setRows] = useState<BankTransaction[]>([])
-  const [invoices, setInvoices] = useState<InvoiceWithPaid[]>([])
-  const [partners, setPartners] = useState<Partner[]>([])
-  const [settings, setSettings] = useState<OrganizationSettings | null>(null)
-  const [bookCash, setBookCash] = useState(0)
-  const [paymentMap, setPaymentMap] = useState<Record<string, Payment>>({})
-  const [expenseMap, setExpenseMap] = useState<Record<string, Expense>>({})
-  const [payrollRuns, setPayrollRuns] = useState<BankPayrollRun[]>([])
-  const [dividends, setDividends] = useState<Dividend[]>([])
-  const [salesTaxPeriods, setSalesTaxPeriods] = useState<SalesTaxPeriod[]>([])
-  const [corpTaxRecords, setCorpTaxRecords] = useState<CorporateTaxRecord[]>([])
+  const [rows, setRows] = useState<BankTransaction[]>(initial?.rows ?? [])
+  const [invoices, setInvoices] = useState<InvoiceWithPaid[]>(initial?.invoices ?? [])
+  const [partners, setPartners] = useState<Partner[]>(initial?.partners ?? [])
+  const [settings, setSettings] = useState<OrganizationSettings | null>(initial?.settings ?? null)
+  const [bookCash, setBookCash] = useState(initial?.bookCash ?? 0)
+  const [paymentMap, setPaymentMap] = useState<Record<string, Payment>>(initial?.paymentMap ?? {})
+  const [expenseMap, setExpenseMap] = useState<Record<string, Expense>>(initial?.expenseMap ?? {})
+  const [payrollRuns, setPayrollRuns] = useState<BankPayrollRun[]>(
+    (initial?.payrollRuns as BankPayrollRun[] | undefined) ?? [],
+  )
+  const [dividends, setDividends] = useState<Dividend[]>(initial?.dividends ?? [])
+  const [salesTaxPeriods, setSalesTaxPeriods] = useState<SalesTaxPeriod[]>(initial?.salesTaxPeriods ?? [])
+  const [corpTaxRecords, setCorpTaxRecords] = useState<CorporateTaxRecord[]>(initial?.corpTaxRecords ?? [])
 
   const [assignmentFilter, setAssignmentFilter] = useState<AssignmentFilter>('unassigned')
   const [search, setSearch] = useState('')
@@ -247,62 +247,23 @@ export function BankPage() {
   })
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const [bank, inv, pay, exp, part, set, payroll, div, corpTax, salesTax] = await Promise.all([
-      db.from('bank_transactions').select('*').order('transaction_date', { ascending: false }),
-      db.from('invoices').select('*, partners(legal_name)').neq('status', 'void').order('invoice_date', { ascending: false }),
-      db.from('payments').select('*, invoices(invoice_number, total, partner_id)'),
-      db.from('expenses').select('*'),
-      db.from('partners').select('*').order('legal_name'),
-      db.from('organization_settings').select('*').maybeSingle(),
-      db
-        .from('payroll_runs')
-        .select(
-          'id, payment_date, pay_period_start, pay_period_end, net_pay, remittance_status, remittance_date, remittance_reference, gross_pay, federal_tax, provincial_tax, cpp_employee, ei_employee, qpip_employee, cpp_employer, ei_employer, qpip_employer, other_deductions, employer_benefits, employees(first_name, last_name)'
-        )
-        .order('payment_date', { ascending: false }),
-      db.from('dividends').select('id, declared_date, payment_date, total_amount, paid_amount, description, status').order('declared_date', { ascending: false }),
-      db.from('corporate_tax_records').select('*').order('due_date', { ascending: true }),
-      db.from('sales_tax_periods').select('*').order('period_end', { ascending: false }),
-    ])
-
-    const paidMap: Record<string, number> = {}
-    for (const p of pay.data ?? []) {
-      paidMap[p.invoice_id] = (paidMap[p.invoice_id] ?? 0) + Number(p.amount)
-    }
-
-    const enriched = (inv.data ?? []).map((i) => {
-      const paid = paidMap[i.id] ?? 0
-      return { ...(i as Invoice), paid, balance: invoiceBalance(Number(i.total), paid) }
-    })
-
-    const payments = (pay.data as Payment[]) ?? []
-    const expenses = (exp.data as Expense[]) ?? []
-
-    setRows((bank.data as BankTransaction[]) ?? [])
-    setInvoices(enriched)
-    setPartners((part.data as Partner[]) ?? [])
-    setSettings(set.data)
-    setPaymentMap(Object.fromEntries(payments.map((p) => [p.id, p])))
-    setExpenseMap(Object.fromEntries(expenses.map((e) => [e.id, e])))
-    setPayrollRuns((payroll.data ?? []) as BankPayrollRun[])
-    setDividends((div.data as Dividend[]) ?? [])
-    setSalesTaxPeriods((salesTax.data as SalesTaxPeriod[]) ?? [])
-    setCorpTaxRecords((corpTax.data as CorporateTaxRecord[]) ?? [])
-
-    const { data: glData } = await fetchGeneralLedgerData()
-    const fin = buildFinancialSnapshot(
-      {
-        ...glData,
-        bankTransactions: bank.data ?? [],
-        settings: set.data ?? glData.settings ?? undefined,
-      },
-      allTimeRange()
-    )
-    setBookCash(fin.netCash)
+    const data = await fetchBankScreen(db)
+    setRows(data.rows)
+    setInvoices(data.invoices)
+    setPartners(data.partners)
+    setSettings(data.settings)
+    setPaymentMap(data.paymentMap)
+    setExpenseMap(data.expenseMap)
+    setPayrollRuns(data.payrollRuns as BankPayrollRun[])
+    setDividends(data.dividends)
+    setSalesTaxPeriods(data.salesTaxPeriods)
+    setCorpTaxRecords(data.corpTaxRecords)
+    setBookCash(data.bookCash)
   }
 
   async function handleCsvUpload(file: File) {

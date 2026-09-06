@@ -34,7 +34,7 @@ export const listTableCardViewportClassName =
   "min-h-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden";
 
 export const listTableScrollClassName =
-  "lg:min-h-0 lg:flex-1 lg:overflow-auto [&_[data-slot=table-container]]:overflow-visible";
+  "min-w-0 overflow-x-hidden lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden [&_[data-slot=table-container]]:overflow-visible [&_table]:table-fixed";
 
 export const listTableStickyHeaderClassName = "sticky top-0 z-10 bg-surface";
 
@@ -52,7 +52,8 @@ export const listMobileItemClassName =
 export const listMobileEmptyClassName =
   "rounded-xl border border-border bg-surface px-4 py-8 text-center text-[15px] text-muted-foreground";
 
-export const listTableHeadClassName = "h-auto py-2.5 align-bottom";
+export const listTableHeadClassName =
+  "h-auto min-w-0 whitespace-normal py-2.5 align-bottom";
 
 export const listTableEdgeStartClassName = "pl-4";
 

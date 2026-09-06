@@ -55,6 +55,7 @@ import { PageShell } from '@/components/finance/PageShell'
 import { AlertBanner } from '@/components/finance/AlertBanner'
 import { usePeriodCloseGuard } from '@/components/finance/contexts/PeriodCloseContext'
 import { db } from '@/lib/finance/db'
+import { fetchTimeScreen, type TimeScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 type Filter = 'all' | 'unbilled' | 'invoiced'
@@ -66,9 +67,6 @@ const emptyLine = (): TimeEntryLineDraft => ({
   notes: '',
   billable: true,
 })
-
-const TIME_SELECT =
-  '*, time_entry_lines(id, item_name, hours, notes, billable, sort_order), projects(name, default_hourly_rate, billing_type, fixed_price, partner_id, partners(legal_name)), employees(first_name, last_name), invoices(invoice_number)'
 
 function ItemNameInput({
   id,
@@ -106,15 +104,17 @@ function ItemNameInput({
   )
 }
 
-export function TimePage() {
+export function TimePage({ initial }: { initial?: TimeScreenData }) {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
-  const embedded = pathname.startsWith('/billing')
+  const embedded = pathname.startsWith('/engagements') || pathname.startsWith('/billing')
   const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
-  const [rows, setRows] = useState<TimeEntryWithLines[]>([])
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [allProjects, setAllProjects] = useState<Project[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
+  const [rows, setRows] = useState<TimeEntryWithLines[]>(initial?.entries ?? [])
+  const [employees, setEmployees] = useState<Employee[]>(initial?.employees ?? [])
+  const [allProjects, setAllProjects] = useState<Project[]>(initial?.allProjects ?? [])
+  const [projects, setProjects] = useState<Project[]>(
+    () => (initial?.allProjects ?? []).filter((x) => x.status === 'active'),
+  )
   const [billingFilter, setBillingFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
@@ -171,19 +171,16 @@ export function TimePage() {
   const hasFilters = !!(search || projectFilter || partnerFilter || dateFrom || dateTo || billingFilter !== 'all')
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const [p, entries, emp] = await Promise.all([
-      db.from('projects').select('*, partners(legal_name)').order('name'),
-      db.from('time_entries').select(TIME_SELECT).order('entry_date', { ascending: false }),
-      db.from('employees').select('*').eq('active', true).order('last_name').order('first_name'),
-    ])
-    setAllProjects((p.data as Project[]) ?? [])
-    setProjects(((p.data as Project[]) ?? []).filter((x) => x.status === 'active'))
-    setRows((entries.data as TimeEntryWithLines[]) ?? [])
-    setEmployees((emp.data as Employee[]) ?? [])
+    const data = await fetchTimeScreen(db)
+    setAllProjects(data.allProjects)
+    setProjects(data.allProjects.filter((x) => x.status === 'active'))
+    setRows(data.entries)
+    setEmployees(data.employees)
     refreshMetrics?.()
   }
 
@@ -408,7 +405,7 @@ export function TimePage() {
             onClear={clearFilters}
             actions={embedded ? logTimeBtn : undefined}
           />
-          <DataTable minWidth={960}>
+          <DataTable>
             <thead className="bg-muted text-left">
               <tr>
                 <FilterTh label={t('time.date')}>
@@ -420,7 +417,7 @@ export function TimePage() {
                   />
                 </FilterTh>
                 <FilterTh label={t('time.project')}>
-                  <div className="flex flex-col gap-1 min-w-[8rem]">
+                  <div className="flex min-w-0 flex-col gap-1">
                     <HeaderSelect
                       value={projectFilter}
                       onChange={setProjectFilter}
@@ -609,7 +606,7 @@ export function TimePage() {
             <div className="divide-y divide-border">
               {form.lines.map((line, index) => (
                 <div key={index} className="space-y-3 p-4">
-                  <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-12">
+                  <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-12">
                     <Field className="sm:col-span-5">
                       <FieldLabel htmlFor={`timesheet-item-${index}`} required>
                         {t('time.item')}
@@ -719,7 +716,7 @@ export function TimePage() {
       </Modal>
 
       {embedded && unbilledCount > 0 && (
-        <WorkflowFooter to="/billing/invoices" label={t('time.createInvoice')}>
+        <WorkflowFooter to="/engagements/invoices" label={t('time.createInvoice')}>
           {t('time.toBillCount', { count: unbilledCount })}
         </WorkflowFooter>
       )}

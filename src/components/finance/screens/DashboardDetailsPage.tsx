@@ -177,7 +177,7 @@ export function DashboardDetailsPage() {
             value={formatCad(worked.total)}
             sub={t('dashboard.workedHoursBreakdown', { hours: worked.hours, hourly: formatCad(worked.hourly), fixed: formatCad(worked.fixed) })}
             trend={trends.workedRevenue}
-            to="/billing/time"
+            to="/engagements/time"
           />
           <KpiCard
             dense
@@ -189,7 +189,7 @@ export function DashboardDetailsPage() {
                 : t('dashboard.htOnPeriod')
             }
             trend={trends.invoicedRevenue}
-            to="/billing/invoices"
+            to="/engagements/invoices"
           />
           <KpiCard
             dense
@@ -201,14 +201,14 @@ export function DashboardDetailsPage() {
                 : t('dashboard.clientPaymentsPeriod')
             }
             trend={trends.cashCollected}
-            to="/billing/invoices"
+            to="/engagements/invoices"
           />
           <KpiCard
             dense
             label={t('dashboard.workBillingGap')}
             value={formatCad(billingGap)}
             sub={billingGap > 0 ? t('dashboard.unbilledWork') : billingGap < 0 ? t('dashboard.billedBeyondTime') : t('dashboard.aligned')}
-            to="/billing/invoices"
+            to="/engagements/invoices"
           />
         </MetricGrid>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -248,7 +248,7 @@ export function DashboardDetailsPage() {
                 ? t('dashboard.arHint', { rate: fin.billing.collectionRatePct.toFixed(1) })
                 : t('dashboard.glCumulative')
             }
-            to="/billing/invoices"
+            to="/engagements/invoices"
           />
         </MetricGrid>
       </DashboardSection>
@@ -284,8 +284,8 @@ export function DashboardDetailsPage() {
       <DashboardSection title={t('dashboard.billingPipeline')}>
         <MetricGrid cols={4} dense>
           <KpiCard dense label={t('dashboard.activePartners')} value={String(ops.partners)} to="/partners" />
-          <KpiCard dense label={t('dashboard.unbilledHours')} value={`${ops.unbilledHours} h`} sub={t('dashboard.unbilledHoursHint')} to="/billing/time" />
-          <KpiCard dense label={t('dashboard.wipToBill')} value={formatCad(ops.unbilledAmount)} sub={t('dashboard.wipToBillHint')} to="/billing/invoices" />
+          <KpiCard dense label={t('dashboard.unbilledHours')} value={`${ops.unbilledHours} h`} sub={t('dashboard.unbilledHoursHint')} to="/engagements/time" />
+          <KpiCard dense label={t('dashboard.wipToBill')} value={formatCad(ops.unbilledAmount)} sub={t('dashboard.wipToBillHint')} to="/engagements/invoices" />
           <KpiCard dense label={t('dashboard.pendingReimb')} value={formatCad(ops.pendingReimbursement)} to="/employee-expenses" />
         </MetricGrid>
       </DashboardSection>

@@ -4,6 +4,7 @@ import {
   openFinanceResultAction,
   sealFinanceValuesAction,
 } from "@/app/actions/finance-crypto";
+import type { FinanceQueryCall } from "@/lib/finance/query-calls";
 
 type OrgRow = Record<string, unknown>;
 
@@ -14,15 +15,29 @@ function withOrg<T>(values: T, orgId: string): T {
   return { ...(values as object), organization_id: orgId } as T;
 }
 
-type QueryResult = {
+export type QueryResult = {
   data: unknown;
   error: unknown;
   count?: number | null;
+  status?: number;
+  statusText?: string;
 };
 
 function isQueryResult(value: unknown): value is QueryResult {
   return Boolean(value) && typeof value === "object" && "data" in (value as object);
 }
+
+export type FinanceDbCrypto = {
+  openRead: (table: string, result: QueryResult) => Promise<QueryResult>;
+  seal: (table: string, values: unknown) => Promise<unknown>;
+  /** When set, select chains run here instead of on this supabase client. */
+  runRead?: (table: string, calls: FinanceQueryCall[]) => Promise<QueryResult>;
+};
+
+const defaultCrypto: FinanceDbCrypto = {
+  openRead: (table, result) => openFinanceResultAction(table, result),
+  seal: (table, values) => sealFinanceValuesAction(table, values),
+};
 
 function wrapBuilder(
   table: string,
@@ -58,9 +73,9 @@ function wrapBuilder(
 function wrapSealedBuilder(
   table: string,
   builderPromise: Promise<object>,
-  calls: { prop: string; args: unknown[] }[] = [],
+  openRead: (table: string, result: QueryResult) => Promise<QueryResult>,
+  calls: FinanceQueryCall[] = [],
 ): object {
-  const open = (result: QueryResult) => openFinanceResultAction(table, result);
   return new Proxy(
     {},
     {
@@ -79,13 +94,13 @@ function wrapSealedBuilder(
                 return Promise.resolve(next);
               })
               .then(async (result) => {
-                if (isQueryResult(result)) return open(result);
+                if (isQueryResult(result)) return openRead(table, result);
                 return result;
               })
               .then(resolve, reject);
         }
         return (...args: unknown[]) =>
-          wrapSealedBuilder(table, builderPromise, [
+          wrapSealedBuilder(table, builderPromise, openRead, [
             ...calls,
             { prop: String(prop), args },
           ]);
@@ -94,52 +109,92 @@ function wrapSealedBuilder(
   );
 }
 
+function wrapRecordedRead(
+  table: string,
+  calls: FinanceQueryCall[],
+  runRead: (table: string, calls: FinanceQueryCall[]) => Promise<QueryResult>,
+): object {
+  return new Proxy(
+    {},
+    {
+      get(_target, prop) {
+        if (prop === "then") {
+          return (resolve: (value: unknown) => void, reject: (reason: unknown) => void) =>
+            runRead(table, calls).then(resolve, reject);
+        }
+        return (...args: unknown[]) =>
+          wrapRecordedRead(
+            table,
+            [...calls, { prop: String(prop), args }],
+            runRead,
+          );
+      },
+    },
+  );
+}
+
 /**
  * Org-scoped table access. RLS still allows every org the user belongs to;
  * this filter is the active-workspace UX. PII columns are sealed with the org
- * DEK on write and opened on read (via a server action).
+ * DEK on write and opened on read (inline on the server, via a query action
+ * from the browser).
  */
-export function createFinanceDb(supabase: SupabaseClient, orgId: string) {
-  const openRead = (table: string) => (result: QueryResult) =>
-    openFinanceResultAction(table, result);
-
+export function createFinanceDb(
+  supabase: SupabaseClient,
+  orgId: string,
+  hooks: Partial<FinanceDbCrypto> = {},
+) {
+  const openRead = hooks.openRead ?? defaultCrypto.openRead;
+  const seal = hooks.seal ?? defaultCrypto.seal;
+  const runRead = hooks.runRead;
   return {
     orgId,
     supabase,
     from<Table extends string>(table: Table) {
       const q = supabase.from(table);
       return {
-        select: ((columns?: string, options?: object) =>
-          wrapBuilder(
+        select: ((columns?: string, options?: object) => {
+          if (runRead) {
+            return wrapRecordedRead(
+              table,
+              [{ prop: "select", args: options == null ? [columns ?? "*"] : [columns ?? "*", options] }],
+              runRead,
+            );
+          }
+          return wrapBuilder(
             table,
             q
               .select((columns ?? "*") as "*", options as never)
               .eq("organization_id", orgId),
-            openRead(table),
-          )) as typeof q.select,
+            (result) => openRead(table, result),
+          );
+        }) as typeof q.select,
         insert: ((values: OrgRow | OrgRow[], options?: object) =>
           wrapSealedBuilder(
             table,
-            sealFinanceValuesAction(table, withOrg(values, orgId)).then(
+            seal(table, withOrg(values, orgId)).then(
               (sealed) => q.insert(sealed as never, options as never) as object,
             ),
+            openRead,
           )) as typeof q.insert,
         update: ((values: object, options?: object) =>
           wrapSealedBuilder(
             table,
-            sealFinanceValuesAction(table, values).then(
+            seal(table, values).then(
               (sealed) =>
                 q
                   .update(sealed as never, options as never)
                   .eq("organization_id", orgId) as object,
             ),
+            openRead,
           )) as typeof q.update,
         upsert: ((values: OrgRow | OrgRow[], options?: object) =>
           wrapSealedBuilder(
             table,
-            sealFinanceValuesAction(table, withOrg(values, orgId)).then(
+            seal(table, withOrg(values, orgId)).then(
               (sealed) => q.upsert(sealed as never, options as never) as object,
             ),
+            openRead,
           )) as typeof q.upsert,
         delete: (() =>
           q.delete().eq("organization_id", orgId)) as typeof q.delete,

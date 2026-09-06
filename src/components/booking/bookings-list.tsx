@@ -608,7 +608,6 @@ export function BookingsList({
             <TableRow className="hover:bg-transparent">
               <TableHead
                 className={cn(
-                  "min-w-[8rem]",
                   listTableHeadClassName,
                   listTableEdgeStartClassName,
                 )}
@@ -634,7 +633,7 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <BookingSortButton
                     column="guest"
@@ -653,7 +652,7 @@ export function BookingsList({
                   />
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[8.5rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <BookingSortButton
                     column="service"
@@ -677,7 +676,7 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[7.5rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <BookingSortButton
                     column="host"
@@ -701,7 +700,7 @@ export function BookingsList({
                   </NativeSelect>
                 </div>
               </TableHead>
-              <TableHead className={cn("min-w-[8.5rem]", listTableHeadClassName)}>
+              <TableHead className={cn(listTableHeadClassName)}>
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <BookingSortButton
                     column="status"
@@ -729,7 +728,6 @@ export function BookingsList({
               </TableHead>
               <TableHead
                 className={cn(
-                  "min-w-[8.5rem]",
                   listTableHeadClassName,
                 )}
               >
@@ -831,7 +829,7 @@ export function BookingsList({
                     ) : null}
                   </div>
                 </TableCell>
-                <TableCell className="max-w-[12rem] whitespace-normal">
+                <TableCell className="min-w-0 whitespace-normal">
                   {booking.personId ? (
                     <div className="min-w-0 space-y-0.5">
                       <Link
@@ -858,10 +856,10 @@ export function BookingsList({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="max-w-[10rem] truncate text-sm">
+                <TableCell className="min-w-0 truncate text-sm">
                   {booking.serviceTitle}
                 </TableCell>
-                <TableCell className="max-w-[8rem] truncate text-sm">
+                <TableCell className="min-w-0 truncate text-sm">
                   {booking.hostName}
                 </TableCell>
                 <TableCell className="whitespace-normal">

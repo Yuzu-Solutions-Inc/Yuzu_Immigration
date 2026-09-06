@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/finance/EmptyState'
 import { PageHeader } from '@/components/finance/PageHeader'
 import { AlertBanner } from '@/components/finance/AlertBanner'
 import { db } from '@/lib/finance/db'
+import { fetchShareholdersScreen, type ShareholdersScreenData } from '@/lib/finance/screen-data'
 import { useTranslations } from 'next-intl'
 
 type CompensationOutletContext = { refreshMetrics?: () => void }
@@ -27,33 +28,33 @@ const emptyShareholder = {
   notes: '',
 }
 
-export function ShareholdersPage() {
+export function ShareholdersPage({ initial }: { initial?: ShareholdersScreenData }) {
   const t = useTranslations('financeApp')
   const { refreshMetrics } = useFinanceOutlet<CompensationOutletContext>() ?? {}
-  const [rows, setRows] = useState<Shareholder[]>([])
-  const [employees, setEmployees] = useState<Employee[]>([])
+  const [rows, setRows] = useState<Shareholder[]>(initial?.rows ?? [])
+  const [employees, setEmployees] = useState<Employee[]>(initial?.employees ?? [])
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(emptyShareholder)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(
+    initial?.loadError === 'missing' ? t('shareholders.missingTable') : initial?.loadError ?? null,
+  )
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
     setLoadError(null)
-    const [sh, emp] = await Promise.all([
-      db.from('shareholders').select('*, employees(first_name, last_name)').order('legal_name'),
-      db.from('employees').select('id, first_name, last_name, active').eq('active', true).order('last_name'),
-    ])
-    if (sh.error?.message.includes('shareholders')) {
+    const data = await fetchShareholdersScreen(db)
+    if (data.loadError === 'missing') {
       setLoadError(t('shareholders.missingTable'))
       setRows([])
     } else {
-      setRows((sh.data as Shareholder[]) ?? [])
+      setRows(data.rows)
     }
-    setEmployees((emp.data as Employee[]) ?? [])
+    setEmployees(data.employees)
     refreshMetrics?.()
   }
 

@@ -1,8 +1,8 @@
 import { setRequestLocale } from "next-intl/server";
 
 import { FinanceRouteGuard } from "@/components/finance/finance-route-guard";
-
 import { EmployeesPage } from "@/components/finance/screens/EmployeesPage";
+import { loadEmployeesScreen } from "@/lib/finance/load-screens";
 
 export default async function Page({
   params,
@@ -13,7 +13,12 @@ export default async function Page({
   setRequestLocale(locale);
   return (
     <FinanceRouteGuard locale={locale}>
-      <EmployeesPage />
+      <EmployeesLoader />
     </FinanceRouteGuard>
   );
+}
+
+async function EmployeesLoader() {
+  const initial = await loadEmployeesScreen();
+  return <EmployeesPage initial={initial} />;
 }

@@ -103,7 +103,7 @@ export function DocumentAttachments({
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-muted/50 p-3">
+    <div className="min-w-0 space-y-2 rounded-lg border border-border bg-muted/50 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="text-sm font-medium">{label ?? t('common.documents')}</div>

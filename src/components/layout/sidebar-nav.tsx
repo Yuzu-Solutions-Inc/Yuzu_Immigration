@@ -53,8 +53,12 @@ const navItems: {
 }[] = [
   { href: "/home", key: "home", icon: Home, module: null },
   { href: "/partners", key: "partners", icon: Users, module: null },
+  { href: "/projects", key: "projects", icon: FolderKanban, module: "immigration" },
+  { href: "/calendar", key: "calendar", icon: CalendarDays, module: "bookings" },
+  { href: "/bookings", key: "bookings", icon: ClipboardList, module: "bookings" },
+  { href: "/services", key: "services", icon: Briefcase, module: "services" },
   {
-    href: "/engagements",
+    href: "/engagements/projects",
     key: "engagements",
     icon: FolderKanban,
     module: "finance",
@@ -67,10 +71,6 @@ const navItems: {
     module: "finance",
   },
   { href: "/other", key: "other", icon: LayoutGrid, module: "finance" },
-  { href: "/projects", key: "projects", icon: FolderKanban, module: "immigration" },
-  { href: "/calendar", key: "calendar", icon: CalendarDays, module: "bookings" },
-  { href: "/bookings", key: "bookings", icon: ClipboardList, module: "bookings" },
-  { href: "/services", key: "services", icon: Briefcase, module: "services" },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -82,8 +82,13 @@ function isActive(pathname: string, href: string) {
       pathname.startsWith("/files/")
     );
   }
-  if (href === "/engagements") {
-    return pathname === "/engagements" || pathname.startsWith("/billing/");
+  if (href === "/engagements/projects") {
+    return (
+      pathname === "/engagements" ||
+      pathname.startsWith("/engagements/") ||
+      pathname === "/billing" ||
+      pathname.startsWith("/billing/")
+    );
   }
   if (href === "/compensation/payroll") {
     return pathname === "/compensation" || pathname.startsWith("/compensation/");
@@ -277,6 +282,7 @@ function SidebarBody({
         )}
       >
         <LegalLinks
+          includeHelpAndDocs={false}
           onNavigate={onNavigate}
           className={cn(
             collapsed

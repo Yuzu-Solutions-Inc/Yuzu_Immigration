@@ -48,6 +48,9 @@ const CRUMB_KEYS = {
   settings: "crumbSettings",
   payments: "crumbPayments",
   billing: "crumbBilling",
+  pipeline: "crumbPipeline",
+  time: "crumbTime",
+  invoices: "crumbInvoices",
   account: "crumbAccount",
   organization: "crumbOrganization",
   modules: "crumbOrganization",
@@ -433,6 +436,9 @@ function AppNotifications() {
 
 function AppSupportMenu() {
   const t = useTranslations("topBar");
+  const tHelp = useTranslations("help");
+  const tDocs = useTranslations("docs");
+  const router = useRouter();
 
   return (
     <DropdownMenu>
@@ -443,6 +449,13 @@ function AppSupportMenu() {
         <CircleHelp className="size-4" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuItem onClick={() => router.push("/help")}>
+          {tHelp("link")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/docs")}>
+          {tDocs("link")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
             window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(t("supportHelpSubject"))}`;
@@ -450,7 +463,6 @@ function AppSupportMenu() {
         >
           {t("supportHelp")}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
             window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(t("supportFormSubject"))}`;

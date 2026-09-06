@@ -23,6 +23,10 @@ import { StepActionBar } from '@/components/finance/WorkflowNav'
 import { WorkflowFooter } from '@/components/finance/WorkflowFooter'
 import { db } from '@/lib/finance/db'
 import {
+  fetchEngagementsScreen,
+  type EngagementsScreenData,
+} from '@/lib/finance/screen-data'
+import {
   ListTableCard,
   listFooterClassName,
   listMobileEmptyClassName,
@@ -65,13 +69,13 @@ import { cn } from '@/lib/utils'
 
 type BillingOutletContext = { refreshMetrics?: () => void }
 
-export function ProjectsPage() {
+export function ProjectsPage({ initial }: { initial?: EngagementsScreenData }) {
   const t = useTranslations('financeApp')
   const pathname = usePathname()
-  const embedded = pathname.startsWith('/billing')
+  const embedded = pathname.startsWith('/engagements') || pathname.startsWith('/billing')
   const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
-  const [rows, setRows] = useState<Project[]>([])
-  const [partners, setPartners] = useState<Partner[]>([])
+  const [rows, setRows] = useState<Project[]>(initial?.projects ?? [])
+  const [partners, setPartners] = useState<Partner[]>(initial?.partners ?? [])
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({
     partner_id: '',
@@ -110,16 +114,14 @@ export function ProjectsPage() {
   const hasFilters = !!(search || partnerFilter || statusFilter)
 
   useEffect(() => {
-    load()
+    if (initial) return
+    void load()
   }, [])
 
   async function load() {
-    const [p, c] = await Promise.all([
-      db.from('projects').select('*, partners(legal_name, kind)').order('name'),
-      db.from('partners').select('*').order('legal_name'),
-    ])
-    setRows((p.data as Project[]) ?? [])
-    setPartners(c.data ?? [])
+    const data = await fetchEngagementsScreen(db)
+    setRows(data.projects)
+    setPartners(data.partners)
     refreshMetrics?.()
   }
 
@@ -260,7 +262,7 @@ export function ProjectsPage() {
           <Table>
             <TableHeader className={listTableStickyHeaderClassName}>
               <TableRow className="hover:bg-transparent">
-                <TableHead className={cn('min-w-[12rem]', listTableHeadClassName, listTableEdgeStartClassName)}>
+                <TableHead className={cn(listTableHeadClassName, listTableEdgeStartClassName)}>
                   <div className="flex flex-col gap-1.5">
                     <span className="font-medium">{t('projects.project')}</span>
                     <Input
@@ -273,7 +275,7 @@ export function ProjectsPage() {
                     />
                   </div>
                 </TableHead>
-                <TableHead className={cn('min-w-[10rem]', listTableHeadClassName)}>
+                <TableHead className={cn(listTableHeadClassName)}>
                   <div className="flex flex-col gap-1.5">
                     <span className="font-medium">{t('projects.partner')}</span>
                     <NativeSelect
@@ -293,7 +295,7 @@ export function ProjectsPage() {
                 </TableHead>
                 <TableHead className={cn(listTableHeadClassName)}>{t('projects.billing')}</TableHead>
                 <TableHead className={cn(listTableHeadClassName)}>{t('projects.amount')}</TableHead>
-                <TableHead className={cn('min-w-[8rem]', listTableHeadClassName)}>
+                <TableHead className={cn(listTableHeadClassName)}>
                   <div className="flex flex-col gap-1.5">
                     <span className="font-medium">{t('projects.status')}</span>
                     <NativeSelect
@@ -391,7 +393,7 @@ export function ProjectsPage() {
   )
 
   const formModal = (
-    <Modal title={editingId ? t('projects.edit') : t('projects.new')} open={open} onClose={() => setOpen(false)}>
+    <Modal title={editingId ? t('projects.edit') : t('projects.new')} open={open} onClose={() => setOpen(false)} wide>
       <FormStack onSubmit={save}>
         <Field>
           <FieldLabel htmlFor="engagement-partner" required>
@@ -527,7 +529,7 @@ export function ProjectsPage() {
       {rows.length === 0 ? <EmptyState message={t('projects.empty')} /> : list}
       {formModal}
       {embedded && rows.some((p) => p.status === 'active') ? (
-        <WorkflowFooter to="/billing/pipeline" label={t('projects.planPipeline')}>
+        <WorkflowFooter to="/engagements/pipeline" label={t('projects.planPipeline')}>
           {t('projects.confirmActive')}
         </WorkflowFooter>
       ) : null}

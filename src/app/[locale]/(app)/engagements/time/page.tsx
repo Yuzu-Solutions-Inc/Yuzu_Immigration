@@ -1,8 +1,8 @@
 import { setRequestLocale } from "next-intl/server";
 
-import { FinanceRouteGuard } from "@/components/finance/finance-route-guard";
-
 import { TimePage } from "@/components/finance/screens/TimePage";
+import { loadTimeScreen } from "@/lib/finance/load-screens";
+import { requireModule } from "@/lib/modules/require-module";
 
 export default async function Page({
   params,
@@ -11,9 +11,7 @@ export default async function Page({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return (
-    <FinanceRouteGuard locale={locale}>
-      <TimePage />
-    </FinanceRouteGuard>
-  );
+  await requireModule(locale, "finance");
+  const initial = await loadTimeScreen();
+  return <TimePage initial={initial} />;
 }

@@ -61,8 +61,28 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: "/:locale/billing",
+        destination: "/:locale/engagements/projects",
+        permanent: false,
+      },
+      {
         source: "/:locale/billing/projects",
-        destination: "/:locale/engagements",
+        destination: "/:locale/engagements/projects",
+        permanent: false,
+      },
+      {
+        source: "/:locale/billing/pipeline",
+        destination: "/:locale/engagements/pipeline",
+        permanent: false,
+      },
+      {
+        source: "/:locale/billing/time",
+        destination: "/:locale/engagements/time",
+        permanent: false,
+      },
+      {
+        source: "/:locale/billing/invoices",
+        destination: "/:locale/engagements/invoices",
         permanent: false,
       },
       {

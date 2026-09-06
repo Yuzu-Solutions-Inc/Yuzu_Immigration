@@ -224,7 +224,6 @@ export function PartnersList({
               <TableRow className="hover:bg-transparent">
                 <TableHead
                   className={cn(
-                    "min-w-[12rem]",
                     listTableHeadClassName,
                     listTableEdgeStartClassName,
                   )}
@@ -247,7 +246,7 @@ export function PartnersList({
                     />
                   </div>
                 </TableHead>
-                <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
+                <TableHead className={cn(listTableHeadClassName)}>
                   <div className="flex flex-col gap-1.5">
                     <SortButton
                       column="kind"
@@ -271,7 +270,7 @@ export function PartnersList({
                     </NativeSelect>
                   </div>
                 </TableHead>
-                <TableHead className={cn("min-w-[12rem]", listTableHeadClassName)}>
+                <TableHead className={cn(listTableHeadClassName)}>
                   <SortButton
                     column="email"
                     label={t("partners.email")}
@@ -281,11 +280,11 @@ export function PartnersList({
                   />
                 </TableHead>
                 {immigrationOn ? (
-                  <TableHead className={cn("min-w-[10rem]", listTableHeadClassName)}>
+                  <TableHead className={cn(listTableHeadClassName)}>
                     {t("partners.immigrationStatus")}
                   </TableHead>
                 ) : null}
-                <TableHead className={cn("min-w-[8rem]", listTableHeadClassName)}>
+                <TableHead className={cn(listTableHeadClassName)}>
                   <SortButton
                     column="city"
                     label={t("partners.city")}
