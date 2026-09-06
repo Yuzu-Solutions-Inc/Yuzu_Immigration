@@ -1,14 +1,18 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
+import { FinanceRouteGuard } from "@/components/finance/finance-route-guard";
+import { SettingsPage } from "@/components/finance/screens/SettingsPage";
 import { SurfaceCard } from "@/components/layout/surface-card";
 import { DeleteOrganizationPanel } from "@/components/settings/delete-organization-panel";
 import { OrganizationDpaPanel } from "@/components/settings/organization-dpa-panel";
+import { OrganizationModulesForm } from "@/components/settings/organization-modules-form";
 import { OrganizationSettingsForm } from "@/components/settings/organization-settings-form";
 import { canAdministerOrg, canDeleteOrganization, isOwner } from "@/lib/auth/rbac";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { listOrgMembers } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
+import { isModuleEnabled } from "@/lib/modules/org-modules";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function OrganizationSettingsPage({
@@ -38,17 +42,22 @@ export default async function OrganizationSettingsPage({
   if (!org) redirect(`/${locale}/onboarding`);
 
   const t = await getTranslations("settings");
+  const tm = await getTranslations("modules");
   const members = await listOrgMembers();
   const owner = members.find((member) => isOwner(member.role));
   const ownerName =
     owner?.profile.full_name?.trim() || owner?.profile.email || t("ownerContactUnknown");
+  const financeOn = isModuleEnabled(membership.enabledModules, "finance");
 
   return (
     <div className="space-y-4">
       <SurfaceCard className="space-y-5 sm:p-6">
-        <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("organization")}
-        </h2>
+        <div className="space-y-1">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {t("workspace")}
+          </h2>
+          <p className="text-sm text-muted-foreground">{t("organizationHelp")}</p>
+        </div>
         <div className="rounded-xl border border-border bg-canvas px-4 py-3">
           <p className="text-sm font-medium text-brand">{t("ownerContactTitle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("ownerContactHelp")}</p>
@@ -78,6 +87,29 @@ export default async function OrganizationSettingsPage({
           }}
         />
       </SurfaceCard>
+
+      <div id="modules" className="scroll-mt-6">
+      <SurfaceCard className="space-y-5 sm:p-6">
+        <div className="space-y-1">
+          <h2 className="font-heading text-lg font-semibold text-brand">
+            {tm("title")}
+          </h2>
+          <p className="text-sm text-muted-foreground">{tm("subtitle")}</p>
+        </div>
+        <OrganizationModulesForm initialEnabled={membership.enabledModules} />
+      </SurfaceCard>
+      </div>
+
+      {financeOn ? (
+        <div id="company" className="scroll-mt-6">
+          <FinanceRouteGuard locale={localeParam}>
+            <SurfaceCard className="space-y-5 sm:p-6">
+              <SettingsPage />
+            </SurfaceCard>
+          </FinanceRouteGuard>
+        </div>
+      ) : null}
+
       <SurfaceCard className="sm:p-6">
         <OrganizationDpaPanel
           locale={locale}

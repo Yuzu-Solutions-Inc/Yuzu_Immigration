@@ -2,27 +2,35 @@
 
 import { useTranslations } from "next-intl";
 
+import type { ModuleId } from "@/lib/modules/catalog";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
-export function SettingsTabs({ canAdminister }: { canAdminister: boolean }) {
+export function SettingsTabs({
+  canAdminister,
+  enabledModules,
+}: {
+  canAdminister: boolean;
+  enabledModules: readonly ModuleId[];
+}) {
   const t = useTranslations("settings");
   const pathname = usePathname();
+  const immigrationOn = enabledModules.includes("immigration");
 
   const tabs = [
     { href: "/settings/account", label: t("account") },
-    { href: "/settings/calendar", label: t("calendar") },
-    { href: "/settings/forms", label: t("forms") },
     ...(canAdminister
       ? [
-          { href: "/settings/organization", label: t("organization") },
-          { href: "/settings/modules", label: t("modules") },
+          { href: "/settings/organization", label: t("workspace") },
           { href: "/settings/billing", label: t("teamBilling") },
           { href: "/settings/payments", label: t("payments") },
-          { href: "/settings/security", label: t("security") },
         ]
       : []),
-  ] as const;
+    ...(immigrationOn ? [{ href: "/settings/forms", label: t("forms") }] : []),
+    ...(canAdminister
+      ? [{ href: "/settings/security", label: t("compliance") }]
+      : []),
+  ];
 
   return (
     <nav className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

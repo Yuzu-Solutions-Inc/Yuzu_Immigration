@@ -342,7 +342,7 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
                   {t("hours.preset")}
                 </Button>
                 <Link
-                  href="/settings/calendar#hours"
+                  href="/settings/account#hours"
                   className={cn(buttonVariants({ variant: "outline" }))}
                 >
                   {t("hours.custom")}

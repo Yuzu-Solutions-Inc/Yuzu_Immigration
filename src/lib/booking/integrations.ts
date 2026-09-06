@@ -1,6 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/admin";
 
-export const SETTINGS_CALENDAR_PATH = "/settings/calendar";
+export const SETTINGS_CALENDAR_PATH = "/settings/account";
 
 export function calendarSettingsHref(
   locale: string,

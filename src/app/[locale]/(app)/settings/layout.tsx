@@ -24,7 +24,10 @@ export default async function SettingsLayout({
         </h1>
         <p className="text-[15px] text-muted-foreground">{t("subtitle")}</p>
       </div>
-      <SettingsTabs canAdminister={canAdministerOrg(membership?.role)} />
+      <SettingsTabs
+        canAdminister={canAdministerOrg(membership?.role)}
+        enabledModules={membership?.enabledModules ?? []}
+      />
       {children}
     </div>
   );

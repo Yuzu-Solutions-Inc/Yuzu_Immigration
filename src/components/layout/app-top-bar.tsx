@@ -47,6 +47,8 @@ const CRUMB_KEYS = {
   billing: "crumbBilling",
   account: "crumbAccount",
   organization: "crumbOrganization",
+  modules: "crumbOrganization",
+  company: "crumbOrganization",
   security: "crumbSecurity",
   forms: "crumbForms",
   new: "crumbNew",

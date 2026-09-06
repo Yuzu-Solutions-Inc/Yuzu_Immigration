@@ -144,7 +144,7 @@ export function PeriodClosePage() {
           ) : (
             <p className="text-muted-foreground text-xs">
               {t('periodClose.wipOff')}{' '}
-              <Link href="/settings" className="text-brand hover:underline">
+              <Link href="/settings/organization#company" className="text-brand hover:underline">
                 {t('periodClose.enableInSettings')}
               </Link>
               .

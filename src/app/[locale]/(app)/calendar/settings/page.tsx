@@ -14,5 +14,5 @@ export default async function LegacyCalendarSettingsRoute({
   if (query.microsoft) qs.set("microsoft", query.microsoft);
   if (query.zoom) qs.set("zoom", query.zoom);
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
-  redirect(`/${locale}/settings/calendar${suffix}`);
+  redirect(`/${locale}/settings/account${suffix}`);
 }

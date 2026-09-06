@@ -24,9 +24,6 @@ import { formatCad } from '@/lib/finance/format'
 import { Button } from '@/components/finance/Button'
 import { Field, inputClass } from '@/components/finance/Field'
 import { EmptyState } from '@/components/finance/EmptyState'
-import { PageHeader } from '@/components/finance/PageHeader'
-import { PageShell } from '@/components/finance/PageShell'
-import { TeamSettings } from '@/components/finance/TeamSettings'
 
 const defaults: OrganizationSettingsForm = {
   company_legal_name: '',
@@ -176,13 +173,12 @@ export function SettingsPage() {
 
   if (!userId) return <EmptyState message="Connectez-vous pour gérer les paramètres." />
 
-  return (
-    <PageShell width="narrow">
-      <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
+  const formBody = (
+    <>
       {loadError && (
-        <p className="mb-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{loadError}</p>
+        <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2">{loadError}</p>
       )}
-      <form onSubmit={save} className="space-y-6 ui-card p-5">
+      <form onSubmit={save} className="space-y-6">
         <section className="space-y-3">
           <h2 className="font-medium">Entreprise</h2>
           <Field label="Raison sociale *">
@@ -378,9 +374,16 @@ export function SettingsPage() {
           )}
         </div>
       </form>
-      <div className="ui-card p-5">
-        <TeamSettings />
+    </>
+  )
+
+  return (
+    <div className="space-y-5">
+      <div className="space-y-1">
+        <h2 className="font-heading text-lg font-semibold text-brand">{t('settings.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
-    </PageShell>
+      {formBody}
+    </div>
   )
 }

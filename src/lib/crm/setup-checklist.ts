@@ -38,9 +38,9 @@ const SETUP_HREFS: Record<StaffSetupItemId, string> = {
   account: "/settings/account",
   representative: "/settings/account#representative",
   signature: "/services?contracts=1",
-  hours: "/settings/calendar#hours",
-  calendar: "/settings/calendar#calendar",
-  meeting: "/settings/calendar#meetings",
+  hours: "/settings/account#hours",
+  calendar: "/settings/account#calendar",
+  meeting: "/settings/account#meetings",
   service: "/services",
 };
 
