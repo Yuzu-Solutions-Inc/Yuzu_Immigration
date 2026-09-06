@@ -13,6 +13,7 @@ import {
 } from "@/lib/google/oauth";
 import { GOOGLE_CALENDAR_AAD } from "@/lib/google/oauth";
 import { getGoogleCalendarSecrets, upsertGoogleCalendarSecrets } from "@/lib/google/secrets";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
 import { encryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -58,6 +59,12 @@ export async function GET(request: Request) {
     const redirectOrigin = state.origin || origin;
     const tokens = await exchangeGoogleCode({ origin: redirectOrigin, code });
     const email = await googleUserEmail(tokens.access_token);
+    const orgKey = await getOrgDataKey(state.organizationId);
+    const sealedEmail = encryptOrgRow(
+      "google_calendar_connections",
+      { google_email: email },
+      orgKey,
+    ).google_email;
 
     const { data: existing, error: existingError } = await admin
       .from("google_calendar_connections")
@@ -76,7 +83,7 @@ export async function GET(request: Request) {
         .from("google_calendar_connections")
         .update({
           user_id: user.id,
-          google_email: email,
+          google_email: sealedEmail,
           calendar_id: "primary",
           is_enabled: true,
           updated_at: new Date().toISOString(),
@@ -92,7 +99,7 @@ export async function GET(request: Request) {
         .insert({
           organization_id: state.organizationId,
           user_id: user.id,
-          google_email: email,
+          google_email: sealedEmail,
           calendar_id: "primary",
           is_enabled: true,
         })

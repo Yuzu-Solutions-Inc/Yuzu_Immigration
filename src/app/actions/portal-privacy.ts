@@ -10,6 +10,7 @@ import {
   decryptPersonRow,
   decryptProjectRow,
 } from "@/lib/security/client-pii";
+import { decryptOrgRow } from "@/lib/security/encrypted-fields";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -72,7 +73,11 @@ export async function requestPortalDeletionAction(
         .is("left_at", null),
     ]);
 
-  const contact = org?.privacy_contact_email?.trim().toLowerCase();
+  const contact = decryptOrgRow(
+    "organizations",
+    { privacy_contact_email: org?.privacy_contact_email as string | null },
+    key,
+  ).privacy_contact_email?.trim().toLowerCase();
   if (!contact) return { error: "no_firm_contact" };
   if (!personRow) return { error: "not_found" };
 

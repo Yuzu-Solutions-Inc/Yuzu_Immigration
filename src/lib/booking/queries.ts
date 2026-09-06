@@ -12,6 +12,8 @@ import {
   decryptProjectRow,
   PII_AAD,
 } from "@/lib/security/client-pii";
+import { decryptOrgRow } from "@/lib/security/encrypted-fields";
+import { decryptProfileRow } from "@/lib/security/profile-pii";
 import { decryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
@@ -206,13 +208,15 @@ async function loadHostCalendars(input: {
     .from("profiles")
     .select("id, full_name, email")
     .in("id", hostIds);
+  const orgKey = await getOrgDataKey(input.organizationId);
   const nameById = new Map(
-    (profiles ?? []).map((profile) => [
-      profile.id as string,
-      (profile.full_name as string | null)?.trim() ||
-        (profile.email as string | null) ||
-        (profile.id as string),
-    ]),
+    (profiles ?? []).map((profile) => {
+      const opened = decryptProfileRow(profile);
+      return [
+        opened.id as string,
+        opened.full_name?.trim() || opened.email || (opened.id as string),
+      ];
+    }),
   );
 
   const connections = ((connectionsRes.data ?? []) as {
@@ -223,14 +227,20 @@ async function loadHostCalendars(input: {
   }[]).filter((connection) =>
     isActiveCalendarVendor(connection.user_id, "google", calendarProviders),
   );
-  const microsoftConnections = ((microsoftRes.data ?? []) as {
-    id: string;
-    user_id: string;
-    microsoft_email: string | null;
-    is_enabled: boolean;
-  }[]).filter((connection) =>
-    isActiveCalendarVendor(connection.user_id, "microsoft", calendarProviders),
-  );
+  const microsoftConnections = (
+    (microsoftRes.data ?? []) as {
+      id: string;
+      user_id: string;
+      microsoft_email: string | null;
+      is_enabled: boolean;
+    }[]
+  )
+    .map((connection) =>
+      decryptOrgRow("microsoft_calendar_connections", connection, orgKey),
+    )
+    .filter((connection) =>
+      isActiveCalendarVendor(connection.user_id, "microsoft", calendarProviders),
+    );
   const connectionByUser = new Map(
     connections.map((connection) => [connection.user_id, connection]),
   );
@@ -1154,9 +1164,14 @@ export async function getMyGoogleCalendarConnection(): Promise<GoogleCalendarCon
   if (!data?.is_enabled) return null;
   const secrets = await getGoogleCalendarSecrets(data.id as string);
   if (!secrets) return null;
+  const opened = decryptOrgRow(
+    "google_calendar_connections",
+    data,
+    await getOrgDataKey(orgId),
+  );
   return {
-    user_id: data.user_id as string,
-    google_email: data.google_email as string | null,
+    user_id: opened.user_id as string,
+    google_email: opened.google_email as string | null,
     last_synced_at: data.last_synced_at as string | null,
     is_enabled: data.is_enabled as boolean,
   };
@@ -1212,9 +1227,14 @@ export async function getMyMicrosoftCalendarConnection(): Promise<MicrosoftCalen
   if (!data?.is_enabled) return null;
   const secrets = await getMicrosoftCalendarSecrets(data.id as string);
   if (!secrets) return null;
+  const opened = decryptOrgRow(
+    "microsoft_calendar_connections",
+    data,
+    await getOrgDataKey(orgId),
+  );
   return {
-    user_id: data.user_id as string,
-    microsoft_email: data.microsoft_email as string | null,
+    user_id: opened.user_id as string,
+    microsoft_email: opened.microsoft_email as string | null,
     last_synced_at: data.last_synced_at as string | null,
     is_enabled: data.is_enabled as boolean,
   };
@@ -1238,9 +1258,14 @@ export async function getMyZoomConnection(): Promise<ZoomConnectionPublic | null
   if (!data?.is_enabled) return null;
   const secrets = await getZoomSecrets(data.id as string);
   if (!secrets) return null;
+  const opened = decryptOrgRow(
+    "zoom_connections",
+    data,
+    await getOrgDataKey(orgId),
+  );
   return {
-    user_id: data.user_id as string,
-    zoom_email: data.zoom_email as string | null,
+    user_id: opened.user_id as string,
+    zoom_email: opened.zoom_email as string | null,
     is_enabled: data.is_enabled as boolean,
   };
 }

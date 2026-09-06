@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
+
 import { usePathname } from '@/i18n/navigation'
 import { useFinanceOutlet } from '@/components/finance/finance-outlet'
 import { deleteEntityDocuments } from '@/lib/finance/documents'
@@ -9,19 +11,52 @@ import { matchesSearch } from '@/lib/finance/filters'
 import { customerPartners } from '@/lib/finance/partners'
 import { billingTypeLabel, projectAmountLabel } from '@/lib/finance/invoice'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
-import { DataTable } from '@/components/finance/DataTable'
 import { DocumentAttachments } from '@/components/finance/DocumentAttachments'
 import { Modal } from '@/components/finance/Modal'
-import { Field, inputClass } from '@/components/finance/Field'
 import { EmptyState } from '@/components/finance/EmptyState'
-import { FilterSummary, FilterTh, HeaderSearch, HeaderSelect, PlainTh } from '@/components/finance/ColumnFilters'
-import { PageHeader } from '@/components/finance/PageHeader'
 import { StepActionBar } from '@/components/finance/WorkflowNav'
 import { WorkflowFooter } from '@/components/finance/WorkflowFooter'
-import { PageShell } from '@/components/finance/PageShell'
 import { db } from '@/lib/finance/db'
-import { useTranslations } from 'next-intl'
+import {
+  ListTableCard,
+  listFooterClassName,
+  listMobileEmptyClassName,
+  listMobileFiltersClassName,
+  listMobileFiltersStackClassName,
+  listMobileItemClassName,
+  listPageClassName,
+  listPageHeaderClassName,
+  listPageSubtitleClassName,
+  listPageTitleClassName,
+  listTableCardViewportClassName,
+  listTableEdgeEndClassName,
+  listTableEdgeStartClassName,
+  listTableEmptyCellClassName,
+  listTableHeadClassName,
+  listTableScrollClassName,
+  listTableStickyHeaderClassName,
+  listViewportStackClassName,
+} from '@/components/layout/list-layout'
+import { Button } from '@/components/ui/button'
+import {
+  Field,
+  FieldGrid,
+  FieldHint,
+  FieldLabel,
+  FormStack,
+} from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { NativeSelect } from '@/components/ui/native-select'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 
 type BillingOutletContext = { refreshMetrics?: () => void }
 
@@ -115,6 +150,8 @@ export function ProjectsPage() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
+    const partner = billablePartners.find((p) => p.id === form.partner_id)
+    if (!partner) return
     const payload = {
       partner_id: form.partner_id,
       name: form.name,
@@ -133,7 +170,6 @@ export function ProjectsPage() {
       const { data, error } = await db.from('projects').insert(payload).select('id').single()
       if (!error && data?.id) {
         setEditingId(data.id)
-        // Keep modal open so a PDF contract can be attached immediately.
       } else {
         setOpen(false)
       }
@@ -152,244 +188,382 @@ export function ProjectsPage() {
     load()
   }
 
-  const newProjectBtn = (
-    <Button onClick={openNew} disabled={billablePartners.length === 0}>
+  const newBtn = (
+    <Button size="sm" onClick={openNew} disabled={billablePartners.length === 0}>
       {t('projects.new')}
     </Button>
   )
 
-  const clearFilters = () => {
-    setSearch('')
-    setPartnerFilter('')
-    setStatusFilter('')
-  }
-
-  const content = (
-    <>
-      {embedded ? (
-        rows.length === 0 && <StepActionBar actions={newProjectBtn} />
-      ) : (
-        <PageHeader title={t('projects.title')} actions={newProjectBtn} />
-      )}
-      {billablePartners.length === 0 && (
-        <p className="text-sm text-muted-foreground mb-3">
-          {t('projects.needClient')}
-        </p>
-      )}
-      {rows.length === 0 ? (
-        <EmptyState message={t('projects.empty')} />
-      ) : (
-        <>
-          <FilterSummary
-            resultCount={filtered.length}
-            totalCount={rows.length}
-            hasFilters={hasFilters}
-            onClear={clearFilters}
-            actions={embedded ? newProjectBtn : undefined}
+  const list = (
+    <div className={listViewportStackClassName}>
+      <div className={listMobileFiltersStackClassName}>
+        <div className={listMobileFiltersClassName}>
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('projects.searchName')}
+            aria-label={t('projects.filterProject')}
           />
-          <DataTable minWidth={900}>
-            <thead className="bg-muted text-left">
-              <tr>
-                <FilterTh label={t('projects.project')}>
-                  <HeaderSearch
-                    value={search}
-                    onChange={setSearch}
-                    placeholder={t('projects.searchName')}
-                    aria-label={t('projects.filterProject')}
-                  />
-                </FilterTh>
-                <FilterTh label={t('projects.partner')}>
-                  <HeaderSelect
-                    value={partnerFilter}
-                    onChange={setPartnerFilter}
-                    aria-label={t('projects.filterPartner')}
-                    options={[
-                      { value: '', label: t('common.all') },
-                      ...billablePartners.map((p) => ({ value: p.id, label: p.legal_name })),
-                    ]}
-                  />
-                </FilterTh>
-                <PlainTh>{t('projects.billing')}</PlainTh>
-                <PlainTh>{t('projects.amount')}</PlainTh>
-                <FilterTh label={t('projects.status')}>
-                  <HeaderSelect
-                    value={statusFilter}
-                    onChange={setStatusFilter}
-                    aria-label={t('projects.filterStatus')}
-                    options={[
-                      { value: '', label: t('common.all') },
-                      { value: 'active', label: t('projects.active') },
-                      { value: 'on_hold', label: t('projects.onHold') },
-                      { value: 'completed', label: t('projects.completed') },
-                      { value: 'archived', label: t('projects.archived') },
-                    ]}
-                  />
-                </FilterTh>
-                <PlainTh className="w-px" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+          <NativeSelect
+            value={partnerFilter}
+            onChange={(e) => setPartnerFilter(e.target.value)}
+            aria-label={t('projects.filterPartner')}
+          >
+            <option value="">{t('common.all')}</option>
+            {billablePartners.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.legal_name}
+              </option>
+            ))}
+          </NativeSelect>
+          <NativeSelect
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label={t('projects.filterStatus')}
+          >
+            <option value="">{t('common.all')}</option>
+            <option value="active">{t('projects.active')}</option>
+            <option value="on_hold">{t('projects.onHold')}</option>
+            <option value="completed">{t('projects.completed')}</option>
+            <option value="archived">{t('projects.archived')}</option>
+          </NativeSelect>
+        </div>
+        {filtered.length === 0 ? (
+          <p className={listMobileEmptyClassName}>{t('projects.noneMatch')}</p>
+        ) : (
+          <ul className="space-y-2">
+            {filtered.map((p) => (
+              <li key={p.id} className={listMobileItemClassName}>
+                <p className="font-medium text-brand">{p.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {p.partners?.legal_name ?? t('common.dash')} · {billingTypeLabel(p.billing_type)}
+                </p>
+                <p className="text-sm text-brand/80">{projectAmountLabel(p)}</p>
+                <div className="mt-2 flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => openEdit(p)}>
+                    {t('common.edit')}
+                  </Button>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => remove(p.id)}>
+                    {t('common.delete')}
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <ListTableCard className={cn('hidden md:block', listTableCardViewportClassName)}>
+        <div className={listTableScrollClassName}>
+          <Table>
+            <TableHeader className={listTableStickyHeaderClassName}>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={cn('min-w-[12rem]', listTableHeadClassName, listTableEdgeStartClassName)}>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="font-medium">{t('projects.project')}</span>
+                    <Input
+                      type="search"
+                      density="dense"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder={t('projects.searchName')}
+                      aria-label={t('projects.filterProject')}
+                    />
+                  </div>
+                </TableHead>
+                <TableHead className={cn('min-w-[10rem]', listTableHeadClassName)}>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="font-medium">{t('projects.partner')}</span>
+                    <NativeSelect
+                      density="dense"
+                      value={partnerFilter}
+                      onChange={(e) => setPartnerFilter(e.target.value)}
+                      aria-label={t('projects.filterPartner')}
+                    >
+                      <option value="">{t('common.all')}</option>
+                      {billablePartners.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.legal_name}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
+                </TableHead>
+                <TableHead className={cn(listTableHeadClassName)}>{t('projects.billing')}</TableHead>
+                <TableHead className={cn(listTableHeadClassName)}>{t('projects.amount')}</TableHead>
+                <TableHead className={cn('min-w-[8rem]', listTableHeadClassName)}>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="font-medium">{t('projects.status')}</span>
+                    <NativeSelect
+                      density="dense"
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      aria-label={t('projects.filterStatus')}
+                    >
+                      <option value="">{t('common.all')}</option>
+                      <option value="active">{t('projects.active')}</option>
+                      <option value="on_hold">{t('projects.onHold')}</option>
+                      <option value="completed">{t('projects.completed')}</option>
+                      <option value="archived">{t('projects.archived')}</option>
+                    </NativeSelect>
+                  </div>
+                </TableHead>
+                <TableHead className={cn('w-12', listTableHeadClassName, listTableEdgeEndClassName)}>
+                  <span className="sr-only">{t('common.edit')}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-10 text-center text-sm text-muted-foreground">
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={6} className={listTableEmptyCellClassName}>
                     {t('projects.noneMatch')}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 filtered.map((p) => (
-                  <tr key={p.id} className="hover:bg-muted/50">
-                    <td className="px-3 py-3 font-medium">
-                      {p.name}
-                      {p.po_number?.trim() && (
-                        <div className="text-xs font-normal text-muted-foreground mt-0.5">{t('common.poPrefix', { po: p.po_number.trim() })}</div>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-muted-foreground">{p.partners?.legal_name ?? t('common.dash')}</td>
-                    <td className="px-3 py-3">
-                      <Badge label={billingTypeLabel(p.billing_type)} tone={p.billing_type === 'fixed' ? 'sent' : 'active'} />
-                    </td>
-                    <td className="px-3 py-3">{projectAmountLabel(p)}</td>
-                    <td className="px-3 py-3">
-                      <Badge label={p.status} tone={p.status} />
-                      {p.billing_type === 'fixed' && p.invoice_id && (
-                        <span className="ml-2 text-xs text-muted-foreground">{t('projects.invoiced')}</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-right space-x-2">
-                      <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(p)}>
-                        {t('common.edit')}
-                      </Button>
-                      <Button variant="danger" className={tableActionClass} onClick={() => remove(p.id)}>
-                        {t('common.deleteShort')}
-                      </Button>
-                    </td>
-                  </tr>
+                  <TableRow key={p.id}>
+                    <TableCell className={cn('whitespace-normal', listTableEdgeStartClassName)}>
+                      <span className="font-medium text-brand">{p.name}</span>
+                      {p.po_number?.trim() ? (
+                        <div className="text-xs text-muted-foreground">
+                          {t('common.poPrefix', { po: p.po_number.trim() })}
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {p.partners?.legal_name ?? t('common.dash')}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        label={billingTypeLabel(p.billing_type)}
+                        tone={p.billing_type === 'fixed' ? 'sent' : 'active'}
+                      />
+                    </TableCell>
+                    <TableCell>{projectAmountLabel(p)}</TableCell>
+                    <TableCell>
+                      <Badge label={statusLabel(t, p.status)} tone={p.status} />
+                    </TableCell>
+                    <TableCell className={cn('text-right', listTableEdgeEndClassName)}>
+                      <div className="flex justify-end gap-1">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(p)}>
+                          {t('common.edit')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => remove(p.id)}
+                        >
+                          {t('common.delete')}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </DataTable>
-        </>
-      )}
-      <Modal title={editingId ? t('projects.edit') : t('projects.new')} open={open} onClose={() => setOpen(false)}>
-        <form onSubmit={save} className="space-y-3">
-          <Field label={t('projects.partnerClient')}>
-            <select
-              className={inputClass}
-              required
-              value={form.partner_id}
-              onChange={(e) => setForm({ ...form, partner_id: e.target.value })}
-            >
-              {billablePartners.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.legal_name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label={t('projects.projectName')}>
-            <input
-              className={inputClass}
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </Field>
-          <Field label={t('projects.billingType')}>
-            <select
-              className={inputClass}
-              value={form.billing_type}
-              onChange={(e) => setForm({ ...form, billing_type: e.target.value as BillingType })}
-            >
-              <option value="hourly">{t('common.hourlyTimeLogged')}</option>
-              <option value="fixed">{t('common.fixedAmount')}</option>
-            </select>
-          </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {form.billing_type === 'hourly' ? (
-              <Field label={t('projects.hourlyRate')}>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className={inputClass}
-                  required
-                  value={form.default_hourly_rate}
-                  onChange={(e) => setForm({ ...form, default_hourly_rate: Number(e.target.value) })}
-                />
-              </Field>
-            ) : (
-              <Field label={t('projects.fixedAmount')}>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className={inputClass}
-                  required
-                  value={form.fixed_price}
-                  onChange={(e) => setForm({ ...form, fixed_price: Number(e.target.value) })}
-                />
-              </Field>
-            )}
-            <Field label={t('projects.status')}>
-              <select
-                className={inputClass}
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as ProjectStatus })}
-              >
-                <option value="active">active</option>
-                <option value="on_hold">on_hold</option>
-                <option value="completed">completed</option>
-                <option value="archived">archived</option>
-              </select>
-            </Field>
-          </div>
-          {form.billing_type === 'fixed' && (
-            <p className="text-xs text-muted-foreground">
-              {t('projects.fixedHint')}
-            </p>
-          )}
-          <Field label={t('projects.poNumber')}>
-            <input
-              className={inputClass}
-              value={form.po_number}
-              onChange={(e) => setForm({ ...form, po_number: e.target.value })}
-              placeholder={t('projects.poHint')}
-            />
-          </Field>
-          <Field label={t('projects.notes')}>
-            <textarea
-              className={inputClass}
-              rows={2}
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            />
-          </Field>
-          <DocumentAttachments
-            entityType="project"
-            entityId={editingId}
-            pdfOnly
-            label={t('projects.contractPdf')}
-            hint={t('projects.contractHint')}
+            </TableBody>
+          </Table>
+        </div>
+      </ListTableCard>
+
+      <div className={listFooterClassName}>
+        <p className="text-sm text-muted-foreground">
+          {t('projects.showingCount', { shown: filtered.length, total: rows.length })}
+        </p>
+        {hasFilters ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearch('')
+              setPartnerFilter('')
+              setStatusFilter('')
+            }}
+          >
+            {t('projects.clearFilters')}
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  )
+
+  const formModal = (
+    <Modal title={editingId ? t('projects.edit') : t('projects.new')} open={open} onClose={() => setOpen(false)}>
+      <FormStack onSubmit={save}>
+        <Field>
+          <FieldLabel htmlFor="engagement-partner" required>
+            {t('projects.partner')}
+          </FieldLabel>
+          <NativeSelect
+            id="engagement-partner"
+            required
+            value={form.partner_id}
+            onChange={(e) => setForm({ ...form, partner_id: e.target.value })}
+          >
+            {billablePartners.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.legal_name}
+              </option>
+            ))}
+          </NativeSelect>
+          <FieldHint>{t('projects.needClient')}</FieldHint>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="engagement-name" required>
+            {t('projects.project')}
+          </FieldLabel>
+          <Input
+            id="engagement-name"
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit">{t('common.save')}</Button>
-          </div>
-        </form>
-      </Modal>
-      {embedded && rows.some((p) => p.status === 'active') && (
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="engagement-billing" required>
+            {t('projects.billingType')}
+          </FieldLabel>
+          <NativeSelect
+            id="engagement-billing"
+            value={form.billing_type}
+            onChange={(e) => setForm({ ...form, billing_type: e.target.value as BillingType })}
+          >
+            <option value="hourly">{t('common.hourlyTimeLogged')}</option>
+            <option value="fixed">{t('common.fixedAmount')}</option>
+          </NativeSelect>
+        </Field>
+        <FieldGrid columns={2}>
+          {form.billing_type === 'hourly' ? (
+            <Field>
+              <FieldLabel htmlFor="engagement-rate" required>
+                {t('projects.hourlyRate')}
+              </FieldLabel>
+              <Input
+                id="engagement-rate"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={form.default_hourly_rate}
+                onChange={(e) => setForm({ ...form, default_hourly_rate: Number(e.target.value) })}
+              />
+            </Field>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="engagement-fixed" required>
+                {t('projects.fixedAmount')}
+              </FieldLabel>
+              <Input
+                id="engagement-fixed"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={form.fixed_price}
+                onChange={(e) => setForm({ ...form, fixed_price: Number(e.target.value) })}
+              />
+            </Field>
+          )}
+          <Field>
+            <FieldLabel htmlFor="engagement-status">{t('projects.status')}</FieldLabel>
+            <NativeSelect
+              id="engagement-status"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value as ProjectStatus })}
+            >
+              <option value="active">{t('projects.active')}</option>
+              <option value="on_hold">{t('projects.onHold')}</option>
+              <option value="completed">{t('projects.completed')}</option>
+              <option value="archived">{t('projects.archived')}</option>
+            </NativeSelect>
+          </Field>
+        </FieldGrid>
+        {form.billing_type === 'fixed' ? (
+          <FieldHint>{t('projects.fixedHint')}</FieldHint>
+        ) : null}
+        <Field>
+          <FieldLabel htmlFor="engagement-po">{t('projects.poNumber')}</FieldLabel>
+          <Input
+            id="engagement-po"
+            value={form.po_number}
+            onChange={(e) => setForm({ ...form, po_number: e.target.value })}
+            placeholder={t('projects.poHint')}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="engagement-notes">{t('projects.notes')}</FieldLabel>
+          <Textarea
+            id="engagement-notes"
+            rows={2}
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          />
+        </Field>
+        <DocumentAttachments
+          entityType="project"
+          entityId={editingId}
+          pdfOnly
+          label={t('projects.contractPdf')}
+          hint={t('projects.contractHint')}
+        />
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit">{t('common.save')}</Button>
+        </div>
+      </FormStack>
+    </Modal>
+  )
+
+  const body = (
+    <>
+      {billablePartners.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t('projects.needClient')}</p>
+      ) : null}
+      {rows.length === 0 ? <EmptyState message={t('projects.empty')} /> : list}
+      {formModal}
+      {embedded && rows.some((p) => p.status === 'active') ? (
         <WorkflowFooter to="/billing/pipeline" label={t('projects.planPipeline')}>
           {t('projects.confirmActive')}
         </WorkflowFooter>
-      )}
+      ) : null}
     </>
   )
 
   if (embedded) {
-    return <div className="space-y-3">{content}</div>
+    return (
+      <div className="space-y-3">
+        {rows.length === 0 ? <StepActionBar actions={newBtn} /> : null}
+        {body}
+      </div>
+    )
   }
 
-  return <PageShell>{content}</PageShell>
+  return (
+    <div className={listPageClassName}>
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-2">
+        <div className={listPageHeaderClassName}>
+          <h1 className={listPageTitleClassName}>{t('projects.title')}</h1>
+          <p className={listPageSubtitleClassName}>{t('projects.subtitle')}</p>
+        </div>
+        {newBtn}
+      </div>
+      {body}
+    </div>
+  )
+}
+
+function statusLabel(
+  t: ReturnType<typeof useTranslations<'financeApp'>>,
+  status: ProjectStatus,
+) {
+  if (status === 'on_hold') return t('projects.onHold')
+  if (status === 'completed') return t('projects.completed')
+  if (status === 'archived') return t('projects.archived')
+  return t('projects.active')
 }

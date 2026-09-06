@@ -16,6 +16,8 @@ import {
 import { getPerson, getPersonByPartnerId } from "@/lib/crm/queries";
 import type { Partner, PartnerKind } from "@/lib/finance/types";
 import { isModuleEnabled } from "@/lib/modules/org-modules";
+import { decryptOrgRow } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +45,9 @@ export default async function PartnerDetailPage({
     .eq("id", id)
     .maybeSingle();
 
-  let partner = partnerRow as Partner | null;
+  let partner = partnerRow
+    ? decryptOrgRow("partners", partnerRow as Partner, await getOrgDataKey(orgId))
+    : null;
   let person = partner ? await getPersonByPartnerId(partner.id) : null;
 
   if (!partner) {

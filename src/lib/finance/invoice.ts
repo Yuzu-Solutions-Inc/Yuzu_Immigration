@@ -4,10 +4,11 @@ import { computePlaceOfSupply, type PlaceOfSupplyResult } from './placeOfSupply'
 import { normalizeCaRegion } from '../sage/tax-regions'
 import { round2, type TaxBreakdown, type TaxSettings } from './taxes'
 
-export type LineTaxes = TaxBreakdown & {
+export type InvoiceTaxes = TaxBreakdown & {
   placeOfSupply?: PlaceOfSupplyResult
 }
 
+/** Tax-exclusive line. GST/HST/QST live only on the invoice header. */
 export interface InvoiceLineDraft {
   project_id: string | null
   time_entry_id: string | null
@@ -17,19 +18,10 @@ export interface InvoiceLineDraft {
   unit_label: string
   unit_price: number
   subtotal: number
-  gst: number
-  qst: number
-  total: number
   sort_order: number
 }
 
-/** Line amounts are always HT. TPS/TVQ are applied once on the invoice sous-total. */
-export function htLineTotals(subtotal: number): LineTaxes {
-  const base = round2(subtotal)
-  return { subtotal: base, gst: 0, qst: 0, total: base }
-}
-
-function toInvoiceTaxColumns(pos: PlaceOfSupplyResult, settings: TaxSettings): LineTaxes {
+function toInvoiceTaxColumns(pos: PlaceOfSupplyResult, settings: TaxSettings): InvoiceTaxes {
   if (pos.regime === 'hst') {
     const gst = settings.charge_gst ? pos.hst : 0
     return { subtotal: pos.subtotal, gst, qst: 0, total: round2(pos.subtotal + gst), placeOfSupply: pos }
@@ -39,11 +31,18 @@ function toInvoiceTaxColumns(pos: PlaceOfSupplyResult, settings: TaxSettings): L
   return { subtotal: pos.subtotal, gst, qst, total: round2(pos.subtotal + gst + qst), placeOfSupply: pos }
 }
 
+/**
+ * GST/HST/QST for an invoice: one calculation on the HT subtotal, rounded to the cent.
+ *
+ * CRA and Revenu Québec allow either this invoice-total method or summing per-line
+ * taxes. We use invoice-total only — professional services have one place of supply
+ * (the partner), and per-line rounding drifts by a cent.
+ */
 export function computeInvoiceTotals(
   subtotal: number,
   settings: TaxSettings,
   partnerProvince?: string | null
-): LineTaxes {
+): InvoiceTaxes {
   if (!settings.charge_gst && !settings.charge_qst) {
     const base = round2(subtotal)
     return { subtotal: base, gst: 0, qst: 0, total: base }
@@ -53,10 +52,10 @@ export function computeInvoiceTotals(
 }
 
 export function invoiceTotalsFromLines(
-  lines: Pick<LineTaxes, 'subtotal'>[],
+  lines: { subtotal: number }[],
   settings: TaxSettings,
   partnerProvince?: string | null
-): LineTaxes {
+): InvoiceTaxes {
   const subtotal = round2(lines.reduce((s, l) => s + Number(l.subtotal), 0))
   return computeInvoiceTotals(subtotal, settings, partnerProvince)
 }
@@ -77,7 +76,7 @@ export function invoiceTaxDisplayRows(
 
 export function salesTaxLinesForInvoice(
   invoiceId: string,
-  totals: LineTaxes
+  totals: InvoiceTaxes
 ): Array<{
   source_type: 'invoice'
   source_id: string
@@ -124,7 +123,7 @@ export function buildLineFromTimeEntry(entry: TimeEntry, sortOrder: number): Inv
     quantity: Number(entry.hours),
     unit_label: 'h',
     unit_price: rate,
-    ...htLineTotals(subtotal),
+    subtotal: round2(subtotal),
     sort_order: sortOrder,
   }
 }
@@ -139,7 +138,7 @@ export function buildLineFromFixedProject(project: Project, sortOrder: number): 
     quantity: 1,
     unit_label: 'forfait',
     unit_price: subtotal,
-    ...htLineTotals(subtotal),
+    subtotal: round2(subtotal),
     sort_order: sortOrder,
   }
 }

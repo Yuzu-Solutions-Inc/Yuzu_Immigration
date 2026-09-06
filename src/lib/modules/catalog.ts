@@ -46,7 +46,7 @@ export const MODULE_CATALOG: Record<ModuleId, ModuleManifest> = {
     id: "immigration",
     nameKey: "immigration",
     dependsOn: [],
-    nav: [{ href: "/files", navKey: "files" }],
+    nav: [{ href: "/projects", navKey: "projects" }],
   },
   bookings: {
     id: "bookings",

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   asImmigrationStatus,
+  isProjectLinkablePartnerKind,
   partnerLegalName,
   splitDisplayName,
 } from "@/lib/crm/partner-person-names";
@@ -37,5 +38,12 @@ describe("partner-person name mapping", () => {
     assert.equal(asImmigrationStatus("worker"), "worker");
     assert.equal(asImmigrationStatus("not-a-status"), "none");
     assert.equal(asImmigrationStatus(null), "none");
+  });
+
+  it("only client and both roles can link to projects", () => {
+    assert.equal(isProjectLinkablePartnerKind("customer"), true);
+    assert.equal(isProjectLinkablePartnerKind("both"), true);
+    assert.equal(isProjectLinkablePartnerKind("provider"), false);
+    assert.equal(isProjectLinkablePartnerKind(null), false);
   });
 });

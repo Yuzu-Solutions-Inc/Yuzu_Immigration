@@ -37,6 +37,8 @@ import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import {
   ensurePartnerForPerson,
+  ensurePersonForPartner,
+  isProjectLinkablePartnerKind,
   partnerLegalName,
 } from "@/lib/crm/partner-person";
 
@@ -53,6 +55,7 @@ function closedAndRetainFields(status: ProjectStatus, statusAt: string) {
 
 const participantInputSchema = z.object({
   personId: z.string().uuid().optional(),
+  partnerId: z.string().uuid().optional(),
   firstName: z.string().trim().min(1).max(80).optional(),
   lastName: z.string().trim().min(1).max(80).optional(),
   email: z.string().email().optional().or(z.literal("")),
@@ -274,16 +277,91 @@ async function resolveParticipants(
   const seen = new Set<string>();
 
   for (const participant of participants) {
+    if (participant.partnerId && !participant.personId) {
+      const { data: partner, error: partnerError } = await supabase
+        .from("partners")
+        .select("id, kind, legal_name, email")
+        .eq("organization_id", orgId)
+        .eq("id", participant.partnerId)
+        .maybeSingle();
+      if (partnerError || !partner) {
+        return { error: "person_missing" };
+      }
+      if (
+        !isProjectLinkablePartnerKind(
+          partner.kind as "customer" | "provider" | "both",
+        )
+      ) {
+        return { error: "partner_not_linkable" };
+      }
+      if (!userId) {
+        return { error: "forbidden" };
+      }
+      const personId = await ensurePersonForPartner(
+        { supabase, orgId, userId },
+        partner.id as string,
+      );
+      if (!personId) {
+        return { error: "create_failed" };
+      }
+      if (seen.has(personId)) {
+        return { error: "invalid" };
+      }
+      seen.add(personId);
+
+      const { data: linkedPerson } = await supabase
+        .from("people")
+        .select("first_name, last_name, email")
+        .eq("id", personId)
+        .maybeSingle();
+      const opened = linkedPerson
+        ? decryptPersonRow(
+            linkedPerson as {
+              first_name: string;
+              last_name: string;
+              email: string | null;
+            },
+            key,
+          )
+        : null;
+      resolvedPeople.push({
+        id: personId,
+        role: participant.role,
+        displayName: opened
+          ? `${opened.first_name} ${opened.last_name}`.trim()
+          : "",
+        email: opened?.email || null,
+      });
+      continue;
+    }
+
     if (participant.personId) {
       const { data: existing, error } = await supabase
         .from("people")
-        .select("id, first_name, last_name, email")
+        .select("id, first_name, last_name, email, partner_id")
         .eq("organization_id", orgId)
         .eq("id", participant.personId)
         .maybeSingle();
 
       if (error || !existing) {
         return { error: "person_missing" };
+      }
+
+      if (existing.partner_id) {
+        const { data: linkedPartner } = await supabase
+          .from("partners")
+          .select("kind")
+          .eq("organization_id", orgId)
+          .eq("id", existing.partner_id)
+          .maybeSingle();
+        if (
+          linkedPartner &&
+          !isProjectLinkablePartnerKind(
+            linkedPartner.kind as "customer" | "provider" | "both",
+          )
+        ) {
+          return { error: "partner_not_linkable" };
+        }
       }
 
       const person = decryptPersonRow(

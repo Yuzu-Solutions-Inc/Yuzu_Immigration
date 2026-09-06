@@ -11,12 +11,12 @@ import type {
   ProjectStatus,
 } from "@/db/schema";
 import { serviceTitle } from "@/lib/booking/service-i18n";
+import { decryptNoteBody, decryptPersonRow, decryptProjectNoteBody, decryptProjectRow } from "@/lib/security/client-pii";
 import {
-  decryptNoteBody,
-  decryptPersonRow,
-  decryptProjectNoteBody,
-  decryptProjectRow,
-} from "@/lib/security/client-pii";
+  decryptOrgPayload,
+  decryptOrgRow,
+} from "@/lib/security/encrypted-fields";
+import { decryptProfileRow } from "@/lib/security/profile-pii";
 import {
   comparePersonSearchName,
   hashEmailLookup,
@@ -122,6 +122,11 @@ export type StaffProfileRow = {
   full_name: string | null;
   email: string | null;
 };
+
+function staffDisplayName(p: { full_name?: string | null; email?: string | null }) {
+  const opened = decryptProfileRow(p);
+  return opened.full_name || opened.email || null;
+}
 
 export type OrgMemberRow = {
   id: string;
@@ -512,6 +517,90 @@ export async function listPeople(
     .slice(0, limit);
 }
 
+export type LinkableProjectClient = {
+  key: string;
+  personId: string | null;
+  partnerId: string | null;
+  label: string;
+  email: string | null;
+};
+
+/** Client or client+vendor partners (and unlinked people) that can join an immigration project. */
+export async function listLinkableProjectClients(): Promise<
+  LinkableProjectClient[]
+> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return [];
+
+  const supabase = await createClient();
+  const key = await getOrgDataKey(orgId);
+
+  const [{ data: partners, error: partnerError }, { data: people, error: peopleError }] =
+    await Promise.all([
+      supabase
+        .from("partners")
+        .select("id, legal_name, email, kind, contact_name")
+        .eq("organization_id", orgId)
+        .in("kind", ["customer", "both"]),
+      supabase
+        .from("people")
+        .select("id, partner_id, first_name, last_name, email")
+        .eq("organization_id", orgId),
+    ]);
+
+  if (partnerError) console.error("listLinkableProjectClients partners:", partnerError.message);
+  if (peopleError) console.error("listLinkableProjectClients people:", peopleError.message);
+
+  const decryptedPeople = ((people ?? []) as PersonRow[]).map((row) =>
+    decryptPersonRow(row, key),
+  );
+  const decryptedPartners = decryptOrgPayload(
+    "partners",
+    (partners ?? []) as Array<{
+      id: string;
+      legal_name: string;
+      email: string | null;
+      contact_name: string | null;
+    }>,
+    key,
+  );
+  const personByPartnerId = new Map<string, PersonRow>();
+  for (const person of decryptedPeople) {
+    if (person.partner_id) personByPartnerId.set(person.partner_id, person);
+  }
+
+  const items: LinkableProjectClient[] = [];
+  for (const partner of decryptedPartners) {
+    const person = personByPartnerId.get(partner.id);
+    const label = person
+      ? `${person.first_name} ${person.last_name}`.trim()
+      : partner.legal_name;
+    items.push({
+      key: person ? `person:${person.id}` : `partner:${partner.id}`,
+      personId: person?.id ?? null,
+      partnerId: partner.id,
+      label,
+      email: person?.email ?? partner.email,
+    });
+  }
+
+  for (const person of decryptedPeople) {
+    if (person.partner_id) continue;
+    items.push({
+      key: `person:${person.id}`,
+      personId: person.id,
+      partnerId: null,
+      label: `${person.first_name} ${person.last_name}`.trim(),
+      email: person.email,
+    });
+  }
+
+  items.sort((a, b) =>
+    a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
+  );
+  return items;
+}
+
 export async function listUpcomingStatusExpiries(
   limit = 15,
 ): Promise<PersonRow[]> {
@@ -617,7 +706,7 @@ export async function listPersonNotes(
       names = new Map(
         (profiles ?? []).map((p) => [
           p.id as string,
-          (p.full_name as string | null) || (p.email as string | null),
+          staffDisplayName(p),
         ]),
       );
     }
@@ -698,7 +787,7 @@ export async function listPersonMeetings(
       hostNames = new Map(
         (profiles ?? []).map((p) => [
           p.id as string,
-          (p.full_name as string | null) || (p.email as string | null),
+          staffDisplayName(p),
         ]),
       );
     }
@@ -791,7 +880,7 @@ export async function listProjectNotes(
       names = new Map(
         (profiles ?? []).map((p) => [
           p.id as string,
-          (p.full_name as string | null) || (p.email as string | null),
+          staffDisplayName(p),
         ]),
       );
     }
@@ -834,7 +923,10 @@ export async function listOrgMembers(): Promise<OrgMemberRow[]> {
   }
 
   const profileById = new Map(
-    (profiles ?? []).map((p) => [p.id as string, p as StaffProfileRow]),
+    (profiles ?? []).map((p) => [
+      p.id as string,
+      decryptProfileRow(p as StaffProfileRow),
+    ]),
   );
 
   return (members ?? [])
@@ -983,7 +1075,7 @@ async function withProjectListMeta(
       console.error("listProjects representatives:", profileError.message);
     } else {
       for (const p of profiles ?? []) {
-        profileById.set(p.id as string, p as StaffProfileRow);
+        profileById.set(p.id as string, decryptProfileRow(p as StaffProfileRow));
       }
     }
   }
@@ -1260,7 +1352,9 @@ export async function getProject(projectId: string): Promise<ProjectRow | null> 
 
   return {
     ...project,
-    representative: (profile as StaffProfileRow | null) ?? null,
+    representative: profile
+      ? decryptProfileRow(profile as StaffProfileRow)
+      : null,
     organization_program_name: organizationProgramName,
   };
 }
@@ -1422,8 +1516,12 @@ export async function listPendingInvitations(): Promise<PendingInvitationRow[]> 
     return [];
   }
 
-  return ((data ?? []) as PendingInvitationRow[]).map((row) => ({
-    ...row,
-    role: mapAssignedRole(row.role),
-  }));
+  const key = await getOrgDataKey(orgId);
+  return ((data ?? []) as PendingInvitationRow[]).map((row) => {
+    const opened = decryptOrgRow("organization_invitations", row, key);
+    return {
+      ...opened,
+      role: mapAssignedRole(opened.role),
+    };
+  });
 }

@@ -245,6 +245,7 @@ export const staffOnboarding = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
     skippedSteps: text("skipped_steps").array().notNull().default([]),
+    seenModules: text("seen_modules").array().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

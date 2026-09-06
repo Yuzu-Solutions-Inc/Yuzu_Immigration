@@ -6,7 +6,7 @@ import { CreateProjectForm } from "@/components/projects/create-project-form";
 import { Link } from "@/i18n/navigation";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
-import { listOrgMembers, listPeople } from "@/lib/crm/queries";
+import { listOrgMembers, listLinkableProjectClients } from "@/lib/crm/queries";
 import { listOrganizationPrograms } from "@/app/actions/org-programs";
 import { listProjectContractsCatalog } from "@/app/actions/project-contracts";
 
@@ -26,9 +26,9 @@ export default async function NewProjectPage({
   if (!canCreateInWorkspace(membership)) {
     redirect(`/${locale}/projects`);
   }
-  const [people, members, user, organizationPrograms, contractTemplates] =
+  const [clients, members, user, organizationPrograms, contractTemplates] =
     await Promise.all([
-    listPeople(),
+    listLinkableProjectClients(),
     listOrgMembers(),
     getSessionUser(),
     listOrganizationPrograms(),
@@ -53,7 +53,7 @@ export default async function NewProjectPage({
       <SurfaceCard>
         <CreateProjectForm
           locale={locale}
-          people={people}
+          clients={clients}
           members={members.map((m) => ({
             user_id: m.user_id,
             full_name: m.profile.full_name,

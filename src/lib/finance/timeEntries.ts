@@ -1,13 +1,9 @@
 import type { MetricsTimeEntry } from './billingMetrics'
 import type { InvoiceLineDraft } from './invoice'
-import { htLineTotals } from './invoice'
 import { effectiveRate, lineAmount, relationOne } from './format'
+import { round2 } from './taxes'
 import type { Project, TimeEntry, TimeEntryLine } from './types'
 import { db } from './db'
-
-function round2(n: number) {
-  return Math.round(n * 100) / 100
-}
 
 export type TimeEntryWithLines = TimeEntry & { time_entry_lines?: TimeEntryLine[] | null }
 
@@ -148,7 +144,7 @@ export function buildGroupedLinesFromTimeSheets(entries: TimeEntrySheetSource[])
         quantity: g.hours,
         unit_label: 'h',
         unit_price: g.rate,
-        ...htLineTotals(subtotal),
+        subtotal: round2(subtotal),
         sort_order: sortOrder,
       }
     })

@@ -23,17 +23,16 @@ This sandbox **is** Dossierly (Immigration `main` checked out). Finance Vite app
 
 | Project | Ref | Use |
 |---|---|---|
-| **Yuzu Solutions Inc.** | `gqpafbmlherrwuigsjxy` | Local `.env.local` and Vercel Preview / Development. |
-| **MyConsultant** | `cezwtrsleuubrfmbhosn` | Vercel Production (`dossierly.ca`). Do not migrate/drop here from this sandbox branch. |
+| **MyConsultant** | `cezwtrsleuubrfmbhosn` | Canonical. Local `.env.local`, Vercel Production (`dossierly.ca`), and Vercel Preview branches (schema clones, empty data). |
+| **Yuzu Solutions Inc.** | `gqpafbmlherrwuigsjxy` | Archive only. Do not point local or Preview at it. |
 
 App env (create `.env.local`, gitignored):
 
-- `NEXT_PUBLIC_SUPABASE_URL=https://gqpafbmlherrwuigsjxy.supabase.co`
-- This project’s anon / publishable key
-- **New** `DOCUMENT_ENCRYPTION_KEY` for this project — do **not** reuse MyConsultant’s wrap key
-- Vercel Production env is scoped separately to MyConsultant; Preview is scoped to this project.
+- `NEXT_PUBLIC_SUPABASE_URL=https://cezwtrsleuubrfmbhosn.supabase.co`
+- This project’s anon / publishable key and **MyConsultant** `DOCUMENT_ENCRYPTION_KEY` — do **not** reuse the archived Yuzu wrap key
+- Vercel Preview vars are injected by the Supabase ↔ Vercel integration when a PR opens. Production stays on MyConsultant.
 
-`organization_modules` is **already applied** on Yuzu Solutions Inc. Existing org seeded with: `finance`, `bookings`, `services`, `contracts`, `payments` (no `immigration`).
+Finance data for Yuzu Solutions lives on **YUZU Test** (`024a6906-ac5a-4a01-b884-3c9ff8527605`) inside MyConsultant. Live immigration orgs were left intact.
 
 ---
 
@@ -74,9 +73,9 @@ App env (create `.env.local`, gitignored):
 
 ### 1. Env + don’t break production
 
-- Local `.env.local` and Vercel Preview/Development use Yuzu Solutions Inc. (`gqpafbmlherrwuigsjxy`).
-- Vercel Production uses MyConsultant (`cezwtrsleuubrfmbhosn`) for dossierly.ca.
-- Re-add `DATABASE_URL` / `DIRECT_DATABASE_URL` on Vercel (Production from MyConsultant, Preview from Yuzu) from each project’s Connect dialog — those two were not recoverable from local files.
+- Local `.env.local` uses MyConsultant (`cezwtrsleuubrfmbhosn`). Pull keys from the MyConsultant dashboard or `vercel env pull` (Production / Development). Do not leave Preview pointed at Yuzu.
+- Vercel Production uses MyConsultant for dossierly.ca. Preview databases are MyConsultant branches (data-less schema clones).
+- Re-add `DATABASE_URL` / `DIRECT_DATABASE_URL` from MyConsultant’s Connect dialog if missing. Preview connection strings come from the Supabase integration.
 - Never `git push` to `immigration` from this sandbox unless promoting a reviewed production change. Create a new GitHub repo for `yuzu_crm` when the owner wants a separate remote.
 
 ### 2. Sauvegarde + schema strategy on Yuzu Solutions Inc.
@@ -144,9 +143,9 @@ Payments requires Bookings **and/or** Finance. Disable = hide nav; **keep data**
 ## Risks
 
 - Accidental `git push` to `immigration` would ship sandbox to production Dossierly GitHub.
-- Pointing `.env.local` at MyConsultant would mix products.
+- Pointing `.env.local` or Vercel Preview at archived Yuzu (`gqpafbmlherrwuigsjxy`) would split environments again.
 - Double cash if Banque inserts a payment Stripe already created from an invoice.
-- Encryption key mix-up makes PII unreadable.
+- Encryption key mix-up (Yuzu wrap key on MyConsultant data) makes PII unreadable.
 - Drop old tables only after counts match.
 - Tax/payroll output is **draft for owner/CPA review**.
 
@@ -154,4 +153,4 @@ Payments requires Bookings **and/or** Finance. Disable = hide nav; **keep data**
 
 ## How to start the next chat
 
-Open `/Users/adrienyvin/YUZU Solutions Inc/yuzu_crm`. Tell the agent: follow `.cursor/plans/dossierly-family-handoff.md`. First task: `.env.local` → Yuzu Solutions Inc., then port Finance from `app-legacy` onto Dossierly UI.
+Open `/Users/adrienyvin/YUZU Solutions Inc/yuzu_crm`. Tell the agent: follow `.cursor/plans/dossierly-family-handoff.md`. Canonical database is MyConsultant. First task: confirm `.env.local` uses MyConsultant keys, then port Finance from `app-legacy` onto Dossierly UI.

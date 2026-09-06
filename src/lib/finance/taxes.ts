@@ -105,6 +105,9 @@ export function splitPurchaseAmount(
  * TPS and TVQ apply in parallel on the same tax-exclusive consideration.
  * Do not calculate TVQ on HT+TPS — that was the pre-2013 9.5% stacked rule.
  * Each tax is rounded to the cent (half-up).
+ *
+ * Invoices must use `computeInvoiceTotals` / `invoiceTotalsFromLines` instead:
+ * tax is rounded once on the invoice subtotal, not per line.
  */
 export function computeSalesTaxes(subtotal: number, settings: TaxSettings): TaxBreakdown {
   const base = round2(subtotal)

@@ -122,7 +122,7 @@ export async function PersonImmigrationDetail({
             ) : null}
             {canCreate ? (
               <Link
-                href={`/files/new?person=${person.id}`}
+                href={`/projects/new?person=${person.id}`}
                 className={cn(
                   buttonVariants({ size: "sm" }),
                   "bg-action text-action-foreground hover:bg-action/90",
@@ -187,7 +187,7 @@ export async function PersonImmigrationDetail({
                       {projects.map((project) => (
                         <li key={project.id}>
                           <Link
-                            href={`/files/${project.id}`}
+                            href={`/projects/${project.id}`}
                             className="flex flex-col gap-1 px-5 py-4 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div>

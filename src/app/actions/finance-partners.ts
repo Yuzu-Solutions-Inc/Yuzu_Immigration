@@ -1,15 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { PERSON_IMMIGRATION_STATUSES } from "@/lib/crm/person-status";
 import { createFinanceDb } from "@/lib/finance/org-db";
-import type { Partner } from "@/lib/finance/types";
+import type { Partner, PartnerListRow } from "@/lib/finance/types";
 import { isModuleEnabled } from "@/lib/modules/org-modules";
+import { decryptOrgPayload, encryptOrgRow } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 import {
+  partnerLegalName,
   shouldSyncImmigrationPerson,
   syncPersonFromPartner,
 } from "@/lib/crm/partner-person";
@@ -44,22 +48,41 @@ function emptyToNull(value: string | null | undefined) {
   return trimmed ? trimmed : null;
 }
 
-export async function listPartnersAction(): Promise<Partner[]> {
+export async function listPartnersAction(): Promise<PartnerListRow[]> {
   const membership = await getPrimaryMembership();
   if (!membership) return [];
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("partners")
-    .select("*")
-    .eq("organization_id", membership.organization.id)
-    .order("legal_name");
+  const orgId = membership.organization.id;
+  const [{ data, error }, { data: peopleRows }] = await Promise.all([
+    supabase
+      .from("partners")
+      .select("*")
+      .eq("organization_id", orgId)
+      .order("legal_name"),
+    supabase
+      .from("people")
+      .select("id, partner_id")
+      .eq("organization_id", orgId),
+  ]);
   if (error) throw new Error(error.message);
-  return (data ?? []) as Partner[];
+  const key = await getOrgDataKey(orgId);
+  const personIdByPartner = new Map<string, string>();
+  for (const row of peopleRows ?? []) {
+    if (row.partner_id) personIdByPartner.set(row.partner_id as string, row.id as string);
+  }
+  return decryptOrgPayload("partners", (data ?? []) as Partner[], key)
+    .map((partner) => ({
+      ...partner,
+      person_id: personIdByPartner.get(partner.id) ?? null,
+    }))
+    .sort((a, b) =>
+      a.legal_name.localeCompare(b.legal_name, "en", { sensitivity: "base" }),
+    );
 }
 
 export async function upsertPartnerAction(
   input: z.infer<typeof partnerPayloadSchema>,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; id?: string }> {
   const parsed = partnerPayloadSchema.safeParse(input);
   if (!parsed.success) return { error: "invalid" };
 
@@ -73,18 +96,25 @@ export async function upsertPartnerAction(
   const supabase = await createClient();
   const db = createFinanceDb(supabase, membership.organization.id);
 
+  const key = await getOrgDataKey(membership.organization.id);
   const payload: Record<string, unknown> = {
-    legal_name: parsed.data.legal_name,
+    ...encryptOrgRow(
+      "partners",
+      {
+        legal_name: parsed.data.legal_name,
+        contact_name: emptyToNull(parsed.data.contact_name ?? null),
+        email: emptyToNull(parsed.data.email ?? null),
+        phone: emptyToNull(parsed.data.phone ?? null),
+        address_line1: emptyToNull(parsed.data.address_line1 ?? null),
+        city: emptyToNull(parsed.data.city ?? null),
+        postal_code: emptyToNull(parsed.data.postal_code ?? null),
+        notes: emptyToNull(parsed.data.notes ?? null),
+      },
+      key,
+    ),
     kind: parsed.data.kind,
-    contact_name: emptyToNull(parsed.data.contact_name ?? null),
-    email: emptyToNull(parsed.data.email ?? null),
-    phone: emptyToNull(parsed.data.phone ?? null),
-    address_line1: emptyToNull(parsed.data.address_line1 ?? null),
-    city: emptyToNull(parsed.data.city ?? null),
     province: emptyToNull(parsed.data.province ?? null),
-    postal_code: emptyToNull(parsed.data.postal_code ?? null),
     country: emptyToNull(parsed.data.country ?? null),
-    notes: emptyToNull(parsed.data.notes ?? null),
   };
 
   if (financeOn && (parsed.data.kind === "customer" || parsed.data.kind === "both")) {
@@ -135,7 +165,7 @@ export async function upsertPartnerAction(
 
   revalidatePath("/partners");
   if (partnerId) revalidatePath(`/partners/${partnerId}`);
-  return {};
+  return { id: partnerId ?? undefined };
 }
 
 export async function deletePartnerAction(id: string): Promise<{ error?: string }> {
@@ -178,4 +208,76 @@ export async function deletePartnerAction(id: string): Promise<{ error?: string 
   if (error) return { error: error.message };
   revalidatePath("/partners");
   return {};
+}
+
+export type PartnerFormState = { error?: string };
+
+function formStr(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim();
+}
+
+export async function savePartnerFormAction(
+  _prev: PartnerFormState,
+  formData: FormData,
+): Promise<PartnerFormState> {
+  const locale = formStr(formData, "locale") || "en";
+  const id = formStr(formData, "id") || undefined;
+  const kind = (formStr(formData, "kind") || "customer") as
+    | "customer"
+    | "provider"
+    | "both";
+  const firstName = formStr(formData, "firstName");
+  const lastName = formStr(formData, "lastName");
+  const legalName =
+    firstName && lastName
+      ? partnerLegalName(firstName, lastName)
+      : formStr(formData, "legal_name");
+
+  const penaltyPercent = Number(formStr(formData, "invoice_penalty_percent"));
+  const termsDays = Number(formStr(formData, "payment_terms_days"));
+
+  const result = await upsertPartnerAction({
+    id,
+    legal_name: legalName,
+    kind,
+    contact_name:
+      formStr(formData, "contact_name") ||
+      (firstName && lastName ? legalName : null),
+    email: formStr(formData, "email") || null,
+    phone: formStr(formData, "phone") || null,
+    address_line1: formStr(formData, "address_line1") || null,
+    city: formStr(formData, "city") || null,
+    province: formStr(formData, "province") || null,
+    postal_code: formStr(formData, "postal_code") || null,
+    country: formStr(formData, "country") || null,
+    language: (formStr(formData, "language") || "fr") as "fr" | "en",
+    payment_terms_days: Number.isFinite(termsDays) ? termsDays : 30,
+    invoice_penalty_monthly_pct: Number.isFinite(penaltyPercent)
+      ? penaltyPercent / 100
+      : 0.02,
+    immigration_status: (formStr(formData, "immigration_status") ||
+      undefined) as (typeof PERSON_IMMIGRATION_STATUSES)[number] | undefined,
+    status_expires_at: formStr(formData, "status_expires_at") || null,
+    preferred_locale: (formStr(formData, "preferred_locale") || undefined) as
+      | "en"
+      | "fr"
+      | "es"
+      | undefined,
+  });
+
+  if (result.error || !result.id) {
+    return { error: result.error ?? "create_failed" };
+  }
+  redirect(`/${locale}/partners/${result.id}`);
+}
+
+export async function deletePartnerFormAction(
+  _prev: PartnerFormState,
+  formData: FormData,
+): Promise<PartnerFormState> {
+  const locale = formStr(formData, "locale") || "en";
+  const id = formStr(formData, "id");
+  const result = await deletePartnerAction(id);
+  if (result.error) return { error: result.error };
+  redirect(`/${locale}/partners`);
 }

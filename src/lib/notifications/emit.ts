@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/admin";
 import { decryptProjectRow } from "@/lib/security/client-pii";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 
 export type StaffNotificationKind =
@@ -58,6 +59,15 @@ async function projectTitle(
   return decryptProjectRow(data as { title: string }, key).title || "Project";
 }
 
+async function sealNotice(
+  organizationId: string,
+  title: string,
+  body: string | null,
+) {
+  const key = await getOrgDataKey(organizationId);
+  return encryptOrgRow("staff_notifications", { title, body }, key);
+}
+
 export async function notifyDocumentsUploaded(input: {
   organizationId: string;
   projectId: string;
@@ -89,11 +99,15 @@ export async function notifyDocumentsUploaded(input: {
         const meta = (existing.metadata ?? {}) as Record<string, unknown>;
         const prev = typeof meta.fileCount === "number" ? meta.fileCount : 1;
         const fileCount = prev + addCount;
+        const sealed = await sealNotice(
+          input.organizationId,
+          title,
+          `${fileCount} new file${fileCount === 1 ? "" : "s"}`,
+        );
         await admin
           .from("staff_notifications")
           .update({
-            title,
-            body: `${fileCount} new file${fileCount === 1 ? "" : "s"}`,
+            ...sealed,
             metadata: {
               ...meta,
               projectId: input.projectId,
@@ -106,13 +120,17 @@ export async function notifyDocumentsUploaded(input: {
         continue;
       }
 
+      const sealed = await sealNotice(
+        input.organizationId,
+        title,
+        `${addCount} new file${addCount === 1 ? "" : "s"}`,
+      );
       await admin.from("staff_notifications").insert({
         organization_id: input.organizationId,
         user_id: userId,
         project_id: input.projectId,
         kind: "documents_uploaded",
-        title,
-        body: `${addCount} new file${addCount === 1 ? "" : "s"}`,
+        ...sealed,
         href,
         metadata: {
           projectId: input.projectId,
@@ -136,13 +154,17 @@ export async function notifyFormsSubmitted(input: {
     if (recipients.length === 0) return;
 
     const title = await projectTitle(input.organizationId, input.projectId);
+    const sealed = await sealNotice(
+      input.organizationId,
+      title,
+      "Client submitted the questionnaire",
+    );
     const rows = recipients.map((userId) => ({
       organization_id: input.organizationId,
       user_id: userId,
       project_id: input.projectId,
       kind: "forms_complete" as const,
-      title,
-      body: "Client submitted the questionnaire",
+      ...sealed,
       href: `/projects/${input.projectId}/forms`,
       metadata: {
         projectId: input.projectId,
@@ -168,13 +190,17 @@ export async function notifyFormCertification(input: {
   try {
     const admin = createServiceClient();
     const count = input.changedFormCodes.length;
+    const sealed = await sealNotice(
+      input.organizationId,
+      "IRCC form updates",
+      `${count} form${count === 1 ? "" : "s"} changed since the last certification check`,
+    );
     const rows = input.userIds.map((userId) => ({
       organization_id: input.organizationId,
       user_id: userId,
       project_id: null,
       kind: "form_certification" as const,
-      title: "IRCC form updates",
-      body: `${count} form${count === 1 ? "" : "s"} changed since the last certification check`,
+      ...sealed,
       href: "/settings/forms",
       metadata: {
         formCodes: input.changedFormCodes,

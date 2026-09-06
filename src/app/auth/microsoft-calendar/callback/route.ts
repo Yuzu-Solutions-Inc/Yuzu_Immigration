@@ -16,6 +16,7 @@ import {
   getMicrosoftCalendarSecrets,
   upsertMicrosoftCalendarSecrets,
 } from "@/lib/microsoft/secrets";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
 import { encryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -64,6 +65,12 @@ export async function GET(request: Request) {
       code,
     });
     const email = await microsoftUserEmail(tokens.access_token);
+    const orgKey = await getOrgDataKey(state.organizationId);
+    const sealedEmail = encryptOrgRow(
+      "microsoft_calendar_connections",
+      { microsoft_email: email },
+      orgKey,
+    ).microsoft_email;
 
     const { data: existing, error: existingError } = await admin
       .from("microsoft_calendar_connections")
@@ -82,7 +89,7 @@ export async function GET(request: Request) {
         .from("microsoft_calendar_connections")
         .update({
           user_id: user.id,
-          microsoft_email: email,
+          microsoft_email: sealedEmail,
           calendar_id: "calendar",
           is_enabled: true,
           updated_at: new Date().toISOString(),
@@ -98,7 +105,7 @@ export async function GET(request: Request) {
         .insert({
           organization_id: state.organizationId,
           user_id: user.id,
-          microsoft_email: email,
+          microsoft_email: sealedEmail,
           calendar_id: "calendar",
           is_enabled: true,
         })

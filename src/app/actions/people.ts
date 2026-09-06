@@ -24,6 +24,7 @@ import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { erasePersonPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { encryptNoteBody, encryptPersonWrite } from "@/lib/security/client-pii";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
 import { personLookupWrite } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
@@ -115,17 +116,24 @@ export async function createPersonAction(
       : null;
   const legalName = partnerLegalName(data.firstName, data.lastName);
   const email = data.email || null;
+  const key = await getOrgDataKey(orgId);
 
   const { data: partner, error: partnerError } = await supabase
     .from("partners")
     .insert({
       organization_id: orgId,
       user_id: user.id,
-      legal_name: legalName,
+      ...encryptOrgRow(
+        "partners",
+        {
+          legal_name: legalName,
+          contact_name: legalName,
+          email,
+          phone: data.phone || null,
+        },
+        key,
+      ),
       kind: "customer",
-      contact_name: legalName,
-      email,
-      phone: data.phone || null,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,
       preferred_locale: data.preferredLocale,
@@ -139,7 +147,6 @@ export async function createPersonAction(
     return { error: "create_failed" };
   }
 
-  const key = await getOrgDataKey(orgId);
   const { data: created, error: createError } = await supabase
     .from("people")
     .insert({

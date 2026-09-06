@@ -9,11 +9,13 @@ import {
   decryptPersonRow,
   encryptPersonWrite,
 } from "@/lib/security/client-pii";
+import { decryptOrgRow, encryptOrgRow } from "@/lib/security/encrypted-fields";
 import { personLookupWrite } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 
 export {
   asImmigrationStatus,
+  isProjectLinkablePartnerKind,
   partnerLegalName,
   shouldSyncImmigrationPerson,
   splitDisplayName,
@@ -79,11 +81,17 @@ export async function ensurePartnerForPerson(
     .insert({
       organization_id: orgId,
       user_id: userId,
-      legal_name: legalName,
+      ...encryptOrgRow(
+        "partners",
+        {
+          legal_name: legalName,
+          contact_name: legalName,
+          email: decrypted.email,
+          phone: decrypted.phone,
+        },
+        key,
+      ),
       kind: "customer",
-      contact_name: legalName,
-      email: decrypted.email,
-      phone: decrypted.phone,
       immigration_status: asImmigrationStatus(
         person.immigration_status as string | null,
       ),
@@ -141,12 +149,22 @@ export async function ensurePersonForPartner(
     return null;
   }
 
-  const { firstName, lastName } = splitDisplayName(
-    partner.legal_name as string,
-    partner.contact_name as string | null,
-  );
   const key = await getOrgDataKey(orgId);
-  const email = (partner.email as string | null) || null;
+  const opened = decryptOrgRow(
+    "partners",
+    partner as {
+      legal_name: string;
+      contact_name: string | null;
+      email: string | null;
+      phone: string | null;
+    },
+    key,
+  );
+  const { firstName, lastName } = splitDisplayName(
+    opened.legal_name as string,
+    opened.contact_name as string | null,
+  );
+  const email = opened.email || null;
   const immigrationStatus = asImmigrationStatus(
     partner.immigration_status as string | null,
   );
@@ -161,7 +179,7 @@ export async function ensurePersonForPartner(
           first_name: firstName,
           last_name: lastName,
           email,
-          phone: (partner.phone as string | null) || null,
+          phone: opened.phone || null,
         },
         key,
       ),
@@ -218,10 +236,16 @@ export async function syncPartnerFromPerson(
   const { error: updateError } = await supabase
     .from("partners")
     .update({
-      legal_name: legalName,
-      contact_name: legalName,
-      email: decrypted.email,
-      phone: decrypted.phone,
+      ...encryptOrgRow(
+        "partners",
+        {
+          legal_name: legalName,
+          contact_name: legalName,
+          email: decrypted.email,
+          phone: decrypted.phone,
+        },
+        key,
+      ),
       immigration_status: asImmigrationStatus(
         person.immigration_status as string | null,
       ),
@@ -271,12 +295,22 @@ export async function syncPersonFromPartner(
     .maybeSingle();
   if (error || !partner) return personId;
 
-  const { firstName, lastName } = splitDisplayName(
-    partner.legal_name as string,
-    partner.contact_name as string | null,
-  );
   const key = await getOrgDataKey(orgId);
-  const email = (partner.email as string | null) || null;
+  const opened = decryptOrgRow(
+    "partners",
+    partner as {
+      legal_name: string;
+      contact_name: string | null;
+      email: string | null;
+      phone: string | null;
+    },
+    key,
+  );
+  const { firstName, lastName } = splitDisplayName(
+    opened.legal_name as string,
+    opened.contact_name as string | null,
+  );
+  const email = opened.email || null;
   const immigrationStatus = asImmigrationStatus(
     partner.immigration_status as string | null,
   );
@@ -289,7 +323,7 @@ export async function syncPersonFromPartner(
           first_name: firstName,
           last_name: lastName,
           email,
-          phone: (partner.phone as string | null) || null,
+          phone: opened.phone || null,
         },
         key,
       ),

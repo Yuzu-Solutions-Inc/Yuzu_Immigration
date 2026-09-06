@@ -20,6 +20,7 @@ type OnboardingRow = {
   completed_at: string | null;
   dismissed_at: string | null;
   skipped_steps: string[];
+  seen_modules: string[];
   updated_at: string;
 };
 
@@ -35,7 +36,7 @@ async function loadOnboardingRow() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("staff_onboarding")
-    .select("completed_at, dismissed_at, skipped_steps")
+    .select("completed_at, dismissed_at, skipped_steps, seen_modules")
     .eq("organization_id", membership.organization.id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -52,6 +53,7 @@ async function loadOnboardingRow() {
       completed_at: string | null;
       dismissed_at: string | null;
       skipped_steps: string[] | null;
+      seen_modules: string[] | null;
     } | null,
   };
 }

@@ -23,5 +23,4 @@ export function revalidateContactPaths(
   }
   revalidatePath(`/${locale}/home`);
   revalidatePath(`/${locale}/projects`);
-  revalidatePath(`/${locale}/files`);
 }

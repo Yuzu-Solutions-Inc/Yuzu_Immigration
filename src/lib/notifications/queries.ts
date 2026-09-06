@@ -5,6 +5,8 @@ import {
 import { requireOrganizationId } from "@/lib/crm/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { notifyFormCertification } from "@/lib/notifications/emit";
+import { decryptOrgPayload } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
 export type StaffNotificationRow = {
@@ -90,7 +92,12 @@ export async function listStaffNotifications(
     return [];
   }
 
-  return (data ?? []) as StaffNotificationRow[];
+  const key = await getOrgDataKey(orgId);
+  return decryptOrgPayload(
+    "staff_notifications",
+    (data ?? []) as StaffNotificationRow[],
+    key,
+  );
 }
 
 export async function markStaffNotificationsRead(

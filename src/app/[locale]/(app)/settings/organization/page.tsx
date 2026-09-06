@@ -14,6 +14,8 @@ import { getPrimaryMembership } from "@/lib/auth/session";
 import { listOrgMembers } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { isModuleEnabled } from "@/lib/modules/org-modules";
+import { decryptOrgRow } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function OrganizationSettingsPage({
@@ -41,6 +43,12 @@ export default async function OrganizationSettingsPage({
     .maybeSingle();
 
   if (!org) redirect(`/${locale}/onboarding`);
+
+  const openedOrg = decryptOrgRow(
+    "organizations",
+    org,
+    await getOrgDataKey(membership.organization.id),
+  );
 
   const t = await getTranslations("settings");
   const tm = await getTranslations("modules");
@@ -76,11 +84,11 @@ export default async function OrganizationSettingsPage({
           <OrganizationSettingsForm
             locale={locale}
             initialValues={{
-              name: org.name ?? "",
-              slug: org.slug ?? "",
-              defaultLocale: toAppLocale(org.default_locale),
-              privacyContactEmail: org.privacy_contact_email ?? "",
-              portalGoogleLoginEnabled: org.portal_google_login_enabled === true,
+              name: openedOrg.name ?? "",
+              slug: openedOrg.slug ?? "",
+              defaultLocale: toAppLocale(openedOrg.default_locale),
+              privacyContactEmail: openedOrg.privacy_contact_email ?? "",
+              portalGoogleLoginEnabled: openedOrg.portal_google_login_enabled === true,
             }}
           />
         </SurfaceCard>

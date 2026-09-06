@@ -4,6 +4,7 @@ import {
   applyMeetingProvider,
   calendarSettingsHref,
 } from "@/lib/booking/integrations";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
 import { encryptField } from "@/lib/security/field-crypto";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -59,6 +60,12 @@ export async function GET(request: Request) {
       code,
     });
     const profile = await zoomUserProfile(tokens.access_token);
+    const orgKey = await getOrgDataKey(state.organizationId);
+    const sealedEmail = encryptOrgRow(
+      "zoom_connections",
+      { zoom_email: profile?.email ?? null },
+      orgKey,
+    ).zoom_email;
 
     const { data: existing, error: existingError } = await admin
       .from("zoom_connections")
@@ -77,7 +84,7 @@ export async function GET(request: Request) {
         .from("zoom_connections")
         .update({
           user_id: user.id,
-          zoom_email: profile?.email ?? null,
+          zoom_email: sealedEmail,
           zoom_user_id: profile?.zoomUserId ?? null,
           is_enabled: true,
           updated_at: new Date().toISOString(),
@@ -93,7 +100,7 @@ export async function GET(request: Request) {
         .insert({
           organization_id: state.organizationId,
           user_id: user.id,
-          zoom_email: profile?.email ?? null,
+          zoom_email: sealedEmail,
           zoom_user_id: profile?.zoomUserId ?? null,
           is_enabled: true,
         })

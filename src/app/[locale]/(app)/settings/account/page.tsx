@@ -17,6 +17,7 @@ import { loadCalendarSettingsModel } from "@/lib/booking/calendar-settings-data"
 import { toAppLocale } from "@/lib/i18n/locales";
 import { isAccountRepComplete } from "@/lib/ircc/account-rep";
 import { isModuleEnabled } from "@/lib/modules/org-modules";
+import { decryptProfileRow } from "@/lib/security/profile-pii";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AccountSettingsPage({
@@ -59,6 +60,7 @@ export default async function AccountSettingsPage({
 
   const t = await getTranslations("settings");
   const oauthReturn = Boolean(googleStatus || microsoftStatus || zoomStatus);
+  const openedProfile = profile ? decryptProfileRow(profile) : null;
 
   return (
     <div className="space-y-4">
@@ -72,8 +74,8 @@ export default async function AccountSettingsPage({
             <p className="text-sm text-muted-foreground">{t("accountHelp")}</p>
             <AccountProfileForm
               locale={locale}
-              email={profile?.email || user.email || ""}
-              fullName={profile?.full_name || ""}
+              email={openedProfile?.email || user.email || ""}
+              fullName={openedProfile?.full_name || ""}
               canChangePassword={hasEmailPasswordAuth(user)}
             />
           </SurfaceCard>
@@ -82,23 +84,23 @@ export default async function AccountSettingsPage({
           <SurfaceCard className="sm:p-6">
             <RepresentativeSettingsForm
               locale={locale}
-              email={profile?.email || user.email || ""}
+              email={openedProfile?.email || user.email || ""}
               representative={{
-                repFamilyName: profile?.rep_family_name ?? "",
-                repGivenName: profile?.rep_given_name ?? "",
-                repOrganization: profile?.rep_organization ?? "",
-                repEmail: profile?.rep_email ?? "",
-                repPhone: profile?.rep_phone ?? "",
-                repPhoneCountryCode: profile?.rep_phone_country_code ?? "",
-                repMembershipId: profile?.rep_membership_id ?? "",
-                repStreetNum: profile?.rep_street_num ?? "",
-                repStreetName: profile?.rep_street_name ?? "",
-                repCity: profile?.rep_city ?? "",
-                repProvince: profile?.rep_province ?? "",
-                repCountry: profile?.rep_country ?? "Canada",
-                repPostalCode: profile?.rep_postal_code ?? "",
+                repFamilyName: openedProfile?.rep_family_name ?? "",
+                repGivenName: openedProfile?.rep_given_name ?? "",
+                repOrganization: openedProfile?.rep_organization ?? "",
+                repEmail: openedProfile?.rep_email ?? "",
+                repPhone: openedProfile?.rep_phone ?? "",
+                repPhoneCountryCode: openedProfile?.rep_phone_country_code ?? "",
+                repMembershipId: openedProfile?.rep_membership_id ?? "",
+                repStreetNum: openedProfile?.rep_street_num ?? "",
+                repStreetName: openedProfile?.rep_street_name ?? "",
+                repCity: openedProfile?.rep_city ?? "",
+                repProvince: openedProfile?.rep_province ?? "",
+                repCountry: openedProfile?.rep_country ?? "Canada",
+                repPostalCode: openedProfile?.rep_postal_code ?? "",
               }}
-              representativeComplete={isAccountRepComplete(profile)}
+              representativeComplete={isAccountRepComplete(openedProfile)}
             />
           </SurfaceCard>
         }

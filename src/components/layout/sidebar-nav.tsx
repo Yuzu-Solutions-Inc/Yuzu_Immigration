@@ -66,19 +66,19 @@ const navItems: {
     module: "finance",
   },
   { href: "/other", key: "other", icon: LayoutGrid, module: "finance" },
-  { href: "/files", key: "files", icon: FolderKanban, module: "immigration" },
+  { href: "/projects", key: "projects", icon: FolderKanban, module: "immigration" },
   { href: "/calendar", key: "calendar", icon: CalendarDays, module: "bookings" },
   { href: "/bookings", key: "bookings", icon: ClipboardList, module: "bookings" },
   { href: "/services", key: "services", icon: Briefcase, module: "services" },
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/files") {
+  if (href === "/projects") {
     return (
-      pathname === "/files" ||
-      pathname.startsWith("/files/") ||
       pathname === "/projects" ||
-      pathname.startsWith("/projects/")
+      pathname.startsWith("/projects/") ||
+      pathname === "/files" ||
+      pathname.startsWith("/files/")
     );
   }
   if (href === "/engagements") {
@@ -101,7 +101,7 @@ function SidebarCreateLink({
   onNavigate,
   icon: Icon,
 }: {
-  href: "/files/new" | "/partners" | "/partners/new";
+  href: "/projects/new" | "/partners" | "/partners/new";
   label: string;
   collapsed: boolean;
   onNavigate?: () => void;
@@ -211,7 +211,7 @@ function SidebarBody({
         {showImmigrationCreate ? (
           <>
             <SidebarCreateLink
-              href="/files/new"
+              href="/projects/new"
               label={newProjectLabel}
               collapsed={collapsed}
               onNavigate={onNavigate}

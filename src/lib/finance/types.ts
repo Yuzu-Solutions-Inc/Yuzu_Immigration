@@ -313,6 +313,8 @@ export interface Partner {
   updated_at: string
 }
 
+export type PartnerListRow = Partner & { person_id: string | null }
+
 export interface Project {
   id: string
   user_id: string
@@ -353,10 +355,8 @@ export interface InvoiceLineItem {
   quantity: number
   unit_label: string
   unit_price: number
+  /** Tax-exclusive. Invoice GST/HST/QST is stored on `invoices`, not here. */
   subtotal: number
-  gst: number
-  qst: number
-  total: number
   sort_order: number
   created_at: string
   updated_at: string
@@ -408,8 +408,11 @@ export interface Invoice {
   invoice_date: string
   due_date: string
   currency: string
+  /** Sum of tax-exclusive line amounts. */
   subtotal: number
+  /** GST or HST, rounded once on `subtotal`. */
   gst: number
+  /** QST, rounded once on `subtotal`. Zero outside Québec. */
   qst: number
   total: number
   status: InvoiceStatus

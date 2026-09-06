@@ -28,6 +28,8 @@ import { slugifyOrganizationName } from "@/lib/org/slug";
 import { ONBOARDING_DEFAULT_MODULES, normalizeModuleSelection, validateModuleSelection } from "@/lib/modules/catalog";
 import { replaceOrganizationModules } from "@/lib/modules/org-modules";
 import { recordAuditEvent } from "@/lib/security/audit";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
 
@@ -120,11 +122,21 @@ export async function createOrganizationAction(
   const org = data as { id?: string };
   if (org.id) {
     await setActiveOrganizationId(org.id);
+    const { loadOrCreateOrgDataKey, getOrgDataKey } = await import(
+      "@/lib/security/org-data-key"
+    );
+    const { encryptOrgRow } = await import("@/lib/security/encrypted-fields");
+    await loadOrCreateOrgDataKey(org.id);
+    const orgKey = await getOrgDataKey(org.id);
     const { error: orgUpdateError } = await admin
       .from("organizations")
       .update({
         default_locale: parsed.data.locale,
-        privacy_contact_email: parsed.data.privacyContactEmail,
+        ...encryptOrgRow(
+          "organizations",
+          { privacy_contact_email: parsed.data.privacyContactEmail },
+          orgKey,
+        ),
         ...firmDpaAcceptanceColumns(user.id),
       })
       .eq("id", org.id);
@@ -132,10 +144,6 @@ export async function createOrganizationAction(
       console.error("create_organization settings:", orgUpdateError.message);
       return { error: "create_failed" };
     }
-    const { loadOrCreateOrgDataKey } = await import(
-      "@/lib/security/org-data-key"
-    );
-    await loadOrCreateOrgDataKey(org.id);
     const moduleResult = await replaceOrganizationModules(
       admin,
       org.id,
@@ -237,14 +245,23 @@ export async function deleteOrganizationAction(
   }
 
   const contact = await loadOwnerContact(orgId);
+  const orgKey = await getOrgDataKey(orgId);
+  const sealedContact = encryptOrgRow(
+    "organizations",
+    {
+      owner_contact_name: contact.name,
+      owner_contact_email: contact.email,
+    },
+    orgKey,
+  );
   await cancelOrganizationSubscription(orgId);
   await deleteOrganizationStorage(orgId);
 
   const { error } = await admin.rpc("purge_organization", {
     p_organization_id: orgId,
     p_actor_user_id: user.id,
-    p_owner_contact_name: contact.name,
-    p_owner_contact_email: contact.email,
+    p_owner_contact_name: sealedContact.owner_contact_name,
+    p_owner_contact_email: sealedContact.owner_contact_email,
   });
 
   if (error) {

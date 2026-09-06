@@ -1,16 +1,14 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 
+import { PartnerForm } from "@/components/partners/partner-form";
 import { SurfaceCard } from "@/components/layout/surface-card";
-import { CreatePersonForm } from "@/components/people/create-person-form";
 import { Link } from "@/i18n/navigation";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
-import { toAppLocale } from "@/lib/i18n/locales";
 import { isModuleEnabled } from "@/lib/modules/org-modules";
-import { requireImmigrationWorkspace } from "@/lib/modules/require-workspace";
 
-export default async function NewPartnerPersonPage({
+export default async function NewPartnerPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -19,16 +17,14 @@ export default async function NewPartnerPersonPage({
   setRequestLocale(locale);
 
   const membership = await getPrimaryMembership();
-  if (!isModuleEnabled(membership?.enabledModules ?? [], "immigration")) {
-    redirect(`/${locale}/partners`);
-  }
-  await requireImmigrationWorkspace(locale);
-
+  if (!membership) redirect(`/${locale}/onboarding`);
   if (!canCreateInWorkspace(membership)) {
     redirect(`/${locale}/partners`);
   }
 
-  const t = await getTranslations("people");
+  const t = await getTranslations("financeApp");
+  const financeOn = isModuleEnabled(membership.enabledModules, "finance");
+  const immigrationOn = isModuleEnabled(membership.enabledModules, "immigration");
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -37,18 +33,22 @@ export default async function NewPartnerPersonPage({
           href="/partners"
           className="text-sm font-medium text-action hover:underline"
         >
-          ← {t("back")}
+          ← {t("partners.back")}
         </Link>
         <h1 className="font-heading text-2xl font-semibold text-brand">
-          {t("createTitle")}
+          {t("partners.new")}
         </h1>
         <p className="text-[15px] text-muted-foreground">
-          {t("createSubtitle")}
+          {t("partners.createSubtitle")}
         </p>
       </div>
 
       <SurfaceCard>
-        <CreatePersonForm locale={toAppLocale(locale)} />
+        <PartnerForm
+          locale={locale}
+          financeOn={financeOn}
+          immigrationOn={immigrationOn}
+        />
       </SurfaceCard>
     </div>
   );

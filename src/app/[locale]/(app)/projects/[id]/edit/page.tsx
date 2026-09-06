@@ -12,8 +12,8 @@ import { inferCompositionFromRoles } from "@/lib/crm/programs";
 import {
   getProject,
   getProjectParticipants,
+  listLinkableProjectClients,
   listOrgMembers,
-  listPeople,
 } from "@/lib/crm/queries";
 import { listOrganizationPrograms } from "@/app/actions/org-programs";
 import { normalizeAnswersStore } from "@/lib/ircc/answers-store";
@@ -43,7 +43,7 @@ export default async function EditProjectPage({
 
   const [
     participants,
-    people,
+    clients,
     members,
     user,
     membership,
@@ -53,7 +53,7 @@ export default async function EditProjectPage({
     organizationPrograms,
   ] = await Promise.all([
       getProjectParticipants(id),
-      listPeople(),
+      listLinkableProjectClients(),
       listOrgMembers(),
       getSessionUser(),
       getPrimaryMembership(),
@@ -96,6 +96,7 @@ export default async function EditProjectPage({
         role: row.role,
         mode: "existing" as const,
         personId: row.person!.id,
+        partnerId: row.person!.partner_id ?? "",
         firstName: row.person!.first_name,
         lastName: row.person!.last_name,
         email: row.person!.email ?? "",
@@ -160,7 +161,7 @@ export default async function EditProjectPage({
       <SurfaceCard>
         <ProjectForm
           locale={locale}
-          people={people}
+          clients={clients}
           members={members.map((m) => ({
             user_id: m.user_id,
             full_name: m.profile.full_name,
@@ -193,6 +194,7 @@ export default async function EditProjectPage({
                     role: "principal" as const,
                     mode: "new" as const,
                     personId: "",
+                    partnerId: "",
                     firstName: "",
                     lastName: "",
                     email: "",

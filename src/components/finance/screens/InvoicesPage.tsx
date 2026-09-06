@@ -306,9 +306,6 @@ export function InvoicesPage() {
         unit_label: line.unit_label,
         unit_price: line.unit_price,
         subtotal: line.subtotal,
-        gst: line.gst,
-        qst: line.qst,
-        total: line.total,
         sort_order: line.sort_order,
       }))
     )

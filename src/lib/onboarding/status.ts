@@ -2,6 +2,7 @@ import "server-only";
 
 import { canAdministerOrg, canManageBookingCatalog } from "@/lib/auth/rbac";
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
+import { canCreateInWorkspace } from "@/lib/billing/trial";
 import { getStaffBookingIntegrations } from "@/lib/booking/integrations";
 import {
   getMyGoogleCalendarConnection,
@@ -15,7 +16,10 @@ import {
   PROFILE_REP_SELECT,
   type AccountRepSource,
 } from "@/lib/ircc/account-rep";
-import { type OnboardingChecks } from "@/lib/onboarding/steps";
+import { type ModuleId } from "@/lib/modules/catalog";
+import { type OnboardingChecks, setupCheckIdsFor } from "@/lib/onboarding/steps";
+import { unseenModules } from "@/lib/onboarding/tour";
+import { decryptProfileRow } from "@/lib/security/profile-pii";
 import { createClient } from "@/lib/supabase/server";
 
 export {
@@ -23,6 +27,7 @@ export {
   ONBOARDING_CHECK_IDS,
   WIZARD_STEP_IDS,
   emptyOnboardingChecks,
+  setupCheckIdsFor,
   wizardStepsForRole,
   type OnboardingCheckId,
   type OnboardingChecks,
@@ -33,7 +38,12 @@ export type OnboardingState = {
   organizationId: string;
   isAdmin: boolean;
   canManageServices: boolean;
+  canCreate: boolean;
   fullName: string;
+  enabledModules: ModuleId[];
+  seenModules: string[];
+  unseenModules: ModuleId[];
+  activeCheckIds: OnboardingCheckId[];
   checks: OnboardingChecks;
   wizardCompleted: boolean;
   wizardDismissed: boolean;
@@ -84,7 +94,7 @@ export async function getOnboardingState(): Promise<OnboardingState | null> {
     getMyZoomConnection(),
     supabase
       .from("staff_onboarding")
-      .select("completed_at, dismissed_at, skipped_steps")
+      .select("completed_at, dismissed_at, skipped_steps, seen_modules")
       .eq("organization_id", orgId)
       .eq("user_id", user.id)
       .maybeSingle(),
@@ -139,13 +149,31 @@ export async function getOnboardingState(): Promise<OnboardingState | null> {
     service: canManageServices ? (servicesResult.count ?? 0) > 0 : true,
   };
 
+  const enabledModules = membership.enabledModules;
+  const seenRaw = onboardingResult.data?.seen_modules;
+  const seenModules = (Array.isArray(seenRaw) ? seenRaw : []).filter(
+    (value: unknown): value is string => typeof value === "string",
+  );
+  const unseen = unseenModules(enabledModules, seenModules);
+  const wizardCompleted = Boolean(onboardingResult.data?.completed_at);
+  const wizardDismissed = Boolean(onboardingResult.data?.dismissed_at);
+
   return {
     organizationId: orgId,
     isAdmin,
     canManageServices,
-    fullName: String(profile?.full_name ?? "").trim(),
+    canCreate: canCreateInWorkspace(membership),
+    fullName: String(decryptProfileRow(profile ?? {}).full_name ?? "").trim(),
+    enabledModules,
+    seenModules,
+    unseenModules: wizardCompleted || wizardDismissed ? unseen : enabledModules,
+    activeCheckIds: setupCheckIdsFor({
+      enabledModules,
+      isAdmin,
+      canManageServices,
+    }),
     checks,
-    wizardCompleted: Boolean(onboardingResult.data?.completed_at),
-    wizardDismissed: Boolean(onboardingResult.data?.dismissed_at),
+    wizardCompleted,
+    wizardDismissed,
   };
 }

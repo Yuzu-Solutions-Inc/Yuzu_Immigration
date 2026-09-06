@@ -66,31 +66,19 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/:locale/projects",
-        destination: "/:locale/files",
+        source: "/:locale/files",
+        destination: "/:locale/projects",
         permanent: false,
       },
       {
-        source: "/:locale/projects/:path*",
-        destination: "/:locale/files/:path*",
+        source: "/:locale/files/:path*",
+        destination: "/:locale/projects/:path*",
         permanent: false,
       },
       {
         source: "/:locale/settings/team",
         destination: "/:locale/settings/billing",
         permanent: true,
-      },
-    ];
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/:locale/files",
-        destination: "/:locale/projects",
-      },
-      {
-        source: "/:locale/files/:path*",
-        destination: "/:locale/projects/:path*",
       },
     ];
   },

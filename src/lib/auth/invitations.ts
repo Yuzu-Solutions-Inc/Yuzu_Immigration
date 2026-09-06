@@ -6,6 +6,8 @@ import { mapAssignedRole } from "@/lib/auth/rbac";
 import { getSessionUser } from "@/lib/auth/session";
 import { canAddMemberSeat } from "@/lib/billing/occupancy";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
+import { decryptOrgRow } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 async function rememberJoinedOrganization(organizationId: string) {
@@ -40,6 +42,20 @@ type InvitationRow = {
   accepted_at: string | null;
   revoked_at: string | null;
 };
+
+async function openedInviteEmail(
+  organizationId: string,
+  email: string | null | undefined,
+) {
+  const key = await getOrgDataKey(organizationId);
+  return normalizeInviteEmail(
+    decryptOrgRow(
+      "organization_invitations",
+      { email: email ?? "" },
+      key,
+    ).email ?? "",
+  );
+}
 
 function isPending(row: InvitationRow, now = Date.now()) {
   if (row.accepted_at || row.revoked_at) return false;
@@ -129,7 +145,7 @@ export async function acceptInvitationByToken(
     return { ok: false, error: row.accepted_at ? "already_accepted" : "expired" };
   }
 
-  if (normalizeInviteEmail(row.email) !== normalizeInviteEmail(user.email)) {
+  if (await openedInviteEmail(row.organization_id, row.email) !== normalizeInviteEmail(user.email)) {
     return { ok: false, error: "email_mismatch" };
   }
 
@@ -186,9 +202,13 @@ export async function acceptPendingInvitationsForUser(): Promise<{
     return { joined: 0, organizationId: null };
   }
 
-  const matches = ((data ?? []) as InvitationRow[]).filter(
-    (row) => normalizeInviteEmail(row.email) === email && isPending(row),
-  );
+  const matches: InvitationRow[] = [];
+  for (const row of (data ?? []) as InvitationRow[]) {
+    if (!isPending(row)) continue;
+    if ((await openedInviteEmail(row.organization_id, row.email)) === email) {
+      matches.push(row);
+    }
+  }
 
   let joined = 0;
   let organizationId: string | null = null;
@@ -232,6 +252,10 @@ export async function getInvitationByToken(token: string) {
     .maybeSingle();
 
   if (!data) return null;
+  const openedEmail = await openedInviteEmail(
+    data.organization_id as string,
+    data.email as string,
+  );
   const { data: org } = await admin
     .from("organizations")
     .select("name")
@@ -240,6 +264,7 @@ export async function getInvitationByToken(token: string) {
 
   return {
     ...(data as InvitationRow),
+    email: openedEmail,
     role: mapAssignedRole(data.role),
     organizationName: (org?.name as string | undefined) ?? null,
   };

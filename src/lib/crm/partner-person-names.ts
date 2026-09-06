@@ -37,3 +37,10 @@ export function shouldSyncImmigrationPerson(
 ) {
   return kind === "customer" || kind === "both";
 }
+
+/** Immigration projects and finance engagements only attach to client-capable partners. */
+export function isProjectLinkablePartnerKind(
+  kind: "customer" | "provider" | "both" | null | undefined,
+) {
+  return kind === "customer" || kind === "both";
+}
