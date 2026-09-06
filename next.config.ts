@@ -36,18 +36,55 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:locale/people",
-        destination: "/:locale/clients",
+        destination: "/:locale/partners",
         permanent: true,
       },
       {
         source: "/:locale/people/:path*",
-        destination: "/:locale/clients/:path*",
+        destination: "/:locale/partners/:path*",
         permanent: true,
+      },
+      {
+        source: "/:locale/clients",
+        destination: "/:locale/partners",
+        permanent: false,
+      },
+      {
+        source: "/:locale/clients/:path*",
+        destination: "/:locale/partners/:path*",
+        permanent: false,
+      },
+      {
+        source: "/:locale/billing/projects",
+        destination: "/:locale/engagements",
+        permanent: false,
+      },
+      {
+        source: "/:locale/projects",
+        destination: "/:locale/files",
+        permanent: false,
+      },
+      {
+        source: "/:locale/projects/:path*",
+        destination: "/:locale/files/:path*",
+        permanent: false,
       },
       {
         source: "/:locale/settings/team",
         destination: "/:locale/settings/billing",
         permanent: true,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/:locale/files",
+        destination: "/:locale/projects",
+      },
+      {
+        source: "/:locale/files/:path*",
+        destination: "/:locale/projects/:path*",
       },
     ];
   },

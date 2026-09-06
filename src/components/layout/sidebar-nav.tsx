@@ -6,6 +6,8 @@ import {
   ClipboardList,
   FolderKanban,
   Home,
+  Landmark,
+  LayoutGrid,
   LogOut,
   Menu,
   PanelLeft,
@@ -13,6 +15,7 @@ import {
   Plus,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -48,23 +51,41 @@ const navItems: {
   module: ModuleId | null;
 }[] = [
   { href: "/home", key: "home", icon: Home, module: null },
-  { href: "/partners", key: "partners", icon: Users, module: "finance" },
+  { href: "/partners", key: "partners", icon: Users, module: null },
   {
-    href: "/billing/projects",
+    href: "/engagements",
     key: "engagements",
     icon: FolderKanban,
     module: "finance",
   },
-  { href: "/projects", key: "projects", icon: FolderKanban, module: "immigration" },
-  { href: "/clients", key: "people", icon: Users, module: "immigration" },
+  { href: "/bank", key: "bank", icon: Landmark, module: "finance" },
+  {
+    href: "/compensation/payroll",
+    key: "compensation",
+    icon: Wallet,
+    module: "finance",
+  },
+  { href: "/other", key: "other", icon: LayoutGrid, module: "finance" },
+  { href: "/files", key: "files", icon: FolderKanban, module: "immigration" },
   { href: "/calendar", key: "calendar", icon: CalendarDays, module: "bookings" },
   { href: "/bookings", key: "bookings", icon: ClipboardList, module: "bookings" },
   { href: "/services", key: "services", icon: Briefcase, module: "services" },
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/home") {
-    return pathname === "/home";
+  if (href === "/files") {
+    return (
+      pathname === "/files" ||
+      pathname.startsWith("/files/") ||
+      pathname === "/projects" ||
+      pathname.startsWith("/projects/")
+    );
+  }
+  if (href === "/engagements") {
+    return pathname === "/engagements" || pathname.startsWith("/billing/");
+  }
+  if (href === "/compensation/payroll") {
+    return pathname === "/compensation" || pathname.startsWith("/compensation/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -80,7 +101,7 @@ function SidebarCreateLink({
   onNavigate,
   icon: Icon,
 }: {
-  href: "/projects/new" | "/clients/new";
+  href: "/files/new" | "/partners" | "/partners/new";
   label: string;
   collapsed: boolean;
   onNavigate?: () => void;
@@ -190,14 +211,14 @@ function SidebarBody({
         {showImmigrationCreate ? (
           <>
             <SidebarCreateLink
-              href="/projects/new"
+              href="/files/new"
               label={newProjectLabel}
               collapsed={collapsed}
               onNavigate={onNavigate}
               icon={Plus}
             />
             <SidebarCreateLink
-              href="/clients/new"
+              href="/partners/new"
               label={newPersonLabel}
               collapsed={collapsed}
               onNavigate={onNavigate}

@@ -2,11 +2,8 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
 import { getStripe } from "@/lib/stripe/client";
-import {
-  fulfillConnectedCheckoutSession,
-  markConnectedCheckoutFailed,
-  syncConnectedAccountFromEvent,
-} from "@/lib/stripe/connect-webhooks";
+import { fulfillConnectedCheckoutSession, markConnectedCheckoutFailed, syncConnectedAccountFromEvent } from "@/lib/stripe/connect-webhooks";
+import { fulfillInvoiceStripeCheckout } from "@/lib/finance/invoice-stripe";
 import { alignFoundingCatalogPrices, ensurePendingRenewalSchedule } from "@/lib/stripe/seats";
 import {
   clearPendingBillingForSchedule,
@@ -100,12 +97,19 @@ export async function POST(request: Request) {
           await syncFromSubscriptionId(subscriptionId);
         }
         if (session.mode === "payment") {
-          await fulfillConnectedCheckoutSession(session);
+          const invoiced = await fulfillInvoiceStripeCheckout(session);
+          if (!invoiced) {
+            await fulfillConnectedCheckoutSession(session);
+          }
         }
         break;
       }
       case "checkout.session.async_payment_succeeded": {
-        await fulfillConnectedCheckoutSession(event.data.object);
+        const session = event.data.object;
+        const invoiced = await fulfillInvoiceStripeCheckout(session);
+        if (!invoiced) {
+          await fulfillConnectedCheckoutSession(session);
+        }
         break;
       }
       case "checkout.session.async_payment_failed": {

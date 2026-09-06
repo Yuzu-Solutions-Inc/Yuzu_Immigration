@@ -210,7 +210,7 @@ export function PeopleList({
                 <li key={person.id}>
                   <div className={cn("flex items-start gap-2", listMobileItemClassName)}>
                     <Link
-                      href={`/clients/${person.id}`}
+                      href={`/partners/${person.partner_id || person.id}`}
                       className="min-w-0 flex-1 space-y-1"
                     >
                       <p className="font-medium text-brand">{fullName}</p>
@@ -397,12 +397,12 @@ export function PeopleList({
                     className="group cursor-pointer"
                     onClick={(event) => {
                       if (shouldIgnoreRowClick(event)) return;
-                      router.push(`/clients/${person.id}`);
+                      router.push(`/partners/${person.partner_id || person.id}`);
                     }}
                   >
                     <TableCell className={cn("whitespace-normal", listTableEdgeStartClassName)}>
                       <Link
-                        href={`/clients/${person.id}`}
+                        href={`/partners/${person.partner_id || person.id}`}
                         className="font-medium text-brand transition-colors hover:opacity-80"
                       >
                         {fullName}

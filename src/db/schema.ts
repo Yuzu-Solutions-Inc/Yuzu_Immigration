@@ -19,13 +19,37 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
+/**
+ * Modular CRM schema (one Postgres, org-level module checkboxes).
+ *
+ * Core (always on): organizations, profiles, members, invitations, modules,
+ * partners (the only contact directory).
+ *
+ * Finance: public.projects (engagements) + invoices/payments/bank/payroll.
+ * Those tables are owned by the Finance app layer; do not reuse `projects`
+ * or the Finance `project_status` enum (active|on_hold|completed|archived).
+ *
+ * Immigration: people (1:1 partner extension), immigration_projects (files)
+ * with `file_status`, forms, documents, portal.
+ *
+ * Bookings / services / contracts / payments: booking_*, contract_*,
+ * payment_requests (booking Stripe; not Finance invoice AR).
+ */
+
 export const orgMemberRoleEnum = pgEnum("org_member_role", [
   "owner",
   "admin",
-  "case_manager",
+  "member",
 ]);
 
-export const projectStatusEnum = pgEnum("project_status", [
+export const partnerKindEnum = pgEnum("partner_kind", [
+  "customer",
+  "provider",
+  "both",
+]);
+
+/** Immigration file workflow. Not Finance `project_status`. */
+export const fileStatusEnum = pgEnum("file_status", [
   "new",
   "in_progress",
   "stuck",
@@ -34,6 +58,9 @@ export const projectStatusEnum = pgEnum("project_status", [
   "granted",
   "rejected",
 ]);
+
+/** @deprecated Use fileStatusEnum. Kept so existing TS `ProjectStatus` imports stay stable. */
+export const projectStatusEnum = fileStatusEnum;
 
 export const projectJurisdictionEnum = pgEnum("project_jurisdiction", [
   "federal",
@@ -193,7 +220,7 @@ export const organizationMembers = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
-    role: orgMemberRoleEnum("role").notNull().default("case_manager"),
+    role: orgMemberRoleEnum("role").notNull().default("member"),
     /** Paid workspace access. False keeps membership read-only. */
     isLicensed: boolean("is_licensed").default(true).notNull(),
     /** Optional license assignment to apply with the next billing phase. */
@@ -253,12 +280,54 @@ export const organizationInvitations = pgTable("organization_invitations", {
     .notNull(),
 });
 
-/** Lifelong immigration clients belonging to an organization. */
+/**
+ * Core CRM contact. Finance invoices and immigration files both point here.
+ * Industry PII lives on module tables (people.partner_id for immigration).
+ */
+export const partners = pgTable("partners", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "restrict" }),
+  legalName: text("legal_name").notNull(),
+  kind: partnerKindEnum("kind").notNull().default("customer"),
+  contactName: text("contact_name"),
+  email: text("email"),
+  phone: text("phone"),
+  addressLine1: text("address_line1"),
+  city: text("city"),
+  province: text("province").default("QC"),
+  postalCode: text("postal_code"),
+  country: text("country").default("Canada"),
+  language: text("language").default("fr"),
+  paymentTermsDays: integer("payment_terms_days").default(30),
+  invoicePenaltyMonthlyPct: numeric("invoice_penalty_monthly_pct")
+    .notNull()
+    .default("0.02"),
+  notes: text("notes"),
+  immigrationStatus: text("immigration_status"),
+  statusExpiresAt: date("status_expires_at"),
+  preferredLocale: text("preferred_locale").notNull().default("fr"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Immigration PII for a partner. One row per partner when that module is used. */
 export const people = pgTable("people", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
+  partnerId: uuid("partner_id").references(() => partners.id, {
+    onDelete: "restrict",
+  }),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email"),
@@ -285,7 +354,10 @@ export const people = pgTable("people", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+},
+(table) => [
+  uniqueIndex("people_partner_id_uidx").on(table.partnerId),
+]);
 
 /** Internal consultation notes for a person (firm-only). */
 export const personNotes = pgTable(
@@ -332,7 +404,7 @@ export const immigrationProjects = pgTable("immigration_projects", {
   formPercent: integer("form_percent").notNull().default(0),
   description: text("description"),
   notes: text("notes"),
-  status: projectStatusEnum("status").notNull().default("new"),
+  status: fileStatusEnum("status").notNull().default("new"),
   statusAt: date("status_at").notNull().default(sql`current_date`),
   submitBefore: date("submit_before"),
   jurisdiction: projectJurisdictionEnum("jurisdiction")
@@ -465,7 +537,7 @@ export const projectStatusHistory = pgTable("project_status_history", {
   projectId: uuid("project_id")
     .notNull()
     .references(() => immigrationProjects.id, { onDelete: "cascade" }),
-  status: projectStatusEnum("status").notNull(),
+  status: fileStatusEnum("status").notNull(),
   statusAt: date("status_at").notNull(),
   changedBy: uuid("changed_by").references(() => profiles.id, {
     onDelete: "set null",
@@ -1108,6 +1180,9 @@ export const bookingAppointments = pgTable("booking_appointments", {
   personId: uuid("person_id").references(() => people.id, {
     onDelete: "set null",
   }),
+  partnerId: uuid("partner_id").references(() => partners.id, {
+    onDelete: "set null",
+  }),
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
   endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
   guestName: text("guest_name").notNull(),
@@ -1623,6 +1698,9 @@ export const paymentRequests = pgTable(
     personId: uuid("person_id").references(() => people.id, {
       onDelete: "set null",
     }),
+    partnerId: uuid("partner_id").references(() => partners.id, {
+      onDelete: "set null",
+    }),
     appointmentId: uuid("appointment_id").references(
       () => bookingAppointments.id,
       { onDelete: "set null" },
@@ -1984,7 +2062,7 @@ export type ProgramFamily = (typeof programFamilyEnum.enumValues)[number];
 export type ProjectJurisdiction =
   (typeof projectJurisdictionEnum.enumValues)[number];
 export type ParticipantRole = (typeof participantRoleEnum.enumValues)[number];
-export type ProjectStatus = (typeof projectStatusEnum.enumValues)[number];
+export type ProjectStatus = (typeof fileStatusEnum.enumValues)[number];
 export type PersonImmigrationStatus =
   (typeof personImmigrationStatusEnum.enumValues)[number];
 export type DocumentRequestStatus =

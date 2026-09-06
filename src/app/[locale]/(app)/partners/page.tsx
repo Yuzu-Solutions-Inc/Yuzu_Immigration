@@ -1,25 +1,23 @@
-import { getTranslations } from "next-intl/server";
+import { listPartnersAction } from "@/app/actions/finance-partners";
+import { PartnersPage } from "@/components/finance/screens/PartnersPage";
+import { getPrimaryMembership } from "@/lib/auth/session";
+import { isModuleEnabled } from "@/lib/modules/org-modules";
+import { setRequestLocale } from "next-intl/server";
 
-import { SurfaceCard } from "@/components/layout/surface-card";
-import { requireModule } from "@/lib/modules/require-module";
-import { toAppLocale } from "@/lib/i18n/locales";
-
-export default async function PartnersPlaceholderPage({
+export default async function Page({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale: localeParam } = await params;
-  const locale = toAppLocale(localeParam);
-  await requireModule(locale, "finance");
-  const t = await getTranslations("modules");
-
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const membership = await getPrimaryMembership();
+  const rows = await listPartnersAction();
   return (
-    <SurfaceCard className="space-y-2 sm:p-6">
-      <h1 className="font-heading text-xl font-semibold text-brand">
-        {t("items.finance.name")}
-      </h1>
-      <p className="text-sm text-muted-foreground">{t("financeComingSoon")}</p>
-    </SurfaceCard>
+    <PartnersPage
+      initialRows={rows}
+      financeOn={isModuleEnabled(membership?.enabledModules ?? [], "finance")}
+      immigrationOn={isModuleEnabled(membership?.enabledModules ?? [], "immigration")}
+    />
   );
 }

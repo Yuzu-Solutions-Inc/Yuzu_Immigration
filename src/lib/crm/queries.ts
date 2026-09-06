@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import type { OrgRole } from "@/lib/auth/rbac";
-import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
+import { mapAssignedRole } from "@/lib/auth/rbac";
 import type {
   BookingAppointmentStatus,
   ParticipantRole,
@@ -44,6 +44,7 @@ import {
 export type PersonRow = {
   id: string;
   organization_id: string;
+  partner_id?: string | null;
   first_name: string;
   last_name: string;
   email: string | null;
@@ -554,6 +555,29 @@ export async function getPerson(personId: string): Promise<PersonRow | null> {
   return data ? decryptPersonRow(data as PersonRow, await getOrgDataKey(orgId)) : null;
 }
 
+export async function getPersonByPartnerId(
+  partnerId: string,
+): Promise<PersonRow | null> {
+  const orgId = await requireOrganizationId();
+  if (!orgId) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("people")
+    .select("*")
+    .eq("organization_id", orgId)
+    .eq("partner_id", partnerId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getPersonByPartnerId:", error.message);
+    return null;
+  }
+  return data
+    ? decryptPersonRow(data as PersonRow, await getOrgDataKey(orgId))
+    : null;
+}
+
 export async function listPersonNotes(
   personId: string,
 ): Promise<PersonNoteRow[]> {
@@ -820,7 +844,7 @@ export async function listOrgMembers(): Promise<OrgMemberRow[]> {
       return {
         id: m.id as string,
         user_id: m.user_id as string,
-        role: isOrgRole(m.role) ? m.role : DEFAULT_ORG_ROLE,
+        role: mapAssignedRole(m.role),
         is_licensed: m.is_licensed !== false,
         licensed_at_renewal:
           typeof m.licensed_at_renewal === "boolean"
@@ -1400,6 +1424,6 @@ export async function listPendingInvitations(): Promise<PendingInvitationRow[]> 
 
   return ((data ?? []) as PendingInvitationRow[]).map((row) => ({
     ...row,
-    role: isOrgRole(row.role) ? row.role : DEFAULT_ORG_ROLE,
+    role: mapAssignedRole(row.role),
   }));
 }

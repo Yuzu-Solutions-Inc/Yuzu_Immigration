@@ -75,7 +75,7 @@ export async function DashboardShell({
 export function NewProjectButton({ label }: { label: string }) {
   return (
     <Link
-      href="/projects/new"
+      href="/files/new"
       className={cn(
         buttonVariants({ size: "sm" }),
         "bg-action text-action-foreground hover:bg-action/90",

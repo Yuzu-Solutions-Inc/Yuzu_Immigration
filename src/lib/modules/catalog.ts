@@ -27,18 +27,17 @@ export const MODULE_CATALOG: Record<ModuleId, ModuleManifest> = {
     nameKey: "finance",
     dependsOn: [],
     nav: [
-      { href: "/partners", navKey: "partners" },
-      { href: "/billing/projects", navKey: "engagements" },
+      { href: "/engagements", navKey: "engagements" },
+      { href: "/bank", navKey: "bank" },
+      { href: "/compensation/payroll", navKey: "compensation" },
+      { href: "/other", navKey: "other" },
     ],
   },
   immigration: {
     id: "immigration",
     nameKey: "immigration",
     dependsOn: [],
-    nav: [
-      { href: "/projects", navKey: "projects" },
-      { href: "/clients", navKey: "people" },
-    ],
+    nav: [{ href: "/files", navKey: "files" }],
   },
   bookings: {
     id: "bookings",
@@ -69,16 +68,8 @@ export const MODULE_CATALOG: Record<ModuleId, ModuleManifest> = {
   },
 };
 
-/** Current Dossierly product when no rows exist yet (table missing or empty). */
-export const FALLBACK_MODULES: ModuleId[] = [
-  "immigration",
-  "bookings",
-  "services",
-  "contracts",
-  "payments",
-];
-
-export const ONBOARDING_DEFAULT_MODULES: ModuleId[] = [...FALLBACK_MODULES];
+/** No product modules until Settings or onboarding writes `organization_modules`. */
+export const ONBOARDING_DEFAULT_MODULES: ModuleId[] = [];
 
 export function isModuleId(value: unknown): value is ModuleId {
   return (

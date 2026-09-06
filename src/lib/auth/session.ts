@@ -1,10 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/auth/active-org";
 import { orgAllowsWrites, trialEndsAt } from "@/lib/billing/trial";
-import type { OrgAccessLevel, OrgRole } from "@/lib/auth/rbac";
-import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
+import {
+  mapAssignedRole,
+  type OrgAccessLevel,
+  type OrgRole,
+} from "@/lib/auth/rbac";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
-import { FALLBACK_MODULES, isModuleId, type ModuleId } from "@/lib/modules/catalog";
+import { isModuleId, type ModuleId } from "@/lib/modules/catalog";
 
 export type OrgMembership = {
   id: string;
@@ -109,7 +112,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
         return null;
       }
 
-      const assignedRole = isOrgRole(row.role) ? row.role : DEFAULT_ORG_ROLE;
+      const assignedRole = mapAssignedRole(row.role);
       const isLicensed = row.is_licensed !== false;
       return {
         id: row.id as string,
@@ -133,7 +136,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
         },
         enabledModules: modulesTableReady
           ? (modulesByOrg.get(organization.id as string) ?? [])
-          : [...FALLBACK_MODULES],
+          : [],
       };
     })
     .filter((row): row is OrgMembership => row !== null);

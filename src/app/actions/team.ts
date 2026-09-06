@@ -29,7 +29,7 @@ export type TeamActionState = {
   inviteUrl?: string;
 };
 
-const accessSchema = z.enum(["admin", "case_manager", "unlicensed"]);
+const accessSchema = z.enum(["admin", "member", "unlicensed"]);
 
 export async function inviteOrgMemberAction(
   _prev: TeamActionState,
@@ -102,7 +102,7 @@ export async function inviteOrgMemberAction(
     .insert({
       organization_id: orgId,
       email,
-      role: parsed.data.access === "admin" ? "admin" : "case_manager",
+      role: parsed.data.access === "admin" ? "admin" : "member",
       is_licensed: parsed.data.access !== "unlicensed",
       token_hash: hashInviteToken(token),
       invited_by: user?.id ?? null,
@@ -127,7 +127,7 @@ export async function inviteOrgMemberAction(
       ? roleLabels.unlicensed
       : parsed.data.access === "admin"
         ? roleLabels.admin
-        : roleLabels.case_manager;
+        : roleLabels.member;
 
   const sent = await sendOrgInviteEmail({
     locale,

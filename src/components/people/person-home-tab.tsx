@@ -24,7 +24,7 @@ function InfoField({
 }
 
 export async function PersonHomeTab({
-  personId,
+  partnerId,
   email,
   phone,
   preferredLocaleLabel,
@@ -33,7 +33,7 @@ export async function PersonHomeTab({
   portal,
   projects,
 }: {
-  personId: string;
+  partnerId: string;
   email: string;
   phone: string;
   preferredLocaleLabel: string;
@@ -52,7 +52,7 @@ export async function PersonHomeTab({
             {t("infoTitle")}
           </h2>
           <Link
-            href={`/clients/${personId}/edit`}
+            href={`/partners/${partnerId}/edit`}
             className="text-sm font-medium text-action hover:underline"
           >
             {t("edit")}

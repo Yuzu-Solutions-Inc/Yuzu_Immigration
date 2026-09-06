@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
-  FALLBACK_MODULES,
   isModuleId,
   parseModuleIds,
   validateModuleSelection,
@@ -22,18 +21,11 @@ export async function loadEnabledModules(
     .eq("organization_id", organizationId);
 
   if (error) {
-    if (error.code === "42P01" || error.message.includes("organization_modules")) {
-      return [...FALLBACK_MODULES];
-    }
     console.error("loadEnabledModules:", error.message);
-    return [...FALLBACK_MODULES];
+    return [];
   }
 
-  if (!data?.length) {
-    return [...FALLBACK_MODULES];
-  }
-
-  return uniqueSorted(data.map((row) => row.module_id).filter(isModuleId));
+  return uniqueSorted((data ?? []).map((row) => row.module_id).filter(isModuleId));
 }
 
 export async function replaceOrganizationModules(

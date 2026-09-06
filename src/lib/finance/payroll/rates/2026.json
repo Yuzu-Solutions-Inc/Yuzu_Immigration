@@ -1,0 +1,203 @@
+{
+  "year": 2026,
+  "effectiveFrom": "2026-01-01",
+  "effectiveTo": "2026-12-31",
+  "source": {
+    "federal": "CRA T4127 123rd edition (July 1, 2026) and T4032-QC January 2026",
+    "quebec": "Revenu Québec TP-1015.F-V 2026-01",
+    "cpp": "CRA CPP contribution rates, maximums and exemptions 2026",
+    "ei": "Canada Employment Insurance Commission 2026 premium rate",
+    "qpp": "Retraite Québec 2026 QPP figures",
+    "qpip": "Revenu Québec / CNESST QPIP 2026"
+  },
+  "payPeriods": {
+    "weekly": 52,
+    "biweekly": 26,
+    "semimonthly": 24,
+    "monthly": 12
+  },
+  "federal": {
+    "lowestRate": 0.14,
+    "bpaMax": 16452,
+    "bpaMin": 14829,
+    "bpaPhaseStart": 181440,
+    "bpaPhaseEnd": 258482,
+    "canadaEmploymentAmount": 1501,
+    "quebecAbatement": 0.165,
+    "outsideCanadaSurtax": 0.48,
+    "brackets": [
+      { "from": 0, "rate": 0.14, "k": 0 },
+      { "from": 58523, "rate": 0.205, "k": 3804 },
+      { "from": 117045, "rate": 0.26, "k": 10241 },
+      { "from": 181440, "rate": 0.29, "k": 15685 },
+      { "from": 258482, "rate": 0.33, "k": 26024 }
+    ]
+  },
+  "cpp": {
+    "ympe": 74600,
+    "yampe": 85000,
+    "basicExemption": 3500,
+    "baseRate": 0.0495,
+    "firstAdditionalRate": 0.01,
+    "combinedRate": 0.0595,
+    "secondRate": 0.04,
+    "maxEmployeeToYmpe": 4230.45,
+    "maxEmployeeSecond": 416.0,
+    "maxEmployeeTotal": 4646.45
+  },
+  "qpp": {
+    "ympe": 74600,
+    "yampe": 85000,
+    "basicExemption": 3500,
+    "baseRate": 0.053,
+    "firstAdditionalRate": 0.01,
+    "combinedRate": 0.063,
+    "secondRate": 0.04,
+    "maxEmployeeToYmpe": 4479.3,
+    "maxEmployeeSecond": 416.0,
+    "maxEmployeeTotal": 4895.3,
+    "maxBaseOnly": 3768.3
+  },
+  "ei": {
+    "maxInsurable": 68900,
+    "employeeRate": 0.0163,
+    "employeeRateQuebec": 0.013,
+    "employerMultiplier": 1.4,
+    "maxEmployee": 1123.07,
+    "maxEmployeeQuebec": 895.7,
+    "maxEmployer": 1572.3,
+    "maxEmployerQuebec": 1253.98
+  },
+  "qpip": {
+    "maxInsurable": 103000,
+    "employeeRate": 0.0043,
+    "employerRate": 0.00602,
+    "maxEmployee": 442.9,
+    "maxEmployer": 620.06
+  },
+  "quebec": {
+    "bpa": 18952,
+    "lowestRate": 0.14,
+    "workerDeductionRate": 0.06,
+    "workerDeductionMax": 1450,
+    "brackets": [
+      { "from": 0, "rate": 0.14, "k": 0 },
+      { "from": 54345, "rate": 0.19, "k": 2717.25 },
+      { "from": 108680, "rate": 0.24, "k": 8151.25 },
+      { "from": 132245, "rate": 0.2575, "k": 10465.5375 }
+    ]
+  },
+  "hsf": {
+    "smallPayrollCeiling": 1000000,
+    "largePayrollFloor": 7800000,
+    "maxRate": 0.0426,
+    "other": {
+      "smallRate": 0.0165,
+      "formulaIntercept": 1.2662,
+      "formulaSlope": 0.3838
+    },
+    "primaryManufacturing": {
+      "smallRate": 0.0125,
+      "formulaIntercept": 0.8074,
+      "formulaSlope": 0.4426
+    },
+    "publicRate": 0.0426
+  },
+  "cnt": {
+    "rate": 0.0006,
+    "maxAssessable": 103000
+  },
+  "cnesst": {
+    "maxAssessable": 103000
+  },
+  "wsdrf": {
+    "payrollThreshold": 2000000,
+    "rate": 0.01
+  },
+  "provincial": {
+    "AB": { "bpa": 22769, "lowestRate": 0.08, "brackets": [
+      { "from": 0, "rate": 0.08, "k": 0 },
+      { "from": 61200, "rate": 0.1, "k": 1224 },
+      { "from": 154259, "rate": 0.12, "k": 4309 },
+      { "from": 185111, "rate": 0.13, "k": 6160 },
+      { "from": 246813, "rate": 0.14, "k": 8628 },
+      { "from": 370220, "rate": 0.15, "k": 12331 }
+    ]},
+    "BC": { "bpa": 13216, "lowestRate": 0.0614, "brackets": [
+      { "from": 0, "rate": 0.0614, "k": 0 },
+      { "from": 50363, "rate": 0.077, "k": 786 },
+      { "from": 100728, "rate": 0.105, "k": 3606 },
+      { "from": 115648, "rate": 0.1229, "k": 5676 },
+      { "from": 140430, "rate": 0.147, "k": 9061 },
+      { "from": 190405, "rate": 0.168, "k": 13059 },
+      { "from": 265545, "rate": 0.205, "k": 22884 }
+    ]},
+    "MB": { "bpa": 15780, "lowestRate": 0.108, "brackets": [
+      { "from": 0, "rate": 0.108, "k": 0 },
+      { "from": 47000, "rate": 0.1275, "k": 917 },
+      { "from": 100000, "rate": 0.174, "k": 5567 }
+    ]},
+    "NB": { "bpa": 13664, "lowestRate": 0.094, "brackets": [
+      { "from": 0, "rate": 0.094, "k": 0 },
+      { "from": 52333, "rate": 0.14, "k": 2407 },
+      { "from": 104666, "rate": 0.16, "k": 4501 },
+      { "from": 193861, "rate": 0.195, "k": 11286 }
+    ]},
+    "NL": { "bpa": 15000, "lowestRate": 0.087, "brackets": [
+      { "from": 0, "rate": 0.087, "k": 0 },
+      { "from": 44678, "rate": 0.145, "k": 2591 },
+      { "from": 89354, "rate": 0.158, "k": 3753 },
+      { "from": 159528, "rate": 0.178, "k": 6943 },
+      { "from": 223340, "rate": 0.198, "k": 11410 },
+      { "from": 285319, "rate": 0.208, "k": 14263 },
+      { "from": 570638, "rate": 0.213, "k": 17117 },
+      { "from": 1141275, "rate": 0.218, "k": 22823 }
+    ]},
+    "NS": { "bpa": 11932, "lowestRate": 0.0879, "brackets": [
+      { "from": 0, "rate": 0.0879, "k": 0 },
+      { "from": 30995, "rate": 0.1495, "k": 1909 },
+      { "from": 61991, "rate": 0.1667, "k": 2976 },
+      { "from": 97417, "rate": 0.175, "k": 3784 },
+      { "from": 157124, "rate": 0.21, "k": 9283 }
+    ]},
+    "NT": { "bpa": 18198, "lowestRate": 0.059, "brackets": [
+      { "from": 0, "rate": 0.059, "k": 0 },
+      { "from": 53003, "rate": 0.086, "k": 1431 },
+      { "from": 106009, "rate": 0.122, "k": 5247 },
+      { "from": 172346, "rate": 0.1405, "k": 8436 }
+    ]},
+    "NU": { "bpa": 19659, "lowestRate": 0.04, "brackets": [
+      { "from": 0, "rate": 0.04, "k": 0 },
+      { "from": 55801, "rate": 0.07, "k": 1674 },
+      { "from": 111602, "rate": 0.09, "k": 3906 },
+      { "from": 181439, "rate": 0.115, "k": 8442 }
+    ]},
+    "ON": { "bpa": 12989, "lowestRate": 0.0505, "brackets": [
+      { "from": 0, "rate": 0.0505, "k": 0 },
+      { "from": 53891, "rate": 0.0915, "k": 2210 },
+      { "from": 107785, "rate": 0.1116, "k": 4376 },
+      { "from": 150000, "rate": 0.1216, "k": 5876 },
+      { "from": 220000, "rate": 0.1316, "k": 8076 }
+    ]},
+    "PE": { "bpa": 15000, "lowestRate": 0.095, "brackets": [
+      { "from": 0, "rate": 0.095, "k": 0 },
+      { "from": 33928, "rate": 0.1347, "k": 1347 },
+      { "from": 65820, "rate": 0.166, "k": 3407 },
+      { "from": 106890, "rate": 0.1762, "k": 4497 },
+      { "from": 142520, "rate": 0.19, "k": 6464 },
+      { "from": 200000, "rate": 0.21, "k": 10464 }
+    ]},
+    "SK": { "bpa": 20381, "lowestRate": 0.105, "brackets": [
+      { "from": 0, "rate": 0.105, "k": 0 },
+      { "from": 54532, "rate": 0.125, "k": 1091 },
+      { "from": 155805, "rate": 0.145, "k": 4207 }
+    ]},
+    "YT": { "bpa": 16452, "lowestRate": 0.064, "brackets": [
+      { "from": 0, "rate": 0.064, "k": 0 },
+      { "from": 58523, "rate": 0.09, "k": 1522 },
+      { "from": 117045, "rate": 0.109, "k": 3745 },
+      { "from": 181440, "rate": 0.128, "k": 7193 },
+      { "from": 500000, "rate": 0.15, "k": 18193 }
+    ]}
+  }
+}

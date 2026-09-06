@@ -163,7 +163,7 @@ export function TeamSettings({
           <NativeSelect
             id="inviteRole"
             name="access"
-            defaultValue="case_manager"
+            defaultValue="member"
           >
             {ASSIGNABLE_ORG_ROLES.map((role) => (
               <option key={role} value={role}>

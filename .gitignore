@@ -63,3 +63,7 @@ supabase/.temp/
 
 # Local Finance snapshot for the CRM merge (do not push to Yuzu_Immigration)
 app-legacy/
+
+# Python (standalone payroll engine)
+__pycache__/
+*.py[cod]

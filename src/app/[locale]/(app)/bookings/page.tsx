@@ -20,6 +20,7 @@ import { serviceTitle } from "@/lib/booking/service-i18n";
 import { listOrgMembers } from "@/lib/crm/queries";
 import { toAppLocale } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/server";
+import { requireBookingsWorkspace } from "@/lib/modules/require-workspace";
 
 export default async function BookingsPage({
   params,
@@ -31,6 +32,7 @@ export default async function BookingsPage({
   const { locale: localeParam } = await params;
   const { payment } = await searchParams;
   setRequestLocale(localeParam);
+  await requireBookingsWorkspace(localeParam);
   const locale = toAppLocale(localeParam);
 
   const membership = await getPrimaryMembership();

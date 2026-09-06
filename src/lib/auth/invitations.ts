@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { setActiveOrganizationId } from "@/lib/auth/active-org";
 import type { OrgRole } from "@/lib/auth/rbac";
-import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
+import { mapAssignedRole } from "@/lib/auth/rbac";
 import { getSessionUser } from "@/lib/auth/session";
 import { canAddMemberSeat } from "@/lib/billing/occupancy";
 import { hasAcceptedLegal } from "@/lib/legal/acceptance";
@@ -87,7 +87,7 @@ async function addMembership(input: {
   const { error } = await admin.from("organization_members").insert({
     organization_id: input.organizationId,
     user_id: input.userId,
-    role: isOrgRole(input.role) ? input.role : DEFAULT_ORG_ROLE,
+    role: mapAssignedRole(input.role),
     is_licensed: input.isLicensed,
     licensed_at_renewal: licensedAtRenewal,
   });
@@ -137,7 +137,7 @@ export async function acceptInvitationByToken(
     await addMembership({
       organizationId: row.organization_id,
       userId: user.id,
-      role: row.role,
+      role: mapAssignedRole(row.role),
       isLicensed: row.is_licensed !== false,
     });
   } catch (err) {
@@ -197,7 +197,7 @@ export async function acceptPendingInvitationsForUser(): Promise<{
       await addMembership({
         organizationId: row.organization_id,
         userId: user.id,
-        role: row.role,
+        role: mapAssignedRole(row.role),
         isLicensed: row.is_licensed !== false,
       });
       await admin
@@ -240,7 +240,7 @@ export async function getInvitationByToken(token: string) {
 
   return {
     ...(data as InvitationRow),
-    role: isOrgRole(data.role) ? data.role : DEFAULT_ORG_ROLE,
+    role: mapAssignedRole(data.role),
     organizationName: (org?.name as string | undefined) ?? null,
   };
 }

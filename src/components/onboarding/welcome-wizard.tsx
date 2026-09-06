@@ -464,9 +464,9 @@ export function WelcomeWizard(props: WelcomeWizardProps) {
                 <NativeSelect
                   id="inviteRole"
                   name="access"
-                  defaultValue="case_manager"
+                  defaultValue="member"
                 >
-                  <option value="case_manager">{tRoles("case_manager")}</option>
+                  <option value="member">{tRoles("member")}</option>
                   <option value="admin">{tRoles("admin")}</option>
                   <option value="unlicensed">{tRoles("unlicensed")}</option>
                 </NativeSelect>
