@@ -23,14 +23,15 @@ This sandbox **is** Dossierly (Immigration `main` checked out). Finance Vite app
 
 | Project | Ref | Use |
 |---|---|---|
-| **Yuzu Solutions Inc.** | `gqpafbmlherrwuigsjxy` | **Only** DB for this sandbox. Finance books + files live here. |
-| **MyConsultant** | `cezwtrsleuubrfmbhosn` | Production Immigration. **Never** point this app at it. **Never** migrate/drop there. |
+| **Yuzu Solutions Inc.** | `gqpafbmlherrwuigsjxy` | Local `.env.local` and Vercel Preview / Development. |
+| **MyConsultant** | `cezwtrsleuubrfmbhosn` | Vercel Production (`dossierly.ca`). Do not migrate/drop here from this sandbox branch. |
 
 App env (create `.env.local`, gitignored):
 
 - `NEXT_PUBLIC_SUPABASE_URL=https://gqpafbmlherrwuigsjxy.supabase.co`
 - This project’s anon / publishable key
 - **New** `DOCUMENT_ENCRYPTION_KEY` for this project — do **not** reuse MyConsultant’s wrap key
+- Vercel Production env is scoped separately to MyConsultant; Preview is scoped to this project.
 
 `organization_modules` is **already applied** on Yuzu Solutions Inc. Existing org seeded with: `finance`, `bookings`, `services`, `contracts`, `payments` (no `immigration`).
 
@@ -65,7 +66,7 @@ App env (create `.env.local`, gitignored):
 4. Onboarding checkboxes; Settings → Modules; sidebar gated by modules; Finance placeholders at `/partners` and `/billing/projects`.
 5. Session loads `enabledModules` (if table missing → Immigration fallback pack).
 
-**Not done:** `src/modules/{core,finance,...}` folder split (logic still lives in existing Dossierly `src/` plus `src/lib/modules`). Finance screens are placeholders. Bookings still keyed to `people`. App may still expect Immigration `.env.example` (MyConsultant) — **repoint to Yuzu Solutions Inc. before running against real books.**
+**Not done:** `src/modules/{core,finance,...}` folder split (logic still lives in existing Dossierly `src/` plus `src/lib/modules`). Finance screens are placeholders. Bookings still keyed to `people`.
 
 ---
 
@@ -73,8 +74,10 @@ App env (create `.env.local`, gitignored):
 
 ### 1. Env + don’t break production
 
-- Add `.env.local` for `gqpafbmlherrwuigsjxy`. Confirm the app does not use MyConsultant.
-- Never `git push` to `immigration`. Create a new GitHub repo for `yuzu_crm` when the owner wants a remote.
+- Local `.env.local` and Vercel Preview/Development use Yuzu Solutions Inc. (`gqpafbmlherrwuigsjxy`).
+- Vercel Production uses MyConsultant (`cezwtrsleuubrfmbhosn`) for dossierly.ca.
+- Re-add `DATABASE_URL` / `DIRECT_DATABASE_URL` on Vercel (Production from MyConsultant, Preview from Yuzu) from each project’s Connect dialog — those two were not recoverable from local files.
+- Never `git push` to `immigration` from this sandbox unless promoting a reviewed production change. Create a new GitHub repo for `yuzu_crm` when the owner wants a separate remote.
 
 ### 2. Sauvegarde + schema strategy on Yuzu Solutions Inc.
 
