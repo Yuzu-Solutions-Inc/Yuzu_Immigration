@@ -9,8 +9,13 @@ import { deleteEntityDocuments } from '@/lib/finance/documents'
 import type { BillingType, Partner, Project, ProjectStatus } from '@/lib/finance/types'
 import { matchesSearch } from '@/lib/finance/filters'
 import { customerPartners } from '@/lib/finance/partners'
-import { billingTypeLabel, projectAmountLabel } from '@/lib/finance/invoice'
+import { projectAmountLabel } from '@/lib/finance/invoice'
 import { Badge } from '@/components/finance/Badge'
+import {
+  DeleteIconButton,
+  EditIconButton,
+  iconActionRevealClassName,
+} from '@/components/layout/icon-action-button'
 import { DocumentAttachments } from '@/components/finance/DocumentAttachments'
 import { Modal } from '@/components/finance/Modal'
 import { EmptyState } from '@/components/finance/EmptyState'
@@ -237,16 +242,12 @@ export function ProjectsPage() {
               <li key={p.id} className={listMobileItemClassName}>
                 <p className="font-medium text-brand">{p.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {p.partners?.legal_name ?? t('common.dash')} · {billingTypeLabel(p.billing_type)}
+                  {p.partners?.legal_name ?? t('common.dash')} · {billingLabel(t, p.billing_type)}
                 </p>
                 <p className="text-sm text-brand/80">{projectAmountLabel(p)}</p>
-                <div className="mt-2 flex gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => openEdit(p)}>
-                    {t('common.edit')}
-                  </Button>
-                  <Button type="button" variant="destructive" size="sm" onClick={() => remove(p.id)}>
-                    {t('common.delete')}
-                  </Button>
+                <div className="mt-2 flex justify-end gap-0.5">
+                  <EditIconButton label={t('common.edit')} onClick={() => openEdit(p)} />
+                  <DeleteIconButton label={t('common.delete')} onClick={() => remove(p.id)} />
                 </div>
               </li>
             ))}
@@ -323,7 +324,7 @@ export function ProjectsPage() {
                 </TableRow>
               ) : (
                 filtered.map((p) => (
-                  <TableRow key={p.id}>
+                  <TableRow key={p.id} className="group">
                     <TableCell className={cn('whitespace-normal', listTableEdgeStartClassName)}>
                       <span className="font-medium text-brand">{p.name}</span>
                       {p.po_number?.trim() ? (
@@ -337,7 +338,7 @@ export function ProjectsPage() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        label={billingTypeLabel(p.billing_type)}
+                        label={billingLabel(t, p.billing_type)}
                         tone={p.billing_type === 'fixed' ? 'sent' : 'active'}
                       />
                     </TableCell>
@@ -346,19 +347,17 @@ export function ProjectsPage() {
                       <Badge label={statusLabel(t, p.status)} tone={p.status} />
                     </TableCell>
                     <TableCell className={cn('text-right', listTableEdgeEndClassName)}>
-                      <div className="flex justify-end gap-1">
-                        <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(p)}>
-                          {t('common.edit')}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      <div className="flex items-center justify-end gap-0.5">
+                        <EditIconButton
+                          className={iconActionRevealClassName}
+                          label={t('common.edit')}
+                          onClick={() => openEdit(p)}
+                        />
+                        <DeleteIconButton
+                          className={iconActionRevealClassName}
+                          label={t('common.delete')}
                           onClick={() => remove(p.id)}
-                        >
-                          {t('common.delete')}
-                        </Button>
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -556,6 +555,13 @@ export function ProjectsPage() {
       {body}
     </div>
   )
+}
+
+function billingLabel(
+  t: ReturnType<typeof useTranslations<'financeApp'>>,
+  type: BillingType,
+) {
+  return type === 'fixed' ? t('pipeline.fixed') : t('pipeline.hourly')
 }
 
 function statusLabel(

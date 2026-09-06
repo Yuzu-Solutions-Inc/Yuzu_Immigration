@@ -130,29 +130,62 @@ export async function skipOnboardingIntegrationsAction(
 export async function completeOnboardingAction(locale: string) {
   const parsed = localeSchema.safeParse(locale);
   if (!parsed.success) return { error: "invalid" as const };
+  const loaded = await loadOnboardingRow();
+  if ("error" in loaded) return loaded;
   const now = new Date().toISOString();
   const result = await upsertOnboarding({
     completedAt: now,
     dismissedAt: null,
     extraSkipped: [...INTEGRATION_CHECK_IDS],
+    seenModules: loaded.membership.enabledModules,
   });
   if ("error" in result) return result;
   revalidatePath(`/${parsed.data}/welcome`);
   revalidatePath(`/${parsed.data}/home`);
+  revalidatePath("/", "layout");
   redirect(`/${parsed.data}/home`);
 }
 
 export async function dismissOnboardingAction(locale: string) {
   const parsed = localeSchema.safeParse(locale);
   if (!parsed.success) return { error: "invalid" as const };
+  const loaded = await loadOnboardingRow();
+  if ("error" in loaded) return loaded;
   const now = new Date().toISOString();
   const result = await upsertOnboarding({
     completedAt: now,
     dismissedAt: now,
     extraSkipped: [...INTEGRATION_CHECK_IDS],
+    seenModules: loaded.membership.enabledModules,
   });
   if ("error" in result) return result;
   revalidatePath(`/${parsed.data}/welcome`);
   revalidatePath(`/${parsed.data}/home`);
+  revalidatePath("/", "layout");
   redirect(`/${parsed.data}/home`);
+}
+
+/** Mark the current (or listed) modules as toured without a full-page redirect. */
+export async function markTourModulesSeenAction(
+  locale: string,
+  moduleIds?: string[],
+) {
+  const parsed = localeSchema.safeParse(locale);
+  if (!parsed.success) return { error: "invalid" as const };
+  const loaded = await loadOnboardingRow();
+  if ("error" in loaded) return loaded;
+  const now = new Date().toISOString();
+  const seen =
+    moduleIds && moduleIds.length > 0
+      ? moduleIds
+      : loaded.membership.enabledModules;
+  const result = await upsertOnboarding({
+    completedAt: now,
+    dismissedAt: null,
+    seenModules: seen,
+  });
+  if ("error" in result) return result;
+  revalidatePath(`/${parsed.data}/home`);
+  revalidatePath("/", "layout");
+  return { ok: true as const };
 }

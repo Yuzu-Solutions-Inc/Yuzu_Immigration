@@ -17,7 +17,11 @@ import {
   type AccountRepSource,
 } from "@/lib/ircc/account-rep";
 import { type ModuleId } from "@/lib/modules/catalog";
-import { type OnboardingChecks, setupCheckIdsFor } from "@/lib/onboarding/steps";
+import {
+  setupCheckIdsFor,
+  type OnboardingCheckId,
+  type OnboardingChecks,
+} from "@/lib/onboarding/steps";
 import { unseenModules } from "@/lib/onboarding/tour";
 import { decryptProfileRow } from "@/lib/security/profile-pii";
 import { createClient } from "@/lib/supabase/server";
@@ -175,5 +179,49 @@ export async function getOnboardingState(): Promise<OnboardingState | null> {
     checks,
     wizardCompleted,
     wizardDismissed,
+  };
+}
+
+export type TourPresentation = {
+  enabledModules: ModuleId[];
+  isAdmin: boolean;
+  canCreate: boolean;
+  unseenModules: ModuleId[];
+  autoStart: boolean;
+};
+
+/** Lightweight flags for the in-app spotlight. Avoids booking/profile queries. */
+export async function getTourPresentation(): Promise<TourPresentation | null> {
+  const [user, membership] = await Promise.all([
+    getSessionUser(),
+    getPrimaryMembership(),
+  ]);
+  if (!user || !membership) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("staff_onboarding")
+    .select("completed_at, dismissed_at, seen_modules")
+    .eq("organization_id", membership.organization.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error) {
+    console.error("tour presentation:", error.message);
+  }
+
+  const seenRaw = data?.seen_modules;
+  const seenModules = (Array.isArray(seenRaw) ? seenRaw : []).filter(
+    (value: unknown): value is string => typeof value === "string",
+  );
+  const enabledModules = membership.enabledModules;
+  const neverToured = !data?.completed_at && !data?.dismissed_at;
+  const unseen = unseenModules(enabledModules, seenModules);
+
+  return {
+    enabledModules,
+    isAdmin: canAdministerOrg(membership.role),
+    canCreate: canCreateInWorkspace(membership),
+    unseenModules: neverToured ? enabledModules : unseen,
+    autoStart: neverToured,
   };
 }

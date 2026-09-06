@@ -470,6 +470,7 @@ function AppSettingsLink() {
     <Link
       href="/settings/account"
       aria-label={t("menuAria")}
+      data-tour="nav-settings"
       className={topBarIconClass}
     >
       <Settings className="size-4" aria-hidden />

@@ -465,8 +465,12 @@
     }
   },
   "onboarding": {
-    "title": "Créer votre organisation",
-    "subtitle": "Chaque cabinet dispose d’un espace sécurisé. Vous en serez administrateur.",
+    "title": "Configurer votre cabinet",
+    "subtitle": "Choisissez d’abord les modules nécessaires. Le nom du cabinet vient ensuite, puis une courte visite dans l’application.",
+    "modulesTitle": "De quoi ce cabinet a-t-il besoin ?",
+    "modulesHelp": "Le guidage et la barre latérale suivent cette liste. Vous pourrez ajouter ou retirer des modules plus tard dans Paramètres → Espace de travail.",
+    "modulesContinue": "Continuer",
+    "modulesBack": "Modifier les modules",
     "orgName": "Nom de l’organisation",
     "orgNamePlaceholder": "Immigration Étoile du Nord",
     "orgSlug": "Identifiant d’espace",
@@ -531,6 +535,60 @@
       "missingDependency": "Activez d’abord les modules requis.",
       "saveFailed": "Impossible d’enregistrer les modules. Réessayez.",
       "forbidden": "Seuls les propriétaires et administrateurs peuvent modifier les modules."
+    }
+  },
+  "tour": {
+    "kicker": "{current} sur {total}",
+    "clickHint": "Cliquez sur l’élément en surbrillance pour continuer.",
+    "skip": "Ignorer la visite",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Terminer",
+    "steps": {
+      "home": {
+        "title": "Votre accueil",
+        "body": "C’est le tableau du jour pour les modules activés — dossiers, rendez-vous ou finance."
+      },
+      "partners": {
+        "title": "Partenaires et clients",
+        "body": "Chaque cabinet conserve ses personnes ici. Cliquez sur Partenaires dans la barre latérale."
+      },
+      "partnersNew": {
+        "title": "Ajouter une personne",
+        "body": "Créez un client ou un partenaire de facturation. Vous pouvez aussi en ajouter en ouvrant un dossier."
+      },
+      "projects": {
+        "title": "Dossiers d’immigration",
+        "body": "Chaque dossier est un mandat avec formulaires et pièces. Cliquez sur Dossiers."
+      },
+      "projectsNew": {
+        "title": "Ouvrir un dossier",
+        "body": "Nouveau dossier est le flux principal — programme et personnes sur un seul écran."
+      },
+      "engagements": {
+        "title": "Prestations finance",
+        "body": "Projets de facturation, temps et factures. Cliquez sur Prestations."
+      },
+      "bank": {
+        "title": "Banque et reçus",
+        "body": "Importez les relevés, rapprochez les paiements et gardez les reçus fournisseurs."
+      },
+      "calendar": {
+        "title": "Calendrier",
+        "body": "Votre page de réservation publique et le calendrier de l’équipe. Cliquez sur Calendrier."
+      },
+      "services": {
+        "title": "Services",
+        "body": "Le catalogue que les clients réservent, et les contrats qu’ils signent."
+      },
+      "settings": {
+        "title": "Paramètres",
+        "body": "Votre nom, vos heures et vos coordonnées de représentant sont sous l’engrenage. Cliquez dessus."
+      },
+      "payments": {
+        "title": "Paiements",
+        "body": "Connectez Stripe ou Square ici pour encaisser les réservations ou les factures."
+      }
     }
   },
   "welcome": {
@@ -761,8 +819,12 @@
       "title": "Terminez la configuration de votre compte",
       "subtitle": "{done} sur {total} faits",
       "cta": "Configurer",
-      "guidedCta": "Ouvrir le guidage",
-      "guidedHelp": "Un court parcours du produit et des réglages qui changent les rendez-vous et les formulaires IMM.",
+      "guidedCta": "Faire le tour",
+      "guidedHelp": "Un parcours cliquable des écrans qui correspondent aux modules activés.",
+      "newModulesCta": "Voir les nouveaux modules",
+      "newModuleTitle": "Nouveau : {module}",
+      "newModuleHelp": "Une visite guidée de cette zone.",
+      "tourCta": "Voir",
       "items": {
         "account": {
           "title": "Votre nom",
@@ -1464,6 +1526,7 @@
       "recipients": "Les invitations vont à {names}. Les personnes à charge ne sont pas invitées.",
       "noAdults": "Ajoutez un adulte à ce dossier pour envoyer une invitation au portail.",
       "noEmail": "Ajoutez un courriel pour au moins un adulte afin d’envoyer les invitations.",
+      "contractPending": "L’accès au portail est bloqué jusqu’à la signature du mandat par le client (votre contre-signature peut suivre).",
       "errors": {
         "invalid": "Vérifiez le formulaire et réessayez.",
         "unauthorized": "Reconnectez-vous et réessayez.",
@@ -3472,6 +3535,9 @@
     "contractEditorSubtitle": "Rédigez ou téléversez le document dans chaque langue que vous servez, puis cliquez une variable pour l’insérer. Les blocs de signature enregistrent une marque et un consentement.",
     "contractTitle": "Nom du contrat",
     "contractAssignHelp": "Ce contrat est rempli à partir de la réservation et envoyé pour signature lorsqu’un client réserve un de ces services.",
+    "contractFormLabel": "Formulaire d’accueil lié",
+    "contractFormNone": "Aucun formulaire",
+    "contractFormHelp": "Facultatif. Les clés de champs de ce formulaire sont disponibles comme variables de fusion dans le contrat.",
     "contractSendOnBooking": "Envoyer à la réservation",
     "contractRequireConsultant": "Contre-signature du consultant",
     "contractSendHelp": "Si l’envoi est activé, le contrat rempli est courriellé après une réservation. Le client signe en premier ; le consultant ensuite si la contre-signature est activée.",
@@ -4283,6 +4349,7 @@
     },
     "colActions": "Actions",
     "joinMeet": "Rejoindre",
+    "joinNow": "Rejoindre maintenant",
     "modify": "Modifier",
     "cancel": "Annuler",
     "cancelConfirm": "Annuler ce rendez-vous ? Le client sera notifié.",
@@ -5080,10 +5147,11 @@
       "projectStar": "Projet *",
       "dateStar": "Date *",
       "itemsOfDay": "Items du jour",
+      "item": "Item",
       "itemStar": "Item *",
       "hoursStar": "Heures *",
       "billable": "Facturable",
-      "addItem": "+ Ajouter un item",
+      "addItem": "Ajouter un item",
       "remove": "Retirer",
       "dayNotes": "Notes du jour (interne)",
       "dayNotesPlaceholder": "Détails sur ce que vous avez fait…",
@@ -5100,7 +5168,8 @@
       "cannotDeleteInvoiced": "Impossible de supprimer une feuille facturée.",
       "confirmDelete": "Supprimer cette feuille de temps ?",
       "createInvoice": "Créer une facture",
-      "toBillCount": "{count} à facturer."
+      "toBillCount": "{count} à facturer.",
+      "totalHours": "Total : {hours} h"
     },
     "invoices": {
       "title": "Factures",
@@ -6043,6 +6112,7 @@
       "langEn": "English",
       "owner": "Propriétaire",
       "admin": "Administrateur",
+      "member": "Membre",
       "case_manager": "Gestionnaire de cas",
       "employee": "Employé",
       "shareholder": "Actionnaire"

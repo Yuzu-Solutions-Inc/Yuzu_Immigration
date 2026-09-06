@@ -6,7 +6,6 @@ import { useFinanceOutlet } from '@/components/finance/finance-outlet'
 import type { Employee, Project } from '@/lib/finance/types'
 import { formatCad, formatDate, relationOne, todayIso } from '@/lib/finance/format'
 import { inDateRange, matchesSearch } from '@/lib/finance/filters'
-import { billingTypeLabel } from '@/lib/finance/invoice'
 import { isFixedProject } from '@/lib/finance/billingMetrics'
 import { employeeDisplayName } from '@/lib/finance/payrollCalc'
 import {
@@ -21,11 +20,26 @@ import {
   type TimeEntryWithLines,
 } from '@/lib/finance/timeEntries'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
-import { Field, inputClass } from '@/components/finance/Field'
 import { EmptyState } from '@/components/finance/EmptyState'
+import {
+  DeleteIconButton,
+  EditIconButton,
+  iconActionRevealClassName,
+} from '@/components/layout/icon-action-button'
+import {
+  Field,
+  FieldGrid,
+  FieldHint,
+  FieldLabel,
+  FormStack,
+} from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { NativeSelect } from '@/components/ui/native-select'
+import { Textarea } from '@/components/ui/textarea'
+import { Plus } from 'lucide-react'
 import {
   FilterSummary,
   FilterTh,
@@ -56,31 +70,32 @@ const emptyLine = (): TimeEntryLineDraft => ({
 const TIME_SELECT =
   '*, time_entry_lines(id, item_name, hours, notes, billable, sort_order), projects(name, default_hourly_rate, billing_type, fixed_price, partner_id, partners(legal_name)), employees(first_name, last_name), invoices(invoice_number)'
 
-const DUPLICATE_SHEET_MESSAGE =
-  'Une feuille existe déjà pour cet employé, ce projet et cette date. Ouvrez-la pour la modifier, ou changez la date ou le projet.'
-
 function ItemNameInput({
+  id,
   value,
   onChange,
   suggestions,
   listId,
   required,
+  placeholder,
 }: {
+  id?: string
   value: string
   onChange: (value: string) => void
   suggestions: string[]
   listId: string
   required?: boolean
+  placeholder?: string
 }) {
   return (
     <>
-      <input
-        className={inputClass}
+      <Input
+        id={id}
         required={required}
         list={listId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Ex. Sprint planning, API work…"
+        placeholder={placeholder}
       />
       <datalist id={listId}>
         {suggestions.map((name) => (
@@ -197,20 +212,20 @@ export function TimePage() {
     refreshItemSuggestions(projectId)
   }
 
-  function openEdit(t: TimeEntryWithLines) {
-    if (t.invoice_id) {
-      alert('Feuille déjà facturée — modification limitée.')
+  function openEdit(sheet: TimeEntryWithLines) {
+    if (sheet.invoice_id) {
+      alert(t('time.alreadyInvoiced'))
       return
     }
     setForm({
-      project_id: t.project_id,
-      employee_id: t.employee_id ?? defaultEmployeeId,
-      entry_date: t.entry_date,
-      notes: t.notes ?? '',
-      rate_override: t.rate_override != null ? String(t.rate_override) : '',
+      project_id: sheet.project_id,
+      employee_id: sheet.employee_id ?? defaultEmployeeId,
+      entry_date: sheet.entry_date,
+      notes: sheet.notes ?? '',
+      rate_override: sheet.rate_override != null ? String(sheet.rate_override) : '',
       lines:
-        (t.time_entry_lines ?? []).length > 0
-          ? (t.time_entry_lines ?? []).map((l) => ({
+        (sheet.time_entry_lines ?? []).length > 0
+          ? (sheet.time_entry_lines ?? []).map((l) => ({
               id: l.id,
               item_name: l.item_name,
               hours: Number(l.hours),
@@ -219,9 +234,9 @@ export function TimePage() {
             }))
           : [emptyLine()],
     })
-    setEditingId(t.id)
+    setEditingId(sheet.id)
     setOpen(true)
-    refreshItemSuggestions(t.project_id)
+    refreshItemSuggestions(sheet.project_id)
   }
 
   const collidingSheet = useMemo(() => {
@@ -271,12 +286,12 @@ export function TimePage() {
       .filter((line) => normalizeItemName(line.item_name) && Number(line.hours) > 0)
 
     if (cleanedLines.length === 0) {
-      alert('Ajoutez au moins une ligne avec un nom d\'item et des heures.')
+      alert(t('time.needLine'))
       return
     }
 
     if (collidingSheet) {
-      alert(DUPLICATE_SHEET_MESSAGE)
+      alert(t('time.duplicate'))
       return
     }
 
@@ -296,14 +311,14 @@ export function TimePage() {
     if (entryId) {
       const { error } = await db.from('time_entries').update(headerPayload).eq('id', entryId)
       if (error) {
-        alert(error.code === '23505' ? DUPLICATE_SHEET_MESSAGE : error.message)
+        alert(error.code === '23505' ? t('time.duplicate') : error.message)
         return
       }
       await db.from('time_entry_lines').delete().eq('time_entry_id', entryId)
     } else {
       const { data, error } = await db.from('time_entries').insert(headerPayload).select('id').single()
       if (error || !data) {
-        alert(error?.code === '23505' ? DUPLICATE_SHEET_MESSAGE : (error?.message ?? DUPLICATE_SHEET_MESSAGE))
+        alert(error?.code === '23505' ? t('time.duplicate') : (error?.message ?? t('time.duplicate')))
         return
       }
       entryId = data.id
@@ -396,7 +411,7 @@ export function TimePage() {
           <DataTable minWidth={960}>
             <thead className="bg-muted text-left">
               <tr>
-                <FilterTh label="Date">
+                <FilterTh label={t('time.date')}>
                   <HeaderDateRange
                     from={dateFrom}
                     to={dateTo}
@@ -404,48 +419,50 @@ export function TimePage() {
                     onToChange={setDateTo}
                   />
                 </FilterTh>
-                <FilterTh label="Projet">
+                <FilterTh label={t('time.project')}>
                   <div className="flex flex-col gap-1 min-w-[8rem]">
                     <HeaderSelect
                       value={projectFilter}
                       onChange={setProjectFilter}
-                      aria-label="Filtrer par projet"
+                      aria-label={t('time.filterProject')}
                       options={[
-                        { value: '', label: 'Tous les projets' },
+                        { value: '', label: t('time.allProjects') },
                         ...allProjects.map((p) => ({ value: p.id, label: p.name })),
                       ]}
                     />
                     <HeaderSelect
                       value={partnerFilter}
                       onChange={setPartnerFilter}
-                      aria-label="Filtrer par partenaire"
-                      options={[{ value: '', label: 'Tous les partenaires' }, ...partnerOptions]}
+                      aria-label={t('time.filterPartner')}
+                      options={[{ value: '', label: t('time.allPartners') }, ...partnerOptions]}
                     />
                   </div>
                 </FilterTh>
-                <FilterTh label="Items">
+                <FilterTh label={t('time.items')}>
                   <HeaderSearch
                     value={search}
                     onChange={setSearch}
-                    placeholder="Item, notes…"
-                    aria-label="Filtrer par item"
+                    placeholder={t('time.itemsPlaceholder')}
+                    aria-label={t('time.filterItem')}
                   />
                 </FilterTh>
-                <PlainTh>Heures</PlainTh>
-                <PlainTh>Montant</PlainTh>
-                <FilterTh label="Facturation">
+                <PlainTh>{t('time.hours')}</PlainTh>
+                <PlainTh>{t('time.amount')}</PlainTh>
+                <FilterTh label={t('time.billing')}>
                   <HeaderSelect
                     value={billingFilter}
                     onChange={(v) => setBillingFilter(v as Filter)}
-                    aria-label="Filtrer par facturation"
+                    aria-label={t('time.filterBilling')}
                     options={[
-                      { value: 'all', label: 'Tout' },
-                      { value: 'unbilled', label: 'Non facturé' },
-                      { value: 'invoiced', label: 'Facturé' },
+                      { value: 'all', label: t('time.allBilling') },
+                      { value: 'unbilled', label: t('time.unbilled') },
+                      { value: 'invoiced', label: t('time.invoiced') },
                     ]}
                   />
                 </FilterTh>
-                <PlainTh className="w-px" />
+                <PlainTh className="w-px">
+                  <span className="sr-only">{t('common.edit')}</span>
+                </PlainTh>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -456,39 +473,45 @@ export function TimePage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((t) => {
-                  const proj = relationOne(t.projects)
+                filtered.map((sheet) => {
+                  const proj = relationOne(sheet.projects)
                   const internal = proj ? isFixedProject(proj as Project) : false
-                  const lines = t.time_entry_lines ?? []
-                  const hours = lines.length > 0 ? totalLineHours(lines) : Number(t.hours)
-                  const amt = internal ? 0 : sheetBillableAmount(t, proj ?? undefined)
-                  const inv = relationOne(t.invoices)
+                  const lines = sheet.time_entry_lines ?? []
+                  const hours = lines.length > 0 ? totalLineHours(lines) : Number(sheet.hours)
+                  const amt = internal ? 0 : sheetBillableAmount(sheet, proj ?? undefined)
+                  const inv = relationOne(sheet.invoices)
                   return (
-                    <tr key={t.id} className="hover:bg-muted/50">
-                      <td className="px-3 py-3">{formatDate(t.entry_date)}</td>
+                    <tr key={sheet.id} className="group hover:bg-muted/50">
+                      <td className="px-3 py-3">{formatDate(sheet.entry_date)}</td>
                       <td className="px-3 py-3">
-                        <div className="font-medium">{proj?.name ?? '—'}</div>
+                        <div className="font-medium">{proj?.name ?? t('common.dash')}</div>
                         <div className="text-xs text-muted-foreground">{proj?.partners?.legal_name}</div>
                       </td>
                       <td className="px-3 py-3 text-muted-foreground max-w-md truncate">{sheetSummary(lines)}</td>
                       <td className="px-3 py-3">{hours.toFixed(2)}</td>
-                      <td className="px-3 py-3">{internal ? '—' : amt > 0 ? formatCad(amt) : '—'}</td>
+                      <td className="px-3 py-3">{internal ? t('common.dash') : amt > 0 ? formatCad(amt) : t('common.dash')}</td>
                       <td className="px-3 py-3">
                         {internal ? (
-                          <Badge label="Interne" tone="sent" />
-                        ) : t.invoice_id ? (
-                          <Badge label={inv?.invoice_number ?? 'Facturé'} tone="invoiced" />
+                          <Badge label={t('time.internal')} tone="sent" />
+                        ) : sheet.invoice_id ? (
+                          <Badge label={inv?.invoice_number ?? t('time.invoicedBadge')} tone="invoiced" />
                         ) : (
-                          <Badge label="Non facturé" tone="unbilled" />
+                          <Badge label={t('time.unbilled')} tone="unbilled" />
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right space-x-2">
-                        <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(t)}>
-                          Modifier
-                        </Button>
-                        <Button variant="danger" className={tableActionClass} onClick={() => remove(t)}>
-                          Suppr.
-                        </Button>
+                      <td className="px-3 py-3 text-right">
+                        <div className="flex items-center justify-end gap-0.5">
+                          <EditIconButton
+                            className={iconActionRevealClassName}
+                            label={t('common.edit')}
+                            onClick={() => openEdit(sheet)}
+                          />
+                          <DeleteIconButton
+                            className={iconActionRevealClassName}
+                            label={t('common.delete')}
+                            onClick={() => remove(sheet)}
+                          />
+                        </div>
                       </td>
                     </tr>
                   )
@@ -505,11 +528,14 @@ export function TimePage() {
         onClose={() => setOpen(false)}
         wide
       >
-        <form onSubmit={save} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Field label="Employé *">
-              <select
-                className={inputClass}
+        <FormStack onSubmit={save}>
+          <FieldGrid columns={3}>
+            <Field>
+              <FieldLabel htmlFor="timesheet-employee" required>
+                {t('common.employee')}
+              </FieldLabel>
+              <NativeSelect
+                id="timesheet-employee"
                 required
                 value={form.employee_id}
                 onChange={(e) => setForm({ ...form, employee_id: e.target.value })}
@@ -519,11 +545,14 @@ export function TimePage() {
                     {employeeDisplayName(e)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
-            <Field label="Projet *">
-              <select
-                className={inputClass}
+            <Field>
+              <FieldLabel htmlFor="timesheet-project" required>
+                {t('common.project')}
+              </FieldLabel>
+              <NativeSelect
+                id="timesheet-project"
                 required
                 value={form.project_id}
                 onChange={(e) => {
@@ -534,128 +563,149 @@ export function TimePage() {
               >
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} — {billingTypeLabel(p.billing_type)} ({p.partners?.legal_name})
+                    {p.name} — {p.billing_type === 'fixed' ? t('pipeline.fixed') : t('pipeline.hourly')} ({p.partners?.legal_name})
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
-            <Field label="Date *">
-              <input
+            <Field>
+              <FieldLabel htmlFor="timesheet-date" required>
+                {t('time.date')}
+              </FieldLabel>
+              <Input
+                id="timesheet-date"
                 type="date"
-                className={inputClass}
                 required
                 value={form.entry_date}
                 onChange={(e) => setForm({ ...form, entry_date: e.target.value })}
               />
             </Field>
-          </div>
+          </FieldGrid>
 
-          {fixedInternal && (
-            <p className="text-xs text-muted-foreground">
-              Projet forfaitaire — suivi interne uniquement, non visible sur la facture client.
-            </p>
-          )}
+          {fixedInternal ? <FieldHint>{t('time.fixedInternalHint')}</FieldHint> : null}
 
-          {collidingSheet && (
+          {collidingSheet ? (
             <AlertBanner>
-              Une feuille existe déjà pour cet employé, ce projet et cette date.{' '}
+              {t('time.duplicate')}{' '}
               <button
                 type="button"
                 className="font-medium underline"
                 onClick={() => openEdit(collidingSheet)}
               >
-                Ouvrir la feuille existante
+                {t('time.openExisting')}
               </button>
             </AlertBanner>
-          )}
+          ) : null}
 
-          <div className="rounded-xl border border-border overflow-hidden">
-              <div className="bg-muted px-4 py-2 border-b border-border flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Items du jour</p>
-                <span className="text-xs text-muted-foreground">Total : {formTotalHours.toFixed(2)} h</span>
-              </div>
-              <div className="divide-y divide-border">
-                {form.lines.map((line, index) => (
-                  <div key={index} className="p-4 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
-                      <Field label="Item *" className="sm:col-span-5">
-                        <ItemNameInput
-                          value={line.item_name}
-                          onChange={(value) => updateLine(index, { item_name: value })}
-                          suggestions={itemSuggestions}
-                          listId={datalistId}
-                          required
-                        />
-                      </Field>
-                      <Field label="Heures *" className="sm:col-span-2">
-                        <input
-                          type="number"
-                          step="0.25"
-                          min="0.25"
-                          className={inputClass}
-                          required
-                          value={line.hours}
-                          onChange={(e) => updateLine(index, { hours: Number(e.target.value) })}
-                        />
-                      </Field>
-                      {!fixedInternal && (
-                        <Field label="Facturable" className="sm:col-span-2">
-                          <select
-                            className={inputClass}
-                            value={line.billable ? 'yes' : 'no'}
-                            onChange={(e) => updateLine(index, { billable: e.target.value === 'yes' })}
-                          >
-                            <option value="yes">Oui</option>
-                            <option value="no">Non</option>
-                          </select>
-                        </Field>
-                      )}
-                      <div className="sm:col-span-3 flex justify-end pt-6">
-                        <Button type="button" variant="ghost" className={tableActionClass} onClick={() => removeLine(index)}>
-                          Retirer
-                        </Button>
-                      </div>
-                    </div>
-                    <Field label="Notes du jour (interne)">
-                      <input
-                        className={inputClass}
-                        value={line.notes}
-                        onChange={(e) => updateLine(index, { notes: e.target.value })}
-                        placeholder="Détails sur ce que vous avez fait…"
+          <div className="overflow-hidden rounded-xl border border-border">
+            <div className="flex items-center justify-between border-b border-border bg-muted px-4 py-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('time.itemsOfDay')}
+              </p>
+              <span className="text-xs text-muted-foreground">
+                {t('time.totalHours', { hours: formTotalHours.toFixed(2) })}
+              </span>
+            </div>
+            <div className="divide-y divide-border">
+              {form.lines.map((line, index) => (
+                <div key={index} className="space-y-3 p-4">
+                  <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-12">
+                    <Field className="sm:col-span-5">
+                      <FieldLabel htmlFor={`timesheet-item-${index}`} required>
+                        {t('time.item')}
+                      </FieldLabel>
+                      <ItemNameInput
+                        id={`timesheet-item-${index}`}
+                        value={line.item_name}
+                        onChange={(value) => updateLine(index, { item_name: value })}
+                        suggestions={itemSuggestions}
+                        listId={`${datalistId}-${index}`}
+                        required
+                        placeholder={t('time.itemPlaceholder')}
                       />
                     </Field>
+                    <Field className="sm:col-span-2">
+                      <FieldLabel htmlFor={`timesheet-hours-${index}`} required>
+                        {t('time.hours')}
+                      </FieldLabel>
+                      <Input
+                        id={`timesheet-hours-${index}`}
+                        type="number"
+                        step="0.25"
+                        min="0.25"
+                        required
+                        value={line.hours}
+                        onChange={(e) => updateLine(index, { hours: Number(e.target.value) })}
+                      />
+                    </Field>
+                    {!fixedInternal ? (
+                      <Field className="sm:col-span-2">
+                        <FieldLabel htmlFor={`timesheet-billable-${index}`}>
+                          {t('time.billable')}
+                        </FieldLabel>
+                        <NativeSelect
+                          id={`timesheet-billable-${index}`}
+                          value={line.billable ? 'yes' : 'no'}
+                          onChange={(e) => updateLine(index, { billable: e.target.value === 'yes' })}
+                        >
+                          <option value="yes">{t('common.yes')}</option>
+                          <option value="no">{t('common.no')}</option>
+                        </NativeSelect>
+                      </Field>
+                    ) : null}
+                    <div className="flex justify-end pt-6 sm:col-span-3">
+                      <DeleteIconButton
+                        label={t('time.remove')}
+                        onClick={() => removeLine(index)}
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="px-4 py-3 border-t border-border">
-                <Button type="button" variant="secondary" onClick={addLine}>
-                  + Ajouter un item
-                </Button>
-              </div>
+                  <Field>
+                    <FieldLabel htmlFor={`timesheet-line-notes-${index}`}>
+                      {t('time.dayNotes')}
+                    </FieldLabel>
+                    <Input
+                      id={`timesheet-line-notes-${index}`}
+                      value={line.notes}
+                      onChange={(e) => updateLine(index, { notes: e.target.value })}
+                      placeholder={t('time.dayNotesPlaceholder')}
+                    />
+                  </Field>
+                </div>
+              ))}
             </div>
+            <div className="border-t border-border px-4 py-3">
+              <Button type="button" variant="secondary" onClick={addLine}>
+                <Plus className="size-4" />
+                {t('time.addItem')}
+              </Button>
+            </div>
+          </div>
 
-          <Field label="Notes de la feuille (interne, optionnel)">
-            <textarea
-              className={inputClass}
+          <Field>
+            <FieldLabel htmlFor="timesheet-notes">{t('time.sheetNotes')}</FieldLabel>
+            <Textarea
+              id="timesheet-notes"
               rows={2}
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Contexte général de la journée…"
+              placeholder={t('time.sheetNotesPlaceholder')}
             />
           </Field>
 
-          {!fixedInternal && (
-            <Field label="Taux override (optionnel, toute la feuille)">
-              <input
+          {!fixedInternal ? (
+            <Field>
+              <FieldLabel htmlFor="timesheet-rate">{t('time.rateOverride')}</FieldLabel>
+              <Input
+                id="timesheet-rate"
                 type="number"
                 step="0.01"
-                className={inputClass}
-                placeholder="Taux projet par défaut"
+                placeholder={t('time.ratePlaceholder')}
                 value={form.rate_override}
                 onChange={(e) => setForm({ ...form, rate_override: e.target.value })}
               />
             </Field>
-          )}
+          ) : null}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
@@ -665,12 +715,12 @@ export function TimePage() {
               {t('common.save')}
             </Button>
           </div>
-        </form>
+        </FormStack>
       </Modal>
 
       {embedded && unbilledCount > 0 && (
         <WorkflowFooter to="/billing/invoices" label={t('time.createInvoice')}>
-          {unbilledCount} feuille{unbilledCount > 1 ? 's' : ''} prête{unbilledCount > 1 ? 's' : ''} à facturer.
+          {t('time.toBillCount', { count: unbilledCount })}
         </WorkflowFooter>
       )}
     </>

@@ -18,7 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sheet";
 import { Link, usePathname } from "@/i18n/navigation";
 import type { ModuleId } from "@/lib/modules/catalog";
+import { TOUR_OPEN_NAV_EVENT } from "@/lib/onboarding/tour";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_COOKIE = "sidebar-collapsed";
@@ -100,12 +101,14 @@ function SidebarCreateLink({
   collapsed,
   onNavigate,
   icon: Icon,
+  tour,
 }: {
   href: "/projects/new" | "/partners" | "/partners/new";
   label: string;
   collapsed: boolean;
   onNavigate?: () => void;
   icon: typeof Plus;
+  tour?: string;
 }) {
   return (
     <Link
@@ -113,6 +116,7 @@ function SidebarCreateLink({
       onClick={onNavigate}
       aria-label={label}
       title={collapsed ? label : undefined}
+      data-tour={tour}
       className={cn(
         collapsed
           ? collapsedItemClass
@@ -157,6 +161,7 @@ function SidebarBody({
     (item) => !item.module || enabledSet.has(item.module),
   );
   const showImmigrationCreate = canCreate && enabledSet.has("immigration");
+  const showPartnerCreate = canCreate;
 
   return (
     <div className="flex h-full flex-col">
@@ -209,22 +214,24 @@ function SidebarBody({
           collapsed={collapsed}
         />
         {showImmigrationCreate ? (
-          <>
-            <SidebarCreateLink
-              href="/projects/new"
-              label={newProjectLabel}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-              icon={Plus}
-            />
-            <SidebarCreateLink
-              href="/partners/new"
-              label={newPersonLabel}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-              icon={UserPlus}
-            />
-          </>
+          <SidebarCreateLink
+            href="/projects/new"
+            label={newProjectLabel}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+            icon={Plus}
+            tour="new-project"
+          />
+        ) : null}
+        {showPartnerCreate ? (
+          <SidebarCreateLink
+            href="/partners/new"
+            label={newPersonLabel}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+            icon={UserPlus}
+            tour="new-partner"
+          />
         ) : null}
       </div>
 
@@ -245,6 +252,7 @@ function SidebarBody({
               onClick={onNavigate}
               aria-label={label}
               title={collapsed ? label : undefined}
+              data-tour={`nav-${item.key}`}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 collapsed && cn(collapsedItemClass, "gap-0 px-0 py-0"),
@@ -374,6 +382,12 @@ export function MobileSidebarTrigger({
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const openNav = () => setOpen(true);
+    window.addEventListener(TOUR_OPEN_NAV_EVENT, openNav);
+    return () => window.removeEventListener(TOUR_OPEN_NAV_EVENT, openNav);
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

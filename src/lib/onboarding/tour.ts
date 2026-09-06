@@ -1,5 +1,8 @@
 import type { ModuleId } from "@/lib/modules/catalog";
 
+/** Mobile sidebar listens so spotlight steps can open the drawer. */
+export const TOUR_OPEN_NAV_EVENT = "dossierly:tour-open-nav";
+
 export type TourStepId =
   | "home"
   | "partners"

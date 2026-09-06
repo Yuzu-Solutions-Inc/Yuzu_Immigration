@@ -5,7 +5,8 @@ import { useFinanceOutlet } from '@/components/finance/finance-outlet'
 import type { Employee, Shareholder } from '@/lib/finance/types'
 import { employeeDisplayName } from '@/lib/finance/payrollCalc'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { Field, inputClass } from '@/components/finance/Field'
@@ -130,7 +131,7 @@ export function ShareholdersPage() {
           </thead>
           <tbody className="divide-y divide-border">
             {rows.map((s) => (
-              <tr key={s.id}>
+              <tr key={s.id} className="group">
                 <td className="px-4 py-3 font-medium">{s.legal_name}</td>
                 <td className="px-4 py-3">{Number(s.shares_held)}</td>
                 <td className="px-4 py-3 text-muted-foreground">
@@ -139,13 +140,11 @@ export function ShareholdersPage() {
                 <td className="px-4 py-3">
                   <Badge label={s.active ? t('shareholders.active') : t('common.inactive')} tone={s.active ? 'paid' : 'draft'} />
                 </td>
-                <td className="px-4 py-3 text-right space-x-1">
-                  <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(s)}>
-                    {t('common.edit')}
-                  </Button>
-                  <Button variant="danger" className={tableActionClass} onClick={() => remove(s.id)}>
-                    {t('common.deleteShort')}
-                  </Button>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-0.5">
+                    <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEdit(s)} />
+                    <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(s.id)} />
+                  </div>
                 </td>
               </tr>
             ))}

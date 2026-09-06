@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 
 import { AttentionList } from "@/components/home/attention-list";
 import { CaseloadBar } from "@/components/home/caseload-bar";
-import { SetupChecklist } from "@/components/home/setup-checklist";
 import { TodayTimeline } from "@/components/home/today-timeline";
 import { NewProjectButton } from "@/components/layout/app-shell";
 import { SurfaceCard } from "@/components/layout/surface-card";
@@ -178,8 +177,6 @@ export async function HomeDashboardView({
         </div>
         {canCreate ? <NewProjectButton label={t("newProject")} /> : null}
       </div>
-
-      <SetupChecklist setup={dashboard.setup} />
 
       {booking.needsSetup ? (
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border-l-2 border-l-action bg-action/5 px-3 py-2 text-sm text-brand">

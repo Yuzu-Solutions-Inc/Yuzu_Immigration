@@ -8,7 +8,8 @@ import { formatCad } from '@/lib/finance/format'
 import { employeeDisplayName, grossPerPeriod, payFrequencyLabel, periodsPerYear } from '@/lib/finance/payrollCalc'
 import { CA_PROVINCES } from '@/lib/sage/tax-regions'
 import { Badge } from '@/components/finance/Badge'
-import { Button, tableActionClass } from '@/components/finance/Button'
+import { Button } from '@/components/finance/Button'
+import { DeleteIconButton, EditIconButton, iconActionRevealClassName } from '@/components/layout/icon-action-button'
 import { DataTable } from '@/components/finance/DataTable'
 import { Modal } from '@/components/finance/Modal'
 import { Field, inputClass } from '@/components/finance/Field'
@@ -141,7 +142,7 @@ export function EmployeesPage() {
           </thead>
           <tbody className="divide-y divide-border">
             {employees.map((e) => (
-              <tr key={e.id}>
+              <tr key={e.id} className="group">
                 <td className="px-4 py-3 font-medium">{employeeDisplayName(e)}</td>
                 <td className="px-4 py-3">{formatCad(e.yearly_salary)}</td>
                 <td className="px-4 py-3 text-muted-foreground">{payFrequencyLabel(e.pay_frequency)}</td>
@@ -153,13 +154,11 @@ export function EmployeesPage() {
                 <td className="px-4 py-3">
                   <Badge label={e.active ? t('employees.active') : t('employees.inactive')} tone={e.active ? 'active' : 'archived'} />
                 </td>
-                <td className="px-4 py-3 text-right space-x-1">
-                  <Button variant="ghost" className={tableActionClass} onClick={() => openEdit(e)}>
-                    {t('common.editShort')}
-                  </Button>
-                  <Button variant="danger" className={tableActionClass} onClick={() => remove(e.id)}>
-                    {t('common.deleteShort')}
-                  </Button>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-0.5">
+                    <EditIconButton className={iconActionRevealClassName} label={t('common.edit')} onClick={() => openEdit(e)} />
+                    <DeleteIconButton className={iconActionRevealClassName} label={t('common.delete')} onClick={() => remove(e.id)} />
+                  </div>
                 </td>
               </tr>
             ))}

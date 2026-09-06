@@ -108,7 +108,7 @@ export default async function PaymentsSettingsPage({
   const policyValues = stripeEnabled ? stripe : squareEnabled ? square : null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-tour="nav-payments">
       {squareFlash === "connected" ? (
         <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success-text">
           {t("squareConnectedFlash")}

@@ -56,8 +56,11 @@ export default async function InvitePage({
     }
 
     const result = await acceptInvitationByToken(token);
-    if (result.ok || result.error === "already_accepted") {
-      redirect(`/${locale}/welcome`);
+    if (result.ok) {
+      redirect(`/${locale}/home?tour=1`);
+    }
+    if (result.error === "already_accepted") {
+      redirect(`/${locale}/home`);
     }
 
     const errorMessage =

@@ -6,6 +6,7 @@ import {
   DesktopSidebar,
   MobileSidebarTrigger,
 } from "@/components/layout/sidebar-nav";
+import { ProductTourGate } from "@/components/onboarding/product-tour-gate";
 import { type OrgSwitcherOption } from "@/components/layout/org-switcher";
 import { TrialLockBanner } from "@/components/layout/trial-lock-banner";
 import { buttonVariants } from "@/components/ui/button";
@@ -68,6 +69,7 @@ export async function DashboardShell({
           {children}
         </main>
       </div>
+      <ProductTourGate />
     </div>
   );
 }
@@ -76,6 +78,7 @@ export function NewProjectButton({ label }: { label: string }) {
   return (
     <Link
       href="/projects/new"
+      data-tour="new-project"
       className={cn(
         buttonVariants({ size: "sm" }),
         "bg-action text-action-foreground hover:bg-action/90",

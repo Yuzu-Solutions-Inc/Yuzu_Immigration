@@ -465,8 +465,12 @@
     }
   },
   "onboarding": {
-    "title": "Create your organization",
-    "subtitle": "Each consulting firm gets its own secure workspace. You will be an admin.",
+    "title": "Set up your firm",
+    "subtitle": "Choose the modules this workspace needs first. Naming the firm comes next, and a short in-app tour follows.",
+    "modulesTitle": "What does this firm need?",
+    "modulesHelp": "Onboarding and the sidebar follow this list. You can add or remove modules later in Settings → Workspace.",
+    "modulesContinue": "Continue",
+    "modulesBack": "Change modules",
     "orgName": "Organization name",
     "orgNamePlaceholder": "North Star Immigration",
     "orgSlug": "Workspace URL slug",
@@ -531,6 +535,60 @@
       "missingDependency": "Turn on required modules first.",
       "saveFailed": "Could not save modules. Try again.",
       "forbidden": "Only owners and admins can change modules."
+    }
+  },
+  "tour": {
+    "kicker": "{current} of {total}",
+    "clickHint": "Click the highlighted control to continue.",
+    "skip": "Skip tour",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "steps": {
+      "home": {
+        "title": "Your home",
+        "body": "This is the daily snapshot for the modules you turned on — files, bookings, or finance."
+      },
+      "partners": {
+        "title": "Partners and clients",
+        "body": "Every firm keeps people here. Click Partners in the sidebar."
+      },
+      "partnersNew": {
+        "title": "Add a person",
+        "body": "Use this to create a client or billing partner. You can also add people while creating a file."
+      },
+      "projects": {
+        "title": "Immigration files",
+        "body": "Each file is a time-bound engagement with forms and documents. Click Projects."
+      },
+      "projectsNew": {
+        "title": "Start a file",
+        "body": "New project is the main create flow — pick a program and add people on one screen."
+      },
+      "engagements": {
+        "title": "Finance engagements",
+        "body": "Billing projects, time, and invoices live here. Click Engagements."
+      },
+      "bank": {
+        "title": "Bank and receipts",
+        "body": "Import statements, match payments, and keep supplier receipts with the books."
+      },
+      "calendar": {
+        "title": "Calendar",
+        "body": "Your public booking page and staff calendar. Click Calendar."
+      },
+      "services": {
+        "title": "Services",
+        "body": "The catalog clients book from, and the contracts they sign."
+      },
+      "settings": {
+        "title": "Settings",
+        "body": "Your name, hours, and representative details are under the gear. Click it."
+      },
+      "payments": {
+        "title": "Payments",
+        "body": "Connect Stripe or Square here when you charge for bookings or invoices."
+      }
     }
   },
   "welcome": {
@@ -761,8 +819,12 @@
       "title": "Finish setting up your account",
       "subtitle": "{done} of {total} done",
       "cta": "Set up",
-      "guidedCta": "Open guided setup",
-      "guidedHelp": "A short walkthrough of the product and the settings that change bookings and IMM forms.",
+      "guidedCta": "Show me around",
+      "guidedHelp": "A short click-through of the screens that match the modules you turned on.",
+      "newModulesCta": "Show me the new modules",
+      "newModuleTitle": "New: {module}",
+      "newModuleHelp": "Take a highlight tour of this area.",
+      "tourCta": "Show me",
       "items": {
         "account": {
           "title": "Your name",
@@ -4374,6 +4436,7 @@
     "saveNewTime": "Save new time",
     "saving": "Saving…",
     "joinMeet": "Join meeting",
+    "joinNow": "Join now",
     "cancelTitle": "Cancel appointment",
     "cancelBody": "This frees the time on the consultant’s calendar. You will need a new booking if you still want to meet.",
     "cancelPolicyTitle": "Cancellation & refund",
@@ -5084,6 +5147,7 @@
       "projectStar": "Project *",
       "dateStar": "Date *",
       "itemsOfDay": "Items for the day",
+      "item": "Item",
       "itemStar": "Item *",
       "hoursStar": "Hours *",
       "billable": "Billable",
@@ -5104,7 +5168,8 @@
       "cannotDeleteInvoiced": "Cannot delete an invoiced timesheet.",
       "confirmDelete": "Delete this timesheet?",
       "createInvoice": "Create an invoice",
-      "toBillCount": "{count} to bill."
+      "toBillCount": "{count} to bill.",
+      "totalHours": "Total: {hours} h"
     },
     "invoices": {
       "title": "Invoices",
@@ -6048,6 +6113,7 @@
       "owner": "Owner",
       "admin": "Administrator",
       "member": "Member",
+      "case_manager": "Case manager",
       "employee": "Employee",
       "shareholder": "Shareholder"
     }
