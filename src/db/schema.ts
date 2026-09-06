@@ -136,6 +136,20 @@ export const organizations = pgTable("organizations", {
     .notNull(),
 });
 
+export const organizationModules = pgTable(
+  "organization_modules",
+  {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    moduleId: text("module_id").notNull(),
+    enabledAt: timestamp("enabled_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.organizationId, table.moduleId] })],
+);
+
 /** Staff user profile — 1:1 with auth.users (email/password or Google). */
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),

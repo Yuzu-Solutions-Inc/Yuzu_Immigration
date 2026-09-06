@@ -47,6 +47,7 @@ export default async function AppDashboardLayout({
       canCreate={canCreateInWorkspace(membership)}
       writable={membership.organization.writable}
       role={membership.role}
+      enabledModules={membership.enabledModules}
     >
       {children}
     </DashboardShell>

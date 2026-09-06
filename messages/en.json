@@ -485,6 +485,48 @@
       "generic": "Something went wrong. Try again."
     }
   },
+  "modules": {
+    "title": "Dossierly modules",
+    "subtitle": "Turn product areas on or off for this workspace. Data is kept when a module is off.",
+    "onboardingHelp": "Choose what this workspace needs. You can change this later in Settings → Modules.",
+    "save": "Save modules",
+    "saving": "Saving…",
+    "saved": "Modules updated.",
+    "disableKeepsData": "Turning a module off hides it from the app. Existing records stay in the database.",
+    "financeComingSoon": "Finance screens from Yuzu Finance are being ported onto this design system. Partners and billing projects will land here.",
+    "items": {
+      "finance": {
+        "name": "Dossierly Finance",
+        "help": "Partners, billing projects, time, invoices, bank, payroll, tax, and reports."
+      },
+      "immigration": {
+        "name": "Dossierly Immigration",
+        "help": "Immigration files, IRCC forms, and client caseload."
+      },
+      "bookings": {
+        "name": "Dossierly Bookings",
+        "help": "Public booking pages, calendar, and Google Calendar / Meet."
+      },
+      "services": {
+        "name": "Dossierly Services",
+        "help": "Priced service catalog used by bookings and contracts."
+      },
+      "contracts": {
+        "name": "Dossierly Contracts",
+        "help": "Templates and e-sign envelopes."
+      },
+      "payments": {
+        "name": "Dossierly Payments",
+        "help": "Stripe payment links. Invoice reconciliation only when Checkout is created from an invoice."
+      }
+    },
+    "errors": {
+      "paymentsNeedsSource": "Payments needs Bookings and/or Finance so there is something to charge.",
+      "missingDependency": "Turn on required modules first.",
+      "saveFailed": "Could not save modules. Try again.",
+      "forbidden": "Only owners and admins can change modules."
+    }
+  },
   "welcome": {
     "kicker": "Step {current} of {total}",
     "skipAll": "Skip setup",
@@ -804,6 +846,8 @@
     "calendar": "Calendar",
     "bookings": "Bookings",
     "services": "Services",
+    "partners": "Partners",
+    "engagements": "Projects",
     "inbox": "Inbox",
     "menu": "Open menu",
     "login": "Sign in",
@@ -876,6 +920,7 @@
     "teamBilling": "Team & billing",
     "payments": "Payments",
     "security": "Security",
+    "modules": "Modules",
     "accountHelp": "Your staff profile and IMM 5476 representative details.",
     "formsHelp": "Editions we fill, IRCC publication dates, and the latest Sunday check: canada.ca editions, certified fill, and PDF cells the questionnaire does not fill.",
     "formsLastCheck": "Last validation: {date} — {result}",

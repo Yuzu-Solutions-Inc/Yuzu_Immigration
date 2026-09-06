@@ -60,3 +60,6 @@ supabase/.temp/
 /logo-ideas*.html
 /name-analysis/
 /naming/
+
+# Local Finance snapshot for the CRM merge (do not push to Yuzu_Immigration)
+app-legacy/

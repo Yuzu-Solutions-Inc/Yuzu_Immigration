@@ -11,6 +11,7 @@ import { TrialLockBanner } from "@/components/layout/trial-lock-banner";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { OrgAccessLevel } from "@/lib/auth/rbac";
+import type { ModuleId } from "@/lib/modules/catalog";
 import { cn } from "@/lib/utils";
 
 export async function DashboardShell({
@@ -19,6 +20,7 @@ export async function DashboardShell({
   canCreate = true,
   writable = true,
   role,
+  enabledModules = [],
   children,
 }: {
   locale: string;
@@ -27,6 +29,7 @@ export async function DashboardShell({
   canCreate?: boolean;
   writable?: boolean;
   role?: OrgAccessLevel;
+  enabledModules?: readonly ModuleId[];
   children: React.ReactNode;
   actions?: React.ReactNode;
 }) {
@@ -41,6 +44,7 @@ export async function DashboardShell({
       newProjectLabel={tHome("newProject")}
       newPersonLabel={tHome("newPerson")}
       canCreate={canCreate}
+      enabledModules={enabledModules}
     />
   );
 
@@ -52,6 +56,7 @@ export async function DashboardShell({
         newProjectLabel={tHome("newProject")}
         newPersonLabel={tHome("newPerson")}
         canCreate={canCreate}
+        enabledModules={enabledModules}
         defaultCollapsed={sidebarCollapsed}
       />
 

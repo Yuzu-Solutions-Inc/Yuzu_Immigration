@@ -34,20 +34,33 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Link, usePathname } from "@/i18n/navigation";
+import type { ModuleId } from "@/lib/modules/catalog";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_COOKIE = "sidebar-collapsed";
 const collapsedItemClass =
   "flex size-9 shrink-0 items-center justify-center rounded-lg";
 
-const navItems = [
-  { href: "/home", key: "home" as const, icon: Home },
-  { href: "/projects", key: "projects" as const, icon: FolderKanban },
-  { href: "/clients", key: "people" as const, icon: Users },
-  { href: "/calendar", key: "calendar" as const, icon: CalendarDays },
-  { href: "/bookings", key: "bookings" as const, icon: ClipboardList },
-  { href: "/services", key: "services" as const, icon: Briefcase },
-] as const;
+const navItems: {
+  href: string;
+  key: string;
+  icon: typeof Home;
+  module: ModuleId | null;
+}[] = [
+  { href: "/home", key: "home", icon: Home, module: null },
+  { href: "/partners", key: "partners", icon: Users, module: "finance" },
+  {
+    href: "/billing/projects",
+    key: "engagements",
+    icon: FolderKanban,
+    module: "finance",
+  },
+  { href: "/projects", key: "projects", icon: FolderKanban, module: "immigration" },
+  { href: "/clients", key: "people", icon: Users, module: "immigration" },
+  { href: "/calendar", key: "calendar", icon: CalendarDays, module: "bookings" },
+  { href: "/bookings", key: "bookings", icon: ClipboardList, module: "bookings" },
+  { href: "/services", key: "services", icon: Briefcase, module: "services" },
+];
 
 function isActive(pathname: string, href: string) {
   if (href === "/home") {
@@ -97,6 +110,7 @@ function SidebarBody({
   newProjectLabel,
   newPersonLabel,
   canCreate,
+  enabledModules,
   collapsed = false,
   onNavigate,
   onToggleCollapse,
@@ -106,6 +120,7 @@ function SidebarBody({
   newProjectLabel: string;
   newPersonLabel: string;
   canCreate: boolean;
+  enabledModules: readonly ModuleId[];
   collapsed?: boolean;
   onNavigate?: () => void;
   onToggleCollapse?: () => void;
@@ -116,6 +131,11 @@ function SidebarBody({
   const locale = useLocale();
 
   const collapseLabel = collapsed ? t("expand") : t("collapse");
+  const enabledSet = new Set(enabledModules);
+  const visibleNav = navItems.filter(
+    (item) => !item.module || enabledSet.has(item.module),
+  );
+  const showImmigrationCreate = canCreate && enabledSet.has("immigration");
 
   return (
     <div className="flex h-full flex-col">
@@ -167,7 +187,7 @@ function SidebarBody({
           variant="sidebar"
           collapsed={collapsed}
         />
-        {canCreate ? (
+        {showImmigrationCreate ? (
           <>
             <SidebarCreateLink
               href="/projects/new"
@@ -193,7 +213,7 @@ function SidebarBody({
           collapsed ? "items-center px-2" : "px-3",
         )}
       >
-        {navItems.map((item) => {
+        {visibleNav.map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
           const label = t(item.key);
@@ -276,6 +296,7 @@ export function DesktopSidebar({
   newProjectLabel,
   newPersonLabel,
   canCreate,
+  enabledModules,
   defaultCollapsed = false,
 }: {
   organizations: OrgSwitcherOption[];
@@ -283,6 +304,7 @@ export function DesktopSidebar({
   newProjectLabel: string;
   newPersonLabel: string;
   canCreate: boolean;
+  enabledModules: readonly ModuleId[];
   defaultCollapsed?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
@@ -300,6 +322,7 @@ export function DesktopSidebar({
         newProjectLabel={newProjectLabel}
         newPersonLabel={newPersonLabel}
         canCreate={canCreate}
+        enabledModules={enabledModules}
         collapsed={collapsed}
         onToggleCollapse={() => {
           setCollapsed((prev) => {
@@ -319,12 +342,14 @@ export function MobileSidebarTrigger({
   newProjectLabel,
   newPersonLabel,
   canCreate,
+  enabledModules,
 }: {
   organizations: OrgSwitcherOption[];
   activeOrganizationId: string;
   newProjectLabel: string;
   newPersonLabel: string;
   canCreate: boolean;
+  enabledModules: readonly ModuleId[];
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -354,6 +379,7 @@ export function MobileSidebarTrigger({
           newProjectLabel={newProjectLabel}
           newPersonLabel={newPersonLabel}
           canCreate={canCreate}
+          enabledModules={enabledModules}
           onNavigate={() => setOpen(false)}
         />
       </SheetContent>

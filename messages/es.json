@@ -485,6 +485,48 @@
       "generic": "Something went wrong. Try again."
     }
   },
+  "modules": {
+    "title": "Módulos Dossierly",
+    "subtitle": "Active o desactive áreas de producto para este espacio. Los datos se conservan si un módulo está apagado.",
+    "onboardingHelp": "Elija lo que necesita este espacio. Puede cambiarlo después en Ajustes → Módulos.",
+    "save": "Guardar módulos",
+    "saving": "Guardando…",
+    "saved": "Módulos actualizados.",
+    "disableKeepsData": "Desactivar un módulo lo oculta en la aplicación. Los registros siguen en la base de datos.",
+    "financeComingSoon": "Las pantallas de Finance de Yuzu Finance se están adaptando a este sistema de diseño. Socios y proyectos de facturación llegarán aquí.",
+    "items": {
+      "finance": {
+        "name": "Dossierly Finance",
+        "help": "Socios, proyectos de facturación, tiempo, facturas, banco, nómina, impuestos e informes."
+      },
+      "immigration": {
+        "name": "Dossierly Immigration",
+        "help": "Expedientes de inmigración, formularios IRCC y cartera de clientes."
+      },
+      "bookings": {
+        "name": "Dossierly Reservas",
+        "help": "Páginas públicas de reserva, calendario y Google Calendar / Meet."
+      },
+      "services": {
+        "name": "Dossierly Servicios",
+        "help": "Catálogo de servicios con precio para reservas y contratos."
+      },
+      "contracts": {
+        "name": "Dossierly Contratos",
+        "help": "Plantillas y sobres de firma electrónica."
+      },
+      "payments": {
+        "name": "Dossierly Pagos",
+        "help": "Enlaces Stripe. Conciliación de factura solo si el Checkout se crea desde una factura."
+      }
+    },
+    "errors": {
+      "paymentsNeedsSource": "Pagos requiere Reservas y/o Finance para tener algo que cobrar.",
+      "missingDependency": "Active primero los módulos requeridos.",
+      "saveFailed": "No se pudieron guardar los módulos. Inténtelo de nuevo.",
+      "forbidden": "Solo propietarios y administradores pueden cambiar los módulos."
+    }
+  },
   "welcome": {
     "kicker": "Paso {current} de {total}",
     "skipAll": "Omitir la configuración",
@@ -804,6 +846,8 @@
     "calendar": "Calendario",
     "bookings": "Reservas",
     "services": "Servicios",
+    "partners": "Socios",
+    "engagements": "Proyectos",
     "inbox": "Bandeja de entrada",
     "menu": "Abrir menú",
     "login": "Iniciar sesión",
@@ -876,6 +920,7 @@
     "teamBilling": "Equipo y facturación",
     "payments": "Pagos",
     "security": "Seguridad",
+    "modules": "Módulos",
     "accountHelp": "Tu perfil y tus datos de representante IMM 5476.",
     "formsHelp": "Ediciones que rellenamos, fechas de publicación de IRCC y la última comprobación dominical: ediciones de canada.ca, relleno certificado y celdas PDF que el cuestionario no rellena.",
     "formsLastCheck": "Última validación: {date} — {result}",

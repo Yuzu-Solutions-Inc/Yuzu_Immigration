@@ -25,6 +25,8 @@ import {
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyOrganizationName } from "@/lib/org/slug";
+import { ONBOARDING_DEFAULT_MODULES, parseModuleIds, validateModuleSelection } from "@/lib/modules/catalog";
+import { replaceOrganizationModules } from "@/lib/modules/org-modules";
 import { recordAuditEvent } from "@/lib/security/audit";
 
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
@@ -68,6 +70,13 @@ export async function createOrganizationAction(
 
   if (!formAcceptedFirmDpa(formData)) {
     return { error: "dpa_required" };
+  }
+
+  const selectedModules = formData.get("modulesPresent")
+    ? parseModuleIds(formData.getAll("module"))
+    : [...ONBOARDING_DEFAULT_MODULES];
+  if (validateModuleSelection(selectedModules)) {
+    return { error: "invalid_org" };
   }
 
   const supabase = await createClient();
@@ -127,6 +136,14 @@ export async function createOrganizationAction(
       "@/lib/security/org-data-key"
     );
     await loadOrCreateOrgDataKey(org.id);
+    const moduleResult = await replaceOrganizationModules(
+      admin,
+      org.id,
+      selectedModules,
+    );
+    if (moduleResult.error) {
+      console.error("create_organization modules:", moduleResult.error);
+    }
     after(() => {
       void import("@/lib/email/trial").then(({ sendTrialEmailsForOrg }) =>
         sendTrialEmailsForOrg(org.id as string, "welcome"),
