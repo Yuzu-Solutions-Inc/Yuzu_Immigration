@@ -76,6 +76,7 @@ async function upsertOnboarding(values: {
   completedAt?: string | null;
   dismissedAt?: string | null;
   extraSkipped?: IntegrationCheckId[];
+  seenModules?: string[];
 }) {
   const loaded = await loadOnboardingRow();
   if ("error" in loaded) return loaded;
@@ -85,6 +86,12 @@ async function upsertOnboarding(values: {
     ...(loaded.current?.skipped_steps ?? []),
     ...(values.extraSkipped ?? []),
   ]);
+  const seenModules = [
+    ...new Set([
+      ...(loaded.current?.seen_modules ?? []),
+      ...(values.seenModules ?? []),
+    ]),
+  ];
 
   const row: OnboardingRow = {
     organization_id: loaded.membership.organization.id,
@@ -98,6 +105,7 @@ async function upsertOnboarding(values: {
         ? values.dismissedAt
         : (loaded.current?.dismissed_at ?? null),
     skipped_steps: skipped,
+    seen_modules: seenModules,
     updated_at: now,
   };
 
