@@ -18,7 +18,7 @@ import {
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { trialExpiredError } from "@/lib/billing/trial";
 import { sendOrgInviteEmail } from "@/lib/email/org-invite";
-import { dictionaries } from "@/lib/i18n/dictionaries";
+import { orgRoleLabels } from "@/lib/i18n/dictionaries";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -121,7 +121,7 @@ export async function inviteOrgMemberAction(
   const locale = parsed.data.locale;
   const invitePath = `/${locale}/invite/${token}`;
   const inviteUrl = `${base}${invitePath}`;
-  const roleLabels = dictionaries[locale].orgRoles;
+  const roleLabels = orgRoleLabels(locale);
   const roleLabel =
     parsed.data.access === "unlicensed"
       ? roleLabels.unlicensed
