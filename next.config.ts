@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
   transpilePackages: ["pdfjs-dist"],
   typescript: {
     tsconfigPath: "tsconfig.build.json",
+    // Vercel Hobby is 8GB; `next build` tsc OOMs after finance. Types still run in
+    // GitHub Actions and `npm run typecheck` before push.
+    ignoreBuildErrors: Boolean(process.env.VERCEL),
   },
   experimental: {
     serverActions: {
