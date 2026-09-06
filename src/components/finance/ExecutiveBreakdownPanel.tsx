@@ -1,0 +1,112 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { formatCad } from '@/lib/finance/format'
+import type { BreakdownRow } from '@/lib/finance/billingMetrics'
+
+type BreakdownMode = 'amount' | 'rate'
+
+function BreakdownToggle({ mode, onChange }: { mode: BreakdownMode; onChange: (mode: BreakdownMode) => void }) {
+  return (
+    <div className="inline-flex rounded-lg border border-border overflow-hidden text-xs">
+      <button
+        type="button"
+        className={`px-2.5 py-1 ${mode === 'amount' ? 'bg-action/10 text-foreground font-medium' : 'bg-surface text-muted-foreground'}`}
+        onClick={() => onChange('amount')}
+      >
+        $
+      </button>
+      <button
+        type="button"
+        className={`px-2.5 py-1 ${mode === 'rate' ? 'bg-action/10 text-foreground font-medium' : 'bg-surface text-muted-foreground'}`}
+        onClick={() => onChange('rate')}
+      >
+        $/h
+      </button>
+    </div>
+  )
+}
+
+function metricValue(row: BreakdownRow, key: 'worked' | 'invoiced' | 'collected', mode: BreakdownMode) {
+  if (mode === 'rate') {
+    if (row.hours <= 0) return '—'
+    return `${formatCad(row[key] / row.hours)}/h`
+  }
+  return formatCad(row[key])
+}
+
+export function ExecutiveBreakdownPanel({
+  title,
+  rows,
+  emptyMessage,
+  dense = false,
+}: {
+  title: string
+  rows: BreakdownRow[]
+  emptyMessage: string
+  dense?: boolean
+}) {
+  const [mode, setMode] = useState<BreakdownMode>('amount')
+
+  const totals = useMemo(() => {
+    const worked = rows.reduce((s, r) => s + r.worked, 0)
+    const invoiced = rows.reduce((s, r) => s + r.invoiced, 0)
+    const collected = rows.reduce((s, r) => s + r.collected, 0)
+    const hours = rows.reduce((s, r) => s + r.hours, 0)
+    return { worked, invoiced, collected, hours }
+  }, [rows])
+
+  const cellY = dense ? 'py-1.5' : 'py-2'
+
+  return (
+    <div className={`ui-card h-full flex flex-col min-h-0 ${dense ? 'p-3' : 'p-4'}`}>
+      <div className={`flex items-center justify-between gap-2 ${dense ? 'mb-2' : 'mb-3'}`}>
+        <h3 className="font-semibold text-sm">{title}</h3>
+        <BreakdownToggle mode={mode} onChange={setMode} />
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground flex-1">{emptyMessage}</p>
+      ) : (
+        <div className="overflow-auto flex-1 -mx-1 px-1 max-h-[220px]">
+          <table className="w-full text-sm min-w-[320px]">
+            <thead className="text-xs text-muted-foreground text-left border-b border-border sticky top-0 bg-surface">
+              <tr>
+                <th className={`${cellY} pr-2 font-medium`}>Nom</th>
+                <th className={`${cellY} pr-2 font-medium text-right`}>Prestations</th>
+                <th className={`${cellY} pr-2 font-medium text-right`}>Facturé</th>
+                <th className={`${cellY} font-medium text-right`}>Encaissé</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td className={`${cellY} pr-2 font-medium truncate max-w-[140px]`} title={row.label}>
+                    {row.label}
+                  </td>
+                  <td className={`${cellY} pr-2 text-right tabular-nums`}>{metricValue(row, 'worked', mode)}</td>
+                  <td className={`${cellY} pr-2 text-right tabular-nums`}>{metricValue(row, 'invoiced', mode)}</td>
+                  <td className={`${cellY} text-right tabular-nums`}>{metricValue(row, 'collected', mode)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="border-t border-border text-xs font-medium">
+              <tr>
+                <td className={`${cellY} pr-2`}>Total</td>
+                <td className={`${cellY} pr-2 text-right tabular-nums`}>
+                  {mode === 'rate' && totals.hours > 0 ? `${formatCad(totals.worked / totals.hours)}/h` : formatCad(totals.worked)}
+                </td>
+                <td className={`${cellY} pr-2 text-right tabular-nums`}>
+                  {mode === 'rate' && totals.hours > 0 ? `${formatCad(totals.invoiced / totals.hours)}/h` : formatCad(totals.invoiced)}
+                </td>
+                <td className={`${cellY} text-right tabular-nums`}>
+                  {mode === 'rate' && totals.hours > 0 ? `${formatCad(totals.collected / totals.hours)}/h` : formatCad(totals.collected)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}

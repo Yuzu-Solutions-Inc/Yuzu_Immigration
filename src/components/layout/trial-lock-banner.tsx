@@ -12,7 +12,7 @@ export async function TrialLockBanner({ role }: { role: OrgAccessLevel }) {
     <div className="mb-4 rounded-xl border border-border bg-surface px-4 py-3">
       <p className="text-sm font-medium text-brand">{t("title")}</p>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground text-pretty">
-        {admin ? t("adminBody") : t("caseManagerBody")}
+        {admin ? t("adminBody") : t("memberBody")}
       </p>
       {admin ? (
         <p className="mt-2 text-sm">

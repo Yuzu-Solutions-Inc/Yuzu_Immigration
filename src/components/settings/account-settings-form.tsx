@@ -123,7 +123,7 @@ function actionErrorMessage(
   );
 }
 
-function AccountProfileForm({
+export function AccountProfileForm({
   locale,
   email,
   fullName,
@@ -151,7 +151,7 @@ function AccountProfileForm({
     <FormStack action={action} gap="loose">
       <input type="hidden" name="locale" value={locale} />
 
-      <section className="scroll-mt-6 space-y-4" id="account">
+      <section className="space-y-4">
         <Field>
           <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
           <Input id="email" value={email} disabled readOnly />
@@ -184,7 +184,7 @@ function AccountProfileForm({
   );
 }
 
-function RepresentativeSettingsForm({
+export function RepresentativeSettingsForm({
   locale,
   email,
   representative,
@@ -265,7 +265,7 @@ function RepresentativeSettingsForm({
 
   if (!showForm) {
     return (
-      <section className="scroll-mt-6" id="representative">
+      <section>
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-canvas/40 px-4 py-3">
           <h3 className="font-heading text-base font-semibold text-brand">
             {t("repFilledTitle")}
@@ -291,7 +291,7 @@ function RepresentativeSettingsForm({
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="repCountry" value={repCountry} />
 
-      <section className="scroll-mt-6 space-y-4" id="representative">
+      <section className="space-y-4">
         <div>
           <h3 className="font-heading text-base font-semibold text-brand">
             {t("repTitle")}

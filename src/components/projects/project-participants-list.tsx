@@ -59,7 +59,7 @@ export function ProjectParticipantsList({
             <li key={row.id}>
               {row.person ? (
                 <Link
-                  href={`/clients/${row.person.id}`}
+                  href={`/partners/${row.person.id}`}
                   className="flex items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-muted/60"
                 >
                   <div className="min-w-0">

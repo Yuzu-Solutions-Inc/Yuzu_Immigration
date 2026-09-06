@@ -20,6 +20,7 @@ type OnboardingRow = {
   completed_at: string | null;
   dismissed_at: string | null;
   skipped_steps: string[];
+  seen_modules: string[];
   updated_at: string;
 };
 
@@ -35,7 +36,7 @@ async function loadOnboardingRow() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("staff_onboarding")
-    .select("completed_at, dismissed_at, skipped_steps")
+    .select("completed_at, dismissed_at, skipped_steps, seen_modules")
     .eq("organization_id", membership.organization.id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -52,6 +53,7 @@ async function loadOnboardingRow() {
       completed_at: string | null;
       dismissed_at: string | null;
       skipped_steps: string[] | null;
+      seen_modules: string[] | null;
     } | null,
   };
 }
@@ -74,6 +76,7 @@ async function upsertOnboarding(values: {
   completedAt?: string | null;
   dismissedAt?: string | null;
   extraSkipped?: IntegrationCheckId[];
+  seenModules?: string[];
 }) {
   const loaded = await loadOnboardingRow();
   if ("error" in loaded) return loaded;
@@ -83,6 +86,12 @@ async function upsertOnboarding(values: {
     ...(loaded.current?.skipped_steps ?? []),
     ...(values.extraSkipped ?? []),
   ]);
+  const seenModules = [
+    ...new Set([
+      ...(loaded.current?.seen_modules ?? []),
+      ...(values.seenModules ?? []),
+    ]),
+  ];
 
   const row: OnboardingRow = {
     organization_id: loaded.membership.organization.id,
@@ -96,6 +105,7 @@ async function upsertOnboarding(values: {
         ? values.dismissedAt
         : (loaded.current?.dismissed_at ?? null),
     skipped_steps: skipped,
+    seen_modules: seenModules,
     updated_at: now,
   };
 
@@ -120,29 +130,62 @@ export async function skipOnboardingIntegrationsAction(
 export async function completeOnboardingAction(locale: string) {
   const parsed = localeSchema.safeParse(locale);
   if (!parsed.success) return { error: "invalid" as const };
+  const loaded = await loadOnboardingRow();
+  if ("error" in loaded) return loaded;
   const now = new Date().toISOString();
   const result = await upsertOnboarding({
     completedAt: now,
     dismissedAt: null,
     extraSkipped: [...INTEGRATION_CHECK_IDS],
+    seenModules: loaded.membership.enabledModules,
   });
   if ("error" in result) return result;
   revalidatePath(`/${parsed.data}/welcome`);
   revalidatePath(`/${parsed.data}/home`);
+  revalidatePath("/", "layout");
   redirect(`/${parsed.data}/home`);
 }
 
 export async function dismissOnboardingAction(locale: string) {
   const parsed = localeSchema.safeParse(locale);
   if (!parsed.success) return { error: "invalid" as const };
+  const loaded = await loadOnboardingRow();
+  if ("error" in loaded) return loaded;
   const now = new Date().toISOString();
   const result = await upsertOnboarding({
     completedAt: now,
     dismissedAt: now,
     extraSkipped: [...INTEGRATION_CHECK_IDS],
+    seenModules: loaded.membership.enabledModules,
   });
   if ("error" in result) return result;
   revalidatePath(`/${parsed.data}/welcome`);
   revalidatePath(`/${parsed.data}/home`);
+  revalidatePath("/", "layout");
   redirect(`/${parsed.data}/home`);
+}
+
+/** Mark the current (or listed) modules as toured without a full-page redirect. */
+export async function markTourModulesSeenAction(
+  locale: string,
+  moduleIds?: string[],
+) {
+  const parsed = localeSchema.safeParse(locale);
+  if (!parsed.success) return { error: "invalid" as const };
+  const loaded = await loadOnboardingRow();
+  if ("error" in loaded) return loaded;
+  const now = new Date().toISOString();
+  const seen =
+    moduleIds && moduleIds.length > 0
+      ? moduleIds
+      : loaded.membership.enabledModules;
+  const result = await upsertOnboarding({
+    completedAt: now,
+    dismissedAt: null,
+    seenModules: seen,
+  });
+  if ("error" in result) return result;
+  revalidatePath(`/${parsed.data}/home`);
+  revalidatePath("/", "layout");
+  return { ok: true as const };
 }

@@ -38,6 +38,9 @@ const CRUMB_KEYS = {
   projects: "crumbProjects",
   people: "crumbPeople",
   clients: "crumbPeople",
+  partners: "crumbPartners",
+  engagements: "crumbEngagements",
+  files: "crumbProjects",
   calendar: "crumbCalendar",
   bookings: "crumbBookings",
   services: "crumbServices",
@@ -47,6 +50,8 @@ const CRUMB_KEYS = {
   billing: "crumbBilling",
   account: "crumbAccount",
   organization: "crumbOrganization",
+  modules: "crumbOrganization",
+  company: "crumbOrganization",
   security: "crumbSecurity",
   forms: "crumbForms",
   new: "crumbNew",
@@ -77,7 +82,7 @@ function useBreadcrumbs(t: ReturnType<typeof useTranslations<"topBar">>): Crumb[
     if (UUID_RE.test(seg)) {
       const parent = segments[i - 1];
       const label =
-        parent === "clients" || parent === "people"
+        parent === "clients" || parent === "people" || parent === "partners"
           ? t("crumbPerson")
           : parent === "projects" || parent === "templates"
             ? t("crumbProject")
@@ -465,6 +470,7 @@ function AppSettingsLink() {
     <Link
       href="/settings/account"
       aria-label={t("menuAria")}
+      data-tour="nav-settings"
       className={topBarIconClass}
     >
       <Settings className="size-4" aria-hidden />

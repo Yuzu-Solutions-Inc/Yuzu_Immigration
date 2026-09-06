@@ -28,7 +28,8 @@ export function HashDetailTabs<T extends string>({
 
     const resolveFromHash = (hash: string): T | null => {
       if (isTab(hash)) return hash;
-      return aliases?.[hash] ?? null;
+      const aliased = aliases?.[hash];
+      return aliased && isTab(aliased) ? aliased : null;
     };
 
     const syncFromHash = () => {
@@ -40,6 +41,23 @@ export function HashDetailTabs<T extends string>({
     window.addEventListener("hashchange", syncFromHash);
     return () => window.removeEventListener("hashchange", syncFromHash);
   }, [aliases, values]);
+
+  useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash || hash === tab) return;
+    let cancelled = false;
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        if (!cancelled) {
+          document.getElementById(hash)?.scrollIntoView({ block: "start" });
+        }
+      });
+    });
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [tab]);
 
   return (
     <Tabs
@@ -72,7 +90,12 @@ export function HashDetailTabs<T extends string>({
       </div>
 
       {values.map((value) => (
-        <TabsContent key={value} value={value} className="min-w-0 w-full">
+        <TabsContent
+          key={value}
+          value={value}
+          id={value}
+          className="min-w-0 w-full scroll-mt-6"
+        >
           <div className="w-full space-y-6">{panels[value]}</div>
         </TabsContent>
       ))}

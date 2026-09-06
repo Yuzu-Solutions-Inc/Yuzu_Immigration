@@ -35,6 +35,12 @@ import {
 import { personLookupWrite } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
+import {
+  ensurePartnerForPerson,
+  ensurePersonForPartner,
+  isProjectLinkablePartnerKind,
+  partnerLegalName,
+} from "@/lib/crm/partner-person";
 
 function closedAndRetainFields(status: ProjectStatus, statusAt: string) {
   if (!isTerminalStatus(status)) {
@@ -49,6 +55,7 @@ function closedAndRetainFields(status: ProjectStatus, statusAt: string) {
 
 const participantInputSchema = z.object({
   personId: z.string().uuid().optional(),
+  partnerId: z.string().uuid().optional(),
   firstName: z.string().trim().min(1).max(80).optional(),
   lastName: z.string().trim().min(1).max(80).optional(),
   email: z.string().email().optional().or(z.literal("")),
@@ -243,7 +250,10 @@ async function resolveParticipants(
   orgId: string,
   locale: string,
   participants: z.infer<typeof participantInputSchema>[],
-  options?: { allowCreatePeople?: boolean; createdBy?: string | null },
+  options?: {
+    allowCreatePeople?: boolean;
+    createdBy?: string | null;
+  },
 ): Promise<
   | { error: string }
   | {
@@ -257,6 +267,7 @@ async function resolveParticipants(
 > {
   const supabase = await createClient();
   const key = await getOrgDataKey(orgId);
+  const userId = options?.createdBy ?? null;
   const resolvedPeople: Array<{
     id: string;
     role: ParticipantRole;
@@ -266,16 +277,91 @@ async function resolveParticipants(
   const seen = new Set<string>();
 
   for (const participant of participants) {
+    if (participant.partnerId && !participant.personId) {
+      const { data: partner, error: partnerError } = await supabase
+        .from("partners")
+        .select("id, kind, legal_name, email")
+        .eq("organization_id", orgId)
+        .eq("id", participant.partnerId)
+        .maybeSingle();
+      if (partnerError || !partner) {
+        return { error: "person_missing" };
+      }
+      if (
+        !isProjectLinkablePartnerKind(
+          partner.kind as "customer" | "provider" | "both",
+        )
+      ) {
+        return { error: "partner_not_linkable" };
+      }
+      if (!userId) {
+        return { error: "forbidden" };
+      }
+      const personId = await ensurePersonForPartner(
+        { supabase, orgId, userId },
+        partner.id as string,
+      );
+      if (!personId) {
+        return { error: "create_failed" };
+      }
+      if (seen.has(personId)) {
+        return { error: "invalid" };
+      }
+      seen.add(personId);
+
+      const { data: linkedPerson } = await supabase
+        .from("people")
+        .select("first_name, last_name, email")
+        .eq("id", personId)
+        .maybeSingle();
+      const opened = linkedPerson
+        ? decryptPersonRow(
+            linkedPerson as {
+              first_name: string;
+              last_name: string;
+              email: string | null;
+            },
+            key,
+          )
+        : null;
+      resolvedPeople.push({
+        id: personId,
+        role: participant.role,
+        displayName: opened
+          ? `${opened.first_name} ${opened.last_name}`.trim()
+          : "",
+        email: opened?.email || null,
+      });
+      continue;
+    }
+
     if (participant.personId) {
       const { data: existing, error } = await supabase
         .from("people")
-        .select("id, first_name, last_name, email")
+        .select("id, first_name, last_name, email, partner_id")
         .eq("organization_id", orgId)
         .eq("id", participant.personId)
         .maybeSingle();
 
       if (error || !existing) {
         return { error: "person_missing" };
+      }
+
+      if (existing.partner_id) {
+        const { data: linkedPartner } = await supabase
+          .from("partners")
+          .select("kind")
+          .eq("organization_id", orgId)
+          .eq("id", existing.partner_id)
+          .maybeSingle();
+        if (
+          linkedPartner &&
+          !isProjectLinkablePartnerKind(
+            linkedPartner.kind as "customer" | "provider" | "both",
+          )
+        ) {
+          return { error: "partner_not_linkable" };
+        }
       }
 
       const person = decryptPersonRow(
@@ -292,6 +378,13 @@ async function resolveParticipants(
         return { error: "invalid" };
       }
       seen.add(person.id);
+
+      if (userId) {
+        await ensurePartnerForPerson(
+          { supabase, orgId, userId },
+          person.id,
+        );
+      }
 
       resolvedPeople.push({
         id: person.id,
@@ -316,11 +409,40 @@ async function resolveParticipants(
         ? null
         : participant.statusExpiresAt;
     const email = participant.email || null;
+    const legalName = partnerLegalName(
+      participant.firstName,
+      participant.lastName,
+    );
+
+    let partnerId: string | null = null;
+    if (userId) {
+      const { data: partner, error: partnerError } = await supabase
+        .from("partners")
+        .insert({
+          organization_id: orgId,
+          user_id: userId,
+          legal_name: legalName,
+          kind: "customer",
+          contact_name: legalName,
+          email,
+          immigration_status: immigrationStatus,
+          status_expires_at: statusExpiresAt,
+          preferred_locale: locale,
+        })
+        .select("id")
+        .single();
+      if (partnerError || !partner) {
+        console.error("create partner for participant:", partnerError?.message);
+        return { error: "create_failed" };
+      }
+      partnerId = partner.id as string;
+    }
 
     const { data: created, error: createError } = await supabase
       .from("people")
       .insert({
         organization_id: orgId,
+        partner_id: partnerId,
         ...encryptPersonWrite(
           {
             first_name: participant.firstName,
@@ -348,6 +470,13 @@ async function resolveParticipants(
 
     if (createError || !created) {
       console.error("create person:", createError?.message);
+      if (partnerId) {
+        await supabase
+          .from("partners")
+          .delete()
+          .eq("id", partnerId)
+          .eq("organization_id", orgId);
+      }
       return { error: "create_failed" };
     }
 
@@ -1187,7 +1316,7 @@ export async function updateProjectAction(
 
   revalidatePath(`/${data.locale}/projects/${projectId}`);
   revalidatePath(`/${data.locale}/projects`);
-  revalidatePath(`/${data.locale}/clients`);
+  revalidatePath(`/${data.locale}/partners`);
   revalidatePath(`/${data.locale}/home`);
   redirect(`/${data.locale}/projects/${projectId}`);
 }
@@ -1524,7 +1653,7 @@ export async function deleteProjectAction(
   revalidatePath(`/${parsed.data.locale}/projects`);
   revalidatePath(`/${parsed.data.locale}/projects/${parsed.data.projectId}`);
   revalidatePath(`/${parsed.data.locale}/home`);
-  revalidatePath(`/${parsed.data.locale}/clients`);
+  revalidatePath(`/${parsed.data.locale}/partners`);
   revalidatePath(`/${parsed.data.locale}/calendar`);
   redirect(`/${parsed.data.locale}/projects`);
 }

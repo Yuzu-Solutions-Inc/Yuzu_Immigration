@@ -8,7 +8,7 @@ describe("org administration", () => {
     assert.equal(isAdmin("owner"), true);
     assert.equal(canAdministerOrg("owner"), true);
     assert.equal(canAdministerOrg("admin"), true);
-    assert.equal(canAdministerOrg("case_manager"), false);
+    assert.equal(canAdministerOrg("member"), false);
     assert.equal(canAdministerOrg("unlicensed"), false);
   });
 });

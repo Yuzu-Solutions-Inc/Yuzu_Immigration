@@ -3,6 +3,7 @@ import "server-only";
 import { CONTRACT_ENVELOPES_BUCKET } from "@/lib/contracts/types";
 import { CLIENT_DOCUMENTS_BUCKET } from "@/lib/documents/catalog";
 import { stripeConfigured, getStripe } from "@/lib/stripe/client";
+import { decryptProfileRow } from "@/lib/security/profile-pii";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 const STORAGE_REMOVE_CHUNK = 100;
@@ -99,8 +100,11 @@ export async function loadOwnerContact(organizationId: string): Promise<{
     .select("full_name, email")
     .eq("id", owner.user_id as string)
     .maybeSingle();
+  const opened = decryptProfileRow(
+    (profile ?? {}) as { full_name?: string | null; email?: string | null },
+  );
   return {
-    name: ((profile?.full_name as string | null) ?? "").trim(),
+    name: (opened.full_name ?? "").trim(),
     email: ((profile?.email as string | null) ?? "").trim().toLowerCase(),
   };
 }

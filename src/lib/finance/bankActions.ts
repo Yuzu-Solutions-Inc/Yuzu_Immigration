@@ -1,0 +1,523 @@
+import { deleteEntityDocuments } from './documents'
+import { deletePayment, recalculateInvoiceStatus } from './invoiceActions'
+import type { CorpTaxStatus, DividendStatus, ExpenseCategory, TaxPeriodStatus } from './types'
+import type { ParsedBankRow } from './wealthsimpleCsv'
+import { db } from './db'
+
+async function loadExistingImportKeys(): Promise<Set<string>> {
+  const keys = new Set<string>()
+  const pageSize = 1000
+  let from = 0
+
+  while (true) {
+    const { data, error } = await db
+      .from('bank_transactions')
+      .select('import_key')
+      .not('import_key', 'is', null)
+      .range(from, from + pageSize - 1)
+
+    if (error) throw new Error(error.message)
+    for (const row of data ?? []) {
+      if (row.import_key) keys.add(row.import_key)
+    }
+    if (!data || data.length < pageSize) break
+    from += pageSize
+  }
+
+  return keys
+}
+
+function parseRevertNote<T>(notes: string | null, prefix: string): T | null {
+  if (!notes?.startsWith(prefix)) return null
+  try {
+    return JSON.parse(notes.slice(prefix.length)) as T
+  } catch {
+    return null
+  }
+}
+
+async function revertLinkedRecord(bankId: string, matchSource: string | null, matchId: string | null) {
+  if (!matchSource || !matchId) return
+
+  const { data: bank } = await db.from('bank_transactions').select('notes').eq('id', bankId).single()
+  const notes = bank?.notes ?? null
+
+  if (matchSource === 'payment') {
+    const { data: payment } = await db.from('payments').select('invoice_id').eq('id', matchId).single()
+    if (payment?.invoice_id) await deletePayment(matchId, payment.invoice_id)
+    return
+  }
+
+  if (matchSource === 'expense') {
+    await deleteEntityDocuments('expense', matchId)
+    await db.from('expenses').delete().eq('id', matchId)
+    return
+  }
+
+  if (matchSource === 'payroll') {
+    if (notes === 'payroll_match:remittance') {
+      await db
+        .from('payroll_runs')
+        .update({
+          remittance_status: 'pending',
+          remittance_date: null,
+          remittance_reference: null,
+        })
+        .eq('id', matchId)
+    }
+    return
+  }
+
+  if (matchSource === 'sales_tax') {
+    const prev = parseRevertNote<{ status: TaxPeriodStatus; filed_date: string | null }>(notes, 'sales_tax_prev:')
+    if (prev) {
+      await db
+        .from('sales_tax_periods')
+        .update({ status: prev.status, filed_date: prev.filed_date })
+        .eq('id', matchId)
+    }
+    return
+  }
+
+  if (matchSource === 'corporate_tax') {
+    const prev = parseRevertNote<{ status: CorpTaxStatus; paid_amount: number; paid_date: string | null }>(
+      notes,
+      'corp_tax_prev:'
+    )
+    if (prev) {
+      await db
+        .from('corporate_tax_records')
+        .update({
+          status: prev.status,
+          paid_amount: prev.paid_amount,
+          paid_date: prev.paid_date,
+        })
+        .eq('id', matchId)
+    }
+    return
+  }
+
+  if (matchSource === 'dividend') {
+    const prev = parseRevertNote<{ status: DividendStatus; payment_date: string | null; paid_amount: number }>(
+      notes,
+      'dividend_prev:'
+    )
+    if (prev) {
+      await db
+        .from('dividends')
+        .update({
+          status: prev.status,
+          payment_date: prev.payment_date,
+          paid_amount: prev.paid_amount ?? 0,
+        })
+        .eq('id', matchId)
+    }
+  }
+}
+
+export async function importBankRows(rows: ParsedBankRow[]) {
+  if (rows.length === 0) return { inserted: 0, duplicates: 0 }
+
+  const existingKeys = await loadExistingImportKeys()
+  const batchKeys = new Set<string>()
+  const toInsert = []
+
+  for (const r of rows) {
+    if (existingKeys.has(r.import_key) || batchKeys.has(r.import_key)) continue
+    batchKeys.add(r.import_key)
+    toInsert.push({
+      transaction_date: r.transaction_date,
+      description: r.description,
+      amount: r.amount,
+      transaction_code: r.transaction_code,
+      source_format: r.source_format,
+      import_key: r.import_key,
+      reconciled: false,
+      match_source: null,
+      match_id: null,
+    })
+  }
+
+  if (toInsert.length === 0) {
+    return { inserted: 0, duplicates: rows.length }
+  }
+
+  const { error } = await db.from('bank_transactions').insert(toInsert)
+  if (error) throw new Error(error.message)
+
+  return { inserted: toInsert.length, duplicates: rows.length - toInsert.length }
+}
+
+export async function createManualBankTransaction(payload: {
+  transaction_date: string
+  description: string
+  amount: number
+  source_format: 'chequing' | 'credit_card' | 'manual'
+  transaction_code?: string | null
+  notes?: string | null
+}) {
+  const description = payload.description.trim()
+  if (!description) throw new Error('Description requise.')
+  if (payload.amount === 0) throw new Error('Montant invalide.')
+
+  const { error } = await db.from('bank_transactions').insert({
+    transaction_date: payload.transaction_date,
+    description,
+    amount: payload.amount,
+    source_format: payload.source_format,
+    transaction_code: payload.transaction_code?.trim() || null,
+    notes: payload.notes?.trim() || null,
+    import_key: null,
+    reconciled: false,
+    match_source: null,
+    match_id: null,
+  })
+
+  if (error) throw new Error(error.message)
+}
+
+export async function assignBankPayment(
+  bankId: string,
+  invoiceId: string,
+  paymentDate: string,
+  amount: number,
+  method: string | null,
+  reference: string | null
+) {
+  const [{ data: existingPayments }, { data: linkedRows }] = await Promise.all([
+    db.from('payments').select('id, source').eq('invoice_id', invoiceId),
+    db.from('bank_transactions').select('match_id').eq('match_source', 'payment'),
+  ])
+  const linkedIds = new Set(
+    (linkedRows ?? [])
+      .map((row) => row.match_id as string | null)
+      .filter((id): id is string => Boolean(id)),
+  )
+  const stripePayment = (existingPayments ?? []).find(
+    (row) => row.source === 'stripe' && !linkedIds.has(row.id as string),
+  )
+
+  if (stripePayment) {
+    const { error: bankErr } = await db
+      .from('bank_transactions')
+      .update({
+        reconciled: true,
+        match_source: 'payment',
+        match_id: stripePayment.id,
+        notes: null,
+      })
+      .eq('id', bankId)
+    if (bankErr) throw new Error(bankErr.message)
+    return
+  }
+
+  const { data: payment, error: payErr } = await db
+    .from('payments')
+    .insert({
+      invoice_id: invoiceId,
+      payment_date: paymentDate,
+      amount,
+      method,
+      reference,
+      notes: null,
+      source: 'other',
+    })
+    .select('id')
+    .single()
+
+  if (payErr || !payment) throw new Error(payErr?.message ?? 'Paiement non créé')
+
+  await recalculateInvoiceStatus(invoiceId)
+
+  const { error: bankErr } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'payment',
+      match_id: payment.id,
+      notes: null,
+    })
+    .eq('id', bankId)
+
+  if (bankErr) throw new Error(bankErr.message)
+}
+
+export async function assignBankExpense(
+  bankId: string,
+  payload: {
+    expense_date: string
+    vendor: string
+    category: ExpenseCategory
+    description: string | null
+    amount: number
+    gst: number
+    qst: number
+    total: number
+  }
+): Promise<string> {
+  const { data: expense, error: expErr } = await db
+    .from('expenses')
+    .insert({
+      ...payload,
+      paid: true,
+      notes: null,
+    })
+    .select('id')
+    .single()
+
+  if (expErr || !expense) throw new Error(expErr?.message ?? 'Dépense non créée')
+
+  const { error: bankErr } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'expense',
+      match_id: expense.id,
+      notes: null,
+    })
+    .eq('id', bankId)
+
+  if (bankErr) throw new Error(bankErr.message)
+  return expense.id
+}
+
+export type PayrollBankMatchKind = 'net_pay' | 'remittance'
+
+export async function assignBankPayroll(
+  bankId: string,
+  payrollRunId: string,
+  kind: PayrollBankMatchKind,
+  remittanceDate: string,
+  remittanceReference: string | null
+) {
+  if (kind === 'remittance') {
+    const { error: prErr } = await db
+      .from('payroll_runs')
+      .update({
+        remittance_status: 'remitted',
+        remittance_date: remittanceDate,
+        remittance_reference: remittanceReference,
+      })
+      .eq('id', payrollRunId)
+    if (prErr) throw new Error(prErr.message)
+  }
+
+  const { error: bankErr } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'payroll',
+      match_id: payrollRunId,
+      notes: kind === 'remittance' ? 'payroll_match:remittance' : 'payroll_match:net_pay',
+    })
+    .eq('id', bankId)
+
+  if (bankErr) throw new Error(bankErr.message)
+}
+
+export async function assignBankDividend(
+  bankId: string,
+  dividendId: string,
+  paymentDate: string,
+  paidAmount: number
+) {
+  const { data: dividend, error: readErr } = await db
+    .from('dividends')
+    .select('status, payment_date, paid_amount, total_amount')
+    .eq('id', dividendId)
+    .single()
+
+  if (readErr || !dividend) throw new Error(readErr?.message ?? 'Dividende introuvable')
+  if (dividend.status === 'paid') throw new Error('Ce dividende est déjà payé.')
+
+  const prevNote = `dividend_prev:${JSON.stringify({
+    status: dividend.status as DividendStatus,
+    payment_date: dividend.payment_date,
+    paid_amount: Number(dividend.paid_amount ?? 0),
+  })}`
+
+  const newPaidTotal = round2(Number(dividend.paid_amount ?? 0) + paidAmount)
+  const status: DividendStatus = newPaidTotal >= Number(dividend.total_amount) ? 'paid' : 'declared'
+
+  const { error: divErr } = await db
+    .from('dividends')
+    .update({ status, payment_date: paymentDate, paid_amount: newPaidTotal })
+    .eq('id', dividendId)
+
+  if (divErr) throw new Error(divErr.message)
+
+  const { error: bankErr } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'dividend',
+      match_id: dividendId,
+      notes: prevNote,
+    })
+    .eq('id', bankId)
+
+  if (bankErr) throw new Error(bankErr.message)
+}
+
+export async function assignBankSalesTax(bankId: string, periodId: string, paymentDate: string) {
+  const { data: period, error: readErr } = await db
+    .from('sales_tax_periods')
+    .select('status, filed_date')
+    .eq('id', periodId)
+    .single()
+
+  if (readErr || !period) throw new Error(readErr?.message ?? 'Période TPS/TVQ introuvable')
+
+  const prevNote = `sales_tax_prev:${JSON.stringify({
+    status: period.status as TaxPeriodStatus,
+    filed_date: period.filed_date,
+  })}`
+
+  const { error: periodErr } = await db
+    .from('sales_tax_periods')
+    .update({ status: 'paid', filed_date: paymentDate })
+    .eq('id', periodId)
+
+  if (periodErr) throw new Error(periodErr.message)
+
+  const { error: bankErr } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'sales_tax',
+      match_id: periodId,
+      notes: prevNote,
+    })
+    .eq('id', bankId)
+
+  if (bankErr) throw new Error(bankErr.message)
+}
+
+export async function assignBankCorporateTax(
+  bankId: string,
+  recordId: string,
+  paidAmount: number,
+  paidDate: string
+) {
+  const { data: record, error: readErr } = await db
+    .from('corporate_tax_records')
+    .select('status, paid_amount, paid_date, amount')
+    .eq('id', recordId)
+    .single()
+
+  if (readErr || !record) throw new Error(readErr?.message ?? 'Impôt société introuvable')
+
+  const prevNote = `corp_tax_prev:${JSON.stringify({
+    status: record.status as CorpTaxStatus,
+    paid_amount: Number(record.paid_amount),
+    paid_date: record.paid_date,
+  })}`
+
+  const newPaidTotal = round2(Number(record.paid_amount) + paidAmount)
+  const status: CorpTaxStatus = newPaidTotal >= Number(record.amount) ? 'paid' : 'due'
+
+  const { error: recordErr } = await db
+    .from('corporate_tax_records')
+    .update({
+      paid_amount: newPaidTotal,
+      paid_date: paidDate,
+      status,
+    })
+    .eq('id', recordId)
+
+  if (recordErr) throw new Error(recordErr.message)
+
+  const { error: bankErr } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'corporate_tax',
+      match_id: recordId,
+      notes: prevNote,
+    })
+    .eq('id', bankId)
+
+  if (bankErr) throw new Error(bankErr.message)
+}
+
+export async function assignBankInterest(bankId: string) {
+  const { error } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'interest',
+      match_id: null,
+      notes: 'interest_income',
+    })
+    .eq('id', bankId)
+  if (error) throw new Error(error.message)
+}
+
+export async function assignBankOpening(bankId: string) {
+  const { error } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'opening',
+      match_id: null,
+      notes: 'opening_retained_earnings',
+    })
+    .eq('id', bankId)
+  if (error) throw new Error(error.message)
+}
+
+export async function assignBankCapital(bankId: string) {
+  const { error } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'capital',
+      match_id: null,
+      notes: 'capital_contribution',
+    })
+    .eq('id', bankId)
+  if (error) throw new Error(error.message)
+}
+
+function round2(n: number) {
+  return Math.round(n * 100) / 100
+}
+
+export async function ignoreBankTransaction(bankId: string) {
+  const { error } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: true,
+      match_source: 'manual',
+      match_id: null,
+      notes: null,
+    })
+    .eq('id', bankId)
+  if (error) throw new Error(error.message)
+}
+
+export async function unassignBankTransaction(
+  bankId: string,
+  matchSource: string | null,
+  matchId: string | null
+) {
+  await revertLinkedRecord(bankId, matchSource, matchId)
+
+  const { error } = await db
+    .from('bank_transactions')
+    .update({
+      reconciled: false,
+      match_source: null,
+      match_id: null,
+      notes: null,
+    })
+    .eq('id', bankId)
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteBankTransaction(bankId: string, matchSource: string | null, matchId: string | null) {
+  await revertLinkedRecord(bankId, matchSource, matchId)
+
+  const { error } = await db.from('bank_transactions').delete().eq('id', bankId)
+  if (error) throw new Error(error.message)
+}

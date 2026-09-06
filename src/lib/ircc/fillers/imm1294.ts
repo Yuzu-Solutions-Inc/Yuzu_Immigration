@@ -7,7 +7,7 @@
 
 import { deflate, inflate } from "pako";
 import { md5 } from "js-md5";
-import cityCodes from "../codes/city-codes.json";
+import cityCodes from "../codes/city-codes-data";
 import { resolveCountryLic, resolveLanguageLic } from "../codes/resolve-lic";
 import {
   ensureAfterToday,

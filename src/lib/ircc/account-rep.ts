@@ -1,3 +1,5 @@
+import { decryptProfileRow } from "@/lib/security/profile-pii";
+
 /** Account-level IMM 5476 representative fields (staff profile, not client data). */
 
 export type AccountRepSource = {
@@ -49,7 +51,7 @@ function filled(value: string | null | undefined) {
 export function isAccountNameComplete(
   profile: AccountRepSource | null | undefined,
 ): boolean {
-  return filled(profile?.full_name);
+  return filled(decryptProfileRow(profile ?? {}).full_name);
 }
 
 const REQUIRED_REP_COLUMNS: (keyof AccountRepSource)[] = [
@@ -105,8 +107,9 @@ export function isAccountRepComplete(
   profile: AccountRepSource | null | undefined,
 ): boolean {
   if (!profile) return false;
-  if (!filled(profile.rep_email) && !filled(profile.email)) return false;
-  return REQUIRED_REP_COLUMNS.every((key) => filled(profile[key]));
+  const opened = decryptProfileRow(profile);
+  if (!filled(opened.rep_email) && !filled(opened.email)) return false;
+  return REQUIRED_REP_COLUMNS.every((key) => filled(opened[key]));
 }
 
 /** Display name for a staff representative on client-facing surfaces. */
@@ -114,33 +117,35 @@ export function representativeDisplayName(
   profile: AccountRepSource | null | undefined,
 ): string {
   if (!profile) return "";
-  const repName = [profile.rep_given_name, profile.rep_family_name]
+  const opened = decryptProfileRow(profile);
+  const repName = [opened.rep_given_name, opened.rep_family_name]
     .map((part) => String(part ?? "").trim())
     .filter(Boolean)
     .join(" ");
   if (repName) return repName;
-  return String(profile.full_name ?? profile.email ?? "").trim();
+  return String(opened.full_name ?? opened.email ?? "").trim();
 }
 
 /** Map profiles.rep_* into questionnaire / PDF answer keys. */
 export function accountRepAnswersFromProfile(
   profile: AccountRepSource | null | undefined,
 ): Record<AccountRepAnswerKey, string> & { hasRepresentative: "Y" } {
+  const opened = profile ? decryptProfileRow(profile) : null;
   return {
     hasRepresentative: "Y",
-    repFamilyName: profile?.rep_family_name || "",
-    repGivenName: profile?.rep_given_name || "",
-    repOrganization: profile?.rep_organization || "",
-    repEmail: profile?.rep_email || profile?.email || "",
-    repPhone: profile?.rep_phone || "",
-    repPhoneCountryCode: profile?.rep_phone_country_code || "",
-    repMembershipId: profile?.rep_membership_id || "",
-    repStreetNum: profile?.rep_street_num || "",
-    repStreetName: profile?.rep_street_name || "",
-    repCity: profile?.rep_city || "",
-    repProvince: profile?.rep_province || "",
-    repCountry: profile?.rep_country || "Canada",
-    repPostalCode: profile?.rep_postal_code || "",
+    repFamilyName: opened?.rep_family_name || "",
+    repGivenName: opened?.rep_given_name || "",
+    repOrganization: opened?.rep_organization || "",
+    repEmail: opened?.rep_email || opened?.email || "",
+    repPhone: opened?.rep_phone || "",
+    repPhoneCountryCode: opened?.rep_phone_country_code || "",
+    repMembershipId: opened?.rep_membership_id || "",
+    repStreetNum: opened?.rep_street_num || "",
+    repStreetName: opened?.rep_street_name || "",
+    repCity: opened?.rep_city || "",
+    repProvince: opened?.rep_province || "",
+    repCountry: opened?.rep_country || "Canada",
+    repPostalCode: opened?.rep_postal_code || "",
   };
 }
 

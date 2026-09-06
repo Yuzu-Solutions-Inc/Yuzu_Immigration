@@ -6,11 +6,13 @@ import {
   DesktopSidebar,
   MobileSidebarTrigger,
 } from "@/components/layout/sidebar-nav";
+import { ProductTourGate } from "@/components/onboarding/product-tour-gate";
 import { type OrgSwitcherOption } from "@/components/layout/org-switcher";
 import { TrialLockBanner } from "@/components/layout/trial-lock-banner";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { OrgAccessLevel } from "@/lib/auth/rbac";
+import type { ModuleId } from "@/lib/modules/catalog";
 import { cn } from "@/lib/utils";
 
 export async function DashboardShell({
@@ -19,6 +21,7 @@ export async function DashboardShell({
   canCreate = true,
   writable = true,
   role,
+  enabledModules = [],
   children,
 }: {
   locale: string;
@@ -27,6 +30,7 @@ export async function DashboardShell({
   canCreate?: boolean;
   writable?: boolean;
   role?: OrgAccessLevel;
+  enabledModules?: readonly ModuleId[];
   children: React.ReactNode;
   actions?: React.ReactNode;
 }) {
@@ -41,6 +45,7 @@ export async function DashboardShell({
       newProjectLabel={tHome("newProject")}
       newPersonLabel={tHome("newPerson")}
       canCreate={canCreate}
+      enabledModules={enabledModules}
     />
   );
 
@@ -52,6 +57,7 @@ export async function DashboardShell({
         newProjectLabel={tHome("newProject")}
         newPersonLabel={tHome("newPerson")}
         canCreate={canCreate}
+        enabledModules={enabledModules}
         defaultCollapsed={sidebarCollapsed}
       />
 
@@ -63,6 +69,7 @@ export async function DashboardShell({
           {children}
         </main>
       </div>
+      <ProductTourGate />
     </div>
   );
 }
@@ -71,6 +78,7 @@ export function NewProjectButton({ label }: { label: string }) {
   return (
     <Link
       href="/projects/new"
+      data-tour="new-project"
       className={cn(
         buttonVariants({ size: "sm" }),
         "bg-action text-action-foreground hover:bg-action/90",

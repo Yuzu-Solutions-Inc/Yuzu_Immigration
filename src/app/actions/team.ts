@@ -18,8 +18,10 @@ import {
 import { getPrimaryMembership, getSessionUser } from "@/lib/auth/session";
 import { trialExpiredError } from "@/lib/billing/trial";
 import { sendOrgInviteEmail } from "@/lib/email/org-invite";
-import { dictionaries } from "@/lib/i18n/dictionaries";
+import { orgRoleLabels } from "@/lib/i18n/dictionaries";
 import { recordAuditEvent } from "@/lib/security/audit";
+import { decryptOrgRow, encryptOrgRow } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,7 +31,28 @@ export type TeamActionState = {
   inviteUrl?: string;
 };
 
-const accessSchema = z.enum(["admin", "case_manager", "unlicensed"]);
+const accessSchema = z.enum(["admin", "member", "unlicensed"]);
+
+async function pendingInviteIdsForEmail(orgId: string, email: string) {
+  const admin = createServiceClient();
+  const key = await getOrgDataKey(orgId);
+  const { data } = await admin
+    .from("organization_invitations")
+    .select("id, email")
+    .eq("organization_id", orgId)
+    .is("accepted_at", null)
+    .is("revoked_at", null);
+  return (data ?? [])
+    .filter((row) => {
+      const opened = decryptOrgRow(
+        "organization_invitations",
+        row as { email: string },
+        key,
+      );
+      return normalizeInviteEmail(opened.email ?? "") === email;
+    })
+    .map((row) => row.id as string);
+}
 
 export async function inviteOrgMemberAction(
   _prev: TeamActionState,
@@ -84,25 +107,29 @@ export async function inviteOrgMemberAction(
     }
   }
 
-  await admin
-    .from("organization_invitations")
-    .update({ revoked_at: new Date().toISOString() })
-    .eq("organization_id", orgId)
-    .ilike("email", email)
-    .is("accepted_at", null)
-    .is("revoked_at", null);
+  const previousIds = await pendingInviteIdsForEmail(orgId, email);
+  if (previousIds.length > 0) {
+    await admin
+      .from("organization_invitations")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("organization_id", orgId)
+      .is("accepted_at", null)
+      .is("revoked_at", null)
+      .in("id", previousIds);
+  }
 
   const token = newInviteToken();
   const expiresAt = new Date(
     Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
 
+  const orgKey = await getOrgDataKey(orgId);
   const { error: insertError } = await admin
     .from("organization_invitations")
     .insert({
       organization_id: orgId,
-      email,
-      role: parsed.data.access === "admin" ? "admin" : "case_manager",
+      ...encryptOrgRow("organization_invitations", { email }, orgKey),
+      role: parsed.data.access === "admin" ? "admin" : "member",
       is_licensed: parsed.data.access !== "unlicensed",
       token_hash: hashInviteToken(token),
       invited_by: user?.id ?? null,
@@ -121,13 +148,13 @@ export async function inviteOrgMemberAction(
   const locale = parsed.data.locale;
   const invitePath = `/${locale}/invite/${token}`;
   const inviteUrl = `${base}${invitePath}`;
-  const roleLabels = dictionaries[locale].orgRoles;
+  const roleLabels = orgRoleLabels(locale);
   const roleLabel =
     parsed.data.access === "unlicensed"
       ? roleLabels.unlicensed
       : parsed.data.access === "admin"
         ? roleLabels.admin
-        : roleLabels.case_manager;
+        : roleLabels.member;
 
   const sent = await sendOrgInviteEmail({
     locale,

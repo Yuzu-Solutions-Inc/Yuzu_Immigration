@@ -1,12 +1,12 @@
-export const ORG_ROLES = ["owner", "admin", "case_manager"] as const;
+export const ORG_ROLES = ["owner", "admin", "member"] as const;
 
 export type OrgRole = (typeof ORG_ROLES)[number];
 export type OrgAccessLevel = OrgRole | "unlicensed";
 
-export const DEFAULT_ORG_ROLE: OrgRole = "case_manager";
+export const DEFAULT_ORG_ROLE: OrgRole = "member";
 
 /** Roles that can be invited or assigned. Owner is transferred, never invited. */
-export const ASSIGNABLE_ORG_ROLES = ["admin", "case_manager"] as const;
+export const ASSIGNABLE_ORG_ROLES = ["admin", "member"] as const;
 
 export type AssignableOrgRole = (typeof ASSIGNABLE_ORG_ROLES)[number];
 
@@ -25,6 +25,12 @@ export function isAssignableOrgRole(
   );
 }
 
+/** Map legacy Immigration `case_manager` rows to Member. */
+export function mapAssignedRole(value: unknown): OrgRole {
+  if (value === "case_manager" || value === "member") return "member";
+  return isOrgRole(value) ? value : DEFAULT_ORG_ROLE;
+}
+
 export function isOwner(role: OrgAccessLevel | null | undefined): boolean {
   return role === "owner";
 }
@@ -34,11 +40,11 @@ export function isAdmin(role: OrgAccessLevel | null | undefined): boolean {
   return role === "owner" || role === "admin";
 }
 
-/** Owner, admin, and case manager: full org caseload, can create records. */
+/** Owner, admin, and member: full org records, can create. */
 export function canCreateRecords(
   role: OrgAccessLevel | null | undefined,
 ): boolean {
-  return role === "owner" || role === "admin" || role === "case_manager";
+  return role === "owner" || role === "admin" || role === "member";
 }
 
 /** Org settings, invites, retention destroy, audit log. */
@@ -61,7 +67,7 @@ export function canDeleteRecord(input: {
   actorUserId: string | null | undefined;
 }): boolean {
   if (isAdmin(input.role)) return true;
-  if (input.role === "case_manager" && input.createdBy && input.actorUserId) {
+  if (input.role === "member" && input.createdBy && input.actorUserId) {
     return input.createdBy === input.actorUserId;
   }
   return false;

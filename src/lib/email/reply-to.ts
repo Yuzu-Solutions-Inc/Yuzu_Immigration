@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServiceClient } from "@/lib/supabase/admin";
+import { decryptProfileRow } from "@/lib/security/profile-pii";
 
 export type StaffReplyTo = {
   userId: string;
@@ -47,13 +48,14 @@ export async function staffReplyTo(
     return null;
   }
   if (!data) return null;
-  const email = ((data.rep_email as string | null) || (data.email as string | null) || "")
+  const opened = decryptProfileRow(data);
+  const email = ((opened.rep_email as string | null) || (opened.email as string | null) || "")
     .trim()
     .toLowerCase();
   if (!looksLikeEmail(email)) return null;
   return {
     userId: data.id as string,
     email,
-    name: displayName(data),
+    name: displayName(opened),
   };
 }

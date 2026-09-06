@@ -448,7 +448,7 @@ export function BookingsList({
                     </p>
                     {booking.personId ? (
                       <Link
-                        href={`/clients/${booking.personId}`}
+                        href={`/partners/${booking.personId}`}
                         className="block truncate text-sm font-medium text-action hover:underline"
                       >
                         {booking.guestName}
@@ -835,13 +835,13 @@ export function BookingsList({
                   {booking.personId ? (
                     <div className="min-w-0 space-y-0.5">
                       <Link
-                        href={`/clients/${booking.personId}`}
+                        href={`/partners/${booking.personId}`}
                         className="block truncate text-sm font-medium text-action hover:underline"
                       >
                         {booking.guestName}
                       </Link>
                       <Link
-                        href={`/clients/${booking.personId}`}
+                        href={`/partners/${booking.personId}`}
                         className="block truncate text-xs text-muted-foreground hover:text-action hover:underline"
                       >
                         {booking.guestEmail}

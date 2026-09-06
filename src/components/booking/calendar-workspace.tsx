@@ -438,7 +438,7 @@ export function CalendarWorkspace({
         <div className="flex flex-wrap items-center gap-2">
           <CopyBookingLinkButton locale={locale} />
           <Link
-            href="/settings/calendar"
+            href="/settings/account"
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <Settings2 className="size-4" />
@@ -586,7 +586,7 @@ export function CalendarEmptyHint({
           </Link>
         ) : (
           <Link
-            href="/settings/calendar"
+            href="/settings/account"
             className="text-sm font-medium text-action hover:underline"
           >
             {t("settings")}

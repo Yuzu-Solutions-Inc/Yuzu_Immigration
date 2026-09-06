@@ -11,10 +11,20 @@ import {
   isTrialExpiredDbError,
   trialExpiredError,
 } from "@/lib/billing/trial";
+import {
+  revalidateContactPaths,
+  partnerDetailPath,
+} from "@/lib/crm/contact-paths";
+import {
+  ensurePersonForPartner,
+  partnerLegalName,
+  syncPartnerFromPerson,
+} from "@/lib/crm/partner-person";
 import { personStatusAllowsExpiry } from "@/lib/crm/person-status";
 import { erasePersonPersonalData } from "@/lib/privacy/erase";
 import { recordAuditEvent } from "@/lib/security/audit";
 import { encryptNoteBody, encryptPersonWrite } from "@/lib/security/client-pii";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
 import { personLookupWrite } from "@/lib/security/email-lookup";
 import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
@@ -95,23 +105,58 @@ export async function createPersonAction(
   if (locked) return { error: locked };
   const orgId = membership.organization.id;
   const user = await getSessionUser();
+  if (!user) {
+    redirect(`/${data.locale}/login`);
+  }
 
   const supabase = await createClient();
   const statusExpiresAt =
     personStatusAllowsExpiry(data.immigrationStatus) && data.statusExpiresAt
       ? data.statusExpiresAt
       : null;
-
+  const legalName = partnerLegalName(data.firstName, data.lastName);
+  const email = data.email || null;
   const key = await getOrgDataKey(orgId);
+
+  const { data: partner, error: partnerError } = await supabase
+    .from("partners")
+    .insert({
+      organization_id: orgId,
+      user_id: user.id,
+      ...encryptOrgRow(
+        "partners",
+        {
+          legal_name: legalName,
+          contact_name: legalName,
+          email,
+          phone: data.phone || null,
+        },
+        key,
+      ),
+      kind: "customer",
+      immigration_status: data.immigrationStatus,
+      status_expires_at: statusExpiresAt,
+      preferred_locale: data.preferredLocale,
+    })
+    .select("id")
+    .single();
+
+  if (partnerError || !partner) {
+    console.error("create partner for person:", partnerError?.message);
+    if (isTrialExpiredDbError(partnerError)) return { error: "trial_expired" };
+    return { error: "create_failed" };
+  }
+
   const { data: created, error: createError } = await supabase
     .from("people")
     .insert({
       organization_id: orgId,
+      partner_id: partner.id,
       ...encryptPersonWrite(
         {
           first_name: data.firstName,
           last_name: data.lastName,
-          email: data.email || null,
+          email,
           phone: data.phone || null,
         },
         key,
@@ -121,20 +166,25 @@ export async function createPersonAction(
         {
           first_name: data.firstName,
           last_name: data.lastName,
-          email: data.email || null,
+          email,
         },
         key,
       ),
       preferred_locale: data.preferredLocale,
       immigration_status: data.immigrationStatus,
       status_expires_at: statusExpiresAt,
-      created_by: user?.id ?? null,
+      created_by: user.id,
     })
     .select("id")
     .single();
 
   if (createError || !created) {
     console.error("create person:", createError?.message);
+    await supabase
+      .from("partners")
+      .delete()
+      .eq("id", partner.id)
+      .eq("organization_id", orgId);
     if (isTrialExpiredDbError(createError)) return { error: "trial_expired" };
     return { error: "create_failed" };
   }
@@ -149,11 +199,8 @@ export async function createPersonAction(
     });
   });
 
-  revalidatePath(`/${data.locale}/clients`);
-  revalidatePath(`/${data.locale}/clients/${created.id}`);
-  revalidatePath(`/${data.locale}/home`);
-  revalidatePath(`/${data.locale}/projects`);
-  redirect(`/${data.locale}/clients/${created.id}`);
+  revalidateContactPaths(data.locale, partner.id);
+  redirect(`/${data.locale}${partnerDetailPath(partner.id)}`);
 }
 
 export async function updatePersonAction(
@@ -184,9 +231,14 @@ export async function updatePersonAction(
       ? data.statusExpiresAt
       : null;
 
+  const user = await getSessionUser();
+  if (!user) {
+    redirect(`/${data.locale}/login`);
+  }
+
   const { data: existing, error: existingError } = await supabase
     .from("people")
-    .select("id")
+    .select("id, partner_id")
     .eq("organization_id", orgId)
     .eq("id", data.personId)
     .maybeSingle();
@@ -241,11 +293,15 @@ export async function updatePersonAction(
     });
   });
 
-  revalidatePath(`/${data.locale}/clients/${data.personId}`);
-  revalidatePath(`/${data.locale}/clients`);
-  revalidatePath(`/${data.locale}/home`);
-  revalidatePath(`/${data.locale}/projects`);
-  redirect(`/${data.locale}/clients/${data.personId}`);
+  const partnerId = await syncPartnerFromPerson(
+    { supabase, orgId, userId: user.id },
+    data.personId,
+  );
+
+  revalidateContactPaths(data.locale, partnerId ?? existing.partner_id);
+  redirect(
+    `/${data.locale}${partnerDetailPath(partnerId ?? existing.partner_id ?? data.personId)}`,
+  );
 }
 
 const deletePersonSchema = z.object({
@@ -281,7 +337,7 @@ export async function deletePersonAction(
   const supabase = await createClient();
   const { data: existing, error: existingError } = await supabase
     .from("people")
-    .select("id, created_by")
+    .select("id, created_by, partner_id")
     .eq("organization_id", orgId)
     .eq("id", data.personId)
     .maybeSingle();
@@ -324,12 +380,9 @@ export async function deletePersonAction(
     return { error: "delete_failed" };
   }
 
-  revalidatePath(`/${data.locale}/clients`);
-  revalidatePath(`/${data.locale}/clients/${data.personId}`);
-  revalidatePath(`/${data.locale}/home`);
-  revalidatePath(`/${data.locale}/projects`);
+  revalidateContactPaths(data.locale, existing.partner_id as string | null);
   revalidatePath(`/${data.locale}/calendar`);
-  redirect(`/${data.locale}/clients`);
+  redirect(`/${data.locale}/partners`);
 }
 
 function encryptNoteBodyOrEmpty(body: string, key: Buffer) {
@@ -433,7 +486,7 @@ export async function addPersonNoteAction(
         console.error("add person note (existing meeting):", updateError.message);
         return { error: "save_failed" };
       }
-      revalidatePath(`/${data.locale}/clients/${data.personId}`);
+      revalidateContactPaths(data.locale);
       return { message: "saved" };
     }
 
@@ -447,7 +500,7 @@ export async function addPersonNoteAction(
     return { error: "save_failed" };
   }
 
-  revalidatePath(`/${data.locale}/clients/${data.personId}`);
+  revalidateContactPaths(data.locale);
   return { message: "saved" };
 }
 
@@ -512,6 +565,44 @@ export async function updatePersonNoteAction(
     return { error: "save_failed" };
   }
 
-  revalidatePath(`/${data.locale}/clients/${data.personId}`);
+  revalidateContactPaths(data.locale);
   return { message: "updated" };
 }
+
+const enableImmigrationProfileSchema = z.object({
+  locale: z.enum(["en", "fr", "es"]).default("en"),
+  partnerId: z.string().uuid(),
+});
+
+export async function enableImmigrationProfileAction(formData: FormData) {
+  const parsed = enableImmigrationProfileSchema.safeParse({
+    locale: formData.get("locale") || "en",
+    partnerId: String(formData.get("partnerId") || ""),
+  });
+  if (!parsed.success) {
+    redirect("/en/partners");
+  }
+
+  const { locale, partnerId } = parsed.data;
+  const membership = await getPrimaryMembership();
+  const user = await getSessionUser();
+  if (!membership || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const supabase = await createClient();
+  const personId = await ensurePersonForPartner(
+    {
+      supabase,
+      orgId: membership.organization.id,
+      userId: user.id,
+    },
+    partnerId,
+  );
+  if (!personId) {
+    redirect(`/${locale}${partnerDetailPath(partnerId)}`);
+  }
+  revalidateContactPaths(locale, partnerId);
+  redirect(`/${locale}${partnerDetailPath(partnerId)}`);
+}
+

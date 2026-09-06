@@ -26,6 +26,9 @@ import {
   formAcceptedFirmDpa,
 } from "@/lib/legal/dpa";
 import { recordAuditEvent } from "@/lib/security/audit";
+import { encryptProfileWrite } from "@/lib/security/profile-pii";
+import { encryptOrgRow } from "@/lib/security/encrypted-fields";
+import { getOrgDataKey } from "@/lib/security/org-data-key";
 import { createClient } from "@/lib/supabase/server";
 
 function normalizeRepCountry(value: string): string {
@@ -126,7 +129,7 @@ export async function updateAccountSettingsAction(
   const { error } = await supabase
     .from("profiles")
     .update({
-      full_name: parsed.data.fullName,
+      ...encryptProfileWrite({ full_name: parsed.data.fullName }),
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id);
@@ -197,19 +200,21 @@ export async function updateAccountRepAction(
   const { error } = await supabase
     .from("profiles")
     .update({
-      rep_family_name: parsed.data.repFamilyName || null,
-      rep_given_name: parsed.data.repGivenName || null,
-      rep_organization: parsed.data.repOrganization || null,
-      rep_email: parsed.data.repEmail || null,
-      rep_phone: parsed.data.repPhone || null,
-      rep_phone_country_code: parsed.data.repPhoneCountryCode || null,
-      rep_membership_id: parsed.data.repMembershipId || null,
-      rep_street_num: parsed.data.repStreetNum || null,
-      rep_street_name: parsed.data.repStreetName || null,
-      rep_city: parsed.data.repCity || null,
-      rep_province: parsed.data.repProvince || null,
-      rep_country: parsed.data.repCountry || null,
-      rep_postal_code: parsed.data.repPostalCode || null,
+      ...encryptProfileWrite({
+        rep_family_name: parsed.data.repFamilyName || null,
+        rep_given_name: parsed.data.repGivenName || null,
+        rep_organization: parsed.data.repOrganization || null,
+        rep_email: parsed.data.repEmail || null,
+        rep_phone: parsed.data.repPhone || null,
+        rep_phone_country_code: parsed.data.repPhoneCountryCode || null,
+        rep_membership_id: parsed.data.repMembershipId || null,
+        rep_street_num: parsed.data.repStreetNum || null,
+        rep_street_name: parsed.data.repStreetName || null,
+        rep_city: parsed.data.repCity || null,
+        rep_province: parsed.data.repProvince || null,
+        rep_country: parsed.data.repCountry || null,
+        rep_postal_code: parsed.data.repPostalCode || null,
+      }),
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id);
@@ -284,13 +289,18 @@ export async function updateOrganizationSettingsAction(
   if (locked) return { error: locked };
 
   const supabase = await createClient();
+  const orgKey = await getOrgDataKey(orgId);
   const { error } = await supabase
     .from("organizations")
     .update({
       name: parsed.data.name,
       slug: parsed.data.slug,
       default_locale: parsed.data.defaultLocale,
-      privacy_contact_email: parsed.data.privacyContactEmail,
+      ...encryptOrgRow(
+        "organizations",
+        { privacy_contact_email: parsed.data.privacyContactEmail },
+        orgKey,
+      ),
       portal_google_login_enabled: parsed.data.portalGoogleLoginEnabled,
       updated_at: new Date().toISOString(),
     })

@@ -24,6 +24,12 @@ const CSP_REPORT_ONLY = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["pdfjs-dist"],
+  typescript: {
+    tsconfigPath: "tsconfig.build.json",
+    // Vercel Hobby is 8GB; `next build` tsc OOMs after finance. Types still run in
+    // GitHub Actions and `npm run typecheck` before push.
+    ignoreBuildErrors: Boolean(process.env.VERCEL),
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "6mb",
@@ -36,13 +42,38 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:locale/people",
-        destination: "/:locale/clients",
+        destination: "/:locale/partners",
         permanent: true,
       },
       {
         source: "/:locale/people/:path*",
-        destination: "/:locale/clients/:path*",
+        destination: "/:locale/partners/:path*",
         permanent: true,
+      },
+      {
+        source: "/:locale/clients",
+        destination: "/:locale/partners",
+        permanent: false,
+      },
+      {
+        source: "/:locale/clients/:path*",
+        destination: "/:locale/partners/:path*",
+        permanent: false,
+      },
+      {
+        source: "/:locale/billing/projects",
+        destination: "/:locale/engagements",
+        permanent: false,
+      },
+      {
+        source: "/:locale/files",
+        destination: "/:locale/projects",
+        permanent: false,
+      },
+      {
+        source: "/:locale/files/:path*",
+        destination: "/:locale/projects/:path*",
+        permanent: false,
       },
       {
         source: "/:locale/settings/team",

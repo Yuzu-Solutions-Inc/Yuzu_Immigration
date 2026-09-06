@@ -7,7 +7,7 @@ alwaysApply: true
 
 - **Framework**: Next.js App Router (src/), TypeScript strict
 - **UI**: Tailwind CSS v4 + shadcn/ui (`src/components/ui`)
-- **Data**: Supabase project `cezwtrsleuubrfmbhosn` (Auth, Postgres, Storage) + Drizzle ORM
+- **Data**: Supabase (Auth, Postgres, Storage) + Drizzle ORM. Canonical project is MyConsultant (`cezwtrsleuubrfmbhosn`, ca-central-1): Vercel Production (`dossierly.ca`), local `.env.local`, and Vercel Preview branches. Preview databases are schema clones of MyConsultant via the Supabase ↔ Vercel integration (empty data). The US Yuzu Solutions Inc. project (`gqpafbmlherrwuigsjxy`) is an archive only — do not point Preview or local at it.
 - **Client data**: TanStack Query for server-state fetching/mutations
 - **Forms**: React Hook Form + Zod
 - **i18n**: next-intl with `en`, `fr`, and `es` under `src/app/[locale]`

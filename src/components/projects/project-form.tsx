@@ -54,13 +54,7 @@ import {
   personStatusAllowsExpiry,
 } from "@/lib/crm/person-status";
 import { PROJECT_STATUSES, todayDateInputValue } from "@/lib/crm/statuses";
-
-type ExistingPerson = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-};
+import type { LinkableProjectClient } from "@/lib/crm/queries";
 
 type OrgMemberOption = {
   user_id: string;
@@ -72,6 +66,7 @@ export type ProjectFormSlot = {
   role: ParticipantRole;
   mode: "new" | "existing";
   personId: string;
+  partnerId: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -117,6 +112,7 @@ function emptySlot(
     role,
     mode: kit?.mode ?? "new",
     personId: "",
+    partnerId: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -130,7 +126,7 @@ function emptySlot(
 
 export function ProjectForm({
   locale,
-  people,
+  clients,
   members,
   currentUserId,
   presetPersonId,
@@ -140,7 +136,7 @@ export function ProjectForm({
   contractTemplates = [],
 }: {
   locale: string;
-  people: ExistingPerson[];
+  clients: LinkableProjectClient[];
   members: OrgMemberOption[];
   currentUserId?: string;
   presetPersonId?: string;
@@ -237,15 +233,17 @@ export function ProjectForm({
           return { ...existing, role };
         }
         if (index === 0 && presetPersonId && !isEdit) {
-          const person = people.find((p) => p.id === presetPersonId);
-          if (person) {
+          const client = clients.find((p) => p.personId === presetPersonId);
+          if (client) {
+            const [firstName, ...rest] = client.label.split(" ");
             return {
               ...emptySlot(role, { applicationLocation, mode: defaultPersonMode }),
               mode: "existing" as const,
-              personId: person.id,
-              firstName: person.first_name,
-              lastName: person.last_name,
-              email: person.email ?? "",
+              personId: client.personId ?? "",
+              partnerId: client.partnerId ?? "",
+              firstName: firstName ?? client.label,
+              lastName: rest.join(" "),
+              email: client.email ?? "",
             };
           }
         }
@@ -254,7 +252,7 @@ export function ProjectForm({
     );
   }, [
     composition,
-    people,
+    clients,
     presetPersonId,
     isEdit,
     initial?.slots?.length,
@@ -313,8 +311,13 @@ export function ProjectForm({
               needsCustodian: slot.needsCustodian ? ("Y" as const) : ("N" as const),
             }
           : {};
-        return slot.mode === "existing" && slot.personId
-          ? { personId: slot.personId, role: slot.role, ...kit }
+        return slot.mode === "existing" && (slot.personId || slot.partnerId)
+          ? {
+              personId: slot.personId || undefined,
+              partnerId: slot.partnerId || undefined,
+              role: slot.role,
+              ...kit,
+            }
           : {
               firstName: slot.firstName,
               lastName: slot.lastName,
@@ -334,6 +337,7 @@ export function ProjectForm({
     ? {
         invalid: t("errors.invalid"),
         person_missing: t("errors.personMissing"),
+        partner_not_linkable: t("errors.partnerNotLinkable"),
         principal_required: t("errors.principalRequired"),
         create_failed: t("errors.createFailed"),
         update_failed: t("errors.updateFailed"),
@@ -734,6 +738,7 @@ export function ProjectForm({
                         updateSlot(index, {
                           mode: "new",
                           personId: "",
+                          partnerId: "",
                         })
                       }
                     >
@@ -758,25 +763,36 @@ export function ProjectForm({
 
             {slot.mode === "existing" ? (
               <NativeSelect
-                value={slot.personId}
+                value={
+                  slot.personId
+                    ? `person:${slot.personId}`
+                    : slot.partnerId
+                      ? `partner:${slot.partnerId}`
+                      : ""
+                }
                 onChange={(e) => {
-                  const person = people.find((p) => p.id === e.target.value);
+                  const client = clients.find((p) => p.key === e.target.value);
+                  const [firstName, ...rest] = (client?.label ?? "").split(" ");
                   updateSlot(index, {
-                    personId: e.target.value,
-                    firstName: person?.first_name ?? "",
-                    lastName: person?.last_name ?? "",
-                    email: person?.email ?? "",
+                    personId: client?.personId ?? "",
+                    partnerId: client?.partnerId ?? "",
+                    firstName: firstName ?? "",
+                    lastName: rest.join(" "),
+                    email: client?.email ?? "",
                   });
                 }}
                 required
               >
-                <option value="" disabled={Boolean(slot.personId)}>
+                <option
+                  value=""
+                  disabled={Boolean(slot.personId || slot.partnerId)}
+                >
                   {t("selectPerson")}
                 </option>
-                {people.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.first_name} {person.last_name}
-                    {person.email ? ` · ${person.email}` : ""}
+                {clients.map((client) => (
+                  <option key={client.key} value={client.key}>
+                    {client.label}
+                    {client.email ? ` · ${client.email}` : ""}
                   </option>
                 ))}
               </NativeSelect>
@@ -961,7 +977,7 @@ export function ProjectForm({
 /** @deprecated Prefer ProjectForm */
 export function CreateProjectForm(props: {
   locale: string;
-  people: ExistingPerson[];
+  clients: LinkableProjectClient[];
   members: OrgMemberOption[];
   currentUserId?: string;
   presetPersonId?: string;

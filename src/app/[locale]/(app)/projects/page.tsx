@@ -12,6 +12,7 @@ import { ProjectsCatalogButtons } from "@/components/projects/projects-catalog-b
 import { ProjectsTable } from "@/components/projects/projects-table";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { requireImmigrationWorkspace } from "@/lib/modules/require-workspace";
 import { getPrimaryMembership } from "@/lib/auth/session";
 import { canManageBookingCatalog } from "@/lib/auth/rbac";
 import { canCreateInWorkspace } from "@/lib/billing/trial";
@@ -31,6 +32,7 @@ export default async function ProjectsPage({
   const { locale } = await params;
   const { contracts } = await searchParams;
   setRequestLocale(locale);
+  await requireImmigrationWorkspace(locale);
 
   const t = await getTranslations("projects");
   const th = await getTranslations("appHome");

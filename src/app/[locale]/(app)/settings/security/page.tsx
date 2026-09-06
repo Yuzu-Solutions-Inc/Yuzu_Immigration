@@ -72,9 +72,9 @@ export default async function SecuritySettingsPage({
     <SurfaceCard className="space-y-4 sm:p-6">
       <div className="space-y-1">
         <h2 className="font-heading text-lg font-semibold text-brand">
-          {t("security")}
+          {t("compliance")}
         </h2>
-        <p className="text-sm text-muted-foreground">{t("securityHelp")}</p>
+        <p className="text-sm text-muted-foreground">{t("complianceHelp")}</p>
         <LegalLinks className="pt-1" />
       </div>
 

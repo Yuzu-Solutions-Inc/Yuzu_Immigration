@@ -119,7 +119,8 @@ export async function disablePersonPortalAction(
     resourceId: parsed.data,
   }).catch((err) => console.error("portal staff audit:", err));
 
-  revalidatePath(`/${locale}/clients/${parsed.data}`);
+  revalidatePath(`/${locale}/partners`);
+  revalidatePath(`/${locale}/partners/${parsed.data}`);
   return { message: "disabled" };
 }
 
@@ -153,7 +154,8 @@ export async function resendPersonPortalInviteAction(
     resourceId: parsed.data,
   }).catch((err) => console.error("portal staff audit:", err));
 
-  revalidatePath(`/${locale}/clients/${parsed.data}`);
+  revalidatePath(`/${locale}/partners`);
+  revalidatePath(`/${locale}/partners/${parsed.data}`);
   return {
     message: "invited",
     portalUrl: invited.portalUrl,
@@ -200,7 +202,8 @@ export async function resetPersonPortalAction(
   });
   const base = await getAppBaseUrl();
   const url = portalBaseUrl(base, locale);
-  revalidatePath(`/${locale}/clients/${parsed.data}`);
+  revalidatePath(`/${locale}/partners`);
+  revalidatePath(`/${locale}/partners/${parsed.data}`);
 
   if (invited.error && invited.error !== "no_email") {
     return {

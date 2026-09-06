@@ -34,13 +34,34 @@ export async function updateSession(request: NextRequest) {
 
   if (pathname === "/people" || pathname.startsWith("/people/")) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = `/${locale}${pathname.replace(/^\/people/, "/clients")}`;
+    redirectUrl.pathname = `/${locale}${pathname.replace(/^\/people/, "/partners")}`;
     return NextResponse.redirect(redirectUrl);
   }
 
   const isAuthRoute = pathname === "/login";
   const isPasswordResetRoute = pathname === "/reset-password";
+  const isFinanceRoute = [
+    "/partners",
+    "/billing",
+    "/bank",
+    "/compensation",
+    "/other",
+    "/dashboard",
+    "/employee-expenses",
+    "/backup",
+    "/sales-tax",
+    "/financial-reports",
+    "/corporate-tax",
+    "/compliance",
+    "/tax-exports",
+    "/adjustments",
+    "/period-close",
+    "/ledger",
+    "/engagements",
+    "/files",
+  ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   const isProtectedRoute =
+    isFinanceRoute ||
     pathname === "/home" ||
     pathname.startsWith("/home/") ||
     pathname === "/onboarding" ||
@@ -49,6 +70,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/legal/accept/") ||
     pathname === "/projects" ||
     pathname.startsWith("/projects/") ||
+    pathname === "/partners" ||
+    pathname.startsWith("/partners/") ||
     pathname === "/clients" ||
     pathname.startsWith("/clients/") ||
     pathname === "/calendar" ||

@@ -66,6 +66,7 @@ async function requireMember() {
 
 function revalidateBooking(locale: string) {
   revalidatePath(`/${locale}/calendar`);
+  revalidatePath(`/${locale}/settings/account`);
   revalidatePath(`/${locale}/settings/calendar`);
   revalidatePath(`/${locale}/home`);
   revalidatePath(`/${locale}/welcome`);

@@ -1,0 +1,464 @@
+'use client'
+
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { useFinanceOutlet } from '@/components/finance/finance-outlet'
+import type { Project, ProjectWeekPlan } from '@/lib/finance/types'
+import { addDays, formatCad, numberFieldValue, parseNumberField, relationOne, todayIso } from '@/lib/finance/format'
+import { projectAmountLabel } from '@/lib/finance/invoice'
+import type { TimeEntrySheetSource } from '@/lib/finance/timeEntries'
+import {
+  cellRevenue,
+  earliestWeekInMap,
+  formatWeekLabel,
+  hoursKey,
+  pipelineVariance,
+  plansToHoursMap,
+  projectRowTotals,
+  startOfWeekMonday,
+  timeEntriesToBillableHoursMap,
+  totalHoursByProject,
+  weekColumnTotals,
+  weeksBetween,
+  weeksForNextMonths,
+  type PipelineProject,
+} from '@/lib/finance/pipeline'
+import { Badge } from '@/components/finance/Badge'
+import { EmptyState } from '@/components/finance/EmptyState'
+import { WorkflowFooter } from '@/components/finance/WorkflowFooter'
+import { db } from '@/lib/finance/db'
+import { useTranslations } from 'next-intl'
+
+type BillingOutletContext = { refreshMetrics?: () => void }
+
+const HORIZON_MONTHS = 6
+const PIPELINE_STATUSES = new Set(['active', 'on_hold'])
+/** Width of the sticky project column, so auto-scroll never hides the current week behind it. */
+const PROJECT_COL_WIDTH = 220
+
+function formatSigned(value: number, suffix = '') {
+  const formatted = new Intl.NumberFormat('fr-CA', { maximumFractionDigits: 2 }).format(Math.abs(value))
+  return `${value > 0 ? '+' : value < 0 ? '−' : ''}${formatted}${suffix}`
+}
+
+function sumProjectHours(map: Map<string, number>, projectId: string, weeks: string[]) {
+  return Math.round(weeks.reduce((sum, week) => sum + (map.get(hoursKey(projectId, week)) ?? 0), 0) * 100) / 100
+}
+
+function VarianceCell({
+  variance,
+  asHeader = false,
+}: {
+  variance?: { hours: number; percent: number | null }
+  asHeader?: boolean
+}) {
+  const t = useTranslations('financeApp')
+  if (asHeader) {
+    return (
+      <th
+        title={t('pipeline.varianceTitle')}
+        className="px-2 py-2.5 text-center font-medium min-w-[96px] bg-amber-50 text-amber-900 border-x border-amber-200/80"
+      >
+        <div className="text-xs font-semibold">{t('pipeline.variance')}</div>
+        <div className="text-[10px] font-normal whitespace-nowrap opacity-80">{t('pipeline.varianceCumul')}</div>
+      </th>
+    )
+  }
+  const v = variance ?? { hours: 0, percent: null }
+  return (
+    <td className="px-1.5 py-1.5 text-center align-top bg-amber-50/60 border-x border-amber-200/60">
+      <div className="font-semibold tabular-nums text-sm">{formatSigned(v.hours, ' h')}</div>
+      <div className="mt-0.5 text-[10px] tabular-nums text-foreground/70">
+        {v.percent == null ? '—' : formatSigned(v.percent, ' %')}
+      </div>
+    </td>
+  )
+}
+
+export function PipelinePage() {
+  const t = useTranslations('financeApp')
+  const { refreshMetrics } = useFinanceOutlet<BillingOutletContext>() ?? {}
+  const [projects, setProjects] = useState<PipelineProject[]>([])
+  const [plans, setPlans] = useState<ProjectWeekPlan[]>([])
+  const [timeEntries, setTimeEntries] = useState<TimeEntrySheetSource[]>([])
+  const [savingKey, setSavingKey] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const draftRef = useRef<Map<string, string>>(new Map())
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const currentWeekRef = useRef<HTMLTableCellElement>(null)
+  const didScrollToCurrentWeek = useRef(false)
+  const [, bump] = useState(0)
+
+  const thisWeek = startOfWeekMonday(todayIso())
+  const horizonWeeks = useMemo(() => weeksForNextMonths(todayIso(), HORIZON_MONTHS), [])
+
+  const visibleProjects = useMemo(
+    () => projects.filter((p) => PIPELINE_STATUSES.has(p.status)).sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+    [projects]
+  )
+
+  const hoursMap = useMemo(() => plansToHoursMap(plans), [plans])
+  const actualHoursMap = useMemo(() => timeEntriesToBillableHoursMap(timeEntries), [timeEntries])
+
+  const weeks = useMemo(() => {
+    const firstBillableWeek = earliestWeekInMap(actualHoursMap)
+    if (!firstBillableWeek || firstBillableWeek >= horizonWeeks[0]) return horizonWeeks
+    return weeksBetween(firstBillableWeek, horizonWeeks[horizonWeeks.length - 1])
+  }, [actualHoursMap, horizonWeeks])
+  const completedWeeks = useMemo(() => weeks.filter((week) => week < thisWeek), [weeks, thisWeek])
+  const lastCompletedWeek = completedWeeks[completedWeeks.length - 1] ?? null
+  const showVarianceColumn = lastCompletedWeek != null
+
+  const totalsByProject = useMemo(
+    () => totalHoursByProject(hoursMap, visibleProjects.map((p) => p.id)),
+    [hoursMap, visibleProjects]
+  )
+
+  const grand = useMemo(() => {
+    let plannedHours = 0
+    let actualHours = 0
+    let amount = 0
+    for (const p of visibleProjects) {
+      const row = projectRowTotals(p, weeks, hoursMap, totalsByProject.get(p.id) ?? 0)
+      plannedHours += row.hours
+      actualHours += weeks.reduce((sum, week) => sum + (actualHoursMap.get(hoursKey(p.id, week)) ?? 0), 0)
+      amount += row.amount
+    }
+    return {
+      plannedHours: Math.round(plannedHours * 100) / 100,
+      actualHours: Math.round(actualHours * 100) / 100,
+      amount: Math.round(amount * 100) / 100,
+    }
+  }, [visibleProjects, weeks, hoursMap, actualHoursMap, totalsByProject])
+
+  const grandVariance = useMemo(() => {
+    let plannedHours = 0
+    let actualHours = 0
+    for (const project of visibleProjects) {
+      plannedHours += sumProjectHours(hoursMap, project.id, completedWeeks)
+      actualHours += sumProjectHours(actualHoursMap, project.id, completedWeeks)
+    }
+    return pipelineVariance(actualHours, plannedHours)
+  }, [visibleProjects, completedWeeks, hoursMap, actualHoursMap])
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  // Past weeks push the current week off-screen, so land the view on it once data is in.
+  useEffect(() => {
+    if (!loaded || didScrollToCurrentWeek.current) return
+    const scroller = scrollerRef.current
+    const cell = currentWeekRef.current
+    if (!scroller || !cell) return
+    const offset = cell.getBoundingClientRect().left - scroller.getBoundingClientRect().left
+    scroller.scrollLeft += offset - PROJECT_COL_WIDTH
+    didScrollToCurrentWeek.current = true
+  }, [loaded, weeks])
+
+  async function load() {
+    setError(null)
+    const periodEnd = addDays(horizonWeeks[horizonWeeks.length - 1], 6)
+    const [p, w, t] = await Promise.all([
+      db.from('projects').select('id, name, billing_type, default_hourly_rate, fixed_price, status, partner_id, partners(legal_name)').order('name'),
+      db.from('project_week_plans').select('*'),
+      db
+        .from('time_entries')
+        .select('id, entry_date, hours, rate_override, billable, invoice_id, project_id, description, time_entry_lines(hours, billable, item_name)')
+        .lte('entry_date', periodEnd),
+    ])
+    if (p.error) {
+      setError(p.error.message)
+      return
+    }
+    if (w.error) {
+      setError(
+        w.error.message.includes('project_week_plans')
+          ? 'Table project_week_plans manquante — exécutez la migration supabase/migrations/20260724230000_project_week_plans.sql'
+          : w.error.message
+      )
+      return
+    }
+    if (t.error) {
+      setError(t.error.message)
+      return
+    }
+    setProjects((p.data as PipelineProject[]) ?? [])
+    setPlans((w.data as ProjectWeekPlan[]) ?? [])
+    setTimeEntries((t.data as TimeEntrySheetSource[]) ?? [])
+    setLoaded(true)
+    refreshMetrics?.()
+  }
+
+  function displayHours(projectId: string, week: string): string {
+    const key = hoursKey(projectId, week)
+    if (draftRef.current.has(key)) return draftRef.current.get(key)!
+    return numberFieldValue(hoursMap.get(key) ?? 0)
+  }
+
+  function onHoursChange(projectId: string, week: string, raw: string) {
+    const key = hoursKey(projectId, week)
+    draftRef.current.set(key, raw)
+    bump((n) => n + 1)
+  }
+
+  async function commitHours(projectId: string, week: string) {
+    const key = hoursKey(projectId, week)
+    const raw = draftRef.current.get(key)
+    if (raw === undefined) return
+    draftRef.current.delete(key)
+
+    const hours = Math.max(0, Math.round(parseNumberField(raw) * 100) / 100)
+    const prev = hoursMap.get(key) ?? 0
+    if (hours === prev) {
+      bump((n) => n + 1)
+      return
+    }
+
+    setSavingKey(key)
+    setError(null)
+
+    // Optimistic local update
+    setPlans((current) => {
+      const existing = current.find((r) => r.project_id === projectId && r.week_start === week)
+      if (hours === 0) {
+        return current.filter((r) => !(r.project_id === projectId && r.week_start === week))
+      }
+      if (existing) {
+        return current.map((r) => (r.id === existing.id ? { ...r, hours } : r))
+      }
+      return [
+        ...current,
+        {
+          id: `temp-${key}`,
+          user_id: '',
+          project_id: projectId,
+          week_start: week,
+          hours,
+          created_at: '',
+          updated_at: '',
+        },
+      ]
+    })
+
+    try {
+      if (hours === 0) {
+        const { error: delErr } = await db
+          .from('project_week_plans')
+          .delete()
+          .eq('project_id', projectId)
+          .eq('week_start', week)
+        if (delErr) throw delErr
+      } else {
+        const existing = plans.find((r) => r.project_id === projectId && r.week_start === week && !r.id.startsWith('temp-'))
+        if (existing) {
+          const { data, error: updErr } = await db
+            .from('project_week_plans')
+            .update({ hours })
+            .eq('id', existing.id)
+            .select()
+            .maybeSingle()
+          if (updErr) throw updErr
+          if (data) {
+            setPlans((current) => current.map((r) => (r.id === existing.id ? (data as ProjectWeekPlan) : r)))
+          }
+        } else {
+          const { data, error: insErr } = await db
+            .from('project_week_plans')
+            .insert({ project_id: projectId, week_start: week, hours })
+            .select()
+            .maybeSingle()
+          if (insErr) throw insErr
+          if (data) {
+            setPlans((current) => {
+              const withoutTemp = current.filter(
+                (r) => !(r.project_id === projectId && r.week_start === week)
+              )
+              return [...withoutTemp, data as ProjectWeekPlan]
+            })
+          }
+        }
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('pipeline.saveError'))
+      await load()
+    } finally {
+      setSavingKey(null)
+      bump((n) => n + 1)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <h2 className="text-base font-semibold text-foreground">{t('pipeline.title')}</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {t('pipeline.subtitle', { months: HORIZON_MONTHS })}
+        </p>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</div>
+      )}
+
+      {visibleProjects.length === 0 ? (
+        <EmptyState message={t('pipeline.empty')} />
+      ) : (
+        <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain rounded-xl border border-border bg-surface">
+          <table className="min-w-max w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/80">
+                <th className="sticky left-0 z-20 bg-muted px-3 py-2.5 text-left font-medium text-muted-foreground min-w-[220px] border-r border-border">
+                  {t('pipeline.project')}
+                </th>
+                {weeks.map((week) => {
+                  const label = formatWeekLabel(week)
+                  const isCurrent = week === thisWeek
+                  return (
+                    <Fragment key={week}>
+                      <th
+                        ref={isCurrent ? currentWeekRef : undefined}
+                        className={`px-2 py-2.5 text-center font-medium min-w-[88px] ${
+                          isCurrent
+                            ? 'bg-action/10 text-brand'
+                            : week < thisWeek
+                              ? 'bg-muted/70 text-muted-foreground'
+                              : 'text-muted-foreground'
+                        }`}
+                      >
+                        <div className="text-xs font-semibold">{label.week}</div>
+                        <div className="text-[10px] font-normal whitespace-nowrap opacity-80">{label.range}</div>
+                      </th>
+                      {showVarianceColumn && week === lastCompletedWeek && <VarianceCell asHeader />}
+                    </Fragment>
+                  )
+                })}
+                <th className="sticky right-0 z-20 bg-muted px-3 py-2.5 text-right font-medium text-muted-foreground min-w-[110px] border-l border-border">
+                  {t('common.total')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleProjects.map((project) => {
+                const row = projectRowTotals(project, weeks, hoursMap, totalsByProject.get(project.id) ?? 0)
+                const actualRowHours = sumProjectHours(actualHoursMap, project.id, weeks)
+                const comparisonPlannedHours = sumProjectHours(hoursMap, project.id, completedWeeks)
+                const comparisonActualHours = sumProjectHours(actualHoursMap, project.id, completedWeeks)
+                const variance = pipelineVariance(comparisonActualHours, comparisonPlannedHours)
+                const partner = relationOne(project.partners)?.legal_name
+                return (
+                  <tr key={project.id} className="border-b border-border/70 hover:bg-muted/40">
+                    <td className="sticky left-0 z-10 bg-surface px-3 py-2 border-r border-border align-top">
+                      <div className="font-medium text-foreground leading-tight">{project.name}</div>
+                      <div className="text-xs text-muted-foreground truncate max-w-[200px]">{partner ?? '—'}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        <Badge
+                          label={project.billing_type === 'fixed' ? 'Forfait' : 'Horaire'}
+                          tone={project.billing_type === 'fixed' ? 'partial' : 'sent'}
+                        />
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {projectAmountLabel(project as Project)}
+                        </span>
+                      </div>
+                    </td>
+                    {weeks.map((week) => {
+                      const key = hoursKey(project.id, week)
+                      const h = hoursMap.get(key) ?? 0
+                      const draft = draftRef.current.get(key)
+                      const weekHours = draft !== undefined ? parseNumberField(draft) : h
+                      const actualHours = actualHoursMap.get(key) ?? 0
+                      const amount = cellRevenue(project, weekHours, totalsByProject.get(project.id) ?? 0)
+                      const isCurrent = week === thisWeek
+                      return (
+                        <Fragment key={week}>
+                          <td
+                            className={`px-1.5 py-1.5 text-center align-top ${
+                              isCurrent ? 'bg-action/5' : week < thisWeek ? 'bg-muted/70' : ''
+                            }`}
+                          >
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min={0}
+                              step={0.25}
+                              aria-label={`Heures ${project.name} ${week}`}
+                              className="mx-auto block w-full max-w-[72px] rounded-lg border border-input bg-surface px-1.5 py-1 text-center text-sm tabular-nums outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                              value={displayHours(project.id, week)}
+                              disabled={savingKey === key}
+                              onChange={(e) => onHoursChange(project.id, week, e.target.value)}
+                              onBlur={() => void commitHours(project.id, week)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                              }}
+                            />
+                            <div className="mt-1 text-[10px] font-medium text-foreground/70 tabular-nums">
+                              Réel {actualHours} h
+                            </div>
+                            <div
+                              className={`text-[10px] tabular-nums ${
+                                amount > 0 ? 'text-foreground/70' : 'text-transparent'
+                              }`}
+                            >
+                              {formatCad(amount)}
+                            </div>
+                          </td>
+                          {showVarianceColumn && week === lastCompletedWeek && <VarianceCell variance={variance} />}
+                        </Fragment>
+                      )
+                    })}
+                    <td className="sticky right-0 z-10 bg-surface px-3 py-2 text-right border-l border-border align-top">
+                      <div className="font-semibold tabular-nums">Prévu {row.hours} h</div>
+                      <div className="text-xs text-foreground/70 tabular-nums">Réel {actualRowHours} h</div>
+                      <div className="text-xs text-muted-foreground tabular-nums">{formatCad(row.amount)}</div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="bg-muted/90 border-t border-border font-medium">
+                <td className="sticky left-0 z-10 bg-muted px-3 py-2.5 border-r border-border">
+                  Totaux ({weeks.length} sem.)
+                </td>
+                {weeks.map((week) => {
+                  const col = weekColumnTotals(visibleProjects, week, hoursMap, totalsByProject)
+                  const actualHours = Math.round(
+                    visibleProjects.reduce(
+                      (sum, project) => sum + (actualHoursMap.get(hoursKey(project.id, week)) ?? 0),
+                      0
+                    ) * 100
+                  ) / 100
+                  return (
+                    <Fragment key={week}>
+                      <td className="px-1.5 py-2 text-center">
+                        <div className="text-xs tabular-nums">P {col.hours} h</div>
+                        <div className="text-[10px] text-foreground/70 tabular-nums">R {actualHours} h</div>
+                        <div className="text-[10px] text-muted-foreground tabular-nums">{formatCad(col.amount)}</div>
+                      </td>
+                      {showVarianceColumn && week === lastCompletedWeek && <VarianceCell variance={grandVariance} />}
+                    </Fragment>
+                  )
+                })}
+                <td className="sticky right-0 z-10 bg-muted px-3 py-2.5 text-right border-l border-border">
+                  <div className="font-semibold tabular-nums">Prévu {grand.plannedHours} h</div>
+                  <div className="text-xs text-foreground/70 tabular-nums">Réel {grand.actualHours} h</div>
+                  <div className="text-xs text-muted-foreground tabular-nums">{formatCad(grand.amount)}</div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        Faites défiler horizontalement pour voir toutes les semaines — les semaines passées (grisées) sont à gauche de
+        la semaine courante. La colonne Écart (après la dernière semaine terminée) compare le prévu au réel depuis le
+        début. Forfaits : montant réparti au prorata de toutes les heures planifiées du projet.
+      </p>
+
+      <WorkflowFooter to="/billing/time" label={t('pipeline.logTime')}>
+        {t('pipeline.readyToLog')}
+      </WorkflowFooter>
+    </div>
+  )
+}

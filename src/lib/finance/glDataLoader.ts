@@ -1,0 +1,103 @@
+import type { GeneralLedgerBuildInput } from './financials'
+import type { MetricsProject } from './billingMetrics'
+import { TIME_ENTRY_SELECT } from './dashboardData'
+import { entriesToMetrics } from './timeEntries'
+import { db as defaultDb, type FinanceDb } from './db'
+
+export async function fetchGeneralLedgerData(
+  db: FinanceDb = defaultDb,
+): Promise<{
+  data: GeneralLedgerBuildInput
+  warnings: string[]
+}> {
+  const [
+    invoices,
+    payments,
+    expenses,
+    employeeExpenses,
+    payroll,
+    dividends,
+    corpTax,
+    salesTax,
+    adjustments,
+    settingsRow,
+    timeEntries,
+    fixedProjects,
+    bankMatches,
+  ] = await Promise.all([
+    db.from('invoices').select('id, invoice_number, invoice_date, subtotal, gst, qst, total, status'),
+    db.from('payments').select('id, payment_date, amount, invoice_id, reference, invoices(invoice_number, status)'),
+    db.from('expenses').select('id, expense_date, vendor, category, description, amount, gst, qst, total, paid, payroll_run_id'),
+    db.from('employee_expenses').select('id, expense_date, vendor, category, description, amount, gst, qst, total, taxable, payroll_run_id'),
+    db
+      .from('payroll_runs')
+      .select(
+        'id, payment_date, remittance_status, remittance_date, gross_pay, federal_tax, provincial_tax, cpp_employee, ei_employee, qpip_employee, cpp_employer, ei_employer, qpip_employer, other_deductions, employer_benefits, hsf_employer, cnesst_employer, net_pay, reimbursement_total'
+      ),
+    db.from('dividends').select('id, declared_date, payment_date, total_amount, paid_amount, description, status'),
+    db
+      .from('corporate_tax_records')
+      .select('id, paid_date, paid_amount, amount, status, due_date, label, fiscal_year'),
+    db.from('sales_tax_periods').select('id, period_end, filed_date, gst_net, qst_net, status'),
+    db.from('accounting_adjustments').select('*'),
+    db
+      .from('organization_settings')
+      .select(
+        'share_capital, opening_retained_earnings, opening_cash_balance, opening_balance_date, estimated_corp_tax_rate, wip_accrual_enabled, hsf_rate, cnesst_rate'
+      )
+      .maybeSingle(),
+    db.from('time_entries').select(TIME_ENTRY_SELECT),
+    db
+      .from('projects')
+      .select('id, partner_id, billing_type, fixed_price, invoice_id, status, default_hourly_rate')
+      .eq('billing_type', 'fixed'),
+    db
+      .from('bank_transactions')
+      .select('id, transaction_date, description, amount, match_source, transaction_code'),
+  ])
+
+  const warnings: string[] = []
+  if (adjustments.error) {
+    warnings.push(
+      adjustments.error.message.includes('accounting_adjustments')
+        ? 'Ajustements manuels non chargés — exécutez la migration 20260630150100_accounting_adjustments.sql.'
+        : `Ajustements non chargés : ${adjustments.error.message}`
+    )
+  }
+  if (settingsRow.error) {
+    warnings.push(`Paramètres comptables non chargés : ${settingsRow.error.message}`)
+  }
+  if (timeEntries.error) {
+    warnings.push(`Temps non chargé pour WIP : ${timeEntries.error.message}`)
+  }
+
+  return {
+    data: {
+      invoices: invoices.data ?? [],
+      payments: payments.data ?? [],
+      expenses: expenses.data ?? [],
+      employeeExpenses: employeeExpenses.data ?? [],
+      payrollRuns: payroll.data ?? [],
+      dividends: dividends.data ?? [],
+      corporateTax: corpTax.data ?? [],
+      salesTaxRemittances: salesTax.data ?? [],
+      bankMatches: bankMatches.data ?? [],
+      adjustments: adjustments.data ?? [],
+      settings: settingsRow.data,
+      timeEntries: entriesToMetrics(timeEntries.data ?? []),
+      fixedProjects: (fixedProjects.data ?? []) as MetricsProject[],
+    },
+    warnings,
+  }
+}
+
+export async function fetchFinancialReportExtras(db: FinanceDb = defaultDb) {
+  const [bank, salesTaxPaid] = await Promise.all([
+    db.from('bank_transactions').select('amount, transaction_date'),
+    db.from('sales_tax_periods').select('gst_net, qst_net, filed_date, period_end, status').eq('status', 'paid'),
+  ])
+  return {
+    bankTransactions: bank.data ?? [],
+    salesTaxRemitted: salesTaxPaid.data ?? [],
+  }
+}

@@ -21,6 +21,7 @@ import {
 import { listOrgMembers } from "@/lib/crm/queries";
 import { addDaysToIsoDate, zonedDateIso } from "@/lib/booking/timezone";
 import { refreshHostCalendarsIfStale } from "@/lib/calendar/host-calendar";
+import { requireBookingsWorkspace } from "@/lib/modules/require-workspace";
 
 export default async function CalendarPage({
   params,
@@ -29,6 +30,7 @@ export default async function CalendarPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireBookingsWorkspace(locale);
 
   const [membership, user] = await Promise.all([
     getPrimaryMembership(),

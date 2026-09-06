@@ -1,9 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/auth/active-org";
 import { orgAllowsWrites, trialEndsAt } from "@/lib/billing/trial";
-import type { OrgAccessLevel, OrgRole } from "@/lib/auth/rbac";
-import { DEFAULT_ORG_ROLE, isOrgRole } from "@/lib/auth/rbac";
+import {
+  mapAssignedRole,
+  type OrgAccessLevel,
+  type OrgRole,
+} from "@/lib/auth/rbac";
 import { toAppLocale, type AppLocale } from "@/lib/i18n/locales";
+import {
+  isModuleId,
+  normalizeModuleSelection,
+  type ModuleId,
+} from "@/lib/modules/catalog";
 
 export type OrgMembership = {
   id: string;
@@ -20,6 +28,7 @@ export type OrgMembership = {
     subscribed: boolean;
     trialEndsAt: Date;
   };
+  enabledModules: ModuleId[];
 };
 
 export async function getSessionUser() {
@@ -75,6 +84,31 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
 
   const orgById = new Map((orgs ?? []).map((org) => [org.id as string, org]));
 
+  const modulesByOrg = new Map<string, ModuleId[]>();
+  const { data: moduleRows, error: moduleError } = await supabase
+    .from("organization_modules")
+    .select("organization_id, module_id")
+    .in("organization_id", orgIds);
+
+  const modulesTableReady = !moduleError;
+  if (moduleError) {
+    if (
+      moduleError.code !== "42P01" &&
+      !moduleError.message.includes("organization_modules")
+    ) {
+      console.error("getUserMemberships modules:", moduleError.message);
+    }
+  } else {
+    for (const row of moduleRows ?? []) {
+      const orgId = row.organization_id as string;
+      const moduleId = row.module_id;
+      if (!isModuleId(moduleId)) continue;
+      const list = modulesByOrg.get(orgId) ?? [];
+      list.push(moduleId);
+      modulesByOrg.set(orgId, list);
+    }
+  }
+
   return membershipRows
     .map((row) => {
       const organization = orgById.get(row.organization_id as string);
@@ -82,7 +116,7 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
         return null;
       }
 
-      const assignedRole = isOrgRole(row.role) ? row.role : DEFAULT_ORG_ROLE;
+      const assignedRole = mapAssignedRole(row.role);
       const isLicensed = row.is_licensed !== false;
       return {
         id: row.id as string,
@@ -104,6 +138,11 @@ export async function getUserMemberships(): Promise<OrgMembership[]> {
             (organization.trial_started_at ?? organization.created_at) as string,
           ),
         },
+        enabledModules: modulesTableReady
+          ? normalizeModuleSelection(
+              modulesByOrg.get(organization.id as string) ?? [],
+            )
+          : [],
       };
     })
     .filter((row): row is OrgMembership => row !== null);

@@ -5,5 +5,5 @@
     "incremental": false
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.mts"],
-  "exclude": ["node_modules", ".next", "docs"]
+  "exclude": ["node_modules", ".next", "docs", "app-legacy", "supabase/functions"]
 }

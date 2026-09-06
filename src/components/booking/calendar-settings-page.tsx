@@ -185,7 +185,7 @@ export function CalendarSettingsPage({
         </SurfaceCard>
       </div>
 
-      <div id="calendar" className="scroll-mt-6">
+      <div>
         <SurfaceCard className="space-y-4 sm:p-6">
           <div>
             <h2 className="font-heading text-lg font-semibold text-brand">

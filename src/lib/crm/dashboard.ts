@@ -102,7 +102,7 @@ export type HomeDashboard = {
   appointments: DashboardAppointment[];
 };
 
-const EMPTY: HomeDashboard = {
+export const EMPTY_HOME_DASHBOARD: HomeDashboard = {
   hasCaseload: false,
   kpis: {
     openProjects: 0,
@@ -198,9 +198,9 @@ export async function getHomeDashboard(
   locale?: string | null,
 ): Promise<HomeDashboard> {
   const orgId = await requireOrganizationId();
-  if (!orgId) return EMPTY;
+  if (!orgId) return EMPTY_HOME_DASHBOARD;
   const user = await getSessionUser();
-  if (!user) return EMPTY;
+  if (!user) return EMPTY_HOME_DASHBOARD;
 
   const supabase = await createClient();
   const now = new Date();

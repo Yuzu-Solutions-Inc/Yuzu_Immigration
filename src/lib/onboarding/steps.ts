@@ -58,3 +58,22 @@ export function wizardStepsForRole(isAdmin: boolean): WizardStepId[] {
 export function emptyOnboardingChecks(): OnboardingChecks {
   return { ...EMPTY_ONBOARDING_CHECKS };
 }
+
+/** Setup tasks that apply for the workspace modules and this member's permissions. */
+export function setupCheckIdsFor(input: {
+  enabledModules: readonly string[]
+  isAdmin: boolean
+  canManageServices: boolean
+}): OnboardingCheckId[] {
+  const enabled = new Set(input.enabledModules);
+  const ids: OnboardingCheckId[] = ["account"];
+  if (enabled.has("immigration")) ids.push("representative");
+  if (enabled.has("contracts")) ids.push("signature");
+  if (enabled.has("bookings")) {
+    ids.push("hours", "calendar", "meeting");
+  }
+  if (input.canManageServices && enabled.has("services")) {
+    ids.push("service");
+  }
+  return ids;
+}

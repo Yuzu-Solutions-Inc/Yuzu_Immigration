@@ -6,6 +6,8 @@ import {
   ClipboardList,
   FolderKanban,
   Home,
+  Landmark,
+  LayoutGrid,
   LogOut,
   Menu,
   PanelLeft,
@@ -13,9 +15,10 @@ import {
   Plus,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -34,24 +37,56 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Link, usePathname } from "@/i18n/navigation";
+import type { ModuleId } from "@/lib/modules/catalog";
+import { TOUR_OPEN_NAV_EVENT } from "@/lib/onboarding/tour";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_COOKIE = "sidebar-collapsed";
 const collapsedItemClass =
   "flex size-9 shrink-0 items-center justify-center rounded-lg";
 
-const navItems = [
-  { href: "/home", key: "home" as const, icon: Home },
-  { href: "/projects", key: "projects" as const, icon: FolderKanban },
-  { href: "/clients", key: "people" as const, icon: Users },
-  { href: "/calendar", key: "calendar" as const, icon: CalendarDays },
-  { href: "/bookings", key: "bookings" as const, icon: ClipboardList },
-  { href: "/services", key: "services" as const, icon: Briefcase },
-] as const;
+const navItems: {
+  href: string;
+  key: string;
+  icon: typeof Home;
+  module: ModuleId | null;
+}[] = [
+  { href: "/home", key: "home", icon: Home, module: null },
+  { href: "/partners", key: "partners", icon: Users, module: null },
+  {
+    href: "/engagements",
+    key: "engagements",
+    icon: FolderKanban,
+    module: "finance",
+  },
+  { href: "/bank", key: "bank", icon: Landmark, module: "finance" },
+  {
+    href: "/compensation/payroll",
+    key: "compensation",
+    icon: Wallet,
+    module: "finance",
+  },
+  { href: "/other", key: "other", icon: LayoutGrid, module: "finance" },
+  { href: "/projects", key: "projects", icon: FolderKanban, module: "immigration" },
+  { href: "/calendar", key: "calendar", icon: CalendarDays, module: "bookings" },
+  { href: "/bookings", key: "bookings", icon: ClipboardList, module: "bookings" },
+  { href: "/services", key: "services", icon: Briefcase, module: "services" },
+];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/home") {
-    return pathname === "/home";
+  if (href === "/projects") {
+    return (
+      pathname === "/projects" ||
+      pathname.startsWith("/projects/") ||
+      pathname === "/files" ||
+      pathname.startsWith("/files/")
+    );
+  }
+  if (href === "/engagements") {
+    return pathname === "/engagements" || pathname.startsWith("/billing/");
+  }
+  if (href === "/compensation/payroll") {
+    return pathname === "/compensation" || pathname.startsWith("/compensation/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -66,12 +101,14 @@ function SidebarCreateLink({
   collapsed,
   onNavigate,
   icon: Icon,
+  tour,
 }: {
-  href: "/projects/new" | "/clients/new";
+  href: "/projects/new" | "/partners" | "/partners/new";
   label: string;
   collapsed: boolean;
   onNavigate?: () => void;
   icon: typeof Plus;
+  tour?: string;
 }) {
   return (
     <Link
@@ -79,6 +116,7 @@ function SidebarCreateLink({
       onClick={onNavigate}
       aria-label={label}
       title={collapsed ? label : undefined}
+      data-tour={tour}
       className={cn(
         collapsed
           ? collapsedItemClass
@@ -97,6 +135,7 @@ function SidebarBody({
   newProjectLabel,
   newPersonLabel,
   canCreate,
+  enabledModules,
   collapsed = false,
   onNavigate,
   onToggleCollapse,
@@ -106,6 +145,7 @@ function SidebarBody({
   newProjectLabel: string;
   newPersonLabel: string;
   canCreate: boolean;
+  enabledModules: readonly ModuleId[];
   collapsed?: boolean;
   onNavigate?: () => void;
   onToggleCollapse?: () => void;
@@ -116,6 +156,12 @@ function SidebarBody({
   const locale = useLocale();
 
   const collapseLabel = collapsed ? t("expand") : t("collapse");
+  const enabledSet = new Set(enabledModules);
+  const visibleNav = navItems.filter(
+    (item) => !item.module || enabledSet.has(item.module),
+  );
+  const showImmigrationCreate = canCreate && enabledSet.has("immigration");
+  const showPartnerCreate = canCreate;
 
   return (
     <div className="flex h-full flex-col">
@@ -167,23 +213,25 @@ function SidebarBody({
           variant="sidebar"
           collapsed={collapsed}
         />
-        {canCreate ? (
-          <>
-            <SidebarCreateLink
-              href="/projects/new"
-              label={newProjectLabel}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-              icon={Plus}
-            />
-            <SidebarCreateLink
-              href="/clients/new"
-              label={newPersonLabel}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-              icon={UserPlus}
-            />
-          </>
+        {showImmigrationCreate ? (
+          <SidebarCreateLink
+            href="/projects/new"
+            label={newProjectLabel}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+            icon={Plus}
+            tour="new-project"
+          />
+        ) : null}
+        {showPartnerCreate ? (
+          <SidebarCreateLink
+            href="/partners/new"
+            label={newPersonLabel}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+            icon={UserPlus}
+            tour="new-partner"
+          />
         ) : null}
       </div>
 
@@ -193,7 +241,7 @@ function SidebarBody({
           collapsed ? "items-center px-2" : "px-3",
         )}
       >
-        {navItems.map((item) => {
+        {visibleNav.map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
           const label = t(item.key);
@@ -204,6 +252,7 @@ function SidebarBody({
               onClick={onNavigate}
               aria-label={label}
               title={collapsed ? label : undefined}
+              data-tour={`nav-${item.key}`}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 collapsed && cn(collapsedItemClass, "gap-0 px-0 py-0"),
@@ -276,6 +325,7 @@ export function DesktopSidebar({
   newProjectLabel,
   newPersonLabel,
   canCreate,
+  enabledModules,
   defaultCollapsed = false,
 }: {
   organizations: OrgSwitcherOption[];
@@ -283,6 +333,7 @@ export function DesktopSidebar({
   newProjectLabel: string;
   newPersonLabel: string;
   canCreate: boolean;
+  enabledModules: readonly ModuleId[];
   defaultCollapsed?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
@@ -300,6 +351,7 @@ export function DesktopSidebar({
         newProjectLabel={newProjectLabel}
         newPersonLabel={newPersonLabel}
         canCreate={canCreate}
+        enabledModules={enabledModules}
         collapsed={collapsed}
         onToggleCollapse={() => {
           setCollapsed((prev) => {
@@ -319,15 +371,23 @@ export function MobileSidebarTrigger({
   newProjectLabel,
   newPersonLabel,
   canCreate,
+  enabledModules,
 }: {
   organizations: OrgSwitcherOption[];
   activeOrganizationId: string;
   newProjectLabel: string;
   newPersonLabel: string;
   canCreate: boolean;
+  enabledModules: readonly ModuleId[];
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const openNav = () => setOpen(true);
+    window.addEventListener(TOUR_OPEN_NAV_EVENT, openNav);
+    return () => window.removeEventListener(TOUR_OPEN_NAV_EVENT, openNav);
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -354,6 +414,7 @@ export function MobileSidebarTrigger({
           newProjectLabel={newProjectLabel}
           newPersonLabel={newPersonLabel}
           canCreate={canCreate}
+          enabledModules={enabledModules}
           onNavigate={() => setOpen(false)}
         />
       </SheetContent>
