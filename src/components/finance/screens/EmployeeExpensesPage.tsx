@@ -394,7 +394,7 @@ export function EmployeeExpensesPage() {
                   const emp = relationOne(e.employees)
                   const pay = relationOne(e.payroll_runs)
                   return (
-                    <tr key={e.id}>
+                    <tr key={e.id} className="group">
                       <td className="px-4 py-3">{formatDate(e.expense_date)}</td>
                       <td className="px-4 py-3">{emp ? employeeDisplayName(emp) : '—'}</td>
                       <td className="px-4 py-3 font-medium">{e.vendor}</td>
@@ -402,7 +402,7 @@ export function EmployeeExpensesPage() {
                         <Badge label={EXPENSE_CATEGORY_LABELS[e.category] ?? e.category} />
                       </td>
                       <td className="px-4 py-3">{formatCad(e.total)}</td>
-                      <td className="px-4 py-3">{e.taxable ? 'Oui' : 'Non'}</td>
+                      <td className="px-4 py-3">{e.taxable ? t('common.yes') : t('common.no')}</td>
                       <td className="px-4 py-3">
                         {e.payroll_run_id ? (
                           <Badge label={pay ? `Paie ${formatDate(pay.payment_date)}` : 'Remboursé'} tone="active" />
@@ -437,7 +437,7 @@ export function EmployeeExpensesPage() {
             hint="PDF ou image (max 10 Mo). Joint au frais à l’enregistrement."
             disabled={!!(editingId && rows.find((r) => r.id === editingId)?.payroll_run_id)}
           />
-          <Field label="Employé *">
+          <Field label={t('common.employee')}>
             <select
               className={inputClass}
               required

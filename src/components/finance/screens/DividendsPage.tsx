@@ -265,7 +265,7 @@ export function DividendsPage() {
                 </tr>
               ) : (
                 filtered.map((d) => (
-                  <tr key={d.id} className="hover:bg-muted/50">
+                  <tr key={d.id} className="group hover:bg-muted/50">
                     <td className="px-3 py-3">{formatDate(d.declared_date)}</td>
                     <td className="px-3 py-3">
                       <Badge

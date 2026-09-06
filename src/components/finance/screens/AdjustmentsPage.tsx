@@ -172,7 +172,7 @@ export function AdjustmentsPage() {
           </thead>
           <tbody className="divide-y divide-border text-sm">
             {rows.map((r) => (
-              <tr key={r.id} className="hover:bg-muted/50">
+              <tr key={r.id} className="group hover:bg-muted/50">
                 <td className="px-4 py-3">{formatDate(r.start_date)}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.end_date ? formatDate(r.end_date) : t('common.dash')}</td>
                 <td className="px-4 py-3">{t(typeKeys[r.adjustment_type])}</td>

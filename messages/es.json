@@ -5250,7 +5250,7 @@
       "bookCash": "Book cash",
       "variance": "Variance",
       "checkAssignments": "Review assignments",
-      "unassigned": "Unassigned",
+      "unassigned": "Sin asignar",
       "empty": "Import a Wealthsimple CSV (chequing, card, or activity) or add a transaction manually to get started.",
       "searchPlaceholder": "Description, code, amount…",
       "filterAssignment": "Assignment",

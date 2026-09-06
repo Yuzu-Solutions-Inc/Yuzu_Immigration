@@ -785,7 +785,7 @@ export function BankPage() {
           value={formatCad(variance)}
           hint={Math.abs(variance) > 1 ? 'Vérifier les affectations' : undefined}
         />
-        <MetricCard label="Non affectées" value={unassignedCount} />
+        <MetricCard label={t('bank.unassigned')} value={unassignedCount} />
       </MetricGrid>
 
       {rows.length === 0 ? (
@@ -810,7 +810,7 @@ export function BankPage() {
               value={assignmentFilter}
               onChange={(v) => setAssignmentFilter(v as AssignmentFilter)}
               options={[
-                { value: 'unassigned', label: 'Non affectées' },
+                { value: 'unassigned', label: t('bank.unassigned') },
                 { value: 'all', label: 'Toutes' },
                 { value: 'payment', label: 'Paiements clients' },
                 { value: 'opening', label: 'Solde d\'ouverture (BNR)' },
@@ -844,7 +844,7 @@ export function BankPage() {
                 {filtered.map((r) => {
                   const label = matchLabel(r)
                   return (
-                    <tr key={r.id} className={!r.match_source ? 'bg-amber-50/40' : undefined}>
+                    <tr key={r.id} className={`group ${!r.match_source ? 'bg-amber-50/40' : ''}`}>
                       <td className="px-4 py-3 whitespace-nowrap">{formatDate(r.transaction_date)}</td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">
                         {sourceLabel(r)}

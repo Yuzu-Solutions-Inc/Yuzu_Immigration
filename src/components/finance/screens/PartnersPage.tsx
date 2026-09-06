@@ -225,7 +225,7 @@ export function PartnersPage({
                 </tr>
               ) : (
                 filtered.map((p) => (
-                  <tr key={p.id} className="hover:bg-muted/50">
+                  <tr key={p.id} className="group hover:bg-muted/50">
                     <td className="px-3 py-3 font-medium">
                       <Link href={`/partners/${p.id}`} className="text-action hover:underline">
                         {p.legal_name}

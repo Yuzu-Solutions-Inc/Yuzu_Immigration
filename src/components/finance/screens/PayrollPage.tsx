@@ -611,7 +611,7 @@ export function PayrollPage() {
                 </tr>
               ) : (
                 filtered.map((p) => (
-                  <tr key={p.id} className="hover:bg-muted/50">
+                  <tr key={p.id} className="group hover:bg-muted/50">
                     <td className="px-3 py-3 font-medium">
                       {p.employees ? employeeDisplayName(p.employees) : '—'}
                     </td>
@@ -661,7 +661,7 @@ export function PayrollPage() {
         {form && (
           <form onSubmit={savePayroll} className="space-y-3 text-sm">
             <div className="flex flex-wrap items-end gap-3">
-              <Field label="Employé *" className="flex-1 min-w-[200px]">
+              <Field label={t('common.employee')} className="flex-1 min-w-[200px]">
                 <select className={inputClass} required value={form.employee_id} onChange={(e) => onPayrollEmployeeChange(e.target.value)}>
                   {activeEmployees.map((e) => (
                     <option key={e.id} value={e.id}>{employeeDisplayName(e)}</option>

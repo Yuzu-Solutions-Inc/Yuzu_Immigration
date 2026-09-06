@@ -497,7 +497,7 @@ export function InvoicesPage() {
                 </tr>
               ) : (
                 filtered.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-muted/50">
+                  <tr key={inv.id} className="group hover:bg-muted/50">
                     <td className="px-3 py-3 font-medium">{inv.invoice_number}</td>
                     <td className="px-3 py-3">{inv.partners?.legal_name}</td>
                     <td className="px-3 py-3 text-muted-foreground">{formatDate(inv.invoice_date)}</td>

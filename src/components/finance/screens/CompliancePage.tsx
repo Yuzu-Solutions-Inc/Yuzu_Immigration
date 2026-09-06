@@ -280,7 +280,7 @@ export function CompliancePage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-muted/50">
+                  <tr key={r.id} className="group hover:bg-muted/50">
                     <td className="px-4 py-3">
                       <div className="font-medium">{r.title}</div>
                       {r.notes && <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{r.notes}</div>}
